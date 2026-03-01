@@ -244,6 +244,25 @@ const CONFIG = {
         normal: [{ body:'#880000', accent:'#CC0000' }, { body:'#660000', accent:'#AA0000' }],
         big:    [{ body:'#440000', accent:'#880000' }, { body:'#330000', accent:'#660000' }],
       },
+    },
+    {
+      id: 'zombie', name: 'ZOMBIE OUTBREAK',
+      desc: 'Neon City has fallen. The infected never stop coming.',
+      theme: '#44FF88', tags: ['EXPERIMENTAL', 'ENDLESS', 'SURVIVAL'],
+      previewGridSize: 18, previewBg: '#030a03', previewRoad: 'rgba(30,180,60,0.5)',
+      mapW: 36, mapH: 36, tileSize: 80, roadEvery: 7,
+      roadColor: '#080d08', sidewalkColor: '#0c140c',
+      buildingPalette: ['#0a1a0a','#0d1f0d','#081508','#102010','#0c1a0c','#091509','#0f1e0f','#0b1b0b'],
+      neonColors: ['#44FF88','#22CC55','#88FFAA','#00AA44'],
+      windowColors: ['#44FF88','#22CC55','#66FF99','#00FF66'],
+      lightColor: '#44FF88', lightGlow: '#22CC55', neonFreq: 5,
+      weather: 'fog',
+      botPalettes: {
+        mini:   [{ body:'#66CC44', accent:'#44AA22' }],
+        normal: [{ body:'#44AA33', accent:'#225511' }],
+        big:    [{ body:'#997722', accent:'#664400' }],
+      },
+      zombie: true,
     }
   ],
 
@@ -346,5 +365,22 @@ const CONFIG = {
     { id:'nanoshield', name:'NANO SHIELD',       desc:'6s of invincibility.',             price:2800, type:'implant', effect:'nanoshield'  },
     { id:'overclock',  name:'OVERCLOCK CHIP',    desc:'Permanently +60% bullet damage.', price:4500, type:'implant', effect:'overclock'   },
     { id:'proto_car',  name:'PROTOTYPE VEHICLE', desc:'500HP · Nitro · Bulletproof.',    price:6500, type:'vehicle' },
-  ]
+  ],
+
+  // ── Zombie Configs ───────────────────────────────────────
+  ZOMBIE_CONFIGS: {
+    shambler: { speed:52,  hp:90,  damage:18, radius:18, color:'#66CC44', accent:'#44AA22', moneyMult:0.8,  melee:true  },
+    runner:   { speed:148, hp:50,  damage:12, radius:15, color:'#99FF55', accent:'#66CC33', moneyMult:1.0,  melee:true  },
+    brute:    { speed:36,  hp:300, damage:38, radius:28, color:'#44AA33', accent:'#225511', moneyMult:2.5,  melee:true  },
+    mutant:   { speed:68,  hp:130, damage:20, radius:20, color:'#AAFF44', accent:'#77CC22', moneyMult:1.5,  melee:false, acidRate:2200, acidSpeed:180 },
+    bloater:  { speed:30,  hp:200, damage:22, radius:30, color:'#DDBB00', accent:'#886600', moneyMult:2.0,  melee:false, acidRate:1600, acidSpeed:140 },
+  },
+
+  // ── Global Events ────────────────────────────────────────
+  GLOBAL_EVENTS: [
+    { id:'blackout',    name:'TOTAL BLACKOUT',    desc:'The city grid has failed.',                   duration:55, major:true  },
+    { id:'riot',        name:'CITY RIOT',          desc:'The streets are in chaos.',                   duration:60, major:false },
+    { id:'corporate',   name:'CORPORATE INVASION', desc:'MegaCorp enforcers have seized the district.', duration:65, major:true  },
+    { id:'cyber_virus', name:'CYBER VIRUS',        desc:'Systems compromised. Reality unraveling.',     duration:50, major:false },
+  ],
 };

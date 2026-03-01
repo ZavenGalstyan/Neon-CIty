@@ -2002,3 +2002,152 @@ class Drone {
     }
   }
 }
+
+// ══════════════════════════════════════════════════════════════════
+// ZombieBot — experimental mode enemy
+// ══════════════════════════════════════════════════════════════════
+class ZombieBot {
+  constructor(x, y, wave, type = 'shambler') {
+    this.x    = x;
+    this.y    = y;
+    this.type = type;
+    this._cfg = CONFIG.ZOMBIE_CONFIGS[type];
+
+    this.hp     = this._cfg.hp + Math.floor(wave * 8);
+    this.maxHp  = this.hp;
+    this.radius = this._cfg.radius;
+    this.speed  = this._cfg.speed;
+    this.damage = this._cfg.damage;
+
+    this.dead  = false;
+    this.dying = false;
+    this._dyingTimer  = 0;
+    this._angle       = 0;
+    this._contactTimer = 0;   // cooldown between melee hits (seconds)
+    this._acidTimer   = 0;   // ms until next acid spit
+    this._rageMult    = 1;
+    this._damagedTimer = 0;  // seconds to show HP bar after taking damage
+  }
+
+  update(dt, player, map, bullets, particles) {
+    if (this.dying) {
+      this._dyingTimer -= dt;
+      if (this._dyingTimer <= 0) this.dead = true;
+      return;
+    }
+
+    if (this._contactTimer > 0) this._contactTimer -= dt;
+    if (this._damagedTimer > 0) this._damagedTimer -= dt;
+
+    const dx   = player.x - this.x;
+    const dy   = player.y - this.y;
+    const dist = Math.hypot(dx, dy);
+
+    if (dist > 1) {
+      this._angle = Math.atan2(dy, dx);
+      const spd = this.speed * this._rageMult * dt;
+      const nx  = dx / dist, ny = dy / dist;
+      const tx  = this.x + nx * spd;
+      const ty  = this.y + ny * spd;
+
+      if (!map.isBlockedCircle(tx, this.y, this.radius - 2)) this.x = tx;
+      if (!map.isBlockedCircle(this.x, ty, this.radius - 2)) this.y = ty;
+    }
+
+    // Runner rage at 50% HP
+    if (this.type === 'runner' && this.hp <= this.maxHp * 0.5) {
+      this._rageMult = 1.8;
+    }
+
+    // Acid spit (mutant / bloater)
+    if (!this._cfg.melee && dist < 380) {
+      this._acidTimer -= dt * 1000;
+      if (this._acidTimer <= 0) {
+        this._acidTimer = this._cfg.acidRate;
+        const b = new Bullet(this.x, this.y, this._angle, this._cfg.acidSpeed,
+                             this._cfg.damage, false, '#88FF44');
+        b.radius = 7;
+        bullets.push(b);
+      }
+    }
+  }
+
+  takeDamage(amount, particles) {
+    if (this.dying || this.dead) return;
+    this.hp -= amount;
+    this._damagedTimer = 1.5;
+
+    // Green particle burst
+    for (let i = 0; i < 5; i++) {
+      const a   = Math.random() * Math.PI * 2;
+      const spd = 60 + Math.random() * 80;
+      particles.push(new Particle(this.x, this.y, Math.cos(a) * spd, Math.sin(a) * spd,
+                                  '#88FF44', 3, 0.3 + Math.random() * 0.3));
+    }
+
+    if (this.hp <= 0) {
+      this.dying = true;
+      this._dyingTimer = 0.3;
+    }
+  }
+
+  render(ctx) {
+    if (this.dead) return;
+    const x = this.x, y = this.y, r = this.radius;
+    const t = this.dying ? Math.max(0, this._dyingTimer / 0.3) : 1;
+
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.globalAlpha = t;
+
+    // Rage glow for enraged runner
+    if (this._rageMult > 1) {
+      ctx.shadowColor = '#99FF44';
+      ctx.shadowBlur  = 18;
+    }
+
+    // Spiky star body (7 spikes)
+    const spikes = 7;
+    ctx.beginPath();
+    for (let i = 0; i < spikes * 2; i++) {
+      const a  = (i / (spikes * 2)) * Math.PI * 2 - Math.PI / 2;
+      const sr = i % 2 === 0 ? r : r * 0.55;
+      if (i === 0) ctx.moveTo(Math.cos(a) * sr, Math.sin(a) * sr);
+      else         ctx.lineTo(Math.cos(a) * sr, Math.sin(a) * sr);
+    }
+    ctx.closePath();
+    ctx.fillStyle   = this._cfg.color;
+    ctx.fill();
+    ctx.strokeStyle = this._cfg.accent;
+    ctx.lineWidth   = 1.5;
+    ctx.stroke();
+    ctx.shadowBlur  = 0;
+
+    // Eyes oriented toward movement angle
+    const perpX = -Math.sin(this._angle);
+    const perpY =  Math.cos(this._angle);
+    const fwdX  = Math.cos(this._angle) * r * 0.35;
+    const fwdY  = Math.sin(this._angle) * r * 0.35;
+    const eo    = r * 0.28;
+    ctx.fillStyle = '#fff';
+    ctx.beginPath();
+    ctx.arc(fwdX + perpX * eo, fwdY + perpY * eo, 3, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(fwdX - perpX * eo, fwdY - perpY * eo, 3, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.restore();
+
+    // HP bar — always for brute/bloater, brief flash after damage for others
+    const showBar = this.type === 'brute' || this.type === 'bloater' || this._damagedTimer > 0;
+    if (showBar && !this.dying) {
+      const bw = r * 2 + 8, bh = 3;
+      const bx = x - bw / 2, by = y - r - 10;
+      ctx.save();
+      ctx.fillStyle = '#111';  ctx.fillRect(bx, by, bw, bh);
+      ctx.fillStyle = '#44FF44'; ctx.fillRect(bx, by, bw * (this.hp / this.maxHp), bh);
+      ctx.restore();
+    }
+  }
+}

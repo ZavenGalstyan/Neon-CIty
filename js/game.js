@@ -97,6 +97,21 @@ class Game {
     this._reflexTimer     = 0;
     this._nanoshieldTimer = 0;
 
+    // ── Zombie Mode ──────────────────────────────────────────
+    this._zombieMode      = !!this.map.config.zombie;
+    this._zombieWaveSize  = 0;
+    this._zombieSpawned   = 0;
+    this._zombieTimer     = 500;
+    this._zombieCountdown = 0;
+
+    // ── Global Events ────────────────────────────────────────
+    this._globalEvent        = null;
+    this._eventTimer         = rnd(90, 120);
+    this._eventAnnounceTimer = 0;
+    this._eventWave          = new Set();
+    this._cyberDebuffActive  = false;
+    this._corpTimer          = 0;
+
     // Camera
     this.camX = spawnX - this.canvas.width  / 2;
     this.camY = spawnY - this.canvas.height / 2;
@@ -120,7 +135,8 @@ class Game {
     window.addEventListener('keydown', this._keyHandler);
 
     this._spawnVehicles();
-    if (this._arenaMode) this._startArenaWave();
+    if (this._arenaMode)  this._startArenaWave();
+    if (this._zombieMode) this._startZombieWave();
 
     requestAnimationFrame((t) => this._loop(t));
   }
@@ -159,7 +175,7 @@ class Game {
       return;
     }
     if (e.code === 'KeyB') {
-      if (this._arenaMode) return; // no shop in arena
+      if (this._arenaMode || this._zombieMode) return; // no shop in arena/zombie
       if      (this.state === 'playing') { this.shop.open();  this.state = 'shop'; }
       else if (this.state === 'shop')    { this.shop.close(); this.state = 'playing'; }
       else if (this.state === 'paused')  { this.shop.open();  this.state = 'shop'; }
@@ -220,7 +236,7 @@ class Game {
     if (this._achPopup) { this._achPopup.timer -= dt; if (this._achPopup.timer <= 0) this._achPopup = null; }
 
     // ── Day/Night cycle ──────────────────────────────────────
-    if (!this._arenaMode) {
+    if (!this._arenaMode && !this._zombieMode) {
       this._gameTime += dt;
       const cycle = 120, nightStart = 80;
       const t = this._gameTime % cycle;
@@ -234,6 +250,31 @@ class Game {
         this._isNight = false;
         this._bmVendor = null;
         if (this._bmOpen) { this._bmOpen = false; this.state = 'playing'; }
+      }
+
+      // ── Global Events ───────────────────────────────────────
+      this._eventTimer -= dt;
+      if (this._eventTimer <= 0) { this._triggerEvent(false); this._eventTimer = rnd(90, 120); }
+      if (this._eventAnnounceTimer > 0) this._eventAnnounceTimer -= dt;
+      if (this._globalEvent) {
+        this._globalEvent.timer -= dt;
+        if (this._globalEvent.timer <= 0) { this._endEvent(); }
+        else {
+          // Riot: rapid police spawns
+          if (this._globalEvent.id === 'riot') {
+            this._policeTimer -= dt * 1000;
+            if (this._policeTimer <= 0) { this._spawnPolice(); this._policeTimer = 1200; }
+          }
+          // Corporate: extra heavyswat soldiers
+          if (this._globalEvent.id === 'corporate') {
+            this._corpTimer -= dt * 1000;
+            if (this._corpTimer <= 0) {
+              const rp = this.map.randomRoadPos();
+              this.bots.push(new Bot(rp.x, rp.y, this.wave, 'heavyswat', this.map.config));
+              this._corpTimer = 2200;
+            }
+          }
+        }
       }
     }
 
@@ -273,7 +314,7 @@ class Game {
     }
 
     // ── Police drone spawning ────────────────────────────────
-    if (this._wantedLevel >= 3 && !this._arenaMode && !this._indoor) {
+    if (this._wantedLevel >= 3 && !this._arenaMode && !this._zombieMode && !this._indoor) {
       this._droneTimer -= dt * 1000;
       if (this._droneTimer <= 0 && this._drones.filter(d => d.type === 'police').length < this._wantedLevel - 1) {
         const pos = this.map.randomRoadPos();
@@ -282,7 +323,7 @@ class Game {
       }
     }
     // Combat drones in wave 6+
-    if (!this._arenaMode && this.wave >= 6 && this._drones.filter(d => d.type === 'combat').length < Math.floor((this.wave - 5) / 2)) {
+    if (!this._arenaMode && !this._zombieMode && this.wave >= 6 && this._drones.filter(d => d.type === 'combat').length < Math.floor((this.wave - 5) / 2)) {
       const pos = this.map.randomRoadPos();
       this._drones.push(new Drone(pos.x, pos.y, 'combat'));
     }
@@ -362,7 +403,7 @@ class Game {
     }
 
     // ── Police spawn ───────────────────────────────────────
-    if (this._wantedLevel > 0) {
+    if (this._wantedLevel > 0 && !this._zombieMode) {
       const intervals = [0, 9000, 6000, 4000, 2400];
       this._policeTimer -= dt * 1000;
       if (this._policeTimer <= 0) {
@@ -397,7 +438,51 @@ class Game {
       }
     }
 
+    // ── Zombie wave management ─────────────────────────────
+    if (this._zombieMode) {
+      if (this._zombieCountdown > 0) {
+        this._zombieCountdown -= dt;
+        if (this._zombieCountdown <= 0) this._startZombieWave();
+      } else {
+        // Incremental zombie spawning for this wave
+        if (this._zombieSpawned < this._zombieWaveSize) {
+          this._zombieTimer -= dt * 1000;
+          if (this._zombieTimer <= 0) {
+            this._spawnZombie();
+            this._zombieSpawned++;
+            this._zombieTimer = Math.max(300, 1200 - this.wave * 60);
+          }
+        }
+        // Wave complete when all zombies + boss gone
+        const zbossGone = !this.boss || this.boss.dead || this.boss.dying;
+        if (this._zombieSpawned >= this._zombieWaveSize &&
+            this.bots.filter(b => !b.dead && !b.dying).length === 0 && zbossGone) {
+          if (this.boss && this.boss.dead) this.boss = null;
+          this._zombieCountdown = 4.0;
+          this.wave++;
+        }
+      }
+    }
+
     for (const bot of this.bots) bot.update(dt, this.player, this.map, this.bullets, this.particles);
+
+    // ── Zombie melee contact damage ────────────────────────
+    if (this._zombieMode && !this.player.dead && !this._playerVehicle) {
+      for (const b of this.bots) {
+        if (b.dead || b.dying || !b._cfg || !b._cfg.melee) continue;
+        if (circlesOverlap(b.x, b.y, b.radius, this.player.x, this.player.y, this.player.radius)) {
+          if (b._contactTimer <= 0) {
+            const dmg = this.player.takeDamage(b.damage, this.hud);
+            if (dmg) {
+              this.hud.addDamageNumber(this.player.x, this.player.y - 30, dmg, this.camX, this.camY, '#44FF44');
+              this._killStreak = 0;
+              this._streakTimer = 0;
+            }
+            b._contactTimer = 0.55;
+          }
+        }
+      }
+    }
 
     // Bullet update + bullet-hole decal detection
     for (const b of this.bullets) {
@@ -595,8 +680,8 @@ class Game {
     this.bullets   = this.bullets.filter(b => !b.dead);
     this.particles = this.particles.filter(p => !p.dead);
 
-    // ── Bot spawning (non-arena only; arena handles its own) ──
-    if (!this._arenaMode) {
+    // ── Bot spawning (non-arena, non-zombie only) ─────────
+    if (!this._arenaMode && !this._zombieMode) {
       this.spawnTimer -= dt * 1000;
       if (this.spawnTimer <= 0 && this.bots.length < CONFIG.MAX_BOTS + this.wave * 2) {
         this._spawnBot();
@@ -605,7 +690,15 @@ class Game {
 
       // ── Wave ─────────────────────────────────────────────
       this.waveTimer -= dt * 1000;
-      if (this.waveTimer <= 0) { this.wave++; this.waveTimer = 30000; }
+      if (this.waveTimer <= 0) {
+        this.wave++;
+        this.waveTimer = 30000;
+        // Wave-locked global event every 5 waves (major only)
+        if (this.wave % 5 === 0 && !this._globalEvent && !this._eventWave.has(this.wave)) {
+          this._eventWave.add(this.wave);
+          this._triggerEvent(true);
+        }
+      }
 
       // ── Boss lifecycle ───────────────────────────────────
       if (!this._bossActivated && this.wave >= 3) {
@@ -729,6 +822,51 @@ class Game {
     if (this.wave >= 4 && this.wave % 4 === 0 && !this.boss) {
       this._spawnBoss();
     }
+  }
+
+  _startZombieWave() {
+    this._zombieWaveSize = 8 + this.wave * 4;
+    this._zombieSpawned  = 0;
+    this._zombieTimer    = 400;
+    if (this.wave >= 4 && this.wave % 4 === 0 && !this.boss) this._spawnBoss();
+  }
+
+  _spawnZombie() {
+    const w = this.wave;
+    let type;
+    const r = Math.random();
+    if (w <= 2) {
+      type = 'shambler';
+    } else if (w <= 4) {
+      type = r < 0.6 ? 'shambler' : 'runner';
+    } else if (w <= 7) {
+      type = r < 0.35 ? 'shambler' : r < 0.65 ? 'runner' : r < 0.88 ? 'brute' : 'mutant';
+    } else {
+      type = r < 0.25 ? 'runner' : r < 0.50 ? 'brute' : r < 0.78 ? 'mutant' : 'bloater';
+    }
+    const pos = this.map.randomRoadPos();
+    this.bots.push(new ZombieBot(pos.x, pos.y, w, type));
+  }
+
+  _triggerEvent(majorOnly = false) {
+    if (this._globalEvent) return;
+    const pool = majorOnly ? CONFIG.GLOBAL_EVENTS.filter(e => e.major) : CONFIG.GLOBAL_EVENTS;
+    const ev   = rndChoice(pool);
+    this._globalEvent        = { ...ev, timer: ev.duration };
+    this._eventAnnounceTimer = 3.5;
+    if (ev.id === 'cyber_virus') { this.player.fireRateMult *= 1.55; this._cyberDebuffActive = true; }
+    if (ev.id === 'riot')        { this._wantedLevel = Math.max(this._wantedLevel, 2); }
+    if (ev.id === 'corporate')   { this._corpTimer = 500; }
+  }
+
+  _endEvent() {
+    if (!this._globalEvent) return;
+    if (this._globalEvent.id === 'cyber_virus' && this._cyberDebuffActive) {
+      this.player.fireRateMult /= 1.55;
+      this._cyberDebuffActive = false;
+    }
+    this._globalEvent = null;
+    this._corpTimer   = 0;
   }
 
   _spawnBot() {
@@ -1063,6 +1201,32 @@ class Game {
       ctx.restore();
     }
 
+    // ── Global Event overlays ─────────────────────────────
+    if (this._globalEvent) {
+      if (this._globalEvent.id === 'blackout') {
+        const psx  = this.player.x - this.camX;
+        const psy  = this.player.y - this.camY;
+        const grad = ctx.createRadialGradient(psx, psy, 55, psx, psy, Math.max(W, H));
+        grad.addColorStop(0,    'rgba(0,4,8,0)');
+        grad.addColorStop(0.18, 'rgba(0,4,8,0.88)');
+        grad.addColorStop(1,    'rgba(0,4,8,0.97)');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, W, H);
+      }
+      if (this._globalEvent.id === 'cyber_virus') {
+        ctx.save();
+        ctx.globalAlpha = 0.06;
+        ctx.fillStyle = '#00FFFF';
+        for (let yl = 0; yl < H; yl += 4) ctx.fillRect(0, yl, W, 1);
+        if (Math.random() < 0.25) {
+          ctx.globalAlpha = 0.18;
+          ctx.fillStyle = Math.random() < 0.5 ? '#00FFFF' : '#FF00AA';
+          ctx.fillRect(0, Math.random() * H, W, 2 + Math.random() * 6);
+        }
+        ctx.restore();
+      }
+    }
+
     // Weather (screen-space, drawn over world)
     this.weather.render(ctx, W, H);
 
@@ -1078,16 +1242,21 @@ class Game {
         const remaining = Math.max(0, this._arenaWaveSize - this._arenaKilled);
         this.hud.renderWave(this.wave, remaining, !!(this.boss && !this.boss.dead));
         if (this._arenaCountdown > 0) this.hud.renderArenaCountdown(this._arenaCountdown);
+      } else if (this._zombieMode) {
+        const remaining = this.bots.filter(b => !b.dead && !b.dying).length;
+        this.hud.renderZombieWave(this.wave, remaining, this._zombieCountdown, this._zombieWaveSize);
+        if (this._zombieCountdown > 0) this.hud.renderArenaCountdown(this._zombieCountdown);
       } else {
         this.hud.renderWave(this.wave, this.bots.length, !!(this.boss && !this.boss.dead));
       }
-      if (this._wantedLevel > 0) {
+      if (this._wantedLevel > 0 && !this._zombieMode) {
         this.hud.renderWantedLevel(this._wantedLevel, this._wantedDecay);
       }
       this.hud.renderWeaponInfo(this.player);
-      this.hud.renderShopButton(this.state === 'shop');
+      if (!this._arenaMode && !this._zombieMode) this.hud.renderShopButton(this.state === 'shop');
       this.hud.renderAchButton(this._achPanelOpen);
-      this.hud.renderDayNight(this._nightAlpha, this._gameTime);
+      if (!this._zombieMode) this.hud.renderDayNight(this._nightAlpha, this._gameTime);
+      if (this._globalEvent) this.hud.renderEventBanner(ctx, W, H, this._globalEvent, this._eventAnnounceTimer);
       if (this._playerDrone) this.hud.renderDroneStatus(this._playerDrone, this._droneControl);
       this.hud.renderDamageNumbers();
       if (this.boss && !this.boss.dead && !this.boss.dying) {

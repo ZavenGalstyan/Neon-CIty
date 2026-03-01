@@ -250,14 +250,20 @@ html, body { width: 100%; height: 100%; background: var(--bg); color: var(--text
 .map-card[data-map="casino"].selected     { transform: translateY(-5px); border-color: #FFCC00; box-shadow: 0 0 24px rgba(255,204,0,0.5), 0 12px 40px rgba(0,0,0,0.6); }
 .map-card[data-map="arena"].selected      { transform: translateY(-4px); border-color: #FF0044; box-shadow: 0 0 30px rgba(255,0,68,0.6),  0 12px 40px rgba(0,0,0,0.7); }
 
-/* Arena row — full-width card */
-.arena-row { grid-column: 1 / -1; margin-top: 6px; }
-.map-card--arena {
-  display: flex; flex-direction: row; align-items: center; gap: 16px;
-  max-width: 100%; padding: 14px 18px;
+/* Arena + Zombie side-by-side row */
+.special-maps-row {
+  grid-column: 1 / -1; margin-top: 6px;
+  display: flex; gap: 10px;
 }
-.map-card--arena .map-preview { width: 110px; flex-shrink: 0; }
-.map-card--arena .map-info    { flex: 1; }
+.special-maps-row .map-card { flex: 1; min-width: 0; }
+.map-card--arena, .map-card--experimental {
+  display: flex; flex-direction: row; align-items: center; gap: 16px;
+  padding: 14px 18px;
+}
+.map-card--arena .map-preview,
+.map-card--experimental .map-preview { width: 110px; flex-shrink: 0; }
+.map-card--arena .map-info,
+.map-card--experimental .map-info    { flex: 1; }
 
 /* Checkmark on selected map */
 .map-card.selected::after {
@@ -397,3 +403,17 @@ html, body { width: 100%; height: 100%; background: var(--bg); color: var(--text
   border-radius: 2px; animation: loadFill 0.85s ease forwards;
 }
 @keyframes loadFill { from { width: 0%; } to { width: 100%; } }
+
+/* ════════════════════════════════════════════════════════════
+   EXPERIMENTAL MAP CARD
+   ════════════════════════════════════════════════════════════ */
+.map-card--experimental              { border: 1px solid rgba(68,255,136,0.2); }
+.map-card--experimental:hover        { border-color: rgba(68,255,136,0.45); box-shadow: 0 8px 30px rgba(0,0,0,0.5), 0 0 20px rgba(68,255,136,0.1); }
+.map-card--experimental.selected     { transform: translateY(-3px); border-color: #44FF88; box-shadow: 0 0 30px rgba(68,255,136,0.55), 0 12px 40px rgba(0,0,0,0.7); }
+.experimental-badge {
+  position: absolute; top: -11px; left: 18px;
+  background: #44FF88; color: #000;
+  font: bold 9px 'Orbitron', monospace; padding: 2px 10px;
+  border-radius: 3px; letter-spacing: 0.08em;
+  box-shadow: 0 0 14px rgba(68,255,136,0.7);
+}

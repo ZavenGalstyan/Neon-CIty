@@ -52,8 +52,8 @@
       const card = charCards[num - 1];
       if (card) card.click();
     }
-    // Q/W/E/R/T/Y/U → pick map (U = arena)
-    const mapKeys = ['KeyQ', 'KeyW', 'KeyE', 'KeyR', 'KeyT', 'KeyY', 'KeyU'];
+    // Q/W/E/R/T/Y/U → pick map (U = arena, I = zombie)
+    const mapKeys = ['KeyQ', 'KeyW', 'KeyE', 'KeyR', 'KeyT', 'KeyY', 'KeyU', 'KeyI'];
     const mapIdx  = mapKeys.indexOf(e.code);
     if (mapIdx >= 0 && mapIdx < mapCards.length) {
       mapCards[mapIdx].click();

@@ -764,6 +764,99 @@ class HUD {
     ctx.restore();
   }
 
+  // ── Global Event Banner ────────────────────────────────────────────────────
+  renderEventBanner(ctx, W, H, event, announceTimer) {
+    const colors = {
+      blackout:    '#3355AA',
+      riot:        '#FF4422',
+      corporate:   '#BBCCDD',
+      cyber_virus: '#00FFCC',
+    };
+    const col = colors[event.id] || '#FFFFFF';
+
+    if (announceTimer > 0) {
+      // Full-screen dramatic announcement
+      const fade = Math.min(1, Math.min(announceTimer, 3.5 - announceTimer) * 1.2);
+      ctx.save();
+      ctx.globalAlpha = fade * 0.88;
+      ctx.fillStyle = 'rgba(0,0,0,0.82)';
+      ctx.fillRect(0, 0, W, H);
+
+      // Colored border glow
+      ctx.globalAlpha = fade;
+      ctx.strokeStyle = col;
+      ctx.lineWidth   = 3;
+      ctx.shadowColor = col;
+      ctx.shadowBlur  = 28;
+      ctx.strokeRect(12, 12, W - 24, H - 24);
+      ctx.shadowBlur = 0;
+
+      // Event name
+      ctx.fillStyle  = col;
+      ctx.font       = 'bold 38px Orbitron, monospace';
+      ctx.textAlign  = 'center';
+      ctx.shadowColor = col; ctx.shadowBlur = 22;
+      ctx.fillText(event.name, W / 2, H / 2 - 20);
+
+      // Desc
+      ctx.shadowBlur = 0;
+      ctx.fillStyle  = 'rgba(255,255,255,0.75)';
+      ctx.font       = '15px Orbitron, monospace';
+      ctx.fillText(event.desc, W / 2, H / 2 + 22);
+
+      ctx.restore();
+    } else {
+      // Compact pulsing top-center bar
+      const bw = 260, bh = 28;
+      const bx = W / 2 - bw / 2, by = 14;
+      const pulse = 0.75 + Math.sin(Date.now() / 380) * 0.25;
+
+      ctx.save();
+      ctx.globalAlpha = pulse;
+      ctx.fillStyle = 'rgba(0,0,0,0.78)';
+      ctx.beginPath(); ctx.roundRect(bx, by, bw, bh, 5); ctx.fill();
+      ctx.strokeStyle = col; ctx.lineWidth = 1.2;
+      ctx.shadowColor = col; ctx.shadowBlur = 8;
+      ctx.beginPath(); ctx.roundRect(bx, by, bw, bh, 5); ctx.stroke();
+
+      // Timer drain bar
+      const frac = Math.max(0, event.timer / event.duration);
+      ctx.fillStyle = col; ctx.globalAlpha = pulse * 0.35;
+      ctx.fillRect(bx + 1, by + bh - 3, (bw - 2) * frac, 2);
+
+      ctx.shadowBlur = 0;
+      ctx.globalAlpha = pulse;
+      ctx.fillStyle = col;
+      ctx.font = 'bold 10px Orbitron, monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText(`⚡ ${event.name}  ${Math.ceil(event.timer)}s`, W / 2, by + bh / 2 + 4);
+      ctx.restore();
+    }
+  }
+
+  // ── Zombie Wave Display ────────────────────────────────────────────────────
+  renderZombieWave(wave, remaining, countdown, total) {
+    const ctx = this.ctx;
+    const x = HUD_PAD + HUD_MM_W + 16;
+    const y = this.canvas.height - HUD_PAD - 10;
+
+    ctx.save();
+    ctx.shadowColor = '#44FF88';
+    ctx.shadowBlur  = 10;
+    ctx.fillStyle   = '#44FF88';
+    ctx.font        = 'bold 13px Orbitron, monospace';
+    ctx.textAlign   = 'left';
+    ctx.fillText(`☣ WAVE ${wave}`, x, y - 14);
+    ctx.fillStyle   = 'rgba(68,255,136,0.8)';
+    ctx.font        = '11px Orbitron, monospace';
+    ctx.fillText(countdown > 0 ? 'WAVE CLEARED' : `INFECTED: ${remaining}`, x, y);
+    ctx.shadowBlur  = 0;
+    ctx.fillStyle   = 'rgba(68,255,136,0.4)';
+    ctx.font        = 'bold 8px Orbitron, monospace';
+    ctx.fillText('SURVIVAL', x + 200, y - 14);
+    ctx.restore();
+  }
+
   // ── Helpers ────────────────────────────────────────────────────────────────
   _rr(ctx, x, y, w, h, r) {
     r = Math.min(r, w/2, h/2);
