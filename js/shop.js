@@ -233,6 +233,15 @@ class ShopManager {
       ctx.fillStyle = w.color + (equipped ? 'dd' : owned ? '55' : canBuy ? '44' : '1a');
       ctx.fillRect(cx + 9, cy, cardW - 18, 3);
 
+      // Experimental badge
+      if (w.experimental) {
+        ctx.save();
+        ctx.font = 'bold 7px Orbitron, monospace'; ctx.textAlign = 'right';
+        ctx.fillStyle = '#FF88FF'; ctx.shadowColor = '#FF88FF'; ctx.shadowBlur = 8;
+        ctx.fillText('⚗ EXP', cx + cardW - 6, cy + 13);
+        ctx.restore();
+      }
+
       // Weapon name
       ctx.font = `bold ${cardW > 200 ? 12 : 10}px Orbitron, monospace`;
       ctx.fillStyle  = equipped ? '#fff' : owned ? '#ccc' : canBuy ? '#aaa' : '#444';
@@ -1101,4 +1110,237 @@ class DealershipManager {
       }
     });
   }
+}
+
+// ── CasinoManager ─────────────────────────────────────────────────────────────
+class CasinoManager {
+  constructor() {
+    this.isOpen         = false;
+    this._areas         = [];
+    this._feedback      = null;
+    this._spinning      = false;
+    this._spinTimer     = 0;
+    this._spinResult    = null;   // 'WIN' | 'LOSE' | null
+    this._pendingPayout = null;   // set when spin resolves; game.js picks this up
+    this._bet           = 500;
+    this._lastBet       = 500;
+    this._spinT         = 0;
+    this._sym1 = 0; this._sym2 = 1; this._sym3 = 2;
+  }
+
+  open()  { this.isOpen = true;  this._areas = []; }
+  close() { this.isOpen = false; this._areas = []; }
+
+  update(dt) {
+    if (this._feedback) { this._feedback.t -= dt; if (this._feedback.t <= 0) this._feedback = null; }
+    if (this._spinning) {
+      this._spinTimer -= dt;
+      this._spinT     += dt * 14;
+      if (this._spinTimer <= 0) {
+        this._spinning = false;
+        const win = Math.random() < 0.46;
+        this._spinResult    = win ? 'WIN' : 'LOSE';
+        this._pendingPayout = win ? this._lastBet * 2 : 0;
+        this._sym1 = win ? 6 : Math.floor(Math.random() * 6);
+        this._sym2 = win ? 6 : Math.floor(Math.random() * 5);
+        this._sym3 = win ? 6 : Math.floor(Math.random() * 4);
+      }
+    }
+  }
+
+  handleClick(sx, sy, player, gameRef) {
+    if (!this.isOpen) return false;
+    for (const a of this._areas) {
+      if (sx >= a.x && sx <= a.x + a.w && sy >= a.y && sy <= a.y + a.h) {
+        a.action(player, gameRef); return true;
+      }
+    }
+    return true;
+  }
+
+  _pushArea(x, y, w, h, fn) { this._areas.push({ x, y, w, h, action: fn }); }
+  _msg(text, color = '#FFD700') { this._feedback = { msg: text, color, t: 2.2 }; }
+
+  render(ctx, W, H, player, money, mx, my) {
+    if (!this.isOpen) return;
+    this._areas = [];
+
+    const PW = Math.min(660, W - 40);
+    const PH = Math.min(500, H - 50);
+    const px = (W - PW) / 2, py = (H - PH) / 2;
+    const cx = px + PW / 2;
+
+    ctx.fillStyle = 'rgba(0,0,0,0.88)'; ctx.fillRect(0, 0, W, H);
+
+    // Panel
+    ctx.save();
+    ctx.shadowColor = '#FF44AA'; ctx.shadowBlur = 45;
+    ctx.fillStyle = '#08050f'; ctx.strokeStyle = 'rgba(255,68,170,0.65)'; ctx.lineWidth = 1.8;
+    this._rr(ctx, px, py, PW, PH, 14); ctx.fill(); ctx.stroke();
+    ctx.restore();
+
+    // Top gradient stripe
+    ctx.save();
+    const grd = ctx.createLinearGradient(px, py, px, py + 70);
+    grd.addColorStop(0, 'rgba(255,68,170,0.12)'); grd.addColorStop(1, 'rgba(255,68,170,0)');
+    ctx.fillStyle = grd; this._rr(ctx, px, py, PW, 70, 14); ctx.fill();
+    ctx.restore();
+
+    // Title
+    ctx.save();
+    ctx.font = 'bold 24px Orbitron, monospace'; ctx.textAlign = 'center';
+    ctx.shadowColor = '#FF44AA'; ctx.shadowBlur = 20; ctx.fillStyle = '#fff';
+    ctx.fillText('🎰  CASINO', cx, py + 38);
+    ctx.restore();
+
+    ctx.strokeStyle = 'rgba(255,68,170,0.18)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(px + 24, py + 54); ctx.lineTo(px + PW - 24, py + 54); ctx.stroke();
+
+    // Balance
+    ctx.save();
+    ctx.font = 'bold 15px Orbitron, monospace'; ctx.textAlign = 'center';
+    ctx.fillStyle = '#FFD700'; ctx.shadowColor = '#FFD700'; ctx.shadowBlur = 10;
+    ctx.fillText(`BALANCE: $${money.toLocaleString()}`, cx, py + 72);
+    ctx.restore();
+
+    // ── Slot machine ─────────────────────────────────────────
+    const slotY = py + 88;
+    const slotW = 260, slotH = 82;
+    const slotX = cx - slotW / 2;
+    const symbols = ['7','♦','♣','★','♥','$','🍀'];
+
+    ctx.save();
+    ctx.fillStyle = '#0a0014'; ctx.strokeStyle = '#FF44AA'; ctx.lineWidth = 2;
+    this._rr(ctx, slotX, slotY, slotW, slotH, 10); ctx.fill(); ctx.stroke();
+
+    // Dividers
+    ctx.strokeStyle = 'rgba(255,68,170,0.3)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(slotX + slotW/3,     slotY + 4); ctx.lineTo(slotX + slotW/3,     slotY + slotH - 4); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(slotX + slotW*2/3, slotY + 4); ctx.lineTo(slotX + slotW*2/3, slotY + slotH - 4); ctx.stroke();
+
+    const smy = slotY + slotH / 2 + 16;
+    ctx.font = 'bold 36px monospace'; ctx.textAlign = 'center';
+    if (this._spinning) {
+      const t = this._spinT;
+      ctx.fillStyle = '#FF44AA'; ctx.shadowColor = '#FF44AA'; ctx.shadowBlur = 14;
+      ctx.fillText(symbols[Math.floor(t*3)    % symbols.length], slotX + slotW/6,   smy);
+      ctx.fillText(symbols[Math.floor(t*4+2)  % symbols.length], slotX + slotW/2,   smy);
+      ctx.fillText(symbols[Math.floor(t*5+4)  % symbols.length], slotX + slotW*5/6, smy);
+    } else if (this._spinResult === 'WIN') {
+      ctx.fillStyle = '#FFD700'; ctx.shadowColor = '#FFD700'; ctx.shadowBlur = 22;
+      ctx.fillText('7', slotX + slotW/6,   smy);
+      ctx.fillText('7', slotX + slotW/2,   smy);
+      ctx.fillText('7', slotX + slotW*5/6, smy);
+    } else if (this._spinResult === 'LOSE') {
+      ctx.fillStyle = '#666'; ctx.shadowBlur = 0;
+      ctx.fillText(symbols[this._sym1], slotX + slotW/6,   smy);
+      ctx.fillText(symbols[this._sym2], slotX + slotW/2,   smy);
+      ctx.fillText(symbols[this._sym3], slotX + slotW*5/6, smy);
+    } else {
+      ctx.fillStyle = 'rgba(255,68,170,0.35)'; ctx.shadowBlur = 0;
+      ctx.fillText('?', slotX + slotW/6,   smy);
+      ctx.fillText('?', slotX + slotW/2,   smy);
+      ctx.fillText('?', slotX + slotW*5/6, smy);
+    }
+    ctx.restore();
+
+    // ── Bet selector ─────────────────────────────────────────
+    const bets = [100, 500, 2000, 5000];
+    const betLabelY = slotY + slotH + 22;
+    ctx.save();
+    ctx.font = '10px Orbitron, monospace'; ctx.fillStyle = 'rgba(255,255,255,0.35)'; ctx.textAlign = 'center';
+    ctx.fillText('SELECT BET', cx, betLabelY);
+    ctx.restore();
+
+    bets.forEach((bet, i) => {
+      const bw = (PW - 64) / bets.length - 8;
+      const bx2 = px + 32 + i * (bw + 8), by2 = betLabelY + 8, bh2 = 34;
+      const sel = this._bet === bet, hov = mx >= bx2 && mx <= bx2 + bw && my >= by2 && my <= by2 + bh2;
+      ctx.save();
+      ctx.fillStyle   = sel ? 'rgba(255,68,170,0.28)' : hov ? 'rgba(255,68,170,0.1)' : 'rgba(18,8,28,0.8)';
+      ctx.strokeStyle = sel ? '#FF44AA' : hov ? 'rgba(255,68,170,0.5)' : 'rgba(255,255,255,0.08)';
+      ctx.lineWidth = sel ? 1.5 : 1;
+      this._rr(ctx, bx2, by2, bw, bh2, 6); ctx.fill(); ctx.stroke();
+      ctx.font = `bold ${sel ? 11 : 10}px Orbitron, monospace`;
+      ctx.fillStyle = sel ? '#FF44AA' : hov ? '#fff' : '#777';
+      ctx.textAlign = 'center';
+      ctx.fillText(`$${bet.toLocaleString()}`, bx2 + bw / 2, by2 + bh2 / 2 + 4);
+      ctx.restore();
+      this._pushArea(bx2, by2, bw, bh2, () => { this._bet = bet; });
+    });
+
+    // ── Spin button ───────────────────────────────────────────
+    const spinY = betLabelY + 8 + 34 + 14;
+    const spinW = 200, spinH = 50;
+    const spinX = cx - spinW / 2;
+    const canSpin = !this._spinning && money >= this._bet;
+    const spinHov = mx >= spinX && mx <= spinX + spinW && my >= spinY && my <= spinY + spinH;
+    ctx.save();
+    ctx.fillStyle   = canSpin ? (spinHov ? 'rgba(255,68,170,0.32)' : 'rgba(255,68,170,0.16)') : 'rgba(28,18,38,0.7)';
+    ctx.strokeStyle = canSpin ? (spinHov ? '#FF44AA' : 'rgba(255,68,170,0.5)')             : 'rgba(60,40,70,0.4)';
+    ctx.shadowColor = canSpin && spinHov ? '#FF44AA' : 'transparent';
+    ctx.shadowBlur  = canSpin && spinHov ? 22 : 0;
+    ctx.lineWidth = 2;
+    this._rr(ctx, spinX, spinY, spinW, spinH, 9); ctx.fill(); ctx.stroke();
+    ctx.font = 'bold 15px Orbitron, monospace'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = canSpin ? '#fff' : '#444'; ctx.shadowBlur = 0;
+    ctx.fillText(this._spinning ? 'SPINNING...' : '🎰  SPIN', cx, spinY + spinH / 2);
+    ctx.textBaseline = 'alphabetic';
+    ctx.restore();
+    if (canSpin) {
+      this._pushArea(spinX, spinY, spinW, spinH, (p, g) => {
+        if (g.money >= this._bet) {
+          g.money -= this._bet;
+          this._lastBet = this._bet;
+          this._spinning = true; this._spinTimer = 1.6 + Math.random() * 0.8;
+          this._spinT = 0; this._spinResult = null; this._pendingPayout = null;
+        } else { this._msg('NOT ENOUGH MONEY!', '#FF4466'); }
+      });
+    }
+
+    // Result display
+    if (!this._spinning && this._spinResult) {
+      const isWin = this._spinResult === 'WIN';
+      ctx.save();
+      ctx.font = 'bold 20px Orbitron, monospace'; ctx.textAlign = 'center';
+      ctx.fillStyle = isWin ? '#FFD700' : '#FF4466';
+      ctx.shadowColor = isWin ? '#FFD700' : '#FF4466'; ctx.shadowBlur = 16;
+      ctx.fillText(
+        isWin ? `JACKPOT! +$${(this._lastBet * 2).toLocaleString()}` : `NO LUCK — LOST $${this._lastBet.toLocaleString()}`,
+        cx, spinY + spinH + 32
+      );
+      ctx.restore();
+    }
+
+    // Feedback
+    if (this._feedback) {
+      const alpha = Math.min(1, this._feedback.t / 0.6);
+      ctx.save(); ctx.globalAlpha = alpha;
+      ctx.font = 'bold 14px Orbitron, monospace'; ctx.textAlign = 'center';
+      ctx.fillStyle = this._feedback.color; ctx.shadowColor = this._feedback.color; ctx.shadowBlur = 14;
+      ctx.fillText(this._feedback.msg, cx, py + PH - 16);
+      ctx.restore();
+    }
+
+    // Close button
+    const clx = px + PW - 22, cly = py + 22, clr = 15;
+    const clHov = Math.hypot(mx - clx, my - cly) < clr + 4;
+    ctx.save();
+    ctx.strokeStyle = clHov ? '#FF44AA' : 'rgba(255,68,170,0.5)';
+    ctx.shadowColor = clHov ? '#FF44AA' : 'transparent'; ctx.shadowBlur = clHov ? 14 : 0;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.arc(clx, cly, clr, 0, Math.PI * 2); ctx.stroke();
+    ctx.fillStyle = clHov ? '#FF44AA' : 'rgba(255,68,170,0.7)';
+    ctx.font = 'bold 18px Orbitron, monospace'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('×', clx, cly); ctx.textBaseline = 'alphabetic';
+    ctx.restore();
+    this._pushArea(clx - clr - 4, cly - clr - 4, (clr + 4) * 2, (clr + 4) * 2, () => this.close());
+
+    ctx.save();
+    ctx.font = '10px Orbitron, monospace'; ctx.fillStyle = 'rgba(255,255,255,0.2)'; ctx.textAlign = 'right';
+    ctx.fillText('[T] or [ESC] CLOSE', px + PW - 22, py + PH - 16);
+    ctx.restore();
+  }
+
+  _rr(ctx, x, y, w, h, r) { ctx.beginPath(); ctx.roundRect(x, y, w, h, r); }
 }

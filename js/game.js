@@ -125,6 +125,10 @@ class Game {
     this._salespersons    = [];
     this._nearSalesperson = false;
     this._dealership      = new DealershipManager();
+    // ── Casino ────────────────────────────────────────────────
+    this._casino          = new CasinoManager();
+    this._casinoHosts     = [];
+    this._nearCasinoHost  = false;
     // ── Grenades ──────────────────────────────────────────────
     this._grenades        = [];
     this._grenadeCount    = 0;
@@ -133,6 +137,9 @@ class Game {
     this._glitchPortalTimer  = 0;
     // ── Bodyguards ────────────────────────────────────────────
     this._bodyguards         = [];
+    // ── Life Mode ─────────────────────────────────────────────
+    this._lifeMode        = !!this.map.config.lifeMode;
+    this._cityNpcs        = [];
 
     // Camera
     this.camX = spawnX - this.canvas.width  / 2;
@@ -159,6 +166,7 @@ class Game {
     this._spawnVehicles();
     if (this._arenaMode)  this._startArenaWave();
     if (this._zombieMode) this._startZombieWave();
+    if (this._lifeMode)   this._spawnCityNpcs();
 
     requestAnimationFrame((t) => this._loop(t));
   }
@@ -207,6 +215,9 @@ class Game {
       if (this._indoor?.isDealership && this._nearSalesperson) {
         if      (this.state === 'playing')  { this._dealership.open();  this.state = 'carshop'; }
         else if (this.state === 'carshop')  { this._dealership.close(); this.state = 'playing'; }
+      } else if (this._indoor?.isCasino && this._nearCasinoHost) {
+        if      (this.state === 'playing')  { this._casino.open();  this.state = 'casino'; }
+        else if (this.state === 'casino')   { this._casino.close(); this.state = 'playing'; }
       }
       return;
     }
@@ -222,12 +233,14 @@ class Game {
       if      (this.state === 'playing') this.state = 'paused';
       else if (this.state === 'paused')  this.state = 'playing';
       else if (this.state === 'carshop') { this._dealership.close(); this.state = 'playing'; }
+      else if (this.state === 'casino')  { this._casino.close();     this.state = 'playing'; }
       return;
     }
     if (e.code === 'Escape') {
       if (this.state === 'blackmarket') { this._bmOpen = false; this.state = 'playing'; return; }
       if (this.state === 'shop')    { this.shop.close(); this.state = 'playing'; return; }
       if (this.state === 'carshop') { this._dealership.close(); this.state = 'playing'; return; }
+      if (this.state === 'casino')  { this._casino.close();     this.state = 'playing'; return; }
       if (this.state === 'paused')  { this.state = 'playing'; return; }  // ESC = resume
       if (this.state === 'playing') { this.state = 'paused'; return; }
       if (this.state === 'gameover'){ this._destroy(); window.location.href = 'index.html'; return; }
@@ -264,6 +277,19 @@ class Game {
     if (this.state === 'playing' || this.state === 'blackmarket') this._update(dt);
     if (this.state === 'shop' || this.state === 'paused') this.shop.update(dt);
     if (this.state === 'carshop') this._dealership.update(dt);
+    if (this.state === 'casino') {
+      this._casino.update(dt);
+      if (this._casino._pendingPayout !== null) {
+        this.money += this._casino._pendingPayout;
+        this._casino._msg(
+          this._casino._pendingPayout > 0
+            ? `JACKPOT! +$${this._casino._pendingPayout.toLocaleString()}`
+            : 'BETTER LUCK NEXT TIME!',
+          this._casino._pendingPayout > 0 ? '#FFD700' : '#FF4466'
+        );
+        this._casino._pendingPayout = null;
+      }
+    }
 
     this._render();
     this.input.flush();
@@ -276,7 +302,7 @@ class Game {
     if (this._achPopup) { this._achPopup.timer -= dt; if (this._achPopup.timer <= 0) this._achPopup = null; }
 
     // ── Day/Night cycle ──────────────────────────────────────
-    if (!this._arenaMode && !this._zombieMode) {
+    if (!this._arenaMode && !this._zombieMode && !this._lifeMode) {
       this._gameTime += dt;
       const cycle = 120, nightStart = 80;
       const t = this._gameTime % cycle;
@@ -403,7 +429,7 @@ class Game {
     }
 
     // ── Police drone spawning ────────────────────────────────
-    if (this._wantedLevel >= 3 && !this._arenaMode && !this._zombieMode && !this._indoor) {
+    if (this._wantedLevel >= 3 && !this._arenaMode && !this._zombieMode && !this._lifeMode && !this._indoor) {
       this._droneTimer -= dt * 1000;
       if (this._droneTimer <= 0 && this._drones.filter(d => d.type === 'police').length < this._wantedLevel - 1) {
         const pos = this.map.randomRoadPos();
@@ -412,7 +438,7 @@ class Game {
       }
     }
     // Combat drones in wave 6+
-    if (!this._arenaMode && !this._zombieMode && this.wave >= 6 && this._drones.filter(d => d.type === 'combat').length < Math.floor((this.wave - 5) / 2)) {
+    if (!this._arenaMode && !this._zombieMode && !this._lifeMode && this.wave >= 6 && this._drones.filter(d => d.type === 'combat').length < Math.floor((this.wave - 5) / 2)) {
       const pos = this.map.randomRoadPos();
       this._drones.push(new Drone(pos.x, pos.y, 'combat'));
     }
@@ -501,13 +527,18 @@ class Game {
     }
 
     // ── Police spawn ───────────────────────────────────────
-    if (this._wantedLevel > 0 && !this._zombieMode) {
+    if (this._wantedLevel > 0 && !this._zombieMode && !this._lifeMode) {
       const intervals = [0, 9000, 6000, 4000, 2400];
       this._policeTimer -= dt * 1000;
       if (this._policeTimer <= 0) {
         this._spawnPolice();
         this._policeTimer = intervals[this._wantedLevel];
       }
+    }
+
+    // ── City NPC updates (life mode) ───────────────────────
+    if (this._lifeMode) {
+      for (const npc of this._cityNpcs) npc.update(dt);
     }
 
     // ── Arena wave management ──────────────────────────────
@@ -562,7 +593,12 @@ class Game {
       }
     }
 
-    for (const bot of this.bots) bot.update(dt, this.player, this.map, this.bullets, this.particles);
+    for (const bot of this.bots) {
+      if (bot._frozen > 0) { bot._frozen -= dt; continue; }
+      let edt = dt;
+      if (bot._slowTimer > 0) { bot._slowTimer -= dt; edt = dt * (bot._slowMult || 0.3); }
+      bot.update(edt, this.player, this.map, this.bullets, this.particles);
+    }
 
     // ── Zombie melee contact damage ────────────────────────
     if (this._zombieMode && !this.player.dead && !this._playerVehicle) {
@@ -674,6 +710,7 @@ class Game {
         if (hit) {
           bot.takeDamage(b.damage, this.particles);
           this.hud.addDamageNumber(bot.x, bot.y - 30, b.damage, this.camX, this.camY, '#FF6666');
+          if (b.special && !bot.dying) this._applyBulletSpecial(b.special, bot, b);
           b.dead = true;
           if (bot.dying) {
             this.decals.push(new Decal(bot.x, bot.y, 'blood'));
@@ -797,8 +834,8 @@ class Game {
     this.bullets   = this.bullets.filter(b => !b.dead);
     this.particles = this.particles.filter(p => !p.dead);
 
-    // ── Bot spawning (non-arena, non-zombie only) ─────────
-    if (!this._arenaMode && !this._zombieMode) {
+    // ── Bot spawning (non-arena, non-zombie, non-life only) ──
+    if (!this._arenaMode && !this._zombieMode && !this._lifeMode) {
       this.spawnTimer -= dt * 1000;
       if (this.spawnTimer <= 0 && this.bots.length < CONFIG.MAX_BOTS + this.wave * 2) {
         this._spawnBot();
@@ -1080,8 +1117,43 @@ class Game {
     }
   }
 
+  // ── Special weapon effects ─────────────────────────────────
+  _applyBulletSpecial(special, bot, b) {
+    if (special === 'timefreeze') {
+      bot._frozen = 2.5;
+      this.particles.push(...Particle.burst(bot.x, bot.y, '#88DDFF', 10, 40, 100, 2, 5, 0.5, 1.8));
+    } else if (special === 'gravity') {
+      const ang = Math.atan2(this.player.y - bot.y, this.player.x - bot.x);
+      const nx  = bot.x + Math.cos(ang) * 80, ny = bot.y + Math.sin(ang) * 80;
+      if (!this.map.isBlockedCircle(nx, ny, bot.radius)) { bot.x = nx; bot.y = ny; }
+      this.particles.push(...Particle.burst(bot.x, bot.y, '#CC88FF', 8, 60, 140, 2, 5, 0.3, 0.9));
+    } else if (special === 'electric') {
+      for (const nb of this.bots) {
+        if (nb === bot || nb.dead || nb.dying) continue;
+        if (Math.hypot(nb.x - bot.x, nb.y - bot.y) < 105) {
+          const chainDmg = Math.round(b.damage * 0.6);
+          nb.takeDamage(chainDmg, this.particles);
+          this.hud.addDamageNumber(nb.x, nb.y - 30, chainDmg, this.camX, this.camY, '#88FFCC');
+          this.particles.push(...Particle.burst(nb.x, nb.y, '#88FFCC', 5, 40, 110, 1, 3, 0.2, 0.7));
+        }
+      }
+    } else if (special === 'plasma') {
+      bot._slowTimer = 3.0; bot._slowMult = 0.3;
+      this.particles.push(...Particle.burst(bot.x, bot.y, '#FF88FF', 6, 30, 80, 2, 4, 0.3, 0.9));
+    }
+  }
+
+  // ── Life Mode: city NPC spawning ───────────────────────────
+  _spawnCityNpcs() {
+    const count = 14 + Math.floor(Math.random() * 8);
+    for (let i = 0; i < count; i++) {
+      const pos = this.map.randomRoadPos();
+      this._cityNpcs.push(new CityNPC(pos.x, pos.y, this.map));
+    }
+  }
+
   _buildDistrictLayout() {
-    if (this._arenaMode || this._zombieMode) return null;
+    if (this._arenaMode || this._zombieMode || this._lifeMode) return null;
     const types = ['dangerous', 'rich', 'industrial'];
     for (let i = types.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
@@ -1155,6 +1227,10 @@ class Game {
         this._salespersons = [];
         if (this.state === 'carshop') { this._dealership.close(); this.state = 'playing'; }
       }
+      if (this._indoor.isCasino) {
+        this._casinoHosts = [];
+        if (this.state === 'casino') { this._casino.close(); this.state = 'playing'; }
+      }
       const door = this._indoor.doorDoor;
       this.player.x = door.wx;
       this.player.y = door.wy + 30;
@@ -1168,7 +1244,11 @@ class Game {
       const dist = Math.hypot(door.wx - this.player.x, door.wy - this.player.y);
       if (dist < 55) {
         const room = this.map.getRoom(door);
-        room.isDealership = (door.specialType === 'dealership');
+        room.isDealership   = (door.specialType === 'dealership');
+        room.isCasino       = (door.specialType === 'casino');
+        room.isRestaurant   = (door.specialType === 'restaurant');
+        room.isHome         = (door.specialType === 'home');
+        room._doorSpecial   = door.specialType;
         this._indoor = room;
         this._achStats.buildingsEntered++;
         this._checkAchievements();
@@ -1177,10 +1257,15 @@ class Game {
 
         if (room.isDealership) {
           this._salespersons = [
-            new Salesperson(room.entryX + 55,  room.entryY - 90,  '#FFAA55'),
-            new Salesperson(room.entryX - 55,  room.entryY - 130, '#55AAFF'),
+            new Salesperson(room.entryX + 55,  room.entryY - 90,  '#FFAA55', 'DEALER'),
+            new Salesperson(room.entryX - 55,  room.entryY - 130, '#55AAFF', 'DEALER'),
           ];
-        } else {
+        } else if (room.isCasino) {
+          this._casinoHosts = [
+            new Salesperson(room.entryX + 60,  room.entryY - 85,  '#FF44AA', 'HOST'),
+            new Salesperson(room.entryX - 60,  room.entryY - 115, '#FFCC00', 'HOST'),
+          ];
+        } else if (!this._lifeMode) {
           const key = `${door.tx},${door.ty}`;
           if (!this._visitedRooms.has(key)) {
             const count = 1 + Math.floor(Math.random() * 2) + Math.floor(this.wave / 3);
@@ -1197,6 +1282,7 @@ class Game {
 
   _updateIndoor(dt) {
     if (this._indoor?.isDealership) { this._updateDealershipIndoor(dt); return; }
+    if (this._indoor?.isCasino)     { this._updateCasinoIndoor(dt);     return; }
     const room = this._indoor;
     const offX = (this.canvas.width  - room.roomW) / 2;
     const offY = (this.canvas.height - room.roomH) / 2;
@@ -1299,8 +1385,30 @@ class Game {
     this.hud.update(dt);
   }
 
+  _updateCasinoIndoor(dt) {
+    const room = this._indoor;
+    const offX = (this.canvas.width  - room.roomW) / 2;
+    const offY = (this.canvas.height - room.roomH) / 2;
+    this.input.updateMouseWorld(-offX, -offY);
+    this.player.inVehicle = false;
+    if (this.state === 'playing') {
+      this.player.update(dt, this.input, room, this._indoorBullets, this.particles);
+      if (this.player.dead) this.state = 'gameover';
+      if (this.player.y >= room.roomH - 5) { this._tryEnterExit(); return; }
+    }
+    for (const h of this._casinoHosts) h.update(dt);
+    this._nearCasinoHost = this._casinoHosts.some(
+      h => Math.hypot(h.x - this.player.x, h.y - this.player.y) < 65
+    );
+    this.weather.update(dt, this.canvas.width, this.canvas.height);
+    if (this._streakTimer > 0) { this._streakTimer -= dt; if (this._streakTimer <= 0) this._killStreak = 0; }
+    if (this._streakPopup.timer > 0) this._streakPopup.timer -= dt;
+    this.hud.update(dt);
+  }
+
   _renderIndoorScene(ctx, W, H, shake) {
     if (this._indoor?.isDealership) { this._renderDealershipIndoor(ctx, W, H, shake); return; }
+    if (this._indoor?.isCasino)     { this._renderCasinoIndoor(ctx, W, H, shake);     return; }
     const room = this._indoor;
     const offX = (W - room.roomW) / 2;
     const offY = (H - room.roomH) / 2;
@@ -1389,13 +1497,66 @@ class Game {
     ctx.restore(); ctx.restore();
   }
 
+  _renderCasinoIndoor(ctx, W, H, shake) {
+    const room = this._indoor;
+    const offX = (W - room.roomW) / 2, offY = (H - room.roomH) / 2;
+    const S = room.S;
+    ctx.fillStyle = '#06030a'; ctx.fillRect(0, 0, W, H);
+    ctx.save(); ctx.translate(offX + shake.x, offY + shake.y);
+    // Rich casino floor: dark red velvet + gold trim
+    for (let ty = 0; ty < room.H; ty++) {
+      for (let tx = 0; tx < room.W; tx++) {
+        const px = tx * S, py = ty * S, t = room.layout[ty][tx];
+        if (t === 1) {
+          ctx.fillStyle = '#110008'; ctx.fillRect(px, py, S, S);
+        } else if (t === 2) {
+          // Casino table
+          ctx.fillStyle = '#0a1a08'; ctx.fillRect(px, py, S, S);
+          ctx.fillStyle = '#1a3a18'; ctx.fillRect(px + 6, py + 6, S - 12, S - 12);
+          ctx.strokeStyle = '#CC9900'; ctx.lineWidth = 1.5;
+          ctx.strokeRect(px + 6, py + 6, S - 12, S - 12);
+          ctx.fillStyle = '#FFDD00'; ctx.font = 'bold 9px monospace'; ctx.textAlign = 'center';
+          ctx.fillText('♠', px + S/2, py + S/2 + 3);
+        } else {
+          ctx.fillStyle = (tx + ty) % 2 === 0 ? '#150010' : '#120008';
+          ctx.fillRect(px, py, S, S);
+          // Gold border lines
+          ctx.fillStyle = 'rgba(204,153,0,0.12)';
+          ctx.fillRect(px, py, S, 1); ctx.fillRect(px, py, 1, S);
+        }
+      }
+    }
+    // Neon accent
+    ctx.fillStyle = 'rgba(255,68,170,0.22)'; ctx.fillRect(0, S, room.roomW, 3);
+    ctx.fillStyle = 'rgba(255,68,170,0.07)'; ctx.fillRect(0, S, room.roomW, S * 0.3);
+    // Casino hosts + player
+    for (const h of this._casinoHosts) h.render(ctx);
+    if (!this.player.dead) this.player.render(ctx);
+    // [T] hint near host
+    if (this._nearCasinoHost) {
+      const nearH = this._casinoHosts.find(h => Math.hypot(h.x - this.player.x, h.y - this.player.y) < 65);
+      if (nearH) {
+        ctx.save();
+        ctx.font = 'bold 11px Orbitron, monospace'; ctx.textAlign = 'center';
+        ctx.fillStyle = '#FFEEAA'; ctx.shadowColor = '#FF44AA'; ctx.shadowBlur = 12;
+        ctx.fillText('[T] OPEN CASINO', nearH.x, nearH.y - 62);
+        ctx.restore();
+      }
+    }
+    // [E] EXIT hint
+    ctx.save(); ctx.font = 'bold 11px Orbitron, monospace'; ctx.textAlign = 'center';
+    ctx.fillStyle = '#FFEEAA'; ctx.shadowColor = '#FF44AA'; ctx.shadowBlur = 10;
+    ctx.fillText('[E] EXIT', room.entryX, room.roomH - 8);
+    ctx.restore(); ctx.restore();
+  }
+
   // ── Render ─────────────────────────────────────────────────
   _render() {
     const ctx = this.ctx;
     const W   = this.canvas.width, H = this.canvas.height;
     const shake = this.hud.getShakeOffset();
 
-    this.canvas.style.cursor = (this.state === 'shop' || this.state === 'blackmarket' || this.state === 'carshop') ? 'default' : 'none';
+    this.canvas.style.cursor = (this.state === 'shop' || this.state === 'blackmarket' || this.state === 'carshop' || this.state === 'casino') ? 'default' : 'none';
 
     ctx.clearRect(0, 0, W, H);
     ctx.fillStyle = '#08080f';
@@ -1424,6 +1585,7 @@ class Game {
       for (const p   of this.particles) p.render(ctx);
       for (const b   of this.bullets)   if (!b.isPlayer) b.render(ctx);
       for (const bot of this.bots)      bot.render(ctx);
+      for (const npc of this._cityNpcs) npc.render(ctx);
       if (this.boss && !this.boss.dead)  this.boss.render(ctx);
       for (const b   of this.bullets)   if (b.isPlayer)  b.render(ctx);
       if (!this.player.dead) this.player.render(ctx);
@@ -1484,9 +1646,15 @@ class Game {
           if (Math.hypot(door.wx - this.player.x, door.wy - this.player.y) < 55) {
             ctx.save();
             ctx.font = 'bold 11px Orbitron, monospace'; ctx.textAlign = 'center';
-            const hintText  = door.specialType === 'dealership' ? '[E] CAR SHOP' : '[E] ENTER';
-            ctx.fillStyle   = door.specialType === 'dealership' ? '#FFDD44'      : '#FFFFAA';
-            ctx.shadowColor = door.specialType === 'dealership' ? '#FFBB00'      : '#FFFF00';
+            const hintText  = door.specialType === 'dealership' ? '[E] CAR SHOP'
+                            : door.specialType === 'casino'      ? '[E] CASINO'
+                            : '[E] ENTER';
+            ctx.fillStyle   = door.specialType === 'dealership' ? '#FFDD44'
+                            : door.specialType === 'casino'      ? '#FF44AA'
+                            : '#FFFFAA';
+            ctx.shadowColor = door.specialType === 'dealership' ? '#FFBB00'
+                            : door.specialType === 'casino'      ? '#FF0088'
+                            : '#FFFF00';
             ctx.shadowBlur  = 10;
             ctx.fillText(hintText, door.wx, door.wy - 16);
             ctx.restore();
@@ -1578,7 +1746,7 @@ class Game {
         const remaining = this.bots.filter(b => !b.dead && !b.dying).length;
         this.hud.renderZombieWave(this.wave, remaining, this._zombieCountdown, this._zombieWaveSize);
         if (this._zombieCountdown > 0) this.hud.renderArenaCountdown(this._zombieCountdown);
-      } else {
+      } else if (!this._lifeMode) {
         this.hud.renderWave(this.wave, this.bots.length, !!(this.boss && !this.boss.dead));
       }
       if (this._wantedLevel > 0 && !this._zombieMode) {
@@ -1586,9 +1754,9 @@ class Game {
       }
       this.hud.renderWeaponInfo(this.player);
       if (this._grenadeCount > 0) this.hud.renderGrenadeCount(this._grenadeCount);
-      if (!this._arenaMode && !this._zombieMode) this.hud.renderShopButton(this.state === 'shop');
+      if (!this._arenaMode && !this._zombieMode && !this._lifeMode) this.hud.renderShopButton(this.state === 'shop');
       this.hud.renderAchButton(this._achPanelOpen);
-      if (!this._zombieMode) this.hud.renderDayNight(this._nightAlpha, this._gameTime);
+      if (!this._zombieMode && !this._lifeMode) this.hud.renderDayNight(this._nightAlpha, this._gameTime);
       if (this._globalEvent) this.hud.renderEventBanner(ctx, W, H, this._globalEvent, this._eventAnnounceTimer);
       if (this._playerDrone) this.hud.renderDroneStatus(this._playerDrone, this._droneControl);
       this.hud.renderDamageNumbers();
@@ -1653,6 +1821,16 @@ class Game {
       if (this.input.mouseJustDown) {
         this._dealership.handleClick(this.input.mouseScreen.x, this.input.mouseScreen.y, this.player, this);
         if (!this._dealership.isOpen) this.state = 'playing';
+      }
+    }
+
+    // Casino overlay
+    if (this.state === 'casino') {
+      this._casino.render(ctx, W, H, this.player, this.money,
+                          this.input.mouseScreen.x, this.input.mouseScreen.y);
+      if (this.input.mouseJustDown) {
+        this._casino.handleClick(this.input.mouseScreen.x, this.input.mouseScreen.y, this.player, this);
+        if (!this._casino.isOpen) this.state = 'playing';
       }
     }
 

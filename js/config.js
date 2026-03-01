@@ -246,6 +246,26 @@ const CONFIG = {
       },
     },
     {
+      id: 'lifemode', name: 'LIFE MODE',
+      desc: 'Peaceful city. Buy a home, eat out, explore and drive freely.',
+      theme: '#88DDFF', tags: ['PEACEFUL', 'SANDBOX'],
+      previewGridSize: 14, previewBg: '#04090d', previewRoad: 'rgba(136,221,255,0.38)',
+      mapW: 60, mapH: 60, tileSize: 80, roadEvery: 8,
+      roadColor:      '#0c1218',
+      sidewalkColor:  '#121820',
+      buildingPalette: ['#0f1e28','#111e30','#0e1a24','#131f2e','#101c28','#0f1c24','#121e2c','#0e1c28'],
+      neonColors:     ['#88DDFF','#AAEEFF','#66CCFF','#44BBDD'],
+      windowColors:   ['#88DDFF','#AAEEFF','#66BBFF','#CCEEFF'],
+      lightColor:     '#88DDFF', lightGlow: '#44AACC', neonFreq: 10,
+      weather: 'clear',
+      lifeMode: true,
+      botPalettes: {
+        mini:   [{ body:'#4488CC', accent:'#66AAEE' }],
+        normal: [{ body:'#3366AA', accent:'#5588CC' }],
+        big:    [{ body:'#224477', accent:'#336699' }],
+      },
+    },
+    {
       id: 'zombie', name: 'ZOMBIE OUTBREAK',
       desc: 'Neon City has fallen. The infected never stop coming.',
       theme: '#44FF88', tags: ['EXPERIMENTAL', 'ENDLESS', 'SURVIVAL'],
@@ -317,7 +337,49 @@ const CONFIG = {
       price: 6000,        damage: 11,   fireRate: 38,
       bullets: 1,         spread: 0.22, bulletSpeed: 620,
       color: '#FFD700'
+    },
+    // ── Experimental Weapons ─────────────────────────────
+    {
+      id: 'timecannon',   name: 'TIME CANNON',
+      desc: 'Freezes enemies in time for 2.5s',
+      price: 8000,  damage: 40,  fireRate: 1800,
+      bullets: 1,   spread: 0.02, bulletSpeed: 260,
+      color: '#88DDFF', special: 'timefreeze', experimental: true
+    },
+    {
+      id: 'gravitgun',    name: 'GRAVITY RIFLE',
+      desc: 'Pulls enemies toward you on impact',
+      price: 6500,  damage: 25,  fireRate: 900,
+      bullets: 1,   spread: 0,   bulletSpeed: 380,
+      color: '#CC88FF', special: 'gravity', experimental: true
+    },
+    {
+      id: 'electricwhip', name: 'ELEC. WHIP',
+      desc: 'Melee arc — chains lightning to nearby foes',
+      price: 5500,  damage: 55,  fireRate: 600,
+      bullets: 0,   spread: 0,   bulletSpeed: 0,
+      melee: true,  range: 140,
+      color: '#88FFCC', special: 'electric', experimental: true
+    },
+    {
+      id: 'plasmashotgun', name: 'PLASMA SHOTGUN',
+      desc: 'Searing plasma — slows targets by 70%',
+      price: 7000,  damage: 30,  fireRate: 1100,
+      bullets: 6,   spread: 0.45, bulletSpeed: 320,
+      color: '#FF88FF', special: 'plasma', experimental: true
     }
+  ],
+
+  // ── Building Types (deterministic per door tile) ─────────
+  BUILDING_TYPES: [
+    { name:'RESTAURANT', color:'#FF8844' },
+    { name:'OFFICE',     color:'#4488FF' },
+    { name:'HOTEL',      color:'#CC66FF' },
+    { name:'MARKET',     color:'#44FF88' },
+    { name:'ARCADE',     color:'#FFDD00' },
+    { name:'PHARMACY',   color:'#44FFCC' },
+    { name:'GYM',        color:'#FF6644' },
+    { name:'BANK',       color:'#FFCC44' },
   ],
 
   // ── Upgrades ─────────────────────────────────────────────

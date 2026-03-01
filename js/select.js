@@ -72,6 +72,16 @@
     window.location.href = 'game.html';
   });
 
+  // ── Maps & Modes modal ───────────────────────────────────
+  const modesBtn   = document.getElementById('modesBtn');
+  const modesModal = document.getElementById('modesModal');
+  const modesClose = document.getElementById('modesModalClose');
+  if (modesBtn && modesModal) {
+    modesBtn.addEventListener('click', () => { modesModal.style.display = 'flex'; });
+    modesClose.addEventListener('click', () => { modesModal.style.display = 'none'; });
+    modesModal.addEventListener('click', e => { if (e.target === modesModal) modesModal.style.display = 'none'; });
+  }
+
   // ── Keyboard shortcuts ────────────────────────────────────
   document.addEventListener('keydown', e => {
     const num = parseInt(e.key);
@@ -81,13 +91,17 @@
       const card = charCards[num - 1];
       if (card) card.click();
     }
-    // Q/W/E/R/T/Y/U → pick map (U = arena, I = zombie)
-    const mapKeys = ['KeyQ', 'KeyW', 'KeyE', 'KeyR', 'KeyT', 'KeyY', 'KeyU', 'KeyI'];
+    // Q/W/E/R/T/Y/U/I/O → pick map (U=lifemode, I=arena, O=zombie)
+    const mapKeys = ['KeyQ', 'KeyW', 'KeyE', 'KeyR', 'KeyT', 'KeyY', 'KeyU', 'KeyI', 'KeyO'];
     const mapIdx  = mapKeys.indexOf(e.code);
     if (mapIdx >= 0 && mapIdx < mapCards.length) {
       mapCards[mapIdx].click();
     }
 
+    // Escape = close modal
+    if (e.code === 'Escape' && modesModal && modesModal.style.display !== 'none') {
+      modesModal.style.display = 'none'; return;
+    }
     // Enter = start
     if (e.code === 'Enter' && !startBtn.disabled) startBtn.click();
   });

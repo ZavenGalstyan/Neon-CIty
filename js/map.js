@@ -148,6 +148,24 @@ class GameMap {
         count++;
       }
     }
+
+    // Mark 1 casino door on Casino Strip map
+    if (this.config.id === 'casino' && this.doors.length >= 3) {
+      const idx = Math.floor(this.doors.length / 3);
+      if (!this.doors[idx].specialType) this.doors[idx].specialType = 'casino';
+    }
+
+    // Mark restaurant and home doors in life mode
+    if (this.config.lifeMode && this.doors.length >= 4) {
+      const step2 = Math.max(1, Math.floor(this.doors.length / 5));
+      let homeCount = 0, restCount = 0;
+      for (let i = 0; i < this.doors.length; i += step2) {
+        if (!this.doors[i].specialType) {
+          if (homeCount < 2)      { this.doors[i].specialType = 'home';       homeCount++; }
+          else if (restCount < 3) { this.doors[i].specialType = 'restaurant'; restCount++; }
+        }
+      }
+    }
   }
 
   _blockColor(seed) {
@@ -267,9 +285,20 @@ class GameMap {
             ctx.beginPath(); ctx.arc(dx2 + dw - 5, dy2 + dh / 2, 2.2, 0, Math.PI * 2); ctx.fill();
             ctx.shadowBlur = 0;
             // Building sign above door
-            const isDealer   = doorEntry.specialType === 'dealership';
-            const signText   = isDealer ? 'AUTO' : 'SHOP';
-            const signColor  = isDealer ? '#FFCC00' : '#44EEFF';
+            let signText, signColor;
+            if (doorEntry.specialType === 'dealership') {
+              signText = 'DEALER'; signColor = '#FFCC00';
+            } else if (doorEntry.specialType === 'casino') {
+              signText = 'CASINO'; signColor = '#FF44AA';
+            } else if (doorEntry.specialType === 'restaurant') {
+              signText = 'CAFE'; signColor = '#FF8844';
+            } else if (doorEntry.specialType === 'home') {
+              signText = 'HOME'; signColor = '#88FFCC';
+            } else {
+              const bTypeIdx = Math.floor(Math.abs(Math.sin(x * 17.3 + y * 11.7)) * CONFIG.BUILDING_TYPES.length);
+              const bType    = CONFIG.BUILDING_TYPES[bTypeIdx];
+              signText = bType.name; signColor = bType.color;
+            }
             const signW      = dw + 14;
             const signH      = 14;
             const signX      = wx + S / 2 - signW / 2;

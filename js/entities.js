@@ -638,9 +638,11 @@ class Player {
     const damage = this._activeDamage();
     const color  = this._weaponColor();
 
-    // ── Melee (knife) ──────────────────────────────────────
+    // ── Melee (knife / electric whip) ──────────────────────
     if (w.melee) {
-      bullets.push(new MeleeAttack(this.x, this.y, this.angle, w.range, damage));
+      const ma = new MeleeAttack(this.x, this.y, this.angle, w.range, damage);
+      ma.special = w.special || null;
+      bullets.push(ma);
       this._muzzleFlash = 0.20;
       const bx = this.x + Math.cos(this.angle) * (this.radius + 10);
       const by = this.y + Math.sin(this.angle) * (this.radius + 10);
@@ -658,7 +660,9 @@ class Player {
 
     for (let i = 0; i < count; i++) {
       const angle = this.angle + (Math.random() - 0.5) * spread;
-      bullets.push(new Bullet(bx, by, angle, speed, damage, true, color));
+      const blt = new Bullet(bx, by, angle, speed, damage, true, color);
+      blt.special = w.special || null;
+      bullets.push(blt);
     }
     this._muzzleFlash = 0.08;
     particles.push(...Particle.burst(bx, by, color, 3 + Math.floor(count / 2), 80, 220, 1, 3, 0.05, 0.16));
@@ -2353,8 +2357,8 @@ class Grenade {
 
 // ─── Salesperson ─────────────────────────────────────────────────────────────
 class Salesperson {
-  constructor(x, y, color = '#FFAA55') {
-    this.x = x; this.y = y; this.color = color; this.radius = 16;
+  constructor(x, y, color = '#FFAA55', label = 'DEALER') {
+    this.x = x; this.y = y; this.color = color; this.label = label; this.radius = 16;
     this._waveT = 0;
   }
   update(dt) { this._waveT += dt * 1.4; }
@@ -2367,7 +2371,54 @@ class Salesperson {
     ctx.beginPath(); ctx.arc(0, -34, 11, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = '#FFFFFF'; ctx.shadowColor = this.color; ctx.shadowBlur = 6;
     ctx.font = 'bold 7px Orbitron, monospace'; ctx.textAlign = 'center';
-    ctx.fillText('DEALER', 0, -50);
+    ctx.fillText(this.label, 0, -50);
     ctx.shadowBlur = 0; ctx.restore();
+  }
+}
+
+// ─── CityNPC ──────────────────────────────────────────────────────────────────
+class CityNPC {
+  constructor(x, y, map) {
+    this.x = x; this.y = y; this._map = map;
+    this.radius = 14;
+    this.dead   = false;
+    this._color = ['#AADDFF','#FFDDAA','#AAFFCC','#FFAACC','#DDCCFF'][Math.floor(Math.random()*5)];
+    this._dir   = Math.random() * Math.PI * 2;
+    this._speed = 30 + Math.random() * 25;
+    this._turnTimer = 1 + Math.random() * 3;
+    this._bobT  = Math.random() * Math.PI * 2;
+  }
+  update(dt) {
+    this._bobT      += dt * 2.5;
+    this._turnTimer -= dt;
+    if (this._turnTimer <= 0) {
+      this._dir = Math.random() * Math.PI * 2;
+      this._turnTimer = 1.5 + Math.random() * 3;
+    }
+    const nx = this.x + Math.cos(this._dir) * this._speed * dt;
+    const ny = this.y + Math.sin(this._dir) * this._speed * dt;
+    if (!this._map.isBlockedCircle(nx, ny, this.radius)) {
+      this.x = nx; this.y = ny;
+    } else {
+      this._dir += Math.PI * (0.5 + Math.random());
+    }
+  }
+  render(ctx) {
+    const bob = Math.sin(this._bobT) * 2;
+    ctx.save(); ctx.translate(this.x, this.y + bob);
+    // Shadow
+    ctx.fillStyle = 'rgba(0,0,0,0.25)';
+    ctx.beginPath(); ctx.ellipse(0, 14, 8, 4, 0, 0, Math.PI * 2); ctx.fill();
+    // Body
+    ctx.fillStyle = this._color;
+    ctx.beginPath(); ctx.roundRect(-8, -22, 16, 20, 3); ctx.fill();
+    // Head
+    ctx.fillStyle = '#FFDDBB';
+    ctx.beginPath(); ctx.arc(0, -28, 9, 0, Math.PI * 2); ctx.fill();
+    // Eyes
+    ctx.fillStyle = '#222';
+    ctx.beginPath(); ctx.arc(-3, -29, 1.5, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(3,  -29, 1.5, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
   }
 }
