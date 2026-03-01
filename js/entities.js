@@ -287,6 +287,24 @@ class Bullet {
   }
 }
 
+// ─── MeleeAttack ───────────────────────────────────────────────────────────────
+class MeleeAttack {
+  constructor(x, y, angle, range, damage) {
+    this.x = x; this.y = y;
+    this.angle    = angle;
+    this.range    = range;
+    this.damage   = damage;
+    this.radius   = range;   // used for broad-phase check
+    this._arc     = 1.15;    // ~66 degrees total arc half-angle
+    this.isPlayer = true;
+    this.isMelee  = true;
+    this.dead     = false;
+    this.trail    = [];      // expected by bullet loop
+  }
+  update(dt, map) { this.dead = true; }  // instant hit
+  render(ctx) {}  // swing arc rendered by Player.render
+}
+
 // ─── Pickup ────────────────────────────────────────────────────────────────────
 class Pickup {
   constructor(x, y, type) {
@@ -606,11 +624,23 @@ class Player {
 
   _shoot(bullets, particles) {
     const w      = this._weapon;
+    const damage = this._activeDamage();
+    const color  = this._weaponColor();
+
+    // ── Melee (knife) ──────────────────────────────────────
+    if (w.melee) {
+      bullets.push(new MeleeAttack(this.x, this.y, this.angle, w.range, damage));
+      this._muzzleFlash = 0.20;
+      const bx = this.x + Math.cos(this.angle) * (this.radius + 10);
+      const by = this.y + Math.sin(this.angle) * (this.radius + 10);
+      particles.push(...Particle.burst(bx, by, color, 5, 30, 100, 1, 3, 0.06, 0.18));
+      return;
+    }
+
+    // ── Ranged (all other weapons) ─────────────────────────
     const count  = w.bullets;
     const spread = this._activeSpread();
     const speed  = this._activeBulletSpeed();
-    const damage = this._activeDamage();
-    const color  = this._weaponColor();
     const gunTip = this.radius + 6;
     const bx = this.x + Math.cos(this.angle) * gunTip;
     const by = this.y + Math.sin(this.angle) * gunTip;
@@ -665,27 +695,63 @@ class Player {
     const gy = y + Math.sin(this.angle) * gunLen;
     ctx.save();
     ctx.shadowColor = wColor; ctx.shadowBlur = 12;
-    ctx.strokeStyle = wColor; ctx.lineWidth = 5; ctx.lineCap = 'round';
-    ctx.beginPath();
-    ctx.moveTo(x + Math.cos(this.angle) * (r - 2), y + Math.sin(this.angle) * (r - 2));
-    ctx.lineTo(gx, gy);
-    ctx.stroke();
-    ctx.strokeStyle = '#ddd'; ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.moveTo(gx - Math.cos(this.angle) * 2, gy - Math.sin(this.angle) * 2);
-    ctx.lineTo(gx + Math.cos(this.angle) * 8, gy + Math.sin(this.angle) * 8);
-    ctx.stroke();
+    if (this._weapon && this._weapon.melee) {
+      // Knife blade
+      ctx.strokeStyle = '#AADDFF'; ctx.lineWidth = 3; ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(x + Math.cos(this.angle) * (r - 2), y + Math.sin(this.angle) * (r - 2));
+      ctx.lineTo(gx + Math.cos(this.angle) * 10, gy + Math.sin(this.angle) * 10);
+      ctx.stroke();
+      // Blade edge
+      ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(gx, gy);
+      ctx.lineTo(gx + Math.cos(this.angle) * 10, gy + Math.sin(this.angle) * 10);
+      ctx.stroke();
+    } else {
+      ctx.strokeStyle = wColor; ctx.lineWidth = 5; ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(x + Math.cos(this.angle) * (r - 2), y + Math.sin(this.angle) * (r - 2));
+      ctx.lineTo(gx, gy);
+      ctx.stroke();
+      ctx.strokeStyle = '#ddd'; ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(gx - Math.cos(this.angle) * 2, gy - Math.sin(this.angle) * 2);
+      ctx.lineTo(gx + Math.cos(this.angle) * 8, gy + Math.sin(this.angle) * 8);
+      ctx.stroke();
+    }
     ctx.restore();
 
     if (this._muzzleFlash > 0) {
-      const fx = x + Math.cos(this.angle) * (gunLen + 12);
-      const fy = y + Math.sin(this.angle) * (gunLen + 12);
-      ctx.save();
-      ctx.shadowColor = wColor; ctx.shadowBlur = 30;
-      ctx.fillStyle   = '#ffffaa';
-      ctx.globalAlpha = this._muzzleFlash / 0.08;
-      ctx.beginPath(); ctx.arc(fx, fy, 7, 0, Math.PI * 2); ctx.fill();
-      ctx.restore();
+      if (this._weapon && this._weapon.melee) {
+        // Knife swing arc
+        const swingRange = this._weapon.range;
+        const arcSpan    = 1.15;
+        ctx.save();
+        ctx.globalAlpha  = Math.min(1, this._muzzleFlash / 0.12) * 0.72;
+        ctx.strokeStyle  = '#AADDFF';
+        ctx.lineWidth    = 2.5;
+        ctx.shadowColor  = '#88CCFF'; ctx.shadowBlur = 14;
+        ctx.lineCap      = 'round';
+        ctx.beginPath();
+        ctx.arc(x, y, swingRange, this.angle - arcSpan / 2, this.angle + arcSpan / 2);
+        ctx.stroke();
+        // Tip glow
+        const tipX = x + Math.cos(this.angle) * swingRange;
+        const tipY = y + Math.sin(this.angle) * swingRange;
+        ctx.fillStyle = '#DDEEFF'; ctx.shadowBlur = 20;
+        ctx.beginPath(); ctx.arc(tipX, tipY, 5, 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
+      } else {
+        const fx = x + Math.cos(this.angle) * (gunLen + 12);
+        const fy = y + Math.sin(this.angle) * (gunLen + 12);
+        ctx.save();
+        ctx.shadowColor = wColor; ctx.shadowBlur = 30;
+        ctx.fillStyle   = '#ffffaa';
+        ctx.globalAlpha = this._muzzleFlash / 0.08;
+        ctx.beginPath(); ctx.arc(fx, fy, 7, 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
+      }
     }
 
     if (this.invincible > 0) {
