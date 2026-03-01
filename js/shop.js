@@ -696,24 +696,125 @@ class DealershipManager {
       ctx.shadowColor = 'transparent';
       ctx.fillText(car.name, cx + cardW / 2, cy + 26);
 
-      // Car silhouette (simple rectangle icon)
+      // Car silhouette — unique shape per type
       ctx.save();
       ctx.translate(cx + cardW / 2, cy + cardH * 0.46);
-      ctx.fillStyle   = car.color + (canBuy ? 'cc' : '33');
-      ctx.strokeStyle = car.color + (canBuy ? 'ff' : '44');
-      ctx.lineWidth   = 1.5;
-      ctx.beginPath();
-      ctx.roundRect(-32, -10, 64, 18, 4);
-      ctx.fill(); ctx.stroke();
-      ctx.beginPath();
-      ctx.roundRect(-22, -22, 44, 14, 3);
-      ctx.fill(); ctx.stroke();
-      // Wheels
-      ctx.fillStyle = '#222';
-      [-22, 22].forEach(wx2 => {
-        ctx.beginPath(); ctx.arc(wx2, 8, 6, 0, Math.PI * 2); ctx.fill();
-        ctx.strokeStyle = '#555'; ctx.lineWidth = 1; ctx.stroke();
-      });
+      const alpha = canBuy ? 'cc' : '33';
+      const alpha2 = canBuy ? 'ff' : '44';
+      ctx.fillStyle   = car.color + alpha;
+      ctx.strokeStyle = car.color + alpha2;
+
+      if (car.id === 'sedan') {
+        // Sedan — medium, classic roofline
+        ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.roundRect(-30, -10, 60, 17, 4); ctx.fill(); ctx.stroke();
+        ctx.beginPath(); ctx.roundRect(-18, -24, 36, 16, 4); ctx.fill(); ctx.stroke();
+        // Window tint
+        ctx.fillStyle = 'rgba(120,200,255,0.18)';
+        ctx.beginPath(); ctx.roundRect(-15, -22, 30, 12, 3); ctx.fill();
+        ctx.fillStyle = car.color + alpha; ctx.strokeStyle = car.color + alpha2;
+        // Wheels
+        const wr = 6;
+        ctx.fillStyle = '#1a1a1a';
+        [-21, 21].forEach(wx2 => {
+          ctx.lineWidth = 2; ctx.strokeStyle = '#444';
+          ctx.beginPath(); ctx.arc(wx2, 7, wr, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+          ctx.fillStyle = '#333'; ctx.strokeStyle = '#666'; ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.arc(wx2, 7, wr * 0.45, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+          ctx.fillStyle = '#1a1a1a';
+        });
+
+      } else if (car.id === 'sports') {
+        // Sports car — ultra low, long hood, narrow cabin offset to rear
+        ctx.lineWidth = 1.5;
+        // Long sleek body
+        ctx.beginPath(); ctx.roundRect(-36, -7, 72, 13, 3); ctx.fill(); ctx.stroke();
+        // Low cabin shifted slightly back
+        ctx.beginPath(); ctx.roundRect(-6, -19, 26, 14, 4); ctx.fill(); ctx.stroke();
+        // Aggressive front splitter
+        ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(-36, 0); ctx.lineTo(-40, 2); ctx.lineTo(-36, 4); ctx.stroke();
+        // Rear spoiler
+        ctx.beginPath(); ctx.moveTo(28, -10); ctx.lineTo(36, -12); ctx.lineTo(36, -9); ctx.stroke();
+        // Window tint — low & slim
+        ctx.fillStyle = 'rgba(120,200,255,0.18)';
+        ctx.beginPath(); ctx.roundRect(-3, -17, 22, 10, 3); ctx.fill();
+        ctx.fillStyle = car.color + alpha; ctx.strokeStyle = car.color + alpha2;
+        // Wheels — bigger, wider set
+        const wr2 = 6;
+        ctx.fillStyle = '#1a1a1a';
+        [-26, 25].forEach(wx2 => {
+          ctx.lineWidth = 2.5; ctx.strokeStyle = '#444';
+          ctx.beginPath(); ctx.arc(wx2, 6, wr2, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+          ctx.fillStyle = '#333'; ctx.strokeStyle = '#666'; ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.arc(wx2, 6, wr2 * 0.42, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+          ctx.fillStyle = '#1a1a1a';
+        });
+
+      } else if (car.id === 'suv') {
+        // SUV/Truck — tall, wide, boxy
+        ctx.lineWidth = 1.5;
+        // Tall boxy body
+        ctx.beginPath(); ctx.roundRect(-30, -13, 60, 22, 3); ctx.fill(); ctx.stroke();
+        // Tall wide cabin, nearly full width
+        ctx.beginPath(); ctx.roundRect(-26, -31, 52, 20, 3); ctx.fill(); ctx.stroke();
+        // Roof rack accent
+        ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(-22, -31); ctx.lineTo(-22, -34); ctx.moveTo(22, -31); ctx.lineTo(22, -34);
+        ctx.moveTo(-22, -34); ctx.lineTo(22, -34); ctx.stroke();
+        // Window tint — wide
+        ctx.fillStyle = 'rgba(120,200,255,0.18)';
+        ctx.beginPath(); ctx.roundRect(-22, -29, 44, 15, 2); ctx.fill();
+        ctx.fillStyle = car.color + alpha; ctx.strokeStyle = car.color + alpha2;
+        // Big wheels
+        const wr3 = 8;
+        ctx.fillStyle = '#1a1a1a';
+        [-20, 20].forEach(wx2 => {
+          ctx.lineWidth = 2.5; ctx.strokeStyle = '#555';
+          ctx.beginPath(); ctx.arc(wx2, 9, wr3, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+          ctx.fillStyle = '#333'; ctx.strokeStyle = '#777'; ctx.lineWidth = 1.5;
+          ctx.beginPath(); ctx.arc(wx2, 9, wr3 * 0.45, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+          ctx.fillStyle = '#1a1a1a';
+        });
+
+      } else if (car.id === 'armored') {
+        // Armored Van — massive, boxy, plated
+        ctx.lineWidth = 2;
+        // Huge boxy body
+        ctx.beginPath(); ctx.roundRect(-34, -14, 68, 26, 2); ctx.fill(); ctx.stroke();
+        // Full-width tall cabin, almost no curvature
+        ctx.beginPath(); ctx.roundRect(-32, -36, 64, 24, 2); ctx.fill(); ctx.stroke();
+        // Armor plate lines on body
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = car.color + (canBuy ? '55' : '1a');
+        ctx.beginPath();
+        ctx.moveTo(-34, -2); ctx.lineTo(34, -2);   // horizontal belt line
+        ctx.moveTo(-34, 5);  ctx.lineTo(34, 5);    // second belt
+        ctx.moveTo(-10, -14); ctx.lineTo(-10, 12); // vertical panel
+        ctx.moveTo(10, -14);  ctx.lineTo(10, 12);  // vertical panel
+        ctx.stroke();
+        // Mesh grill on front
+        ctx.strokeStyle = car.color + alpha2; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.roundRect(-34, -4, 8, 10, 1); ctx.stroke();
+        // Tiny slit window
+        ctx.fillStyle = 'rgba(120,200,255,0.12)';
+        ctx.beginPath(); ctx.roundRect(-28, -34, 56, 8, 1); ctx.fill();
+        ctx.fillStyle = car.color + alpha; ctx.strokeStyle = car.color + alpha2;
+        // Huge armored wheels
+        const wr4 = 9;
+        ctx.fillStyle = '#111';
+        [-22, 22].forEach(wx2 => {
+          ctx.lineWidth = 3; ctx.strokeStyle = '#555';
+          ctx.beginPath(); ctx.arc(wx2, 12, wr4, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+          // Lug bolts
+          for (let b2 = 0; b2 < 5; b2++) {
+            const ba = (b2 / 5) * Math.PI * 2;
+            ctx.fillStyle = '#666';
+            ctx.beginPath(); ctx.arc(wx2 + Math.cos(ba) * wr4 * 0.55, 12 + Math.sin(ba) * wr4 * 0.55, 1.5, 0, Math.PI * 2); ctx.fill();
+          }
+          ctx.fillStyle = '#111';
+        });
+      }
       ctx.restore();
 
       // Stats
