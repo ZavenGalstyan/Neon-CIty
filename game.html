@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NEON CITY</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="game-body">
+
+  <!-- Loading screen -->
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-title">NEON CITY</div>
+    <div class="loading-bar-wrap">
+      <div class="loading-bar-fill"></div>
+    </div>
+  </div>
+
+  <!-- Game canvas -->
+  <canvas id="gameCanvas"></canvas>
+
+  <!-- roundRect polyfill for older browsers -->
+  <script>
+    if (!CanvasRenderingContext2D.prototype.roundRect) {
+      CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
+        r = Math.min(r, w / 2, h / 2);
+        this.moveTo(x + r, y);
+        this.lineTo(x + w - r, y);
+        this.quadraticCurveTo(x + w, y, x + w, y + r);
+        this.lineTo(x + w, y + h - r);
+        this.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+        this.lineTo(x + r, y + h);
+        this.quadraticCurveTo(x, y + h, x, y + h - r);
+        this.lineTo(x, y + r);
+        this.quadraticCurveTo(x, y, x + r, y);
+        this.closePath();
+      };
+    }
+  </script>
+
+  <!-- Scripts (order matters) -->
+  <script src="js/config.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/input.js"></script>
+  <script src="js/map.js"></script>
+  <script src="js/entities.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/shop.js"></script>
+  <script src="js/game.js"></script>
+
+  <script>
+    // Hide loading overlay after short delay, then start game
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        const overlay = document.getElementById('loadingOverlay');
+        overlay.classList.add('hidden');
+
+        // Load selected character from localStorage
+        let charData = null;
+        try { charData = JSON.parse(localStorage.getItem('selectedChar')); } catch (e) {}
+        if (!charData) charData = CONFIG.CHARACTERS[0];
+
+        // Load selected map from localStorage
+        let mapData = null;
+        try { mapData = JSON.parse(localStorage.getItem('selectedMap')); } catch (e) {}
+        if (!mapData) mapData = CONFIG.MAPS[0];
+
+        window.startGame(charData, mapData);
+      }, 900);
+    });
+  </script>
+</body>
+</html>
