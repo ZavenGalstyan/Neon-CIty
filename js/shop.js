@@ -10,9 +10,14 @@ class ShopManager {
     this._guardCount = 0;          // updated by game.js before render
   }
 
-  open()   { this.isOpen = true;  this._areas = []; }
+  open()   { this.isOpen = true;  this._areas = []; this._scrollY = 0; }
   close()  { this.isOpen = false; this._areas = []; }
   toggle() { this.isOpen ? this.close() : this.open(); }
+
+  handleScroll(delta) {
+    if (!this.isOpen) return;
+    this._scrollY = Math.max(0, Math.min(this._maxScrollY || 0, this._scrollY + delta * 0.55));
+  }
 
   update(dt) {
     if (this._feedback) {
@@ -138,7 +143,7 @@ class ShopManager {
       ctx.textAlign = 'center';
       ctx.fillText(label, tx + tabW / 2, tabY + 24);
       ctx.restore();
-      if (!active) this._pushArea(tx, tabY, tabW, tabH, () => { this.tab = id; });
+      if (!active) this._pushArea(tx, tabY, tabW, tabH, () => { this.tab = id; this._scrollY = 0; });
     });
 
     // ── Content ─────────────────────────────────────────────
@@ -195,16 +200,26 @@ class ShopManager {
   // ── Weapons tab ─────────────────────────────────────────
   _drawWeapons(ctx, px, y, PW, PH, player, money, mx, my) {
     const weapons = CONFIG.WEAPONS;
-    const cols = 3;
-    const gap  = 14;
-    const cardW = Math.floor((PW - gap * (cols + 1)) / cols);
-    const cardH = Math.min(155, Math.floor((PH - gap * 3) / 2));
+    const cols  = 3;
+    const gap   = 12;
+    const sbW   = 8;   // scrollbar width
+    const cardW = Math.floor((PW - gap * (cols + 1) - sbW - 4) / cols);
+    const cardH = 138; // fixed height — enough for all weapon info
+
+    // Total scrollable height & clamp
+    const rows   = Math.ceil(weapons.length / cols);
+    const totalH = gap + rows * (cardH + gap);
+    this._maxScrollY = Math.max(0, totalH - PH + 20);
+    this._scrollY    = Math.max(0, Math.min(this._scrollY || 0, this._maxScrollY));
 
     weapons.forEach((w, i) => {
       const col = i % cols;
       const row = Math.floor(i / cols);
       const cx  = px + gap + col * (cardW + gap);
-      const cy  = y  + gap + row * (cardH + gap);
+      const cy  = y  + gap + row * (cardH + gap) - this._scrollY;
+
+      // Skip fully off-screen cards
+      if (cy + cardH < y || cy > y + PH) return;
 
       const owned    = player.ownedWeapons.has(w.id);
       const equipped = player.equippedWeaponId === w.id;
@@ -278,14 +293,17 @@ class ShopManager {
         ctx.font = '10px Orbitron, monospace';
         ctx.fillStyle = hover ? '#fff' : '#aaa';
         ctx.fillText('CLICK TO EQUIP', cx + cardW / 2, cy + cardH - 12);
-        if (hover) this._pushArea(cx, cy, cardW, cardH, (p) => { p.equipWeapon(w.id); this._msg(`${w.name} EQUIPPED`, w.color); });
+        // Only add hit area if card is actually visible on screen
+        const cardVisible = cy >= y - 10 && cy + cardH <= y + PH + 10;
+        if (cardVisible && hover) this._pushArea(cx, cy, cardW, cardH, (p) => { p.equipWeapon(w.id); this._msg(`${w.name} EQUIPPED`, w.color); });
       } else {
         ctx.font = `bold 12px Orbitron, monospace`;
         ctx.fillStyle  = canBuy ? (hover ? '#fff' : '#FFD700') : '#444';
         ctx.shadowColor = canBuy && hover ? '#FFD700' : 'transparent';
         ctx.shadowBlur  = canBuy && hover ? 14 : 0;
         ctx.fillText(w.price > 0 ? `$ ${w.price.toLocaleString()}` : 'FREE', cx + cardW / 2, cy + cardH - 12);
-        if (canBuy) {
+        const cardVisible2 = cy >= y - 10 && cy + cardH <= y + PH + 10;
+        if (canBuy && cardVisible2) {
           this._pushArea(cx, cy, cardW, cardH, (p, g) => {
             const effectivePrice = Math.round(w.price * (1 - (g._shopDiscount || 0)));
             if (g.money >= effectivePrice) {
@@ -300,12 +318,27 @@ class ShopManager {
       ctx.restore();
     });
 
-    // Wheel / key hint
+    // ── Scrollbar ──────────────────────────────────────────
+    if (this._maxScrollY > 0) {
+      const sbX    = px + PW - 10;
+      const trackH = PH - 4;
+      const thumbH = Math.max(30, trackH * (PH / totalH));
+      const thumbY = y + 2 + (this._scrollY / this._maxScrollY) * (trackH - thumbH);
+      ctx.fillStyle = 'rgba(68,238,255,0.12)';
+      ctx.fillRect(sbX, y + 2, 6, trackH);
+      ctx.fillStyle = 'rgba(68,238,255,0.6)';
+      ctx.fillRect(sbX, thumbY, 6, thumbH);
+    }
+
+    // Hint
     ctx.save();
     ctx.font = '9px Orbitron, monospace';
     ctx.fillStyle = 'rgba(255,255,255,0.18)';
     ctx.textAlign = 'center';
-    ctx.fillText('SCROLL WHEEL  or  1–6 KEYS  to cycle weapons', px + PW / 2, y + PH - 2);
+    const hintTxt = this._maxScrollY > 0
+      ? 'SCROLL WHEEL to see all weapons   ·   1–9 KEYS to cycle'
+      : 'SCROLL WHEEL  or  1–9 KEYS  to cycle weapons';
+    ctx.fillText(hintTxt, px + PW / 2, y + PH - 2);
     ctx.restore();
   }
 

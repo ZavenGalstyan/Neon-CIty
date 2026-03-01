@@ -155,6 +155,9 @@ class Game {
       if (this.state === 'playing') {
         e.preventDefault();
         this.player.cycleWeapon(e.deltaY > 0 ? 1 : -1);
+      } else if (this.state === 'shop') {
+        e.preventDefault();
+        this.shop.handleScroll(e.deltaY);
       }
     };
     this.canvas.addEventListener('wheel', this._wheelHandler, { passive: false });
