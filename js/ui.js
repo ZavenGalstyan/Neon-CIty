@@ -321,6 +321,8 @@ class HUD {
       { key:'CLICK', desc:'Shoot'  },
       { key:'F',     desc:'Car'    },
       { key:'B',     desc:'Shop'   },
+      { key:'V',     desc:'Drone'  },
+      { key:'N',     desc:'B.Mkt'  },
       { key:'SCROLL',desc:'Weapon' },
       { key:'P/ESC', desc:'Pause'  },
     ];
@@ -437,6 +439,157 @@ class HUD {
       ctx.fillText(`×${player.damageMult.toFixed(2)} DMG`, W - 16, H - 35);
     }
     ctx.restore();
+  }
+
+  renderAchButton(panelOpen) {
+    const ctx = this.ctx;
+    const W   = this.canvas.width;
+    const H   = this.canvas.height;
+    ctx.save();
+    ctx.fillStyle   = panelOpen ? 'rgba(255,204,0,0.18)' : 'rgba(0,0,0,0.6)';
+    ctx.strokeStyle = panelOpen ? '#FFCC00' : 'rgba(255,204,0,0.25)';
+    ctx.lineWidth   = panelOpen ? 1.5 : 1;
+    ctx.shadowColor = panelOpen ? '#FFCC00' : 'transparent';
+    ctx.shadowBlur  = panelOpen ? 12 : 0;
+    this._rr(ctx, W - 136, H - 66, 124, 26, 5);
+    ctx.fill(); ctx.stroke();
+
+    ctx.font      = 'bold 10px Orbitron, monospace';
+    ctx.fillStyle = panelOpen ? '#FFCC00' : 'rgba(255,255,255,0.5)';
+    ctx.textAlign = 'center';
+    ctx.shadowColor = panelOpen ? '#FFCC00' : 'transparent';
+    ctx.shadowBlur  = panelOpen ? 8 : 0;
+    ctx.fillText('[TAB]  ACHIEVEMENTS', W - 74, H - 49);
+    ctx.restore();
+  }
+
+  renderDayNight(nightAlpha, gameTime) {
+    const ctx = this.ctx;
+    const W   = this.canvas.width;
+    if (nightAlpha < 0.05) return;
+    ctx.save();
+    ctx.globalAlpha = Math.min(1, nightAlpha * 1.8);
+    ctx.textAlign = 'center';
+    ctx.font = '14px Orbitron, monospace';
+    ctx.fillStyle = '#8899CC';
+    ctx.shadowColor = '#8899CC'; ctx.shadowBlur = 8;
+    ctx.fillText('☽  NIGHT', W / 2, 22);
+    ctx.restore();
+  }
+
+  renderDroneStatus(drone, inControl) {
+    const ctx = this.ctx;
+    const W   = this.canvas.width;
+    const H   = this.canvas.height;
+    const panelW = 180, panelH = inControl ? 48 : 38;
+    const px = W / 2 - panelW / 2;
+    const py = H - 100;
+
+    ctx.save();
+    ctx.fillStyle   = 'rgba(0,0,0,0.72)';
+    ctx.strokeStyle = inControl ? '#44EEFF' : '#44EEFF';
+    ctx.lineWidth   = 1;
+    ctx.shadowColor = '#44EEFF'; ctx.shadowBlur = 8;
+    this._rr(ctx, px, py, panelW, panelH, 6);
+    ctx.fill(); ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    ctx.font = 'bold 9px Orbitron, monospace';
+    ctx.fillStyle = '#44EEFF'; ctx.textAlign = 'center';
+    ctx.fillText(inControl ? 'DRONE CONTROL MODE' : 'DRONE ACTIVE', W / 2, py + 14);
+
+    if (inControl) {
+      ctx.font = '8px Orbitron, monospace';
+      ctx.fillStyle = 'rgba(255,255,255,0.45)';
+      ctx.fillText('[V] RECALL · WASD MOVE', W / 2, py + 30);
+    } else {
+      // HP bar
+      const pct = drone.hp / drone.maxHp;
+      const bw = panelW - 24;
+      const bx = px + 12, by = py + 22;
+      ctx.fillStyle = '#111'; ctx.fillRect(bx, by, bw, 6);
+      ctx.fillStyle = '#44EEFF'; ctx.shadowColor = '#44EEFF'; ctx.shadowBlur = 6;
+      ctx.fillRect(bx, by, bw * pct, 6);
+    }
+    ctx.restore();
+  }
+
+  renderBlackMarket(ctx, W, H, items, money, mx, my, bought) {
+    // Dark overlay
+    ctx.save();
+    ctx.fillStyle = 'rgba(0,0,0,0.88)';
+    ctx.fillRect(0, 0, W, H);
+
+    // Title
+    ctx.textAlign = 'center';
+    ctx.font = 'bold 32px Orbitron, monospace';
+    ctx.fillStyle = '#FFAA00'; ctx.shadowColor = '#FF8800'; ctx.shadowBlur = 30;
+    ctx.fillText('BLACK MARKET', W / 2, 56);
+    ctx.shadowBlur = 0;
+    ctx.font = '11px Orbitron, monospace'; ctx.fillStyle = 'rgba(255,170,0,0.4)';
+    ctx.fillText('ONLY AVAILABLE AT NIGHT  ·  PRESS [N] TO CLOSE', W / 2, 78);
+
+    // Money
+    ctx.font = 'bold 16px Orbitron, monospace';
+    ctx.fillStyle = '#FFD700'; ctx.shadowColor = '#FFD700'; ctx.shadowBlur = 14;
+    ctx.textAlign = 'right';
+    ctx.fillText(`$ ${money.toLocaleString()}`, W - 24, 56);
+    ctx.shadowBlur = 0;
+
+    // Items — 2 columns x 3 rows
+    const cols = 2;
+    const itemW = Math.min(320, (W - 80) / cols);
+    const itemH = 84;
+    const gridW = cols * itemW + (cols - 1) * 16;
+    const startX = W / 2 - gridW / 2;
+    const startY = 102;
+    const clickAreas = [];
+
+    items.forEach((item, i) => {
+      const col = i % cols, row = Math.floor(i / cols);
+      const ix = startX + col * (itemW + 16);
+      const iy = startY + row * (itemH + 12);
+      const hover = mx >= ix && mx <= ix + itemW && my >= iy && my <= iy + itemH;
+      const owned = bought.has(item.id);
+
+      ctx.save();
+      ctx.fillStyle   = owned ? 'rgba(80,60,0,0.5)' : hover ? 'rgba(255,170,0,0.12)' : 'rgba(20,14,0,0.85)';
+      ctx.strokeStyle = owned ? 'rgba(150,120,0,0.4)' : hover ? '#FFAA00' : 'rgba(255,170,0,0.3)';
+      ctx.lineWidth   = hover ? 1.5 : 1;
+      ctx.shadowColor = hover ? '#FFAA00' : 'transparent';
+      ctx.shadowBlur  = hover ? 14 : 0;
+      this._rr(ctx, ix, iy, itemW, itemH, 7);
+      ctx.fill(); ctx.stroke();
+      ctx.shadowBlur = 0;
+
+      // Type badge
+      const typeColors = { weapon:'#FF5533', implant:'#AA44FF', vehicle:'#44FF88' };
+      ctx.fillStyle = typeColors[item.type] || '#888';
+      ctx.font = 'bold 8px Orbitron, monospace'; ctx.textAlign = 'left';
+      ctx.fillText(item.type.toUpperCase(), ix + 10, iy + 16);
+
+      // Name
+      ctx.font = 'bold 13px Orbitron, monospace';
+      ctx.fillStyle = owned ? '#888' : '#FFAA00';
+      ctx.fillText(item.name, ix + 10, iy + 34);
+
+      // Desc
+      ctx.font = '9px Orbitron, monospace';
+      ctx.fillStyle = 'rgba(255,255,255,0.45)';
+      ctx.fillText(item.desc, ix + 10, iy + 50);
+
+      // Price
+      ctx.textAlign = 'right';
+      ctx.font = 'bold 12px Orbitron, monospace';
+      ctx.fillStyle = owned ? '#666' : money >= item.price ? '#FFD700' : '#FF4444';
+      ctx.fillText(owned ? 'OWNED' : `$ ${item.price.toLocaleString()}`, ix + itemW - 10, iy + 34);
+
+      ctx.restore();
+      clickAreas.push({ ix, iy, itemW, itemH, item });
+    });
+
+    ctx.restore();
+    return clickAreas;
   }
 
   renderShopButton(shopOpen) {

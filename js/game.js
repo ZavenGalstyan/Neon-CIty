@@ -81,6 +81,22 @@ class Game {
     this.bossRespawnTimer  = 0;
     this._bossActivated    = false;
 
+    // ── Drones ─────────────────────────────────────────────
+    this._drones        = [];
+    this._playerDrone   = null;
+    this._droneControl  = false;
+    this._droneTimer    = 8000;  // initial delay before first police drone
+
+    // ── Day/Night + Black Market ────────────────────────────
+    this._gameTime        = 0;
+    this._isNight         = false;
+    this._nightAlpha      = 0;
+    this._bmVendor        = null;
+    this._bmOpen          = false;
+    this._bmBought        = new Set();
+    this._reflexTimer     = 0;
+    this._nanoshieldTimer = 0;
+
     // Camera
     this.camX = spawnX - this.canvas.width  / 2;
     this.camY = spawnY - this.canvas.height / 2;
@@ -126,6 +142,18 @@ class Game {
       }
       return;
     }
+    if (e.code === 'KeyV' && this.state === 'playing') {
+      this._togglePlayerDrone();
+      return;
+    }
+    if (e.code === 'KeyN' && (this.state === 'playing' || this.state === 'blackmarket')) {
+      if (this._bmOpen) { this._bmOpen = false; this.state = 'playing'; }
+      else if (this._bmVendor && !this._arenaMode) {
+        if (Math.hypot(this._bmVendor.x - this.player.x, this._bmVendor.y - this.player.y) < 70)
+          { this._bmOpen = true; this.state = 'blackmarket'; }
+      }
+      return;
+    }
     if (e.code === 'KeyF' && this.state === 'playing') {
       this._toggleVehicle();
       return;
@@ -143,6 +171,7 @@ class Game {
       return;
     }
     if (e.code === 'Escape') {
+      if (this.state === 'blackmarket') { this._bmOpen = false; this.state = 'playing'; return; }
       if (this.state === 'shop')    { this.shop.close(); this.state = 'playing'; return; }
       if (this.state === 'paused')  { this.state = 'playing'; return; }  // ESC = resume
       if (this.state === 'playing') { this.state = 'paused'; return; }
@@ -177,7 +206,7 @@ class Game {
     const dt = Math.min((timestamp - this._lastTime) / 1000, 0.05);
     this._lastTime = timestamp;
 
-    if (this.state === 'playing') this._update(dt);
+    if (this.state === 'playing' || this.state === 'blackmarket') this._update(dt);
     if (this.state === 'shop' || this.state === 'paused') this.shop.update(dt);
 
     this._render();
@@ -190,6 +219,74 @@ class Game {
     // Achievement popup decay
     if (this._achPopup) { this._achPopup.timer -= dt; if (this._achPopup.timer <= 0) this._achPopup = null; }
 
+    // ── Day/Night cycle ──────────────────────────────────────
+    if (!this._arenaMode) {
+      this._gameTime += dt;
+      const cycle = 120, nightStart = 80;
+      const t = this._gameTime % cycle;
+      const targetNight = t > nightStart;
+      this._nightAlpha = lerp(this._nightAlpha, targetNight ? 0.55 : 0, dt * 1.5);
+      if (targetNight && !this._isNight) {
+        this._isNight = true;
+        const pos = this.map.randomRoadPos();
+        this._bmVendor = { x: pos.x, y: pos.y };
+      } else if (!targetNight && this._isNight) {
+        this._isNight = false;
+        this._bmVendor = null;
+        if (this._bmOpen) { this._bmOpen = false; this.state = 'playing'; }
+      }
+    }
+
+    // ── Implant timers ───────────────────────────────────────
+    if (this._reflexTimer > 0) {
+      this._reflexTimer -= dt;
+      if (this._reflexTimer <= 0) { this.player.speed /= 2; this.player.fireRateMult *= 2; }
+    }
+    if (this._nanoshieldTimer > 0) {
+      this._nanoshieldTimer -= dt;
+      if (this._nanoshieldTimer <= 0) this.player.invincible = 0;
+    }
+
+    // ── Drone updates ────────────────────────────────────────
+    for (const d of this._drones) d.update(dt, this.player, this.map, this.bullets, this.particles);
+    this._drones = this._drones.filter(d => !d.dead);
+
+    if (this._playerDrone) {
+      if (this._playerDrone.dead) { this._playerDrone = null; this._droneControl = false; }
+      else if (this._droneControl) {
+        const ds = this._playerDrone.speed * dt;
+        if (this.input.isDown('KeyW')) this._playerDrone.y -= ds;
+        if (this.input.isDown('KeyS')) this._playerDrone.y += ds;
+        if (this.input.isDown('KeyA')) this._playerDrone.x -= ds;
+        if (this.input.isDown('KeyD')) this._playerDrone.x += ds;
+        this._playerDrone.angle = Math.atan2(
+          this.input.mouseWorld.y - this._playerDrone.y,
+          this.input.mouseWorld.x - this._playerDrone.x
+        );
+        if (Math.hypot(this._playerDrone.x - this.player.x, this._playerDrone.y - this.player.y) > 600)
+          this._togglePlayerDrone();
+      }
+      if (this._playerDrone) {
+        this._playerDrone._altTimer += dt * 2.6;
+        this._playerDrone._altitude  = Math.sin(this._playerDrone._altTimer) * 5;
+      }
+    }
+
+    // ── Police drone spawning ────────────────────────────────
+    if (this._wantedLevel >= 3 && !this._arenaMode && !this._indoor) {
+      this._droneTimer -= dt * 1000;
+      if (this._droneTimer <= 0 && this._drones.filter(d => d.type === 'police').length < this._wantedLevel - 1) {
+        const pos = this.map.randomRoadPos();
+        this._drones.push(new Drone(pos.x, pos.y, 'police'));
+        this._droneTimer = 15000;
+      }
+    }
+    // Combat drones in wave 6+
+    if (!this._arenaMode && this.wave >= 6 && this._drones.filter(d => d.type === 'combat').length < Math.floor((this.wave - 5) / 2)) {
+      const pos = this.map.randomRoadPos();
+      this._drones.push(new Drone(pos.x, pos.y, 'combat'));
+    }
+
     // Track max wave
     if (this.wave > this._achStats.maxWave) {
       this._achStats.maxWave = this.wave;
@@ -201,10 +298,10 @@ class Game {
 
     this.input.updateMouseWorld(this.camX, this.camY);
 
-    // Sync vehicle state before player update
-    this.player.inVehicle = !!this._playerVehicle;
+    // Sync vehicle state before player update (also freeze player while controlling drone)
+    this.player.inVehicle = !!this._playerVehicle || this._droneControl;
     this.player.update(dt, this.input, this.map, this.bullets, this.particles);
-    if (this.player.dead && this.state === 'playing') this.state = 'gameover';
+    if (this.player.dead && (this.state === 'playing' || this.state === 'blackmarket')) this.state = 'gameover';
 
     // ── Vehicles ───────────────────────────────────────────
     for (const v of this.vehicles) {
@@ -435,6 +532,20 @@ class Game {
       }
     }
 
+    // ── Bullet → drones ────────────────────────────────────
+    for (const b of this.bullets) {
+      if (!b.isPlayer || b.dead) continue;
+      for (const d of this._drones) {
+        if (d.dead || d.type === 'player') continue;
+        if (circlesOverlap(b.x, b.y, b.radius, d.x, d.y, d.radius)) {
+          d.takeDamage(b.damage, this.particles);
+          b.dead = true;
+          if (d.dead) { this.kills++; this.money += CONFIG.MONEY_PER_KILL; this._onKill(); }
+          break;
+        }
+      }
+    }
+
     // ── Bullet → vehicles (enemy bullets) ─────────────────
     for (const v of this.vehicles) {
       if (v.dead || v._exploding) continue;
@@ -508,8 +619,10 @@ class Game {
     }
 
     // ── Camera ─────────────────────────────────────────────
-    const tcx = this.player.x - this.canvas.width  / 2;
-    const tcy = this.player.y - this.canvas.height / 2;
+    const _camTarget = (this._droneControl && this._playerDrone)
+      ? this._playerDrone : this.player;
+    const tcx = _camTarget.x - this.canvas.width  / 2;
+    const tcy = _camTarget.y - this.canvas.height / 2;
     this.camX = lerp(this.camX, tcx, CONFIG.CAM_LERP);
     this.camY = lerp(this.camY, tcy, CONFIG.CAM_LERP);
     const mapPxW = this.map.W * this.map.S, mapPxH = this.map.H * this.map.S;
@@ -646,6 +759,52 @@ class Game {
   _spawnBoss() {
     const rp = this.map.randomRoadPos();
     this.boss = new BossBot(rp.x, rp.y, this.wave, this.map.config.id);
+  }
+
+  _togglePlayerDrone() {
+    if (this._playerDrone) {
+      this._playerDrone = null;
+      this._droneControl = false;
+    } else {
+      this._playerDrone = new Drone(this.player.x, this.player.y - 40, 'player');
+      this._droneControl = true;
+    }
+  }
+
+  _applyBmItem(item) {
+    if (item.type === 'weapon') {
+      // Inject into CONFIG.WEAPONS if not already there, then equip
+      if (!CONFIG.WEAPONS.find(w => w.id === item.id)) {
+        CONFIG.WEAPONS.push({
+          id: item.id, name: item.name, color: item.color,
+          damage: item.damage, fireRate: item.fireRate,
+          bullets: item.bullets, spread: item.spread,
+          bulletSpeed: item.bulletSpeed, melee: item.melee,
+          ammo: -1
+        });
+      }
+      this.player.ownedWeapons.add(item.id);
+      this.player.equipWeapon(item.id);
+    } else if (item.type === 'implant') {
+      if (item.effect === 'reflex') {
+        if (this._reflexTimer <= 0) {
+          this.player.speed        *= 2;
+          this.player.fireRateMult *= 0.5;  // halve = fire twice as fast
+        }
+        this._reflexTimer = 8;
+      } else if (item.effect === 'nanoshield') {
+        this.player.invincible  = 6;
+        this._nanoshieldTimer   = 6;
+      } else if (item.effect === 'overclock') {
+        this.player.damageMult = (this.player.damageMult || 1) * 1.6;
+      }
+    } else if (item.type === 'vehicle') {
+      // Spawn prototype vehicle near player
+      const pv = new Vehicle(this.player.x + 80, this.player.y, '#CCDDFF');
+      pv.hp    = 500;
+      pv.maxHp = 500;
+      this.vehicles.push(pv);
+    }
   }
 
   _checkAchievements() {
@@ -826,7 +985,7 @@ class Game {
     const W   = this.canvas.width, H = this.canvas.height;
     const shake = this.hud.getShakeOffset();
 
-    this.canvas.style.cursor = this.state === 'shop' ? 'default' : 'none';
+    this.canvas.style.cursor = (this.state === 'shop' || this.state === 'blackmarket') ? 'default' : 'none';
 
     ctx.clearRect(0, 0, W, H);
     ctx.fillStyle = '#08080f';
@@ -848,6 +1007,26 @@ class Game {
       if (this.boss && !this.boss.dead)  this.boss.render(ctx);
       for (const b   of this.bullets)   if (b.isPlayer)  b.render(ctx);
       if (!this.player.dead) this.player.render(ctx);
+
+      // Drones
+      for (const d of this._drones) d.render(ctx);
+      if (this._playerDrone) this._playerDrone.render(ctx);
+
+      // Black market vendor NPC
+      if (this._bmVendor && this._nightAlpha > 0.1) {
+        ctx.save();
+        ctx.shadowColor = '#FFAA00'; ctx.shadowBlur = 30;
+        ctx.fillStyle = '#FFAA00'; ctx.strokeStyle = '#FF8800'; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(this._bmVendor.x, this._bmVendor.y, 16, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = '#111'; ctx.font = 'bold 9px Orbitron, monospace'; ctx.textAlign = 'center';
+        ctx.fillText('$', this._bmVendor.x, this._bmVendor.y + 4);
+        if (Math.hypot(this._bmVendor.x - this.player.x, this._bmVendor.y - this.player.y) < 70) {
+          ctx.fillStyle = '#FFAA00'; ctx.font = 'bold 11px Orbitron, monospace';
+          ctx.shadowColor = '#FF8800'; ctx.shadowBlur = 10;
+          ctx.fillText('[N] BLACK MARKET', this._bmVendor.x, this._bmVendor.y - 24);
+        }
+        ctx.restore();
+      }
 
       // "[F] ENTER" hint near vehicles, "[E] ENTER" hint near doors
       if (!this._playerVehicle && !this.player.dead) {
@@ -875,6 +1054,15 @@ class Game {
       ctx.restore();
     }
 
+    // Night overlay (screen-space)
+    if (this._nightAlpha > 0.01) {
+      ctx.save();
+      ctx.globalAlpha = this._nightAlpha;
+      ctx.fillStyle = '#000820';
+      ctx.fillRect(0, 0, W, H);
+      ctx.restore();
+    }
+
     // Weather (screen-space, drawn over world)
     this.weather.render(ctx, W, H);
 
@@ -898,6 +1086,9 @@ class Game {
       }
       this.hud.renderWeaponInfo(this.player);
       this.hud.renderShopButton(this.state === 'shop');
+      this.hud.renderAchButton(this._achPanelOpen);
+      this.hud.renderDayNight(this._nightAlpha, this._gameTime);
+      if (this._playerDrone) this.hud.renderDroneStatus(this._playerDrone, this._droneControl);
       this.hud.renderDamageNumbers();
       if (this.boss && !this.boss.dead && !this.boss.dying) {
         this.hud.renderBossBar(this.boss);
@@ -910,6 +1101,15 @@ class Game {
       }
       if (!this.player.dead && this.state === 'playing' && !this._playerVehicle) {
         this.hud.renderCrosshair(this.input.mouseScreen.x, this.input.mouseScreen.y);
+      }
+    }
+
+    // ACH button click (bottom-right area: W-136, H-66, 124×26)
+    if (this.input.mouseJustDown && this.state === 'playing') {
+      const mx = this.input.mouseScreen.x, my = this.input.mouseScreen.y;
+      const ax = W - 136, ay = H - 66;
+      if (mx >= ax && mx <= ax + 124 && my >= ay && my <= ay + 26) {
+        this._achPanelOpen = !this._achPanelOpen;
       }
     }
 
@@ -936,6 +1136,30 @@ class Game {
       if (this.input.mouseJustDown) {
         this.shop.handleClick(this.input.mouseScreen.x, this.input.mouseScreen.y, this.player, this);
         if (!this.shop.isOpen) this.state = 'playing';
+      }
+    }
+
+    // Black market overlay
+    if (this.state === 'blackmarket' && this._bmOpen) {
+      const clickAreas = this.hud.renderBlackMarket(
+        ctx, W, H, CONFIG.BLACK_MARKET, this.money,
+        this.input.mouseScreen.x, this.input.mouseScreen.y, this._bmBought
+      );
+      if (this.input.mouseJustDown) {
+        const mx = this.input.mouseScreen.x, my = this.input.mouseScreen.y;
+        for (const ca of clickAreas) {
+          if (mx >= ca.ix && mx <= ca.ix + ca.itemW && my >= ca.iy && my <= ca.iy + ca.itemH) {
+            const item = ca.item;
+            // Non-consumable implants can only be bought once
+            const isOnce = item.type === 'implant' && item.effect === 'overclock';
+            if (!this._bmBought.has(item.id) && this.money >= item.price) {
+              this.money -= item.price;
+              this._applyBmItem(item);
+              if (isOnce) this._bmBought.add(item.id);
+            }
+            break;
+          }
+        }
       }
     }
 

@@ -329,5 +329,22 @@ const CONFIG = {
     { id:'wave_10',     name:'VETERAN',        desc:'Survive to wave 10',           icon:'W', stat:'maxWave',          threshold:10    },
     { id:'explorer',    name:'URBAN EXPLORER', desc:'Enter a building interior',    icon:'E', stat:'buildingsEntered', threshold:1     },
     { id:'clearer',     name:'ROOM CLEARER',   desc:'Clear 3 buildings of enemies', icon:'E', stat:'buildingsCleared', threshold:3     },
+  ],
+
+  DRONE_CONFIGS: {
+    police: { speed:155, hp:60,  fireRate:1500, damage:10, color:'#3399FF', radius:14 },
+    combat: { speed:210, hp:110, fireRate:900,  damage:18, color:'#FF5500', radius:16 },
+    player: { speed:300, hp:80,  color:'#44EEFF', radius:12 }
+  },
+
+  BLACK_MARKET: [
+    { id:'plasma',     name:'PLASMA CANNON',   desc:'Melts armor. 3x dmg vs vehicles.', price:3500, type:'weapon',
+      damage:80, fireRate:950, bullets:1, spread:0.04, bulletSpeed:560, color:'#CC44FF', melee:false },
+    { id:'railgun',    name:'RAILGUN',          desc:'Piercing beam. One-shot kill.',    price:5500, type:'weapon',
+      damage:240, fireRate:2000, bullets:1, spread:0, bulletSpeed:1400, color:'#00FFFF', melee:false },
+    { id:'reflex',     name:'REFLEX IMPLANT',   desc:'Double speed & fire rate for 8s.', price:2000, type:'implant', effect:'reflex'     },
+    { id:'nanoshield', name:'NANO SHIELD',       desc:'6s of invincibility.',             price:2800, type:'implant', effect:'nanoshield'  },
+    { id:'overclock',  name:'OVERCLOCK CHIP',    desc:'Permanently +60% bullet damage.', price:4500, type:'implant', effect:'overclock'   },
+    { id:'proto_car',  name:'PROTOTYPE VEHICLE', desc:'500HP · Nitro · Bulletproof.',    price:6500, type:'vehicle' },
   ]
 };
