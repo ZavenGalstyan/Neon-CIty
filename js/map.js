@@ -266,6 +266,26 @@ class GameMap {
             ctx.fillStyle = '#FFD700'; ctx.shadowColor = '#FFD700'; ctx.shadowBlur = 4;
             ctx.beginPath(); ctx.arc(dx2 + dw - 5, dy2 + dh / 2, 2.2, 0, Math.PI * 2); ctx.fill();
             ctx.shadowBlur = 0;
+            // Building sign above door
+            const isDealer   = doorEntry.specialType === 'dealership';
+            const signText   = isDealer ? 'AUTO' : 'SHOP';
+            const signColor  = isDealer ? '#FFCC00' : '#44EEFF';
+            const signW      = dw + 14;
+            const signH      = 14;
+            const signX      = wx + S / 2 - signW / 2;
+            const signY      = wy + 8;
+            ctx.save();
+            ctx.fillStyle = 'rgba(0,0,0,0.75)';
+            ctx.fillRect(signX, signY, signW, signH);
+            ctx.strokeStyle = signColor; ctx.lineWidth = 1.5;
+            ctx.shadowColor = signColor; ctx.shadowBlur = 10;
+            ctx.strokeRect(signX, signY, signW, signH);
+            ctx.fillStyle = signColor;
+            ctx.font = 'bold 8px Orbitron, monospace';
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillText(signText, wx + S / 2, signY + signH / 2);
+            ctx.shadowBlur = 0; ctx.textBaseline = 'alphabetic';
+            ctx.restore();
           }
         }
       }

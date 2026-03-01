@@ -128,6 +128,11 @@ class Game {
     // ── Grenades ──────────────────────────────────────────────
     this._grenades        = [];
     this._grenadeCount    = 0;
+    // ── Glitch Mode ───────────────────────────────────────────
+    this._glitchPortals      = [];
+    this._glitchPortalTimer  = 0;
+    // ── Bodyguards ────────────────────────────────────────────
+    this._bodyguards         = [];
 
     // Camera
     this.camX = spawnX - this.canvas.width  / 2;
@@ -309,6 +314,19 @@ class Game {
               this._corpTimer = 2200;
             }
           }
+          // Glitch Mode: update portals, spawn buffed bots from them
+          if (this._globalEvent.id === 'glitch_mode' && !this._indoor) {
+            for (const p of this._glitchPortals) {
+              p.t += dt;
+              p.spawnTimer -= dt;
+              if (p.spawnTimer <= 0) {
+                p.spawnTimer = 7 + Math.random() * 5;
+                const bot = new Bot(p.x + rnd(-20, 20), p.y + rnd(-20, 20), this.wave + 1, 'normal', this.map.config);
+                bot.speed *= 1.4; bot.hp *= 1.3; bot.maxHp = bot.hp;
+                this.bots.push(bot);
+              }
+            }
+          }
         }
       }
 
@@ -456,6 +474,12 @@ class Game {
     // ── Decals ─────────────────────────────────────────────
     for (const d of this.decals) d.update(dt);
     this.decals = this.decals.filter(d => !d.dead);
+
+    // ── Bodyguards ─────────────────────────────────────────
+    for (const bg of this._bodyguards) {
+      bg.update(dt, this.player.x, this.player.y, this.bots, this.bullets, this.particles);
+    }
+    this._bodyguards = this._bodyguards.filter(bg => !bg.dead);
 
     // ── Weather ────────────────────────────────────────────
     this.weather.update(dt, this.canvas.width, this.canvas.height);
@@ -741,6 +765,18 @@ class Game {
       }
     }
 
+    // ── Bullet → bodyguards (enemy bullets) ────────────────
+    for (const bg of this._bodyguards) {
+      if (bg.dead || bg.dying) continue;
+      for (const b of this.bullets) {
+        if (b.isPlayer || b.dead) continue;
+        if (circlesOverlap(b.x, b.y, b.radius, bg.x, bg.y, bg.radius)) {
+          bg.takeDamage(b.damage);
+          b.dead = true;
+        }
+      }
+    }
+
     // ── Warlord charge contact damage ──────────────────────
     if (this.boss && this.boss._chargeActive && !this.boss.dead && !this.player.dead && !this._playerVehicle) {
       if (circlesOverlap(this.boss.x, this.boss.y, this.boss.radius, this.player.x, this.player.y, this.player.radius)) {
@@ -947,6 +983,15 @@ class Game {
     if (ev.id === 'cyber_virus') { this.player.fireRateMult *= 1.55; this._cyberDebuffActive = true; }
     if (ev.id === 'riot')        { this._wantedLevel = Math.max(this._wantedLevel, 2); }
     if (ev.id === 'corporate')   { this._corpTimer = 500; }
+    if (ev.id === 'glitch_mode') {
+      // Spawn 2 portals at random road positions
+      this._glitchPortals = [];
+      for (let i = 0; i < 2; i++) {
+        const rp = this.map.randomRoadPos();
+        this._glitchPortals.push({ x: rp.x, y: rp.y, t: 0, spawnTimer: 8 + i * 3 });
+      }
+      this._glitchPortalTimer = 0;
+    }
   }
 
   _endEvent() {
@@ -955,6 +1000,7 @@ class Game {
       this.player.fireRateMult /= 1.55;
       this._cyberDebuffActive = false;
     }
+    if (this._globalEvent.id === 'glitch_mode') { this._glitchPortals = []; }
     this._globalEvent = null;
     this._corpTimer   = 0;
   }
@@ -1381,6 +1427,7 @@ class Game {
       if (this.boss && !this.boss.dead)  this.boss.render(ctx);
       for (const b   of this.bullets)   if (b.isPlayer)  b.render(ctx);
       if (!this.player.dead) this.player.render(ctx);
+      for (const bg of this._bodyguards) bg.render(ctx);
 
       // Drones
       for (const d of this._drones) d.render(ctx);
@@ -1388,6 +1435,22 @@ class Game {
 
       // Grenades
       for (const g of this._grenades) g.render(ctx);
+
+      // Glitch portals (world-space)
+      for (const p of this._glitchPortals) {
+        const pulse = Math.sin(p.t * 4) * 0.3 + 0.7;
+        ctx.save(); ctx.translate(p.x, p.y);
+        ctx.shadowColor = '#AA44FF'; ctx.shadowBlur = 30 * pulse;
+        ctx.fillStyle   = `rgba(100,20,200,${pulse * 0.28})`;
+        ctx.beginPath(); ctx.ellipse(0, 0, 28, 40, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = `rgba(170,68,255,${pulse})`; ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.ellipse(0, 0, 28, 40, 0, 0, Math.PI * 2); ctx.stroke();
+        ctx.strokeStyle = `rgba(68,238,255,${pulse * 0.7})`; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.ellipse(0, 0, 18, 28, 0, 0, Math.PI * 2); ctx.stroke();
+        ctx.fillStyle = '#CC88FF'; ctx.font = 'bold 8px Orbitron, monospace'; ctx.textAlign = 'center';
+        ctx.fillText('PORTAL', 0, -48);
+        ctx.shadowBlur = 0; ctx.restore();
+      }
 
       // Black market vendor NPC
       if (this._bmVendor && this._nightAlpha > 0.1) {
@@ -1465,6 +1528,33 @@ class Game {
           ctx.fillStyle = Math.random() < 0.5 ? '#00FFFF' : '#FF00AA';
           ctx.fillRect(0, Math.random() * H, W, 2 + Math.random() * 6);
         }
+        ctx.restore();
+      }
+      if (this._globalEvent.id === 'glitch_mode') {
+        ctx.save();
+        // Purple scanlines
+        ctx.globalAlpha = 0.07;
+        ctx.fillStyle = '#AA44FF';
+        for (let yl = 0; yl < H; yl += 3) ctx.fillRect(0, yl, W, 1);
+        // Glitch strips
+        if (Math.random() < 0.35) {
+          const gy = Math.random() * H, gh = 2 + Math.random() * 10;
+          ctx.globalAlpha = 0.22; ctx.fillStyle = Math.random() < 0.5 ? '#AA00FF' : '#00FFAA';
+          ctx.fillRect(0, gy, W, gh);
+          ctx.globalAlpha = 0.14; ctx.fillStyle = '#FF00AA';
+          ctx.fillRect(rnd(-30, 30), gy, W, gh);
+        }
+        // Pixel corruption bursts
+        if (Math.random() < 0.18) {
+          ctx.globalAlpha = 0.5;
+          for (let i = 0; i < 6; i++) {
+            ctx.fillStyle = Math.random() < 0.5 ? '#AA44FF' : '#44FFCC';
+            ctx.fillRect(Math.random() * W, Math.random() * H, rnd(2, 24), rnd(1, 4));
+          }
+        }
+        // Vignette tint
+        ctx.globalAlpha = 0.12; ctx.fillStyle = '#5500AA';
+        ctx.fillRect(0, 0, W, H);
         ctx.restore();
       }
     }
@@ -1548,6 +1638,7 @@ class Game {
 
     // Shop overlay
     if (this.state === 'shop') {
+      this.shop._guardCount = this._bodyguards.length;
       this.shop.render(ctx, W, H, this.player, this.money, this.input.mouseScreen.x, this.input.mouseScreen.y);
       if (this.input.mouseJustDown) {
         this.shop.handleClick(this.input.mouseScreen.x, this.input.mouseScreen.y, this.player, this);

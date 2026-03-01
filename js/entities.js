@@ -527,6 +527,16 @@ class Player {
     this._regenAccum   = 0;
     this.inVehicle     = false;
     this._ammoBoost    = 0;
+    // ── Customization ─────────────────────────────────────
+    const _custRaw = localStorage.getItem('customization');
+    const _cust    = _custRaw ? JSON.parse(_custRaw) : {};
+    if (_cust.neonColor && _cust.neonColor !== 'default') {
+      this.color  = _cust.neonColor;
+      this.accent = _cust.neonColor + 'BB';
+    }
+    this._custMask   = _cust.mask   || 'none';
+    this._custEffect = _cust.effect || 'none';
+    this._effectT    = 0;
   }
 
   equipWeapon(id) {
@@ -620,6 +630,7 @@ class Player {
     if (this._ammoBoost > 0) this._ammoBoost -= dt;
     this.invincible   -= dt;
     this._muzzleFlash -= dt;
+    this._effectT     += dt;
   }
 
   _shoot(bullets, particles) {
@@ -760,6 +771,72 @@ class Player {
       ctx.fillStyle = '#fff';
       ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
       ctx.restore();
+    }
+
+    // ── Mask overlay ─────────────────────────────────────────
+    if (this._custMask === 'skull') {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.fillStyle = 'rgba(220,220,220,0.82)';
+      ctx.beginPath(); ctx.arc(0, -1, r * 0.72, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#0a0a0a';
+      ctx.beginPath(); ctx.ellipse(-5, -3, 4, 5, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse( 5, -3, 4, 5, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillRect(-4, 4, 8, 2);
+      ctx.fillRect(-7, 6, 14, 2);
+      ctx.restore();
+    } else if (this._custMask === 'visor') {
+      ctx.save();
+      ctx.translate(x, y);
+      const vg = ctx.createLinearGradient(-r, -4, r, 4);
+      vg.addColorStop(0,   this.color + '44');
+      vg.addColorStop(0.5, this.color + 'CC');
+      vg.addColorStop(1,   this.color + '44');
+      ctx.fillStyle = vg; ctx.shadowColor = this.color; ctx.shadowBlur = 14;
+      ctx.beginPath();
+      ctx.roundRect(-r + 2, -6, (r - 2) * 2, 12, 3); ctx.fill();
+      ctx.restore();
+    } else if (this._custMask === 'cyber') {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.strokeStyle = this.color; ctx.lineWidth = 1; ctx.shadowColor = this.color; ctx.shadowBlur = 8;
+      ctx.beginPath(); ctx.arc(0, 0, r * 0.82, -0.5, 0.5); ctx.stroke();
+      ctx.beginPath(); ctx.arc(0, 0, r * 0.82, Math.PI - 0.5, Math.PI + 0.5); ctx.stroke();
+      ctx.fillStyle = this.color + 'CC';
+      ctx.beginPath(); ctx.rect(-8, -3, 16, 6); ctx.fill();
+      ctx.fillStyle = '#000'; ctx.fillRect(-5, -2, 10, 4);
+      ctx.restore();
+    }
+
+    // ── Cyber effect ─────────────────────────────────────────
+    const et = this._effectT || 0;
+    if (this._custEffect === 'aura') {
+      const pulse = Math.sin(et * 3) * 0.3 + 0.7;
+      ctx.save();
+      ctx.shadowColor = this.color; ctx.shadowBlur = 40 * pulse;
+      ctx.strokeStyle = this.color + Math.round(pulse * 88).toString(16).padStart(2,'0');
+      ctx.lineWidth = 2.5;
+      ctx.beginPath(); ctx.arc(x, y, r + 8 + Math.sin(et * 3) * 3, 0, Math.PI * 2); ctx.stroke();
+      ctx.restore();
+    } else if (this._custEffect === 'static') {
+      if (Math.random() < 0.4) {
+        ctx.save(); ctx.globalAlpha = 0.55;
+        for (let i = 0; i < 8; i++) {
+          ctx.fillStyle = this.color;
+          const ang = Math.random() * Math.PI * 2;
+          const d   = r + Math.random() * 10;
+          ctx.fillRect(x + Math.cos(ang) * d - 1, y + Math.sin(ang) * d - 1, 2, 2);
+        }
+        ctx.restore();
+      }
+    } else if (this._custEffect === 'glitch') {
+      if (Math.sin(et * 7) > 0.6) {
+        const off = (Math.random() - 0.5) * 12;
+        ctx.save();
+        ctx.globalAlpha = 0.35; ctx.fillStyle = this.color;
+        ctx.beginPath(); ctx.arc(x + off, y, r, 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
+      }
     }
   }
 }
@@ -2149,6 +2226,94 @@ class ZombieBot {
       ctx.fillStyle = '#44FF44'; ctx.fillRect(bx, by, bw * (this.hp / this.maxHp), bh);
       ctx.restore();
     }
+  }
+}
+
+// ─── Bodyguard ───────────────────────────────────────────────────────────────
+class Bodyguard {
+  constructor(x, y, tier = 'light') {
+    this.x = x; this.y = y;
+    this.dead = false; this.dying = false;
+    const tiers = {
+      light: { hp:80,  speed:170, damage:25, fireRate:600, color:'#44CCFF', radius:14 },
+      heavy: { hp:200, speed:140, damage:45, fireRate:800, color:'#FF8844', radius:18 },
+      elite: { hp:150, speed:190, damage:38, fireRate:500, color:'#AAFFAA', radius:15 },
+    };
+    const cfg  = tiers[tier] || tiers.light;
+    this.hp    = cfg.hp; this.maxHp = cfg.hp;
+    this.speed = cfg.speed; this.damage = cfg.damage;
+    this.fireRate = cfg.fireRate; this.color = cfg.color; this.radius = cfg.radius;
+    this._fireCooldown = Math.random() * cfg.fireRate;
+    this._angle  = 0; this._t = 0; this._dyingT = 0;
+  }
+
+  update(dt, playerX, playerY, bots, bullets, particles) {
+    this._t += dt;
+    if (this.dying) { this._dyingT += dt; if (this._dyingT > 0.6) this.dead = true; return; }
+    if (this.hp <= 0) { this.dying = true; return; }
+
+    // Follow player — stay ~60px offset
+    const dx = playerX - this.x, dy = playerY - this.y;
+    const dist = Math.hypot(dx, dy);
+    if (dist > 65) {
+      const spd = this.speed * dt;
+      this.x += (dx / dist) * spd;
+      this.y += (dy / dist) * spd;
+    }
+
+    // Target nearest bot in range
+    let target = null, minDist = 360;
+    for (const bot of bots) {
+      if (bot.dead || bot.dying) continue;
+      const d = Math.hypot(bot.x - this.x, bot.y - this.y);
+      if (d < minDist) { target = bot; minDist = d; }
+    }
+    if (target) {
+      this._angle = Math.atan2(target.y - this.y, target.x - this.x);
+      this._fireCooldown -= dt * 1000;
+      if (this._fireCooldown <= 0) {
+        this._fireCooldown = this.fireRate;
+        bullets.push(new Bullet(this.x, this.y, this._angle, 380, this.damage, true, this.color));
+      }
+    }
+  }
+
+  takeDamage(dmg) {
+    this.hp -= dmg;
+    if (this.hp <= 0) this.dying = true;
+  }
+
+  render(ctx) {
+    if (this.dead) return;
+    const x = this.x, y = this.y, r = this.radius;
+    ctx.save();
+    if (this.dying) ctx.globalAlpha = Math.max(0, 1 - this._dyingT / 0.6);
+    // Shadow
+    ctx.fillStyle = 'rgba(0,0,0,0.28)';
+    ctx.beginPath(); ctx.ellipse(x + 2, y + 4, r * 0.85, r * 0.45, 0, 0, Math.PI * 2); ctx.fill();
+    // Body
+    ctx.shadowColor = this.color; ctx.shadowBlur = 14;
+    ctx.fillStyle   = this.color + '88';
+    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = this.color; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.stroke();
+    // Gun arm
+    const gx = x + Math.cos(this._angle) * (r + 10);
+    const gy = y + Math.sin(this._angle) * (r + 10);
+    ctx.strokeStyle = this.color; ctx.lineWidth = 3; ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(x + Math.cos(this._angle) * (r - 2), y + Math.sin(this._angle) * (r - 2));
+    ctx.lineTo(gx, gy); ctx.stroke();
+    // HP bar
+    const bw = r * 2.5, bh = 4;
+    ctx.shadowBlur = 0; ctx.fillStyle = 'rgba(0,0,0,0.6)';
+    ctx.fillRect(x - bw / 2, y - r - 10, bw, bh);
+    ctx.fillStyle = this.hp / this.maxHp > 0.45 ? '#44FF88' : '#FF4444';
+    ctx.fillRect(x - bw / 2, y - r - 10, bw * (this.hp / this.maxHp), bh);
+    // Label
+    ctx.fillStyle = this.color; ctx.font = 'bold 6px Orbitron, monospace'; ctx.textAlign = 'center';
+    ctx.fillText('GUARD', x, y - r - 14);
+    ctx.restore();
   }
 }
 

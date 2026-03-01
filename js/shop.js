@@ -2,11 +2,12 @@
 
 class ShopManager {
   constructor() {
-    this.isOpen     = false;
-    this.tab        = 'weapons';  // 'weapons' | 'upgrades'
-    this._areas     = [];         // clickable hit-areas rebuilt each render
-    this._feedback  = null;       // { msg, color, t }
-    this._scrollY   = 0;
+    this.isOpen      = false;
+    this.tab         = 'weapons';  // 'weapons' | 'upgrades' | 'security'
+    this._areas      = [];         // clickable hit-areas rebuilt each render
+    this._feedback   = null;       // { msg, color, t }
+    this._scrollY    = 0;
+    this._guardCount = 0;          // updated by game.js before render
   }
 
   open()   { this.isOpen = true;  this._areas = []; }
@@ -118,9 +119,10 @@ class ShopManager {
     // ── Tabs ────────────────────────────────────────────────
     const tabY = py + 60;
     const tabH = 38;
-    const tabW = (PW - 60) / 2;
-    [['weapons', 'WEAPONS  /  GUNS'], ['upgrades', 'UPGRADES  /  STATS']].forEach(([id, label], i) => {
-      const tx = px + 20 + i * (tabW + 20);
+    const tabs = [['weapons','WEAPONS / GUNS'],['upgrades','UPGRADES / STATS'],['security','HIRE SECURITY']];
+    const tabW = (PW - (tabs.length + 1) * 14) / tabs.length;
+    tabs.forEach(([id, label], i) => {
+      const tx = px + 14 + i * (tabW + 14);
       const active = this.tab === id;
       const hover  = mx >= tx && mx <= tx + tabW && my >= tabY && my <= tabY + tabH;
       ctx.save();
@@ -131,7 +133,7 @@ class ShopManager {
       ctx.lineWidth   = active ? 1.5 : 1;
       this._rr(ctx, tx, tabY, tabW, tabH, 7);
       ctx.fill(); ctx.stroke();
-      ctx.font = `bold ${active ? 12 : 11}px Orbitron, monospace`;
+      ctx.font = `bold ${active ? 11 : 10}px Orbitron, monospace`;
       ctx.fillStyle = active ? '#44EEFF' : 'rgba(255,255,255,0.35)';
       ctx.textAlign = 'center';
       ctx.fillText(label, tx + tabW / 2, tabY + 24);
@@ -150,6 +152,8 @@ class ShopManager {
 
     if (this.tab === 'weapons') {
       this._drawWeapons(ctx, px, contentY, PW, contentH, player, money, mx, my);
+    } else if (this.tab === 'security') {
+      this._drawSecurity(ctx, px, contentY, PW, contentH, player, money, mx, my);
     } else {
       this._drawUpgrades(ctx, px, contentY, PW, contentH, player, money, mx, my);
     }
@@ -444,6 +448,105 @@ class ShopManager {
     ctx.stroke();
     ctx.restore();
     if (!visible) ctx.restore();
+  }
+
+  // ── Security tab ─────────────────────────────────────────
+  _drawSecurity(ctx, px, cy, PW, PH, player, money, mx, my) {
+    const guards = [
+      { tier:'light', name:'LIGHT GUARD',  desc:'Fast. Armed with pistol.',  price:1500, hp:80,  color:'#44CCFF' },
+      { tier:'heavy', name:'HEAVY GUARD',  desc:'Tough. Heavy firepower.',   price:3500, hp:200, color:'#FF8844' },
+      { tier:'elite', name:'ELITE GUARD',  desc:'Best-in-class. Fast & lethal.', price:5000, hp:150, color:'#AAFFAA' },
+    ];
+    const gap  = 18, cols = 3;
+    const cardW = Math.floor((PW - gap * (cols + 1)) / cols);
+    const cardH = 190;
+    const startY = cy + 10;
+
+    // Guard count header
+    const guardCount = this._guardCount || 0;
+    ctx.save();
+    ctx.font = 'bold 11px Orbitron, monospace'; ctx.textAlign = 'center';
+    ctx.fillStyle = '#AAFFAA'; ctx.shadowColor = '#44FF88'; ctx.shadowBlur = 10;
+    ctx.fillText(`ACTIVE GUARDS: ${guardCount} / 4`, px + PW / 2, cy + 28);
+    ctx.restore();
+
+    guards.forEach((g, i) => {
+      const cx2 = px + gap + i * (cardW + gap);
+      const ry  = startY + 40;
+      const hover = mx >= cx2 && mx <= cx2 + cardW && my >= ry && my <= ry + cardH;
+
+      // Card
+      ctx.save();
+      ctx.shadowColor = hover ? g.color : 'transparent'; ctx.shadowBlur = hover ? 16 : 0;
+      ctx.fillStyle   = hover ? `rgba(${this._rgb(g.color)},0.10)` : 'rgba(255,255,255,0.03)';
+      ctx.strokeStyle = hover ? g.color : 'rgba(255,255,255,0.1)'; ctx.lineWidth = hover ? 1.5 : 1;
+      this._rr(ctx, cx2, ry, cardW, cardH, 8); ctx.fill(); ctx.stroke();
+
+      // Guard silhouette
+      const mx2 = cx2 + cardW / 2, my2 = ry + 62;
+      ctx.fillStyle = g.color + '99';
+      ctx.beginPath(); ctx.arc(mx2, my2, 22, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = g.color; ctx.lineWidth = 2; ctx.shadowColor = g.color; ctx.shadowBlur = 12;
+      ctx.beginPath(); ctx.arc(mx2, my2, 22, 0, Math.PI * 2); ctx.stroke();
+      // Head
+      ctx.fillStyle = g.color;
+      ctx.beginPath(); ctx.arc(mx2, my2 - 28, 10, 0, Math.PI * 2); ctx.fill();
+      // Gun
+      ctx.strokeStyle = '#CCC'; ctx.lineWidth = 3; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(mx2 + 18, my2 - 4); ctx.lineTo(mx2 + 36, my2 - 4); ctx.stroke();
+
+      // Name
+      ctx.shadowBlur = 0;
+      ctx.font = 'bold 12px Orbitron, monospace'; ctx.textAlign = 'center'; ctx.fillStyle = g.color;
+      ctx.fillText(g.name, mx2, ry + 110);
+
+      // HP
+      ctx.font = '9px Orbitron, monospace'; ctx.fillStyle = 'rgba(255,255,255,0.55)';
+      ctx.fillText(`HP: ${g.hp}`, mx2, ry + 128);
+
+      // Desc
+      ctx.font = '9px Orbitron, monospace'; ctx.fillStyle = 'rgba(255,255,255,0.4)';
+      ctx.fillText(g.desc, mx2, ry + 144);
+
+      // Price button
+      const btnY = ry + cardH - 34, btnW = cardW - 24, btnX = cx2 + 12;
+      const canBuy = money >= g.price;
+      ctx.fillStyle = canBuy ? (hover ? `rgba(${this._rgb(g.color)},0.25)` : `rgba(${this._rgb(g.color)},0.12)`) : 'rgba(100,100,100,0.12)';
+      ctx.strokeStyle = canBuy ? g.color : '#555'; ctx.lineWidth = 1;
+      this._rr(ctx, btnX, btnY, btnW, 26, 5); ctx.fill(); ctx.stroke();
+      ctx.font = 'bold 11px Orbitron, monospace'; ctx.textAlign = 'center';
+      ctx.fillStyle = canBuy ? g.color : '#555'; ctx.shadowColor = canBuy ? g.color : 'transparent'; ctx.shadowBlur = canBuy ? 8 : 0;
+      ctx.fillText(`$ ${g.price.toLocaleString()}  HIRE`, btnX + btnW / 2, btnY + 18);
+      ctx.shadowBlur = 0; ctx.restore();
+
+      const tier = g.tier, price = g.price, color = g.color;
+      this._pushArea(btnX, btnY, btnW, 26, (p, gameRef) => {
+        if ((gameRef._bodyguards || []).length >= 4) { this._msg('MAX 4 GUARDS', '#FF4466'); return; }
+        if (gameRef.money < price) { this._msg('NOT ENOUGH MONEY', '#FF4466'); return; }
+        gameRef.money -= price;
+        const bg = new Bodyguard(p.x + rnd(-50, 50), p.y + rnd(-50, 50), tier);
+        bg._color = color;
+        gameRef._bodyguards.push(bg);
+        this._msg(`${tier.toUpperCase()} GUARD HIRED!`, color);
+      });
+    });
+
+    // Dismiss button
+    const dismissY = startY + 40 + cardH + 16;
+    const dismissX = px + PW / 2 - 100;
+    const dismissHover = mx >= dismissX && mx <= dismissX + 200 && my >= dismissY && my <= dismissY + 28;
+    ctx.save();
+    ctx.fillStyle = dismissHover ? 'rgba(255,68,68,0.18)' : 'rgba(255,68,68,0.07)';
+    ctx.strokeStyle = dismissHover ? '#FF4444' : 'rgba(255,68,68,0.3)'; ctx.lineWidth = 1;
+    this._rr(ctx, dismissX, dismissY, 200, 28, 5); ctx.fill(); ctx.stroke();
+    ctx.font = 'bold 10px Orbitron, monospace'; ctx.textAlign = 'center';
+    ctx.fillStyle = dismissHover ? '#FF6666' : 'rgba(255,68,68,0.6)';
+    ctx.fillText('DISMISS ALL GUARDS', dismissX + 100, dismissY + 19);
+    ctx.restore();
+    this._pushArea(dismissX, dismissY, 200, 28, (p, gameRef) => {
+      gameRef._bodyguards = [];
+      this._msg('ALL GUARDS DISMISSED', '#FF6666');
+    });
   }
 
   // ── Drawing helpers ───────────────────────────────────────

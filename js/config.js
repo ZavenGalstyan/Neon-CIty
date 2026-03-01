@@ -382,6 +382,7 @@ const CONFIG = {
     { id:'riot',        name:'CITY RIOT',          desc:'The streets are in chaos.',                   duration:60, major:false },
     { id:'corporate',   name:'CORPORATE INVASION', desc:'MegaCorp enforcers have seized the district.', duration:65, major:true  },
     { id:'cyber_virus', name:'CYBER VIRUS',        desc:'Systems compromised. Reality unraveling.',     duration:50, major:false },
+    { id:'glitch_mode', name:'GLITCH MODE',         desc:'Reality fractures. The simulation breaks.',   duration:60, major:true  },
   ],
 
   // ── Car Dealership ──────────────────────────────────────
