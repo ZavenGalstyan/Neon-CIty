@@ -383,4 +383,27 @@ const CONFIG = {
     { id:'corporate',   name:'CORPORATE INVASION', desc:'MegaCorp enforcers have seized the district.', duration:65, major:true  },
     { id:'cyber_virus', name:'CYBER VIRUS',        desc:'Systems compromised. Reality unraveling.',     duration:50, major:false },
   ],
+
+  // ── Car Dealership ──────────────────────────────────────
+  CAR_DEALERSHIP: [
+    { id:'sedan',   name:'SEDAN',       desc:'Reliable street car.',   price:2000, speed:295, hp:200, color:'#CC3333', radius:28 },
+    { id:'sports',  name:'SPORTS CAR',  desc:'Born for speed.',        price:5500, speed:420, hp:120, color:'#3366BB', radius:26 },
+    { id:'suv',     name:'SUV / TRUCK', desc:'Built to survive.',      price:4000, speed:200, hp:380, color:'#CC9900', radius:30 },
+    { id:'armored', name:'ARMORED VAN', desc:'Bulletproof. Heavy.',    price:8500, speed:180, hp:500, color:'#445566', radius:32, bulletproof:true },
+  ],
+
+  GRENADE: { damage:120, blastRadius:95, fuseTime:2.0, price:500 },
+
+  // ── Districts ─────────────────────────────────────────────
+  DISTRICTS: [
+    { id:'dangerous',  name:'DANGEROUS DISTRICT', shortName:'DANGER ZONE', color:'#FF4444', tint:'rgba(255,68,68,0.055)',
+      desc:'Gang turf. Killing here calls in reinforcements.',
+      lowEffect:'Gang bots surge every 10s', highEffect:'Reduced enemy pressure' },
+    { id:'rich',       name:'RICH DISTRICT',       shortName:'UPTOWN',      color:'#FFDD44', tint:'rgba(255,221,68,0.045)',
+      desc:'Corporate territory. Money buys silence.',
+      lowEffect:'Wanted stars freeze', highEffect:'Shop -15% discount' },
+    { id:'industrial', name:'INDUSTRIAL ZONE',      shortName:'INDUSTRY',    color:'#FF8822', tint:'rgba(255,136,34,0.055)',
+      desc:'Factory district. Heavy enemies on every block.',
+      lowEffect:'Enemies spawn +25% HP', highEffect:'+50% ammo drop rate' },
+  ],
 };

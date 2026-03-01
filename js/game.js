@@ -112,6 +112,23 @@ class Game {
     this._cyberDebuffActive  = false;
     this._corpTimer          = 0;
 
+    // ── Districts & Reputation ─────────────────────────────────
+    this._districtLayout   = this._buildDistrictLayout(); // null for arena/zombie
+    this._currentDistrict  = null;
+    this._districtTimer    = 0;        // entry notification countdown (3s)
+    this._reputation       = { dangerous: 0, rich: 0, industrial: 0 };
+    this._repRestoreTimers = { dangerous: 0, rich: 0, industrial: 0 };
+    this._dangerSpawnTimer = 0;
+    this._shopDiscount     = 0;
+
+    // ── Car Dealership ────────────────────────────────────────
+    this._salespersons    = [];
+    this._nearSalesperson = false;
+    this._dealership      = new DealershipManager();
+    // ── Grenades ──────────────────────────────────────────────
+    this._grenades        = [];
+    this._grenadeCount    = 0;
+
     // Camera
     this.camX = spawnX - this.canvas.width  / 2;
     this.camY = spawnY - this.canvas.height / 2;
@@ -181,14 +198,31 @@ class Game {
       else if (this.state === 'paused')  { this.shop.open();  this.state = 'shop'; }
       return;
     }
+    if (e.code === 'KeyT') {
+      if (this._indoor?.isDealership && this._nearSalesperson) {
+        if      (this.state === 'playing')  { this._dealership.open();  this.state = 'carshop'; }
+        else if (this.state === 'carshop')  { this._dealership.close(); this.state = 'playing'; }
+      }
+      return;
+    }
+    if (e.code === 'KeyG' && this.state === 'playing' && !this._indoor && this._grenadeCount > 0) {
+      this._grenades.push(new Grenade(
+        this.player.x, this.player.y,
+        this.input.mouseWorld.x, this.input.mouseWorld.y
+      ));
+      this._grenadeCount--;
+      return;
+    }
     if (e.code === 'KeyP') {
       if      (this.state === 'playing') this.state = 'paused';
       else if (this.state === 'paused')  this.state = 'playing';
+      else if (this.state === 'carshop') { this._dealership.close(); this.state = 'playing'; }
       return;
     }
     if (e.code === 'Escape') {
       if (this.state === 'blackmarket') { this._bmOpen = false; this.state = 'playing'; return; }
       if (this.state === 'shop')    { this.shop.close(); this.state = 'playing'; return; }
+      if (this.state === 'carshop') { this._dealership.close(); this.state = 'playing'; return; }
       if (this.state === 'paused')  { this.state = 'playing'; return; }  // ESC = resume
       if (this.state === 'playing') { this.state = 'paused'; return; }
       if (this.state === 'gameover'){ this._destroy(); window.location.href = 'index.html'; return; }
@@ -224,6 +258,7 @@ class Game {
 
     if (this.state === 'playing' || this.state === 'blackmarket') this._update(dt);
     if (this.state === 'shop' || this.state === 'paused') this.shop.update(dt);
+    if (this.state === 'carshop') this._dealership.update(dt);
 
     this._render();
     this.input.flush();
@@ -275,6 +310,42 @@ class Game {
             }
           }
         }
+      }
+
+      // ── District detection & effects ──────────────────────────
+      if (this._districtLayout && !this._indoor) {
+        const mapPxW  = this.map.W * this.map.S;
+        const zoneIdx = Math.min(2, Math.floor(this.player.x / (mapPxW / 3)));
+        const distId  = this._districtLayout[zoneIdx];
+        const distCfg = CONFIG.DISTRICTS.find(d => d.id === distId);
+
+        if (!this._currentDistrict || this._currentDistrict.id !== distId) {
+          this._currentDistrict = distCfg;
+          this._districtTimer   = 3.0;
+        }
+        if (this._districtTimer > 0) this._districtTimer -= dt;
+
+        const rep = this._reputation[distId];
+
+        // Passive recovery: +1 per 12s without a kill here
+        this._repRestoreTimers[distId] += dt;
+        if (this._repRestoreTimers[distId] >= 12) {
+          this._repRestoreTimers[distId] = 0;
+          this._reputation[distId] = Math.min(100, this._reputation[distId] + 1);
+        }
+
+        // DANGEROUS low rep → extra gang bots every 10s
+        if (distId === 'dangerous' && rep <= -50) {
+          this._dangerSpawnTimer -= dt;
+          if (this._dangerSpawnTimer <= 0) {
+            this._dangerSpawnTimer = 10;
+            const rp = this.map.randomRoadPos();
+            this.bots.push(new Bot(rp.x, rp.y, this.wave, Math.random() < 0.6 ? 'normal' : 'mini', this.map.config));
+          }
+        }
+
+        // RICH high rep → shop discount
+        this._shopDiscount = (distId === 'rich' && rep >= 50) ? 0.15 : 0;
       }
     }
 
@@ -395,10 +466,13 @@ class Game {
         this._achStats.maxWanted = this._wantedLevel;
         this._checkAchievements();
       }
-      this._wantedDecay += dt;
-      if (this._wantedDecay >= 10.0) {
-        this._wantedLevel = Math.max(0, this._wantedLevel - 1);
-        this._wantedDecay = 0;
+      const richHalt = this._currentDistrict?.id === 'rich' && this._reputation.rich <= -50;
+      if (!richHalt) {
+        this._wantedDecay += dt;
+        if (this._wantedDecay >= 10.0) {
+          this._wantedLevel = Math.max(0, this._wantedLevel - 1);
+          this._wantedDecay = 0;
+        }
       }
     }
 
@@ -495,6 +569,13 @@ class Game {
         }
       }
     }
+
+    // ── Grenades ─────────────────────────────────────────────
+    for (const g of this._grenades) {
+      g.update(dt, this.map);
+      if (g.explode) this._explodeGrenade(g);
+    }
+    this._grenades = this._grenades.filter(g => !g.dead);
 
     for (const p   of this.particles) p.update(dt);
 
@@ -637,7 +718,7 @@ class Game {
       for (const b of this.bullets) {
         if (b.isPlayer || b.dead) continue;
         if (circlesOverlap(b.x, b.y, b.radius, v.x, v.y, v.radius)) {
-          v.takeDamage(b.damage, this.particles);
+          if (!v.bulletproof) v.takeDamage(b.damage, this.particles);
           b.dead = true;
           if (v === this._playerVehicle) this.hud.shake(3);
         }
@@ -790,13 +871,22 @@ class Game {
 
     // Arena kill count
     if (this._arenaMode) this._arenaKilled++;
+
+    // Rep loss in current district
+    if (this._currentDistrict && !this._zombieMode) {
+      const did = this._currentDistrict.id;
+      this._reputation[did] = Math.max(-100, this._reputation[did] - 10);
+      this._repRestoreTimers[did] = 0;
+    }
   }
 
   _dropPickup(bot) {
     const chances = { mini: 0.12, normal: 0.28, big: 0.55 };
     if (Math.random() < (chances[bot.type] || 0.2)) {
       const r = Math.random();
-      const type = r < 0.42 ? 'health' : r < 0.72 ? 'ammo' : 'cash';
+      const indBonus   = this._currentDistrict?.id === 'industrial' && this._reputation.industrial >= 50;
+      const ammoThresh = indBonus ? 0.84 : 0.72;
+      const type = r < 0.42 ? 'health' : r < ammoThresh ? 'ammo' : 'cash';
       this.pickups.push(new Pickup(bot.x, bot.y, type));
     }
   }
@@ -888,15 +978,70 @@ class Game {
 
     if (Math.random() > 0.4) {
       sx = clamp(sx, 0, maxWX); sy = clamp(sy, 0, maxWY);
-      if (!this.map.isBlocked(sx, sy)) { this.bots.push(new Bot(sx, sy, this.wave, type, this.map.config)); return; }
+      if (!this.map.isBlocked(sx, sy)) {
+        this.bots.push(new Bot(sx, sy, this.wave, type, this.map.config));
+        if (this._currentDistrict?.id === 'industrial' && this._reputation.industrial <= -50) {
+          const b = this.bots[this.bots.length - 1];
+          b.hp = Math.round(b.hp * 1.25); b.maxHp = b.hp;
+        }
+        return;
+      }
     }
     const rp = this.map.randomRoadPos();
     this.bots.push(new Bot(rp.x, rp.y, this.wave, type, this.map.config));
+    if (this._currentDistrict?.id === 'industrial' && this._reputation.industrial <= -50) {
+      const b = this.bots[this.bots.length - 1];
+      b.hp = Math.round(b.hp * 1.25); b.maxHp = b.hp;
+    }
   }
 
   _spawnBoss() {
     const rp = this.map.randomRoadPos();
     this.boss = new BossBot(rp.x, rp.y, this.wave, this.map.config.id);
+  }
+
+  _explodeGrenade(g) {
+    const r = CONFIG.GRENADE.blastRadius, dmg = CONFIG.GRENADE.damage;
+    for (let i = 0; i < 24; i++) {
+      const a = Math.random() * Math.PI * 2, s = rnd(120, 280);
+      this.particles.push(new Particle(g.x, g.y, Math.cos(a)*s, Math.sin(a)*s, i%3===0 ? '#FF8800' : '#FF4400', rnd(4,9), 0.9));
+    }
+    for (let i = 0; i < 10; i++) {
+      const a = Math.random() * Math.PI * 2, s = rnd(40, 100);
+      this.particles.push(new Particle(g.x, g.y, Math.cos(a)*s, Math.sin(a)*s, '#FFEE88', rnd(2,5), 0.5));
+    }
+    this.decals.push(new Decal(g.x, g.y, 'blood'));
+    this.hud.shake(10);
+    for (const bot of this.bots) {
+      if (bot.dead || bot.dying) continue;
+      if (circlesOverlap(g.x, g.y, r, bot.x, bot.y, bot.radius)) {
+        bot.takeDamage(dmg, this.particles);
+        this.hud.addDamageNumber(bot.x, bot.y - 30, dmg, this.camX, this.camY, '#FF8800');
+        if (bot.dying) {
+          this.decals.push(new Decal(bot.x, bot.y, 'blood'));
+          const mult   = this._streakMultiplier();
+          const earned = Math.round(CONFIG.MONEY_PER_KILL * bot._cfg.moneyMult * mult);
+          this.money += earned; this._achStats.moneyEarned += earned; this.kills++;
+          this.hud.addDamageNumber(bot.x, bot.y - 56, earned, this.camX, this.camY, '#FF8800');
+          this._onKill(); this._dropPickup(bot);
+        }
+      }
+    }
+    if (this.boss && !this.boss.dead && !this.boss.dying &&
+        circlesOverlap(g.x, g.y, r, this.boss.x, this.boss.y, this.boss.radius)) {
+      this.boss.takeDamage(dmg, this.particles);
+      this.hud.addDamageNumber(this.boss.x, this.boss.y - 60, dmg, this.camX, this.camY, '#FF8800');
+    }
+  }
+
+  _buildDistrictLayout() {
+    if (this._arenaMode || this._zombieMode) return null;
+    const types = ['dangerous', 'rich', 'industrial'];
+    for (let i = types.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [types[i], types[j]] = [types[j], types[i]];
+    }
+    return types;   // [leftZone, centerZone, rightZone]
   }
 
   _togglePlayerDrone() {
@@ -960,6 +1105,10 @@ class Game {
 
   _tryEnterExit() {
     if (this._indoor) {
+      if (this._indoor.isDealership) {
+        this._salespersons = [];
+        if (this.state === 'carshop') { this._dealership.close(); this.state = 'playing'; }
+      }
       const door = this._indoor.doorDoor;
       this.player.x = door.wx;
       this.player.y = door.wy + 30;
@@ -973,17 +1122,26 @@ class Game {
       const dist = Math.hypot(door.wx - this.player.x, door.wy - this.player.y);
       if (dist < 55) {
         const room = this.map.getRoom(door);
+        room.isDealership = (door.specialType === 'dealership');
         this._indoor = room;
         this._achStats.buildingsEntered++;
         this._checkAchievements();
         this.player.x = room.entryX;
         this.player.y = room.entryY;
-        const key = `${door.tx},${door.ty}`;
-        if (!this._visitedRooms.has(key)) {
-          const count = 1 + Math.floor(Math.random() * 2) + Math.floor(this.wave / 3);
-          for (let i = 0; i < Math.min(count, 4); i++) {
-            const pos = room.randomRoadPos();
-            this._indoorBots.push(new Bot(pos.x, pos.y, this.wave, 'normal', this.map.config));
+
+        if (room.isDealership) {
+          this._salespersons = [
+            new Salesperson(room.entryX + 55,  room.entryY - 90,  '#FFAA55'),
+            new Salesperson(room.entryX - 55,  room.entryY - 130, '#55AAFF'),
+          ];
+        } else {
+          const key = `${door.tx},${door.ty}`;
+          if (!this._visitedRooms.has(key)) {
+            const count = 1 + Math.floor(Math.random() * 2) + Math.floor(this.wave / 3);
+            for (let i = 0; i < Math.min(count, 4); i++) {
+              const pos = room.randomRoadPos();
+              this._indoorBots.push(new Bot(pos.x, pos.y, this.wave, 'normal', this.map.config));
+            }
           }
         }
         return;
@@ -992,6 +1150,7 @@ class Game {
   }
 
   _updateIndoor(dt) {
+    if (this._indoor?.isDealership) { this._updateDealershipIndoor(dt); return; }
     const room = this._indoor;
     const offX = (this.canvas.width  - room.roomW) / 2;
     const offY = (this.canvas.height - room.roomH) / 2;
@@ -1073,7 +1232,29 @@ class Game {
     this.hud.update(dt);
   }
 
+  _updateDealershipIndoor(dt) {
+    const room = this._indoor;
+    const offX = (this.canvas.width  - room.roomW) / 2;
+    const offY = (this.canvas.height - room.roomH) / 2;
+    this.input.updateMouseWorld(-offX, -offY);
+    this.player.inVehicle = false;
+    this.player.update(dt, this.input, room, this._indoorBullets, this.particles);
+    if (this.player.dead && this.state === 'playing') this.state = 'gameover';
+    if (this.player.y >= room.roomH - 5) { this._tryEnterExit(); return; }
+    for (const b of this._indoorBullets) b.update(dt, room);
+    this._indoorBullets = this._indoorBullets.filter(b => !b.dead);
+    for (const sp of this._salespersons) sp.update(dt);
+    this._nearSalesperson = this._salespersons.some(
+      sp => Math.hypot(sp.x - this.player.x, sp.y - this.player.y) < 60
+    );
+    this.weather.update(dt, this.canvas.width, this.canvas.height);
+    if (this._streakTimer > 0) { this._streakTimer -= dt; if (this._streakTimer <= 0) this._killStreak = 0; }
+    if (this._streakPopup.timer > 0) this._streakPopup.timer -= dt;
+    this.hud.update(dt);
+  }
+
   _renderIndoorScene(ctx, W, H, shake) {
+    if (this._indoor?.isDealership) { this._renderDealershipIndoor(ctx, W, H, shake); return; }
     const room = this._indoor;
     const offX = (W - room.roomW) / 2;
     const offY = (H - room.roomH) / 2;
@@ -1117,13 +1298,58 @@ class Game {
     ctx.restore();
   }
 
+  _renderDealershipIndoor(ctx, W, H, shake) {
+    const room = this._indoor;
+    const offX = (W - room.roomW) / 2, offY = (H - room.roomH) / 2;
+    const S = room.S;
+    ctx.fillStyle = '#06060a'; ctx.fillRect(0, 0, W, H);
+    ctx.save(); ctx.translate(offX + shake.x, offY + shake.y);
+    // Glossy showroom floor (checkerboard)
+    for (let ty = 0; ty < room.H; ty++) {
+      for (let tx = 0; tx < room.W; tx++) {
+        const px = tx * S, py = ty * S, t = room.layout[ty][tx];
+        if (t === 1) {
+          ctx.fillStyle = '#111120'; ctx.fillRect(px, py, S, S);
+        } else {
+          ctx.fillStyle = (tx + ty) % 2 === 0 ? '#12121e' : '#0e0e18';
+          ctx.fillRect(px, py, S, S);
+          ctx.fillStyle = 'rgba(68,238,255,0.018)';
+          ctx.fillRect(px, py, S, S);
+        }
+      }
+    }
+    // Neon accent stripe
+    ctx.fillStyle = 'rgba(68,238,255,0.20)'; ctx.fillRect(0, S, room.roomW, 3);
+    ctx.fillStyle = 'rgba(68,238,255,0.08)'; ctx.fillRect(0, S, room.roomW, S * 0.3);
+    // Salespersons + bullets + player
+    for (const sp of this._salespersons) sp.render(ctx);
+    for (const b of this._indoorBullets) b.render(ctx);
+    if (!this.player.dead) this.player.render(ctx);
+    // [T] hint near salesperson
+    if (this._nearSalesperson) {
+      const nearSp = this._salespersons.find(sp => Math.hypot(sp.x - this.player.x, sp.y - this.player.y) < 60);
+      if (nearSp) {
+        ctx.save();
+        ctx.font = 'bold 11px Orbitron, monospace'; ctx.textAlign = 'center';
+        ctx.fillStyle = '#FFFFAA'; ctx.shadowColor = '#FFFF00'; ctx.shadowBlur = 10;
+        ctx.fillText('[T] OPEN SHOP', nearSp.x, nearSp.y - 62);
+        ctx.restore();
+      }
+    }
+    // [E] EXIT hint
+    ctx.save(); ctx.font = 'bold 11px Orbitron, monospace'; ctx.textAlign = 'center';
+    ctx.fillStyle = '#FFFFAA'; ctx.shadowColor = '#FFFF00'; ctx.shadowBlur = 10;
+    ctx.fillText('[E] EXIT', room.entryX, room.roomH - 8);
+    ctx.restore(); ctx.restore();
+  }
+
   // ── Render ─────────────────────────────────────────────────
   _render() {
     const ctx = this.ctx;
     const W   = this.canvas.width, H = this.canvas.height;
     const shake = this.hud.getShakeOffset();
 
-    this.canvas.style.cursor = (this.state === 'shop' || this.state === 'blackmarket') ? 'default' : 'none';
+    this.canvas.style.cursor = (this.state === 'shop' || this.state === 'blackmarket' || this.state === 'carshop') ? 'default' : 'none';
 
     ctx.clearRect(0, 0, W, H);
     ctx.fillStyle = '#08080f';
@@ -1136,6 +1362,16 @@ class Game {
       ctx.save();
       ctx.translate(-this.camX + shake.x, -this.camY + shake.y);
       this.map.render(ctx, this.camX, this.camY, W, H);
+      if (this._districtLayout) {
+        const mapPxW = this.map.W * this.map.S;
+        const mapPxH = this.map.H * this.map.S;
+        const zoneW  = mapPxW / 3;
+        for (let i = 0; i < 3; i++) {
+          const cfg = CONFIG.DISTRICTS.find(d => d.id === this._districtLayout[i]);
+          ctx.fillStyle = cfg.tint;
+          ctx.fillRect(i * zoneW, 0, zoneW, mapPxH);
+        }
+      }
       for (const d   of this.decals)    d.render(ctx);
       for (const p   of this.pickups)   p.render(ctx);
       for (const v   of this.vehicles)  v.render(ctx);
@@ -1149,6 +1385,9 @@ class Game {
       // Drones
       for (const d of this._drones) d.render(ctx);
       if (this._playerDrone) this._playerDrone.render(ctx);
+
+      // Grenades
+      for (const g of this._grenades) g.render(ctx);
 
       // Black market vendor NPC
       if (this._bmVendor && this._nightAlpha > 0.1) {
@@ -1182,8 +1421,11 @@ class Game {
           if (Math.hypot(door.wx - this.player.x, door.wy - this.player.y) < 55) {
             ctx.save();
             ctx.font = 'bold 11px Orbitron, monospace'; ctx.textAlign = 'center';
-            ctx.fillStyle = '#FFFFAA'; ctx.shadowColor = '#FFFF00'; ctx.shadowBlur = 10;
-            ctx.fillText('[E] ENTER', door.wx, door.wy - 16);
+            const hintText  = door.specialType === 'dealership' ? '[E] CAR SHOP' : '[E] ENTER';
+            ctx.fillStyle   = door.specialType === 'dealership' ? '#FFDD44'      : '#FFFFAA';
+            ctx.shadowColor = door.specialType === 'dealership' ? '#FFBB00'      : '#FFFF00';
+            ctx.shadowBlur  = 10;
+            ctx.fillText(hintText, door.wx, door.wy - 16);
             ctx.restore();
           }
         }
@@ -1233,7 +1475,7 @@ class Game {
     // HUD
     const playing = this.state !== 'gameover';
     if (playing) {
-      this.hud.renderMinimap(this.map, this.player, this.bots, this.camX, this.camY, this.boss);
+      this.hud.renderMinimap(this.map, this.player, this.bots, this.camX, this.camY, this.boss, this._districtLayout);
       this.hud.renderHealthBar(this.player);
       this.hud.renderControls(this._arenaMode);
       this.hud.renderMoney(this.money);
@@ -1253,12 +1495,17 @@ class Game {
         this.hud.renderWantedLevel(this._wantedLevel, this._wantedDecay);
       }
       this.hud.renderWeaponInfo(this.player);
+      if (this._grenadeCount > 0) this.hud.renderGrenadeCount(this._grenadeCount);
       if (!this._arenaMode && !this._zombieMode) this.hud.renderShopButton(this.state === 'shop');
       this.hud.renderAchButton(this._achPanelOpen);
       if (!this._zombieMode) this.hud.renderDayNight(this._nightAlpha, this._gameTime);
       if (this._globalEvent) this.hud.renderEventBanner(ctx, W, H, this._globalEvent, this._eventAnnounceTimer);
       if (this._playerDrone) this.hud.renderDroneStatus(this._playerDrone, this._droneControl);
       this.hud.renderDamageNumbers();
+      if (this._districtLayout && this._currentDistrict) {
+        this.hud.renderDistrictHUD(this._districtLayout, this._reputation, this._currentDistrict, this._shopDiscount);
+        if (this._districtTimer > 0) this.hud.renderDistrictEntry(this._currentDistrict, this._districtTimer);
+      }
       if (this.boss && !this.boss.dead && !this.boss.dying) {
         this.hud.renderBossBar(this.boss);
       }
@@ -1305,6 +1552,16 @@ class Game {
       if (this.input.mouseJustDown) {
         this.shop.handleClick(this.input.mouseScreen.x, this.input.mouseScreen.y, this.player, this);
         if (!this.shop.isOpen) this.state = 'playing';
+      }
+    }
+
+    // Car dealership overlay
+    if (this.state === 'carshop') {
+      this._dealership.render(ctx, W, H, this.player, this.money, this._grenadeCount,
+                              this.input.mouseScreen.x, this.input.mouseScreen.y);
+      if (this.input.mouseJustDown) {
+        this._dealership.handleClick(this.input.mouseScreen.x, this.input.mouseScreen.y, this.player, this);
+        if (!this._dealership.isOpen) this.state = 'playing';
       }
     }
 

@@ -138,6 +138,16 @@ class GameMap {
         }
       }
     }
+
+    // Mark 1–2 doors as car dealerships (normal maps only)
+    if (!this.config.arena && !this.config.zombie && this.doors.length >= 2) {
+      const step = Math.max(1, Math.floor(this.doors.length / 2));
+      let count = 0;
+      for (let i = 0; i < this.doors.length && count < 2; i += step) {
+        this.doors[i].specialType = 'dealership';
+        count++;
+      }
+    }
   }
 
   _blockColor(seed) {

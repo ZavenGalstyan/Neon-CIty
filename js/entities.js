@@ -2151,3 +2151,58 @@ class ZombieBot {
     }
   }
 }
+
+// ─── Grenade ────────────────────────────────────────────────────────────────
+class Grenade {
+  constructor(x, y, tx, ty) {
+    this.x = x; this.y = y; this.dead = false; this.radius = 8;
+    const dist  = Math.hypot(tx - x, ty - y);
+    const speed = Math.min(420, Math.max(180, dist * 1.1));
+    const ang   = Math.atan2(ty - y, tx - x);
+    this.vx = Math.cos(ang) * speed;
+    this.vy = Math.sin(ang) * speed;
+    this.timer  = CONFIG.GRENADE.fuseTime;
+    this._spinT = 0;
+    this.explode = false;
+  }
+  update(dt, gameMap) {
+    this.x += this.vx * dt; this.y += this.vy * dt;
+    this.vx *= Math.pow(0.18, dt); this.vy *= Math.pow(0.18, dt);
+    this._spinT += dt * 7;
+    this.timer -= dt;
+    if (this.timer <= 0 || gameMap.isBlocked(this.x, this.y)) {
+      this.explode = true; this.dead = true;
+    }
+  }
+  render(ctx) {
+    ctx.save(); ctx.translate(this.x, this.y); ctx.rotate(this._spinT);
+    ctx.fillStyle = '#3a5c3a'; ctx.strokeStyle = '#88CC88'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.ellipse(0, 0, 8, 6, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    if (this.timer < 0.8 && Math.floor(this.timer / 0.12) % 2 === 0) {
+      ctx.fillStyle = '#FF4400';
+      ctx.beginPath(); ctx.arc(0, -7, 3, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.restore();
+  }
+}
+
+// ─── Salesperson ─────────────────────────────────────────────────────────────
+class Salesperson {
+  constructor(x, y, color = '#FFAA55') {
+    this.x = x; this.y = y; this.color = color; this.radius = 16;
+    this._waveT = 0;
+  }
+  update(dt) { this._waveT += dt * 1.4; }
+  render(ctx) {
+    const sway = Math.sin(this._waveT) * 2;
+    ctx.save(); ctx.translate(this.x + sway, this.y);
+    ctx.fillStyle = this.color;
+    ctx.beginPath(); ctx.roundRect(-10, -26, 20, 24, 3); ctx.fill();
+    ctx.fillStyle = '#FFDDBB';
+    ctx.beginPath(); ctx.arc(0, -34, 11, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#FFFFFF'; ctx.shadowColor = this.color; ctx.shadowBlur = 6;
+    ctx.font = 'bold 7px Orbitron, monospace'; ctx.textAlign = 'center';
+    ctx.fillText('DEALER', 0, -50);
+    ctx.shadowBlur = 0; ctx.restore();
+  }
+}

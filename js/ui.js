@@ -111,7 +111,7 @@ class HUD {
   }
 
   // ── Minimap ────────────────────────────────────────────────────────────────
-  renderMinimap(gameMap, player, bots, camX, camY, boss = null) {
+  renderMinimap(gameMap, player, bots, camX, camY, boss = null, districtLayout = null) {
     const ctx  = this.ctx;
     const H    = this.canvas.height;
     const W    = this.canvas.width;
@@ -139,6 +139,22 @@ class HUD {
 
     // Pre-rendered map tiles
     ctx.drawImage(gameMap.minimapCanvas, mmX, mmY, mmW, mmH);
+
+    // District zone overlays (drawn before dots so dots appear on top)
+    if (districtLayout) {
+      const zoneW = Math.round(mmW / 3);
+      for (let i = 0; i < 3; i++) {
+        const cfg = CONFIG.DISTRICTS.find(d => d.id === districtLayout[i]);
+        ctx.globalAlpha = 0.22;
+        ctx.fillStyle = cfg.color;
+        ctx.fillRect(mmX + i * zoneW, mmY, zoneW, mmH);
+        if (i > 0) {
+          ctx.globalAlpha = 0.5; ctx.strokeStyle = cfg.color; ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.moveTo(mmX + i * zoneW, mmY); ctx.lineTo(mmX + i * zoneW, mmY + mmH); ctx.stroke();
+        }
+      }
+      ctx.globalAlpha = 1;
+    }
 
     // Camera viewport rectangle
     ctx.save();
@@ -184,6 +200,124 @@ class HUD {
     ctx.strokeStyle = 'rgba(68,238,255,0.3)';
     ctx.lineWidth = 1;
     ctx.strokeRect(mmX, mmY, mmW, mmH);
+    ctx.restore();
+  }
+
+  // ── District HUD (top-right panel) ────────────────────────────────────────
+  renderDistrictHUD(districtLayout, reputation, currentDistrict, shopDiscount) {
+    const ctx = this.ctx;
+    const W   = this.canvas.width;
+    const panW = 184;
+    const rowH = 22;
+    const panH = districtLayout.length * rowH + 10 + (shopDiscount > 0 ? 18 : 0);
+    const px   = W - panW - HUD_PAD;
+    const py   = 68;
+
+    // Panel background
+    ctx.save();
+    ctx.fillStyle   = 'rgba(0,0,0,0.70)';
+    ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+    ctx.lineWidth   = 1;
+    this._rr(ctx, px - 6, py - 6, panW + 12, panH + 12, 6);
+    ctx.fill(); ctx.stroke();
+
+    districtLayout.forEach((distId, i) => {
+      const cfg    = CONFIG.DISTRICTS.find(d => d.id === distId);
+      const rep    = reputation[distId];
+      const active = currentDistrict.id === distId;
+      const ry     = py + i * rowH;
+
+      ctx.globalAlpha = active ? 1.0 : 0.45;
+
+      // Colored dot
+      ctx.fillStyle   = cfg.color;
+      ctx.shadowColor = active ? cfg.color : 'transparent';
+      ctx.shadowBlur  = active ? 8 : 0;
+      ctx.beginPath(); ctx.arc(px + 6, ry + 9, 4, 0, Math.PI * 2); ctx.fill();
+      ctx.shadowBlur = 0;
+
+      // Short name
+      ctx.font      = 'bold 8px Orbitron, monospace';
+      ctx.fillStyle = active ? '#ffffff' : '#aaaaaa';
+      ctx.textAlign = 'left';
+      ctx.fillText(cfg.shortName, px + 16, ry + 13);
+
+      // Rep bar (60px wide)
+      const barX = px + panW - 82;
+      const barW = 60;
+      const barH = 7;
+      const barY = ry + 5;
+      ctx.fillStyle = 'rgba(255,255,255,0.08)';
+      ctx.fillRect(barX, barY, barW, barH);
+      // Bar fill color based on rep value
+      const barColor = rep < -50 ? '#FF4444' : rep > 50 ? '#44FF88' : '#FFDD44';
+      const fillPct  = (rep + 100) / 200;  // 0..1
+      ctx.fillStyle  = barColor;
+      ctx.fillRect(barX, barY, Math.round(barW * fillPct), barH);
+      ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+      ctx.lineWidth   = 0.5;
+      ctx.strokeRect(barX, barY, barW, barH);
+
+      // Numeric rep
+      ctx.font      = '8px Orbitron, monospace';
+      ctx.fillStyle = active ? '#ffffff' : '#888888';
+      ctx.textAlign = 'right';
+      ctx.fillText((rep >= 0 ? '+' : '') + rep, px + panW, ry + 13);
+    });
+
+    // Shop discount badge
+    if (shopDiscount > 0) {
+      const badgeY = py + districtLayout.length * rowH + 4;
+      ctx.globalAlpha = 1;
+      ctx.font      = 'bold 9px Orbitron, monospace';
+      ctx.fillStyle = '#FFDD44';
+      ctx.shadowColor = '#FFDD44'; ctx.shadowBlur = 8;
+      ctx.textAlign = 'center';
+      ctx.fillText('SHOP  −15%', px + panW / 2, badgeY + 12);
+      ctx.shadowBlur = 0;
+    }
+
+    ctx.globalAlpha = 1;
+    ctx.restore();
+  }
+
+  // ── District entry notification ────────────────────────────────────────────
+  renderDistrictEntry(district, timer) {
+    const ctx   = this.ctx;
+    const W     = this.canvas.width;
+    const H     = this.canvas.height;
+    // Fade in over first 0.4s, hold, fade out over last 0.6s
+    const alpha = timer < 0.6 ? timer / 0.6 : timer > 2.6 ? (3.0 - timer) / 0.4 : 1;
+
+    const pillW = 290, pillH = 42;
+    const px    = W / 2 - pillW / 2;
+    const py    = H / 2 - 120;
+
+    ctx.save();
+    ctx.globalAlpha = Math.max(0, Math.min(1, alpha));
+
+    // Background pill
+    ctx.fillStyle   = 'rgba(4,4,12,0.88)';
+    ctx.strokeStyle = district.color;
+    ctx.lineWidth   = 1.5;
+    ctx.shadowColor = district.color;
+    ctx.shadowBlur  = 16;
+    this._rr(ctx, px, py, pillW, pillH, 10);
+    ctx.fill(); ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    // "ENTERING" label
+    ctx.font      = 'bold 9px Orbitron, monospace';
+    ctx.fillStyle = district.color;
+    ctx.textAlign = 'center';
+    ctx.fillText('ENTERING', W / 2, py + 14);
+
+    // District name
+    ctx.font      = 'bold 14px Orbitron, monospace';
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(district.name, W / 2, py + 31);
+
+    ctx.globalAlpha = 1;
     ctx.restore();
   }
 
@@ -438,6 +572,21 @@ class HUD {
       ctx.fillStyle = '#FF4455';
       ctx.fillText(`×${player.damageMult.toFixed(2)} DMG`, W - 16, H - 35);
     }
+    ctx.restore();
+  }
+
+  renderGrenadeCount(count) {
+    const ctx = this.ctx;
+    const H   = this.canvas.height;
+    const x   = HUD_PAD + HUD_MM_W + 10;
+    const y   = H - HUD_PAD - 50;
+    ctx.save();
+    ctx.fillStyle   = 'rgba(0,0,0,0.65)';
+    ctx.strokeStyle = '#FF8800'; ctx.lineWidth = 1;
+    this._rr(ctx, x, y, 80, 22, 5); ctx.fill(); ctx.stroke();
+    ctx.font      = 'bold 10px Orbitron, monospace';
+    ctx.fillStyle = '#FF8800'; ctx.textAlign = 'left';
+    ctx.fillText(`\u{1F4A3} x${count}`, x + 8, y + 15);
     ctx.restore();
   }
 
