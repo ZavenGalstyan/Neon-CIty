@@ -132,6 +132,9 @@ class Game {
     // ── Grenades ──────────────────────────────────────────────
     this._grenades        = [];
     this._grenadeCount    = 0;
+    // ── Metro ─────────────────────────────────────────────────
+    this._metroWave       = 0;
+    this._metroWaveTimer  = undefined;
     // ── Glitch Mode ───────────────────────────────────────────
     this._glitchPortals      = [];
     this._glitchPortalTimer  = 0;
@@ -1234,6 +1237,9 @@ class Game {
         this._casinoHosts = [];
         if (this.state === 'casino') { this._casino.close(); this.state = 'playing'; }
       }
+      if (this._indoor.isMetro) {
+        this._metroWaveTimer = undefined;
+      }
       const door = this._indoor.doorDoor;
       this.player.x = door.wx;
       this.player.y = door.wy + 30;
@@ -1286,6 +1292,25 @@ class Game {
         return;
       }
     }
+    // ── Metro entrance ─────────────────────────────────────────
+    if (this.map.metroEntrance && !this._arenaMode && !this._zombieMode) {
+      const me = this.map.metroEntrance;
+      if (Math.hypot(me.wx - this.player.x, me.wy - this.player.y) < 65) {
+        const room = this._buildMetroRoom();
+        this._indoor        = room;
+        this._indoorBots    = [];
+        this._indoorBullets = [];
+        this._indoorPickups = [];
+        this._metroWave     = 0;
+        this._metroWaveTimer = undefined;
+        this._spawnMetroWave();
+        this.player.x = room.entryX;
+        this.player.y = room.entryY;
+        this._achStats.buildingsEntered++;
+        this._checkAchievements();
+        return;
+      }
+    }
   }
 
   _updateIndoor(dt) {
@@ -1298,7 +1323,8 @@ class Game {
     this.player.inVehicle = false;
     this.player.update(dt, this.input, room, this._indoorBullets, this.particles);
     if (this.player.dead && this.state === 'playing') this.state = 'gameover';
-    if (this.player.y >= room.roomH - 5) { this._tryEnterExit(); return; }
+    const _exitThreshold = room.isMetro ? room.roomH - room.S : room.roomH - 5;
+    if (this.player.y >= _exitThreshold) { this._tryEnterExit(); return; }
 
     for (const bot of this._indoorBots) bot.update(dt, this.player, room, this._indoorBullets, this.particles);
     for (const b of this._indoorBullets) b.update(dt, room);
@@ -1353,17 +1379,32 @@ class Game {
       }
     }
 
-    const doorKey = `${room.doorDoor.tx},${room.doorDoor.ty}`;
-    if (!this._visitedRooms.has(doorKey) &&
-        this._indoorBots.length > 0 &&
-        this._indoorBots.filter(b => !b.dead).length === 0) {
-      this._visitedRooms.add(doorKey);
-      this._achStats.buildingsCleared++;
-      this._checkAchievements();
+    if (!room.isMetro) {
+      const doorKey = `${room.doorDoor.tx},${room.doorDoor.ty}`;
+      if (!this._visitedRooms.has(doorKey) &&
+          this._indoorBots.length > 0 &&
+          this._indoorBots.filter(b => !b.dead).length === 0) {
+        this._visitedRooms.add(doorKey);
+        this._achStats.buildingsCleared++;
+        this._checkAchievements();
+      }
     }
 
     this._indoorBots    = this._indoorBots.filter(b => !b.dead);
     this._indoorBullets = this._indoorBullets.filter(b => !b.dead);
+
+    // ── Metro wave management ──────────────────────────────────
+    if (room.isMetro) {
+      if (this._metroWaveTimer !== undefined) {
+        this._metroWaveTimer -= dt;
+        if (this._metroWaveTimer <= 0) {
+          this._metroWaveTimer = undefined;
+          this._spawnMetroWave();
+        }
+      } else if (this._indoorBots.length === 0) {
+        this._metroWaveTimer = 4.0;
+      }
+    }
     for (const p of this.particles) p.update(dt);
     this.particles = this.particles.filter(p => !p.dead);
     if (this._streakTimer > 0) { this._streakTimer -= dt; if (this._streakTimer <= 0) this._killStreak = 0; }
@@ -1417,6 +1458,7 @@ class Game {
   _renderIndoorScene(ctx, W, H, shake) {
     if (this._indoor?.isDealership) { this._renderDealershipIndoor(ctx, W, H, shake); return; }
     if (this._indoor?.isCasino)     { this._renderCasinoIndoor(ctx, W, H, shake);     return; }
+    if (this._indoor?.isMetro)      { this._renderMetroIndoor(ctx, W, H, shake);       return; }
     const room = this._indoor;
     const offX = (W - room.roomW) / 2;
     const offY = (H - room.roomH) / 2;
@@ -1850,6 +1892,232 @@ class Game {
     ctx.restore();
   }
 
+  // ── Metro helpers ────────────────────────────────────────────
+  _buildMetroRoom() {
+    const RS     = 48;
+    const layout = ROOM_LAYOUT_METRO;
+    const RH = layout.length, RW = layout[0].length;
+    const RW_px = RW * RS, RH_px = RH * RS;
+    // Entry gap at cols 8-10 → center col 9
+    const entryX = (8 + 1.5) * RS;   // 9.5 * 48 = 456
+    const entryY = RH_px - RS - 12;
+    const floorPositions = [];
+    for (let fy = 3; fy < RH - 1; fy++) {
+      for (let fx = 1; fx < RW - 1; fx++) {
+        if (layout[fy][fx] === 0) floorPositions.push({ x: (fx + 0.5) * RS, y: (fy + 0.5) * RS });
+      }
+    }
+    return {
+      isMetro: true, layout, W: RW, H: RH, S: RS,
+      roomW: RW_px, roomH: RH_px,
+      doorDoor: this.map.metroEntrance,
+      entryX, entryY, floorPositions,
+      isBlocked(wx, wy) {
+        const tx2 = Math.floor(wx / RS), ty2 = Math.floor(wy / RS);
+        if (tx2 < 0 || ty2 < 0 || tx2 >= RW || ty2 >= RH) return true;
+        return layout[ty2][tx2] !== 0;
+      },
+      isBlockedCircle(wx, wy, r) {
+        return this.isBlocked(wx - r + 1, wy - r + 1) || this.isBlocked(wx + r - 1, wy - r + 1) ||
+               this.isBlocked(wx - r + 1, wy + r - 1) || this.isBlocked(wx + r - 1, wy + r - 1);
+      },
+      randomRoadPos() {
+        const p = floorPositions[Math.floor(Math.random() * floorPositions.length)];
+        return new Vec2(p.x, p.y);
+      },
+    };
+  }
+
+  _spawnMetroWave() {
+    this._metroWave++;
+    const room    = this._indoor;
+    const waveNum = this._metroWave;
+    const base    = 2 + Math.floor(this.wave / 2);
+    const count   = Math.min(base + waveNum, 10);
+    const types   = ['normal','normal','mini','big','normal'];
+    for (let i = 0; i < count; i++) {
+      const pos  = room.randomRoadPos();
+      const type = (waveNum >= 3 && i === count - 1) ? 'big'
+                 : (waveNum >= 2 && i % 3 === 0)     ? 'mini'
+                 : types[i % types.length];
+      this._indoorBots.push(new Bot(pos.x, pos.y, this.wave + waveNum - 1, type, this.map.config));
+    }
+  }
+
+  _renderMetroIndoor(ctx, W, H, shake) {
+    const room = this._indoor;
+    const offX = (W - room.roomW) / 2, offY = (H - room.roomH) / 2;
+    const S = room.S;
+    const T = Date.now() / 1000;
+
+    // ── Sky/background ─────────────────────────────────────────
+    ctx.fillStyle = '#020308'; ctx.fillRect(0, 0, W, H);
+    ctx.save(); ctx.translate(offX + shake.x, offY + shake.y);
+
+    // ── Tile pass ─────────────────────────────────────────────
+    for (let ty = 0; ty < room.H; ty++) {
+      for (let tx = 0; tx < room.W; tx++) {
+        const t = room.layout[ty][tx];
+        const px = tx * S, py = ty * S;
+        if (t === 1) {
+          // Concrete wall / ceiling
+          ctx.fillStyle = '#0d0d18'; ctx.fillRect(px, py, S, S);
+          ctx.fillStyle = 'rgba(255,255,255,0.018)';
+          ctx.fillRect(px, py, S, 2); ctx.fillRect(px, py, 2, S);
+        } else if (t === 2) {
+          // Bench
+          ctx.fillStyle = '#161622'; ctx.fillRect(px, py, S, S);
+          ctx.fillStyle = '#263648'; ctx.fillRect(px + 5, py + S * 0.28, S - 10, 18);
+          ctx.fillStyle = '#1e2e3e'; ctx.fillRect(px + 5, py + S * 0.12, S - 10, S * 0.18);
+          ctx.strokeStyle = '#3a4e62'; ctx.lineWidth = 1;
+          ctx.strokeRect(px + 5, py + S * 0.12, S - 10, S * 0.5);
+        } else if (t === 3) {
+          // Train tracks / pit
+          ctx.fillStyle = '#05050e'; ctx.fillRect(px, py, S, S);
+          // Cross ties (wooden sleepers)
+          ctx.fillStyle = '#1a1208';
+          for (let ci = 0; ci < 3; ci++) ctx.fillRect(px, py + ci * (S / 3) + 2, S, 7);
+          // Rails (two per tile)
+          ctx.fillStyle = '#3a3a50';
+          ctx.fillRect(px + 7, py, 5, S); ctx.fillRect(px + S - 12, py, 5, S);
+          ctx.fillStyle = '#5a5a70';
+          ctx.fillRect(px + 8, py, 3, S); ctx.fillRect(px + S - 11, py, 3, S);
+        } else {
+          // Platform floor — checkerboard tiles
+          ctx.fillStyle = (tx + ty) % 2 === 0 ? '#14141f' : '#111019';
+          ctx.fillRect(px, py, S, S);
+          ctx.fillStyle = 'rgba(0,0,0,0.35)';
+          ctx.fillRect(px, py, S, 1); ctx.fillRect(px, py, 1, S);
+        }
+      }
+    }
+
+    // ── Subway train parked at top (rows 1-2) ──────────────────
+    const trainTop = S, trainH = S * 2;
+    // Car shell
+    ctx.fillStyle = '#1c2d3e'; ctx.fillRect(0, trainTop, room.roomW, trainH);
+    // Body panel
+    ctx.fillStyle = '#253848'; ctx.fillRect(3, trainTop + 5, room.roomW - 6, trainH - 10);
+    // Windows (warm glow)
+    const numWin = Math.floor(room.roomW / 78);
+    for (let wi = 0; wi < numWin; wi++) {
+      const wx2 = 18 + wi * 78;
+      ctx.fillStyle = '#3a2a10'; ctx.fillRect(wx2, trainTop + 9, 46, 26);
+      ctx.fillStyle = 'rgba(255,215,100,0.72)';
+      ctx.fillRect(wx2 + 2, trainTop + 11, 42, 22);
+      ctx.fillStyle = 'rgba(255,255,255,0.1)';
+      ctx.fillRect(wx2 + 2, trainTop + 11, 12, 9);
+    }
+    // Blue stripe
+    ctx.fillStyle = '#0044AA'; ctx.fillRect(0, trainTop + trainH - 14, room.roomW, 8);
+    // Door openings
+    for (const dx of [room.roomW * 0.22, room.roomW * 0.5, room.roomW * 0.78]) {
+      ctx.fillStyle = '#080c14'; ctx.fillRect(dx - 18, trainTop + 5, 36, trainH - 10);
+      // door frame
+      ctx.strokeStyle = '#224466'; ctx.lineWidth = 1.5;
+      ctx.strokeRect(dx - 18, trainTop + 5, 36, trainH - 10);
+    }
+    // Headlight flicker
+    const flickOn = Math.sin(T * 2.4) > 0.3;
+    if (flickOn) {
+      ctx.fillStyle = 'rgba(180,220,255,0.18)';
+      ctx.fillRect(0, trainTop, room.roomW * 0.12, trainH);
+      ctx.fillRect(room.roomW * 0.88, trainTop, room.roomW * 0.12, trainH);
+    }
+    // Car number
+    ctx.fillStyle = '#FFFFFF'; ctx.font = 'bold 13px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('LINE 1 · NEON CITY METRO', room.roomW / 2, trainTop + trainH - 2);
+
+    // ── Platform edge yellow safety stripe ─────────────────────
+    const platEdge = 3 * S;
+    ctx.fillStyle = '#FFCC00'; ctx.shadowColor = '#FFCC00'; ctx.shadowBlur = 10;
+    ctx.fillRect(0, platEdge - 7, room.roomW, 7);
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = '#1a0a00'; ctx.font = 'bold 5px monospace'; ctx.textAlign = 'left';
+    for (let xi = 0; xi < 10; xi++) ctx.fillText('▲ CAUTION — PLATFORM EDGE ▲', xi * 140, platEdge - 1);
+
+    // ── Ceiling fluorescent lights ─────────────────────────────
+    for (const lx of [room.roomW * 0.2, room.roomW * 0.5, room.roomW * 0.8]) {
+      const flick = Math.sin(T * 60 + lx) > 0.98 ? 0.3 : 1;
+      ctx.fillStyle = '#0d0d18'; ctx.fillRect(lx - 34, 3, 68, 9);
+      ctx.fillStyle = `rgba(200,230,255,${0.92 * flick})`;
+      ctx.shadowColor = '#88BBFF'; ctx.shadowBlur = 16 * flick;
+      ctx.fillRect(lx - 30, 5, 60, 5);
+      ctx.shadowBlur = 0;
+      const cone = ctx.createLinearGradient(0, 12, 0, platEdge);
+      cone.addColorStop(0, `rgba(160,200,255,${0.07 * flick})`);
+      cone.addColorStop(1, 'rgba(160,200,255,0)');
+      ctx.fillStyle = cone;
+      ctx.beginPath(); ctx.moveTo(lx - 30, 12); ctx.lineTo(lx + 30, 12);
+      ctx.lineTo(lx + 65, platEdge); ctx.lineTo(lx - 65, platEdge); ctx.closePath(); ctx.fill();
+    }
+
+    // ── Concrete pillars ───────────────────────────────────────
+    for (let pi = 2; pi <= room.W - 3; pi += 5) {
+      const pilX = (pi + 0.5) * S;
+      ctx.fillStyle = '#161622'; ctx.strokeStyle = '#222230'; ctx.lineWidth = 1;
+      ctx.fillRect(pilX - 7, platEdge - 6, 14, room.roomH - platEdge - S);
+      ctx.strokeRect(pilX - 7, platEdge - 6, 14, room.roomH - platEdge - S);
+      ctx.fillStyle = '#202030'; ctx.fillRect(pilX - 10, platEdge - 8, 20, 5);
+      // Blue neon stripe on pillar
+      ctx.fillStyle = '#0033AA'; ctx.shadowColor = '#0055FF'; ctx.shadowBlur = 7;
+      ctx.fillRect(pilX - 2, platEdge, 4, room.roomH - platEdge - S * 1.2);
+      ctx.shadowBlur = 0;
+    }
+
+    // ── Overhead METRO sign ────────────────────────────────────
+    ctx.fillStyle = '#001800'; ctx.strokeStyle = '#22FF66'; ctx.lineWidth = 1.5;
+    ctx.fillRect(room.roomW / 2 - 72, 0, 144, 19);
+    ctx.strokeRect(room.roomW / 2 - 72, 0, 144, 19);
+    ctx.fillStyle = '#22FF66'; ctx.shadowColor = '#22FF66'; ctx.shadowBlur = 14;
+    ctx.font = 'bold 12px Orbitron, monospace'; ctx.textAlign = 'center';
+    ctx.fillText('◉  METRO  LINE 1  ◉', room.roomW / 2, 14);
+    ctx.shadowBlur = 0;
+
+    // EXIT signs on side walls
+    for (const sx2 of [24, room.roomW - 24]) {
+      ctx.fillStyle = '#001800'; ctx.fillRect(sx2 - 18, platEdge + 6, 36, 14);
+      ctx.fillStyle = '#22FF44'; ctx.shadowColor = '#22FF44'; ctx.shadowBlur = 8;
+      ctx.font = 'bold 7px monospace'; ctx.textAlign = 'center';
+      ctx.fillText('EXIT ↓', sx2, platEdge + 16);
+      ctx.shadowBlur = 0;
+    }
+
+    // ── Wave counter top-right ────────────────────────────────
+    const aliveCnt = this._indoorBots.filter(b => !b.dead && !b.dying).length;
+    ctx.fillStyle = '#44FF88'; ctx.font = 'bold 10px Orbitron, monospace'; ctx.textAlign = 'right';
+    ctx.shadowColor = '#22FF44'; ctx.shadowBlur = 8;
+    ctx.fillText(`METRO WAVE ${this._metroWave}`, room.roomW - 8, 14);
+    if (aliveCnt > 0) {
+      ctx.fillStyle = '#FF4444';
+      ctx.fillText(`▼ ${aliveCnt} ENEMY`, room.roomW - 8, 27);
+    } else if (this._metroWaveTimer !== undefined) {
+      ctx.fillStyle = '#FFEE44';
+      ctx.fillText(`NEXT WAVE ${Math.ceil(this._metroWaveTimer)}s`, room.roomW - 8, 27);
+    } else {
+      ctx.fillStyle = '#44FF88'; ctx.fillText('SECTOR CLEAR', room.roomW - 8, 27);
+    }
+    ctx.shadowBlur = 0;
+
+    // ── Entities ─────────────────────────────────────────────
+    for (const d of this.decals)         d.render(ctx);
+    for (const p of this._indoorPickups) p.render(ctx);
+    for (const p of this.particles)      p.render(ctx);
+    for (const b of this._indoorBullets) if (!b.isPlayer) b.render(ctx);
+    for (const bot of this._indoorBots)  bot.render(ctx);
+    for (const b of this._indoorBullets) if (b.isPlayer)  b.render(ctx);
+    if (!this.player.dead) this.player.render(ctx);
+
+    // ── Exit hint ─────────────────────────────────────────────
+    ctx.save();
+    ctx.font = 'bold 11px Orbitron, monospace'; ctx.textAlign = 'center';
+    ctx.fillStyle = '#FFFFAA'; ctx.shadowColor = '#FFFF00'; ctx.shadowBlur = 10;
+    ctx.fillText('[E] EXIT METRO', room.entryX, room.roomH - 8);
+    ctx.restore();
+
+    ctx.restore();
+  }
+
   _renderDealershipIndoor(ctx, W, H, shake) {
     const room = this._indoor;
     const offX = (W - room.roomW) / 2, offY = (H - room.roomH) / 2;
@@ -1967,6 +2235,7 @@ class Game {
       ctx.save();
       ctx.translate(-this.camX + shake.x, -this.camY + shake.y);
       this.map.render(ctx, this.camX, this.camY, W, H);
+      this.map.renderMetroEntrance(ctx);
       if (this._districtLayout) {
         const mapPxW = this.map.W * this.map.S;
         const mapPxH = this.map.H * this.map.S;
@@ -2055,6 +2324,17 @@ class Game {
                             : '#FFFF00';
             ctx.shadowBlur  = 10;
             ctx.fillText(hintText, door.wx, door.wy - 16);
+            ctx.restore();
+          }
+        }
+        // Metro entrance hint
+        if (this.map.metroEntrance) {
+          const me = this.map.metroEntrance;
+          if (Math.hypot(me.wx - this.player.x, me.wy - this.player.y) < 70) {
+            ctx.save();
+            ctx.font = 'bold 11px Orbitron, monospace'; ctx.textAlign = 'center';
+            ctx.fillStyle = '#44FF88'; ctx.shadowColor = '#22FF66'; ctx.shadowBlur = 14;
+            ctx.fillText('[E] METRO', me.wx, me.wy - 40);
             ctx.restore();
           }
         }

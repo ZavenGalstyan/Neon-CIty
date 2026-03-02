@@ -28,6 +28,21 @@ const ROOM_LAYOUT_2 = [
   [1,1,1,1,1,1,0,0,0,1,1,1,1,1,1],  // door gap cols 6-8
 ]; // 15×10 tiles, 60px each → 900×600 px
 
+// 0=floor  1=wall  2=bench  3=tracks(blocked)
+const ROOM_LAYOUT_METRO = [
+  [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+  [3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3],
+  [3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3],
+  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+  [1,0,2,0,0,2,0,0,0,0,0,0,2,0,0,2,0,0,0,1],
+  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+  [1,0,2,0,0,2,0,0,0,0,0,0,2,0,0,2,0,0,0,1],
+  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+  [1,1,1,1,1,1,1,1,0,0,0,1,1,1,1,1,1,1,1,1],
+]; // 20×11 tiles, 48px each → 960×528 px
+
 class GameMap {
   constructor(mapConfig) {
     // Accept a map config object; fall back to first map in CONFIG.MAPS
@@ -165,6 +180,17 @@ class GameMap {
           else if (restCount < 3) { this.doors[i].specialType = 'restaurant'; restCount++; }
         }
       }
+    }
+
+    // Metro entrance near bottom-right (normal maps only)
+    this.metroEntrance = null;
+    if (!this.config.arena && !this.config.zombie) {
+      const R = this.ROAD_EVERY;
+      let meX = Math.round(this.W * 0.72 / R) * R;
+      let meY = Math.round(this.H * 0.76 / R) * R;
+      meX = Math.min(Math.max(meX, R), this.W - R * 2);
+      meY = Math.min(Math.max(meY, R), this.H - R * 2);
+      this.metroEntrance = { tx: meX, ty: meY, wx: (meX + 0.5) * this.S, wy: (meY + 0.5) * this.S };
     }
 
     // Build block-type lookup for indoor furniture
@@ -334,6 +360,28 @@ class GameMap {
         }
       }
     }
+  }
+
+  // ── Metro entrance icon ───────────────────────────────────
+  renderMetroEntrance(ctx) {
+    if (!this.metroEntrance) return;
+    const { wx, wy } = this.metroEntrance;
+    const S = this.S;
+    // ctx is already in world-space (translated by -camX,-camY by the caller)
+    // so render directly at world coordinates wx, wy
+    ctx.save();
+    ctx.fillStyle = '#060e06';
+    ctx.fillRect(wx - S * 0.5, wy - S * 0.5, S, S);
+    for (let i = 0; i < 4; i++) {
+      ctx.fillStyle = `rgba(34,255,100,${0.38 - i * 0.08})`;
+      ctx.fillRect(wx - S * 0.5 + i * 5, wy + S * 0.5 - (i + 1) * 9, S - i * 10, 5);
+    }
+    ctx.font = 'bold 26px monospace';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#22FF66'; ctx.shadowColor = '#22FF66'; ctx.shadowBlur = 20;
+    ctx.fillText('M', wx, wy);
+    ctx.shadowBlur = 0; ctx.textBaseline = 'alphabetic';
+    ctx.restore();
   }
 
   // ── Indoor room factory ───────────────────────────────────
