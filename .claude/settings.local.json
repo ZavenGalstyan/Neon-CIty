@@ -3,7 +3,8 @@
     "allow": [
       "Bash(node:*)",
       "Bash(python3:*)",
-      "Bash(powershell:*)"
+      "Bash(powershell:*)",
+      "mcp__ide__getDiagnostics"
     ]
   }
 }

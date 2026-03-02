@@ -166,6 +166,21 @@ class GameMap {
         }
       }
     }
+
+    // Build block-type lookup for indoor furniture
+    const BL = CONFIG.BUILDING_TYPES.length;
+    this._blockTypes = {};
+    for (let by2 = 0; by2 < Math.ceil(this.H / this.ROAD_EVERY); by2++) {
+      for (let bx2 = 0; bx2 < Math.ceil(this.W / this.ROAD_EVERY); bx2++) {
+        this._blockTypes[`${bx2},${by2}`] = ((bx2 * 1531 + by2 * 743) >>> 0) % BL;
+      }
+    }
+    for (const door of this.doors) {
+      if (door.specialType) {
+        const R2 = this.ROAD_EVERY;
+        this._blockTypes[`${Math.floor(door.tx/R2)},${Math.floor(door.ty/R2)}`] = door.specialType;
+      }
+    }
   }
 
   _blockColor(seed) {
