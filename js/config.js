@@ -244,6 +244,45 @@ const CONFIG = {
         normal: [{ body:'#880000', accent:'#CC0000' }, { body:'#660000', accent:'#AA0000' }],
         big:    [{ body:'#440000', accent:'#880000' }, { body:'#330000', accent:'#660000' }],
       },
+    },
+    {
+      id: 'lifemode', name: 'LIFE MODE',
+      desc: 'Peaceful city. Buy a home, eat out, explore and drive freely.',
+      theme: '#88DDFF', tags: ['PEACEFUL', 'SANDBOX'],
+      previewGridSize: 14, previewBg: '#04090d', previewRoad: 'rgba(136,221,255,0.38)',
+      mapW: 60, mapH: 60, tileSize: 80, roadEvery: 8,
+      roadColor:      '#0c1218',
+      sidewalkColor:  '#121820',
+      buildingPalette: ['#0f1e28','#111e30','#0e1a24','#131f2e','#101c28','#0f1c24','#121e2c','#0e1c28'],
+      neonColors:     ['#88DDFF','#AAEEFF','#66CCFF','#44BBDD'],
+      windowColors:   ['#88DDFF','#AAEEFF','#66BBFF','#CCEEFF'],
+      lightColor:     '#88DDFF', lightGlow: '#44AACC', neonFreq: 10,
+      weather: 'clear',
+      lifeMode: true,
+      botPalettes: {
+        mini:   [{ body:'#4488CC', accent:'#66AAEE' }],
+        normal: [{ body:'#3366AA', accent:'#5588CC' }],
+        big:    [{ body:'#224477', accent:'#336699' }],
+      },
+    },
+    {
+      id: 'zombie', name: 'ZOMBIE OUTBREAK',
+      desc: 'Neon City has fallen. The infected never stop coming.',
+      theme: '#44FF88', tags: ['EXPERIMENTAL', 'ENDLESS', 'SURVIVAL'],
+      previewGridSize: 18, previewBg: '#030a03', previewRoad: 'rgba(30,180,60,0.5)',
+      mapW: 36, mapH: 36, tileSize: 80, roadEvery: 7,
+      roadColor: '#080d08', sidewalkColor: '#0c140c',
+      buildingPalette: ['#0a1a0a','#0d1f0d','#081508','#102010','#0c1a0c','#091509','#0f1e0f','#0b1b0b'],
+      neonColors: ['#44FF88','#22CC55','#88FFAA','#00AA44'],
+      windowColors: ['#44FF88','#22CC55','#66FF99','#00FF66'],
+      lightColor: '#44FF88', lightGlow: '#22CC55', neonFreq: 5,
+      weather: 'fog',
+      botPalettes: {
+        mini:   [{ body:'#66CC44', accent:'#44AA22' }],
+        normal: [{ body:'#44AA33', accent:'#225511' }],
+        big:    [{ body:'#997722', accent:'#664400' }],
+      },
+      zombie: true,
     }
   ],
 
@@ -255,6 +294,14 @@ const CONFIG = {
       price: 0,           damage: 0,    fireRate: 0,
       bullets: 1,         spread: 0.05, bulletSpeed: 680,
       color: '#BBBBBB'
+    },
+    {
+      id: 'knife',        name: 'COMBAT KNIFE',
+      desc: 'Silent & deadly. Instant close-range kill.',
+      price: 800,         damage: 85,  fireRate: 420,
+      bullets: 0,         spread: 0,   bulletSpeed: 0,
+      melee: true,        range: 58,
+      color: '#AADDFF'
     },
     {
       id: 'smg',          name: 'SMG',
@@ -290,7 +337,49 @@ const CONFIG = {
       price: 6000,        damage: 11,   fireRate: 38,
       bullets: 1,         spread: 0.22, bulletSpeed: 620,
       color: '#FFD700'
+    },
+    // ── Experimental Weapons ─────────────────────────────
+    {
+      id: 'timecannon',   name: 'TIME CANNON',
+      desc: 'Freezes enemies in time for 2.5s',
+      price: 8000,  damage: 40,  fireRate: 1800,
+      bullets: 1,   spread: 0.02, bulletSpeed: 260,
+      color: '#88DDFF', special: 'timefreeze', experimental: true
+    },
+    {
+      id: 'gravitgun',    name: 'GRAVITY RIFLE',
+      desc: 'Pulls enemies toward you on impact',
+      price: 6500,  damage: 25,  fireRate: 900,
+      bullets: 1,   spread: 0,   bulletSpeed: 380,
+      color: '#CC88FF', special: 'gravity', experimental: true
+    },
+    {
+      id: 'electricwhip', name: 'ELEC. WHIP',
+      desc: 'Melee arc — chains lightning to nearby foes',
+      price: 5500,  damage: 55,  fireRate: 600,
+      bullets: 0,   spread: 0,   bulletSpeed: 0,
+      melee: true,  range: 140,
+      color: '#88FFCC', special: 'electric', experimental: true
+    },
+    {
+      id: 'plasmashotgun', name: 'PLASMA SHOTGUN',
+      desc: 'Searing plasma — slows targets by 70%',
+      price: 7000,  damage: 30,  fireRate: 1100,
+      bullets: 6,   spread: 0.45, bulletSpeed: 320,
+      color: '#FF88FF', special: 'plasma', experimental: true
     }
+  ],
+
+  // ── Building Types (deterministic per door tile) ─────────
+  BUILDING_TYPES: [
+    { name:'RESTAURANT', color:'#FF8844' },
+    { name:'OFFICE',     color:'#4488FF' },
+    { name:'HOTEL',      color:'#CC66FF' },
+    { name:'MARKET',     color:'#44FF88' },
+    { name:'ARCADE',     color:'#FFDD00' },
+    { name:'PHARMACY',   color:'#44FFCC' },
+    { name:'GYM',        color:'#FF6644' },
+    { name:'BANK',       color:'#FFCC44' },
   ],
 
   // ── Upgrades ─────────────────────────────────────────────
@@ -301,5 +390,83 @@ const CONFIG = {
     { id: 'firerate', name: 'FIRE RATE',   desc: '-8% cooldown per level', icon: '◉', color: '#FF8800', maxLevel: 5, baseCost: 700,  costMult: 1.75 },
     { id: 'armor',    name: 'ARMOR',       desc: '-10% damage taken',      icon: '⬡', color: '#44FF88', maxLevel: 5, baseCost: 800,  costMult: 1.8  },
     { id: 'regen',    name: 'REGEN',       desc: '+1 HP/sec per level',    icon: '✚', color: '#88FFCC', maxLevel: 3, baseCost: 1000, costMult: 2.0  }
-  ]
+  ],
+
+  // ── Achievements ─────────────────────────────────────────
+  ACHIEVEMENTS: [
+    { id:'first_blood', name:'FIRST BLOOD',    desc:'Kill your first enemy',        icon:'☠', stat:'kills',            threshold:1     },
+    { id:'kill_10',     name:'STREET CLEANER', desc:'Kill 10 enemies',              icon:'☠', stat:'kills',            threshold:10    },
+    { id:'kill_50',     name:'MASS MURDERER',  desc:'Kill 50 enemies',              icon:'☠', stat:'kills',            threshold:50    },
+    { id:'kill_100',    name:'UNSTOPPABLE',    desc:'Kill 100 enemies',             icon:'☠', stat:'kills',            threshold:100   },
+    { id:'carjack_1',   name:'CARJACKER',      desc:'Steal your first car',         icon:'*', stat:'carsStolen',       threshold:1     },
+    { id:'carjack_10',  name:'WHEELMAN',       desc:'Steal 10 cars',                icon:'*', stat:'carsStolen',       threshold:10    },
+    { id:'money_10k',   name:'CRIME PAYS',     desc:'Earn $10,000',                 icon:'$', stat:'moneyEarned',      threshold:10000 },
+    { id:'money_50k',   name:'CRIME LORD',     desc:'Earn $50,000',                 icon:'$', stat:'moneyEarned',      threshold:50000 },
+    { id:'knife_5',     name:'BLADE RUNNER',   desc:'Kill 5 enemies with knife',    icon:'+', stat:'knifeKills',       threshold:5     },
+    { id:'knife_20',    name:'SILENT KILLER',  desc:'Kill 20 enemies with knife',   icon:'+', stat:'knifeKills',       threshold:20    },
+    { id:'boss_1',      name:'BOSS SLAYER',    desc:'Defeat your first boss',       icon:'B', stat:'bossesKilled',     threshold:1     },
+    { id:'wanted_4',    name:'MOST WANTED',    desc:'Reach 4 wanted stars',         icon:'!', stat:'maxWanted',        threshold:4     },
+    { id:'streak_5',    name:'KILLING SPREE',  desc:'Get a x5 kill streak',         icon:'x', stat:'maxStreak',        threshold:5     },
+    { id:'wave_10',     name:'VETERAN',        desc:'Survive to wave 10',           icon:'W', stat:'maxWave',          threshold:10    },
+    { id:'explorer',    name:'URBAN EXPLORER', desc:'Enter a building interior',    icon:'E', stat:'buildingsEntered', threshold:1     },
+    { id:'clearer',     name:'ROOM CLEARER',   desc:'Clear 3 buildings of enemies', icon:'E', stat:'buildingsCleared', threshold:3     },
+  ],
+
+  DRONE_CONFIGS: {
+    police: { speed:155, hp:60,  fireRate:1500, damage:10, color:'#3399FF', radius:14 },
+    combat: { speed:210, hp:110, fireRate:900,  damage:18, color:'#FF5500', radius:16 },
+    player: { speed:300, hp:80,  color:'#44EEFF', radius:12 }
+  },
+
+  BLACK_MARKET: [
+    { id:'plasma',     name:'PLASMA CANNON',   desc:'Melts armor. 3x dmg vs vehicles.', price:3500, type:'weapon',
+      damage:80, fireRate:950, bullets:1, spread:0.04, bulletSpeed:560, color:'#CC44FF', melee:false },
+    { id:'railgun',    name:'RAILGUN',          desc:'Piercing beam. One-shot kill.',    price:5500, type:'weapon',
+      damage:240, fireRate:2000, bullets:1, spread:0, bulletSpeed:1400, color:'#00FFFF', melee:false },
+    { id:'reflex',     name:'REFLEX IMPLANT',   desc:'Double speed & fire rate for 8s.', price:2000, type:'implant', effect:'reflex'     },
+    { id:'nanoshield', name:'NANO SHIELD',       desc:'6s of invincibility.',             price:2800, type:'implant', effect:'nanoshield'  },
+    { id:'overclock',  name:'OVERCLOCK CHIP',    desc:'Permanently +60% bullet damage.', price:4500, type:'implant', effect:'overclock'   },
+    { id:'proto_car',  name:'PROTOTYPE VEHICLE', desc:'500HP · Nitro · Bulletproof.',    price:6500, type:'vehicle' },
+  ],
+
+  // ── Zombie Configs ───────────────────────────────────────
+  ZOMBIE_CONFIGS: {
+    shambler: { speed:52,  hp:90,  damage:18, radius:18, color:'#66CC44', accent:'#44AA22', moneyMult:0.8,  melee:true  },
+    runner:   { speed:148, hp:50,  damage:12, radius:15, color:'#99FF55', accent:'#66CC33', moneyMult:1.0,  melee:true  },
+    brute:    { speed:36,  hp:300, damage:38, radius:28, color:'#44AA33', accent:'#225511', moneyMult:2.5,  melee:true  },
+    mutant:   { speed:68,  hp:130, damage:20, radius:20, color:'#AAFF44', accent:'#77CC22', moneyMult:1.5,  melee:false, acidRate:2200, acidSpeed:180 },
+    bloater:  { speed:30,  hp:200, damage:22, radius:30, color:'#DDBB00', accent:'#886600', moneyMult:2.0,  melee:false, acidRate:1600, acidSpeed:140 },
+  },
+
+  // ── Global Events ────────────────────────────────────────
+  GLOBAL_EVENTS: [
+    { id:'blackout',    name:'TOTAL BLACKOUT',    desc:'The city grid has failed.',                   duration:55, major:true  },
+    { id:'riot',        name:'CITY RIOT',          desc:'The streets are in chaos.',                   duration:60, major:false },
+    { id:'corporate',   name:'CORPORATE INVASION', desc:'MegaCorp enforcers have seized the district.', duration:65, major:true  },
+    { id:'cyber_virus', name:'CYBER VIRUS',        desc:'Systems compromised. Reality unraveling.',     duration:50, major:false },
+    { id:'glitch_mode', name:'GLITCH MODE',         desc:'Reality fractures. The simulation breaks.',   duration:60, major:true  },
+  ],
+
+  // ── Car Dealership ──────────────────────────────────────
+  CAR_DEALERSHIP: [
+    { id:'sedan',   name:'SEDAN',       desc:'Reliable street car.',   price:2000, speed:295, hp:200, color:'#CC3333', radius:28 },
+    { id:'sports',  name:'SPORTS CAR',  desc:'Born for speed.',        price:5500, speed:420, hp:120, color:'#3366BB', radius:26 },
+    { id:'suv',     name:'SUV / TRUCK', desc:'Built to survive.',      price:4000, speed:200, hp:380, color:'#CC9900', radius:30 },
+    { id:'armored', name:'ARMORED VAN', desc:'Bulletproof. Heavy.',    price:8500, speed:180, hp:500, color:'#445566', radius:32, bulletproof:true },
+  ],
+
+  GRENADE: { damage:120, blastRadius:95, fuseTime:2.0, price:500 },
+
+  // ── Districts ─────────────────────────────────────────────
+  DISTRICTS: [
+    { id:'dangerous',  name:'DANGEROUS DISTRICT', shortName:'DANGER ZONE', color:'#FF4444', tint:'rgba(255,68,68,0.055)',
+      desc:'Gang turf. Killing here calls in reinforcements.',
+      lowEffect:'Gang bots surge every 10s', highEffect:'Reduced enemy pressure' },
+    { id:'rich',       name:'RICH DISTRICT',       shortName:'UPTOWN',      color:'#FFDD44', tint:'rgba(255,221,68,0.045)',
+      desc:'Corporate territory. Money buys silence.',
+      lowEffect:'Wanted stars freeze', highEffect:'Shop -15% discount' },
+    { id:'industrial', name:'INDUSTRIAL ZONE',      shortName:'INDUSTRY',    color:'#FF8822', tint:'rgba(255,136,34,0.055)',
+      desc:'Factory district. Heavy enemies on every block.',
+      lowEffect:'Enemies spawn +25% HP', highEffect:'+50% ammo drop rate' },
+  ],
 };

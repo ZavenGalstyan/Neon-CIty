@@ -241,6 +241,53 @@
 
     </div><!-- end .characters-grid -->
 
+    <!-- ── Character Customization ──────────────────────── -->
+    <div class="customize-section">
+      <div class="section-divider">
+        <span class="section-label">CUSTOMIZE CHARACTER</span>
+      </div>
+      <div class="customize-panel">
+
+        <!-- Neon Color -->
+        <div class="cust-group">
+          <div class="cust-label">NEON COLOR</div>
+          <div class="color-swatches" id="colorSwatches">
+            <div class="color-swatch active" data-color="default" title="Default" style="background:linear-gradient(135deg,#FF4466,#44EEFF,#44FF88,#CC88FF);box-shadow:0 0 8px rgba(255,255,255,0.4)"></div>
+            <div class="color-swatch" data-color="#FF4466" style="background:#FF4466;box-shadow:0 0 8px #FF4466" title="Crimson"></div>
+            <div class="color-swatch" data-color="#44EEFF" style="background:#44EEFF;box-shadow:0 0 8px #44EEFF" title="Cyan"></div>
+            <div class="color-swatch" data-color="#44FF88" style="background:#44FF88;box-shadow:0 0 8px #44FF88" title="Green"></div>
+            <div class="color-swatch" data-color="#FFDD44" style="background:#FFDD44;box-shadow:0 0 8px #FFDD44" title="Gold"></div>
+            <div class="color-swatch" data-color="#FF8800" style="background:#FF8800;box-shadow:0 0 8px #FF8800" title="Orange"></div>
+            <div class="color-swatch" data-color="#CC88FF" style="background:#CC88FF;box-shadow:0 0 8px #CC88FF" title="Purple"></div>
+            <div class="color-swatch" data-color="#FF66AA" style="background:#FF66AA;box-shadow:0 0 8px #FF66AA" title="Pink"></div>
+          </div>
+        </div>
+
+        <!-- Mask -->
+        <div class="cust-group">
+          <div class="cust-label">MASK</div>
+          <div class="cust-options" id="maskOptions">
+            <button class="cust-btn active" data-mask="none">NONE</button>
+            <button class="cust-btn" data-mask="skull">SKULL</button>
+            <button class="cust-btn" data-mask="visor">VISOR</button>
+            <button class="cust-btn" data-mask="cyber">CYBER</button>
+          </div>
+        </div>
+
+        <!-- Cyber Effect -->
+        <div class="cust-group">
+          <div class="cust-label">CYBER EFFECT</div>
+          <div class="cust-options" id="effectOptions">
+            <button class="cust-btn active" data-effect="none">NONE</button>
+            <button class="cust-btn" data-effect="aura">AURA</button>
+            <button class="cust-btn" data-effect="static">STATIC</button>
+            <button class="cust-btn" data-effect="glitch">GLITCH</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
     <!-- ── Map Selection ─────────────────────────────────── -->
     <div class="map-section">
       <div class="section-divider">
@@ -393,10 +440,37 @@
           </div>
         </div>
 
+
       </div><!-- end .maps-grid -->
 
-      <!-- Arena Mode — full-width special card -->
-      <div class="arena-row">
+      <!-- Life Mode + Arena + Zombie — all in one row -->
+      <div class="special-maps-row">
+
+        <!-- Life Mode -->
+        <div class="map-card map-card--life" data-map="lifemode">
+          <div class="experimental-badge" style="background:#88DDFF;box-shadow:0 0 14px rgba(136,221,255,0.7);color:#000">🏙 SANDBOX</div>
+          <div class="map-preview" style="--mg:14px;--mbg:#04090d;--mr:rgba(136,221,255,0.38);">
+            <div class="map-preview-inner">
+              <div class="road-dot" style="top:20%;left:20%;background:#88DDFF;box-shadow:0 0 6px #88DDFF"></div>
+              <div class="road-dot" style="top:20%;left:80%;background:#88DDFF;box-shadow:0 0 6px #88DDFF"></div>
+              <div class="road-dot" style="top:50%;left:50%;background:#AAEEFF;box-shadow:0 0 10px #AAEEFF;width:8px;height:8px;margin:-4px 0 0 -4px"></div>
+              <div class="road-dot" style="top:80%;left:20%;background:#88DDFF;box-shadow:0 0 6px #88DDFF"></div>
+              <div class="road-dot" style="top:80%;left:80%;background:#88DDFF;box-shadow:0 0 6px #88DDFF"></div>
+            </div>
+          </div>
+          <div class="map-info">
+            <div class="map-header">
+              <h4 class="map-name" style="color:#88DDFF;text-shadow:0 0 10px #88DDFF">🏙 LIFE MODE</h4>
+              <span class="map-num" style="color:#88DDFF">07</span>
+            </div>
+            <p class="map-desc">Peaceful sandbox city. Buy a home, eat out, drive freely. No enemies.</p>
+            <div class="map-tags">
+              <span class="map-tag" style="--tc:#88DDFF">PEACEFUL</span>
+              <span class="map-tag" style="--tc:#88DDFF">SANDBOX</span>
+              <span class="map-tag" style="--tc:#88DDFF">60×60</span>
+            </div>
+          </div>
+        </div>
         <div class="map-card map-card--arena" data-map="arena">
           <div class="map-preview" style="--mg:24px;--mbg:#0a0004;--mr:rgba(255,0,68,0.55);">
             <div class="map-preview-inner">
@@ -410,7 +484,7 @@
           <div class="map-info">
             <div class="map-header">
               <h4 class="map-name" style="color:#FF0044;text-shadow:0 0 10px #FF0044">☠ ARENA ☠</h4>
-              <span class="map-num" style="color:#FF0044">07</span>
+              <span class="map-num" style="color:#FF0044">08</span>
             </div>
             <p class="map-desc">Enclosed kill-zone. Kill-based waves. Boss every 4 waves. No shop. No escape.</p>
             <div class="map-tags">
@@ -418,6 +492,33 @@
               <span class="map-tag" style="--tc:#FF0044">ENDLESS</span>
               <span class="map-tag" style="--tc:#FF0044">NO SHOP</span>
               <span class="map-tag" style="--tc:#FF0044">24×24</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="map-card map-card--experimental" data-map="zombie">
+          <div class="experimental-badge">⚗ EXPERIMENTAL</div>
+          <div class="map-preview" style="--mg:18px;--mbg:#030a03;--mr:rgba(30,180,60,0.5);">
+            <div class="map-preview-inner">
+              <div class="road-dot" style="top:30%;left:25%;background:#44FF88;box-shadow:0 0 8px #44FF88"></div>
+              <div class="road-dot" style="top:50%;left:50%;background:#88FF44;box-shadow:0 0 12px #88FF44;width:10px;height:10px;margin:-5px 0 0 -5px"></div>
+              <div class="road-dot" style="top:70%;left:75%;background:#44FF88;box-shadow:0 0 8px #44FF88"></div>
+              <div class="road-dot" style="top:35%;left:70%;background:#22CC55;box-shadow:0 0 6px #22CC55"></div>
+              <div class="road-dot" style="top:65%;left:30%;background:#22CC55;box-shadow:0 0 6px #22CC55"></div>
+            </div>
+          </div>
+          <div class="map-info">
+            <div class="map-header">
+              <h4 class="map-name" style="color:#44FF88;text-shadow:0 0 10px #44FF88">☣ ZOMBIE OUTBREAK ☣</h4>
+              <span class="map-num" style="color:#44FF88">09</span>
+            </div>
+            <p class="map-desc">Neon City has fallen. The infected never stop coming. Survive as long as you can.</p>
+            <div class="map-tags">
+              <span class="map-tag" style="--tc:#44FF88">EXPERIMENTAL</span>
+              <span class="map-tag" style="--tc:#44FF88">SURVIVAL</span>
+              <span class="map-tag" style="--tc:#44FF88">ENDLESS</span>
+              <span class="map-tag" style="--tc:#44FF88">MELEE HORDES</span>
+              <span class="map-tag" style="--tc:#44FF88">36×36</span>
             </div>
           </div>
         </div>
@@ -430,7 +531,45 @@
       <button class="start-btn" id="startBtn" disabled>
         <span id="startBtnText">SELECT A CHARACTER</span>
       </button>
-      <p class="start-hint">1–4 CHARACTER  ·  Q–Y MAP  ·  U ARENA  ·  ENTER START</p>
+      <div style="display:flex;gap:16px;align-items:center">
+        <p class="start-hint">1–4 CHARACTER  ·  Q–U MAP  ·  U LIFE MODE  ·  I ARENA  ·  O ZOMBIE  ·  ENTER START</p>
+        <button class="modes-btn" id="modesBtn">📋 MAPS &amp; MODES</button>
+      </div>
+    </div>
+
+    <!-- Maps & Modes Modal -->
+    <div class="modal-overlay" id="modesModal" style="display:none">
+      <div class="modal-panel">
+        <button class="modal-close" id="modesModalClose">×</button>
+        <h2 class="modal-title">MAPS &amp; MODES</h2>
+        <div class="modal-section-label">STANDARD MAPS</div>
+        <div class="modal-grid">
+          <div class="modal-map-item" style="--mc:#44EEFF"><span>DOWNTOWN</span><span class="modal-size">40×40</span><span class="modal-desc">Dense neon city. Rain weather.</span></div>
+          <div class="modal-map-item" style="--mc:#FF8800"><span>INDUSTRIAL</span><span class="modal-size">36×36</span><span class="modal-desc">Wide warehouses. Smoke weather.</span></div>
+          <div class="modal-map-item" style="--mc:#44FF88"><span>SUBURBS</span><span class="modal-size">50×50</span><span class="modal-desc">Tight residential grid. Clear.</span></div>
+          <div class="modal-map-item" style="--mc:#FF4444"><span>RUINS</span><span class="modal-size">38×38</span><span class="modal-desc">Collapsed city. Sandstorm.</span></div>
+          <div class="modal-map-item" style="--mc:#00AACC"><span>DOCKS</span><span class="modal-size">34×34</span><span class="modal-desc">Port district. Foggy alleys.</span></div>
+          <div class="modal-map-item" style="--mc:#FFCC00"><span>CASINO STRIP</span><span class="modal-size">44×44</span><span class="modal-desc">Neon boulevard. Has a casino.</span></div>
+        </div>
+        <div class="modal-section-label">SPECIAL MODES</div>
+        <div class="modal-grid">
+          <div class="modal-map-item" style="--mc:#88DDFF"><span>🏙 LIFE MODE</span><span class="modal-size">60×60</span><span class="modal-desc">Sandbox. Buy home, eat, drive. No enemies.</span></div>
+          <div class="modal-map-item" style="--mc:#FF0044"><span>☠ ARENA</span><span class="modal-size">24×24</span><span class="modal-desc">Kill-based waves. Boss every 4. No shop.</span></div>
+          <div class="modal-map-item" style="--mc:#44FF88"><span>☣ ZOMBIE OUTBREAK</span><span class="modal-size">36×36</span><span class="modal-desc">Zombie hordes. Melee combat. Endless.</span></div>
+        </div>
+        <div class="modal-section-label">FEATURES</div>
+        <div class="modal-features">
+          <div class="modal-feat">🏪 <b>Building Interiors</b> — Press E near doors to enter combat-filled rooms</div>
+          <div class="modal-feat">🚗 <b>Car Dealership</b> — Buy vehicles, weapons and grenades inside special buildings</div>
+          <div class="modal-feat">🎰 <b>Casino</b> — Gamble for big money in Casino Strip buildings</div>
+          <div class="modal-feat">⚗ <b>Experimental Weapons</b> — Time Freeze, Gravity Rifle, Electric Whip, Plasma Shotgun</div>
+          <div class="modal-feat">💣 <b>Grenades</b> — Buy from dealership, throw with G key toward mouse cursor</div>
+          <div class="modal-feat">👮 <b>Wanted System</b> — 4-star wanted level, police and drone pursuit</div>
+          <div class="modal-feat">🌙 <b>Day / Night Cycle</b> — Black market vendor spawns at night</div>
+          <div class="modal-feat">🌀 <b>Global Events</b> — Blackout, Riot, Corporate Invasion, Glitch Mode</div>
+          <div class="modal-feat">🛡 <b>Bodyguards</b> — Hire security from the shop</div>
+        </div>
+      </div>
     </div>
 
   </div><!-- end .select-container -->

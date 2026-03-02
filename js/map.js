@@ -2,6 +2,32 @@
 
 const TILE = { ROAD: 0, BUILDING: 1, SIDEWALK: 2 };
 
+// ── Indoor room layouts ────────────────────────────────────────────────────────
+// 0 = floor, 1 = wall, 2 = furniture/crate
+const ROOM_LAYOUT_1 = [
+  [1,1,1,1,1,1,1,1,1,1],
+  [1,0,0,0,0,0,0,0,0,1],
+  [1,0,2,0,0,0,0,2,0,1],
+  [1,0,0,0,0,0,0,0,0,1],
+  [1,0,0,0,0,0,0,0,0,1],
+  [1,0,2,0,0,0,0,0,2,1],
+  [1,0,0,0,0,0,0,0,0,1],
+  [1,1,1,1,0,0,1,1,1,1],  // door gap cols 4-5
+]; // 10×8 tiles, 60px each → 600×480 px
+
+const ROOM_LAYOUT_2 = [
+  [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+  [1,0,2,0,0,2,0,0,2,0,0,2,0,0,1],
+  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+  [1,0,2,0,0,0,0,0,0,0,0,2,0,0,1],
+  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+  [1,1,1,1,1,1,0,0,0,1,1,1,1,1,1],  // door gap cols 6-8
+]; // 15×10 tiles, 60px each → 900×600 px
+
 class GameMap {
   constructor(mapConfig) {
     // Accept a map config object; fall back to first map in CONFIG.MAPS
@@ -15,6 +41,8 @@ class GameMap {
     this.tiles           = [];
     this.buildingColors  = [];
     this.buildingWindows = [];
+    this.doors           = [];       // { tx, ty, type, wx, wy }
+    this._doorMap        = new Map(); // "tx,ty" → door
 
     // Pre-rendered minimap canvas
     this._mmCanvas  = document.createElement('canvas');
@@ -88,6 +116,69 @@ class GameMap {
         const seed = Math.floor(x / R) * 1000 + Math.floor(y / R);
         this.buildingColors[y][x]  = this._blockColor(seed);
         this.buildingWindows[y][x] = Math.sin(seed * 9.73) > 0.2;
+      }
+    }
+
+    // ── Door generation (skip arena) ──────────────────────
+    if (!this.config.arena) {
+      const S = this.S;
+      for (let ty = 0; ty < this.H - 1; ty++) {
+        for (let tx = 0; tx < this.W; tx++) {
+          if (this.tiles[ty][tx] === TILE.BUILDING &&
+              this.tiles[ty + 1][tx] === TILE.SIDEWALK) {
+            const seed2 = tx * 997 + ty * 31;
+            const rand  = Math.abs(Math.sin(seed2 * 4.71));
+            if (rand < 0.09) {
+              const type = Math.abs(Math.sin(seed2 * 2.37)) > 0.5 ? 2 : 1;
+              const door = { tx, ty, type, wx: (tx + 0.5) * S, wy: (ty + 1) * S - 4 };
+              this.doors.push(door);
+              this._doorMap.set(`${tx},${ty}`, door);
+            }
+          }
+        }
+      }
+    }
+
+    // Mark 1–2 doors as car dealerships (normal maps only)
+    if (!this.config.arena && !this.config.zombie && this.doors.length >= 2) {
+      const step = Math.max(1, Math.floor(this.doors.length / 2));
+      let count = 0;
+      for (let i = 0; i < this.doors.length && count < 2; i += step) {
+        this.doors[i].specialType = 'dealership';
+        count++;
+      }
+    }
+
+    // Mark 1 casino door on Casino Strip map
+    if (this.config.id === 'casino' && this.doors.length >= 3) {
+      const idx = Math.floor(this.doors.length / 3);
+      if (!this.doors[idx].specialType) this.doors[idx].specialType = 'casino';
+    }
+
+    // Mark restaurant and home doors in life mode
+    if (this.config.lifeMode && this.doors.length >= 4) {
+      const step2 = Math.max(1, Math.floor(this.doors.length / 5));
+      let homeCount = 0, restCount = 0;
+      for (let i = 0; i < this.doors.length; i += step2) {
+        if (!this.doors[i].specialType) {
+          if (homeCount < 2)      { this.doors[i].specialType = 'home';       homeCount++; }
+          else if (restCount < 3) { this.doors[i].specialType = 'restaurant'; restCount++; }
+        }
+      }
+    }
+
+    // Build block-type lookup for indoor furniture
+    const BL = CONFIG.BUILDING_TYPES.length;
+    this._blockTypes = {};
+    for (let by2 = 0; by2 < Math.ceil(this.H / this.ROAD_EVERY); by2++) {
+      for (let bx2 = 0; bx2 < Math.ceil(this.W / this.ROAD_EVERY); bx2++) {
+        this._blockTypes[`${bx2},${by2}`] = ((bx2 * 1531 + by2 * 743) >>> 0) % BL;
+      }
+    }
+    for (const door of this.doors) {
+      if (door.specialType) {
+        const R2 = this.ROAD_EVERY;
+        this._blockTypes[`${Math.floor(door.tx/R2)},${Math.floor(door.ty/R2)}`] = door.specialType;
       }
     }
   }
@@ -191,9 +282,109 @@ class GameMap {
             ctx.strokeRect(wx + 8, wy + 8, S - 16, S - 16);
             ctx.restore();
           }
+          // Door on south face of building
+          const doorEntry = this._doorMap.get(`${x},${y}`);
+          if (doorEntry) {
+            const dw = doorEntry.type === 2 ? 26 : 20;
+            const dh = 28;
+            const dx2 = wx + S / 2 - dw / 2;
+            const dy2 = wy + S - dh;
+            ctx.fillStyle = '#2a1508'; ctx.fillRect(dx2, dy2, dw, dh);
+            ctx.fillStyle = '#7a4a28'; ctx.fillRect(dx2 + 2, dy2 + 2, dw - 4, dh - 4);
+            // Door panels
+            ctx.fillStyle = 'rgba(0,0,0,0.25)';
+            ctx.fillRect(dx2 + 3, dy2 + 3, dw - 6, (dh - 6) / 2 - 1);
+            ctx.fillRect(dx2 + 3, dy2 + (dh - 6) / 2 + 4, dw - 6, (dh - 6) / 2 - 2);
+            // Handle
+            ctx.fillStyle = '#FFD700'; ctx.shadowColor = '#FFD700'; ctx.shadowBlur = 4;
+            ctx.beginPath(); ctx.arc(dx2 + dw - 5, dy2 + dh / 2, 2.2, 0, Math.PI * 2); ctx.fill();
+            ctx.shadowBlur = 0;
+            // Building sign above door
+            let signText, signColor;
+            if (doorEntry.specialType === 'dealership') {
+              signText = 'DEALER'; signColor = '#FFCC00';
+            } else if (doorEntry.specialType === 'casino') {
+              signText = 'CASINO'; signColor = '#FF44AA';
+            } else if (doorEntry.specialType === 'restaurant') {
+              signText = 'CAFE'; signColor = '#FF8844';
+            } else if (doorEntry.specialType === 'home') {
+              signText = 'HOME'; signColor = '#88FFCC';
+            } else {
+              const bTypeIdx = Math.floor(Math.abs(Math.sin(x * 17.3 + y * 11.7)) * CONFIG.BUILDING_TYPES.length);
+              const bType    = CONFIG.BUILDING_TYPES[bTypeIdx];
+              signText = bType.name; signColor = bType.color;
+            }
+            const signW      = dw + 14;
+            const signH      = 14;
+            const signX      = wx + S / 2 - signW / 2;
+            const signY      = wy + 8;
+            ctx.save();
+            ctx.fillStyle = 'rgba(0,0,0,0.75)';
+            ctx.fillRect(signX, signY, signW, signH);
+            ctx.strokeStyle = signColor; ctx.lineWidth = 1.5;
+            ctx.shadowColor = signColor; ctx.shadowBlur = 10;
+            ctx.strokeRect(signX, signY, signW, signH);
+            ctx.fillStyle = signColor;
+            ctx.font = 'bold 8px Orbitron, monospace';
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillText(signText, wx + S / 2, signY + signH / 2);
+            ctx.shadowBlur = 0; ctx.textBaseline = 'alphabetic';
+            ctx.restore();
+          }
         }
       }
     }
+  }
+
+  // ── Indoor room factory ───────────────────────────────────
+  getRoom(door) {
+    const RS     = 60;  // indoor tile size (px)
+    const layout = door.type === 2 ? ROOM_LAYOUT_2 : ROOM_LAYOUT_1;
+    const RH     = layout.length;
+    const RW     = layout[0].length;
+    const RW_px  = RW * RS;
+    const RH_px  = RH * RS;
+
+    // Entry X = door gap center of the bottom row
+    const entryX = door.type === 2
+      ? ((6 + 7) / 2 + 0.5) * RS   // gap cols 6-8 center
+      : ((4 + 5) / 2 + 0.5) * RS;  // gap cols 4-5 center
+    const entryY = RH_px - RS - 12;
+
+    // Collect walkable floor positions for spawning
+    const floorPositions = [];
+    for (let fy = 1; fy < RH - 1; fy++) {
+      for (let fx = 1; fx < RW - 1; fx++) {
+        if (layout[fy][fx] === 0) {
+          floorPositions.push({ x: (fx + 0.5) * RS, y: (fy + 0.5) * RS });
+        }
+      }
+    }
+
+    return {
+      layout, W: RW, H: RH, S: RS,
+      roomW: RW_px, roomH: RH_px,
+      type: door.type,
+      doorDoor: door,
+      entryX, entryY,
+      floorPositions,
+      isBlocked(wx, wy) {
+        const tx2 = Math.floor(wx / RS);
+        const ty2 = Math.floor(wy / RS);
+        if (tx2 < 0 || ty2 < 0 || tx2 >= RW || ty2 >= RH) return true;
+        return layout[ty2][tx2] !== 0;
+      },
+      isBlockedCircle(wx, wy, r) {
+        return this.isBlocked(wx - r + 1, wy - r + 1) ||
+               this.isBlocked(wx + r - 1, wy - r + 1) ||
+               this.isBlocked(wx - r + 1, wy + r - 1) ||
+               this.isBlocked(wx + r - 1, wy + r - 1);
+      },
+      randomRoadPos() {
+        const p = floorPositions[Math.floor(Math.random() * floorPositions.length)];
+        return new Vec2(p.x, p.y);
+      },
+    };
   }
 
   _hexToRgbStr(hex) {
