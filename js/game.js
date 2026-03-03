@@ -143,6 +143,9 @@ class Game {
     // ── Life Mode ─────────────────────────────────────────────
     this._lifeMode        = !!this.map.config.lifeMode;
     this._cityNpcs        = [];
+    // ── Special Modes ─────────────────────────────────────────
+    this._survivalMode    = !!this.map.config.survival;
+    this._hardcoreMode    = !!this.map.config.hardcore;
 
     // Camera
     this.camX = spawnX - this.canvas.width  / 2;
@@ -211,7 +214,7 @@ class Game {
       return;
     }
     if (e.code === 'KeyB') {
-      if (this._arenaMode || this._zombieMode) return; // no shop in arena/zombie
+      if (this._arenaMode || this._zombieMode || this._survivalMode) return; // no shop in arena/zombie/survival
       if      (this.state === 'playing') { this.shop.open();  this.state = 'shop'; }
       else if (this.state === 'shop')    { this.shop.close(); this.state = 'playing'; }
       else if (this.state === 'paused')  { this.shop.open();  this.state = 'shop'; }
@@ -672,13 +675,15 @@ class Game {
             if (bot.dying) {
               this.decals.push(new Decal(bot.x, bot.y, 'blood'));
               const mult   = this._streakMultiplier();
-              const earned = Math.round(CONFIG.MONEY_PER_KILL * bot._cfg.moneyMult * mult);
+              const wMult  = (this.player._wealthMult || 1) * (this._hardcoreMode ? 3 : 1);
+              const earned = Math.round(CONFIG.MONEY_PER_KILL * bot._cfg.moneyMult * mult * wMult);
               this.money  += earned;
               this._achStats.moneyEarned += earned;
               this.kills++;
               this.hud.addDamageNumber(bot.x, bot.y - 56, earned, this.camX, this.camY, mult > 1 ? '#FF8800' : '#FFD700');
               this._onKill();
               this._dropPickup(bot);
+              if (this.player._leechHp) this.player.health = Math.min(this.player.maxHealth, this.player.health + this.player._leechHp);
             }
           }
         }
@@ -721,13 +726,15 @@ class Game {
           if (bot.dying) {
             this.decals.push(new Decal(bot.x, bot.y, 'blood'));
             const mult   = this._streakMultiplier();
-            const earned = Math.round(CONFIG.MONEY_PER_KILL * bot._cfg.moneyMult * mult);
+            const wMult  = (this.player._wealthMult || 1) * (this._hardcoreMode ? 3 : 1);
+            const earned = Math.round(CONFIG.MONEY_PER_KILL * bot._cfg.moneyMult * mult * wMult);
             this.money  += earned;
             this._achStats.moneyEarned += earned;
             this.kills++;
             this.hud.addDamageNumber(bot.x, bot.y - 56, earned, this.camX, this.camY, mult > 1 ? '#FF8800' : '#FFD700');
             if (b.isMelee) this._achStats.knifeKills++;
             this._onKill();
+            if (this.player._leechHp) this.player.health = Math.min(this.player.maxHealth, this.player.health + this.player._leechHp);
             this._dropPickup(bot);
           }
           if (!b.isMelee) break;  // melee can hit multiple bots in one swing
@@ -797,7 +804,7 @@ class Game {
       for (const b of this.bullets) {
         if (b.isPlayer || b.dead) continue;
         if (circlesOverlap(b.x, b.y, b.radius, this.player.x, this.player.y, this.player.radius)) {
-          const dmg = this.player.takeDamage(b.damage, this.hud);
+          const dmg = this.player.takeDamage(b.damage * (this._hardcoreMode ? 2 : 1), this.hud);
           if (dmg) {
             this.hud.addDamageNumber(this.player.x, this.player.y - 30, dmg, this.camX, this.camY, '#FF4444');
             this._killStreak = 0;
@@ -1109,10 +1116,12 @@ class Game {
         if (bot.dying) {
           this.decals.push(new Decal(bot.x, bot.y, 'blood'));
           const mult   = this._streakMultiplier();
-          const earned = Math.round(CONFIG.MONEY_PER_KILL * bot._cfg.moneyMult * mult);
+          const wMult  = (this.player._wealthMult || 1) * (this._hardcoreMode ? 3 : 1);
+          const earned = Math.round(CONFIG.MONEY_PER_KILL * bot._cfg.moneyMult * mult * wMult);
           this.money += earned; this._achStats.moneyEarned += earned; this.kills++;
           this.hud.addDamageNumber(bot.x, bot.y - 56, earned, this.camX, this.camY, '#FF8800');
           this._onKill(); this._dropPickup(bot);
+          if (this.player._leechHp) this.player.health = Math.min(this.player.maxHealth, this.player.health + this.player._leechHp);
         }
       }
     }
@@ -1351,13 +1360,15 @@ class Game {
           if (bot.dying) {
             this.decals.push(new Decal(bot.x, bot.y, 'blood'));
             const mult   = this._streakMultiplier();
-            const earned = Math.round(CONFIG.MONEY_PER_KILL * bot._cfg.moneyMult * mult);
+            const wMult  = (this.player._wealthMult || 1) * (this._hardcoreMode ? 3 : 1);
+            const earned = Math.round(CONFIG.MONEY_PER_KILL * bot._cfg.moneyMult * mult * wMult);
             this.money  += earned;
             this._achStats.moneyEarned += earned;
             this.kills++;
             this.hud.addDamageNumber(bot.x, bot.y - 56, earned, -offX, -offY, mult > 1 ? '#FF8800' : '#FFD700');
             if (b.isMelee) this._achStats.knifeKills++;
             this._onKill();
+            if (this.player._leechHp) this.player.health = Math.min(this.player.maxHealth, this.player.health + this.player._leechHp);
           }
           if (!b.isMelee) break;
         }
@@ -2432,7 +2443,9 @@ class Game {
       }
       this.hud.renderWeaponInfo(this.player);
       if (this._grenadeCount > 0) this.hud.renderGrenadeCount(this._grenadeCount);
-      if (!this._arenaMode && !this._zombieMode && !this._lifeMode) this.hud.renderShopButton(this.state === 'shop');
+      if (!this._arenaMode && !this._zombieMode && !this._lifeMode && !this._survivalMode) this.hud.renderShopButton(this.state === 'shop');
+      if (this._survivalMode) this.hud.renderModeBadge('☠ SURVIVAL', '#FF2244');
+      if (this._hardcoreMode) this.hud.renderModeBadge('⚡ HARDCORE · 2× DMG · 3× $', '#FF8800');
       this.hud.renderAchButton(this._achPanelOpen);
       if (!this._zombieMode && !this._lifeMode) this.hud.renderDayNight(this._nightAlpha, this._gameTime);
       if (this._globalEvent) this.hud.renderEventBanner(ctx, W, H, this._globalEvent, this._eventAnnounceTimer);

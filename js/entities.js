@@ -349,7 +349,7 @@ class Pickup {
   applyTo(player) {
     switch (this.type) {
       case 'health': player.health = Math.min(player.maxHealth, player.health + 35); break;
-      case 'ammo':   player.fireCooldown = 0; player._ammoBoost = 6.0; break;
+      case 'ammo':   player.fireCooldown = 0; player._ammoBoost = 6.0 * (player._ammoCapMult || 1); break;
       case 'cash':   return 300;
     }
     return 0;
@@ -565,7 +565,7 @@ class Player {
 
   _activeFireRate() {
     const base = this._weapon.fireRate > 0 ? this._weapon.fireRate : this.charData.fireRate;
-    const ammoBonusMult = this._ammoBoost > 0 ? 0.72 : 1.0;
+    const ammoBonusMult = this._ammoBoost > 0 ? Math.max(0.35, 0.72 / (this._ammoCapMult || 1)) : 1.0;
     return base * this.fireRateMult * ammoBonusMult;
   }
 
@@ -582,6 +582,11 @@ class Player {
       case 'firerate': this.fireRateMult = Math.max(0.2, this.fireRateMult * 0.92); break;
       case 'armor':    this.armor = Math.min(0.5, this.armor + 0.1); break;
       case 'regen':    this.regenRate += 1; break;
+      case 'dodge':    this._dodgeChance = Math.min(0.55, (this._dodgeChance || 0) + 0.06); break;
+      case 'wealth':   this._wealthMult  = (this._wealthMult  || 1) + 0.20; break;
+      case 'leech':    this._leechHp     = (this._leechHp     || 0) + 2;    break;
+      case 'critical': this._critChance  = Math.min(0.60, (this._critChance || 0) + 0.08); break;
+      case 'ammo':     this._ammoCapMult = (this._ammoCapMult || 1) + 0.25; break;
     }
   }
 
@@ -660,8 +665,10 @@ class Player {
 
     for (let i = 0; i < count; i++) {
       const angle = this.angle + (Math.random() - 0.5) * spread;
-      const blt = new Bullet(bx, by, angle, speed, damage, true, color);
+      const isCrit = this._critChance && Math.random() < this._critChance;
+      const blt = new Bullet(bx, by, angle, speed, isCrit ? damage * 2 : damage, true, isCrit ? '#FFDD00' : color);
       blt.special = w.special || null;
+      if (isCrit) blt._isCrit = true;
       bullets.push(blt);
     }
     this._muzzleFlash = 0.08;
@@ -670,6 +677,7 @@ class Player {
 
   takeDamage(amount, hud) {
     if (this.invincible > 0) return;
+    if (this._dodgeChance && Math.random() < this._dodgeChance) return 0;
     const reduced = Math.max(1, Math.round(amount * (1 - this.armor)));
     this.health  -= reduced;
     this.invincible = 0.15;

@@ -293,6 +293,15 @@
       <div class="section-divider">
         <span class="section-label">SELECT MAP</span>
       </div>
+
+      <!-- Page navigation tabs -->
+      <div class="page-nav">
+        <button class="page-tab active" id="pageTab1" data-page="1">PAGE 1 · CLASSIC MAPS</button>
+        <button class="page-tab" id="pageTab2" data-page="2">PAGE 2 · NEW MAPS &amp; MODES</button>
+      </div>
+
+      <!-- ─── PAGE 1 ─────────────────────────── -->
+      <div id="mapPage1">
       <div class="maps-grid">
 
         <!-- Downtown -->
@@ -523,6 +532,169 @@
           </div>
         </div>
       </div>
+      </div><!-- end #mapPage1 -->
+
+      <!-- ─── PAGE 2 ─────────────────────────── -->
+      <div id="mapPage2" style="display:none">
+        <div class="maps-grid">
+
+          <!-- Harbor -->
+          <div class="map-card" data-map="harbor">
+            <div class="map-preview" style="--mg:20px;--mbg:#020b10;--mr:rgba(0,204,221,0.38);">
+              <div class="map-preview-inner">
+                <div class="road-dot" style="top:25%;left:25%;background:#00CCDD;box-shadow:0 0 6px #00CCDD"></div>
+                <div class="road-dot" style="top:25%;left:75%;background:#00CCDD;box-shadow:0 0 6px #00CCDD"></div>
+                <div class="road-dot" style="top:75%;left:25%;background:#00CCDD;box-shadow:0 0 6px #00CCDD"></div>
+                <div class="road-dot" style="top:75%;left:75%;background:#00CCDD;box-shadow:0 0 6px #00CCDD"></div>
+              </div>
+            </div>
+            <div class="map-info">
+              <div class="map-header">
+                <h4 class="map-name" style="color:#00CCDD;text-shadow:0 0 8px #00CCDD">HARBOR</h4>
+                <span class="map-num">10</span>
+              </div>
+              <p class="map-desc">Industrial waterfront. Cranes, containers, fog-soaked danger.</p>
+              <div class="map-tags">
+                <span class="map-tag" style="--tc:#00CCDD">PORT</span>
+                <span class="map-tag" style="--tc:#00CCDD">FOG</span>
+                <span class="map-tag" style="--tc:#00CCDD">38×38</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Neon District -->
+          <div class="map-card" data-map="neon_district">
+            <div class="map-preview" style="--mg:14px;--mbg:#0a0010;--mr:rgba(255,68,204,0.45);">
+              <div class="map-preview-inner">
+                <div class="road-dot" style="top:25%;left:25%;background:#FF44CC;box-shadow:0 0 8px #FF44CC"></div>
+                <div class="road-dot" style="top:25%;left:75%;background:#FF44CC;box-shadow:0 0 8px #FF44CC"></div>
+                <div class="road-dot" style="top:75%;left:25%;background:#FF44CC;box-shadow:0 0 8px #FF44CC"></div>
+                <div class="road-dot" style="top:75%;left:75%;background:#FF44CC;box-shadow:0 0 8px #FF44CC"></div>
+                <div class="road-dot" style="top:50%;left:50%;background:#FF00FF;box-shadow:0 0 12px #FF00FF;width:8px;height:8px;margin:-4px 0 0 -4px"></div>
+              </div>
+            </div>
+            <div class="map-info">
+              <div class="map-header">
+                <h4 class="map-name" style="color:#FF44CC;text-shadow:0 0 8px #FF44CC">NEON DISTRICT</h4>
+                <span class="map-num">11</span>
+              </div>
+              <p class="map-desc">The city's pulsing heart. Every surface screams in light.</p>
+              <div class="map-tags">
+                <span class="map-tag" style="--tc:#FF44CC">NEON</span>
+                <span class="map-tag" style="--tc:#FF44CC">DENSE</span>
+                <span class="map-tag" style="--tc:#FF44CC">42×42</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Military Base -->
+          <div class="map-card" data-map="military">
+            <div class="map-preview" style="--mg:24px;--mbg:#060804;--mr:rgba(136,170,68,0.38);">
+              <div class="map-preview-inner">
+                <div class="road-dot" style="top:25%;left:25%;background:#88AA44;box-shadow:0 0 6px #88AA44"></div>
+                <div class="road-dot" style="top:25%;left:75%;background:#88AA44;box-shadow:0 0 6px #88AA44"></div>
+                <div class="road-dot" style="top:75%;left:25%;background:#88AA44;box-shadow:0 0 6px #88AA44"></div>
+                <div class="road-dot" style="top:75%;left:75%;background:#88AA44;box-shadow:0 0 6px #88AA44"></div>
+              </div>
+            </div>
+            <div class="map-info">
+              <div class="map-header">
+                <h4 class="map-name" style="color:#88AA44;text-shadow:0 0 8px #88AA44">MILITARY BASE</h4>
+                <span class="map-num">12</span>
+              </div>
+              <p class="map-desc">Fortified compound. Armored patrols. Heavy resistance.</p>
+              <div class="map-tags">
+                <span class="map-tag" style="--tc:#88AA44">MILITARY</span>
+                <span class="map-tag" style="--tc:#88AA44">SANDSTORM</span>
+                <span class="map-tag" style="--tc:#88AA44">36×36</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Badlands -->
+          <div class="map-card" data-map="badlands">
+            <div class="map-preview" style="--mg:25px;--mbg:#0a0602;--mr:rgba(255,102,34,0.38);">
+              <div class="map-preview-inner">
+                <div class="road-dot" style="top:25%;left:25%;background:#FF6622;box-shadow:0 0 6px #FF6622"></div>
+                <div class="road-dot" style="top:25%;left:75%;background:#FF6622;box-shadow:0 0 6px #FF6622"></div>
+                <div class="road-dot" style="top:75%;left:25%;background:#FF6622;box-shadow:0 0 6px #FF6622"></div>
+                <div class="road-dot" style="top:75%;left:75%;background:#FF6622;box-shadow:0 0 6px #FF6622"></div>
+              </div>
+            </div>
+            <div class="map-info">
+              <div class="map-header">
+                <h4 class="map-name" style="color:#FF6622;text-shadow:0 0 8px #FF6622">BADLANDS</h4>
+                <span class="map-num">13</span>
+              </div>
+              <p class="map-desc">Scorched wasteland. No cover. No mercy. Endless sky.</p>
+              <div class="map-tags">
+                <span class="map-tag" style="--tc:#FF6622">WASTELAND</span>
+                <span class="map-tag" style="--tc:#FF6622">OPEN</span>
+                <span class="map-tag" style="--tc:#FF6622">44×44</span>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- end .maps-grid -->
+
+        <!-- Special Modes Row — Page 2 -->
+        <div class="special-maps-row">
+
+          <!-- Survival Mode -->
+          <div class="map-card map-card--arena" data-map="survival">
+            <div class="experimental-badge" style="background:#FF2244;box-shadow:0 0 14px rgba(255,34,68,0.7)">☠ NO SHOP</div>
+            <div class="map-preview" style="--mg:18px;--mbg:#0a0004;--mr:rgba(255,34,68,0.45);">
+              <div class="map-preview-inner">
+                <div class="road-dot" style="top:30%;left:30%;background:#FF2244;box-shadow:0 0 8px #FF2244"></div>
+                <div class="road-dot" style="top:30%;left:70%;background:#FF2244;box-shadow:0 0 8px #FF2244"></div>
+                <div class="road-dot" style="top:70%;left:30%;background:#FF2244;box-shadow:0 0 8px #FF2244"></div>
+                <div class="road-dot" style="top:70%;left:70%;background:#FF2244;box-shadow:0 0 8px #FF2244"></div>
+                <div class="road-dot" style="top:50%;left:50%;background:#FF0033;box-shadow:0 0 14px #FF0033;width:10px;height:10px;margin:-5px 0 0 -5px"></div>
+              </div>
+            </div>
+            <div class="map-info">
+              <div class="map-header">
+                <h4 class="map-name" style="color:#FF2244;text-shadow:0 0 10px #FF2244">☠ SURVIVAL MODE</h4>
+                <span class="map-num" style="color:#FF2244">14</span>
+              </div>
+              <p class="map-desc">No shop. No mercy. Live or die by the gun. Blood rain never stops.</p>
+              <div class="map-tags">
+                <span class="map-tag" style="--tc:#FF2244">HARDCORE</span>
+                <span class="map-tag" style="--tc:#FF2244">NO SHOP</span>
+                <span class="map-tag" style="--tc:#FF2244">ENDLESS</span>
+                <span class="map-tag" style="--tc:#FF2244">40×40</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Hardcore Mode -->
+          <div class="map-card map-card--experimental" data-map="hardcore">
+            <div class="experimental-badge" style="background:#FF8800;box-shadow:0 0 14px rgba(255,136,0,0.7);color:#000">⚡ HARDCORE</div>
+            <div class="map-preview" style="--mg:16px;--mbg:#080400;--mr:rgba(255,136,0,0.5);">
+              <div class="map-preview-inner">
+                <div class="road-dot" style="top:25%;left:25%;background:#FF8800;box-shadow:0 0 8px #FF8800"></div>
+                <div class="road-dot" style="top:25%;left:75%;background:#FF8800;box-shadow:0 0 8px #FF8800"></div>
+                <div class="road-dot" style="top:75%;left:25%;background:#FF8800;box-shadow:0 0 8px #FF8800"></div>
+                <div class="road-dot" style="top:75%;left:75%;background:#FF8800;box-shadow:0 0 8px #FF8800"></div>
+                <div class="road-dot" style="top:50%;left:50%;background:#FFAA00;box-shadow:0 0 14px #FFAA00;width:10px;height:10px;margin:-5px 0 0 -5px"></div>
+              </div>
+            </div>
+            <div class="map-info">
+              <div class="map-header">
+                <h4 class="map-name" style="color:#FF8800;text-shadow:0 0 10px #FF8800">⚡ HARDCORE MODE</h4>
+                <span class="map-num" style="color:#FF8800">15</span>
+              </div>
+              <p class="map-desc">Enemies deal 2× damage. You earn 3× money. Only legends survive.</p>
+              <div class="map-tags">
+                <span class="map-tag" style="--tc:#FF8800">2× DAMAGE</span>
+                <span class="map-tag" style="--tc:#FF8800">3× MONEY</span>
+                <span class="map-tag" style="--tc:#FF8800">40×40</span>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- end special-maps-row -->
+      </div><!-- end #mapPage2 -->
 
     </div><!-- end .map-section -->
 
@@ -532,7 +704,7 @@
         <span id="startBtnText">SELECT A CHARACTER</span>
       </button>
       <div style="display:flex;gap:16px;align-items:center">
-        <p class="start-hint">1–4 CHARACTER  ·  Q–U MAP  ·  U LIFE MODE  ·  I ARENA  ·  O ZOMBIE  ·  ENTER START</p>
+        <p class="start-hint">1–4 CHARACTER  ·  Q–U MAP  ·  TAB SWITCH PAGE  ·  ENTER START</p>
         <button class="modes-btn" id="modesBtn">📋 MAPS &amp; MODES</button>
       </div>
     </div>
@@ -551,11 +723,28 @@
           <div class="modal-map-item" style="--mc:#00AACC"><span>DOCKS</span><span class="modal-size">34×34</span><span class="modal-desc">Port district. Foggy alleys.</span></div>
           <div class="modal-map-item" style="--mc:#FFCC00"><span>CASINO STRIP</span><span class="modal-size">44×44</span><span class="modal-desc">Neon boulevard. Has a casino.</span></div>
         </div>
+        <div class="modal-section-label">PAGE 2 — NEW MAPS</div>
+        <div class="modal-grid">
+          <div class="modal-map-item" style="--mc:#00CCDD"><span>HARBOR</span><span class="modal-size">38×38</span><span class="modal-desc">Foggy industrial waterfront.</span></div>
+          <div class="modal-map-item" style="--mc:#FF44CC"><span>NEON DISTRICT</span><span class="modal-size">42×42</span><span class="modal-desc">Pulsing neon. Dense city heart.</span></div>
+          <div class="modal-map-item" style="--mc:#88AA44"><span>MILITARY BASE</span><span class="modal-size">36×36</span><span class="modal-desc">Fortified. Armored patrols.</span></div>
+          <div class="modal-map-item" style="--mc:#FF6622"><span>BADLANDS</span><span class="modal-size">44×44</span><span class="modal-desc">Scorched wasteland. No cover.</span></div>
+        </div>
         <div class="modal-section-label">SPECIAL MODES</div>
         <div class="modal-grid">
           <div class="modal-map-item" style="--mc:#88DDFF"><span>🏙 LIFE MODE</span><span class="modal-size">60×60</span><span class="modal-desc">Sandbox. Buy home, eat, drive. No enemies.</span></div>
           <div class="modal-map-item" style="--mc:#FF0044"><span>☠ ARENA</span><span class="modal-size">24×24</span><span class="modal-desc">Kill-based waves. Boss every 4. No shop.</span></div>
           <div class="modal-map-item" style="--mc:#44FF88"><span>☣ ZOMBIE OUTBREAK</span><span class="modal-size">36×36</span><span class="modal-desc">Zombie hordes. Melee combat. Endless.</span></div>
+          <div class="modal-map-item" style="--mc:#FF2244"><span>☠ SURVIVAL MODE</span><span class="modal-size">40×40</span><span class="modal-desc">No shop. Blood rain. Die or fight.</span></div>
+          <div class="modal-map-item" style="--mc:#FF8800"><span>⚡ HARDCORE MODE</span><span class="modal-size">40×40</span><span class="modal-desc">2× enemy damage. 3× money earned.</span></div>
+        </div>
+        <div class="modal-section-label">NEW UPGRADES (SHOP)</div>
+        <div class="modal-grid">
+          <div class="modal-map-item" style="--mc:#FFEE44"><span>✦ DODGE</span><span class="modal-size">+6%/level</span><span class="modal-desc">Chance to dodge incoming bullets.</span></div>
+          <div class="modal-map-item" style="--mc:#FFD700"><span>$ WEALTH</span><span class="modal-size">+20%/level</span><span class="modal-desc">Earn more money per kill.</span></div>
+          <div class="modal-map-item" style="--mc:#FF44AA"><span>♦ LIFE LEECH</span><span class="modal-size">+2HP/kill</span><span class="modal-desc">Heal a little with every kill.</span></div>
+          <div class="modal-map-item" style="--mc:#FF6644"><span>! CRITICAL HIT</span><span class="modal-size">+8%/level</span><span class="modal-desc">Chance to deal 2× bullet damage.</span></div>
+          <div class="modal-map-item" style="--mc:#AAFFEE"><span>◉ AMMO CAP</span><span class="modal-size">+25%/level</span><span class="modal-desc">Increase ammo fire-rate bonus.</span></div>
         </div>
         <div class="modal-section-label">FEATURES</div>
         <div class="modal-features">

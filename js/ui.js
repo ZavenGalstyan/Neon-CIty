@@ -763,6 +763,25 @@ class HUD {
     ctx.restore();
   }
 
+  renderModeBadge(label, color) {
+    const ctx = this.ctx;
+    const W   = this.canvas.width;
+    const H   = this.canvas.height;
+    ctx.save();
+    ctx.fillStyle   = 'rgba(0,0,0,0.65)';
+    ctx.strokeStyle = color;
+    ctx.lineWidth   = 1.5;
+    ctx.shadowColor = color;
+    ctx.shadowBlur  = 10;
+    this._rr(ctx, W - 200, H - 34, 188, 26, 5);
+    ctx.fill(); ctx.stroke();
+    ctx.font      = 'bold 9px Orbitron, monospace';
+    ctx.fillStyle = color;
+    ctx.textAlign = 'center';
+    ctx.fillText(label, W - 106, H - 17);
+    ctx.restore();
+  }
+
   // ── Killstreak ─────────────────────────────────────────────────────────────
   renderKillStreak(streak, mult, popup, streakTimer) {
     const ctx = this.ctx;

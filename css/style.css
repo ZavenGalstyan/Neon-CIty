@@ -103,6 +103,26 @@ html, body { width: 100%; height: 100%; background: var(--bg); color: var(--text
 }
 
 /* ════════════════════════════════════════════════════════════
+   PAGE NAV TABS
+   ════════════════════════════════════════════════════════════ */
+.page-nav {
+  display: flex; gap: 8px; margin: 12px 0 4px;
+}
+.page-tab {
+  flex: 1; padding: 10px 16px;
+  background: var(--panel); border: 1px solid var(--border);
+  border-radius: 8px; cursor: pointer;
+  font-family: 'Orbitron', sans-serif; font-size: 10px; letter-spacing: 0.12em;
+  color: var(--muted); transition: all 0.18s ease;
+}
+.page-tab:hover { border-color: rgba(255,255,255,0.2); color: #fff; }
+.page-tab.active {
+  background: rgba(68,238,255,0.10);
+  border-color: #44EEFF; color: #44EEFF;
+  box-shadow: 0 0 14px rgba(68,238,255,0.18);
+}
+
+/* ════════════════════════════════════════════════════════════
    CHARACTER CARDS  (horizontal layout, compact)
    ════════════════════════════════════════════════════════════ */
 .characters-grid {
