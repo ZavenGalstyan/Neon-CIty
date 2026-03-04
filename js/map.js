@@ -28,6 +28,21 @@ const ROOM_LAYOUT_2 = [
   [1,1,1,1,1,1,0,0,0,1,1,1,1,1,1],  // door gap cols 6-8
 ]; // 15×10 tiles, 60px each → 900×600 px
 
+// 0=floor  1=wall  2=bench  3=tracks(blocked)
+const ROOM_LAYOUT_METRO = [
+  [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+  [3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3],
+  [3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3],
+  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+  [1,0,2,0,0,2,0,0,0,0,0,0,2,0,0,2,0,0,0,1],
+  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+  [1,0,2,0,0,2,0,0,0,0,0,0,2,0,0,2,0,0,0,1],
+  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+  [1,1,1,1,1,1,1,1,0,0,0,1,1,1,1,1,1,1,1,1],
+]; // 20×11 tiles, 48px each → 960×528 px
+
 class GameMap {
   constructor(mapConfig) {
     // Accept a map config object; fall back to first map in CONFIG.MAPS
@@ -167,6 +182,20 @@ class GameMap {
       }
     }
 
+    // Metro entrance near bottom-right (normal maps only)
+    this.metroEntrance = null;
+    if (!this.config.arena && !this.config.zombie) {
+      const R = this.ROAD_EVERY;
+      // Snap to nearest road tile (multiple of R), clamped within map bounds
+      const lastRoadX = Math.floor((this.W - 1) / R) * R;
+      const lastRoadY = Math.floor((this.H - 1) / R) * R;
+      let meX = Math.min(Math.round(this.W * 0.72 / R) * R, lastRoadX - R);
+      let meY = Math.min(Math.round(this.H * 0.76 / R) * R, lastRoadY - R);
+      meX = Math.max(meX, R);
+      meY = Math.max(meY, R);
+      this.metroEntrance = { tx: meX, ty: meY, wx: (meX + 0.5) * this.S, wy: (meY + 0.5) * this.S };
+    }
+
     // Build block-type lookup for indoor furniture
     const BL = CONFIG.BUILDING_TYPES.length;
     this._blockTypes = {};
@@ -180,6 +209,23 @@ class GameMap {
         const R2 = this.ROAD_EVERY;
         this._blockTypes[`${Math.floor(door.tx/R2)},${Math.floor(door.ty/R2)}`] = door.specialType;
       }
+    }
+
+    // ── Teleport Portals (normal maps only, not arena/zombie/life) ──
+    this.portals = [];
+    if (!this.config.arena && !this.config.zombie && !this.config.lifeMode) {
+      const R    = this.ROAD_EVERY;
+      const S    = this.S;
+      const pos1 = { tx: R * 2, ty: R * 2 };
+      const pos2 = { tx: Math.floor(this.W / R) * R - R * 2, ty: Math.floor(this.H / R) * R - R * 2 };
+      // Clamp to valid road tiles
+      const clamp = (v, lo, hi) => Math.min(Math.max(v, lo), hi);
+      pos1.tx = clamp(Math.round(pos1.tx / R) * R, R, this.W - R);
+      pos1.ty = clamp(Math.round(pos1.ty / R) * R, R, this.H - R);
+      pos2.tx = clamp(Math.round(pos2.tx / R) * R, R, this.W - R);
+      pos2.ty = clamp(Math.round(pos2.ty / R) * R, R, this.H - R);
+      this.portals.push({ x: (pos1.tx + 0.5) * S, y: (pos1.ty + 0.5) * S, paired: 1, _animT: 0 });
+      this.portals.push({ x: (pos2.tx + 0.5) * S, y: (pos2.ty + 0.5) * S, paired: 0, _animT: 1.5 });
     }
   }
 
@@ -334,6 +380,28 @@ class GameMap {
         }
       }
     }
+  }
+
+  // ── Metro entrance icon ───────────────────────────────────
+  renderMetroEntrance(ctx) {
+    if (!this.metroEntrance) return;
+    const { wx, wy } = this.metroEntrance;
+    const S = this.S;
+    // ctx is already in world-space (translated by -camX,-camY by the caller)
+    // so render directly at world coordinates wx, wy
+    ctx.save();
+    ctx.fillStyle = '#060e06';
+    ctx.fillRect(wx - S * 0.5, wy - S * 0.5, S, S);
+    for (let i = 0; i < 4; i++) {
+      ctx.fillStyle = `rgba(34,255,100,${0.38 - i * 0.08})`;
+      ctx.fillRect(wx - S * 0.5 + i * 5, wy + S * 0.5 - (i + 1) * 9, S - i * 10, 5);
+    }
+    ctx.font = 'bold 26px monospace';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#22FF66'; ctx.shadowColor = '#22FF66'; ctx.shadowBlur = 20;
+    ctx.fillText('M', wx, wy);
+    ctx.shadowBlur = 0; ctx.textBaseline = 'alphabetic';
+    ctx.restore();
   }
 
   // ── Indoor room factory ───────────────────────────────────

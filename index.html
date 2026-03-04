@@ -19,7 +19,16 @@
     </div>
 
     <!-- Characters -->
-    <div class="characters-grid">
+    <div class="char-section">
+      <!-- Character page tabs -->
+      <div class="page-nav" style="margin:0 0 8px">
+        <button class="page-tab active" id="charTab1">PAGE 1 · STREET CREW</button>
+        <button class="page-tab" id="charTab2">PAGE 2 · SPECIALISTS</button>
+      </div>
+
+      <!-- Page 1: Original 4 chars -->
+      <div id="charPage1">
+      <div class="characters-grid">
 
       <!-- Gangster -->
       <div class="char-card" data-char="gangster">
@@ -239,7 +248,206 @@
         </div>
       </div>
 
-    </div><!-- end .characters-grid -->
+    </div><!-- end .characters-grid page1 -->
+    </div><!-- end #charPage1 -->
+
+    <!-- Page 2: New specialist chars -->
+    <div id="charPage2" style="display:none">
+    <div class="characters-grid">
+
+      <!-- Medic -->
+      <div class="char-card" data-char="medic">
+        <span class="char-number">05</span>
+        <div class="char-avatar" data-char="medic">
+          <svg class="char-figure" viewBox="0 0 100 130" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="50" cy="65" r="38" fill="rgba(68,255,170,0.10)"/>
+            <!-- Body — white medic coat -->
+            <rect x="28" y="54" width="44" height="52" rx="6" fill="#1a3328"/>
+            <rect x="28" y="54" width="44" height="52" rx="6" stroke="#44FFAA" stroke-width="1.5" stroke-opacity="0.7"/>
+            <!-- Red cross on chest -->
+            <rect x="45" y="62" width="10" height="4" rx="1" fill="#FF3333"/>
+            <rect x="48" y="59" width="4" height="10" rx="1" fill="#FF3333"/>
+            <!-- Head -->
+            <circle cx="50" cy="37" r="17" fill="#2a5040"/>
+            <circle cx="50" cy="37" r="17" stroke="#44FFAA" stroke-width="1.5"/>
+            <!-- Medic helmet line -->
+            <rect x="34" y="27" width="32" height="8" rx="3" fill="#1a3328" stroke="#44FFAA" stroke-width="1"/>
+            <!-- Eyes -->
+            <circle cx="43" cy="38" r="3" fill="#44FFAA" opacity="0.9"/>
+            <circle cx="57" cy="38" r="3" fill="#44FFAA" opacity="0.9"/>
+            <circle cx="43" cy="38" r="1.5" fill="#fff"/>
+            <circle cx="57" cy="38" r="1.5" fill="#fff"/>
+            <!-- Medical bag arm -->
+            <rect x="68" y="62" width="6" height="18" rx="3" fill="#1a3328" stroke="#44FFAA" stroke-width="1"/>
+            <rect x="72" y="66" width="18" height="14" rx="3" fill="#0a2020" stroke="#44FFAA" stroke-width="0.8"/>
+            <rect x="79" y="69" width="4" height="8" rx="1" fill="#FF3333"/>
+            <rect x="76" y="72" width="10" height="2" rx="1" fill="#FF3333"/>
+            <!-- Bear companion badge -->
+            <circle cx="35" cy="70" r="6" fill="#CC7722" opacity="0.8"/>
+            <text x="35" y="73" font-size="7" text-anchor="middle" fill="#fff">🐻</text>
+            <!-- Legs -->
+            <rect x="30" y="104" width="15" height="22" rx="4" fill="#1a3328"/>
+            <rect x="55" y="104" width="15" height="22" rx="4" fill="#1a3328"/>
+            <rect x="28" y="121" width="19" height="7" rx="3" fill="#0a1e18" stroke="#44FFAA" stroke-width="0.5"/>
+            <rect x="53" y="121" width="19" height="7" rx="3" fill="#0a1e18" stroke="#44FFAA" stroke-width="0.5"/>
+          </svg>
+        </div>
+        <div class="char-info">
+          <h3>THE MEDIC</h3>
+          <p class="char-lore">Combat surgeon. Bear companion heals.</p>
+          <div class="stats">
+            <div class="stat"><span>SPEED</span><div class="stat-bar"><div class="stat-fill" style="width:44%"></div></div></div>
+            <div class="stat"><span>HEALTH</span><div class="stat-bar"><div class="stat-fill" style="width:90%"></div></div></div>
+            <div class="stat"><span>DAMAGE</span><div class="stat-bar"><div class="stat-fill" style="width:50%"></div></div></div>
+          </div>
+          <span class="char-key">5</span>
+        </div>
+      </div>
+
+      <!-- Ronin -->
+      <div class="char-card" data-char="ronin">
+        <span class="char-number">06</span>
+        <div class="char-avatar" data-char="ronin">
+          <svg class="char-figure" viewBox="0 0 100 130" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="50" cy="65" r="38" fill="rgba(255,204,68,0.10)"/>
+            <!-- Body — dark kimono -->
+            <rect x="28" y="54" width="44" height="52" rx="4" fill="#1a1100"/>
+            <rect x="28" y="54" width="44" height="52" rx="4" stroke="#FFCC44" stroke-width="1.5" stroke-opacity="0.7"/>
+            <!-- Kimono collar V-shape -->
+            <line x1="50" y1="56" x2="42" y2="70" stroke="#FFCC44" stroke-width="1.2" opacity="0.6"/>
+            <line x1="50" y1="56" x2="58" y2="70" stroke="#FFCC44" stroke-width="1.2" opacity="0.6"/>
+            <!-- Belt / obi -->
+            <rect x="28" y="76" width="44" height="6" rx="2" fill="#FFCC44" opacity="0.3" stroke="#FFCC44" stroke-width="0.8"/>
+            <!-- Head -->
+            <circle cx="50" cy="37" r="17" fill="#332200"/>
+            <circle cx="50" cy="37" r="17" stroke="#FFCC44" stroke-width="1.5"/>
+            <!-- Ronin headband -->
+            <rect x="33" y="28" width="34" height="7" rx="2" fill="#FFCC44" opacity="0.55"/>
+            <!-- Eyes — sharp -->
+            <line x1="39" y1="38" x2="47" y2="37" stroke="#FFCC44" stroke-width="2" stroke-linecap="round"/>
+            <line x1="53" y1="37" x2="61" y2="38" stroke="#FFCC44" stroke-width="2" stroke-linecap="round"/>
+            <!-- Katana arm -->
+            <rect x="68" y="52" width="5" height="24" rx="2" fill="#332200" stroke="#FFCC44" stroke-width="1"/>
+            <rect x="66" y="56" width="28" height="3" rx="1" fill="#aaa" stroke="#FFCC44" stroke-width="0.6"/>
+            <rect x="92" y="55" width="8" height="5" rx="1" fill="#FFCC44" opacity="0.7"/>
+            <!-- Fox companion badge -->
+            <circle cx="35" cy="70" r="6" fill="#FF8833" opacity="0.8"/>
+            <text x="35" y="73" font-size="7" text-anchor="middle" fill="#fff">🦊</text>
+            <!-- Legs -->
+            <rect x="30" y="104" width="15" height="22" rx="4" fill="#1a1100"/>
+            <rect x="55" y="104" width="15" height="22" rx="4" fill="#1a1100"/>
+            <rect x="28" y="121" width="19" height="7" rx="3" fill="#0a0800" stroke="#FFCC44" stroke-width="0.5"/>
+            <rect x="53" y="121" width="19" height="7" rx="3" fill="#0a0800" stroke="#FFCC44" stroke-width="0.5"/>
+          </svg>
+        </div>
+        <div class="char-info">
+          <h3>THE RONIN</h3>
+          <p class="char-lore">Ancient blade. Fox companion attacks.</p>
+          <div class="stats">
+            <div class="stat"><span>SPEED</span><div class="stat-bar"><div class="stat-fill" style="width:75%"></div></div></div>
+            <div class="stat"><span>HEALTH</span><div class="stat-bar"><div class="stat-fill" style="width:58%"></div></div></div>
+            <div class="stat"><span>DAMAGE</span><div class="stat-bar"><div class="stat-fill" style="width:96%"></div></div></div>
+          </div>
+          <span class="char-key">6</span>
+        </div>
+      </div>
+
+
+      <!-- Pyro -->
+      <div class="char-card" data-char="pyro">
+        <span class="char-number">07</span>
+        <div class="char-avatar" data-char="pyro">
+          <svg class="char-figure" viewBox="0 0 100 130" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="50" cy="65" r="38" fill="rgba(255,85,0,0.12)"/>
+            <!-- Flame aura -->
+            <ellipse cx="50" cy="90" rx="26" ry="8" fill="rgba(255,68,0,0.18)"/>
+            <!-- Body — dark hazmat-style suit -->
+            <rect x="28" y="54" width="44" height="52" rx="5" fill="#1a0800"/>
+            <rect x="28" y="54" width="44" height="52" rx="5" stroke="#FF5500" stroke-width="1.5" stroke-opacity="0.75"/>
+            <!-- Orange chest panel -->
+            <rect x="34" y="60" width="32" height="18" rx="3" fill="#FF3300" fill-opacity="0.25" stroke="#FF5500" stroke-width="0.8"/>
+            <!-- Flamethrower nozzle arm -->
+            <rect x="70" y="62" width="6" height="20" rx="2" fill="#331100" stroke="#FF5500" stroke-width="1"/>
+            <rect x="74" y="58" width="18" height="5" rx="2" fill="#553300" stroke="#FF6600" stroke-width="0.7"/>
+            <circle cx="92" cy="60" r="4" fill="#FF4400" fill-opacity="0.7"/>
+            <!-- Head — reinforced helmet -->
+            <circle cx="50" cy="37" r="18" fill="#220800"/>
+            <circle cx="50" cy="37" r="18" stroke="#FF5500" stroke-width="1.5"/>
+            <!-- Visor -->
+            <rect x="34" y="28" width="32" height="12" rx="4" fill="#FF4400" fill-opacity="0.35" stroke="#FF6600" stroke-width="0.8"/>
+            <!-- Eyes glow -->
+            <ellipse cx="44" cy="34" rx="4" ry="3" fill="#FFAA00" fill-opacity="0.8"/>
+            <ellipse cx="56" cy="34" rx="4" ry="3" fill="#FFAA00" fill-opacity="0.8"/>
+            <!-- Salamander badge -->
+            <circle cx="35" cy="70" r="6" fill="#FF3300" opacity="0.8"/>
+            <text x="35" y="73" font-size="7" text-anchor="middle" fill="#FFDD00">🦎</text>
+            <!-- Legs -->
+            <rect x="30" y="104" width="14" height="22" rx="4" fill="#1a0800"/>
+            <rect x="56" y="104" width="14" height="22" rx="4" fill="#1a0800"/>
+            <rect x="28" y="120" width="18" height="8" rx="3" fill="#0a0200" stroke="#FF5500" stroke-width="0.5"/>
+            <rect x="54" y="120" width="18" height="8" rx="3" fill="#0a0200" stroke="#FF5500" stroke-width="0.5"/>
+          </svg>
+        </div>
+        <div class="char-info">
+          <h3>THE PYRO</h3>
+          <p class="char-lore">Fire is the only language left. Salamander companion burns all.</p>
+          <div class="stats">
+            <div class="stat"><span>SPEED</span><div class="stat-bar"><div class="stat-fill" style="width:32%"></div></div></div>
+            <div class="stat"><span>HEALTH</span><div class="stat-bar"><div class="stat-fill" style="width:88%"></div></div></div>
+            <div class="stat"><span>DAMAGE</span><div class="stat-bar"><div class="stat-fill" style="width:98%"></div></div></div>
+          </div>
+          <span class="char-key">3</span>
+        </div>
+      </div>
+
+      <!-- Phantom -->
+      <div class="char-card" data-char="phantom">
+        <span class="char-number">08</span>
+        <div class="char-avatar" data-char="phantom">
+          <svg class="char-figure" viewBox="0 0 100 130" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="50" cy="65" r="38" fill="rgba(170,68,255,0.10)"/>
+            <!-- Ghost trail aura -->
+            <ellipse cx="50" cy="100" rx="20" ry="6" fill="rgba(170,68,255,0.15)"/>
+            <!-- Body — dark flowing cloak -->
+            <path d="M28 54 Q24 80 22 106 L44 106 L50 96 L56 106 L78 106 Q76 80 72 54 Z" fill="#150022"/>
+            <path d="M28 54 Q24 80 22 106 L44 106 L50 96 L56 106 L78 106 Q76 80 72 54 Z" stroke="#AA44FF" stroke-width="1.2" stroke-opacity="0.65"/>
+            <!-- Shoulder pads -->
+            <ellipse cx="30" cy="58" rx="8" ry="5" fill="#220033" stroke="#AA44FF" stroke-width="0.8"/>
+            <ellipse cx="70" cy="58" rx="8" ry="5" fill="#220033" stroke="#AA44FF" stroke-width="0.8"/>
+            <!-- Crossbow arm -->
+            <rect x="70" y="60" width="5" height="18" rx="2" fill="#220033" stroke="#AA44FF" stroke-width="0.8"/>
+            <rect x="70" y="64" width="22" height="4" rx="1" fill="#330044" stroke="#CC88FF" stroke-width="0.6"/>
+            <rect x="89" y="62" width="5" height="8" rx="1" fill="#440055" stroke="#AA44FF" stroke-width="0.5"/>
+            <!-- Head — shadow-wrapped -->
+            <circle cx="50" cy="36" r="17" fill="#1a0030"/>
+            <circle cx="50" cy="36" r="17" stroke="#AA44FF" stroke-width="1.5"/>
+            <!-- Mask / face wrap -->
+            <rect x="34" y="32" width="32" height="10" rx="5" fill="#2a0045" stroke="#AA44FF" stroke-width="0.7" opacity="0.9"/>
+            <!-- Glowing purple eyes -->
+            <ellipse cx="43" cy="34" rx="3.5" ry="2.5" fill="#AA44FF" fill-opacity="0.9"/>
+            <ellipse cx="57" cy="34" rx="3.5" ry="2.5" fill="#AA44FF" fill-opacity="0.9"/>
+            <ellipse cx="43" cy="34" rx="1.5" ry="1" fill="#FFFFFF" fill-opacity="0.7"/>
+            <ellipse cx="57" cy="34" rx="1.5" ry="1" fill="#FFFFFF" fill-opacity="0.7"/>
+            <!-- Spirit companion badge -->
+            <circle cx="35" cy="70" r="6" fill="#7711CC" opacity="0.8"/>
+            <text x="35" y="73" font-size="7" text-anchor="middle" fill="#CC88FF">👻</text>
+          </svg>
+        </div>
+        <div class="char-info">
+          <h3>THE PHANTOM</h3>
+          <p class="char-lore">Shadow given a gun. 22% chance to dodge bullets.</p>
+          <div class="stats">
+            <div class="stat"><span>SPEED</span><div class="stat-bar"><div class="stat-fill" style="width:95%"></div></div></div>
+            <div class="stat"><span>HEALTH</span><div class="stat-bar"><div class="stat-fill" style="width:38%"></div></div></div>
+            <div class="stat"><span>DAMAGE</span><div class="stat-bar"><div class="stat-fill" style="width:88%"></div></div></div>
+          </div>
+          <span class="char-key">4</span>
+        </div>
+      </div>
+
+    </div><!-- end .characters-grid page2 -->
+    </div><!-- end #charPage2 -->
+    </div><!-- end .char-section -->
 
     <!-- ── Character Customization ──────────────────────── -->
     <div class="customize-section">
@@ -293,6 +501,15 @@
       <div class="section-divider">
         <span class="section-label">SELECT MAP</span>
       </div>
+
+      <!-- Page navigation tabs -->
+      <div class="page-nav">
+        <button class="page-tab active" id="pageTab1" data-page="1">PAGE 1 · CLASSIC MAPS</button>
+        <button class="page-tab" id="pageTab2" data-page="2">PAGE 2 · NEW MAPS &amp; MODES</button>
+      </div>
+
+      <!-- ─── PAGE 1 ─────────────────────────── -->
+      <div id="mapPage1">
       <div class="maps-grid">
 
         <!-- Downtown -->
@@ -523,18 +740,257 @@
           </div>
         </div>
       </div>
+      </div><!-- end #mapPage1 -->
+
+      <!-- ─── PAGE 2 ─────────────────────────── -->
+      <div id="mapPage2" style="display:none">
+        <div class="maps-grid">
+
+          <!-- Harbor -->
+          <div class="map-card" data-map="harbor">
+            <div class="map-preview" style="--mg:20px;--mbg:#020b10;--mr:rgba(0,204,221,0.38);">
+              <div class="map-preview-inner">
+                <div class="road-dot" style="top:25%;left:25%;background:#00CCDD;box-shadow:0 0 6px #00CCDD"></div>
+                <div class="road-dot" style="top:25%;left:75%;background:#00CCDD;box-shadow:0 0 6px #00CCDD"></div>
+                <div class="road-dot" style="top:75%;left:25%;background:#00CCDD;box-shadow:0 0 6px #00CCDD"></div>
+                <div class="road-dot" style="top:75%;left:75%;background:#00CCDD;box-shadow:0 0 6px #00CCDD"></div>
+              </div>
+            </div>
+            <div class="map-info">
+              <div class="map-header">
+                <h4 class="map-name" style="color:#00CCDD;text-shadow:0 0 8px #00CCDD">HARBOR</h4>
+                <span class="map-num">10</span>
+              </div>
+              <p class="map-desc">Industrial waterfront. Cranes, containers, fog-soaked danger.</p>
+              <div class="map-tags">
+                <span class="map-tag" style="--tc:#00CCDD">PORT</span>
+                <span class="map-tag" style="--tc:#00CCDD">FOG</span>
+                <span class="map-tag" style="--tc:#00CCDD">38×38</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Neon District -->
+          <div class="map-card" data-map="neon_district">
+            <div class="map-preview" style="--mg:14px;--mbg:#0a0010;--mr:rgba(255,68,204,0.45);">
+              <div class="map-preview-inner">
+                <div class="road-dot" style="top:25%;left:25%;background:#FF44CC;box-shadow:0 0 8px #FF44CC"></div>
+                <div class="road-dot" style="top:25%;left:75%;background:#FF44CC;box-shadow:0 0 8px #FF44CC"></div>
+                <div class="road-dot" style="top:75%;left:25%;background:#FF44CC;box-shadow:0 0 8px #FF44CC"></div>
+                <div class="road-dot" style="top:75%;left:75%;background:#FF44CC;box-shadow:0 0 8px #FF44CC"></div>
+                <div class="road-dot" style="top:50%;left:50%;background:#FF00FF;box-shadow:0 0 12px #FF00FF;width:8px;height:8px;margin:-4px 0 0 -4px"></div>
+              </div>
+            </div>
+            <div class="map-info">
+              <div class="map-header">
+                <h4 class="map-name" style="color:#FF44CC;text-shadow:0 0 8px #FF44CC">NEON DISTRICT</h4>
+                <span class="map-num">11</span>
+              </div>
+              <p class="map-desc">The city's pulsing heart. Every surface screams in light.</p>
+              <div class="map-tags">
+                <span class="map-tag" style="--tc:#FF44CC">NEON</span>
+                <span class="map-tag" style="--tc:#FF44CC">DENSE</span>
+                <span class="map-tag" style="--tc:#FF44CC">42×42</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Military Base -->
+          <div class="map-card" data-map="military">
+            <div class="map-preview" style="--mg:24px;--mbg:#060804;--mr:rgba(136,170,68,0.38);">
+              <div class="map-preview-inner">
+                <div class="road-dot" style="top:25%;left:25%;background:#88AA44;box-shadow:0 0 6px #88AA44"></div>
+                <div class="road-dot" style="top:25%;left:75%;background:#88AA44;box-shadow:0 0 6px #88AA44"></div>
+                <div class="road-dot" style="top:75%;left:25%;background:#88AA44;box-shadow:0 0 6px #88AA44"></div>
+                <div class="road-dot" style="top:75%;left:75%;background:#88AA44;box-shadow:0 0 6px #88AA44"></div>
+              </div>
+            </div>
+            <div class="map-info">
+              <div class="map-header">
+                <h4 class="map-name" style="color:#88AA44;text-shadow:0 0 8px #88AA44">MILITARY BASE</h4>
+                <span class="map-num">12</span>
+              </div>
+              <p class="map-desc">Fortified compound. Armored patrols. Heavy resistance.</p>
+              <div class="map-tags">
+                <span class="map-tag" style="--tc:#88AA44">MILITARY</span>
+                <span class="map-tag" style="--tc:#88AA44">SANDSTORM</span>
+                <span class="map-tag" style="--tc:#88AA44">36×36</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Badlands -->
+          <div class="map-card" data-map="badlands">
+            <div class="map-preview" style="--mg:25px;--mbg:#0a0602;--mr:rgba(255,102,34,0.38);">
+              <div class="map-preview-inner">
+                <div class="road-dot" style="top:25%;left:25%;background:#FF6622;box-shadow:0 0 6px #FF6622"></div>
+                <div class="road-dot" style="top:25%;left:75%;background:#FF6622;box-shadow:0 0 6px #FF6622"></div>
+                <div class="road-dot" style="top:75%;left:25%;background:#FF6622;box-shadow:0 0 6px #FF6622"></div>
+                <div class="road-dot" style="top:75%;left:75%;background:#FF6622;box-shadow:0 0 6px #FF6622"></div>
+              </div>
+            </div>
+            <div class="map-info">
+              <div class="map-header">
+                <h4 class="map-name" style="color:#FF6622;text-shadow:0 0 8px #FF6622">BADLANDS</h4>
+                <span class="map-num">13</span>
+              </div>
+              <p class="map-desc">Scorched wasteland. No cover. No mercy. Endless sky.</p>
+              <div class="map-tags">
+                <span class="map-tag" style="--tc:#FF6622">WASTELAND</span>
+                <span class="map-tag" style="--tc:#FF6622">OPEN</span>
+                <span class="map-tag" style="--tc:#FF6622">44×44</span>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- end .maps-grid -->
+
+        <!-- Special Modes Row — Page 2 -->
+        <div class="special-maps-row">
+
+          <!-- Survival Mode -->
+          <div class="map-card map-card--arena" data-map="survival">
+            <div class="experimental-badge" style="background:#FF2244;box-shadow:0 0 14px rgba(255,34,68,0.7)">☠ NO SHOP</div>
+            <div class="map-preview" style="--mg:18px;--mbg:#0a0004;--mr:rgba(255,34,68,0.45);">
+              <div class="map-preview-inner">
+                <div class="road-dot" style="top:30%;left:30%;background:#FF2244;box-shadow:0 0 8px #FF2244"></div>
+                <div class="road-dot" style="top:30%;left:70%;background:#FF2244;box-shadow:0 0 8px #FF2244"></div>
+                <div class="road-dot" style="top:70%;left:30%;background:#FF2244;box-shadow:0 0 8px #FF2244"></div>
+                <div class="road-dot" style="top:70%;left:70%;background:#FF2244;box-shadow:0 0 8px #FF2244"></div>
+                <div class="road-dot" style="top:50%;left:50%;background:#FF0033;box-shadow:0 0 14px #FF0033;width:10px;height:10px;margin:-5px 0 0 -5px"></div>
+              </div>
+            </div>
+            <div class="map-info">
+              <div class="map-header">
+                <h4 class="map-name" style="color:#FF2244;text-shadow:0 0 10px #FF2244">☠ SURVIVAL MODE</h4>
+                <span class="map-num" style="color:#FF2244">14</span>
+              </div>
+              <p class="map-desc">No shop. No mercy. Live or die by the gun. Blood rain never stops.</p>
+              <div class="map-tags">
+                <span class="map-tag" style="--tc:#FF2244">HARDCORE</span>
+                <span class="map-tag" style="--tc:#FF2244">NO SHOP</span>
+                <span class="map-tag" style="--tc:#FF2244">ENDLESS</span>
+                <span class="map-tag" style="--tc:#FF2244">40×40</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Hardcore Mode -->
+          <div class="map-card map-card--experimental" data-map="hardcore">
+            <div class="experimental-badge" style="background:#FF8800;box-shadow:0 0 14px rgba(255,136,0,0.7);color:#000">⚡ HARDCORE</div>
+            <div class="map-preview" style="--mg:16px;--mbg:#080400;--mr:rgba(255,136,0,0.5);">
+              <div class="map-preview-inner">
+                <div class="road-dot" style="top:25%;left:25%;background:#FF8800;box-shadow:0 0 8px #FF8800"></div>
+                <div class="road-dot" style="top:25%;left:75%;background:#FF8800;box-shadow:0 0 8px #FF8800"></div>
+                <div class="road-dot" style="top:75%;left:25%;background:#FF8800;box-shadow:0 0 8px #FF8800"></div>
+                <div class="road-dot" style="top:75%;left:75%;background:#FF8800;box-shadow:0 0 8px #FF8800"></div>
+                <div class="road-dot" style="top:50%;left:50%;background:#FFAA00;box-shadow:0 0 14px #FFAA00;width:10px;height:10px;margin:-5px 0 0 -5px"></div>
+              </div>
+            </div>
+            <div class="map-info">
+              <div class="map-header">
+                <h4 class="map-name" style="color:#FF8800;text-shadow:0 0 10px #FF8800">⚡ HARDCORE MODE</h4>
+                <span class="map-num" style="color:#FF8800">15</span>
+              </div>
+              <p class="map-desc">Enemies deal 2× damage. You earn 3× money. Only legends survive.</p>
+              <div class="map-tags">
+                <span class="map-tag" style="--tc:#FF8800">2× DAMAGE</span>
+                <span class="map-tag" style="--tc:#FF8800">3× MONEY</span>
+                <span class="map-tag" style="--tc:#FF8800">40×40</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Campaign Mode -->
+          <div class="map-card map-card--experimental" data-map="campaign">
+            <div class="experimental-badge" style="background:#FFDD00;box-shadow:0 0 14px rgba(255,221,0,0.7);color:#000">★ 100 LEVELS</div>
+            <div class="map-preview" style="--mg:16px;--mbg:#080600;--mr:rgba(255,221,0,0.5);">
+              <div class="map-preview-inner">
+                <div class="road-dot" style="top:25%;left:25%;background:#FFDD00;box-shadow:0 0 8px #FFDD00"></div>
+                <div class="road-dot" style="top:25%;left:75%;background:#FFDD00;box-shadow:0 0 8px #FFDD00"></div>
+                <div class="road-dot" style="top:75%;left:25%;background:#FFDD00;box-shadow:0 0 8px #FFDD00"></div>
+                <div class="road-dot" style="top:75%;left:75%;background:#FFDD00;box-shadow:0 0 8px #FFDD00"></div>
+                <div class="road-dot" style="top:50%;left:50%;background:#FFD700;box-shadow:0 0 16px #FFD700;width:12px;height:12px;margin:-6px 0 0 -6px"></div>
+              </div>
+            </div>
+            <div class="map-info">
+              <div class="map-header">
+                <h4 class="map-name" style="color:#FFDD00;text-shadow:0 0 10px #FFDD00">★ CAMPAIGN</h4>
+                <span class="map-num" style="color:#FFDD00">16</span>
+              </div>
+              <p class="map-desc">100 levels of escalating warfare. Boss every 10. Can you reach level 100?</p>
+              <div class="map-tags">
+                <span class="map-tag" style="--tc:#FFDD00">100 LEVELS</span>
+                <span class="map-tag" style="--tc:#FFDD00">BOSS×10</span>
+                <span class="map-tag" style="--tc:#FFDD00">38×38</span>
+              </div>
+            </div>
+          </div>
+
+
+          <!-- Blitz Mode -->
+          <div class="map-card map-card--arena" data-map="blitz">
+            <div class="experimental-badge" style="background:#FF2200;box-shadow:0 0 14px rgba(255,34,0,0.7);">⚡ 3× SPEED</div>
+            <div class="map-preview" style="--mg:7px;--mbg:#0a0002;--mr:rgba(255,34,0,0.65);">
+              <div class="map-preview-inner">
+                <div class="road-dot" style="top:20%;left:20%;background:#FF2200;box-shadow:0 0 8px #FF2200"></div>
+                <div class="road-dot" style="top:20%;left:80%;background:#FF4400;box-shadow:0 0 8px #FF4400"></div>
+                <div class="road-dot" style="top:80%;left:50%;background:#FF2200;box-shadow:0 0 8px #FF2200"></div>
+                <div class="road-dot" style="top:50%;left:50%;background:#FF0000;box-shadow:0 0 16px #FF0000;width:10px;height:10px;margin:-5px 0 0 -5px"></div>
+              </div>
+            </div>
+            <div class="map-info">
+              <div class="map-header">
+                <h4 class="map-name" style="color:#FF4400;text-shadow:0 0 10px #FF2200">⚡ BLITZ MODE</h4>
+                <span class="map-num" style="color:#FF4400">17</span>
+              </div>
+              <p class="map-desc">Triple speed carnage. Everyone moves at 3× speed. 5× money. No time to think.</p>
+              <div class="map-tags">
+                <span class="map-tag" style="--tc:#FF4400">3× SPEED</span>
+                <span class="map-tag" style="--tc:#FF4400">5× MONEY</span>
+                <span class="map-tag" style="--tc:#FF4400">28×28</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Siege Mode -->
+          <div class="map-card map-card--experimental" data-map="siege">
+            <div class="experimental-badge" style="background:#44AAFF;box-shadow:0 0 14px rgba(68,170,255,0.7);color:#000">🛡 DEFEND</div>
+            <div class="map-preview" style="--mg:11px;--mbg:#000810;--mr:rgba(68,170,255,0.45);">
+              <div class="map-preview-inner">
+                <div class="road-dot" style="top:50%;left:50%;background:#44AAFF;box-shadow:0 0 18px #44AAFF;width:14px;height:14px;margin:-7px 0 0 -7px"></div>
+                <div class="road-dot" style="top:10%;left:50%;background:#44AAFF;box-shadow:0 0 8px #44AAFF"></div>
+                <div class="road-dot" style="top:90%;left:50%;background:#44AAFF;box-shadow:0 0 8px #44AAFF"></div>
+                <div class="road-dot" style="top:50%;left:10%;background:#44AAFF;box-shadow:0 0 8px #44AAFF"></div>
+                <div class="road-dot" style="top:50%;left:90%;background:#44AAFF;box-shadow:0 0 8px #44AAFF"></div>
+              </div>
+            </div>
+            <div class="map-info">
+              <div class="map-header">
+                <h4 class="map-name" style="color:#44AAFF;text-shadow:0 0 10px #44AAFF">🛡 SIEGE MODE</h4>
+                <span class="map-num" style="color:#44AAFF">18</span>
+              </div>
+              <p class="map-desc">Hold the center. Endless assault from all 4 sides. The city falls — or you do.</p>
+              <div class="map-tags">
+                <span class="map-tag" style="--tc:#44AAFF">DEFEND</span>
+                <span class="map-tag" style="--tc:#44AAFF">ENDLESS</span>
+                <span class="map-tag" style="--tc:#44AAFF">46×46</span>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- end special-maps-row -->
+      </div><!-- end #mapPage2 -->
 
     </div><!-- end .map-section -->
 
-    <!-- Start button -->
-    <div style="display:flex;flex-direction:column;align-items:center;gap:12px">
+    <!-- Start button area -->
+    <div class="start-area">
+      <p class="start-hint">1–4 CHAR · Q–I MAP · TAB PAGE · ↵ START</p>
       <button class="start-btn" id="startBtn" disabled>
         <span id="startBtnText">SELECT A CHARACTER</span>
       </button>
-      <div style="display:flex;gap:16px;align-items:center">
-        <p class="start-hint">1–4 CHARACTER  ·  Q–U MAP  ·  U LIFE MODE  ·  I ARENA  ·  O ZOMBIE  ·  ENTER START</p>
-        <button class="modes-btn" id="modesBtn">📋 MAPS &amp; MODES</button>
-      </div>
+      <button class="modes-btn" id="modesBtn">📋 MAPS &amp; MODES</button>
     </div>
 
     <!-- Maps & Modes Modal -->
@@ -551,11 +1007,28 @@
           <div class="modal-map-item" style="--mc:#00AACC"><span>DOCKS</span><span class="modal-size">34×34</span><span class="modal-desc">Port district. Foggy alleys.</span></div>
           <div class="modal-map-item" style="--mc:#FFCC00"><span>CASINO STRIP</span><span class="modal-size">44×44</span><span class="modal-desc">Neon boulevard. Has a casino.</span></div>
         </div>
+        <div class="modal-section-label">PAGE 2 — NEW MAPS</div>
+        <div class="modal-grid">
+          <div class="modal-map-item" style="--mc:#00CCDD"><span>HARBOR</span><span class="modal-size">38×38</span><span class="modal-desc">Foggy industrial waterfront.</span></div>
+          <div class="modal-map-item" style="--mc:#FF44CC"><span>NEON DISTRICT</span><span class="modal-size">42×42</span><span class="modal-desc">Pulsing neon. Dense city heart.</span></div>
+          <div class="modal-map-item" style="--mc:#88AA44"><span>MILITARY BASE</span><span class="modal-size">36×36</span><span class="modal-desc">Fortified. Armored patrols.</span></div>
+          <div class="modal-map-item" style="--mc:#FF6622"><span>BADLANDS</span><span class="modal-size">44×44</span><span class="modal-desc">Scorched wasteland. No cover.</span></div>
+        </div>
         <div class="modal-section-label">SPECIAL MODES</div>
         <div class="modal-grid">
           <div class="modal-map-item" style="--mc:#88DDFF"><span>🏙 LIFE MODE</span><span class="modal-size">60×60</span><span class="modal-desc">Sandbox. Buy home, eat, drive. No enemies.</span></div>
           <div class="modal-map-item" style="--mc:#FF0044"><span>☠ ARENA</span><span class="modal-size">24×24</span><span class="modal-desc">Kill-based waves. Boss every 4. No shop.</span></div>
           <div class="modal-map-item" style="--mc:#44FF88"><span>☣ ZOMBIE OUTBREAK</span><span class="modal-size">36×36</span><span class="modal-desc">Zombie hordes. Melee combat. Endless.</span></div>
+          <div class="modal-map-item" style="--mc:#FF2244"><span>☠ SURVIVAL MODE</span><span class="modal-size">40×40</span><span class="modal-desc">No shop. Blood rain. Die or fight.</span></div>
+          <div class="modal-map-item" style="--mc:#FF8800"><span>⚡ HARDCORE MODE</span><span class="modal-size">40×40</span><span class="modal-desc">2× enemy damage. 3× money earned.</span></div>
+        </div>
+        <div class="modal-section-label">NEW UPGRADES (SHOP)</div>
+        <div class="modal-grid">
+          <div class="modal-map-item" style="--mc:#FFEE44"><span>✦ DODGE</span><span class="modal-size">+6%/level</span><span class="modal-desc">Chance to dodge incoming bullets.</span></div>
+          <div class="modal-map-item" style="--mc:#FFD700"><span>$ WEALTH</span><span class="modal-size">+20%/level</span><span class="modal-desc">Earn more money per kill.</span></div>
+          <div class="modal-map-item" style="--mc:#FF44AA"><span>♦ LIFE LEECH</span><span class="modal-size">+2HP/kill</span><span class="modal-desc">Heal a little with every kill.</span></div>
+          <div class="modal-map-item" style="--mc:#FF6644"><span>! CRITICAL HIT</span><span class="modal-size">+8%/level</span><span class="modal-desc">Chance to deal 2× bullet damage.</span></div>
+          <div class="modal-map-item" style="--mc:#AAFFEE"><span>◉ AMMO CAP</span><span class="modal-size">+25%/level</span><span class="modal-desc">Increase ammo fire-rate bonus.</span></div>
         </div>
         <div class="modal-section-label">FEATURES</div>
         <div class="modal-features">

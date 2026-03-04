@@ -436,7 +436,10 @@ class HUD {
   }
 
   // ── Controls panel ─────────────────────────────────────────────────────────
-  renderControls(arenaMode = false) {
+  renderControls(arenaMode = false, isMobile = false) {
+    // On mobile, touch buttons replace keyboard controls — skip this panel
+    if (isMobile) return;
+
     const ctx  = this.ctx;
     const H    = this.canvas.height;
     const x    = HUD_PAD;
@@ -500,6 +503,46 @@ class HUD {
       ctx.fillText(c.desc, cx + kw + 5, cy);
       ctx.restore();
     });
+  }
+
+  // ── Mobile controls hint (shown instead of keyboard panel on touch devices) ─
+  renderMobileHints(arenaMode = false) {
+    const ctx = this.ctx;
+    const W   = this.canvas.width;
+    const H   = this.canvas.height;
+
+    // Map name / district hint at top-left
+    ctx.save();
+    ctx.fillStyle   = 'rgba(0,0,0,0.55)';
+    ctx.strokeStyle = 'rgba(68,238,255,0.18)';
+    ctx.lineWidth   = 1;
+    this._rr(ctx, HUD_PAD - 4, 4, 130, 20, 4);
+    ctx.fill(); ctx.stroke();
+    ctx.font      = '8px Orbitron, monospace';
+    ctx.fillStyle = 'rgba(255,255,255,0.45)';
+    ctx.textAlign = 'left';
+    ctx.fillText('🕹 JOYSTICK · TAP FIRE', HUD_PAD + 2, 18);
+    ctx.restore();
+
+    // B (shop) + TAB (weapon) near bottom city name area
+    if (!arenaMode) {
+      const hints = [{ label:'[B] SHOP', color:'#44EEFF' }, { label:'[TAB] WEAPON', color:'rgba(255,255,255,0.5)' }];
+      let hx = W / 2 - 80;
+      hints.forEach(h => {
+        ctx.save();
+        ctx.fillStyle   = 'rgba(0,0,0,0.55)';
+        ctx.strokeStyle = 'rgba(68,238,255,0.18)';
+        ctx.lineWidth   = 1;
+        this._rr(ctx, hx, H - 28, 72, 18, 4);
+        ctx.fill(); ctx.stroke();
+        ctx.font      = 'bold 8px Orbitron, monospace';
+        ctx.fillStyle = h.color;
+        ctx.textAlign = 'center';
+        ctx.fillText(h.label, hx + 36, H - 15);
+        ctx.restore();
+        hx += 80;
+      });
+    }
   }
 
   // ── Top-right: money + kills + wave ───────────────────────────────────────
@@ -741,7 +784,8 @@ class HUD {
     return clickAreas;
   }
 
-  renderShopButton(shopOpen) {
+  renderShopButton(shopOpen, isMobile = false) {
+    if (isMobile) return;
     const ctx = this.ctx;
     const W   = this.canvas.width;
     const H   = this.canvas.height;
@@ -760,6 +804,84 @@ class HUD {
     ctx.shadowColor = shopOpen ? '#44EEFF' : 'transparent';
     ctx.shadowBlur  = shopOpen ? 8 : 0;
     ctx.fillText('[B]  SHOP & UPGRADES', W - 74, H - 17);
+    ctx.restore();
+  }
+
+  renderModeBadge(label, color) {
+    const ctx = this.ctx;
+    const W   = this.canvas.width;
+    const H   = this.canvas.height;
+    ctx.save();
+    ctx.fillStyle   = 'rgba(0,0,0,0.65)';
+    ctx.strokeStyle = color;
+    ctx.lineWidth   = 1.5;
+    ctx.shadowColor = color;
+    ctx.shadowBlur  = 10;
+    this._rr(ctx, W - 200, H - 34, 188, 26, 5);
+    ctx.fill(); ctx.stroke();
+    ctx.font      = 'bold 9px Orbitron, monospace';
+    ctx.fillStyle = color;
+    ctx.textAlign = 'center';
+    ctx.fillText(label, W - 106, H - 17);
+    ctx.restore();
+  }
+
+  // ── Campaign level ─────────────────────────────────────────────────────────
+  renderCampaignLevel(level, kills, target, levelComplete, completeT) {
+    const ctx = this.ctx;
+    const W   = this.canvas.width;
+    const barW = 180, barH = 16;
+    const bx  = W / 2 - barW / 2;
+    const by  = 44;
+    ctx.save();
+    ctx.fillStyle   = 'rgba(0,0,0,0.72)';
+    ctx.strokeStyle = '#FFDD00';
+    ctx.lineWidth   = 1.5;
+    ctx.shadowColor = '#FFDD00';
+    ctx.shadowBlur  = 12;
+    this._rr(ctx, bx - 60, by - 22, barW + 120, barH + 30, 6);
+    ctx.fill(); ctx.stroke(); ctx.shadowBlur = 0;
+
+    ctx.fillStyle = '#FFDD00'; ctx.font = 'bold 9px Orbitron, monospace'; ctx.textAlign = 'center';
+    ctx.fillText(`CAMPAIGN  ·  LEVEL ${level}`, W / 2, by - 5);
+    ctx.fillStyle = '#1a1a00'; ctx.fillRect(bx, by, barW, barH);
+    const pct = Math.min(1, kills / Math.max(1, target));
+    ctx.fillStyle = '#FFDD00'; ctx.shadowColor = '#FFDD00'; ctx.shadowBlur = 8;
+    ctx.fillRect(bx, by, barW * pct, barH);
+    ctx.shadowBlur = 0;
+    ctx.strokeStyle = 'rgba(255,255,0,0.22)'; ctx.lineWidth = 0.5;
+    ctx.strokeRect(bx, by, barW, barH);
+    ctx.fillStyle = '#fff'; ctx.font = 'bold 9px Orbitron, monospace';
+    ctx.fillText(`${kills} / ${target}  KILLS`, W / 2, by + barH - 2);
+
+    if (levelComplete) {
+      const flash = Math.sin(completeT * 8) * 0.5 + 0.5;
+      ctx.globalAlpha = 0.7 + flash * 0.3;
+      ctx.fillStyle = '#FFDD00'; ctx.shadowColor = '#FFDD00'; ctx.shadowBlur = 30;
+      ctx.font = 'bold 22px Orbitron, monospace';
+      ctx.fillText('LEVEL COMPLETE!', W / 2, by + 55);
+    }
+    ctx.restore();
+  }
+
+  // ── Companion HP badge ──────────────────────────────────────────────────────
+  renderCompanionHP(companion) {
+    const ctx = this.ctx;
+    const H   = this.canvas.height;
+    const x   = HUD_PAD + HUD_MM_W + 10;
+    const y   = H - HUD_PAD - 80;
+    const pct = companion.hp / companion.maxHp;
+    const col = pct > 0.5 ? '#44FF88' : pct > 0.25 ? '#FFCC00' : '#FF4444';
+    ctx.save();
+    ctx.fillStyle   = 'rgba(0,0,0,0.65)';
+    ctx.strokeStyle = col;
+    ctx.lineWidth   = 1;
+    ctx.shadowColor = col; ctx.shadowBlur = 8;
+    this._rr(ctx, x, y, 82, 24, 5);
+    ctx.fill(); ctx.stroke(); ctx.shadowBlur = 0;
+    ctx.fillStyle = col; ctx.font = 'bold 8px Orbitron, monospace'; ctx.textAlign = 'left';
+    const icon = { dog:'🐕', cat:'🐈', wolf:'🐺', raven:'🦅', bear:'🐻', fox:'🦊' }[companion.type] || '🐾';
+    ctx.fillText(`${icon} ${Math.ceil(companion.hp)}/${companion.maxHp}`, x + 6, y + 16);
     ctx.restore();
   }
 

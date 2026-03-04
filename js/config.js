@@ -29,26 +29,51 @@ const CONFIG = {
       id: 'gangster', name: 'THE GANGSTER', lore: 'Street boss with no mercy.',
       color: '#FF4466', accent: '#FF0033', gunColor: '#888',
       speed: 185, health: 120, damage: 35, fireRate: 280, radius: 18,
-      stats: { speed: 55, health: 72, damage: 88 }
+      stats: { speed: 55, health: 72, damage: 88 }, companion: 'dog'
     },
     {
       id: 'hacker', name: 'THE HACKER', lore: 'Digital ghost. Faster than light.',
       color: '#44EEFF', accent: '#00BBFF', gunColor: '#00FFCC',
       speed: 250, health: 80, damage: 18, fireRate: 110, radius: 16,
-      stats: { speed: 95, health: 45, damage: 45 }
+      stats: { speed: 95, health: 45, damage: 45 }, companion: 'cat'
     },
     {
       id: 'mercenary', name: 'THE MERCENARY', lore: 'War machine. Built to survive.',
       color: '#44FF88', accent: '#00CC44', gunColor: '#AAFFAA',
       speed: 148, health: 200, damage: 28, fireRate: 380, radius: 20,
-      stats: { speed: 38, health: 100, damage: 65 }
+      stats: { speed: 38, health: 100, damage: 65 }, companion: 'wolf'
     },
     {
       id: 'ghost', name: 'THE GHOST', lore: 'One shot. One kill. No trace.',
       color: '#CC88FF', accent: '#9922FF', gunColor: '#DDAAFF',
       speed: 212, health: 90, damage: 60, fireRate: 700, radius: 17,
-      stats: { speed: 72, health: 55, damage: 100 }
-    }
+      stats: { speed: 72, health: 55, damage: 100 }, companion: 'raven'
+    },
+    {
+      id: 'medic', name: 'THE MEDIC', lore: 'Combat surgeon. Heals in the field.',
+      color: '#44FFAA', accent: '#00CC77', gunColor: '#88FFCC',
+      speed: 162, health: 160, damage: 22, fireRate: 320, radius: 18,
+      stats: { speed: 44, health: 90, damage: 50 }, companion: 'bear'
+    },
+    {
+      id: 'ronin', name: 'THE RONIN', lore: 'Ancient blade. Perfect discipline.',
+      color: '#FFCC44', accent: '#FF9900', gunColor: '#FFEEAA',
+      speed: 225, health: 100, damage: 55, fireRate: 500, radius: 17,
+      stats: { speed: 75, health: 58, damage: 96 }, companion: 'fox', starterWeapon: 'knife'
+    },
+    {
+      id: 'pyro', name: 'THE PYRO', lore: 'Fire is the only language left to speak.',
+      color: '#FF5500', accent: '#FF2200', gunColor: '#FF8833',
+      speed: 148, health: 155, damage: 55, fireRate: 260, radius: 19,
+      stats: { speed: 32, health: 88, damage: 98 }, companion: 'salamander', starterWeapon: 'flamethrower'
+    },
+    {
+      id: 'phantom', name: 'THE PHANTOM', lore: 'Shadow given a gun. Death without a face.',
+      color: '#AA44FF', accent: '#7711CC', gunColor: '#CC88FF',
+      speed: 248, health: 72, damage: 52, fireRate: 390, radius: 15,
+      stats: { speed: 95, health: 38, damage: 88 }, companion: 'spirit', starterWeapon: 'crossbow',
+      _dodgeChance: 0.22
+    },
   ],
 
   // ── Maps ────────────────────────────────────────────────
@@ -283,7 +308,219 @@ const CONFIG = {
         big:    [{ body:'#997722', accent:'#664400' }],
       },
       zombie: true,
-    }
+    },
+
+    // ── Page 2 Maps ─────────────────────────────────────────
+    {
+      id: 'harbor',
+      name: 'HARBOR',
+      desc: 'Industrial waterfront. Cranes, containers, fog-soaked danger.',
+      theme: '#00CCDD',
+      tags: ['PORT', 'FOG', 'INDUSTRIAL'],
+      previewGridSize: 20,
+      previewBg: '#020b10',
+      previewRoad: 'rgba(0,204,221,0.38)',
+      mapW: 38, mapH: 38, tileSize: 80, roadEvery: 10,
+      roadColor: '#090e10',
+      sidewalkColor: '#0d1418',
+      buildingPalette: ['#0a1a1e','#0e2028','#091820','#0c1e26','#0a1c22','#0d1e28','#0b1a20','#0f2030'],
+      neonColors: ['#00CCDD','#0088AA','#00EEFF','#0066BB'],
+      windowColors: ['#00CCDD','#44DDEE','#88EEFF','#00AABB'],
+      lightColor: '#00CCDD', lightGlow: '#00AACC', neonFreq: 9,
+      weather: 'fog',
+      botPalettes: {
+        mini:   [{ body:'#005566', accent:'#00AABB' }, { body:'#003344', accent:'#0088AA' }],
+        normal: [{ body:'#006688', accent:'#00CCDD' }, { body:'#004466', accent:'#0088AA' }, { body:'#007799', accent:'#00BBDD' }],
+        big:    [{ body:'#003350', accent:'#005577' }, { body:'#00445E', accent:'#006688' }],
+      },
+    },
+    {
+      id: 'neon_district',
+      name: 'NEON DISTRICT',
+      desc: 'The city\'s pulsing heart. Every surface screams in light.',
+      theme: '#FF44CC',
+      tags: ['NEON', 'DENSE', 'VIBRANT'],
+      previewGridSize: 14,
+      previewBg: '#0a0010',
+      previewRoad: 'rgba(255,68,204,0.45)',
+      mapW: 42, mapH: 42, tileSize: 80, roadEvery: 9,
+      roadColor: '#0d0012',
+      sidewalkColor: '#14001e',
+      buildingPalette: ['#1a0028','#200030','#180024','#1e002c','#160020','#1c0030','#180028','#200035'],
+      neonColors: ['#FF44CC','#FF00FF','#CC44FF','#FF44AA'],
+      windowColors: ['#FF44CC','#FF88DD','#DD44FF','#FF22AA'],
+      lightColor: '#FF44CC', lightGlow: '#CC00AA', neonFreq: 7,
+      weather: 'neon_haze',
+      botPalettes: {
+        mini:   [{ body:'#880044', accent:'#FF44CC' }, { body:'#660033', accent:'#FF00AA' }],
+        normal: [{ body:'#AA0066', accent:'#FF44CC' }, { body:'#880055', accent:'#DD44AA' }, { body:'#CC0088', accent:'#FF66CC' }],
+        big:    [{ body:'#550033', accent:'#AA0066' }, { body:'#660044', accent:'#BB0077' }],
+      },
+    },
+    {
+      id: 'military',
+      name: 'MILITARY BASE',
+      desc: 'Fortified compound. Armored patrols. Heavy resistance.',
+      theme: '#88AA44',
+      tags: ['MILITARY', 'OPEN', 'DANGER'],
+      previewGridSize: 24,
+      previewBg: '#060804',
+      previewRoad: 'rgba(136,170,68,0.38)',
+      mapW: 36, mapH: 36, tileSize: 80, roadEvery: 11,
+      roadColor: '#0a0c08',
+      sidewalkColor: '#101408',
+      buildingPalette: ['#141e08','#1a2810','#101a06','#182010','#141c08','#1c2414','#121a06','#182210'],
+      neonColors: ['#88AA44','#AACC55','#66AA22','#AABB66'],
+      windowColors: ['#88AA44','#AACC66','#BBDD88','#99BB55'],
+      lightColor: '#AACC55', lightGlow: '#88AA33', neonFreq: 14,
+      weather: 'sandstorm',
+      botPalettes: {
+        mini:   [{ body:'#445522', accent:'#88AA44' }, { body:'#334418', accent:'#668833' }],
+        normal: [{ body:'#556633', accent:'#88AA55' }, { body:'#3d5520', accent:'#7a9944' }, { body:'#6a8840', accent:'#99BB66' }],
+        big:    [{ body:'#3a5018', accent:'#688840' }, { body:'#446028', accent:'#7aaa55' }],
+      },
+    },
+    {
+      id: 'badlands',
+      name: 'BADLANDS',
+      desc: 'Scorched wasteland. No cover. No mercy. Endless sky.',
+      theme: '#FF6622',
+      tags: ['WASTELAND', 'OPEN', 'BRUTAL'],
+      previewGridSize: 25,
+      previewBg: '#0a0602',
+      previewRoad: 'rgba(255,102,34,0.38)',
+      mapW: 44, mapH: 44, tileSize: 80, roadEvery: 13,
+      roadColor: '#0c0a06',
+      sidewalkColor: '#14100a',
+      buildingPalette: ['#1e1408','#28180a','#1a1206','#24160c','#1c1408','#221610','#181006','#2a1c0e'],
+      neonColors: ['#FF6622','#FF8844','#CC4400','#FFAA66'],
+      windowColors: ['#FF8844','#FFAA66','#FF6633','#FFCC88'],
+      lightColor: '#FF8844', lightGlow: '#CC4400', neonFreq: 16,
+      weather: 'sandstorm',
+      botPalettes: {
+        mini:   [{ body:'#883311', accent:'#FF6622' }, { body:'#662200', accent:'#CC4400' }],
+        normal: [{ body:'#AA4422', accent:'#FF6633' }, { body:'#882200', accent:'#CC4422' }, { body:'#CC5533', accent:'#FF7744' }],
+        big:    [{ body:'#662211', accent:'#AA3322' }, { body:'#773322', accent:'#BB4433' }],
+      },
+    },
+
+    // ── Campaign Mode ───────────────────────────────────────
+    {
+      id: 'campaign',
+      name: 'CAMPAIGN',
+      desc: '100 levels of escalating challenge. Carry your upgrades through to the end.',
+      theme: '#FFDD00',
+      tags: ['100 LEVELS', 'PROGRESSIVE', 'CAMPAIGN'],
+      previewGridSize: 18,
+      previewBg: '#080800',
+      previewRoad: 'rgba(255,220,0,0.5)',
+      mapW: 38, mapH: 38, tileSize: 80, roadEvery: 10,
+      roadColor:      '#0d0d08',
+      sidewalkColor:  '#14140a',
+      buildingPalette: ['#1e1e08','#282808','#1a1a06','#24240a','#1c1c08','#222208','#181806','#2a2a0a'],
+      neonColors:     ['#FFDD00','#FFAA00','#FFEE44','#FFB300'],
+      windowColors:   ['#FFDD00','#FFEE88','#FFCC44','#FFD700'],
+      lightColor:     '#FFDD00', lightGlow: '#FFAA00', neonFreq: 10,
+      weather: 'clear',
+      campaign: true,
+      botPalettes: {
+        mini:   [{ body:'#886600', accent:'#FFDD00' }, { body:'#664400', accent:'#FFAA00' }],
+        normal: [{ body:'#AA8800', accent:'#FFDD00' }, { body:'#886600', accent:'#FFCC00' }, { body:'#CC9900', accent:'#FFEE44' }],
+        big:    [{ body:'#664400', accent:'#AA8800' }, { body:'#775500', accent:'#BB9900' }],
+      },
+    },
+
+    // ── Special Modes (Page 2) ───────────────────────────────
+    {
+      id: 'survival',
+      name: 'SURVIVAL MODE',
+      desc: 'No shop. No mercy. Live or die by the gun.',
+      theme: '#FF2244',
+      tags: ['HARDCORE', 'NO SHOP', 'ENDLESS'],
+      previewGridSize: 18,
+      previewBg: '#0a0004',
+      previewRoad: 'rgba(255,34,68,0.45)',
+      mapW: 40, mapH: 40, tileSize: 80, roadEvery: 10,
+      roadColor: '#0d0008',
+      sidewalkColor: '#14000e',
+      buildingPalette: ['#1a0010','#200018','#180010','#1e0014','#160010','#1c0018','#180012','#20001a'],
+      neonColors: ['#FF2244','#FF0044','#CC0033','#FF4466'],
+      windowColors: ['#FF2244','#FF6688','#FF0044','#CC0033'],
+      lightColor: '#FF2244', lightGlow: '#CC0033', neonFreq: 8,
+      weather: 'blood_rain',
+      survival: true,
+      botPalettes: {
+        mini:   [{ body:'#880022', accent:'#FF2244' }, { body:'#660011', accent:'#CC0033' }],
+        normal: [{ body:'#AA0033', accent:'#FF2244' }, { body:'#880022', accent:'#DD2244' }, { body:'#CC1144', accent:'#FF3355' }],
+        big:    [{ body:'#660011', accent:'#AA0033' }, { body:'#770022', accent:'#BB1133' }],
+      },
+    },
+    {
+      id: 'hardcore',
+      name: 'HARDCORE MODE',
+      desc: 'Enemies deal 2× damage. You earn 3× money. Only the best survive.',
+      theme: '#FF8800',
+      tags: ['HARDCORE', '2× DAMAGE', '3× MONEY'],
+      previewGridSize: 16,
+      previewBg: '#080400',
+      previewRoad: 'rgba(255,136,0,0.5)',
+      mapW: 40, mapH: 40, tileSize: 80, roadEvery: 9,
+      roadColor: '#0d0a02',
+      sidewalkColor: '#140e04',
+      buildingPalette: ['#1e1408','#281a0a','#1a1206','#24160c','#1c1408','#221610','#181006','#2a1c0e'],
+      neonColors: ['#FF8800','#FFAA00','#FF6600','#FFCC44'],
+      windowColors: ['#FF8800','#FFAA44','#FFCC66','#FF6622'],
+      lightColor: '#FF8800', lightGlow: '#CC5500', neonFreq: 10,
+      weather: 'blood_rain',
+      hardcore: true,
+      botPalettes: {
+        mini:   [{ body:'#884400', accent:'#FF8800' }, { body:'#663300', accent:'#CC5500' }],
+        normal: [{ body:'#AA5500', accent:'#FF8800' }, { body:'#884400', accent:'#CC6600' }, { body:'#CC6622', accent:'#FF9933' }],
+        big:    [{ body:'#663300', accent:'#AA5500' }, { body:'#774400', accent:'#BB6600' }],
+      },
+    },
+
+    // ── Blitz Mode ───────────────────────────────────────────
+    {
+      id: 'blitz', name: 'BLITZ MODE',
+      desc: 'Ultra-fast carnage. Enemies and you move at triple speed. 5× money. No time to breathe.',
+      theme: '#FF2200', tags: ['ULTRA FAST', '3× SPEED', '5× MONEY'],
+      previewGridSize: 11, previewBg: '#0a0002', previewRoad: 'rgba(255,34,0,0.65)',
+      mapW: 28, mapH: 28, tileSize: 80, roadEvery: 7,
+      roadColor: '#0d0004', sidewalkColor: '#160008',
+      buildingPalette: ['#1e0008','#280012','#1a0006','#22000e','#180008','#1e0010','#160006','#260014'],
+      neonColors: ['#FF2200','#FF4400','#FF0022','#FF6600'],
+      windowColors: ['#FF4400','#FF6644','#FF0044','#FF3300'],
+      lightColor: '#FF2200', lightGlow: '#CC0000', neonFreq: 6,
+      weather: 'blood_rain',
+      blitz: true,
+      botPalettes: {
+        mini:   [{ body:'#880011', accent:'#FF2200' }],
+        normal: [{ body:'#AA0022', accent:'#FF2200' }, { body:'#CC0000', accent:'#FF3300' }],
+        big:    [{ body:'#660011', accent:'#AA0022' }],
+      },
+    },
+
+    // ── Siege Mode ───────────────────────────────────────────
+    {
+      id: 'siege', name: 'SIEGE MODE',
+      desc: 'Hold the center. Endless waves assault from all sides. The city falls — or you do.',
+      theme: '#44AAFF', tags: ['DEFEND', 'ENDLESS WAVES', 'TACTICAL'],
+      previewGridSize: 20, previewBg: '#000810', previewRoad: 'rgba(68,170,255,0.45)',
+      mapW: 46, mapH: 46, tileSize: 80, roadEvery: 11,
+      roadColor: '#04080e', sidewalkColor: '#080e14',
+      buildingPalette: ['#0a1828','#0e2038','#081420','#0c1e30','#0a1c28','#0e2238','#081620','#0c1e34'],
+      neonColors: ['#44AAFF','#2288DD','#66CCFF','#0066CC'],
+      windowColors: ['#44AAFF','#88CCFF','#66AAFF','#2299FF'],
+      lightColor: '#44AAFF', lightGlow: '#2277CC', neonFreq: 9,
+      weather: 'fog',
+      siege: true,
+      botPalettes: {
+        mini:   [{ body:'#002244', accent:'#44AAFF' }],
+        normal: [{ body:'#003366', accent:'#44AAFF' }, { body:'#002255', accent:'#2299FF' }],
+        big:    [{ body:'#001133', accent:'#003366' }],
+      },
+    },
   ],
 
   // ── Weapons ─────────────────────────────────────────────
@@ -367,19 +604,64 @@ const CONFIG = {
       price: 7000,  damage: 30,  fireRate: 1100,
       bullets: 6,   spread: 0.45, bulletSpeed: 320,
       color: '#FF88FF', special: 'plasma', experimental: true
-    }
+    },
+    // ── New Weapons ───────────────────────────────────────
+    {
+      id: 'burst',       name: 'BURST PISTOL',
+      desc: '3-round burst. Fast and precise.',
+      price: 1500, damage: 32, fireRate: 200,
+      bullets: 3,  spread: 0.07, bulletSpeed: 710,
+      color: '#EEFF44', burst: true
+    },
+    {
+      id: 'flamethrower', name: 'FLAMETHROWER',
+      desc: 'Short range cone. Burns through crowds.',
+      price: 3200, damage: 16, fireRate: 60,
+      bullets: 7,  spread: 0.62, bulletSpeed: 260,
+      color: '#FF5500', special: 'fire'
+    },
+    {
+      id: 'crossbow',    name: 'CROSSBOW',
+      desc: 'Silent piercing bolt. Sniper-tier accuracy.',
+      price: 2800, damage: 115, fireRate: 1800,
+      bullets: 1,  spread: 0.003, bulletSpeed: 940,
+      color: '#CCAAFF', silent: true
+    },
+    {
+      id: 'rocket',      name: 'ROCKET LAUNCHER',
+      desc: 'Devastating area explosion. Reload slowly.',
+      price: 7800, damage: 185, fireRate: 2800,
+      bullets: 1,  spread: 0.01, bulletSpeed: 370,
+      color: '#FF4400', special: 'rocket'
+    },
   ],
 
   // ── Building Types (deterministic per door tile) ─────────
   BUILDING_TYPES: [
-    { name:'RESTAURANT', color:'#FF8844' },
-    { name:'OFFICE',     color:'#4488FF' },
-    { name:'HOTEL',      color:'#CC66FF' },
-    { name:'MARKET',     color:'#44FF88' },
-    { name:'ARCADE',     color:'#FFDD00' },
-    { name:'PHARMACY',   color:'#44FFCC' },
-    { name:'GYM',        color:'#FF6644' },
-    { name:'BANK',       color:'#FFCC44' },
+    { name:'RESTAURANT',     color:'#FF8844' },
+    { name:'OFFICE',         color:'#4488FF' },
+    { name:'HOTEL',          color:'#CC66FF' },
+    { name:'MARKET',         color:'#44FF88' },
+    { name:'ARCADE',         color:'#FFDD00' },
+    { name:'PHARMACY',       color:'#44FFCC' },
+    { name:'GYM',            color:'#FF6644' },
+    { name:'BANK',           color:'#FFCC44' },
+    { name:'NIGHTCLUB',      color:'#FF00CC' },
+    { name:'HOSPITAL',       color:'#FF3333' },
+    { name:'GARAGE',         color:'#778899' },
+    { name:'BAR',            color:'#FFAA22' },
+    { name:'PAWNSHOP',       color:'#CC8833' },
+    { name:'TECH LAB',       color:'#00FFCC' },
+    { name:'WAREHOUSE',      color:'#888888' },
+    { name:'POLICE STATION', color:'#4477FF' },
+    { name:'TATTOO PARLOR',  color:'#FF44AA' },
+    { name:'AMMO DEPOT',     color:'#FF6600' },
+    { name:'HACKER DEN',     color:'#00FF88' },
+    { name:'DOJO',           color:'#FFDD00' },
+    { name:'SAFEHOUSE',      color:'#44AAFF' },
+    { name:'CHOP SHOP',      color:'#AA5522' },
+    { name:'RADIO STATION',  color:'#FF88CC' },
+    { name:'UNDERGROUND LAB',color:'#55FF99' },
   ],
 
   // ── Upgrades ─────────────────────────────────────────────
@@ -389,7 +671,12 @@ const CONFIG = {
     { id: 'damage',   name: 'DAMAGE',      desc: '+15% DMG per level',     icon: '◆', color: '#FF4455', maxLevel: 5, baseCost: 600,  costMult: 1.7  },
     { id: 'firerate', name: 'FIRE RATE',   desc: '-8% cooldown per level', icon: '◉', color: '#FF8800', maxLevel: 5, baseCost: 700,  costMult: 1.75 },
     { id: 'armor',    name: 'ARMOR',       desc: '-10% damage taken',      icon: '⬡', color: '#44FF88', maxLevel: 5, baseCost: 800,  costMult: 1.8  },
-    { id: 'regen',    name: 'REGEN',       desc: '+1 HP/sec per level',    icon: '✚', color: '#88FFCC', maxLevel: 3, baseCost: 1000, costMult: 2.0  }
+    { id: 'regen',    name: 'REGEN',       desc: '+1 HP/sec per level',    icon: '✚', color: '#88FFCC', maxLevel: 3, baseCost: 1000, costMult: 2.0  },
+    { id: 'dodge',    name: 'DODGE',       desc: '+6% dodge chance/level',  icon: '✦', color: '#FFEE44', maxLevel: 4, baseCost: 900,  costMult: 1.9  },
+    { id: 'wealth',   name: 'WEALTH',      desc: '+20% money per kill',     icon: '$', color: '#FFD700', maxLevel: 4, baseCost: 750,  costMult: 1.7  },
+    { id: 'leech',    name: 'LIFE LEECH',  desc: '+2 HP per kill',          icon: '♦', color: '#FF44AA', maxLevel: 5, baseCost: 850,  costMult: 1.8  },
+    { id: 'critical', name: 'CRITICAL HIT',desc: '+8% crit chance/level',   icon: '!', color: '#FF6644', maxLevel: 4, baseCost: 800,  costMult: 1.85 },
+    { id: 'ammo',     name: 'AMMO CAP',    desc: '+25% ammo capacity/level',icon: '◉', color: '#AAFFEE', maxLevel: 5, baseCost: 600,  costMult: 1.6  },
   ],
 
   // ── Achievements ─────────────────────────────────────────

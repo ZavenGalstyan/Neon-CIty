@@ -310,6 +310,7 @@ class ShopManager {
               g.money -= effectivePrice;
               p.ownedWeapons.add(w.id);
               p.equipWeapon(w.id);
+              window.audio?.buy();
               this._msg(`${w.name} PURCHASED!`, w.color);
             } else { this._msg('NOT ENOUGH MONEY', '#FF4466'); }
           });
@@ -346,12 +347,20 @@ class ShopManager {
   _drawUpgrades(ctx, px, y, PW, PH, player, money, mx, my) {
     const ups  = CONFIG.UPGRADES;
     const gap  = 8;
-    const rowH = Math.min(72, Math.floor((PH - gap * (ups.length + 1)) / ups.length));
+    const rowH = 68;
     const rowW = PW - gap * 2;
+
+    // Scrolling support (same as weapons tab)
+    const totalH = gap + ups.length * (rowH + gap);
+    this._maxScrollY = Math.max(0, totalH - PH + 20);
+    this._scrollY    = Math.max(0, Math.min(this._scrollY || 0, this._maxScrollY));
 
     ups.forEach((u, i) => {
       const ux    = px + gap;
-      const uy    = y  + gap + i * (rowH + gap);
+      const uy    = y  + gap + i * (rowH + gap) - this._scrollY;
+
+      // Skip off-screen rows
+      if (uy + rowH < y || uy > y + PH) return;
       const level = player.upgradeLevel[u.id] || 0;
       const maxed = level >= u.maxLevel;
       const cost  = maxed ? 0 : Math.round(u.baseCost * Math.pow(u.costMult, level));
@@ -376,19 +385,19 @@ class ShopManager {
       ctx.fillRect(ux, uy + 10, 3, rowH - 20);
 
       // Icon
-      ctx.font = `${rowH < 60 ? 16 : 20}px monospace`;
+      ctx.font = '20px monospace';
       ctx.fillStyle = maxed ? '#FFD700' : u.color;
       ctx.shadowColor = u.color; ctx.shadowBlur = maxed ? 12 : 6;
       ctx.textAlign = 'left';
       ctx.fillText(u.icon, ux + 16, uy + rowH / 2 + 7);
 
       // Name + desc
-      ctx.font = `bold ${rowH < 60 ? 11 : 13}px Orbitron, monospace`;
+      ctx.font = 'bold 13px Orbitron, monospace';
       ctx.fillStyle = maxed ? '#FFD700' : '#ddd';
       ctx.shadowColor = maxed ? '#FFD700' : 'transparent';
       ctx.shadowBlur  = maxed ? 6 : 0;
       ctx.fillText(u.name, ux + 48, uy + rowH * 0.38);
-      ctx.font = `${rowH < 60 ? 9 : 10}px Rajdhani, monospace`;
+      ctx.font = '10px Rajdhani, monospace';
       ctx.fillStyle = 'rgba(255,255,255,0.38)';
       ctx.shadowBlur = 0;
       ctx.fillText(u.desc, ux + 48, uy + rowH * 0.38 + 16);
@@ -442,6 +451,7 @@ class ShopManager {
             if (g.money >= effectiveCost && lvl < u.maxLevel) {
               g.money -= effectiveCost;
               p.applyUpgrade(u.id);
+              window.audio?.upgrade();
               this._msg(`${u.name} LVL ${lvl + 1}!`, u.color);
             } else { this._msg('NOT ENOUGH MONEY', '#FF4466'); }
           });
@@ -991,6 +1001,7 @@ class DealershipManager {
             v.radius = car.radius;
             if (car.bulletproof) v.bulletproof = true;
             g.vehicles.push(v);
+            window.audio?.vehicle();
             g._dealership.close();
             g.state = 'playing';
           } else { this._msg('NOT ENOUGH MONEY', '#FF4466'); }
@@ -1066,6 +1077,7 @@ class DealershipManager {
             if (g.money >= effectivePrice) {
               g.money -= effectivePrice;
               p.ownedWeapons.add(w.id); p.equipWeapon(w.id);
+              window.audio?.buy();
               this._msg(`${w.name} PURCHASED!`, w.color);
             } else { this._msg('NOT ENOUGH MONEY', '#FF4466'); }
           });
@@ -1137,6 +1149,7 @@ class DealershipManager {
           if (g.money >= btn.price) {
             g.money -= btn.price;
             g._grenadeCount += btn.qty;
+            window.audio?.buy();
             this._msg(`+${btn.qty} GRENADE${btn.qty > 1 ? 'S' : ''}!`, '#FF8800');
           } else { this._msg('NOT ENOUGH MONEY', '#FF4466'); }
         });

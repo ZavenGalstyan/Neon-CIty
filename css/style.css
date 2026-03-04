@@ -17,10 +17,56 @@
   --green:  #44FF88;
   --purple: #CC88FF;
   --gold:   #FFD700;
+
+  /* Scrollbar tokens — change here to retheme globally */
+  --sb-size:  4px;
+  --sb-track: rgba(255,255,255,0.04);
+  --sb-thumb: rgba(68,238,255,0.45);
+  --sb-thumb-hover: rgba(68,238,255,0.85);
+  --sb-radius: 999px;
 }
 
-html, body { width: 100%; height: 100%; background: var(--bg); color: var(--text);
-  font-family: 'Rajdhani', 'Orbitron', sans-serif; cursor: default; user-select: none; }
+/* ═══════════════════════════════════════════════════════════
+   CUSTOM THIN SCROLLBARS — global + per-element
+   Works on: Chrome / Edge / Safari (webkit) + Firefox
+   ═══════════════════════════════════════════════════════════ */
+
+/* Firefox — applies to the whole page and any scrollable child */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--sb-thumb) var(--sb-track);
+}
+
+/* Webkit (Chrome, Edge, Safari) — global */
+::-webkit-scrollbar               { width: var(--sb-size); height: var(--sb-size); }
+::-webkit-scrollbar-track         { background: var(--sb-track); border-radius: var(--sb-radius); }
+::-webkit-scrollbar-thumb         { background: var(--sb-thumb); border-radius: var(--sb-radius); }
+::-webkit-scrollbar-thumb:hover   { background: var(--sb-thumb-hover); }
+::-webkit-scrollbar-corner        { background: transparent; }
+
+/* Modal — invisible track, glowing cyan thumb */
+.modal-panel::-webkit-scrollbar              { width: 3px; }
+.modal-panel::-webkit-scrollbar-track        { background: transparent; }
+.modal-panel::-webkit-scrollbar-thumb        { background: rgba(68,238,255,0.5); box-shadow: 0 0 6px rgba(68,238,255,0.6); }
+.modal-panel::-webkit-scrollbar-thumb:hover  { background: #44EEFF; box-shadow: 0 0 10px rgba(68,238,255,0.9); }
+
+/* Select screen body scroll */
+.select-screen::-webkit-scrollbar-thumb       { background: rgba(68,238,255,0.35); }
+.select-screen::-webkit-scrollbar-thumb:hover { background: rgba(68,238,255,0.75); }
+
+/* Shop / dealership / casino panels rendered on canvas — no CSS needed there */
+
+html {
+  /* Let the browser handle scroll — never lock height on html */
+  min-height: 100%;
+  overflow-x: hidden;
+}
+body {
+  width: 100%; min-height: 100%;
+  background: var(--bg); color: var(--text);
+  font-family: 'Rajdhani', 'Orbitron', sans-serif;
+  cursor: default; user-select: none;
+}
 
 /* ── Animated background grid ───────────────────────────── */
 .bg-grid {
@@ -43,12 +89,19 @@ html, body { width: 100%; height: 100%; background: var(--bg); color: var(--text
    SELECT SCREEN
    ════════════════════════════════════════════════════════════ */
 .select-screen {
-  height: 100vh;
-  overflow-y: auto;
-  overflow-x: hidden;
+  /*
+   * KEY FIX: min-height (not height) + NO justify-content:center.
+   * Using height:100vh + align-items:center causes content above the
+   * scroll origin to be unreachable when the page is taller than the viewport.
+   * The browser scrolls the document naturally — we just need min-height.
+   */
+  min-height: 100vh;            /* fallback for older browsers */
+  min-height: 100dvh;           /* dvh = dynamic viewport height (mobile browser chrome-safe) */
+  overflow-x: hidden;           /* never overflow-y here — let the document scroll */
   display: flex;
-  align-items: center;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;          /* horizontal centering only — safe with flex-col */
+  padding: 20px 0 32px;
   background:
     radial-gradient(ellipse at 50% 0%,   rgba(68,238,255,0.09) 0%, transparent 65%),
     radial-gradient(ellipse at 85% 90%,  rgba(255,68,102,0.06) 0%, transparent 55%),
@@ -59,7 +112,7 @@ html, body { width: 100%; height: 100%; background: var(--bg); color: var(--text
 .select-container {
   position: relative; z-index: 1;
   width: 100%; max-width: 1180px;
-  padding: 12px 24px 16px;
+  padding: 0 24px;
   display: flex; flex-direction: column; gap: 10px;
 }
 
@@ -103,12 +156,35 @@ html, body { width: 100%; height: 100%; background: var(--bg); color: var(--text
 }
 
 /* ════════════════════════════════════════════════════════════
+   PAGE NAV TABS
+   ════════════════════════════════════════════════════════════ */
+.page-nav {
+  display: flex; gap: 8px; margin: 12px 0 4px;
+}
+.page-tab {
+  flex: 1; padding: 10px 16px;
+  background: var(--panel); border: 1px solid var(--border);
+  border-radius: 8px; cursor: pointer;
+  font-family: 'Orbitron', sans-serif; font-size: 10px; letter-spacing: 0.12em;
+  color: var(--muted); transition: all 0.18s ease;
+}
+.page-tab:hover { border-color: rgba(255,255,255,0.2); color: #fff; }
+.page-tab.active {
+  background: rgba(68,238,255,0.10);
+  border-color: #44EEFF; color: #44EEFF;
+  box-shadow: 0 0 14px rgba(68,238,255,0.18);
+}
+
+/* ════════════════════════════════════════════════════════════
    CHARACTER CARDS  (horizontal layout, compact)
    ════════════════════════════════════════════════════════════ */
 .characters-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 12px;
+}
+.characters-grid--2col {
+  grid-template-columns: repeat(2, 1fr);
 }
 @media (max-width: 760px) { .characters-grid { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 420px) { .characters-grid { grid-template-columns: 1fr; } }
@@ -134,6 +210,10 @@ html, body { width: 100%; height: 100%; background: var(--bg); color: var(--text
 .char-card[data-char="hacker"].selected    { border-color: #44EEFF; box-shadow: 0 0 22px rgba(68,238,255,0.45), 0 12px 40px rgba(0,0,0,0.5); }
 .char-card[data-char="mercenary"].selected { border-color: #44FF88; box-shadow: 0 0 22px rgba(68,255,136,0.45), 0 12px 40px rgba(0,0,0,0.5); }
 .char-card[data-char="ghost"].selected     { border-color: #CC88FF; box-shadow: 0 0 22px rgba(204,136,255,0.45), 0 12px 40px rgba(0,0,0,0.5); }
+.char-card[data-char="medic"].selected     { border-color: #44FFAA; box-shadow: 0 0 22px rgba(68,255,170,0.45), 0 12px 40px rgba(0,0,0,0.5); }
+.char-card[data-char="ronin"].selected     { border-color: #FFCC44; box-shadow: 0 0 22px rgba(255,204,68,0.45), 0 12px 40px rgba(0,0,0,0.5); }
+.char-card[data-char="pyro"].selected      { border-color: #FF5500; box-shadow: 0 0 22px rgba(255,85,0,0.45),    0 12px 40px rgba(0,0,0,0.5); }
+.char-card[data-char="phantom"].selected   { border-color: #AA44FF; box-shadow: 0 0 22px rgba(170,68,255,0.45),  0 12px 40px rgba(0,0,0,0.5); }
 
 /* Checkmark badge */
 .char-card.selected::after {
@@ -155,6 +235,10 @@ html, body { width: 100%; height: 100%; background: var(--bg); color: var(--text
 .char-avatar[data-char="hacker"]::before    { background: radial-gradient(circle at 50% 60%, #44EEFF, transparent 75%); }
 .char-avatar[data-char="mercenary"]::before { background: radial-gradient(circle at 50% 60%, #44FF88, transparent 75%); }
 .char-avatar[data-char="ghost"]::before     { background: radial-gradient(circle at 50% 60%, #CC88FF, transparent 75%); }
+.char-avatar[data-char="medic"]::before     { background: radial-gradient(circle at 50% 60%, #44FFAA, transparent 75%); }
+.char-avatar[data-char="ronin"]::before     { background: radial-gradient(circle at 50% 60%, #FFCC44, transparent 75%); }
+.char-avatar[data-char="pyro"]::before      { background: radial-gradient(circle at 50% 60%, #FF5500, transparent 75%); }
+.char-avatar[data-char="phantom"]::before   { background: radial-gradient(circle at 50% 60%, #AA44FF, transparent 75%); }
 
 /* Vertical accent line between avatar and info */
 .char-avatar::after {
@@ -196,6 +280,10 @@ html, body { width: 100%; height: 100%; background: var(--bg); color: var(--text
 [data-char="hacker"]    .stat-fill { background: linear-gradient(90deg, #00BBFF, #44EEFF); }
 [data-char="mercenary"] .stat-fill { background: linear-gradient(90deg, #00CC44, #44FF88); }
 [data-char="ghost"]     .stat-fill { background: linear-gradient(90deg, #9922FF, #CC88FF); }
+[data-char="medic"]     .stat-fill { background: linear-gradient(90deg, #00CC77, #44FFAA); }
+[data-char="ronin"]     .stat-fill { background: linear-gradient(90deg, #CC9900, #FFCC44); }
+[data-char="pyro"]      .stat-fill { background: linear-gradient(90deg, #FF2200, #FF5500); }
+[data-char="phantom"]   .stat-fill { background: linear-gradient(90deg, #7711CC, #AA44FF); }
 
 /* Key badge */
 .char-key {
@@ -386,9 +474,15 @@ html, body { width: 100%; height: 100%; background: var(--bg); color: var(--text
 }
 .start-btn:not(:disabled):hover::before { left: 120%; }
 
+.start-area {
+  display: flex; align-items: center; justify-content: center;
+  gap: 16px; flex-wrap: wrap; margin: 8px 0;
+}
+
 .start-hint {
-  font-size: 10px; color: var(--muted); letter-spacing: 0.22em;
-  font-family: 'Orbitron', sans-serif; text-align: center;
+  font-size: 10px; color: var(--muted); letter-spacing: 0.18em;
+  font-family: 'Orbitron', sans-serif; white-space: nowrap;
+  order: -1;
 }
 
 /* ── Character Customization ──────────────────────────────── */
@@ -532,3 +626,166 @@ html, body { width: 100%; height: 100%; background: var(--bg); color: var(--text
   border-left: 2px solid rgba(68,238,255,0.3);
 }
 .modal-feat b { color: rgba(255,255,255,0.8); }
+
+/* ═══════════════════════════════════════════════════════════
+   RESPONSIVE — phone / tablet / notebook / desktop
+   Breakpoints: 480 · 768 · 1024
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── Notebook / small desktop  (769 – 1024px) ───────────── */
+@media (max-width: 1024px) {
+  .select-container { padding: 0 16px; }
+  .char-card        { height: 96px; }
+  .char-info h3     { font-size: 10px; }
+}
+
+/* ── Tablet  (481 – 768px) ──────────────────────────────── */
+@media (max-width: 768px) {
+  .select-screen    { padding: 14px 0 28px; }
+  .select-container { padding: 0 10px; gap: 8px; }
+
+  /* Logo */
+  .logo-text        { font-size: clamp(20px, 7vw, 36px); }
+  .logo-sub         { font-size: 9px; letter-spacing: 0.2em; }
+  .game-logo        { gap: 10px; }
+
+  /* Character cards — 2×2 grid */
+  .characters-grid  { grid-template-columns: repeat(2, 1fr); gap: 6px; }
+  .char-card        { height: 88px; }
+  .char-avatar      { width: 64px; min-width: 64px; }
+  .char-figure      { width: 44px; height: 58px; }
+  .char-info h3     { font-size: 9px; }
+  .char-lore        { font-size: 9px; }
+  .stat span        { font-size: 7px; width: 38px; }
+  .stat-bar         { height: 3px; }
+
+  /* Page nav tabs */
+  .page-nav         { gap: 5px; margin: 8px 0 3px; }
+  .page-tab         { font-size: 8px; padding: 7px 8px; }
+  .section-label    { font-size: 8px; letter-spacing: 0.2em; }
+
+  /* Maps — 2-column grid */
+  .maps-grid        { grid-template-columns: repeat(2, 1fr); gap: 7px; }
+  .map-card         { height: 120px; }
+  .map-preview      { height: 55px; }
+  .map-name         { font-size: 10px; }
+  .map-desc         { font-size: 9px; line-height: 1.3; }
+  .map-tag          { font-size: 7px; padding: 1px 5px; }
+  .map-num          { font-size: 9px; }
+  .map-info         { padding: 6px 8px 6px; }
+
+  /* Special row cards — stack into 2-column grid */
+  .special-maps-row {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 7px;
+    flex-direction: unset;
+  }
+  .map-card--arena,
+  .map-card--experimental,
+  .map-card--life   { flex-direction: column; align-items: flex-start; gap: 0; padding: 0; height: auto; }
+  .map-card--arena .map-preview,
+  .map-card--experimental .map-preview,
+  .map-card--life .map-preview  { width: 100%; height: 50px; }
+  .map-card--arena .map-info,
+  .map-card--experimental .map-info,
+  .map-card--life .map-info     { padding: 6px 8px; }
+
+  /* Customize */
+  .customize-panel  { flex-wrap: wrap; gap: 6px; }
+  .cust-group       { width: calc(50% - 3px); min-width: 0; }
+  .cust-label       { font-size: 8px; }
+  .cust-btn         { font-size: 8px; padding: 4px 8px; }
+
+  /* Color swatches */
+  .color-swatch     { width: 22px; height: 22px; }
+
+  /* Start area */
+  .start-area       { gap: 10px; }
+  .start-btn        { font-size: 13px; padding: 12px 20px; }
+  .start-hint       { font-size: 8px; }
+  .modes-btn        { font-size: 9px; padding: 6px 10px; }
+}
+
+/* ── Phone  (≤ 480px) ───────────────────────────────────── */
+@media (max-width: 480px) {
+  .select-screen    { padding: 10px 0 24px; }
+  .select-container { padding: 0 8px; gap: 7px; }
+
+  /* Logo */
+  .logo-text        { font-size: clamp(18px, 8vw, 28px); }
+  .logo-sub         { display: none; }   /* hide tagline to save space */
+
+  /* Character cards — single column */
+  .characters-grid  { grid-template-columns: 1fr; gap: 5px; }
+  .char-card        { height: 76px; }
+  .char-avatar      { width: 56px; min-width: 56px; }
+  .char-figure      { width: 38px; height: 50px; }
+  .char-number      { font-size: 8px; }
+
+  /* Map cards — single column */
+  .maps-grid        { grid-template-columns: 1fr; gap: 6px; }
+  .map-card         { height: 110px; }
+  .map-preview      { height: 48px; }
+
+  /* Special row — single column */
+  .special-maps-row { grid-template-columns: 1fr; }
+
+  /* Customize: each group full width */
+  .cust-group       { width: 100%; }
+
+  /* Start area mobile */
+  .start-area       { flex-direction: column; gap: 8px; }
+  .start-btn        { width: 100%; font-size: 13px; order: 0; }
+  .start-hint       { display: none; }
+  .modes-btn        { font-size: 8px; padding: 5px 8px; order: 1; }
+}
+
+/* ── Virtual touch controls (game.html) ── */
+#touchControls {
+  position: fixed; inset: 0; pointer-events: none; z-index: 100;
+  display: none;
+}
+#touchControls.active { display: block; }
+
+/* Left joystick zone */
+#joystickZone {
+  position: absolute; bottom: 20px; left: 20px;
+  width: 130px; height: 130px;
+  background: rgba(68,238,255,0.06);
+  border: 1.5px solid rgba(68,238,255,0.2);
+  border-radius: 50%; pointer-events: all;
+}
+#joystickKnob {
+  position: absolute; width: 50px; height: 50px;
+  background: radial-gradient(circle at 35% 35%, rgba(68,238,255,0.55), rgba(68,238,255,0.18));
+  border: 1.5px solid rgba(68,238,255,0.45);
+  border-radius: 50%;
+  left: 50%; top: 50%; transform: translate(-50%,-50%);
+  pointer-events: none; transition: transform 0.05s;
+}
+
+/* Right action buttons */
+#touchButtons {
+  position: absolute; bottom: 20px; right: 16px;
+  display: grid; grid-template-columns: 44px 44px;
+  grid-template-rows: 44px 44px 44px;
+  gap: 8px; pointer-events: all;
+}
+.touch-btn {
+  border-radius: 50%; border: 1.5px solid rgba(255,255,255,0.22);
+  background: rgba(0,0,0,0.55); backdrop-filter: blur(4px);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Orbitron', monospace; font-size: 9px; font-weight: 700;
+  color: rgba(255,255,255,0.75); user-select: none; -webkit-user-select: none;
+  cursor: pointer; pointer-events: all;
+  transition: background 0.1s;
+}
+.touch-btn:active { background: rgba(68,238,255,0.22); border-color: #44EEFF; }
+.touch-btn.btn-fire { background: rgba(255,44,44,0.3); border-color: rgba(255,88,88,0.55); font-size: 16px; width: 54px; height: 54px; border-radius: 50%; align-self: center; justify-self: center; grid-column: 1 / -1; }
+.touch-btn.btn-fire:active { background: rgba(255,44,44,0.6); }
+.touch-btn.btn-enter  { border-color: rgba(255,255,136,0.5); color: #FFFFAA; }
+.touch-btn.btn-sprint { border-color: rgba(68,255,136,0.5);  color: #44FF88; }
+.touch-btn.btn-gren   { border-color: rgba(255,136,0,0.5);   color: #FF8800; }
+.touch-btn.btn-shop   { border-color: rgba(100,200,255,0.5); color: #44DDFF; }
+.touch-btn.btn-car    { border-color: rgba(255,220,44,0.5);  color: #FFDD44; }

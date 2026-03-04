@@ -69,6 +69,9 @@ class Game {
     // Weather
     this.weather = new Weather(this.map.config.weather || 'clear');
 
+    // Mobile detection
+    this._isMobile = ('ontouchstart' in window || navigator.maxTouchPoints > 0);
+
     // Arena mode
     this._arenaMode      = !!this.map.config.arena;
     this._arenaSpawned   = 0;
@@ -132,6 +135,9 @@ class Game {
     // ── Grenades ──────────────────────────────────────────────
     this._grenades        = [];
     this._grenadeCount    = 0;
+    // ── Metro ─────────────────────────────────────────────────
+    this._metroWave       = 0;
+    this._metroWaveTimer  = undefined;
     // ── Glitch Mode ───────────────────────────────────────────
     this._glitchPortals      = [];
     this._glitchPortalTimer  = 0;
@@ -140,6 +146,24 @@ class Game {
     // ── Life Mode ─────────────────────────────────────────────
     this._lifeMode        = !!this.map.config.lifeMode;
     this._cityNpcs        = [];
+    // ── Special Modes ─────────────────────────────────────────
+    this._survivalMode    = !!this.map.config.survival;
+    this._hardcoreMode    = !!this.map.config.hardcore;
+    this._blitzMode       = !!this.map.config.blitz;
+    this._siegeMode       = !!this.map.config.siege;
+    // ── Campaign Mode ─────────────────────────────────────────
+    this._campaignMode    = !!this.map.config.campaign;
+    this._campaignLevel   = 1;
+    this._campaignTarget  = 0;   // kills needed this level
+    this._campaignKills   = 0;   // kills this level
+    this._levelComplete   = false;
+    this._levelCompleteT  = 0;
+    // ── Ambient Traffic ────────────────────────────────────────
+    this._ambientCars     = [];
+    this._ambientSpawnT   = 0;
+    // ── Teleport Portals ───────────────────────────────────────
+    this._portals         = this.map.portals || [];
+    this._portalCooldown  = 0;  // prevents instant re-teleport
 
     // Camera
     this.camX = spawnX - this.canvas.width  / 2;
@@ -166,10 +190,23 @@ class Game {
     this._keyHandler = (e) => this._onKey(e);
     window.addEventListener('keydown', this._keyHandler);
 
+    // ── Blitz mode: 3× speed for player ──────────────────────
+    if (this._blitzMode) {
+      this.player.speed = Math.round(this.player.speed * 3);
+      this.spawnTimer   = 800;  // faster initial spawn
+    }
+    // ── Siege mode: fast spawn, big waves from all sides ─────
+    if (this._siegeMode) {
+      this.spawnTimer  = 600;
+      this._siegeWaveCount = 0;
+    }
+
     this._spawnVehicles();
-    if (this._arenaMode)  this._startArenaWave();
-    if (this._zombieMode) this._startZombieWave();
-    if (this._lifeMode)   this._spawnCityNpcs();
+    if (this._arenaMode)    this._startArenaWave();
+    if (this._zombieMode)   this._startZombieWave();
+    if (this._lifeMode)     this._spawnCityNpcs();
+    if (this._campaignMode) this._startCampaignLevel();
+    this._spawnAmbientTraffic();
 
     requestAnimationFrame((t) => this._loop(t));
   }
@@ -208,7 +245,7 @@ class Game {
       return;
     }
     if (e.code === 'KeyB') {
-      if (this._arenaMode || this._zombieMode) return; // no shop in arena/zombie
+      if (this._arenaMode || this._zombieMode || this._survivalMode || this._blitzMode || this._siegeMode) return;
       if      (this.state === 'playing') { this.shop.open();  this.state = 'shop'; }
       else if (this.state === 'shop')    { this.shop.close(); this.state = 'playing'; }
       else if (this.state === 'paused')  { this.shop.open();  this.state = 'shop'; }
@@ -230,6 +267,7 @@ class Game {
         this.input.mouseWorld.x, this.input.mouseWorld.y
       ));
       this._grenadeCount--;
+      window.audio?.grenadeThrow();
       return;
     }
     if (e.code === 'KeyP') {
@@ -488,6 +526,7 @@ class Game {
           const bonus = p.applyTo(this.player);
           if (bonus > 0) this.money += bonus;
           p.dead = true;
+          window.audio?.pickup();
         }
       }
     }
@@ -512,6 +551,57 @@ class Game {
 
     // ── Weather ────────────────────────────────────────────
     this.weather.update(dt, this.canvas.width, this.canvas.height);
+
+    // ── Animal companion ───────────────────────────────────
+    if (this.player.companion && !this.player.companion.dead && !this._indoor) {
+      this.player.companion.update(dt, this.player, this.bots, this.bullets, this.particles);
+    }
+
+    // ── Ambient traffic ────────────────────────────────────
+    if (!this._indoor && !this._arenaMode && !this._zombieMode) {
+      this._ambientSpawnT -= dt;
+      if (this._ambientSpawnT <= 0) {
+        this._respawnAmbientCar();
+        this._ambientSpawnT = 4.0;
+      }
+      for (const c of this._ambientCars) c.update(dt, this.map);
+      this._ambientCars = this._ambientCars.filter(c => !c.dead);
+    }
+
+    // ── Map portals cooldown & teleport check ──────────────
+    if (this._portalCooldown > 0) this._portalCooldown -= dt;
+    if (!this._indoor && this._portalCooldown <= 0 && this._portals.length >= 2) {
+      for (let i = 0; i < this._portals.length; i++) {
+        const portal = this._portals[i];
+        portal._animT += dt;
+        if (Math.hypot(portal.x - this.player.x, portal.y - this.player.y) < 32) {
+          const dest = this._portals[portal.paired];
+          this.player.x = dest.x;
+          this.player.y = dest.y;
+          this._portalCooldown = 1.8;
+          for (let j = 0; j < 20; j++) {
+            const a = Math.random() * Math.PI * 2, s = rnd(80, 220);
+            this.particles.push(new Particle(dest.x, dest.y, Math.cos(a)*s, Math.sin(a)*s, '#AA44FF', rnd(3,7), 0.8));
+          }
+          this.hud.shake(6);
+          break;
+        }
+      }
+    } else if (!this._indoor) {
+      for (const portal of this._portals) portal._animT += dt;
+    }
+
+    // ── Campaign level complete countdown ──────────────────
+    if (this._campaignMode && this._levelComplete) {
+      this._levelCompleteT -= dt;
+      if (this._levelCompleteT <= 0) {
+        this._campaignLevel++;
+        this._campaignKills  = 0;
+        this._levelComplete  = false;
+        this.bots            = [];
+        this._startCampaignLevel();
+      }
+    }
 
     // ── Wanted decay ───────────────────────────────────────
     if (this._wantedLevel > 0) {
@@ -649,6 +739,7 @@ class Game {
       } else {
         this._achStats.bossesKilled++;
         this._checkAchievements();
+        window.audio?.bossKill();
         this.boss = null;
         if (!this._arenaMode) this.bossRespawnTimer = 30000;
       }
@@ -669,13 +760,15 @@ class Game {
             if (bot.dying) {
               this.decals.push(new Decal(bot.x, bot.y, 'blood'));
               const mult   = this._streakMultiplier();
-              const earned = Math.round(CONFIG.MONEY_PER_KILL * bot._cfg.moneyMult * mult);
+              const wMult  = (this.player._wealthMult || 1) * (this._hardcoreMode ? 3 : 1) * (this._blitzMode ? 5 : 1);
+              const earned = Math.round(CONFIG.MONEY_PER_KILL * bot._cfg.moneyMult * mult * wMult);
               this.money  += earned;
               this._achStats.moneyEarned += earned;
               this.kills++;
               this.hud.addDamageNumber(bot.x, bot.y - 56, earned, this.camX, this.camY, mult > 1 ? '#FF8800' : '#FFD700');
               this._onKill();
               this._dropPickup(bot);
+              if (this.player._leechHp) this.player.health = Math.min(this.player.maxHealth, this.player.health + this.player._leechHp);
             }
           }
         }
@@ -718,13 +811,15 @@ class Game {
           if (bot.dying) {
             this.decals.push(new Decal(bot.x, bot.y, 'blood'));
             const mult   = this._streakMultiplier();
-            const earned = Math.round(CONFIG.MONEY_PER_KILL * bot._cfg.moneyMult * mult);
+            const wMult  = (this.player._wealthMult || 1) * (this._hardcoreMode ? 3 : 1) * (this._blitzMode ? 5 : 1);
+            const earned = Math.round(CONFIG.MONEY_PER_KILL * bot._cfg.moneyMult * mult * wMult);
             this.money  += earned;
             this._achStats.moneyEarned += earned;
             this.kills++;
             this.hud.addDamageNumber(bot.x, bot.y - 56, earned, this.camX, this.camY, mult > 1 ? '#FF8800' : '#FFD700');
             if (b.isMelee) this._achStats.knifeKills++;
             this._onKill();
+            if (this.player._leechHp) this.player.health = Math.min(this.player.maxHealth, this.player.health + this.player._leechHp);
             this._dropPickup(bot);
           }
           if (!b.isMelee) break;  // melee can hit multiple bots in one swing
@@ -794,8 +889,20 @@ class Game {
       for (const b of this.bullets) {
         if (b.isPlayer || b.dead) continue;
         if (circlesOverlap(b.x, b.y, b.radius, this.player.x, this.player.y, this.player.radius)) {
-          const dmg = this.player.takeDamage(b.damage, this.hud);
+          // Phantom dodge
+          const dodgeChance = this.charData._dodgeChance || 0;
+          if (dodgeChance > 0 && Math.random() < dodgeChance) {
+            b.dead = true;
+            window.audio?.dodge();
+            for (let _i = 0; _i < 6; _i++) {
+              const _a = Math.random() * Math.PI * 2, _s = rnd(60, 150);
+              this.particles.push(new Particle(this.player.x, this.player.y, Math.cos(_a)*_s, Math.sin(_a)*_s, '#AA44FF', rnd(2,5), 0.5));
+            }
+            continue;
+          }
+          const dmg = this.player.takeDamage(b.damage * (this._hardcoreMode ? 2 : 1), this.hud);
           if (dmg) {
+            window.audio?.playerHit();
             this.hud.addDamageNumber(this.player.x, this.player.y - 30, dmg, this.camX, this.camY, '#FF4444');
             this._killStreak = 0;
             this._streakTimer = 0;
@@ -832,6 +939,22 @@ class Game {
       }
     }
 
+    // ── Bomb AoE (bomber enemy bullets) ──────────────────
+    for (const b of this.bullets) {
+      if (!b._isBomb || !b.dead) continue;
+      const r = b._aoeRadius || 80, dmg = b.damage * 2.5;
+      for (let i = 0; i < 18; i++) {
+        const a = Math.random() * Math.PI * 2, s = rnd(80, 200);
+        this.particles.push(new Particle(b.x, b.y, Math.cos(a)*s, Math.sin(a)*s, i%2===0 ? '#FF6600' : '#FF3300', rnd(3,8), 0.8));
+      }
+      this.hud.shake(7);
+      if (!this.player.dead && !this._playerVehicle &&
+          circlesOverlap(b.x, b.y, r, this.player.x, this.player.y, this.player.radius)) {
+        const d = this.player.takeDamage(dmg * (this._hardcoreMode ? 2 : 1), this.hud);
+        if (d) this.hud.addDamageNumber(this.player.x, this.player.y - 30, d, this.camX, this.camY, '#FF6600');
+      }
+    }
+
     // ── Cleanup ────────────────────────────────────────────
     this.bots      = this.bots.filter(b => !b.dead);
     this.bullets   = this.bullets.filter(b => !b.dead);
@@ -840,9 +963,19 @@ class Game {
     // ── Bot spawning (non-arena, non-zombie, non-life only) ──
     if (!this._arenaMode && !this._zombieMode && !this._lifeMode) {
       this.spawnTimer -= dt * 1000;
-      if (this.spawnTimer <= 0 && this.bots.length < CONFIG.MAX_BOTS + this.wave * 2) {
-        this._spawnBot();
-        this.spawnTimer = Math.max(700, CONFIG.BOT_SPAWN_INTERVAL - this.wave * 140);
+      const maxBots = this._siegeMode
+        ? CONFIG.MAX_BOTS * 2 + this.wave * 4   // siege: bigger cap
+        : CONFIG.MAX_BOTS + this.wave * 2;
+      const spawnInterval = this._blitzMode
+        ? Math.max(300, CONFIG.BOT_SPAWN_INTERVAL / 3 - this.wave * 50)
+        : this._siegeMode
+          ? Math.max(300, 1800 - this.wave * 80)
+          : Math.max(700, CONFIG.BOT_SPAWN_INTERVAL - this.wave * 140);
+      if (this.spawnTimer <= 0 && this.bots.length < maxBots) {
+        // Siege: spawn 3-4 bots per tick (assault from all sides)
+        const count = this._siegeMode ? 3 + Math.floor(this.wave / 4) : 1;
+        for (let _si = 0; _si < count; _si++) this._spawnBot();
+        this.spawnTimer = spawnInterval;
       }
 
       // ── Wave ─────────────────────────────────────────────
@@ -850,6 +983,7 @@ class Game {
       if (this.waveTimer <= 0) {
         this.wave++;
         this.waveTimer = 30000;
+        window.audio?.waveUp();
         // Wave-locked global event every 5 waves (major only)
         if (this.wave % 5 === 0 && !this._globalEvent && !this._eventWave.has(this.wave)) {
           this._eventWave.add(this.wave);
@@ -913,6 +1047,7 @@ class Game {
           v.occupied = true;
           this._playerVehicle = v;
           this.player.inVehicle = true;
+          window.audio?.vehicle();
           break;
         }
       }
@@ -927,6 +1062,7 @@ class Game {
   }
 
   _onKill() {
+    window.audio?.kill();
     // Killstreak
     this._killStreak++;
     this._streakTimer = 3.0;
@@ -947,6 +1083,14 @@ class Game {
 
     // Arena kill count
     if (this._arenaMode) this._arenaKilled++;
+    // Campaign kill count
+    if (this._campaignMode) {
+      this._campaignKills++;
+      if (this._campaignKills >= this._campaignTarget && !this._levelComplete) {
+        this._levelComplete  = true;
+        this._levelCompleteT = 3.5;
+      }
+    }
 
     // Rep loss in current district
     if (this._currentDistrict && !this._zombieMode) {
@@ -1058,27 +1202,45 @@ class Game {
       default: sx = this.camX - margin; sy = this.camY + rnd(0,H); break;
     }
 
-    // Weighted type selection
+    // Weighted type selection — higher waves introduce advanced types
     const r    = Math.random();
-    const type = r < 0.38 ? 'mini' : r < 0.84 ? 'normal' : 'big';
+    let type;
+    if (this.wave >= 10 && r < 0.06)       type = 'juggernaut';
+    else if (this.wave >= 6  && r < 0.14)  type = 'sniper';
+    else if (this.wave >= 4  && r < 0.22)  type = 'bomber';
+    else if (r < 0.38)                     type = 'mini';
+    else if (r < 0.84)                     type = 'normal';
+    else                                   type = 'big';
+
+    // Siege: spawn from all 4 cardinal edges of the map toward center
+    if (this._siegeMode) {
+      const cx = this.map.W * this.map.S / 2, cy = this.map.H * this.map.S / 2;
+      const side = Math.floor(Math.random() * 4);
+      if      (side === 0) { sx = cx + rnd(-60, 60); sy = 60; }
+      else if (side === 1) { sx = this.map.W * this.map.S - 60; sy = cy + rnd(-60, 60); }
+      else if (side === 2) { sx = cx + rnd(-60, 60); sy = this.map.H * this.map.S - 60; }
+      else                 { sx = 60; sy = cy + rnd(-60, 60); }
+    }
+
+    const _pushBot = (bx, by) => {
+      const bot = new Bot(bx, by, this.wave, type, this.map.config);
+      if (this._blitzMode) { bot.speed = Math.round(bot.speed * 3); }
+      if (this._siegeMode) { bot.hp = Math.round(bot.hp * 1.5); bot.maxHp = bot.hp; }
+      if (this._currentDistrict?.id === 'industrial' && this._reputation.industrial <= -50) {
+        bot.hp = Math.round(bot.hp * 1.25); bot.maxHp = bot.hp;
+      }
+      this.bots.push(bot);
+    };
 
     if (Math.random() > 0.4) {
       sx = clamp(sx, 0, maxWX); sy = clamp(sy, 0, maxWY);
       if (!this.map.isBlocked(sx, sy)) {
-        this.bots.push(new Bot(sx, sy, this.wave, type, this.map.config));
-        if (this._currentDistrict?.id === 'industrial' && this._reputation.industrial <= -50) {
-          const b = this.bots[this.bots.length - 1];
-          b.hp = Math.round(b.hp * 1.25); b.maxHp = b.hp;
-        }
+        _pushBot(sx, sy);
         return;
       }
     }
     const rp = this.map.randomRoadPos();
-    this.bots.push(new Bot(rp.x, rp.y, this.wave, type, this.map.config));
-    if (this._currentDistrict?.id === 'industrial' && this._reputation.industrial <= -50) {
-      const b = this.bots[this.bots.length - 1];
-      b.hp = Math.round(b.hp * 1.25); b.maxHp = b.hp;
-    }
+    _pushBot(rp.x, rp.y);
   }
 
   _spawnBoss() {
@@ -1086,7 +1248,56 @@ class Game {
     this.boss = new BossBot(rp.x, rp.y, this.wave, this.map.config.id);
   }
 
+  _startCampaignLevel() {
+    const lvl  = this._campaignLevel;
+    this._campaignTarget = 10 + lvl * 5;
+    this.wave            = lvl;
+    this._bossActivated  = false;
+    this.boss            = null;
+    this.bossRespawnTimer = lvl % 10 === 0 ? 3000 : 0;
+    if (lvl % 10 === 0) {
+      this._bossActivated = true;
+      this.bossRespawnTimer = 3000;
+    }
+    this.spawnTimer = 1000;
+  }
+
+  _spawnAmbientTraffic() {
+    if (this._arenaMode || this._zombieMode) return;
+    const count = 6 + Math.floor(Math.random() * 4);
+    for (let i = 0; i < count; i++) this._respawnAmbientCar();
+  }
+
+  _respawnAmbientCar() {
+    if (this._ambientCars.length >= 14) return;
+    // Spawn off-camera on a road tile
+    const margin  = 200;
+    const W       = this.canvas.width, H = this.canvas.height;
+    let pos;
+    for (let t = 0; t < 15; t++) {
+      let sx, sy;
+      const side = Math.floor(Math.random() * 4);
+      if      (side === 0) { sx = this.camX + rnd(0,W); sy = this.camY - margin; }
+      else if (side === 1) { sx = this.camX + W + margin; sy = this.camY + rnd(0,H); }
+      else if (side === 2) { sx = this.camX + rnd(0,W); sy = this.camY + H + margin; }
+      else                 { sx = this.camX - margin; sy = this.camY + rnd(0,H); }
+      sx = clamp(sx, 0, this.map.W * this.map.S);
+      sy = clamp(sy, 0, this.map.H * this.map.S);
+      if (!this.map.isBlocked(sx, sy)) { pos = { x: sx, y: sy }; break; }
+    }
+    if (!pos) {
+      try { pos = this.map.randomRoadPos(); } catch(e) { return; }
+    }
+    const angles    = [0, Math.PI / 2, Math.PI, -Math.PI / 2];
+    const carColors = ['#CC3333','#3366BB','#CC9900','#339944','#AA33AA','#336688','#CC6633','#55AACC'];
+    const angle     = angles[Math.floor(Math.random() * angles.length)];
+    const color     = carColors[Math.floor(Math.random() * carColors.length)];
+    const style     = Math.floor(Math.random() * 5);
+    this._ambientCars.push(new AmbientCar(pos.x, pos.y, angle, color, style));
+  }
+
   _explodeGrenade(g) {
+    window.audio?.explosion();
     const r = CONFIG.GRENADE.blastRadius, dmg = CONFIG.GRENADE.damage;
     for (let i = 0; i < 24; i++) {
       const a = Math.random() * Math.PI * 2, s = rnd(120, 280);
@@ -1106,10 +1317,12 @@ class Game {
         if (bot.dying) {
           this.decals.push(new Decal(bot.x, bot.y, 'blood'));
           const mult   = this._streakMultiplier();
-          const earned = Math.round(CONFIG.MONEY_PER_KILL * bot._cfg.moneyMult * mult);
+          const wMult  = (this.player._wealthMult || 1) * (this._hardcoreMode ? 3 : 1) * (this._blitzMode ? 5 : 1);
+          const earned = Math.round(CONFIG.MONEY_PER_KILL * bot._cfg.moneyMult * mult * wMult);
           this.money += earned; this._achStats.moneyEarned += earned; this.kills++;
           this.hud.addDamageNumber(bot.x, bot.y - 56, earned, this.camX, this.camY, '#FF8800');
           this._onKill(); this._dropPickup(bot);
+          if (this.player._leechHp) this.player.health = Math.min(this.player.maxHealth, this.player.health + this.player._leechHp);
         }
       }
     }
@@ -1234,9 +1447,13 @@ class Game {
         this._casinoHosts = [];
         if (this.state === 'casino') { this._casino.close(); this.state = 'playing'; }
       }
+      if (this._indoor.isMetro) {
+        this._metroWaveTimer = undefined;
+      }
       const door = this._indoor.doorDoor;
       this.player.x = door.wx;
-      this.player.y = door.wy + 30;
+      this.player.y = door.wy + 80;  // far enough to avoid instantly re-entering
+      window.audio?.doorClose();
       this._indoor        = null;
       this._indoorBots    = [];
       this._indoorBullets = [];
@@ -1258,6 +1475,7 @@ class Game {
           room._buildingType = this.map._blockTypes[`${bx2},${by2}`] ?? 0;
         } else { room._buildingType = 0; }
         this._indoor = room;
+        window.audio?.doorOpen();
         this._achStats.buildingsEntered++;
         this._checkAchievements();
         this.player.x = room.entryX;
@@ -1286,6 +1504,25 @@ class Game {
         return;
       }
     }
+    // ── Metro entrance ─────────────────────────────────────────
+    if (this.map.metroEntrance && !this._arenaMode && !this._zombieMode) {
+      const me = this.map.metroEntrance;
+      if (Math.hypot(me.wx - this.player.x, me.wy - this.player.y) < 65) {
+        const room = this._buildMetroRoom();
+        this._indoor        = room;
+        this._indoorBots    = [];
+        this._indoorBullets = [];
+        this._indoorPickups = [];
+        this._metroWave     = 0;
+        this._metroWaveTimer = undefined;
+        this._spawnMetroWave();
+        this.player.x = room.entryX;
+        this.player.y = room.entryY;
+        this._achStats.buildingsEntered++;
+        this._checkAchievements();
+        return;
+      }
+    }
   }
 
   _updateIndoor(dt) {
@@ -1298,7 +1535,8 @@ class Game {
     this.player.inVehicle = false;
     this.player.update(dt, this.input, room, this._indoorBullets, this.particles);
     if (this.player.dead && this.state === 'playing') this.state = 'gameover';
-    if (this.player.y >= room.roomH - 5) { this._tryEnterExit(); return; }
+    const _exitThreshold = room.isMetro ? room.roomH - room.S : room.roomH - 5;
+    if (this.player.y >= _exitThreshold) { this._tryEnterExit(); return; }
 
     for (const bot of this._indoorBots) bot.update(dt, this.player, room, this._indoorBullets, this.particles);
     for (const b of this._indoorBullets) b.update(dt, room);
@@ -1325,13 +1563,15 @@ class Game {
           if (bot.dying) {
             this.decals.push(new Decal(bot.x, bot.y, 'blood'));
             const mult   = this._streakMultiplier();
-            const earned = Math.round(CONFIG.MONEY_PER_KILL * bot._cfg.moneyMult * mult);
+            const wMult  = (this.player._wealthMult || 1) * (this._hardcoreMode ? 3 : 1) * (this._blitzMode ? 5 : 1);
+            const earned = Math.round(CONFIG.MONEY_PER_KILL * bot._cfg.moneyMult * mult * wMult);
             this.money  += earned;
             this._achStats.moneyEarned += earned;
             this.kills++;
             this.hud.addDamageNumber(bot.x, bot.y - 56, earned, -offX, -offY, mult > 1 ? '#FF8800' : '#FFD700');
             if (b.isMelee) this._achStats.knifeKills++;
             this._onKill();
+            if (this.player._leechHp) this.player.health = Math.min(this.player.maxHealth, this.player.health + this.player._leechHp);
           }
           if (!b.isMelee) break;
         }
@@ -1353,17 +1593,32 @@ class Game {
       }
     }
 
-    const doorKey = `${room.doorDoor.tx},${room.doorDoor.ty}`;
-    if (!this._visitedRooms.has(doorKey) &&
-        this._indoorBots.length > 0 &&
-        this._indoorBots.filter(b => !b.dead).length === 0) {
-      this._visitedRooms.add(doorKey);
-      this._achStats.buildingsCleared++;
-      this._checkAchievements();
+    if (!room.isMetro) {
+      const doorKey = `${room.doorDoor.tx},${room.doorDoor.ty}`;
+      if (!this._visitedRooms.has(doorKey) &&
+          this._indoorBots.length > 0 &&
+          this._indoorBots.filter(b => !b.dead).length === 0) {
+        this._visitedRooms.add(doorKey);
+        this._achStats.buildingsCleared++;
+        this._checkAchievements();
+      }
     }
 
     this._indoorBots    = this._indoorBots.filter(b => !b.dead);
     this._indoorBullets = this._indoorBullets.filter(b => !b.dead);
+
+    // ── Metro wave management ──────────────────────────────────
+    if (room.isMetro) {
+      if (this._metroWaveTimer !== undefined) {
+        this._metroWaveTimer -= dt;
+        if (this._metroWaveTimer <= 0) {
+          this._metroWaveTimer = undefined;
+          this._spawnMetroWave();
+        }
+      } else if (this._indoorBots.length === 0) {
+        this._metroWaveTimer = 4.0;
+      }
+    }
     for (const p of this.particles) p.update(dt);
     this.particles = this.particles.filter(p => !p.dead);
     if (this._streakTimer > 0) { this._streakTimer -= dt; if (this._streakTimer <= 0) this._killStreak = 0; }
@@ -1417,6 +1672,7 @@ class Game {
   _renderIndoorScene(ctx, W, H, shake) {
     if (this._indoor?.isDealership) { this._renderDealershipIndoor(ctx, W, H, shake); return; }
     if (this._indoor?.isCasino)     { this._renderCasinoIndoor(ctx, W, H, shake);     return; }
+    if (this._indoor?.isMetro)      { this._renderMetroIndoor(ctx, W, H, shake);       return; }
     const room = this._indoor;
     const offX = (W - room.roomW) / 2;
     const offY = (H - room.roomH) / 2;
@@ -1850,6 +2106,232 @@ class Game {
     ctx.restore();
   }
 
+  // ── Metro helpers ────────────────────────────────────────────
+  _buildMetroRoom() {
+    const RS     = 48;
+    const layout = ROOM_LAYOUT_METRO;
+    const RH = layout.length, RW = layout[0].length;
+    const RW_px = RW * RS, RH_px = RH * RS;
+    // Entry gap at cols 8-10 → center col 9
+    const entryX = (8 + 1.5) * RS;   // 9.5 * 48 = 456
+    const entryY = RH_px - RS - 12;
+    const floorPositions = [];
+    for (let fy = 3; fy < RH - 1; fy++) {
+      for (let fx = 1; fx < RW - 1; fx++) {
+        if (layout[fy][fx] === 0) floorPositions.push({ x: (fx + 0.5) * RS, y: (fy + 0.5) * RS });
+      }
+    }
+    return {
+      isMetro: true, layout, W: RW, H: RH, S: RS,
+      roomW: RW_px, roomH: RH_px,
+      doorDoor: this.map.metroEntrance,
+      entryX, entryY, floorPositions,
+      isBlocked(wx, wy) {
+        const tx2 = Math.floor(wx / RS), ty2 = Math.floor(wy / RS);
+        if (tx2 < 0 || ty2 < 0 || tx2 >= RW || ty2 >= RH) return true;
+        return layout[ty2][tx2] !== 0;
+      },
+      isBlockedCircle(wx, wy, r) {
+        return this.isBlocked(wx - r + 1, wy - r + 1) || this.isBlocked(wx + r - 1, wy - r + 1) ||
+               this.isBlocked(wx - r + 1, wy + r - 1) || this.isBlocked(wx + r - 1, wy + r - 1);
+      },
+      randomRoadPos() {
+        const p = floorPositions[Math.floor(Math.random() * floorPositions.length)];
+        return new Vec2(p.x, p.y);
+      },
+    };
+  }
+
+  _spawnMetroWave() {
+    this._metroWave++;
+    const room    = this._indoor;
+    const waveNum = this._metroWave;
+    const base    = 2 + Math.floor(this.wave / 2);
+    const count   = Math.min(base + waveNum, 10);
+    const types   = ['normal','normal','mini','big','normal'];
+    for (let i = 0; i < count; i++) {
+      const pos  = room.randomRoadPos();
+      const type = (waveNum >= 3 && i === count - 1) ? 'big'
+                 : (waveNum >= 2 && i % 3 === 0)     ? 'mini'
+                 : types[i % types.length];
+      this._indoorBots.push(new Bot(pos.x, pos.y, this.wave + waveNum - 1, type, this.map.config));
+    }
+  }
+
+  _renderMetroIndoor(ctx, W, H, shake) {
+    const room = this._indoor;
+    const offX = (W - room.roomW) / 2, offY = (H - room.roomH) / 2;
+    const S = room.S;
+    const T = Date.now() / 1000;
+
+    // ── Sky/background ─────────────────────────────────────────
+    ctx.fillStyle = '#020308'; ctx.fillRect(0, 0, W, H);
+    ctx.save(); ctx.translate(offX + shake.x, offY + shake.y);
+
+    // ── Tile pass ─────────────────────────────────────────────
+    for (let ty = 0; ty < room.H; ty++) {
+      for (let tx = 0; tx < room.W; tx++) {
+        const t = room.layout[ty][tx];
+        const px = tx * S, py = ty * S;
+        if (t === 1) {
+          // Concrete wall / ceiling
+          ctx.fillStyle = '#0d0d18'; ctx.fillRect(px, py, S, S);
+          ctx.fillStyle = 'rgba(255,255,255,0.018)';
+          ctx.fillRect(px, py, S, 2); ctx.fillRect(px, py, 2, S);
+        } else if (t === 2) {
+          // Bench
+          ctx.fillStyle = '#161622'; ctx.fillRect(px, py, S, S);
+          ctx.fillStyle = '#263648'; ctx.fillRect(px + 5, py + S * 0.28, S - 10, 18);
+          ctx.fillStyle = '#1e2e3e'; ctx.fillRect(px + 5, py + S * 0.12, S - 10, S * 0.18);
+          ctx.strokeStyle = '#3a4e62'; ctx.lineWidth = 1;
+          ctx.strokeRect(px + 5, py + S * 0.12, S - 10, S * 0.5);
+        } else if (t === 3) {
+          // Train tracks / pit
+          ctx.fillStyle = '#05050e'; ctx.fillRect(px, py, S, S);
+          // Cross ties (wooden sleepers)
+          ctx.fillStyle = '#1a1208';
+          for (let ci = 0; ci < 3; ci++) ctx.fillRect(px, py + ci * (S / 3) + 2, S, 7);
+          // Rails (two per tile)
+          ctx.fillStyle = '#3a3a50';
+          ctx.fillRect(px + 7, py, 5, S); ctx.fillRect(px + S - 12, py, 5, S);
+          ctx.fillStyle = '#5a5a70';
+          ctx.fillRect(px + 8, py, 3, S); ctx.fillRect(px + S - 11, py, 3, S);
+        } else {
+          // Platform floor — checkerboard tiles
+          ctx.fillStyle = (tx + ty) % 2 === 0 ? '#14141f' : '#111019';
+          ctx.fillRect(px, py, S, S);
+          ctx.fillStyle = 'rgba(0,0,0,0.35)';
+          ctx.fillRect(px, py, S, 1); ctx.fillRect(px, py, 1, S);
+        }
+      }
+    }
+
+    // ── Subway train parked at top (rows 1-2) ──────────────────
+    const trainTop = S, trainH = S * 2;
+    // Car shell
+    ctx.fillStyle = '#1c2d3e'; ctx.fillRect(0, trainTop, room.roomW, trainH);
+    // Body panel
+    ctx.fillStyle = '#253848'; ctx.fillRect(3, trainTop + 5, room.roomW - 6, trainH - 10);
+    // Windows (warm glow)
+    const numWin = Math.floor(room.roomW / 78);
+    for (let wi = 0; wi < numWin; wi++) {
+      const wx2 = 18 + wi * 78;
+      ctx.fillStyle = '#3a2a10'; ctx.fillRect(wx2, trainTop + 9, 46, 26);
+      ctx.fillStyle = 'rgba(255,215,100,0.72)';
+      ctx.fillRect(wx2 + 2, trainTop + 11, 42, 22);
+      ctx.fillStyle = 'rgba(255,255,255,0.1)';
+      ctx.fillRect(wx2 + 2, trainTop + 11, 12, 9);
+    }
+    // Blue stripe
+    ctx.fillStyle = '#0044AA'; ctx.fillRect(0, trainTop + trainH - 14, room.roomW, 8);
+    // Door openings
+    for (const dx of [room.roomW * 0.22, room.roomW * 0.5, room.roomW * 0.78]) {
+      ctx.fillStyle = '#080c14'; ctx.fillRect(dx - 18, trainTop + 5, 36, trainH - 10);
+      // door frame
+      ctx.strokeStyle = '#224466'; ctx.lineWidth = 1.5;
+      ctx.strokeRect(dx - 18, trainTop + 5, 36, trainH - 10);
+    }
+    // Headlight flicker
+    const flickOn = Math.sin(T * 2.4) > 0.3;
+    if (flickOn) {
+      ctx.fillStyle = 'rgba(180,220,255,0.18)';
+      ctx.fillRect(0, trainTop, room.roomW * 0.12, trainH);
+      ctx.fillRect(room.roomW * 0.88, trainTop, room.roomW * 0.12, trainH);
+    }
+    // Car number
+    ctx.fillStyle = '#FFFFFF'; ctx.font = 'bold 13px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('LINE 1 · NEON CITY METRO', room.roomW / 2, trainTop + trainH - 2);
+
+    // ── Platform edge yellow safety stripe ─────────────────────
+    const platEdge = 3 * S;
+    ctx.fillStyle = '#FFCC00'; ctx.shadowColor = '#FFCC00'; ctx.shadowBlur = 10;
+    ctx.fillRect(0, platEdge - 7, room.roomW, 7);
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = '#1a0a00'; ctx.font = 'bold 5px monospace'; ctx.textAlign = 'left';
+    for (let xi = 0; xi < 10; xi++) ctx.fillText('▲ CAUTION — PLATFORM EDGE ▲', xi * 140, platEdge - 1);
+
+    // ── Ceiling fluorescent lights ─────────────────────────────
+    for (const lx of [room.roomW * 0.2, room.roomW * 0.5, room.roomW * 0.8]) {
+      const flick = Math.sin(T * 60 + lx) > 0.98 ? 0.3 : 1;
+      ctx.fillStyle = '#0d0d18'; ctx.fillRect(lx - 34, 3, 68, 9);
+      ctx.fillStyle = `rgba(200,230,255,${0.92 * flick})`;
+      ctx.shadowColor = '#88BBFF'; ctx.shadowBlur = 16 * flick;
+      ctx.fillRect(lx - 30, 5, 60, 5);
+      ctx.shadowBlur = 0;
+      const cone = ctx.createLinearGradient(0, 12, 0, platEdge);
+      cone.addColorStop(0, `rgba(160,200,255,${0.07 * flick})`);
+      cone.addColorStop(1, 'rgba(160,200,255,0)');
+      ctx.fillStyle = cone;
+      ctx.beginPath(); ctx.moveTo(lx - 30, 12); ctx.lineTo(lx + 30, 12);
+      ctx.lineTo(lx + 65, platEdge); ctx.lineTo(lx - 65, platEdge); ctx.closePath(); ctx.fill();
+    }
+
+    // ── Concrete pillars ───────────────────────────────────────
+    for (let pi = 2; pi <= room.W - 3; pi += 5) {
+      const pilX = (pi + 0.5) * S;
+      ctx.fillStyle = '#161622'; ctx.strokeStyle = '#222230'; ctx.lineWidth = 1;
+      ctx.fillRect(pilX - 7, platEdge - 6, 14, room.roomH - platEdge - S);
+      ctx.strokeRect(pilX - 7, platEdge - 6, 14, room.roomH - platEdge - S);
+      ctx.fillStyle = '#202030'; ctx.fillRect(pilX - 10, platEdge - 8, 20, 5);
+      // Blue neon stripe on pillar
+      ctx.fillStyle = '#0033AA'; ctx.shadowColor = '#0055FF'; ctx.shadowBlur = 7;
+      ctx.fillRect(pilX - 2, platEdge, 4, room.roomH - platEdge - S * 1.2);
+      ctx.shadowBlur = 0;
+    }
+
+    // ── Overhead METRO sign ────────────────────────────────────
+    ctx.fillStyle = '#001800'; ctx.strokeStyle = '#22FF66'; ctx.lineWidth = 1.5;
+    ctx.fillRect(room.roomW / 2 - 72, 0, 144, 19);
+    ctx.strokeRect(room.roomW / 2 - 72, 0, 144, 19);
+    ctx.fillStyle = '#22FF66'; ctx.shadowColor = '#22FF66'; ctx.shadowBlur = 14;
+    ctx.font = 'bold 12px Orbitron, monospace'; ctx.textAlign = 'center';
+    ctx.fillText('◉  METRO  LINE 1  ◉', room.roomW / 2, 14);
+    ctx.shadowBlur = 0;
+
+    // EXIT signs on side walls
+    for (const sx2 of [24, room.roomW - 24]) {
+      ctx.fillStyle = '#001800'; ctx.fillRect(sx2 - 18, platEdge + 6, 36, 14);
+      ctx.fillStyle = '#22FF44'; ctx.shadowColor = '#22FF44'; ctx.shadowBlur = 8;
+      ctx.font = 'bold 7px monospace'; ctx.textAlign = 'center';
+      ctx.fillText('EXIT ↓', sx2, platEdge + 16);
+      ctx.shadowBlur = 0;
+    }
+
+    // ── Wave counter top-right ────────────────────────────────
+    const aliveCnt = this._indoorBots.filter(b => !b.dead && !b.dying).length;
+    ctx.fillStyle = '#44FF88'; ctx.font = 'bold 10px Orbitron, monospace'; ctx.textAlign = 'right';
+    ctx.shadowColor = '#22FF44'; ctx.shadowBlur = 8;
+    ctx.fillText(`METRO WAVE ${this._metroWave}`, room.roomW - 8, 14);
+    if (aliveCnt > 0) {
+      ctx.fillStyle = '#FF4444';
+      ctx.fillText(`▼ ${aliveCnt} ENEMY`, room.roomW - 8, 27);
+    } else if (this._metroWaveTimer !== undefined) {
+      ctx.fillStyle = '#FFEE44';
+      ctx.fillText(`NEXT WAVE ${Math.ceil(this._metroWaveTimer)}s`, room.roomW - 8, 27);
+    } else {
+      ctx.fillStyle = '#44FF88'; ctx.fillText('SECTOR CLEAR', room.roomW - 8, 27);
+    }
+    ctx.shadowBlur = 0;
+
+    // ── Entities ─────────────────────────────────────────────
+    for (const d of this.decals)         d.render(ctx);
+    for (const p of this._indoorPickups) p.render(ctx);
+    for (const p of this.particles)      p.render(ctx);
+    for (const b of this._indoorBullets) if (!b.isPlayer) b.render(ctx);
+    for (const bot of this._indoorBots)  bot.render(ctx);
+    for (const b of this._indoorBullets) if (b.isPlayer)  b.render(ctx);
+    if (!this.player.dead) this.player.render(ctx);
+
+    // ── Exit hint ─────────────────────────────────────────────
+    ctx.save();
+    ctx.font = 'bold 11px Orbitron, monospace'; ctx.textAlign = 'center';
+    ctx.fillStyle = '#FFFFAA'; ctx.shadowColor = '#FFFF00'; ctx.shadowBlur = 10;
+    ctx.fillText('[E] EXIT METRO', room.entryX, room.roomH - 8);
+    ctx.restore();
+
+    ctx.restore();
+  }
+
   _renderDealershipIndoor(ctx, W, H, shake) {
     const room = this._indoor;
     const offX = (W - room.roomW) / 2, offY = (H - room.roomH) / 2;
@@ -1967,6 +2449,7 @@ class Game {
       ctx.save();
       ctx.translate(-this.camX + shake.x, -this.camY + shake.y);
       this.map.render(ctx, this.camX, this.camY, W, H);
+      this.map.renderMetroEntrance(ctx);
       if (this._districtLayout) {
         const mapPxW = this.map.W * this.map.S;
         const mapPxH = this.map.H * this.map.S;
@@ -1984,9 +2467,11 @@ class Game {
       for (const b   of this.bullets)   if (!b.isPlayer) b.render(ctx);
       for (const bot of this.bots)      bot.render(ctx);
       for (const npc of this._cityNpcs) npc.render(ctx);
+      for (const c of this._ambientCars) c.render(ctx);
       if (this.boss && !this.boss.dead)  this.boss.render(ctx);
       for (const b   of this.bullets)   if (b.isPlayer)  b.render(ctx);
       if (!this.player.dead) this.player.render(ctx);
+      if (this.player.companion && !this.player.companion.dead) this.player.companion.render(ctx);
       for (const bg of this._bodyguards) bg.render(ctx);
 
       // Drones
@@ -2010,6 +2495,29 @@ class Game {
         ctx.fillStyle = '#CC88FF'; ctx.font = 'bold 8px Orbitron, monospace'; ctx.textAlign = 'center';
         ctx.fillText('PORTAL', 0, -48);
         ctx.shadowBlur = 0; ctx.restore();
+      }
+
+      // Map teleport portals (world-space)
+      for (const p of this._portals) {
+        const pulse = Math.sin(p._animT * 3.5) * 0.35 + 0.65;
+        const near  = Math.hypot(p.x - this.player.x, p.y - this.player.y) < 55;
+        ctx.save(); ctx.translate(p.x, p.y);
+        ctx.shadowColor = '#44EEFF'; ctx.shadowBlur = 28 * pulse;
+        ctx.fillStyle   = `rgba(0,120,200,${pulse * 0.25})`;
+        ctx.beginPath(); ctx.ellipse(0, 0, 22, 34, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = `rgba(68,238,255,${pulse})`; ctx.lineWidth = 2.5;
+        ctx.beginPath(); ctx.ellipse(0, 0, 22, 34, 0, 0, Math.PI * 2); ctx.stroke();
+        ctx.strokeStyle = `rgba(255,255,255,${pulse * 0.5})`; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.ellipse(0, 0, 13, 20, 0, 0, Math.PI * 2); ctx.stroke();
+        ctx.shadowBlur = 0;
+        ctx.fillStyle  = near ? '#FFFFAA' : '#88FFFF';
+        ctx.font       = `bold 8px Orbitron, monospace`; ctx.textAlign = 'center';
+        ctx.fillText('PORTAL', 0, -40);
+        if (near) {
+          ctx.fillStyle = '#FFFFAA'; ctx.shadowColor = '#FFFF00'; ctx.shadowBlur = 8;
+          ctx.fillText('[E] TELEPORT', 0, -52);
+        }
+        ctx.restore();
       }
 
       // Black market vendor NPC
@@ -2055,6 +2563,17 @@ class Game {
                             : '#FFFF00';
             ctx.shadowBlur  = 10;
             ctx.fillText(hintText, door.wx, door.wy - 16);
+            ctx.restore();
+          }
+        }
+        // Metro entrance hint
+        if (this.map.metroEntrance) {
+          const me = this.map.metroEntrance;
+          if (Math.hypot(me.wx - this.player.x, me.wy - this.player.y) < 70) {
+            ctx.save();
+            ctx.font = 'bold 11px Orbitron, monospace'; ctx.textAlign = 'center';
+            ctx.fillStyle = '#44FF88'; ctx.shadowColor = '#22FF66'; ctx.shadowBlur = 14;
+            ctx.fillText('[E] METRO', me.wx, me.wy - 40);
             ctx.restore();
           }
         }
@@ -2133,7 +2652,8 @@ class Game {
     if (playing) {
       this.hud.renderMinimap(this.map, this.player, this.bots, this.camX, this.camY, this.boss, this._districtLayout);
       this.hud.renderHealthBar(this.player);
-      this.hud.renderControls(this._arenaMode);
+      this.hud.renderControls(this._arenaMode, this._isMobile);
+      if (this._isMobile) this.hud.renderMobileHints(this._arenaMode);
       this.hud.renderMoney(this.money);
       this.hud.renderKills(this.kills);
       if (this._arenaMode) {
@@ -2152,7 +2672,13 @@ class Game {
       }
       this.hud.renderWeaponInfo(this.player);
       if (this._grenadeCount > 0) this.hud.renderGrenadeCount(this._grenadeCount);
-      if (!this._arenaMode && !this._zombieMode && !this._lifeMode) this.hud.renderShopButton(this.state === 'shop');
+      if (!this._arenaMode && !this._zombieMode && !this._lifeMode && !this._survivalMode && !this._blitzMode && !this._siegeMode) this.hud.renderShopButton(this.state === 'shop', this._isMobile);
+      if (this._survivalMode) this.hud.renderModeBadge('☠ SURVIVAL', '#FF2244');
+      if (this._hardcoreMode) this.hud.renderModeBadge('⚡ HARDCORE · 2× DMG · 3× $', '#FF8800');
+      if (this._blitzMode)    this.hud.renderModeBadge('⚡ BLITZ · 3× SPEED · 5× $', '#FF4400');
+      if (this._siegeMode)    this.hud.renderModeBadge('🛡 SIEGE · DEFEND THE CENTER', '#44AAFF');
+      if (this._campaignMode) this.hud.renderCampaignLevel(this._campaignLevel, this._campaignKills, this._campaignTarget, this._levelComplete, this._levelCompleteT);
+      if (this.player.companion && !this.player.companion.dead) this.hud.renderCompanionHP(this.player.companion);
       this.hud.renderAchButton(this._achPanelOpen);
       if (!this._zombieMode && !this._lifeMode) this.hud.renderDayNight(this._nightAlpha, this._gameTime);
       if (this._globalEvent) this.hud.renderEventBanner(ctx, W, H, this._globalEvent, this._eventAnnounceTimer);
@@ -2310,4 +2836,6 @@ class Game {
 // ── Entry point ───────────────────────────────────────────────────────────────
 window.startGame = function(charData, mapData) {
   window._game = new Game(charData, mapData);
+  window._gameInstance = window._game;
+  window.dispatchEvent(new Event('gameStarted'));
 };
