@@ -537,6 +537,16 @@ class Player {
     this._custMask   = _cust.mask   || 'none';
     this._custEffect = _cust.effect || 'none';
     this._effectT    = 0;
+
+    // ── Animal Companion ──────────────────────────────────
+    this.companion = charData.companion ? new AnimalCompanion(charData.companion) : null;
+    if (this.companion) { this.companion.x = spawnX; this.companion.y = spawnY; }
+
+    // ── Starter weapon override (Ronin starts with knife) ──
+    if (charData.starterWeapon) {
+      const sw = CONFIG.WEAPONS.find(w => w.id === charData.starterWeapon);
+      if (sw) { this.ownedWeapons.add(sw.id); this.equippedWeaponId = sw.id; this._weapon = sw; }
+    }
   }
 
   equipWeapon(id) {
@@ -913,6 +923,29 @@ const BOT_CFG = {
     bulletColor: '#888888', bulletSpeed: 260, bulletRadius: 8, bulletCount: 3,
     attackRange: 360, visionRange: 550, moneyMult: 2.8,
   },
+  sniper: {
+    radius: 13, speedMult: 0.60, hpMult: 1.1, dmgMult: 4.5,
+    frBase: 2400, frMin: 1800,
+    palette: [{ body: '#223344', accent: '#4488BB' }, { body: '#1a2a38', accent: '#336688' }],
+    bulletColor: '#88DDFF', bulletSpeed: 1200, bulletRadius: 5, bulletCount: 1,
+    attackRange: 580, visionRange: 700, moneyMult: 2.5,
+    keepDistance: 380,
+  },
+  bomber: {
+    radius: 18, speedMult: 0.85, hpMult: 1.6, dmgMult: 1.8,
+    frBase: 1600, frMin: 1200,
+    palette: [{ body: '#884400', accent: '#FF6600' }, { body: '#662200', accent: '#FF4400' }],
+    bulletColor: '#FF6600', bulletSpeed: 260, bulletRadius: 8, bulletCount: 1,
+    attackRange: 340, visionRange: 480, moneyMult: 2.2,
+    isBomber: true,
+  },
+  juggernaut: {
+    radius: 30, speedMult: 0.22, hpMult: 12, dmgMult: 0.75,
+    frBase: 48, frMin: 38,
+    palette: [{ body: '#222222', accent: '#666666' }, { body: '#1a1a1a', accent: '#555555' }],
+    bulletColor: '#FFAA00', bulletSpeed: 200, bulletRadius: 6, bulletCount: 6,
+    attackRange: 240, visionRange: 380, moneyMult: 6.0,
+  },
 };
 
 class Bot {
@@ -992,8 +1025,17 @@ class Bot {
       targetX = this._patrolTarget.x; targetY = this._patrolTarget.y;
     }
 
-    const minAttackDist = this.type === 'mini' ? 0 : 75;
-    if (!(this.state === BOT_STATE.ATTACK && dist < minAttackDist)) {
+    const minAttackDist = this.type === 'mini' ? 0 : this._cfg.keepDistance ? this._cfg.keepDistance : 75;
+    // Sniper backs away when player gets too close
+    if (this._cfg.keepDistance && this.state === BOT_STATE.ATTACK && dist < this._cfg.keepDistance) {
+      const dx = this.x - player.x, dy = this.y - player.y;
+      const d  = Math.hypot(dx, dy) || 1;
+      const md = this.speed * dt;
+      const newX = this.x + (dx / d) * md;
+      if (!gameMap.isBlockedCircle(newX, this.y, this.radius - 2)) this.x = newX;
+      const newY = this.y + (dy / d) * md;
+      if (!gameMap.isBlockedCircle(this.x, newY, this.radius - 2)) this.y = newY;
+    } else if (!(this.state === BOT_STATE.ATTACK && dist < minAttackDist)) {
       const dx = targetX - this.x, dy = targetY - this.y;
       const d  = Math.hypot(dx, dy);
       if (d > 5) {
@@ -1047,11 +1089,24 @@ class Bot {
     const bx    = this.x + Math.cos(this._angle) * go;
     const by    = this.y + Math.sin(this._angle) * go;
 
+    if (cfg.isBomber) {
+      // Bomber throws a slow AOE explosive blob
+      const bull = new Bullet(bx, by, this._angle, cfg.bulletSpeed, this.damage, false, cfg.bulletColor);
+      bull.radius  = 9;
+      bull._isBomb = true;   // game.js handles AoE on impact
+      bull._aoeRadius = 80;
+      bull._aoeDamage = this.damage * 1.5;
+      bullets.push(bull);
+      particles.push(...Particle.burst(bx, by, '#FF6600', 5, 40, 100, 2, 5, 0.05, 0.14));
+      return;
+    }
+
     for (let i = 0; i < count; i++) {
       const t     = count > 1 ? (i / (count - 1) - 0.5) * 0.55 : 0;
-      const angle = this._angle + t + (Math.random() - 0.5) * 0.09;
+      const angle = this._angle + t + (Math.random() - 0.5) * (this.type === 'sniper' ? 0.012 : 0.09);
       const bull  = new Bullet(bx, by, angle, cfg.bulletSpeed, this.damage, false, cfg.bulletColor);
       bull.radius = cfg.bulletRadius;
+      if (this.type === 'sniper') bull._isPiercing = true;
       bullets.push(bull);
     }
     particles.push(...Particle.burst(bx, by, cfg.bulletColor, count * 2, 60, 150, 1, 3, 0.05, 0.14));
@@ -1078,6 +1133,9 @@ class Bot {
     if      (this.type === 'mini')                                                  this._renderMini(ctx, x, y, r);
     else if (this.type === 'big')                                                   this._renderBig(ctx, x, y, r);
     else if (this.type === 'police' || this.type === 'swat' || this.type === 'heavyswat') this._renderPolice(ctx, x, y, r);
+    else if (this.type === 'sniper')                                                this._renderSniper(ctx, x, y, r);
+    else if (this.type === 'bomber')                                                this._renderBomber(ctx, x, y, r);
+    else if (this.type === 'juggernaut')                                            this._renderJuggernaut(ctx, x, y, r);
     else                                                                            this._renderNormal(ctx, x, y, r);
     ctx.restore();
   }
@@ -1307,6 +1365,114 @@ class Bot {
     ctx.fillStyle = pct > 0.6 ? accentCol : pct > 0.3 ? '#FFCC00' : '#FF4444';
     ctx.fillRect(bx2, by2, bw*pct, bh);
     ctx.strokeStyle = 'rgba(255,255,255,0.2)'; ctx.lineWidth = 0.5;
+    ctx.strokeRect(bx2, by2, bw, bh);
+  }
+
+  _renderSniper(ctx, x, y, r) {
+    // Lean, hooded figure with long rifle
+    ctx.save();
+    ctx.shadowColor = '#4488BB'; ctx.shadowBlur = 14;
+    const g = ctx.createRadialGradient(x - r*0.3, y - r*0.3, 0.5, x, y, r);
+    g.addColorStop(0, this.accentColor); g.addColorStop(1, this.bodyColor + 'CC');
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+    // Scope ring
+    ctx.strokeStyle = '#88DDFF'; ctx.lineWidth = 1.5; ctx.globalAlpha = 0.6;
+    ctx.beginPath(); ctx.arc(x, y, r + 4, 0, Math.PI * 2); ctx.stroke();
+    ctx.globalAlpha = 1;
+    ctx.restore();
+    // Long rifle barrel
+    const gl = r + 22;
+    ctx.save();
+    ctx.shadowColor = '#88DDFF'; ctx.shadowBlur = 8;
+    ctx.strokeStyle = '#88DDFF'; ctx.lineWidth = 3; ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(x + Math.cos(this._angle)*(r-2), y + Math.sin(this._angle)*(r-2));
+    ctx.lineTo(x + Math.cos(this._angle)*gl, y + Math.sin(this._angle)*gl);
+    ctx.stroke();
+    // Scope
+    ctx.strokeStyle = '#CCDDFF'; ctx.lineWidth = 5;
+    const sm = 0.55;
+    ctx.beginPath();
+    ctx.moveTo(x + Math.cos(this._angle)*(r+4), y + Math.sin(this._angle)*(r+4));
+    ctx.lineTo(x + Math.cos(this._angle)*(r+12), y + Math.sin(this._angle)*(r+12));
+    ctx.stroke();
+    ctx.restore();
+    this._renderHPBar(ctx, x, y, r, 42, 5);
+  }
+
+  _renderBomber(ctx, x, y, r) {
+    // Stocky with explosive vest
+    ctx.save();
+    ctx.shadowColor = '#FF6600'; ctx.shadowBlur = 18;
+    const g = ctx.createRadialGradient(x, y - r*0.3, 0.5, x, y, r);
+    g.addColorStop(0, '#FF8833'); g.addColorStop(1, this.bodyColor + 'CC');
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+    // Vest stripes
+    ctx.strokeStyle = '#FFAA44'; ctx.lineWidth = 2.5; ctx.globalAlpha = 0.7;
+    for (let i = -1; i <= 1; i++) {
+      const ox = Math.cos(this._angle + Math.PI/2) * (i * 5);
+      const oy = Math.sin(this._angle + Math.PI/2) * (i * 5);
+      ctx.beginPath();
+      ctx.arc(x + ox, y + oy, r * 0.65, this._angle - 0.5, this._angle + 0.5);
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+    // Bomb in hand
+    const bx2 = x + Math.cos(this._angle) * (r + 10);
+    const by2 = y + Math.sin(this._angle) * (r + 10);
+    ctx.fillStyle = '#334433'; ctx.strokeStyle = '#88CC88'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.ellipse(bx2, by2, 8, 6, this._angle, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#FF4400'; ctx.beginPath(); ctx.arc(bx2, by2 - 8, 2.5, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+    this._renderHPBar(ctx, x, y, r, 44, 5);
+  }
+
+  _renderJuggernaut(ctx, x, y, r) {
+    // Massive armored behemoth
+    ctx.save();
+    ctx.shadowColor = '#666666'; ctx.shadowBlur = 24;
+    const g = ctx.createRadialGradient(x - r*0.25, y - r*0.25, 1, x, y, r);
+    g.addColorStop(0, '#555555'); g.addColorStop(1, '#111111');
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+    // Armor plates
+    ctx.strokeStyle = '#888888'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.arc(x, y, r - 4, -0.6, 0.6); ctx.stroke();
+    ctx.beginPath(); ctx.arc(x, y, r - 4, Math.PI - 0.6, Math.PI + 0.6); ctx.stroke();
+    // Minigun barrels
+    const gl = r + 14;
+    for (let i = -1; i <= 1; i++) {
+      const off = i * 4;
+      const ox = Math.cos(this._angle + Math.PI/2) * off;
+      const oy = Math.sin(this._angle + Math.PI/2) * off;
+      ctx.save();
+      ctx.strokeStyle = '#FFAA00'; ctx.lineWidth = 4; ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(x + ox + Math.cos(this._angle)*(r-2), y + oy + Math.sin(this._angle)*(r-2));
+      ctx.lineTo(x + ox + Math.cos(this._angle)*gl, y + oy + Math.sin(this._angle)*gl);
+      ctx.stroke();
+      ctx.restore();
+    }
+    // Glowing eyes
+    ctx.fillStyle = '#FF4400'; ctx.shadowColor = '#FF4400'; ctx.shadowBlur = 14;
+    const eOff = r * 0.35;
+    ctx.beginPath(); ctx.arc(x + Math.cos(this._angle - 0.4)*eOff, y + Math.sin(this._angle - 0.4)*eOff, 3.5, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(x + Math.cos(this._angle + 0.4)*eOff, y + Math.sin(this._angle + 0.4)*eOff, 3.5, 0, Math.PI*2); ctx.fill();
+    ctx.restore();
+    this._renderHPBar(ctx, x, y, r, 70, 8);
+  }
+
+  _renderHPBar(ctx, x, y, r, bw, bh) {
+    const bx2 = x - bw/2, by2 = y - r - 16;
+    const pct = this.health / this.maxHealth;
+    ctx.fillStyle = '#111'; ctx.fillRect(bx2, by2, bw, bh);
+    ctx.fillStyle = pct > 0.6 ? this.accentColor : pct > 0.3 ? '#FFCC00' : '#FF4444';
+    ctx.shadowColor = ctx.fillStyle; ctx.shadowBlur = 4;
+    ctx.fillRect(bx2, by2, bw * pct, bh);
+    ctx.shadowBlur = 0;
+    ctx.strokeStyle = 'rgba(255,255,255,0.18)'; ctx.lineWidth = 0.5;
     ctx.strokeRect(bx2, by2, bw, bh);
   }
 }
@@ -2427,6 +2593,317 @@ class CityNPC {
     ctx.fillStyle = '#222';
     ctx.beginPath(); ctx.arc(-3, -29, 1.5, 0, Math.PI * 2); ctx.fill();
     ctx.beginPath(); ctx.arc(3,  -29, 1.5, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// ANIMAL COMPANION — unique per character, orbits player, attacks nearby enemies
+// ══════════════════════════════════════════════════════════════════════════════
+class AnimalCompanion {
+  constructor(type) {
+    this.type          = type;   // 'dog'|'cat'|'wolf'|'raven'|'bear'|'fox'
+    this.x             = 0;
+    this.y             = 0;
+    this.radius        = 10;
+    this.hp            = 80;
+    this.maxHp         = 80;
+    this.dead          = false;
+    this._attackTimer  = 0;
+    this._cooldown     = type === 'bear' ? 4.5 : type === 'wolf' ? 2.2 : 3.0;
+    this._animT        = Math.random() * Math.PI * 2;
+    this._orbitAngle   = Math.random() * Math.PI * 2;
+    this._followDist   = 50;
+  }
+
+  update(dt, owner, bots, bullets, particles) {
+    if (this.dead) return;
+    this._animT += dt;
+    // Orbit around owner
+    this._orbitAngle += dt * (this.type === 'raven' ? 2.2 : 1.6);
+    const tx = owner.x + Math.cos(this._orbitAngle) * this._followDist;
+    const ty = owner.y + Math.sin(this._orbitAngle) * this._followDist;
+    this.x += (tx - this.x) * 0.14;
+    this.y += (ty - this.y) * 0.14;
+
+    // Bear passive heals owner every 5s
+    if (this.type === 'bear') {
+      this._attackTimer -= dt;
+      if (this._attackTimer <= 0) {
+        if (owner.health < owner.maxHealth) {
+          owner.health = Math.min(owner.maxHealth, owner.health + 8);
+          particles.push(...Particle.burst(owner.x, owner.y - 20, '#FFAA66', 4, 30, 80, 1, 3, 0.2, 0.6));
+        }
+        this._attackTimer = this._cooldown;
+      }
+      return;
+    }
+
+    // Others attack nearest enemy
+    this._attackTimer -= dt;
+    if (this._attackTimer <= 0) {
+      let nearest = null, nearDist = 240;
+      for (const b of bots) {
+        if (b.dead || b.dying) continue;
+        const d = Math.hypot(b.x - owner.x, b.y - owner.y);
+        if (d < nearDist) { nearest = b; nearDist = d; }
+      }
+      if (nearest) {
+        const ang  = Math.atan2(nearest.y - this.y, nearest.x - this.x);
+        const dmg  = this.type === 'wolf' ? 55 : this.type === 'dog' ? 45 : this.type === 'fox' ? 38 : 28;
+        const spd  = this.type === 'raven' ? 520 : 400;
+        const col  = { dog:'#FF8844', cat:'#44EEFF', wolf:'#AAAAFF', raven:'#CC44FF', fox:'#FFAA44' }[this.type] || '#FFDDAA';
+        const b2   = new Bullet(this.x, this.y, ang, spd, dmg, true, col);
+        b2._isCompanionBullet = true;
+        bullets.push(b2);
+        particles.push(...Particle.burst(this.x, this.y, col, 3, 40, 100, 1, 3, 0.05, 0.12));
+        this._attackTimer = this._cooldown;
+      } else {
+        this._attackTimer = 0.5;
+      }
+    }
+  }
+
+  takeDamage(amount) {
+    this.hp -= amount;
+    if (this.hp <= 0) { this.hp = 0; this.dead = true; }
+  }
+
+  render(ctx) {
+    if (this.dead) return;
+    const bob = Math.sin(this._animT * (this.type === 'raven' ? 10 : 4)) * 2;
+    ctx.save();
+    ctx.translate(this.x, this.y + bob);
+    switch (this.type) {
+      case 'dog':    this._renderDog(ctx);    break;
+      case 'cat':    this._renderCat(ctx);    break;
+      case 'wolf':   this._renderWolf(ctx);   break;
+      case 'raven':  this._renderRaven(ctx);  break;
+      case 'bear':   this._renderBear(ctx);   break;
+      case 'fox':    this._renderFox(ctx);    break;
+    }
+    ctx.restore();
+    // HP bar when damaged
+    if (this.hp < this.maxHp) {
+      const bw = 28, bh = 3, bx2 = this.x - bw/2, by2 = this.y - 18;
+      ctx.fillStyle = '#111'; ctx.fillRect(bx2, by2, bw, bh);
+      const pct = this.hp / this.maxHp;
+      ctx.fillStyle = pct > 0.5 ? '#44FF88' : '#FF4444';
+      ctx.fillRect(bx2, by2, bw * pct, bh);
+    }
+  }
+
+  _renderDog(ctx) {
+    ctx.fillStyle = '#CC8844'; ctx.shadowColor = '#FF8844'; ctx.shadowBlur = 8;
+    ctx.beginPath(); ctx.ellipse(0, 2, 10, 7, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(8, -3, 6, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#BB7733';
+    ctx.beginPath(); ctx.ellipse(5, -9, 3, 5, -0.3, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(11, -9, 3, 5, 0.3, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#111'; ctx.beginPath(); ctx.arc(10, -4, 1.5, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = '#CC8844'; ctx.lineWidth = 3; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(-9, 2); ctx.quadraticCurveTo(-14, -8, -10, -12); ctx.stroke();
+    ctx.shadowBlur = 0;
+  }
+
+  _renderCat(ctx) {
+    ctx.fillStyle = '#8888AA'; ctx.shadowColor = '#44EEFF'; ctx.shadowBlur = 10;
+    ctx.beginPath(); ctx.ellipse(0, 2, 8, 6, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(6, -3, 6, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#6666AA';
+    ctx.beginPath(); ctx.moveTo(3, -8); ctx.lineTo(5, -14); ctx.lineTo(8, -8); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(9, -8); ctx.lineTo(12, -14); ctx.lineTo(14, -8); ctx.fill();
+    ctx.fillStyle = '#44EEFF';
+    ctx.beginPath(); ctx.ellipse(5, -4, 1.5, 2, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(9, -4, 1.5, 2, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = '#8888AA'; ctx.lineWidth = 2.5; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(-8, 2); ctx.quadraticCurveTo(-14, -5, -10, -12); ctx.stroke();
+    ctx.shadowBlur = 0;
+  }
+
+  _renderWolf(ctx) {
+    ctx.fillStyle = '#8899CC'; ctx.shadowColor = '#AAAAFF'; ctx.shadowBlur = 12;
+    ctx.beginPath(); ctx.ellipse(0, 0, 11, 7, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(9, -3, 7, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#CCCCFF'; ctx.beginPath(); ctx.arc(9, -2, 4, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#7788BB';
+    ctx.beginPath(); ctx.moveTo(6, -9); ctx.lineTo(9, -17); ctx.lineTo(12, -9); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(12, -9); ctx.lineTo(16, -17); ctx.lineTo(18, -9); ctx.fill();
+    ctx.fillStyle = '#FF4466'; ctx.beginPath(); ctx.arc(11, -3, 1.5, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = '#8899CC'; ctx.lineWidth = 4; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(-10, 0); ctx.quadraticCurveTo(-18, -6, -14, -14); ctx.stroke();
+    ctx.shadowBlur = 0;
+  }
+
+  _renderRaven(ctx) {
+    const wing = Math.sin(this._animT * 9) * 5;
+    ctx.fillStyle = '#221133'; ctx.shadowColor = '#CC44FF'; ctx.shadowBlur = 14;
+    ctx.beginPath(); ctx.ellipse(0, 0, 7, 5, 0.2, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#331144';
+    ctx.beginPath(); ctx.moveTo(-2, 0); ctx.lineTo(-15, -3 - wing); ctx.lineTo(-10, 4); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(2, 0); ctx.lineTo(15, -3 - wing); ctx.lineTo(10, 4); ctx.fill();
+    ctx.fillStyle = '#221133'; ctx.beginPath(); ctx.arc(6, -3, 4, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#AAAAAA'; ctx.beginPath(); ctx.moveTo(9, -3); ctx.lineTo(14, -2); ctx.lineTo(9, -1); ctx.fill();
+    ctx.fillStyle = '#CC44FF'; ctx.beginPath(); ctx.arc(7, -4, 1.5, 0, Math.PI * 2); ctx.fill();
+    ctx.shadowBlur = 0;
+  }
+
+  _renderBear(ctx) {
+    ctx.fillStyle = '#886644'; ctx.shadowColor = '#FFAA66'; ctx.shadowBlur = 10;
+    ctx.beginPath(); ctx.ellipse(0, 2, 12, 9, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(7, -4, 8, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#775533';
+    ctx.beginPath(); ctx.arc(3, -11, 4, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(11, -11, 4, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#AA7755';
+    ctx.beginPath(); ctx.arc(3, -11, 2, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(11, -11, 2, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#111'; ctx.beginPath(); ctx.arc(4, -5, 2, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(10, -5, 2, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#FFAA44'; ctx.beginPath(); ctx.arc(4, -5, 0.8, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(10, -5, 0.8, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#AA8866'; ctx.beginPath(); ctx.ellipse(7, -1, 3.5, 2.5, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#331100'; ctx.beginPath(); ctx.arc(7, -1, 1.2, 0, Math.PI * 2); ctx.fill();
+    ctx.shadowBlur = 0;
+  }
+
+  _renderFox(ctx) {
+    ctx.fillStyle = '#EE8833'; ctx.shadowColor = '#FFAA44'; ctx.shadowBlur = 10;
+    ctx.beginPath(); ctx.ellipse(0, 2, 9, 6, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(7, -3, 7, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#DD6622';
+    ctx.beginPath(); ctx.moveTo(3, -9); ctx.lineTo(6, -18); ctx.lineTo(9, -9); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(10, -9); ctx.lineTo(14, -18); ctx.lineTo(17, -9); ctx.fill();
+    ctx.fillStyle = '#FFCCAA';
+    ctx.beginPath(); ctx.moveTo(4, -9); ctx.lineTo(6, -14); ctx.lineTo(8, -9); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(11, -9); ctx.lineTo(14, -14); ctx.lineTo(16, -9); ctx.fill();
+    ctx.fillStyle = '#66AA33';
+    ctx.beginPath(); ctx.arc(5, -4, 2, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(10, -4, 2, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#111';
+    ctx.beginPath(); ctx.arc(5, -4, 1, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(10, -4, 1, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#FFEECC'; ctx.beginPath(); ctx.ellipse(8, -1, 3, 2, 0, 0, Math.PI * 2); ctx.fill();
+    const tailSway = Math.sin(this._animT * 3) * 5;
+    ctx.strokeStyle = '#EE8833'; ctx.lineWidth = 5; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(-9, 2); ctx.quadraticCurveTo(-18 + tailSway, -5, -16 + tailSway, -14); ctx.stroke();
+    ctx.strokeStyle = '#FFEECC'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(-9, 2); ctx.quadraticCurveTo(-18 + tailSway, -5, -16 + tailSway, -14); ctx.stroke();
+    ctx.shadowBlur = 0;
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// AMBIENT CAR — NPC traffic cars that drive on roads
+// ══════════════════════════════════════════════════════════════════════════════
+class AmbientCar {
+  constructor(x, y, angle, color, bodyStyle) {
+    this.x          = x;
+    this.y          = y;
+    this.angle      = angle;
+    this.color      = color;
+    this.bodyStyle  = bodyStyle || 0;  // 0=sedan 1=suv 2=sports 3=van 4=taxi
+    this.speed      = 75 + Math.random() * 55;
+    this.dead       = false;
+    this.radius     = 20;
+    this.width      = [30, 34, 26, 38, 30][this.bodyStyle] || 30;
+    this.height     = [18, 22, 13, 22, 18][this.bodyStyle] || 18;
+    this._turnTimer = 2 + Math.random() * 4;
+    this._lightT    = 0;
+    this._mapW      = 0;
+    this._mapH      = 0;
+  }
+
+  update(dt, gameMap) {
+    this._lightT    += dt;
+    this._turnTimer -= dt;
+    const nx = this.x + Math.cos(this.angle) * this.speed * dt;
+    const ny = this.y + Math.sin(this.angle) * this.speed * dt;
+
+    if (!gameMap.isBlocked(nx, this.y) && !gameMap.isBlocked(nx, ny)) {
+      this.x = nx;
+    } else {
+      // Hit obstacle — turn to snap to 90° grid angles
+      const angles = [0, Math.PI/2, Math.PI, -Math.PI/2];
+      const candidates = angles.filter(a => {
+        const tx2 = this.x + Math.cos(a) * this.speed * 0.2;
+        const ty2 = this.y + Math.sin(a) * this.speed * 0.2;
+        return !gameMap.isBlocked(tx2, ty2);
+      });
+      if (candidates.length > 0)
+        this.angle = candidates[Math.floor(Math.random() * candidates.length)];
+    }
+    if (!gameMap.isBlocked(this.x, ny)) {
+      this.y = ny;
+    }
+
+    // Random turn at intersections
+    if (this._turnTimer <= 0) {
+      const roadAngles = [0, Math.PI/2, Math.PI, -Math.PI/2];
+      this.angle = roadAngles[Math.floor(Math.random() * roadAngles.length)];
+      this._turnTimer = 2 + Math.random() * 5;
+    }
+
+    // Kill if out of map bounds
+    const maxW = gameMap.W * gameMap.S, maxH = gameMap.H * gameMap.S;
+    if (this.x < -40 || this.y < -40 || this.x > maxW + 40 || this.y > maxH + 40) this.dead = true;
+  }
+
+  render(ctx) {
+    const w = this.width, h = this.height;
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    ctx.rotate(this.angle + Math.PI / 2);
+
+    // Shadow
+    ctx.save(); ctx.globalAlpha = 0.22; ctx.fillStyle = '#000';
+    ctx.beginPath(); ctx.ellipse(3, 5, w * 0.48, h * 0.38, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+
+    // Body
+    ctx.shadowColor = this.color; ctx.shadowBlur = 5;
+    ctx.fillStyle   = this.color;
+    ctx.beginPath(); ctx.roundRect(-w/2, -h/2, w, h, 4); ctx.fill();
+
+    // Windshield / cabin
+    ctx.shadowBlur = 0;
+    if (this.bodyStyle === 2) {  // sports — low wedge
+      ctx.fillStyle = 'rgba(0,200,255,0.32)';
+      ctx.beginPath(); ctx.roundRect(-w/2 + 7, -h/2 + 2, w - 14, h - 6, 2); ctx.fill();
+    } else if (this.bodyStyle === 3) {  // van — cab + cargo
+      ctx.fillStyle = 'rgba(0,180,255,0.28)';
+      ctx.beginPath(); ctx.roundRect(-w/2 + 4, -h/2 + 2, w * 0.38, h / 2, 2); ctx.fill();
+    } else {
+      ctx.fillStyle = 'rgba(0,200,255,0.28)';
+      ctx.beginPath(); ctx.roundRect(-w/2 + 5, -h/2 + 2, w - 10, h / 2, 2); ctx.fill();
+    }
+
+    // Taxi sign
+    if (this.bodyStyle === 4) {
+      ctx.fillStyle = '#FFCC00'; ctx.shadowColor = '#FFCC00'; ctx.shadowBlur = 6;
+      ctx.beginPath(); ctx.roundRect(-8, -h/2 - 5, 16, 5, 2); ctx.fill();
+      ctx.shadowBlur = 0;
+    }
+
+    // Wheels
+    ctx.fillStyle = '#1a1a1a';
+    const ww = 9, wh = 5;
+    const wx2 = w/2 - 3, wy2 = h/2;
+    for (const [sx, sy] of [[-wx2, -wy2 + 1], [-wx2, wy2 - 6], [wx2 - ww, -wy2 + 1], [wx2 - ww, wy2 - 6]]) {
+      ctx.beginPath(); ctx.roundRect(sx, sy, ww, wh, 1.5); ctx.fill();
+    }
+
+    // Headlights (front = negative y after rotation)
+    const blink = this._lightT % 1 < 0.5 ? 1 : 0.7;
+    ctx.fillStyle = `rgba(255,255,200,${blink})`; ctx.shadowColor = '#FFFF88'; ctx.shadowBlur = 14;
+    ctx.beginPath(); ctx.arc(-w/2 + 5, -h/2 + 4, 2.5, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(-w/2 + 5,  h/2 - 4, 2.5, 0, Math.PI * 2); ctx.fill();
+
+    // Taillights
+    ctx.fillStyle = '#FF1100'; ctx.shadowColor = '#FF0000'; ctx.shadowBlur = 8;
+    ctx.beginPath(); ctx.arc(w/2 - 5, -h/2 + 4, 2, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(w/2 - 5,  h/2 - 4, 2, 0, Math.PI * 2); ctx.fill();
+
     ctx.restore();
   }
 }

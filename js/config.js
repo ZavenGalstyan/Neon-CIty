@@ -29,26 +29,38 @@ const CONFIG = {
       id: 'gangster', name: 'THE GANGSTER', lore: 'Street boss with no mercy.',
       color: '#FF4466', accent: '#FF0033', gunColor: '#888',
       speed: 185, health: 120, damage: 35, fireRate: 280, radius: 18,
-      stats: { speed: 55, health: 72, damage: 88 }
+      stats: { speed: 55, health: 72, damage: 88 }, companion: 'dog'
     },
     {
       id: 'hacker', name: 'THE HACKER', lore: 'Digital ghost. Faster than light.',
       color: '#44EEFF', accent: '#00BBFF', gunColor: '#00FFCC',
       speed: 250, health: 80, damage: 18, fireRate: 110, radius: 16,
-      stats: { speed: 95, health: 45, damage: 45 }
+      stats: { speed: 95, health: 45, damage: 45 }, companion: 'cat'
     },
     {
       id: 'mercenary', name: 'THE MERCENARY', lore: 'War machine. Built to survive.',
       color: '#44FF88', accent: '#00CC44', gunColor: '#AAFFAA',
       speed: 148, health: 200, damage: 28, fireRate: 380, radius: 20,
-      stats: { speed: 38, health: 100, damage: 65 }
+      stats: { speed: 38, health: 100, damage: 65 }, companion: 'wolf'
     },
     {
       id: 'ghost', name: 'THE GHOST', lore: 'One shot. One kill. No trace.',
       color: '#CC88FF', accent: '#9922FF', gunColor: '#DDAAFF',
       speed: 212, health: 90, damage: 60, fireRate: 700, radius: 17,
-      stats: { speed: 72, health: 55, damage: 100 }
-    }
+      stats: { speed: 72, health: 55, damage: 100 }, companion: 'raven'
+    },
+    {
+      id: 'medic', name: 'THE MEDIC', lore: 'Combat surgeon. Heals in the field.',
+      color: '#44FFAA', accent: '#00CC77', gunColor: '#88FFCC',
+      speed: 162, health: 160, damage: 22, fireRate: 320, radius: 18,
+      stats: { speed: 44, health: 90, damage: 50 }, companion: 'bear'
+    },
+    {
+      id: 'ronin', name: 'THE RONIN', lore: 'Ancient blade. Perfect discipline.',
+      color: '#FFCC44', accent: '#FF9900', gunColor: '#FFEEAA',
+      speed: 225, health: 100, damage: 55, fireRate: 500, radius: 17,
+      stats: { speed: 75, health: 58, damage: 96 }, companion: 'fox', starterWeapon: 'knife'
+    },
   ],
 
   // ── Maps ────────────────────────────────────────────────
@@ -379,6 +391,32 @@ const CONFIG = {
       },
     },
 
+    // ── Campaign Mode ───────────────────────────────────────
+    {
+      id: 'campaign',
+      name: 'CAMPAIGN',
+      desc: '100 levels of escalating challenge. Carry your upgrades through to the end.',
+      theme: '#FFDD00',
+      tags: ['100 LEVELS', 'PROGRESSIVE', 'CAMPAIGN'],
+      previewGridSize: 18,
+      previewBg: '#080800',
+      previewRoad: 'rgba(255,220,0,0.5)',
+      mapW: 38, mapH: 38, tileSize: 80, roadEvery: 10,
+      roadColor:      '#0d0d08',
+      sidewalkColor:  '#14140a',
+      buildingPalette: ['#1e1e08','#282808','#1a1a06','#24240a','#1c1c08','#222208','#181806','#2a2a0a'],
+      neonColors:     ['#FFDD00','#FFAA00','#FFEE44','#FFB300'],
+      windowColors:   ['#FFDD00','#FFEE88','#FFCC44','#FFD700'],
+      lightColor:     '#FFDD00', lightGlow: '#FFAA00', neonFreq: 10,
+      weather: 'clear',
+      campaign: true,
+      botPalettes: {
+        mini:   [{ body:'#886600', accent:'#FFDD00' }, { body:'#664400', accent:'#FFAA00' }],
+        normal: [{ body:'#AA8800', accent:'#FFDD00' }, { body:'#886600', accent:'#FFCC00' }, { body:'#CC9900', accent:'#FFEE44' }],
+        big:    [{ body:'#664400', accent:'#AA8800' }, { body:'#775500', accent:'#BB9900' }],
+      },
+    },
+
     // ── Special Modes (Page 2) ───────────────────────────────
     {
       id: 'survival',
@@ -511,19 +549,56 @@ const CONFIG = {
       price: 7000,  damage: 30,  fireRate: 1100,
       bullets: 6,   spread: 0.45, bulletSpeed: 320,
       color: '#FF88FF', special: 'plasma', experimental: true
-    }
+    },
+    // ── New Weapons ───────────────────────────────────────
+    {
+      id: 'burst',       name: 'BURST PISTOL',
+      desc: '3-round burst. Fast and precise.',
+      price: 1500, damage: 32, fireRate: 200,
+      bullets: 3,  spread: 0.07, bulletSpeed: 710,
+      color: '#EEFF44', burst: true
+    },
+    {
+      id: 'flamethrower', name: 'FLAMETHROWER',
+      desc: 'Short range cone. Burns through crowds.',
+      price: 3200, damage: 16, fireRate: 60,
+      bullets: 7,  spread: 0.62, bulletSpeed: 260,
+      color: '#FF5500', special: 'fire'
+    },
+    {
+      id: 'crossbow',    name: 'CROSSBOW',
+      desc: 'Silent piercing bolt. Sniper-tier accuracy.',
+      price: 2800, damage: 115, fireRate: 1800,
+      bullets: 1,  spread: 0.003, bulletSpeed: 940,
+      color: '#CCAAFF', silent: true
+    },
+    {
+      id: 'rocket',      name: 'ROCKET LAUNCHER',
+      desc: 'Devastating area explosion. Reload slowly.',
+      price: 7800, damage: 185, fireRate: 2800,
+      bullets: 1,  spread: 0.01, bulletSpeed: 370,
+      color: '#FF4400', special: 'rocket'
+    },
   ],
 
   // ── Building Types (deterministic per door tile) ─────────
   BUILDING_TYPES: [
-    { name:'RESTAURANT', color:'#FF8844' },
-    { name:'OFFICE',     color:'#4488FF' },
-    { name:'HOTEL',      color:'#CC66FF' },
-    { name:'MARKET',     color:'#44FF88' },
-    { name:'ARCADE',     color:'#FFDD00' },
-    { name:'PHARMACY',   color:'#44FFCC' },
-    { name:'GYM',        color:'#FF6644' },
-    { name:'BANK',       color:'#FFCC44' },
+    { name:'RESTAURANT',     color:'#FF8844' },
+    { name:'OFFICE',         color:'#4488FF' },
+    { name:'HOTEL',          color:'#CC66FF' },
+    { name:'MARKET',         color:'#44FF88' },
+    { name:'ARCADE',         color:'#FFDD00' },
+    { name:'PHARMACY',       color:'#44FFCC' },
+    { name:'GYM',            color:'#FF6644' },
+    { name:'BANK',           color:'#FFCC44' },
+    { name:'NIGHTCLUB',      color:'#FF00CC' },
+    { name:'HOSPITAL',       color:'#FF3333' },
+    { name:'GARAGE',         color:'#778899' },
+    { name:'BAR',            color:'#FFAA22' },
+    { name:'PAWNSHOP',       color:'#CC8833' },
+    { name:'TECH LAB',       color:'#00FFCC' },
+    { name:'WAREHOUSE',      color:'#888888' },
+    { name:'POLICE STATION', color:'#4477FF' },
   ],
 
   // ── Upgrades ─────────────────────────────────────────────

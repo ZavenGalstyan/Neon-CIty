@@ -782,6 +782,65 @@ class HUD {
     ctx.restore();
   }
 
+  // ── Campaign level ─────────────────────────────────────────────────────────
+  renderCampaignLevel(level, kills, target, levelComplete, completeT) {
+    const ctx = this.ctx;
+    const W   = this.canvas.width;
+    const barW = 180, barH = 16;
+    const bx  = W / 2 - barW / 2;
+    const by  = 44;
+    ctx.save();
+    ctx.fillStyle   = 'rgba(0,0,0,0.72)';
+    ctx.strokeStyle = '#FFDD00';
+    ctx.lineWidth   = 1.5;
+    ctx.shadowColor = '#FFDD00';
+    ctx.shadowBlur  = 12;
+    this._rr(ctx, bx - 60, by - 22, barW + 120, barH + 30, 6);
+    ctx.fill(); ctx.stroke(); ctx.shadowBlur = 0;
+
+    ctx.fillStyle = '#FFDD00'; ctx.font = 'bold 9px Orbitron, monospace'; ctx.textAlign = 'center';
+    ctx.fillText(`CAMPAIGN  ·  LEVEL ${level}`, W / 2, by - 5);
+    ctx.fillStyle = '#1a1a00'; ctx.fillRect(bx, by, barW, barH);
+    const pct = Math.min(1, kills / Math.max(1, target));
+    ctx.fillStyle = '#FFDD00'; ctx.shadowColor = '#FFDD00'; ctx.shadowBlur = 8;
+    ctx.fillRect(bx, by, barW * pct, barH);
+    ctx.shadowBlur = 0;
+    ctx.strokeStyle = 'rgba(255,255,0,0.22)'; ctx.lineWidth = 0.5;
+    ctx.strokeRect(bx, by, barW, barH);
+    ctx.fillStyle = '#fff'; ctx.font = 'bold 9px Orbitron, monospace';
+    ctx.fillText(`${kills} / ${target}  KILLS`, W / 2, by + barH - 2);
+
+    if (levelComplete) {
+      const flash = Math.sin(completeT * 8) * 0.5 + 0.5;
+      ctx.globalAlpha = 0.7 + flash * 0.3;
+      ctx.fillStyle = '#FFDD00'; ctx.shadowColor = '#FFDD00'; ctx.shadowBlur = 30;
+      ctx.font = 'bold 22px Orbitron, monospace';
+      ctx.fillText('LEVEL COMPLETE!', W / 2, by + 55);
+    }
+    ctx.restore();
+  }
+
+  // ── Companion HP badge ──────────────────────────────────────────────────────
+  renderCompanionHP(companion) {
+    const ctx = this.ctx;
+    const H   = this.canvas.height;
+    const x   = HUD_PAD + HUD_MM_W + 10;
+    const y   = H - HUD_PAD - 80;
+    const pct = companion.hp / companion.maxHp;
+    const col = pct > 0.5 ? '#44FF88' : pct > 0.25 ? '#FFCC00' : '#FF4444';
+    ctx.save();
+    ctx.fillStyle   = 'rgba(0,0,0,0.65)';
+    ctx.strokeStyle = col;
+    ctx.lineWidth   = 1;
+    ctx.shadowColor = col; ctx.shadowBlur = 8;
+    this._rr(ctx, x, y, 82, 24, 5);
+    ctx.fill(); ctx.stroke(); ctx.shadowBlur = 0;
+    ctx.fillStyle = col; ctx.font = 'bold 8px Orbitron, monospace'; ctx.textAlign = 'left';
+    const icon = { dog:'🐕', cat:'🐈', wolf:'🐺', raven:'🦅', bear:'🐻', fox:'🦊' }[companion.type] || '🐾';
+    ctx.fillText(`${icon} ${Math.ceil(companion.hp)}/${companion.maxHp}`, x + 6, y + 16);
+    ctx.restore();
+  }
+
   // ── Killstreak ─────────────────────────────────────────────────────────────
   renderKillStreak(streak, mult, popup, streakTimer) {
     const ctx = this.ctx;

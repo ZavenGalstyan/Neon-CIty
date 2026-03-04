@@ -186,10 +186,13 @@ class GameMap {
     this.metroEntrance = null;
     if (!this.config.arena && !this.config.zombie) {
       const R = this.ROAD_EVERY;
-      let meX = Math.round(this.W * 0.72 / R) * R;
-      let meY = Math.round(this.H * 0.76 / R) * R;
-      meX = Math.min(Math.max(meX, R), this.W - R * 2);
-      meY = Math.min(Math.max(meY, R), this.H - R * 2);
+      // Snap to nearest road tile (multiple of R), clamped within map bounds
+      const lastRoadX = Math.floor((this.W - 1) / R) * R;
+      const lastRoadY = Math.floor((this.H - 1) / R) * R;
+      let meX = Math.min(Math.round(this.W * 0.72 / R) * R, lastRoadX - R);
+      let meY = Math.min(Math.round(this.H * 0.76 / R) * R, lastRoadY - R);
+      meX = Math.max(meX, R);
+      meY = Math.max(meY, R);
       this.metroEntrance = { tx: meX, ty: meY, wx: (meX + 0.5) * this.S, wy: (meY + 0.5) * this.S };
     }
 
@@ -206,6 +209,23 @@ class GameMap {
         const R2 = this.ROAD_EVERY;
         this._blockTypes[`${Math.floor(door.tx/R2)},${Math.floor(door.ty/R2)}`] = door.specialType;
       }
+    }
+
+    // ── Teleport Portals (normal maps only, not arena/zombie/life) ──
+    this.portals = [];
+    if (!this.config.arena && !this.config.zombie && !this.config.lifeMode) {
+      const R    = this.ROAD_EVERY;
+      const S    = this.S;
+      const pos1 = { tx: R * 2, ty: R * 2 };
+      const pos2 = { tx: Math.floor(this.W / R) * R - R * 2, ty: Math.floor(this.H / R) * R - R * 2 };
+      // Clamp to valid road tiles
+      const clamp = (v, lo, hi) => Math.min(Math.max(v, lo), hi);
+      pos1.tx = clamp(Math.round(pos1.tx / R) * R, R, this.W - R);
+      pos1.ty = clamp(Math.round(pos1.ty / R) * R, R, this.H - R);
+      pos2.tx = clamp(Math.round(pos2.tx / R) * R, R, this.W - R);
+      pos2.ty = clamp(Math.round(pos2.ty / R) * R, R, this.H - R);
+      this.portals.push({ x: (pos1.tx + 0.5) * S, y: (pos1.ty + 0.5) * S, paired: 1, _animT: 0 });
+      this.portals.push({ x: (pos2.tx + 0.5) * S, y: (pos2.ty + 0.5) * S, paired: 0, _animT: 1.5 });
     }
   }
 

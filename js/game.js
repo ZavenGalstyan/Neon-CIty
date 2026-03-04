@@ -146,6 +146,19 @@ class Game {
     // ── Special Modes ─────────────────────────────────────────
     this._survivalMode    = !!this.map.config.survival;
     this._hardcoreMode    = !!this.map.config.hardcore;
+    // ── Campaign Mode ─────────────────────────────────────────
+    this._campaignMode    = !!this.map.config.campaign;
+    this._campaignLevel   = 1;
+    this._campaignTarget  = 0;   // kills needed this level
+    this._campaignKills   = 0;   // kills this level
+    this._levelComplete   = false;
+    this._levelCompleteT  = 0;
+    // ── Ambient Traffic ────────────────────────────────────────
+    this._ambientCars     = [];
+    this._ambientSpawnT   = 0;
+    // ── Teleport Portals ───────────────────────────────────────
+    this._portals         = this.map.portals || [];
+    this._portalCooldown  = 0;  // prevents instant re-teleport
 
     // Camera
     this.camX = spawnX - this.canvas.width  / 2;
@@ -173,9 +186,11 @@ class Game {
     window.addEventListener('keydown', this._keyHandler);
 
     this._spawnVehicles();
-    if (this._arenaMode)  this._startArenaWave();
-    if (this._zombieMode) this._startZombieWave();
-    if (this._lifeMode)   this._spawnCityNpcs();
+    if (this._arenaMode)    this._startArenaWave();
+    if (this._zombieMode)   this._startZombieWave();
+    if (this._lifeMode)     this._spawnCityNpcs();
+    if (this._campaignMode) this._startCampaignLevel();
+    this._spawnAmbientTraffic();
 
     requestAnimationFrame((t) => this._loop(t));
   }
@@ -519,6 +534,57 @@ class Game {
     // ── Weather ────────────────────────────────────────────
     this.weather.update(dt, this.canvas.width, this.canvas.height);
 
+    // ── Animal companion ───────────────────────────────────
+    if (this.player.companion && !this.player.companion.dead && !this._indoor) {
+      this.player.companion.update(dt, this.player, this.bots, this.bullets, this.particles);
+    }
+
+    // ── Ambient traffic ────────────────────────────────────
+    if (!this._indoor && !this._arenaMode && !this._zombieMode) {
+      this._ambientSpawnT -= dt;
+      if (this._ambientSpawnT <= 0) {
+        this._respawnAmbientCar();
+        this._ambientSpawnT = 4.0;
+      }
+      for (const c of this._ambientCars) c.update(dt, this.map);
+      this._ambientCars = this._ambientCars.filter(c => !c.dead);
+    }
+
+    // ── Map portals cooldown & teleport check ──────────────
+    if (this._portalCooldown > 0) this._portalCooldown -= dt;
+    if (!this._indoor && this._portalCooldown <= 0 && this._portals.length >= 2) {
+      for (let i = 0; i < this._portals.length; i++) {
+        const portal = this._portals[i];
+        portal._animT += dt;
+        if (Math.hypot(portal.x - this.player.x, portal.y - this.player.y) < 32) {
+          const dest = this._portals[portal.paired];
+          this.player.x = dest.x;
+          this.player.y = dest.y;
+          this._portalCooldown = 1.8;
+          for (let j = 0; j < 20; j++) {
+            const a = Math.random() * Math.PI * 2, s = rnd(80, 220);
+            this.particles.push(new Particle(dest.x, dest.y, Math.cos(a)*s, Math.sin(a)*s, '#AA44FF', rnd(3,7), 0.8));
+          }
+          this.hud.shake(6);
+          break;
+        }
+      }
+    } else if (!this._indoor) {
+      for (const portal of this._portals) portal._animT += dt;
+    }
+
+    // ── Campaign level complete countdown ──────────────────
+    if (this._campaignMode && this._levelComplete) {
+      this._levelCompleteT -= dt;
+      if (this._levelCompleteT <= 0) {
+        this._campaignLevel++;
+        this._campaignKills  = 0;
+        this._levelComplete  = false;
+        this.bots            = [];
+        this._startCampaignLevel();
+      }
+    }
+
     // ── Wanted decay ───────────────────────────────────────
     if (this._wantedLevel > 0) {
       if (this._wantedLevel > this._achStats.maxWanted) {
@@ -842,6 +908,22 @@ class Game {
       }
     }
 
+    // ── Bomb AoE (bomber enemy bullets) ──────────────────
+    for (const b of this.bullets) {
+      if (!b._isBomb || !b.dead) continue;
+      const r = b._aoeRadius || 80, dmg = b.damage * 2.5;
+      for (let i = 0; i < 18; i++) {
+        const a = Math.random() * Math.PI * 2, s = rnd(80, 200);
+        this.particles.push(new Particle(b.x, b.y, Math.cos(a)*s, Math.sin(a)*s, i%2===0 ? '#FF6600' : '#FF3300', rnd(3,8), 0.8));
+      }
+      this.hud.shake(7);
+      if (!this.player.dead && !this._playerVehicle &&
+          circlesOverlap(b.x, b.y, r, this.player.x, this.player.y, this.player.radius)) {
+        const d = this.player.takeDamage(dmg * (this._hardcoreMode ? 2 : 1), this.hud);
+        if (d) this.hud.addDamageNumber(this.player.x, this.player.y - 30, d, this.camX, this.camY, '#FF6600');
+      }
+    }
+
     // ── Cleanup ────────────────────────────────────────────
     this.bots      = this.bots.filter(b => !b.dead);
     this.bullets   = this.bullets.filter(b => !b.dead);
@@ -957,6 +1039,14 @@ class Game {
 
     // Arena kill count
     if (this._arenaMode) this._arenaKilled++;
+    // Campaign kill count
+    if (this._campaignMode) {
+      this._campaignKills++;
+      if (this._campaignKills >= this._campaignTarget && !this._levelComplete) {
+        this._levelComplete  = true;
+        this._levelCompleteT = 3.5;
+      }
+    }
 
     // Rep loss in current district
     if (this._currentDistrict && !this._zombieMode) {
@@ -1068,9 +1158,15 @@ class Game {
       default: sx = this.camX - margin; sy = this.camY + rnd(0,H); break;
     }
 
-    // Weighted type selection
+    // Weighted type selection — higher waves introduce advanced types
     const r    = Math.random();
-    const type = r < 0.38 ? 'mini' : r < 0.84 ? 'normal' : 'big';
+    let type;
+    if (this.wave >= 10 && r < 0.06)       type = 'juggernaut';
+    else if (this.wave >= 6  && r < 0.14)  type = 'sniper';
+    else if (this.wave >= 4  && r < 0.22)  type = 'bomber';
+    else if (r < 0.38)                     type = 'mini';
+    else if (r < 0.84)                     type = 'normal';
+    else                                   type = 'big';
 
     if (Math.random() > 0.4) {
       sx = clamp(sx, 0, maxWX); sy = clamp(sy, 0, maxWY);
@@ -1094,6 +1190,54 @@ class Game {
   _spawnBoss() {
     const rp = this.map.randomRoadPos();
     this.boss = new BossBot(rp.x, rp.y, this.wave, this.map.config.id);
+  }
+
+  _startCampaignLevel() {
+    const lvl  = this._campaignLevel;
+    this._campaignTarget = 10 + lvl * 5;
+    this.wave            = lvl;
+    this._bossActivated  = false;
+    this.boss            = null;
+    this.bossRespawnTimer = lvl % 10 === 0 ? 3000 : 0;
+    if (lvl % 10 === 0) {
+      this._bossActivated = true;
+      this.bossRespawnTimer = 3000;
+    }
+    this.spawnTimer = 1000;
+  }
+
+  _spawnAmbientTraffic() {
+    if (this._arenaMode || this._zombieMode) return;
+    const count = 6 + Math.floor(Math.random() * 4);
+    for (let i = 0; i < count; i++) this._respawnAmbientCar();
+  }
+
+  _respawnAmbientCar() {
+    if (this._ambientCars.length >= 14) return;
+    // Spawn off-camera on a road tile
+    const margin  = 200;
+    const W       = this.canvas.width, H = this.canvas.height;
+    let pos;
+    for (let t = 0; t < 15; t++) {
+      let sx, sy;
+      const side = Math.floor(Math.random() * 4);
+      if      (side === 0) { sx = this.camX + rnd(0,W); sy = this.camY - margin; }
+      else if (side === 1) { sx = this.camX + W + margin; sy = this.camY + rnd(0,H); }
+      else if (side === 2) { sx = this.camX + rnd(0,W); sy = this.camY + H + margin; }
+      else                 { sx = this.camX - margin; sy = this.camY + rnd(0,H); }
+      sx = clamp(sx, 0, this.map.W * this.map.S);
+      sy = clamp(sy, 0, this.map.H * this.map.S);
+      if (!this.map.isBlocked(sx, sy)) { pos = { x: sx, y: sy }; break; }
+    }
+    if (!pos) {
+      try { pos = this.map.randomRoadPos(); } catch(e) { return; }
+    }
+    const angles    = [0, Math.PI / 2, Math.PI, -Math.PI / 2];
+    const carColors = ['#CC3333','#3366BB','#CC9900','#339944','#AA33AA','#336688','#CC6633','#55AACC'];
+    const angle     = angles[Math.floor(Math.random() * angles.length)];
+    const color     = carColors[Math.floor(Math.random() * carColors.length)];
+    const style     = Math.floor(Math.random() * 5);
+    this._ambientCars.push(new AmbientCar(pos.x, pos.y, angle, color, style));
   }
 
   _explodeGrenade(g) {
@@ -1251,7 +1395,7 @@ class Game {
       }
       const door = this._indoor.doorDoor;
       this.player.x = door.wx;
-      this.player.y = door.wy + 30;
+      this.player.y = door.wy + 80;  // far enough to avoid instantly re-entering
       this._indoor        = null;
       this._indoorBots    = [];
       this._indoorBullets = [];
@@ -2264,9 +2408,11 @@ class Game {
       for (const b   of this.bullets)   if (!b.isPlayer) b.render(ctx);
       for (const bot of this.bots)      bot.render(ctx);
       for (const npc of this._cityNpcs) npc.render(ctx);
+      for (const c of this._ambientCars) c.render(ctx);
       if (this.boss && !this.boss.dead)  this.boss.render(ctx);
       for (const b   of this.bullets)   if (b.isPlayer)  b.render(ctx);
       if (!this.player.dead) this.player.render(ctx);
+      if (this.player.companion && !this.player.companion.dead) this.player.companion.render(ctx);
       for (const bg of this._bodyguards) bg.render(ctx);
 
       // Drones
@@ -2290,6 +2436,29 @@ class Game {
         ctx.fillStyle = '#CC88FF'; ctx.font = 'bold 8px Orbitron, monospace'; ctx.textAlign = 'center';
         ctx.fillText('PORTAL', 0, -48);
         ctx.shadowBlur = 0; ctx.restore();
+      }
+
+      // Map teleport portals (world-space)
+      for (const p of this._portals) {
+        const pulse = Math.sin(p._animT * 3.5) * 0.35 + 0.65;
+        const near  = Math.hypot(p.x - this.player.x, p.y - this.player.y) < 55;
+        ctx.save(); ctx.translate(p.x, p.y);
+        ctx.shadowColor = '#44EEFF'; ctx.shadowBlur = 28 * pulse;
+        ctx.fillStyle   = `rgba(0,120,200,${pulse * 0.25})`;
+        ctx.beginPath(); ctx.ellipse(0, 0, 22, 34, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = `rgba(68,238,255,${pulse})`; ctx.lineWidth = 2.5;
+        ctx.beginPath(); ctx.ellipse(0, 0, 22, 34, 0, 0, Math.PI * 2); ctx.stroke();
+        ctx.strokeStyle = `rgba(255,255,255,${pulse * 0.5})`; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.ellipse(0, 0, 13, 20, 0, 0, Math.PI * 2); ctx.stroke();
+        ctx.shadowBlur = 0;
+        ctx.fillStyle  = near ? '#FFFFAA' : '#88FFFF';
+        ctx.font       = `bold 8px Orbitron, monospace`; ctx.textAlign = 'center';
+        ctx.fillText('PORTAL', 0, -40);
+        if (near) {
+          ctx.fillStyle = '#FFFFAA'; ctx.shadowColor = '#FFFF00'; ctx.shadowBlur = 8;
+          ctx.fillText('[E] TELEPORT', 0, -52);
+        }
+        ctx.restore();
       }
 
       // Black market vendor NPC
@@ -2446,6 +2615,8 @@ class Game {
       if (!this._arenaMode && !this._zombieMode && !this._lifeMode && !this._survivalMode) this.hud.renderShopButton(this.state === 'shop');
       if (this._survivalMode) this.hud.renderModeBadge('☠ SURVIVAL', '#FF2244');
       if (this._hardcoreMode) this.hud.renderModeBadge('⚡ HARDCORE · 2× DMG · 3× $', '#FF8800');
+      if (this._campaignMode) this.hud.renderCampaignLevel(this._campaignLevel, this._campaignKills, this._campaignTarget, this._levelComplete, this._levelCompleteT);
+      if (this.player.companion && !this.player.companion.dead) this.hud.renderCompanionHP(this.player.companion);
       this.hud.renderAchButton(this._achPanelOpen);
       if (!this._zombieMode && !this._lifeMode) this.hud.renderDayNight(this._nightAlpha, this._gameTime);
       if (this._globalEvent) this.hud.renderEventBanner(ctx, W, H, this._globalEvent, this._eventAnnounceTimer);

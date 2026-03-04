@@ -130,6 +130,9 @@ html, body { width: 100%; height: 100%; background: var(--bg); color: var(--text
   grid-template-columns: repeat(4, 1fr);
   gap: 12px;
 }
+.characters-grid--2col {
+  grid-template-columns: repeat(2, 1fr);
+}
 @media (max-width: 760px) { .characters-grid { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 420px) { .characters-grid { grid-template-columns: 1fr; } }
 
@@ -154,6 +157,8 @@ html, body { width: 100%; height: 100%; background: var(--bg); color: var(--text
 .char-card[data-char="hacker"].selected    { border-color: #44EEFF; box-shadow: 0 0 22px rgba(68,238,255,0.45), 0 12px 40px rgba(0,0,0,0.5); }
 .char-card[data-char="mercenary"].selected { border-color: #44FF88; box-shadow: 0 0 22px rgba(68,255,136,0.45), 0 12px 40px rgba(0,0,0,0.5); }
 .char-card[data-char="ghost"].selected     { border-color: #CC88FF; box-shadow: 0 0 22px rgba(204,136,255,0.45), 0 12px 40px rgba(0,0,0,0.5); }
+.char-card[data-char="medic"].selected     { border-color: #44FFAA; box-shadow: 0 0 22px rgba(68,255,170,0.45), 0 12px 40px rgba(0,0,0,0.5); }
+.char-card[data-char="ronin"].selected     { border-color: #FFCC44; box-shadow: 0 0 22px rgba(255,204,68,0.45), 0 12px 40px rgba(0,0,0,0.5); }
 
 /* Checkmark badge */
 .char-card.selected::after {
@@ -175,6 +180,8 @@ html, body { width: 100%; height: 100%; background: var(--bg); color: var(--text
 .char-avatar[data-char="hacker"]::before    { background: radial-gradient(circle at 50% 60%, #44EEFF, transparent 75%); }
 .char-avatar[data-char="mercenary"]::before { background: radial-gradient(circle at 50% 60%, #44FF88, transparent 75%); }
 .char-avatar[data-char="ghost"]::before     { background: radial-gradient(circle at 50% 60%, #CC88FF, transparent 75%); }
+.char-avatar[data-char="medic"]::before     { background: radial-gradient(circle at 50% 60%, #44FFAA, transparent 75%); }
+.char-avatar[data-char="ronin"]::before     { background: radial-gradient(circle at 50% 60%, #FFCC44, transparent 75%); }
 
 /* Vertical accent line between avatar and info */
 .char-avatar::after {
@@ -216,6 +223,8 @@ html, body { width: 100%; height: 100%; background: var(--bg); color: var(--text
 [data-char="hacker"]    .stat-fill { background: linear-gradient(90deg, #00BBFF, #44EEFF); }
 [data-char="mercenary"] .stat-fill { background: linear-gradient(90deg, #00CC44, #44FF88); }
 [data-char="ghost"]     .stat-fill { background: linear-gradient(90deg, #9922FF, #CC88FF); }
+[data-char="medic"]     .stat-fill { background: linear-gradient(90deg, #00CC77, #44FFAA); }
+[data-char="ronin"]     .stat-fill { background: linear-gradient(90deg, #CC9900, #FFCC44); }
 
 /* Key badge */
 .char-key {
