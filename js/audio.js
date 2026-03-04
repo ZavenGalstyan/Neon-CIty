@@ -291,6 +291,144 @@ class AudioManager {
       });
     });
   }
+
+  /** Door open — short low creak + click */
+  doorOpen() {
+    this._play('doorOpen', 150, (ctx, out, t) => {
+      // Creak: slow pitch-rising noise burst
+      const src  = ctx.createBufferSource();
+      const filt = ctx.createBiquadFilter();
+      const gain = ctx.createGain();
+      src.buffer = this._noiseBuffer(ctx, 0.12);
+      filt.type  = 'bandpass'; filt.frequency.setValueAtTime(320, t); filt.Q.value = 1.8;
+      filt.frequency.exponentialRampToValueAtTime(900, t + 0.12);
+      gain.gain.setValueAtTime(0.08, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
+      src.connect(filt); filt.connect(gain); gain.connect(out);
+      src.start(t); src.stop(t + 0.12);
+      // Mechanical click
+      const osc  = ctx.createOscillator();
+      const oGain = ctx.createGain();
+      osc.type   = 'square'; osc.frequency.value = 180;
+      oGain.gain.setValueAtTime(0.05, t + 0.10);
+      oGain.gain.exponentialRampToValueAtTime(0.001, t + 0.14);
+      osc.connect(oGain); oGain.connect(out);
+      osc.start(t + 0.10); osc.stop(t + 0.14);
+    });
+  }
+
+  /** Door close — heavier thud + click */
+  doorClose() {
+    this._play('doorClose', 150, (ctx, out, t) => {
+      // Thud: low noise burst
+      const src  = ctx.createBufferSource();
+      const filt = ctx.createBiquadFilter();
+      const gain = ctx.createGain();
+      src.buffer = this._noiseBuffer(ctx, 0.10);
+      filt.type  = 'lowpass'; filt.frequency.value = 420;
+      gain.gain.setValueAtTime(0.18, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.10);
+      src.connect(filt); filt.connect(gain); gain.connect(out);
+      src.start(t); src.stop(t + 0.10);
+      // Latch click
+      const osc  = ctx.createOscillator();
+      const oGain = ctx.createGain();
+      osc.type   = 'square'; osc.frequency.value = 240;
+      oGain.gain.setValueAtTime(0.06, t + 0.08);
+      oGain.gain.exponentialRampToValueAtTime(0.001, t + 0.11);
+      osc.connect(oGain); oGain.connect(out);
+      osc.start(t + 0.08); osc.stop(t + 0.11);
+    });
+  }
+
+  /** Boss killed — dramatic descending chord + noise crash */
+  bossKill() {
+    this._play('bossKill', 3000, (ctx, out, t) => {
+      // Descending power chord
+      [220, 277, 330].forEach((freq, i) => {
+        const osc  = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type   = 'sawtooth';
+        osc.frequency.setValueAtTime(freq, t);
+        osc.frequency.exponentialRampToValueAtTime(freq * 0.4, t + 0.7);
+        gain.gain.setValueAtTime(0.14, t + i * 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.72);
+        osc.connect(gain); gain.connect(out);
+        osc.start(t + i * 0.02); osc.stop(t + 0.72);
+      });
+      // Noise crash
+      const src  = ctx.createBufferSource();
+      const filt = ctx.createBiquadFilter();
+      const nGain = ctx.createGain();
+      src.buffer  = this._noiseBuffer(ctx, 0.5);
+      filt.type   = 'lowpass'; filt.frequency.value = 800;
+      nGain.gain.setValueAtTime(0.35, t);
+      nGain.gain.exponentialRampToValueAtTime(0.001, t + 0.5);
+      src.connect(filt); filt.connect(nGain); nGain.connect(out);
+      src.start(t); src.stop(t + 0.5);
+    });
+  }
+
+  /** Player hit by enemy bullet — short sharp pain sting */
+  playerHit() {
+    this._play('playerHit', 120, (ctx, out, t) => {
+      // High-pitched dissonant ping
+      const osc  = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type   = 'sawtooth';
+      osc.frequency.setValueAtTime(880, t);
+      osc.frequency.exponentialRampToValueAtTime(220, t + 0.14);
+      gain.gain.setValueAtTime(0.16, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.16);
+      osc.connect(gain); gain.connect(out);
+      osc.start(t); osc.stop(t + 0.16);
+      // Noise crack underneath
+      const src  = ctx.createBufferSource();
+      const filt = ctx.createBiquadFilter();
+      const nGain = ctx.createGain();
+      src.buffer  = this._noiseBuffer(ctx, 0.08);
+      filt.type   = 'highpass'; filt.frequency.value = 2200;
+      nGain.gain.setValueAtTime(0.12, t);
+      nGain.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
+      src.connect(filt); filt.connect(nGain); nGain.connect(out);
+      src.start(t); src.stop(t + 0.08);
+    });
+  }
+
+  /** Vehicle destroyed — massive low boom + debris noise */
+  vehicleExplosion() {
+    this._play('vehicleExplosion', 500, (ctx, out, t) => {
+      // Deep sub boom
+      const sub   = ctx.createOscillator();
+      const sGain = ctx.createGain();
+      sub.frequency.setValueAtTime(60, t);
+      sub.frequency.exponentialRampToValueAtTime(12, t + 0.6);
+      sGain.gain.setValueAtTime(0.9, t);
+      sGain.gain.exponentialRampToValueAtTime(0.001, t + 0.65);
+      sub.connect(sGain); sGain.connect(out);
+      sub.start(t); sub.stop(t + 0.65);
+      // Mid crunch
+      const osc  = ctx.createOscillator();
+      const oGain = ctx.createGain();
+      osc.type   = 'sawtooth';
+      osc.frequency.setValueAtTime(140, t);
+      osc.frequency.exponentialRampToValueAtTime(30, t + 0.45);
+      oGain.gain.setValueAtTime(0.4, t);
+      oGain.gain.exponentialRampToValueAtTime(0.001, t + 0.48);
+      osc.connect(oGain); oGain.connect(out);
+      osc.start(t); osc.stop(t + 0.48);
+      // Debris noise burst
+      const src  = ctx.createBufferSource();
+      const filt = ctx.createBiquadFilter();
+      const nGain = ctx.createGain();
+      src.buffer  = this._noiseBuffer(ctx, 0.7);
+      filt.type   = 'bandpass'; filt.frequency.value = 1200; filt.Q.value = 0.5;
+      nGain.gain.setValueAtTime(0.55, t);
+      nGain.gain.exponentialRampToValueAtTime(0.001, t + 0.7);
+      src.connect(filt); filt.connect(nGain); nGain.connect(out);
+      src.start(t); src.stop(t + 0.7);
+    });
+  }
 }
 
 window.audio = new AudioManager();

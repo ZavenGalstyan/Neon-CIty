@@ -419,6 +419,7 @@ class Vehicle {
       this.hp = 0;
       this._exploding    = true;
       this._explodeTimer = 0.9;
+      window.audio?.vehicleExplosion();
       particles.push(...Particle.burst(this.x, this.y, '#FF8800', 28, 80, 300, 4, 12, 0.4, 1.2));
       particles.push(...Particle.burst(this.x, this.y, '#FFCC00', 16, 60, 220, 3,  9, 0.3, 0.9));
       particles.push(...Particle.burst(this.x, this.y, '#FF4400', 20, 50, 200, 3, 10, 0.35, 1.0));

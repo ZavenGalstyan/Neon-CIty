@@ -739,6 +739,7 @@ class Game {
       } else {
         this._achStats.bossesKilled++;
         this._checkAchievements();
+        window.audio?.bossKill();
         this.boss = null;
         if (!this._arenaMode) this.bossRespawnTimer = 30000;
       }
@@ -901,6 +902,7 @@ class Game {
           }
           const dmg = this.player.takeDamage(b.damage * (this._hardcoreMode ? 2 : 1), this.hud);
           if (dmg) {
+            window.audio?.playerHit();
             this.hud.addDamageNumber(this.player.x, this.player.y - 30, dmg, this.camX, this.camY, '#FF4444');
             this._killStreak = 0;
             this._streakTimer = 0;
@@ -1451,6 +1453,7 @@ class Game {
       const door = this._indoor.doorDoor;
       this.player.x = door.wx;
       this.player.y = door.wy + 80;  // far enough to avoid instantly re-entering
+      window.audio?.doorClose();
       this._indoor        = null;
       this._indoorBots    = [];
       this._indoorBullets = [];
@@ -1472,6 +1475,7 @@ class Game {
           room._buildingType = this.map._blockTypes[`${bx2},${by2}`] ?? 0;
         } else { room._buildingType = 0; }
         this._indoor = room;
+        window.audio?.doorOpen();
         this._achStats.buildingsEntered++;
         this._checkAchievements();
         this.player.x = room.entryX;
