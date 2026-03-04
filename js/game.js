@@ -146,6 +146,8 @@ class Game {
     // ── Special Modes ─────────────────────────────────────────
     this._survivalMode    = !!this.map.config.survival;
     this._hardcoreMode    = !!this.map.config.hardcore;
+    this._blitzMode       = !!this.map.config.blitz;
+    this._siegeMode       = !!this.map.config.siege;
     // ── Campaign Mode ─────────────────────────────────────────
     this._campaignMode    = !!this.map.config.campaign;
     this._campaignLevel   = 1;
@@ -184,6 +186,17 @@ class Game {
     // Keyboard
     this._keyHandler = (e) => this._onKey(e);
     window.addEventListener('keydown', this._keyHandler);
+
+    // ── Blitz mode: 3× speed for player ──────────────────────
+    if (this._blitzMode) {
+      this.player.speed = Math.round(this.player.speed * 3);
+      this.spawnTimer   = 800;  // faster initial spawn
+    }
+    // ── Siege mode: fast spawn, big waves from all sides ─────
+    if (this._siegeMode) {
+      this.spawnTimer  = 600;
+      this._siegeWaveCount = 0;
+    }
 
     this._spawnVehicles();
     if (this._arenaMode)    this._startArenaWave();
@@ -229,7 +242,7 @@ class Game {
       return;
     }
     if (e.code === 'KeyB') {
-      if (this._arenaMode || this._zombieMode || this._survivalMode) return; // no shop in arena/zombie/survival
+      if (this._arenaMode || this._zombieMode || this._survivalMode || this._blitzMode || this._siegeMode) return;
       if      (this.state === 'playing') { this.shop.open();  this.state = 'shop'; }
       else if (this.state === 'shop')    { this.shop.close(); this.state = 'playing'; }
       else if (this.state === 'paused')  { this.shop.open();  this.state = 'shop'; }
@@ -741,7 +754,7 @@ class Game {
             if (bot.dying) {
               this.decals.push(new Decal(bot.x, bot.y, 'blood'));
               const mult   = this._streakMultiplier();
-              const wMult  = (this.player._wealthMult || 1) * (this._hardcoreMode ? 3 : 1);
+              const wMult  = (this.player._wealthMult || 1) * (this._hardcoreMode ? 3 : 1) * (this._blitzMode ? 5 : 1);
               const earned = Math.round(CONFIG.MONEY_PER_KILL * bot._cfg.moneyMult * mult * wMult);
               this.money  += earned;
               this._achStats.moneyEarned += earned;
@@ -792,7 +805,7 @@ class Game {
           if (bot.dying) {
             this.decals.push(new Decal(bot.x, bot.y, 'blood'));
             const mult   = this._streakMultiplier();
-            const wMult  = (this.player._wealthMult || 1) * (this._hardcoreMode ? 3 : 1);
+            const wMult  = (this.player._wealthMult || 1) * (this._hardcoreMode ? 3 : 1) * (this._blitzMode ? 5 : 1);
             const earned = Math.round(CONFIG.MONEY_PER_KILL * bot._cfg.moneyMult * mult * wMult);
             this.money  += earned;
             this._achStats.moneyEarned += earned;
@@ -870,6 +883,16 @@ class Game {
       for (const b of this.bullets) {
         if (b.isPlayer || b.dead) continue;
         if (circlesOverlap(b.x, b.y, b.radius, this.player.x, this.player.y, this.player.radius)) {
+          // Phantom dodge
+          const dodgeChance = this.charData._dodgeChance || 0;
+          if (dodgeChance > 0 && Math.random() < dodgeChance) {
+            b.dead = true;
+            for (let _i = 0; _i < 6; _i++) {
+              const _a = Math.random() * Math.PI * 2, _s = rnd(60, 150);
+              this.particles.push(new Particle(this.player.x, this.player.y, Math.cos(_a)*_s, Math.sin(_a)*_s, '#AA44FF', rnd(2,5), 0.5));
+            }
+            continue;
+          }
           const dmg = this.player.takeDamage(b.damage * (this._hardcoreMode ? 2 : 1), this.hud);
           if (dmg) {
             this.hud.addDamageNumber(this.player.x, this.player.y - 30, dmg, this.camX, this.camY, '#FF4444');
@@ -932,9 +955,19 @@ class Game {
     // ── Bot spawning (non-arena, non-zombie, non-life only) ──
     if (!this._arenaMode && !this._zombieMode && !this._lifeMode) {
       this.spawnTimer -= dt * 1000;
-      if (this.spawnTimer <= 0 && this.bots.length < CONFIG.MAX_BOTS + this.wave * 2) {
-        this._spawnBot();
-        this.spawnTimer = Math.max(700, CONFIG.BOT_SPAWN_INTERVAL - this.wave * 140);
+      const maxBots = this._siegeMode
+        ? CONFIG.MAX_BOTS * 2 + this.wave * 4   // siege: bigger cap
+        : CONFIG.MAX_BOTS + this.wave * 2;
+      const spawnInterval = this._blitzMode
+        ? Math.max(300, CONFIG.BOT_SPAWN_INTERVAL / 3 - this.wave * 50)
+        : this._siegeMode
+          ? Math.max(300, 1800 - this.wave * 80)
+          : Math.max(700, CONFIG.BOT_SPAWN_INTERVAL - this.wave * 140);
+      if (this.spawnTimer <= 0 && this.bots.length < maxBots) {
+        // Siege: spawn 3-4 bots per tick (assault from all sides)
+        const count = this._siegeMode ? 3 + Math.floor(this.wave / 4) : 1;
+        for (let _si = 0; _si < count; _si++) this._spawnBot();
+        this.spawnTimer = spawnInterval;
       }
 
       // ── Wave ─────────────────────────────────────────────
@@ -1168,23 +1201,35 @@ class Game {
     else if (r < 0.84)                     type = 'normal';
     else                                   type = 'big';
 
+    // Siege: spawn from all 4 cardinal edges of the map toward center
+    if (this._siegeMode) {
+      const cx = this.map.W * this.map.S / 2, cy = this.map.H * this.map.S / 2;
+      const side = Math.floor(Math.random() * 4);
+      if      (side === 0) { sx = cx + rnd(-60, 60); sy = 60; }
+      else if (side === 1) { sx = this.map.W * this.map.S - 60; sy = cy + rnd(-60, 60); }
+      else if (side === 2) { sx = cx + rnd(-60, 60); sy = this.map.H * this.map.S - 60; }
+      else                 { sx = 60; sy = cy + rnd(-60, 60); }
+    }
+
+    const _pushBot = (bx, by) => {
+      const bot = new Bot(bx, by, this.wave, type, this.map.config);
+      if (this._blitzMode) { bot.speed = Math.round(bot.speed * 3); }
+      if (this._siegeMode) { bot.hp = Math.round(bot.hp * 1.5); bot.maxHp = bot.hp; }
+      if (this._currentDistrict?.id === 'industrial' && this._reputation.industrial <= -50) {
+        bot.hp = Math.round(bot.hp * 1.25); bot.maxHp = bot.hp;
+      }
+      this.bots.push(bot);
+    };
+
     if (Math.random() > 0.4) {
       sx = clamp(sx, 0, maxWX); sy = clamp(sy, 0, maxWY);
       if (!this.map.isBlocked(sx, sy)) {
-        this.bots.push(new Bot(sx, sy, this.wave, type, this.map.config));
-        if (this._currentDistrict?.id === 'industrial' && this._reputation.industrial <= -50) {
-          const b = this.bots[this.bots.length - 1];
-          b.hp = Math.round(b.hp * 1.25); b.maxHp = b.hp;
-        }
+        _pushBot(sx, sy);
         return;
       }
     }
     const rp = this.map.randomRoadPos();
-    this.bots.push(new Bot(rp.x, rp.y, this.wave, type, this.map.config));
-    if (this._currentDistrict?.id === 'industrial' && this._reputation.industrial <= -50) {
-      const b = this.bots[this.bots.length - 1];
-      b.hp = Math.round(b.hp * 1.25); b.maxHp = b.hp;
-    }
+    _pushBot(rp.x, rp.y);
   }
 
   _spawnBoss() {
@@ -1260,7 +1305,7 @@ class Game {
         if (bot.dying) {
           this.decals.push(new Decal(bot.x, bot.y, 'blood'));
           const mult   = this._streakMultiplier();
-          const wMult  = (this.player._wealthMult || 1) * (this._hardcoreMode ? 3 : 1);
+          const wMult  = (this.player._wealthMult || 1) * (this._hardcoreMode ? 3 : 1) * (this._blitzMode ? 5 : 1);
           const earned = Math.round(CONFIG.MONEY_PER_KILL * bot._cfg.moneyMult * mult * wMult);
           this.money += earned; this._achStats.moneyEarned += earned; this.kills++;
           this.hud.addDamageNumber(bot.x, bot.y - 56, earned, this.camX, this.camY, '#FF8800');
@@ -1504,7 +1549,7 @@ class Game {
           if (bot.dying) {
             this.decals.push(new Decal(bot.x, bot.y, 'blood'));
             const mult   = this._streakMultiplier();
-            const wMult  = (this.player._wealthMult || 1) * (this._hardcoreMode ? 3 : 1);
+            const wMult  = (this.player._wealthMult || 1) * (this._hardcoreMode ? 3 : 1) * (this._blitzMode ? 5 : 1);
             const earned = Math.round(CONFIG.MONEY_PER_KILL * bot._cfg.moneyMult * mult * wMult);
             this.money  += earned;
             this._achStats.moneyEarned += earned;
@@ -2612,9 +2657,11 @@ class Game {
       }
       this.hud.renderWeaponInfo(this.player);
       if (this._grenadeCount > 0) this.hud.renderGrenadeCount(this._grenadeCount);
-      if (!this._arenaMode && !this._zombieMode && !this._lifeMode && !this._survivalMode) this.hud.renderShopButton(this.state === 'shop');
+      if (!this._arenaMode && !this._zombieMode && !this._lifeMode && !this._survivalMode && !this._blitzMode && !this._siegeMode) this.hud.renderShopButton(this.state === 'shop');
       if (this._survivalMode) this.hud.renderModeBadge('☠ SURVIVAL', '#FF2244');
       if (this._hardcoreMode) this.hud.renderModeBadge('⚡ HARDCORE · 2× DMG · 3× $', '#FF8800');
+      if (this._blitzMode)    this.hud.renderModeBadge('⚡ BLITZ · 3× SPEED · 5× $', '#FF4400');
+      if (this._siegeMode)    this.hud.renderModeBadge('🛡 SIEGE · DEFEND THE CENTER', '#44AAFF');
       if (this._campaignMode) this.hud.renderCampaignLevel(this._campaignLevel, this._campaignKills, this._campaignTarget, this._levelComplete, this._levelCompleteT);
       if (this.player.companion && !this.player.companion.dead) this.hud.renderCompanionHP(this.player.companion);
       this.hud.renderAchButton(this._achPanelOpen);
@@ -2774,4 +2821,6 @@ class Game {
 // ── Entry point ───────────────────────────────────────────────────────────────
 window.startGame = function(charData, mapData) {
   window._game = new Game(charData, mapData);
+  window._gameInstance = window._game;
+  window.dispatchEvent(new Event('gameStarted'));
 };

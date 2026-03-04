@@ -19,6 +19,25 @@
   <!-- Game canvas -->
   <canvas id="gameCanvas"></canvas>
 
+  <!-- Mobile touch controls (shown on touch devices) -->
+  <div id="touchControls">
+    <!-- Left: virtual joystick -->
+    <div id="joystickZone">
+      <div id="joystickKnob"></div>
+    </div>
+    <!-- Right: action buttons -->
+    <div id="touchButtons">
+      <!-- Row 1 -->
+      <button class="touch-btn btn-enter"  id="tbEnter"  >E</button>
+      <button class="touch-btn btn-sprint" id="tbSprint" >⇧</button>
+      <!-- Row 2: big fire button spanning both cols -->
+      <button class="touch-btn btn-fire"   id="tbFire"   >🔥</button>
+      <!-- Row 3 -->
+      <button class="touch-btn btn-gren"   id="tbGren"   >G</button>
+      <button class="touch-btn btn-car"    id="tbCar"    >F</button>
+    </div>
+  </div>
+
   <!-- roundRect polyfill for older browsers -->
   <script>
     if (!CanvasRenderingContext2D.prototype.roundRect) {
@@ -49,6 +68,36 @@
   <script src="js/game.js"></script>
 
   <script>
+    // Show touch controls on touch devices
+    if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
+      const tc = document.getElementById('touchControls');
+      if (tc) tc.classList.add('active');
+
+      // Wire action buttons to virtual key injection (after InputManager is created)
+      window.addEventListener('gameStarted', () => {
+        const input = window._gameInstance && window._gameInstance.input;
+        if (!input) return;
+        const btnMap = [
+          ['tbEnter',  'KeyE'],
+          ['tbSprint', 'ShiftLeft'],
+          ['tbGren',   'KeyG'],
+          ['tbCar',    'KeyF'],
+        ];
+        btnMap.forEach(([id, code]) => {
+          const btn = document.getElementById(id);
+          if (!btn) return;
+          btn.addEventListener('touchstart', e => { input._virtualKeys.add(code); e.preventDefault(); }, { passive:false });
+          btn.addEventListener('touchend',   e => { input._virtualKeys.delete(code); e.preventDefault(); }, { passive:false });
+        });
+        // Fire button: mouseDown simulation
+        const fbtn = document.getElementById('tbFire');
+        if (fbtn) {
+          fbtn.addEventListener('touchstart', e => { input.mouseDown = true; input.mouseJustDown = true; e.preventDefault(); }, { passive:false });
+          fbtn.addEventListener('touchend',   e => { input.mouseDown = false; e.preventDefault(); }, { passive:false });
+        }
+      });
+    }
+
     // Hide loading overlay after short delay, then start game
     window.addEventListener('load', () => {
       setTimeout(() => {

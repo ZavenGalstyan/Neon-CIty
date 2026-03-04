@@ -2602,18 +2602,18 @@ class CityNPC {
 // ══════════════════════════════════════════════════════════════════════════════
 class AnimalCompanion {
   constructor(type) {
-    this.type          = type;   // 'dog'|'cat'|'wolf'|'raven'|'bear'|'fox'
+    this.type          = type;   // 'dog'|'cat'|'wolf'|'raven'|'bear'|'fox'|'salamander'|'spirit'
     this.x             = 0;
     this.y             = 0;
     this.radius        = 10;
-    this.hp            = 80;
-    this.maxHp         = 80;
+    this.hp            = type === 'spirit' ? 50 : 80;
+    this.maxHp         = this.hp;
     this.dead          = false;
     this._attackTimer  = 0;
-    this._cooldown     = type === 'bear' ? 4.5 : type === 'wolf' ? 2.2 : 3.0;
+    this._cooldown     = type === 'bear' ? 4.5 : type === 'wolf' ? 2.2 : type === 'salamander' ? 1.8 : type === 'spirit' ? 2.5 : 3.0;
     this._animT        = Math.random() * Math.PI * 2;
     this._orbitAngle   = Math.random() * Math.PI * 2;
-    this._followDist   = 50;
+    this._followDist   = type === 'spirit' ? 35 : 50;
   }
 
   update(dt, owner, bots, bullets, particles) {
@@ -2626,7 +2626,7 @@ class AnimalCompanion {
     this.x += (tx - this.x) * 0.14;
     this.y += (ty - this.y) * 0.14;
 
-    // Bear passive heals owner every 5s
+    // Bear passive heals owner every 4.5s
     if (this.type === 'bear') {
       this._attackTimer -= dt;
       if (this._attackTimer <= 0) {
@@ -2639,7 +2639,58 @@ class AnimalCompanion {
       return;
     }
 
-    // Others attack nearest enemy
+    // Salamander: AoE fire burst around self
+    if (this.type === 'salamander') {
+      this._attackTimer -= dt;
+      if (this._attackTimer <= 0) {
+        const burnRange = 110;
+        let hit = false;
+        for (const b of bots) {
+          if (b.dead || b.dying) continue;
+          if (Math.hypot(b.x - this.x, b.y - this.y) < burnRange) {
+            b.takeDamage(38, particles);
+            hit = true;
+          }
+        }
+        if (hit || Math.random() < 0.4) {
+          for (let i = 0; i < 12; i++) {
+            const a = Math.random() * Math.PI * 2, s = rnd(60, 160);
+            particles.push(new Particle(this.x, this.y, Math.cos(a)*s, Math.sin(a)*s, i%2===0?'#FF5500':'#FF8800', rnd(3,7), 0.6));
+          }
+        }
+        this._attackTimer = this._cooldown;
+      }
+      return;
+    }
+
+    // Spirit: teleports to nearest enemy, stuns + deals damage
+    if (this.type === 'spirit') {
+      this._attackTimer -= dt;
+      if (this._attackTimer <= 0) {
+        let nearest = null, nearDist = 280;
+        for (const b of bots) {
+          if (b.dead || b.dying) continue;
+          const d = Math.hypot(b.x - owner.x, b.y - owner.y);
+          if (d < nearDist) { nearest = b; nearDist = d; }
+        }
+        if (nearest) {
+          this.x = nearest.x + rnd(-8, 8);
+          this.y = nearest.y + rnd(-8, 8);
+          nearest.takeDamage(52, particles);
+          nearest._frozen = (nearest._frozen || 0) + 1.2; // brief stun
+          for (let i = 0; i < 10; i++) {
+            const a = Math.random() * Math.PI * 2;
+            particles.push(new Particle(nearest.x, nearest.y, Math.cos(a)*rnd(40,120), Math.sin(a)*rnd(40,120), '#BB66FF', rnd(2,5), 0.7));
+          }
+          this._attackTimer = this._cooldown;
+        } else {
+          this._attackTimer = 0.5;
+        }
+      }
+      return;
+    }
+
+    // Others attack nearest enemy with projectile
     this._attackTimer -= dt;
     if (this._attackTimer <= 0) {
       let nearest = null, nearDist = 240;
@@ -2671,16 +2722,18 @@ class AnimalCompanion {
 
   render(ctx) {
     if (this.dead) return;
-    const bob = Math.sin(this._animT * (this.type === 'raven' ? 10 : 4)) * 2;
+    const bob = Math.sin(this._animT * (this.type === 'raven' ? 10 : this.type === 'spirit' ? 6 : 4)) * (this.type === 'spirit' ? 4 : 2);
     ctx.save();
     ctx.translate(this.x, this.y + bob);
     switch (this.type) {
-      case 'dog':    this._renderDog(ctx);    break;
-      case 'cat':    this._renderCat(ctx);    break;
-      case 'wolf':   this._renderWolf(ctx);   break;
-      case 'raven':  this._renderRaven(ctx);  break;
-      case 'bear':   this._renderBear(ctx);   break;
-      case 'fox':    this._renderFox(ctx);    break;
+      case 'dog':        this._renderDog(ctx);        break;
+      case 'cat':        this._renderCat(ctx);        break;
+      case 'wolf':       this._renderWolf(ctx);       break;
+      case 'raven':      this._renderRaven(ctx);      break;
+      case 'bear':       this._renderBear(ctx);       break;
+      case 'fox':        this._renderFox(ctx);        break;
+      case 'salamander': this._renderSalamander(ctx); break;
+      case 'spirit':     this._renderSpirit(ctx);     break;
     }
     ctx.restore();
     // HP bar when damaged
@@ -2790,6 +2843,69 @@ class AnimalCompanion {
     ctx.strokeStyle = '#FFEECC'; ctx.lineWidth = 2;
     ctx.beginPath(); ctx.moveTo(-9, 2); ctx.quadraticCurveTo(-18 + tailSway, -5, -16 + tailSway, -14); ctx.stroke();
     ctx.shadowBlur = 0;
+  }
+
+  _renderSalamander(ctx) {
+    const flicker = Math.sin(this._animT * 9) * 2;
+    // Body
+    ctx.fillStyle = '#CC3300'; ctx.shadowColor = '#FF5500'; ctx.shadowBlur = 14;
+    ctx.beginPath(); ctx.ellipse(0, 2, 11, 7, 0.1, 0, Math.PI * 2); ctx.fill();
+    // Head
+    ctx.fillStyle = '#DD4400';
+    ctx.beginPath(); ctx.ellipse(8, -3, 7, 5, -0.2, 0, Math.PI * 2); ctx.fill();
+    // Snout
+    ctx.fillStyle = '#BB3300';
+    ctx.beginPath(); ctx.ellipse(14, -2, 4, 3, -0.1, 0, Math.PI * 2); ctx.fill();
+    // Eyes
+    ctx.fillStyle = '#FFDD00'; ctx.shadowColor = '#FFAA00'; ctx.shadowBlur = 12;
+    ctx.beginPath(); ctx.arc(10, -5, 2.2, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#111'; ctx.shadowBlur = 0;
+    ctx.beginPath(); ctx.arc(10, -5, 1, 0, Math.PI * 2); ctx.fill();
+    // Dorsal spines
+    ctx.strokeStyle = '#FF6600'; ctx.lineWidth = 1.5; ctx.shadowColor = '#FF4400'; ctx.shadowBlur = 8;
+    for (let i = 0; i < 4; i++) {
+      const sx = -4 + i * 3.5;
+      ctx.beginPath(); ctx.moveTo(sx, -2); ctx.lineTo(sx + 1, -7 - flicker); ctx.stroke();
+    }
+    // Tail
+    ctx.strokeStyle = '#CC3300'; ctx.lineWidth = 4; ctx.lineCap = 'round'; ctx.shadowBlur = 6;
+    ctx.beginPath(); ctx.moveTo(-10, 3); ctx.quadraticCurveTo(-20, 10, -16, -6); ctx.stroke();
+    // Flame tongue
+    ctx.strokeStyle = '#FFDD00'; ctx.lineWidth = 1.5; ctx.shadowBlur = 0;
+    ctx.beginPath(); ctx.moveTo(17, -2); ctx.lineTo(21 + flicker, -4); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(17, -2); ctx.lineTo(21 + flicker, 0); ctx.stroke();
+  }
+
+  _renderSpirit(ctx) {
+    const pulse = Math.sin(this._animT * 5) * 0.15;
+    // Outer aura
+    ctx.save(); ctx.globalAlpha = 0.18 + pulse;
+    ctx.fillStyle = '#9922FF'; ctx.shadowColor = '#AA44FF'; ctx.shadowBlur = 22;
+    ctx.beginPath(); ctx.ellipse(0, 0, 18, 14, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+    // Translucent body
+    ctx.save(); ctx.globalAlpha = 0.72 + pulse;
+    ctx.fillStyle = '#AA44FF'; ctx.shadowColor = '#CC66FF'; ctx.shadowBlur = 14;
+    ctx.beginPath(); ctx.ellipse(0, -1, 9, 11, 0, 0, Math.PI * 2); ctx.fill();
+    // Wispy tails
+    ctx.strokeStyle = '#CC66FF'; ctx.lineWidth = 3; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(-4, 8); ctx.quadraticCurveTo(-10, 16, -6, 20); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(4, 8); ctx.quadraticCurveTo(10, 16, 6, 20); ctx.stroke();
+    ctx.restore();
+    // White glowing eyes
+    ctx.save(); ctx.globalAlpha = 0.9;
+    ctx.fillStyle = '#FFFFFF'; ctx.shadowColor = '#FFFFFF'; ctx.shadowBlur = 10;
+    ctx.beginPath(); ctx.arc(-3, -3, 2.5, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(3, -3, 2.5, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+    // 3 orbiting sparks
+    for (let i = 0; i < 3; i++) {
+      const a = this._animT * 2.5 + (i * Math.PI * 2 / 3);
+      ctx.save(); ctx.globalAlpha = 0.7;
+      ctx.fillStyle = '#CC44FF'; ctx.shadowColor = '#CC44FF'; ctx.shadowBlur = 8;
+      ctx.beginPath(); ctx.arc(Math.cos(a) * 14, Math.sin(a) * 9, 2, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+    }
   }
 }
 

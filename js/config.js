@@ -61,6 +61,19 @@ const CONFIG = {
       speed: 225, health: 100, damage: 55, fireRate: 500, radius: 17,
       stats: { speed: 75, health: 58, damage: 96 }, companion: 'fox', starterWeapon: 'knife'
     },
+    {
+      id: 'pyro', name: 'THE PYRO', lore: 'Fire is the only language left to speak.',
+      color: '#FF5500', accent: '#FF2200', gunColor: '#FF8833',
+      speed: 148, health: 155, damage: 55, fireRate: 260, radius: 19,
+      stats: { speed: 32, health: 88, damage: 98 }, companion: 'salamander', starterWeapon: 'flamethrower'
+    },
+    {
+      id: 'phantom', name: 'THE PHANTOM', lore: 'Shadow given a gun. Death without a face.',
+      color: '#AA44FF', accent: '#7711CC', gunColor: '#CC88FF',
+      speed: 248, health: 72, damage: 52, fireRate: 390, radius: 15,
+      stats: { speed: 95, health: 38, damage: 88 }, companion: 'spirit', starterWeapon: 'crossbow',
+      _dodgeChance: 0.22
+    },
   ],
 
   // ── Maps ────────────────────────────────────────────────
@@ -466,6 +479,48 @@ const CONFIG = {
         big:    [{ body:'#663300', accent:'#AA5500' }, { body:'#774400', accent:'#BB6600' }],
       },
     },
+
+    // ── Blitz Mode ───────────────────────────────────────────
+    {
+      id: 'blitz', name: 'BLITZ MODE',
+      desc: 'Ultra-fast carnage. Enemies and you move at triple speed. 5× money. No time to breathe.',
+      theme: '#FF2200', tags: ['ULTRA FAST', '3× SPEED', '5× MONEY'],
+      previewGridSize: 11, previewBg: '#0a0002', previewRoad: 'rgba(255,34,0,0.65)',
+      mapW: 28, mapH: 28, tileSize: 80, roadEvery: 7,
+      roadColor: '#0d0004', sidewalkColor: '#160008',
+      buildingPalette: ['#1e0008','#280012','#1a0006','#22000e','#180008','#1e0010','#160006','#260014'],
+      neonColors: ['#FF2200','#FF4400','#FF0022','#FF6600'],
+      windowColors: ['#FF4400','#FF6644','#FF0044','#FF3300'],
+      lightColor: '#FF2200', lightGlow: '#CC0000', neonFreq: 6,
+      weather: 'blood_rain',
+      blitz: true,
+      botPalettes: {
+        mini:   [{ body:'#880011', accent:'#FF2200' }],
+        normal: [{ body:'#AA0022', accent:'#FF2200' }, { body:'#CC0000', accent:'#FF3300' }],
+        big:    [{ body:'#660011', accent:'#AA0022' }],
+      },
+    },
+
+    // ── Siege Mode ───────────────────────────────────────────
+    {
+      id: 'siege', name: 'SIEGE MODE',
+      desc: 'Hold the center. Endless waves assault from all sides. The city falls — or you do.',
+      theme: '#44AAFF', tags: ['DEFEND', 'ENDLESS WAVES', 'TACTICAL'],
+      previewGridSize: 20, previewBg: '#000810', previewRoad: 'rgba(68,170,255,0.45)',
+      mapW: 46, mapH: 46, tileSize: 80, roadEvery: 11,
+      roadColor: '#04080e', sidewalkColor: '#080e14',
+      buildingPalette: ['#0a1828','#0e2038','#081420','#0c1e30','#0a1c28','#0e2238','#081620','#0c1e34'],
+      neonColors: ['#44AAFF','#2288DD','#66CCFF','#0066CC'],
+      windowColors: ['#44AAFF','#88CCFF','#66AAFF','#2299FF'],
+      lightColor: '#44AAFF', lightGlow: '#2277CC', neonFreq: 9,
+      weather: 'fog',
+      siege: true,
+      botPalettes: {
+        mini:   [{ body:'#002244', accent:'#44AAFF' }],
+        normal: [{ body:'#003366', accent:'#44AAFF' }, { body:'#002255', accent:'#2299FF' }],
+        big:    [{ body:'#001133', accent:'#003366' }],
+      },
+    },
   ],
 
   // ── Weapons ─────────────────────────────────────────────
@@ -599,6 +654,14 @@ const CONFIG = {
     { name:'TECH LAB',       color:'#00FFCC' },
     { name:'WAREHOUSE',      color:'#888888' },
     { name:'POLICE STATION', color:'#4477FF' },
+    { name:'TATTOO PARLOR',  color:'#FF44AA' },
+    { name:'AMMO DEPOT',     color:'#FF6600' },
+    { name:'HACKER DEN',     color:'#00FF88' },
+    { name:'DOJO',           color:'#FFDD00' },
+    { name:'SAFEHOUSE',      color:'#44AAFF' },
+    { name:'CHOP SHOP',      color:'#AA5522' },
+    { name:'RADIO STATION',  color:'#FF88CC' },
+    { name:'UNDERGROUND LAB',color:'#55FF99' },
   ],
 
   // ── Upgrades ─────────────────────────────────────────────

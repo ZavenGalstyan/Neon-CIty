@@ -137,13 +137,13 @@
     const num = parseInt(e.key);
 
     // 1-4 → pick character on current char page
-    // Page 1: 1-4 maps to chars 0-3; Page 2: 1-2 maps to chars 4-5
+    // Page 1: 1-4 maps to chars 0-3; Page 2: 1-4 maps to chars 4-7
     if (num >= 1 && num <= 4) {
       if (currentCharPage === 1) {
         const card = charCards[num - 1];
         if (card) card.click();
-      } else if (num <= 2) {
-        const card = charCards[3 + num];  // chars[4] and chars[5]
+      } else {
+        const card = charCards[3 + num];  // chars[4..7]
         if (card) card.click();
       }
     }
@@ -151,7 +151,7 @@
     // Page 1: Q/W/E/R/T/Y/U/I/O → maps 0-8 (classic + special)
     // Page 2: Q/W/E/R/T/Y → maps on page 2
     const page1Keys = ['KeyQ', 'KeyW', 'KeyE', 'KeyR', 'KeyT', 'KeyY', 'KeyU', 'KeyI', 'KeyO'];
-    const page2Keys = ['KeyQ', 'KeyW', 'KeyE', 'KeyR', 'KeyT', 'KeyY'];
+    const page2Keys = ['KeyQ', 'KeyW', 'KeyE', 'KeyR', 'KeyT', 'KeyY', 'KeyU', 'KeyI'];
 
     if (currentPage === 1) {
       const mapIdx = page1Keys.indexOf(e.code);
