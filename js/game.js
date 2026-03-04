@@ -69,6 +69,9 @@ class Game {
     // Weather
     this.weather = new Weather(this.map.config.weather || 'clear');
 
+    // Mobile detection
+    this._isMobile = ('ontouchstart' in window || navigator.maxTouchPoints > 0);
+
     // Arena mode
     this._arenaMode      = !!this.map.config.arena;
     this._arenaSpawned   = 0;
@@ -264,6 +267,7 @@ class Game {
         this.input.mouseWorld.x, this.input.mouseWorld.y
       ));
       this._grenadeCount--;
+      window.audio?.grenadeThrow();
       return;
     }
     if (e.code === 'KeyP') {
@@ -522,6 +526,7 @@ class Game {
           const bonus = p.applyTo(this.player);
           if (bonus > 0) this.money += bonus;
           p.dead = true;
+          window.audio?.pickup();
         }
       }
     }
@@ -887,6 +892,7 @@ class Game {
           const dodgeChance = this.charData._dodgeChance || 0;
           if (dodgeChance > 0 && Math.random() < dodgeChance) {
             b.dead = true;
+            window.audio?.dodge();
             for (let _i = 0; _i < 6; _i++) {
               const _a = Math.random() * Math.PI * 2, _s = rnd(60, 150);
               this.particles.push(new Particle(this.player.x, this.player.y, Math.cos(_a)*_s, Math.sin(_a)*_s, '#AA44FF', rnd(2,5), 0.5));
@@ -975,6 +981,7 @@ class Game {
       if (this.waveTimer <= 0) {
         this.wave++;
         this.waveTimer = 30000;
+        window.audio?.waveUp();
         // Wave-locked global event every 5 waves (major only)
         if (this.wave % 5 === 0 && !this._globalEvent && !this._eventWave.has(this.wave)) {
           this._eventWave.add(this.wave);
@@ -1038,6 +1045,7 @@ class Game {
           v.occupied = true;
           this._playerVehicle = v;
           this.player.inVehicle = true;
+          window.audio?.vehicle();
           break;
         }
       }
@@ -1052,6 +1060,7 @@ class Game {
   }
 
   _onKill() {
+    window.audio?.kill();
     // Killstreak
     this._killStreak++;
     this._streakTimer = 3.0;
@@ -1286,6 +1295,7 @@ class Game {
   }
 
   _explodeGrenade(g) {
+    window.audio?.explosion();
     const r = CONFIG.GRENADE.blastRadius, dmg = CONFIG.GRENADE.damage;
     for (let i = 0; i < 24; i++) {
       const a = Math.random() * Math.PI * 2, s = rnd(120, 280);
@@ -2638,7 +2648,8 @@ class Game {
     if (playing) {
       this.hud.renderMinimap(this.map, this.player, this.bots, this.camX, this.camY, this.boss, this._districtLayout);
       this.hud.renderHealthBar(this.player);
-      this.hud.renderControls(this._arenaMode);
+      this.hud.renderControls(this._arenaMode, this._isMobile);
+      if (this._isMobile) this.hud.renderMobileHints(this._arenaMode);
       this.hud.renderMoney(this.money);
       this.hud.renderKills(this.kills);
       if (this._arenaMode) {
@@ -2657,7 +2668,7 @@ class Game {
       }
       this.hud.renderWeaponInfo(this.player);
       if (this._grenadeCount > 0) this.hud.renderGrenadeCount(this._grenadeCount);
-      if (!this._arenaMode && !this._zombieMode && !this._lifeMode && !this._survivalMode && !this._blitzMode && !this._siegeMode) this.hud.renderShopButton(this.state === 'shop');
+      if (!this._arenaMode && !this._zombieMode && !this._lifeMode && !this._survivalMode && !this._blitzMode && !this._siegeMode) this.hud.renderShopButton(this.state === 'shop', this._isMobile);
       if (this._survivalMode) this.hud.renderModeBadge('☠ SURVIVAL', '#FF2244');
       if (this._hardcoreMode) this.hud.renderModeBadge('⚡ HARDCORE · 2× DMG · 3× $', '#FF8800');
       if (this._blitzMode)    this.hud.renderModeBadge('⚡ BLITZ · 3× SPEED · 5× $', '#FF4400');

@@ -436,7 +436,10 @@ class HUD {
   }
 
   // ── Controls panel ─────────────────────────────────────────────────────────
-  renderControls(arenaMode = false) {
+  renderControls(arenaMode = false, isMobile = false) {
+    // On mobile, touch buttons replace keyboard controls — skip this panel
+    if (isMobile) return;
+
     const ctx  = this.ctx;
     const H    = this.canvas.height;
     const x    = HUD_PAD;
@@ -500,6 +503,46 @@ class HUD {
       ctx.fillText(c.desc, cx + kw + 5, cy);
       ctx.restore();
     });
+  }
+
+  // ── Mobile controls hint (shown instead of keyboard panel on touch devices) ─
+  renderMobileHints(arenaMode = false) {
+    const ctx = this.ctx;
+    const W   = this.canvas.width;
+    const H   = this.canvas.height;
+
+    // Map name / district hint at top-left
+    ctx.save();
+    ctx.fillStyle   = 'rgba(0,0,0,0.55)';
+    ctx.strokeStyle = 'rgba(68,238,255,0.18)';
+    ctx.lineWidth   = 1;
+    this._rr(ctx, HUD_PAD - 4, 4, 130, 20, 4);
+    ctx.fill(); ctx.stroke();
+    ctx.font      = '8px Orbitron, monospace';
+    ctx.fillStyle = 'rgba(255,255,255,0.45)';
+    ctx.textAlign = 'left';
+    ctx.fillText('🕹 JOYSTICK · TAP FIRE', HUD_PAD + 2, 18);
+    ctx.restore();
+
+    // B (shop) + TAB (weapon) near bottom city name area
+    if (!arenaMode) {
+      const hints = [{ label:'[B] SHOP', color:'#44EEFF' }, { label:'[TAB] WEAPON', color:'rgba(255,255,255,0.5)' }];
+      let hx = W / 2 - 80;
+      hints.forEach(h => {
+        ctx.save();
+        ctx.fillStyle   = 'rgba(0,0,0,0.55)';
+        ctx.strokeStyle = 'rgba(68,238,255,0.18)';
+        ctx.lineWidth   = 1;
+        this._rr(ctx, hx, H - 28, 72, 18, 4);
+        ctx.fill(); ctx.stroke();
+        ctx.font      = 'bold 8px Orbitron, monospace';
+        ctx.fillStyle = h.color;
+        ctx.textAlign = 'center';
+        ctx.fillText(h.label, hx + 36, H - 15);
+        ctx.restore();
+        hx += 80;
+      });
+    }
   }
 
   // ── Top-right: money + kills + wave ───────────────────────────────────────
@@ -741,7 +784,8 @@ class HUD {
     return clickAreas;
   }
 
-  renderShopButton(shopOpen) {
+  renderShopButton(shopOpen, isMobile = false) {
+    if (isMobile) return;
     const ctx = this.ctx;
     const W   = this.canvas.width;
     const H   = this.canvas.height;

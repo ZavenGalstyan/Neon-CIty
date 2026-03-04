@@ -655,6 +655,7 @@ class Player {
 
     // ── Melee (knife / electric whip) ──────────────────────
     if (w.melee) {
+      window.audio?.shoot('melee');
       const ma = new MeleeAttack(this.x, this.y, this.angle, w.range, damage);
       ma.special = w.special || null;
       bullets.push(ma);
@@ -666,6 +667,8 @@ class Player {
     }
 
     // ── Ranged (all other weapons) ─────────────────────────
+    const _sndType = w.id === 'flamethrower' ? 'flame' : w.id === 'rocket' ? 'rocket' : (w.bullets > 2 ? 'shotgun' : 'gun');
+    window.audio?.shoot(_sndType);
     const count  = w.bullets;
     const spread = this._activeSpread();
     const speed  = this._activeBulletSpeed();

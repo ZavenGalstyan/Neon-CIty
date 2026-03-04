@@ -310,6 +310,7 @@ class ShopManager {
               g.money -= effectivePrice;
               p.ownedWeapons.add(w.id);
               p.equipWeapon(w.id);
+              window.audio?.buy();
               this._msg(`${w.name} PURCHASED!`, w.color);
             } else { this._msg('NOT ENOUGH MONEY', '#FF4466'); }
           });
@@ -450,6 +451,7 @@ class ShopManager {
             if (g.money >= effectiveCost && lvl < u.maxLevel) {
               g.money -= effectiveCost;
               p.applyUpgrade(u.id);
+              window.audio?.upgrade();
               this._msg(`${u.name} LVL ${lvl + 1}!`, u.color);
             } else { this._msg('NOT ENOUGH MONEY', '#FF4466'); }
           });
@@ -999,6 +1001,7 @@ class DealershipManager {
             v.radius = car.radius;
             if (car.bulletproof) v.bulletproof = true;
             g.vehicles.push(v);
+            window.audio?.vehicle();
             g._dealership.close();
             g.state = 'playing';
           } else { this._msg('NOT ENOUGH MONEY', '#FF4466'); }
@@ -1074,6 +1077,7 @@ class DealershipManager {
             if (g.money >= effectivePrice) {
               g.money -= effectivePrice;
               p.ownedWeapons.add(w.id); p.equipWeapon(w.id);
+              window.audio?.buy();
               this._msg(`${w.name} PURCHASED!`, w.color);
             } else { this._msg('NOT ENOUGH MONEY', '#FF4466'); }
           });
@@ -1145,6 +1149,7 @@ class DealershipManager {
           if (g.money >= btn.price) {
             g.money -= btn.price;
             g._grenadeCount += btn.qty;
+            window.audio?.buy();
             this._msg(`+${btn.qty} GRENADE${btn.qty > 1 ? 'S' : ''}!`, '#FF8800');
           } else { this._msg('NOT ENOUGH MONEY', '#FF4466'); }
         });

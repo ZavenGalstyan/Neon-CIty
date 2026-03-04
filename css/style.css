@@ -474,9 +474,15 @@ body {
 }
 .start-btn:not(:disabled):hover::before { left: 120%; }
 
+.start-area {
+  display: flex; align-items: center; justify-content: center;
+  gap: 16px; flex-wrap: wrap; margin: 8px 0;
+}
+
 .start-hint {
-  font-size: 10px; color: var(--muted); letter-spacing: 0.22em;
-  font-family: 'Orbitron', sans-serif; text-align: center;
+  font-size: 10px; color: var(--muted); letter-spacing: 0.18em;
+  font-family: 'Orbitron', sans-serif; white-space: nowrap;
+  order: -1;
 }
 
 /* ── Character Customization ──────────────────────────────── */
@@ -695,6 +701,7 @@ body {
   .color-swatch     { width: 22px; height: 22px; }
 
   /* Start area */
+  .start-area       { gap: 10px; }
   .start-btn        { font-size: 13px; padding: 12px 20px; }
   .start-hint       { font-size: 8px; }
   .modes-btn        { font-size: 9px; padding: 6px 10px; }
@@ -727,10 +734,11 @@ body {
   /* Customize: each group full width */
   .cust-group       { width: 100%; }
 
-  /* Start button full width */
-  .start-btn        { width: 100%; font-size: 13px; }
+  /* Start area mobile */
+  .start-area       { flex-direction: column; gap: 8px; }
+  .start-btn        { width: 100%; font-size: 13px; order: 0; }
   .start-hint       { display: none; }
-  .modes-btn        { font-size: 8px; padding: 5px 8px; }
+  .modes-btn        { font-size: 8px; padding: 5px 8px; order: 1; }
 }
 
 /* ── Virtual touch controls (game.html) ── */
