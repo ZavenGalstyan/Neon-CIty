@@ -579,6 +579,7 @@ class ShopManager {
         const bg = new Bodyguard(p.x + rnd(-50, 50), p.y + rnd(-50, 50), tier);
         bg._color = color;
         gameRef._bodyguards.push(bg);
+        window.audio?.buy();
         this._msg(`${tier.toUpperCase()} GUARD HIRED!`, color);
       });
     });

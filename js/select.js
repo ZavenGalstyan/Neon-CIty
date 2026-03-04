@@ -143,7 +143,7 @@
         const card = charCards[num - 1];
         if (card) card.click();
       } else {
-        const card = charCards[3 + num];  // chars[4..7]
+        const card = charCards[5 + num];  // page2 starts at index 6 (5+1)
         if (card) card.click();
       }
     }

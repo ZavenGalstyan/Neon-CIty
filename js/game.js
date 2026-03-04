@@ -121,7 +121,7 @@ class Game {
     this._districtTimer    = 0;        // entry notification countdown (3s)
     this._reputation       = { dangerous: 0, rich: 0, industrial: 0 };
     this._repRestoreTimers = { dangerous: 0, rich: 0, industrial: 0 };
-    this._dangerSpawnTimer = 0;
+    this._dangerSpawnTimer = 10;
     this._shopDiscount     = 0;
 
     // ── Car Dealership ────────────────────────────────────────
@@ -656,6 +656,7 @@ class Game {
           if (this.boss && this.boss.dead) this.boss = null;
           this._arenaCountdown = 3.5;
           this.wave++;
+          window.audio?.waveUp();
         }
       }
     }
@@ -682,6 +683,7 @@ class Game {
           if (this.boss && this.boss.dead) this.boss = null;
           this._zombieCountdown = 4.0;
           this.wave++;
+          window.audio?.waveUp();
         }
       }
     }
@@ -930,6 +932,7 @@ class Game {
         if (this.boss._chargeDmgTimer <= 0) {
           const dmg = this.player.takeDamage(this.boss.damage * 2.5, this.hud);
           if (dmg) {
+            window.audio?.playerHit();
             this.hud.addDamageNumber(this.player.x, this.player.y - 30, dmg, this.camX, this.camY, '#FF6644');
             this._killStreak = 0;
             this._streakTimer = 0;
@@ -951,7 +954,7 @@ class Game {
       if (!this.player.dead && !this._playerVehicle &&
           circlesOverlap(b.x, b.y, r, this.player.x, this.player.y, this.player.radius)) {
         const d = this.player.takeDamage(dmg * (this._hardcoreMode ? 2 : 1), this.hud);
-        if (d) this.hud.addDamageNumber(this.player.x, this.player.y - 30, d, this.camX, this.camY, '#FF6600');
+        if (d) { window.audio?.playerHit(); this.hud.addDamageNumber(this.player.x, this.player.y - 30, d, this.camX, this.camY, '#FF6600'); }
       }
     }
 
@@ -1584,6 +1587,7 @@ class Game {
         if (circlesOverlap(b.x, b.y, b.radius, this.player.x, this.player.y, this.player.radius)) {
           const dmg = this.player.takeDamage(b.damage, this.hud);
           if (dmg) {
+            window.audio?.playerHit();
             this.hud.addDamageNumber(this.player.x, this.player.y - 30, dmg, -offX, -offY, '#FF4444');
             this._killStreak = 0;
             this._streakTimer = 0;
@@ -2775,6 +2779,7 @@ class Game {
               this.money -= item.price;
               this._applyBmItem(item);
               if (isOnce) this._bmBought.add(item.id);
+              window.audio?.[item.type === 'implant' ? 'upgrade' : 'buy']();
             }
             break;
           }
