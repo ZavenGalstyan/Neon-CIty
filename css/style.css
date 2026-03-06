@@ -338,12 +338,14 @@ body {
 .map-card[data-map="casino"].selected     { transform: translateY(-5px); border-color: #FFCC00; box-shadow: 0 0 24px rgba(255,204,0,0.5), 0 12px 40px rgba(0,0,0,0.6); }
 .map-card[data-map="arena"].selected      { transform: translateY(-4px); border-color: #FF0044; box-shadow: 0 0 30px rgba(255,0,68,0.6),  0 12px 40px rgba(0,0,0,0.7); }
 
-/* Life Mode + Arena + Zombie — shared row */
+/* Life Mode + Arena + Zombie — 3-per-row grid */
 .special-maps-row {
   grid-column: 1 / -1; margin-top: 6px;
-  display: flex; gap: 10px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
 }
-.special-maps-row .map-card { flex: 1; min-width: 0; }
+.special-maps-row .map-card { min-width: 0; }
 .map-card--arena, .map-card--experimental, .map-card--life {
   display: flex; flex-direction: row; align-items: center; gap: 16px;
   padding: 14px 18px;
@@ -674,9 +676,8 @@ body {
   .map-num          { font-size: 9px; }
   .map-info         { padding: 6px 8px 6px; }
 
-  /* Special row cards — stack into 2-column grid */
+  /* Special row cards — 2-column grid on tablet */
   .special-maps-row {
-    display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 7px;
     flex-direction: unset;
