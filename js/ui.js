@@ -1,5 +1,33 @@
 'use strict';
 
+/**
+ * @file ui.js
+ * HUD — all screen-space (non-world) rendering.
+ * Drawn on top of the game canvas after the world render each frame.
+ *
+ * HUD class responsibilities:
+ *   renderMinimap(ctx, map, player, bots, boss, vehicles, portals) — bottom-left radar
+ *   renderStats(ctx, player, money, wave, kills)                   — HP/ammo bars
+ *   renderWeaponInfo(ctx, player)                                  — active weapon card
+ *   renderKillFeed(ctx, W)                                         — scrolling kill log
+ *   renderWaveAnnounce(ctx, W, H)                                  — wave start banner
+ *   renderEventBanner(ctx, W, H, event, timer)                     — global event notice
+ *   renderStreakPopup(ctx, W, popup)                               — kill-streak badge
+ *   renderGrenadeCount(count)                                      — grenade HUD badge
+ *   renderCompanionHP(ctx, companion)                              — companion health bar
+ *   renderCampaignLevel(ctx, W, level, kills, target)             — campaign progress bar
+ *   renderControls(arenaMode, isMobile)                            — keyboard hint overlay
+ *   renderMobileHints(arenaMode)                                   — mobile action hints
+ *   renderShopButton(shopOpen, isMobile)                           — [B] SHOP button
+ *   addDamageNumber(wx, wy, dmg, camX, camY, color)               — floating damage text
+ *   shake(intensity)                                               — trigger camera shake
+ *   update(dt)                                                     — advance timers
+ *
+ * Layout constants (pixels, bottom-left anchor):
+ *   HUD_MM_W / HUD_MM_H  — minimap dimensions
+ *   HUD_PAD              — outer padding
+ */
+
 // Layout constants (bottom-left panel)
 const HUD_MM_W  = 176;   // minimap width
 const HUD_MM_H  = 128;   // minimap height

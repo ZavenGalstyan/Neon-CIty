@@ -1,5 +1,31 @@
 'use strict';
 
+/**
+ * @file map.js
+ * Procedural city map generation and rendering.
+ *
+ * Tile types (TILE constant):
+ *   ROAD      (0) — walkable, driveable
+ *   BUILDING  (1) — solid blocker; has assigned BUILDING_TYPE label
+ *   SIDEWALK  (2) — walkable, not driveable
+ *
+ * GameMap responsibilities:
+ *   - Procedurally generate tile grid, doors, portals, and road network
+ *   - isBlocked(x, y) / isBlockedCircle(x, y, r) — tile collision queries
+ *   - randomRoadPos() — returns a random road-tile world position
+ *   - getRoom(door)   — builds an indoor room layout for a given door
+ *   - render(ctx, camX, camY, W, H) — draw visible tiles + minimap
+ *   - Portals: 2 per normal map; paired by index; animated glow ring
+ *   - Doors: 1–3 per building; marked `specialType:'dealership'` for 1–2 per map
+ *
+ * Map config flags (from CONFIG.MAPS entry):
+ *   arena   — small 24×24 grid, no portals, no shop
+ *   zombie  — 36×36, dense zombie spawns
+ *   campaign — 38×38, 100 levels, boss every 10
+ *   blitz    — 28×28, 3× speed, 5× money
+ *   siege    — 46×46, bots from all 4 edges
+ */
+
 const TILE = { ROAD: 0, BUILDING: 1, SIDEWALK: 2 };
 
 // ── Indoor room layouts ────────────────────────────────────────────────────────

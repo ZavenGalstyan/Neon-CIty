@@ -1,5 +1,22 @@
 'use strict';
 
+/**
+ * @file config.js
+ * Single source of truth for all game constants and data tables.
+ *
+ * Sections:
+ *   BULLET_LIFETIME, BOT_*, CAM_LERP, PARTICLES — numeric tuning knobs
+ *   CHARACTERS   — 8 playable characters (stats, companion, starterWeapon)
+ *   MAPS         — 18 maps (id, label, size, weather, special flags)
+ *   WEAPONS      — all purchasable / starter weapons
+ *   UPGRADES     — shop upgrade definitions
+ *   BUILDING_TYPES — 24 building labels for procedural map generation
+ *   CAR_DEALERSHIP — 4 purchasable vehicle configs
+ *   GRENADE      — grenade physics constants
+ *   ZOMBIE_CONFIGS, GLOBAL_EVENTS — zombie wave and random event tables
+ *
+ * Nothing in this file should have side effects or DOM access.
+ */
 const CONFIG = {
   // Bullets
   BULLET_LIFETIME: 1.8,

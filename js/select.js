@@ -1,5 +1,30 @@
 'use strict';
 
+/**
+ * @file select.js
+ * Character and map selection screen logic (index.html).
+ *
+ * Responsibilities:
+ *   - Character card click selection (8 chars across 2 pages)
+ *   - Map card click selection (18 maps across 2 pages)
+ *   - Page tab switching for both grids (charTab1/2, pageTab1/2)
+ *   - Customization panel: neon color swatches, mask, effect options
+ *   - START button: saves selections to localStorage, navigates to game.html
+ *   - Keyboard shortcuts:
+ *       1–6     → select character on current char page
+ *       Q–I     → select map on current map page
+ *       Tab     → toggle map page
+ *       Shift+Tab → toggle char page
+ *       Enter   → start game
+ *       Escape  → close modes modal
+ *   - Modes modal: opened by modesBtn, closed by modesModalClose or backdrop click
+ *
+ * localStorage keys written on start:
+ *   'selectedChar'   — JSON of CONFIG.CHARACTERS entry
+ *   'selectedMap'    — JSON of CONFIG.MAPS entry
+ *   'customization'  — { neonColor, mask, effect }
+ */
+
 (function () {
   let selectedCharId   = null;
   let selectedMapId    = CONFIG.MAPS[0].id;  // default: first map

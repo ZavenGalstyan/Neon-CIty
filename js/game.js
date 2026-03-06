@@ -1,5 +1,50 @@
 'use strict';
 
+/**
+ * @file game.js
+ * Main Game class — owns the update/render loop and all game state.
+ *
+ * State machine (this.state):
+ *   'playing'   — normal gameplay
+ *   'paused'    — game paused (P key)
+ *   'shop'      — B key shop overlay open
+ *   'carshop'   — dealership overlay open (T near salesperson)
+ *   'casino'    — casino overlay open
+ *   'gameover'  — player dead
+ *   'waveclear' — brief pause between waves
+ *
+ * Key subsystems:
+ *   GameMap (this.map)             — tile world, collision, doors, portals
+ *   Player (this.player)           — player entity
+ *   Bot[] (this.bots)              — active enemy bots
+ *   BossBot (this.boss)            — wave boss (every 5 waves)
+ *   Bullet[] (this.bullets)        — player bullets
+ *   Bullet[] (this._botBullets)    — enemy bullets
+ *   Grenade[] (this._grenades)     — live grenades
+ *   Vehicle[] (this.vehicles)      — all vehicles on map
+ *   Particle[] (this.particles)    — visual effects
+ *   Decal[] (this.decals)          — persistent floor marks
+ *   HUD (this.hud)                 — screen-space overlay
+ *   InputManager (this.input)      — keyboard/mouse/touch
+ *   ShopManager (this._shop)       — B key shop
+ *   DealershipManager (this._dealership) — T key car shop
+ *   CasinoManager (this._casino)   — casino overlay
+ *   Weather (this.weather)         — ambient particle weather
+ *   AnimalCompanion (this.companion) — character companion
+ *
+ * Indoor system:
+ *   this._indoor — set when player is inside a building
+ *   this._indoor.isDealership — true for car dealership rooms (no enemy bots)
+ *   this._indoorBots / this._indoorBullets — indoor-specific arrays
+ *
+ * Special map modes (boolean flags):
+ *   this._arenaMode   — arena map (wave survival, no shop)
+ *   this._zombieMode  — zombie map
+ *   this._campaignMode — 100-level campaign
+ *   this._blitzMode   — 3× speed, no shop
+ *   this._siegeMode   — bots from all 4 edges
+ *   this._survivalMode / this._hardcoreMode — modifier flags
+ */
 class Game {
   constructor(charData, mapData) {
     this.canvas = document.getElementById('gameCanvas');

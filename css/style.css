@@ -196,7 +196,7 @@ body {
   border: 1px solid var(--border);
   border-radius: 10px;
   cursor: pointer; overflow: hidden;
-  height: 100px;
+  height: 120px;
   transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
 }
 .char-card::before {
@@ -637,7 +637,7 @@ body {
 /* ── Notebook / small desktop  (769 – 1024px) ───────────── */
 @media (max-width: 1024px) {
   .select-container { padding: 0 16px; }
-  .char-card        { height: 96px; }
+  .char-card        { height: 116px; }
   .char-info h3     { font-size: 10px; }
 }
 
@@ -653,7 +653,7 @@ body {
 
   /* Character cards — 2×2 grid */
   .characters-grid  { grid-template-columns: repeat(2, 1fr); gap: 6px; }
-  .char-card        { height: 88px; }
+  .char-card        { height: 108px; }
   .char-avatar      { width: 64px; min-width: 64px; }
   .char-figure      { width: 44px; height: 58px; }
   .char-info h3     { font-size: 9px; }
@@ -719,7 +719,7 @@ body {
 
   /* Character cards — single column */
   .characters-grid  { grid-template-columns: 1fr; gap: 5px; }
-  .char-card        { height: 76px; }
+  .char-card        { height: 96px; }
   .char-avatar      { width: 56px; min-width: 56px; }
   .char-figure      { width: 38px; height: 50px; }
   .char-number      { font-size: 8px; }

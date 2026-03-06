@@ -1,5 +1,33 @@
 'use strict';
 
+/**
+ * @file entities.js
+ * All game entity classes. Loaded after utils.js and config.js.
+ *
+ * Classes (in order):
+ *   Particle       — short-lived visual effect (sparks, blood, fire)
+ *   Decal          — persistent floor mark (blood pool, scorch)
+ *   Weather        — screen-space rain / smoke / sandstorm / fog / neon-haze particles
+ *   Bullet         — projectile fired by player or bot
+ *   MeleeAttack    — instant-hit melee arc (knife, electric whip)
+ *   Pickup         — health / ammo / money drop on bot death
+ *   Vehicle        — driveable car; player enters with F key
+ *   Player         — player entity; reads InputManager each frame
+ *   Bot            — enemy AI; types: mini/normal/big/police/swat/heavyswat/sniper/bomber/juggernaut
+ *   BossBot        — wave boss with shield phase and charge attack
+ *   ZombieBot      — melee-only zombie; contact damage, no ranged attack
+ *   Bodyguard      — hired escort; follows player, shoots enemies
+ *   Drone          — airborne enemy that orbits and fires; spawned by special buildings
+ *   Grenade        — arc projectile thrown by player (G key); explodes on fuse or wall
+ *   Salesperson    — passive NPC inside car dealership showroom; triggers shop on T press
+ *   CityNPC        — ambient pedestrian (life_sim map)
+ *   AnimalCompanion — character-specific companion (dog/cat/wolf/raven/bear/fox/salamander/spirit)
+ *   AmbientCar     — traffic vehicle driving along road tiles
+ *
+ * Bullet constructor: (x, y, angle, speed, damage, isPlayer, color)
+ * Particle constructor: (x, y, vx, vy, color, size, life)  ← ALL 7 args required
+ */
+
 // ─── Particle ──────────────────────────────────────────────────────────────────
 class Particle {
   constructor(x, y, vx, vy, color, size, life) {

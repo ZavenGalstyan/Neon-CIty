@@ -1,5 +1,25 @@
 'use strict';
 
+/**
+ * @file shop.js
+ * All overlay shop managers. Each manager follows the same interface:
+ *   open()                           — show overlay, reset scroll
+ *   close()                          — hide overlay
+ *   render(ctx, W, H, player, ...)   — draw overlay each frame when open
+ *   handleClick(mx, my, player, game) — process a mouse click
+ *   handleScroll(deltaY)             — scroll content area
+ *
+ * Classes:
+ *   ShopManager        — B key shop; tabs: weapons / upgrades / security
+ *   DealershipManager  — T key shop inside car dealership; tabs: vehicles / weapons / grenades
+ *   CasinoManager      — casino mini-game overlay (casino map only)
+ *
+ * Purchase pattern:
+ *   effectivePrice = Math.round(price * (1 - game._shopDiscount))
+ *   Deduct from game.money, apply effect, play audio.buy()
+ *
+ * Click areas stored in this._areas as { x, y, w, h, fn } — fn(player, game) called on match.
+ */
 class ShopManager {
   constructor() {
     this.isOpen      = false;
