@@ -196,7 +196,7 @@ body {
   border: 1px solid var(--border);
   border-radius: 10px;
   cursor: pointer; overflow: hidden;
-  height: 100px;
+  height: 120px;
   transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
 }
 .char-card::before {
@@ -338,12 +338,14 @@ body {
 .map-card[data-map="casino"].selected     { transform: translateY(-5px); border-color: #FFCC00; box-shadow: 0 0 24px rgba(255,204,0,0.5), 0 12px 40px rgba(0,0,0,0.6); }
 .map-card[data-map="arena"].selected      { transform: translateY(-4px); border-color: #FF0044; box-shadow: 0 0 30px rgba(255,0,68,0.6),  0 12px 40px rgba(0,0,0,0.7); }
 
-/* Life Mode + Arena + Zombie — shared row */
+/* Life Mode + Arena + Zombie — 3-per-row grid */
 .special-maps-row {
   grid-column: 1 / -1; margin-top: 6px;
-  display: flex; gap: 10px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
 }
-.special-maps-row .map-card { flex: 1; min-width: 0; }
+.special-maps-row .map-card { min-width: 0; }
 .map-card--arena, .map-card--experimental, .map-card--life {
   display: flex; flex-direction: row; align-items: center; gap: 16px;
   padding: 14px 18px;
@@ -483,6 +485,67 @@ body {
   font-size: 10px; color: var(--muted); letter-spacing: 0.18em;
   font-family: 'Orbitron', sans-serif; white-space: nowrap;
   order: -1;
+}
+
+/* ── Step Wrapper & Animations ───────────────────────────── */
+.step-wrapper { overflow: hidden; position: relative; width: 100%; }
+.step { display: none; }
+.step.active { display: block; animation: stepIn 0.35s ease forwards; }
+.step.slide-out { display: block; animation: stepOut 0.30s ease forwards; }
+
+@keyframes stepIn  { from { opacity: 0; transform: translateX(40px); }  to { opacity: 1; transform: translateX(0); } }
+@keyframes stepOut { from { opacity: 1; transform: translateX(0); }      to { opacity: 0; transform: translateX(-40px); } }
+
+.step-label {
+  font-family: 'Orbitron', sans-serif; font-size: 11px; letter-spacing: 0.18em;
+  color: rgba(68,238,255,0.65); text-align: center; margin-bottom: 14px;
+}
+
+/* ── Step Nav ────────────────────────────────────────────── */
+.step-nav {
+  display: flex; align-items: center; justify-content: center;
+  gap: 24px; padding: 14px 0 6px;
+}
+.step-nav-btn {
+  font-family: 'Orbitron', sans-serif; font-size: 11px; font-weight: 700;
+  letter-spacing: 0.1em; color: #44EEFF;
+  background: rgba(68,238,255,0.08); border: 1px solid rgba(68,238,255,0.3);
+  border-radius: 6px; padding: 9px 22px; cursor: pointer;
+  transition: background 0.18s, border-color 0.18s;
+}
+.step-nav-btn:hover { background: rgba(68,238,255,0.18); border-color: #44EEFF; }
+.step-nav-btn:disabled { opacity: 0.28; cursor: default; pointer-events: none; }
+.step-dots { display: flex; gap: 10px; align-items: center; }
+.step-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.2);
+  transition: background 0.2s;
+}
+.step-dot.active { background: #44EEFF; border-color: #44EEFF; box-shadow: 0 0 8px #44EEFF; }
+
+/* ── Name Input (Step 3) ─────────────────────────────────── */
+.name-input-wrap {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 8px; margin: 16px auto 24px; max-width: 360px;
+}
+.name-label {
+  font-family: 'Orbitron', sans-serif; font-size: 10px;
+  letter-spacing: 0.18em; color: rgba(68,238,255,0.6);
+}
+.name-input {
+  width: 100%; padding: 12px 16px; box-sizing: border-box;
+  font-family: 'Orbitron', monospace; font-size: 18px; font-weight: 700;
+  text-align: center; letter-spacing: 0.14em;
+  color: #fff; background: rgba(0,0,0,0.5);
+  border: 1px solid rgba(68,238,255,0.35); border-radius: 8px;
+  outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+}
+.name-input:focus { border-color: #44EEFF; box-shadow: 0 0 16px rgba(68,238,255,0.25); }
+.name-input::placeholder { color: rgba(255,255,255,0.2); }
+.name-preview {
+  font-family: 'Orbitron', sans-serif; font-size: 13px;
+  color: rgba(255,255,255,0.45); text-align: center;
+  margin-bottom: 4px; min-height: 20px; letter-spacing: 0.1em;
 }
 
 /* ── Character Customization ──────────────────────────────── */
@@ -635,7 +698,7 @@ body {
 /* ── Notebook / small desktop  (769 – 1024px) ───────────── */
 @media (max-width: 1024px) {
   .select-container { padding: 0 16px; }
-  .char-card        { height: 96px; }
+  .char-card        { height: 116px; }
   .char-info h3     { font-size: 10px; }
 }
 
@@ -651,7 +714,7 @@ body {
 
   /* Character cards — 2×2 grid */
   .characters-grid  { grid-template-columns: repeat(2, 1fr); gap: 6px; }
-  .char-card        { height: 88px; }
+  .char-card        { height: 108px; }
   .char-avatar      { width: 64px; min-width: 64px; }
   .char-figure      { width: 44px; height: 58px; }
   .char-info h3     { font-size: 9px; }
@@ -674,9 +737,8 @@ body {
   .map-num          { font-size: 9px; }
   .map-info         { padding: 6px 8px 6px; }
 
-  /* Special row cards — stack into 2-column grid */
+  /* Special row cards — 2-column grid on tablet */
   .special-maps-row {
-    display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 7px;
     flex-direction: unset;
@@ -718,7 +780,7 @@ body {
 
   /* Character cards — single column */
   .characters-grid  { grid-template-columns: 1fr; gap: 5px; }
-  .char-card        { height: 76px; }
+  .char-card        { height: 96px; }
   .char-avatar      { width: 56px; min-width: 56px; }
   .char-figure      { width: 38px; height: 50px; }
   .char-number      { font-size: 8px; }

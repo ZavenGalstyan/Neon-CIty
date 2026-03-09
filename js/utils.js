@@ -1,5 +1,21 @@
 'use strict';
 
+/**
+ * @file utils.js
+ * Shared math utilities used across the entire codebase.
+ *
+ * Exports (globals, no module system):
+ *   Vec2            — 2-D vector class
+ *   lerp            — linear interpolation
+ *   clamp           — value clamping
+ *   rnd             — random float in [min, max)
+ *   rndInt          — random integer in [min, max]
+ *   rndChoice       — pick random element from array
+ *   circlesOverlap  — circle vs circle collision test
+ *   hexToRgb        — "#RRGGBB" → "r,g,b" string
+ */
+
+/** Immutable 2-D vector with fluent math helpers. */
 class Vec2 {
   constructor(x = 0, y = 0) { this.x = x; this.y = y; }
   add(v) { return new Vec2(this.x + v.x, this.y + v.y); }

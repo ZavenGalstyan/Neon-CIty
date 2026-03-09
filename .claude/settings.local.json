@@ -6,7 +6,8 @@
       "Bash(powershell:*)",
       "mcp__ide__getDiagnostics",
       "Bash(gh auth:*)",
-      "Bash(cmdkey:*)"
+      "Bash(cmdkey:*)",
+      "Bash(grep:*)"
     ]
   }
 }

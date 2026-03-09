@@ -1,5 +1,23 @@
 'use strict';
 
+/**
+ * @file input.js
+ * Centralised input abstraction for keyboard, mouse, and touch controls.
+ *
+ * Usage:
+ *   const input = new InputManager(canvas);
+ *   // each frame:
+ *   input.updateMouseWorld(camX, camY);   // converts screen → world coords
+ *   if (input.isDown('KeyW')) { ... }     // keyboard / virtual joystick
+ *   if (input.mouseDown)     { ... }      // held fire
+ *   if (input.mouseJustDown) { ... }      // single-frame click
+ *   input.flush();                         // call at end of frame
+ *
+ * Mobile:
+ *   - Left half → virtual joystick (#joystickZone / #joystickKnob)
+ *   - Right half → aim + fire via touch
+ *   - Action buttons (#touchButtons) inject virtual key presses
+ */
 class InputManager {
   constructor(canvas) {
     this.keys = new Set();

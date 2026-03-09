@@ -18,6 +18,13 @@
       <p class="logo-sub">⬡ CHOOSE YOUR IDENTITY ⬡</p>
     </div>
 
+    <!-- ── Step Wrapper ─────────────────────────────────── -->
+    <div id="stepWrapper" class="step-wrapper">
+
+      <!-- STEP 2: Character + Customization (shown second) -->
+      <div id="step2" class="step">
+        <p class="step-label">STEP 2 OF 3 &nbsp;·&nbsp; CHOOSE YOUR CHARACTER</p>
+
     <!-- Characters -->
     <div class="char-section">
       <!-- Character page tabs -->
@@ -496,6 +503,12 @@
       </div>
     </div>
 
+      </div><!-- end #step2 -->
+
+      <!-- STEP 1: Map Selection (shown first, active by default) -->
+      <div id="step1" class="step active">
+        <p class="step-label">STEP 1 OF 3 &nbsp;·&nbsp; SELECT YOUR MAP</p>
+
     <!-- ── Map Selection ─────────────────────────────────── -->
     <div class="map-section">
       <div class="section-divider">
@@ -843,6 +856,57 @@
             </div>
           </div>
 
+          <!-- Blitz Mode -->
+          <div class="map-card" data-map="blitz">
+            <div class="experimental-badge" style="background:#FF2200;box-shadow:0 0 14px rgba(255,34,0,0.7);">⚡ 3× SPEED</div>
+            <div class="map-preview" style="--mg:7px;--mbg:#0a0002;--mr:rgba(255,34,0,0.65);">
+              <div class="map-preview-inner">
+                <div class="road-dot" style="top:20%;left:20%;background:#FF2200;box-shadow:0 0 8px #FF2200"></div>
+                <div class="road-dot" style="top:20%;left:80%;background:#FF4400;box-shadow:0 0 8px #FF4400"></div>
+                <div class="road-dot" style="top:80%;left:50%;background:#FF2200;box-shadow:0 0 8px #FF2200"></div>
+                <div class="road-dot" style="top:50%;left:50%;background:#FF0000;box-shadow:0 0 16px #FF0000;width:10px;height:10px;margin:-5px 0 0 -5px"></div>
+              </div>
+            </div>
+            <div class="map-info">
+              <div class="map-header">
+                <h4 class="map-name" style="color:#FF4400;text-shadow:0 0 10px #FF2200">⚡ BLITZ MODE</h4>
+                <span class="map-num" style="color:#FF4400">17</span>
+              </div>
+              <p class="map-desc">Triple speed carnage. Everyone moves at 3× speed. 5× money. No time to think.</p>
+              <div class="map-tags">
+                <span class="map-tag" style="--tc:#FF4400">3× SPEED</span>
+                <span class="map-tag" style="--tc:#FF4400">5× MONEY</span>
+                <span class="map-tag" style="--tc:#FF4400">28×28</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Siege Mode -->
+          <div class="map-card" data-map="siege">
+            <div class="experimental-badge" style="background:#44AAFF;box-shadow:0 0 14px rgba(68,170,255,0.7);color:#000">🛡 DEFEND</div>
+            <div class="map-preview" style="--mg:11px;--mbg:#000810;--mr:rgba(68,170,255,0.45);">
+              <div class="map-preview-inner">
+                <div class="road-dot" style="top:50%;left:50%;background:#44AAFF;box-shadow:0 0 18px #44AAFF;width:14px;height:14px;margin:-7px 0 0 -7px"></div>
+                <div class="road-dot" style="top:10%;left:50%;background:#44AAFF;box-shadow:0 0 8px #44AAFF"></div>
+                <div class="road-dot" style="top:90%;left:50%;background:#44AAFF;box-shadow:0 0 8px #44AAFF"></div>
+                <div class="road-dot" style="top:50%;left:10%;background:#44AAFF;box-shadow:0 0 8px #44AAFF"></div>
+                <div class="road-dot" style="top:50%;left:90%;background:#44AAFF;box-shadow:0 0 8px #44AAFF"></div>
+              </div>
+            </div>
+            <div class="map-info">
+              <div class="map-header">
+                <h4 class="map-name" style="color:#44AAFF;text-shadow:0 0 10px #44AAFF">🛡 SIEGE MODE</h4>
+                <span class="map-num" style="color:#44AAFF">18</span>
+              </div>
+              <p class="map-desc">Hold the center. Endless assault from all 4 sides. The city falls — or you do.</p>
+              <div class="map-tags">
+                <span class="map-tag" style="--tc:#44AAFF">DEFEND</span>
+                <span class="map-tag" style="--tc:#44AAFF">ENDLESS</span>
+                <span class="map-tag" style="--tc:#44AAFF">46×46</span>
+              </div>
+            </div>
+          </div>
+
         </div><!-- end .maps-grid -->
 
         <!-- Special Modes Row — Page 2 -->
@@ -928,69 +992,41 @@
           </div>
 
 
-          <!-- Blitz Mode -->
-          <div class="map-card map-card--arena" data-map="blitz">
-            <div class="experimental-badge" style="background:#FF2200;box-shadow:0 0 14px rgba(255,34,0,0.7);">⚡ 3× SPEED</div>
-            <div class="map-preview" style="--mg:7px;--mbg:#0a0002;--mr:rgba(255,34,0,0.65);">
-              <div class="map-preview-inner">
-                <div class="road-dot" style="top:20%;left:20%;background:#FF2200;box-shadow:0 0 8px #FF2200"></div>
-                <div class="road-dot" style="top:20%;left:80%;background:#FF4400;box-shadow:0 0 8px #FF4400"></div>
-                <div class="road-dot" style="top:80%;left:50%;background:#FF2200;box-shadow:0 0 8px #FF2200"></div>
-                <div class="road-dot" style="top:50%;left:50%;background:#FF0000;box-shadow:0 0 16px #FF0000;width:10px;height:10px;margin:-5px 0 0 -5px"></div>
-              </div>
-            </div>
-            <div class="map-info">
-              <div class="map-header">
-                <h4 class="map-name" style="color:#FF4400;text-shadow:0 0 10px #FF2200">⚡ BLITZ MODE</h4>
-                <span class="map-num" style="color:#FF4400">17</span>
-              </div>
-              <p class="map-desc">Triple speed carnage. Everyone moves at 3× speed. 5× money. No time to think.</p>
-              <div class="map-tags">
-                <span class="map-tag" style="--tc:#FF4400">3× SPEED</span>
-                <span class="map-tag" style="--tc:#FF4400">5× MONEY</span>
-                <span class="map-tag" style="--tc:#FF4400">28×28</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Siege Mode -->
-          <div class="map-card map-card--experimental" data-map="siege">
-            <div class="experimental-badge" style="background:#44AAFF;box-shadow:0 0 14px rgba(68,170,255,0.7);color:#000">🛡 DEFEND</div>
-            <div class="map-preview" style="--mg:11px;--mbg:#000810;--mr:rgba(68,170,255,0.45);">
-              <div class="map-preview-inner">
-                <div class="road-dot" style="top:50%;left:50%;background:#44AAFF;box-shadow:0 0 18px #44AAFF;width:14px;height:14px;margin:-7px 0 0 -7px"></div>
-                <div class="road-dot" style="top:10%;left:50%;background:#44AAFF;box-shadow:0 0 8px #44AAFF"></div>
-                <div class="road-dot" style="top:90%;left:50%;background:#44AAFF;box-shadow:0 0 8px #44AAFF"></div>
-                <div class="road-dot" style="top:50%;left:10%;background:#44AAFF;box-shadow:0 0 8px #44AAFF"></div>
-                <div class="road-dot" style="top:50%;left:90%;background:#44AAFF;box-shadow:0 0 8px #44AAFF"></div>
-              </div>
-            </div>
-            <div class="map-info">
-              <div class="map-header">
-                <h4 class="map-name" style="color:#44AAFF;text-shadow:0 0 10px #44AAFF">🛡 SIEGE MODE</h4>
-                <span class="map-num" style="color:#44AAFF">18</span>
-              </div>
-              <p class="map-desc">Hold the center. Endless assault from all 4 sides. The city falls — or you do.</p>
-              <div class="map-tags">
-                <span class="map-tag" style="--tc:#44AAFF">DEFEND</span>
-                <span class="map-tag" style="--tc:#44AAFF">ENDLESS</span>
-                <span class="map-tag" style="--tc:#44AAFF">46×46</span>
-              </div>
-            </div>
-          </div>
-
         </div><!-- end special-maps-row -->
       </div><!-- end #mapPage2 -->
 
     </div><!-- end .map-section -->
 
-    <!-- Start button area -->
-    <div class="start-area">
-      <p class="start-hint">1–4 CHAR · Q–I MAP · TAB PAGE · ↵ START</p>
-      <button class="start-btn" id="startBtn" disabled>
-        <span id="startBtnText">SELECT A CHARACTER</span>
-      </button>
-      <button class="modes-btn" id="modesBtn">📋 MAPS &amp; MODES</button>
+      </div><!-- end #step1 -->
+
+      <!-- STEP 3: Name + Start -->
+      <div id="step3" class="step">
+        <p class="step-label">STEP 3 OF 3 &nbsp;·&nbsp; ENTER YOUR IDENTITY</p>
+        <div id="namePreview" class="name-preview"></div>
+        <div class="name-input-wrap">
+          <div class="name-label">PLAYER NAME</div>
+          <input id="playerNameInput" class="name-input" type="text" maxlength="20"
+            placeholder="ANONYMOUS" autocomplete="off" spellcheck="false">
+        </div>
+        <div class="start-area">
+          <button class="start-btn" id="startBtn" disabled>
+            <span id="startBtnText">SELECT A CHARACTER</span>
+          </button>
+          <button class="modes-btn" id="modesBtn">📋 MAPS &amp; MODES</button>
+        </div>
+      </div><!-- end #step3 -->
+
+    </div><!-- end #stepWrapper -->
+
+    <!-- Step Navigation -->
+    <div class="step-nav">
+      <button class="step-nav-btn" id="prevBtn" disabled>◀ PREV</button>
+      <div class="step-dots">
+        <span class="step-dot active" data-step="1"></span>
+        <span class="step-dot" data-step="2"></span>
+        <span class="step-dot" data-step="3"></span>
+      </div>
+      <button class="step-nav-btn" id="nextBtn">NEXT ▶</button>
     </div>
 
     <!-- Maps & Modes Modal -->

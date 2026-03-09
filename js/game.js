@@ -1,5 +1,50 @@
 'use strict';
 
+/**
+ * @file game.js
+ * Main Game class — owns the update/render loop and all game state.
+ *
+ * State machine (this.state):
+ *   'playing'   — normal gameplay
+ *   'paused'    — game paused (P key)
+ *   'shop'      — B key shop overlay open
+ *   'carshop'   — dealership overlay open (T near salesperson)
+ *   'casino'    — casino overlay open
+ *   'gameover'  — player dead
+ *   'waveclear' — brief pause between waves
+ *
+ * Key subsystems:
+ *   GameMap (this.map)             — tile world, collision, doors, portals
+ *   Player (this.player)           — player entity
+ *   Bot[] (this.bots)              — active enemy bots
+ *   BossBot (this.boss)            — wave boss (every 5 waves)
+ *   Bullet[] (this.bullets)        — player bullets
+ *   Bullet[] (this._botBullets)    — enemy bullets
+ *   Grenade[] (this._grenades)     — live grenades
+ *   Vehicle[] (this.vehicles)      — all vehicles on map
+ *   Particle[] (this.particles)    — visual effects
+ *   Decal[] (this.decals)          — persistent floor marks
+ *   HUD (this.hud)                 — screen-space overlay
+ *   InputManager (this.input)      — keyboard/mouse/touch
+ *   ShopManager (this._shop)       — B key shop
+ *   DealershipManager (this._dealership) — T key car shop
+ *   CasinoManager (this._casino)   — casino overlay
+ *   Weather (this.weather)         — ambient particle weather
+ *   AnimalCompanion (this.companion) — character companion
+ *
+ * Indoor system:
+ *   this._indoor — set when player is inside a building
+ *   this._indoor.isDealership — true for car dealership rooms (no enemy bots)
+ *   this._indoorBots / this._indoorBullets — indoor-specific arrays
+ *
+ * Special map modes (boolean flags):
+ *   this._arenaMode   — arena map (wave survival, no shop)
+ *   this._zombieMode  — zombie map
+ *   this._campaignMode — 100-level campaign
+ *   this._blitzMode   — 3× speed, no shop
+ *   this._siegeMode   — bots from all 4 edges
+ *   this._survivalMode / this._hardcoreMode — modifier flags
+ */
 class Game {
   constructor(charData, mapData) {
     this.canvas = document.getElementById('gameCanvas');
@@ -121,7 +166,7 @@ class Game {
     this._districtTimer    = 0;        // entry notification countdown (3s)
     this._reputation       = { dangerous: 0, rich: 0, industrial: 0 };
     this._repRestoreTimers = { dangerous: 0, rich: 0, industrial: 0 };
-    this._dangerSpawnTimer = 0;
+    this._dangerSpawnTimer = 10;
     this._shopDiscount     = 0;
 
     // ── Car Dealership ────────────────────────────────────────
@@ -158,6 +203,10 @@ class Game {
     this._campaignKills   = 0;   // kills this level
     this._levelComplete   = false;
     this._levelCompleteT  = 0;
+    // ── Player identity + survival timer ──────────────────────
+    this._playerName  = (localStorage.getItem('playerName') || 'ANONYMOUS').toUpperCase();
+    this._surviveTime = 0;
+    this.player._displayName = this._playerName;
     // ── Ambient Traffic ────────────────────────────────────────
     this._ambientCars     = [];
     this._ambientSpawnT   = 0;
@@ -339,6 +388,8 @@ class Game {
 
   // ── Update ─────────────────────────────────────────────────
   _update(dt) {
+    // Survival timer
+    this._surviveTime += dt;
     // Achievement popup decay
     if (this._achPopup) { this._achPopup.timer -= dt; if (this._achPopup.timer <= 0) this._achPopup = null; }
 
@@ -545,7 +596,7 @@ class Game {
 
     // ── Bodyguards ─────────────────────────────────────────
     for (const bg of this._bodyguards) {
-      bg.update(dt, this.player.x, this.player.y, this.bots, this.bullets, this.particles);
+      bg.update(dt, this.player.x, this.player.y, this.bots, this.bullets, this.particles, this.player.hp, this.player.maxHp);
     }
     this._bodyguards = this._bodyguards.filter(bg => !bg.dead);
 
@@ -656,6 +707,7 @@ class Game {
           if (this.boss && this.boss.dead) this.boss = null;
           this._arenaCountdown = 3.5;
           this.wave++;
+          window.audio?.waveUp();
         }
       }
     }
@@ -682,6 +734,7 @@ class Game {
           if (this.boss && this.boss.dead) this.boss = null;
           this._zombieCountdown = 4.0;
           this.wave++;
+          window.audio?.waveUp();
         }
       }
     }
@@ -930,6 +983,7 @@ class Game {
         if (this.boss._chargeDmgTimer <= 0) {
           const dmg = this.player.takeDamage(this.boss.damage * 2.5, this.hud);
           if (dmg) {
+            window.audio?.playerHit();
             this.hud.addDamageNumber(this.player.x, this.player.y - 30, dmg, this.camX, this.camY, '#FF6644');
             this._killStreak = 0;
             this._streakTimer = 0;
@@ -951,7 +1005,7 @@ class Game {
       if (!this.player.dead && !this._playerVehicle &&
           circlesOverlap(b.x, b.y, r, this.player.x, this.player.y, this.player.radius)) {
         const d = this.player.takeDamage(dmg * (this._hardcoreMode ? 2 : 1), this.hud);
-        if (d) this.hud.addDamageNumber(this.player.x, this.player.y - 30, d, this.camX, this.camY, '#FF6600');
+        if (d) { window.audio?.playerHit(); this.hud.addDamageNumber(this.player.x, this.player.y - 30, d, this.camX, this.camY, '#FF6600'); }
       }
     }
 
@@ -1584,6 +1638,7 @@ class Game {
         if (circlesOverlap(b.x, b.y, b.radius, this.player.x, this.player.y, this.player.radius)) {
           const dmg = this.player.takeDamage(b.damage, this.hud);
           if (dmg) {
+            window.audio?.playerHit();
             this.hud.addDamageNumber(this.player.x, this.player.y - 30, dmg, -offX, -offY, '#FF4444');
             this._killStreak = 0;
             this._streakTimer = 0;
@@ -2684,6 +2739,7 @@ class Game {
       if (this._globalEvent) this.hud.renderEventBanner(ctx, W, H, this._globalEvent, this._eventAnnounceTimer);
       if (this._playerDrone) this.hud.renderDroneStatus(this._playerDrone, this._droneControl);
       this.hud.renderDamageNumbers();
+      this.hud.renderSurviveTimer(ctx, W, this._surviveTime);
       if (this._districtLayout && this._currentDistrict) {
         this.hud.renderDistrictHUD(this._districtLayout, this._reputation, this._currentDistrict, this._shopDiscount);
         if (this._districtTimer > 0) this.hud.renderDistrictEntry(this._currentDistrict, this._districtTimer);
@@ -2724,7 +2780,7 @@ class Game {
       }
     }
     if (this.state === 'gameover') {
-      this.hud.renderGameOver(this.money, this.kills);
+      this.hud.renderGameOver(this.money, this.kills, this._surviveTime);
       if (this.input.mouseJustDown) { this._destroy(); window.location.href = 'index.html'; }
     }
 
@@ -2775,6 +2831,7 @@ class Game {
               this.money -= item.price;
               this._applyBmItem(item);
               if (isOnce) this._bmBought.add(item.id);
+              window.audio?.[item.type === 'implant' ? 'upgrade' : 'buy']();
             }
             break;
           }

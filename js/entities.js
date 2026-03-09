@@ -1,5 +1,33 @@
 'use strict';
 
+/**
+ * @file entities.js
+ * All game entity classes. Loaded after utils.js and config.js.
+ *
+ * Classes (in order):
+ *   Particle       — short-lived visual effect (sparks, blood, fire)
+ *   Decal          — persistent floor mark (blood pool, scorch)
+ *   Weather        — screen-space rain / smoke / sandstorm / fog / neon-haze particles
+ *   Bullet         — projectile fired by player or bot
+ *   MeleeAttack    — instant-hit melee arc (knife, electric whip)
+ *   Pickup         — health / ammo / money drop on bot death
+ *   Vehicle        — driveable car; player enters with F key
+ *   Player         — player entity; reads InputManager each frame
+ *   Bot            — enemy AI; types: mini/normal/big/police/swat/heavyswat/sniper/bomber/juggernaut
+ *   BossBot        — wave boss with shield phase and charge attack
+ *   ZombieBot      — melee-only zombie; contact damage, no ranged attack
+ *   Bodyguard      — hired escort; follows player, shoots enemies
+ *   Drone          — airborne enemy that orbits and fires; spawned by special buildings
+ *   Grenade        — arc projectile thrown by player (G key); explodes on fuse or wall
+ *   Salesperson    — passive NPC inside car dealership showroom; triggers shop on T press
+ *   CityNPC        — ambient pedestrian (life_sim map)
+ *   AnimalCompanion — character-specific companion (dog/cat/wolf/raven/bear/fox/salamander/spirit)
+ *   AmbientCar     — traffic vehicle driving along road tiles
+ *
+ * Bullet constructor: (x, y, angle, speed, damage, isPlayer, color)
+ * Particle constructor: (x, y, vx, vy, color, size, life)  ← ALL 7 args required
+ */
+
 // ─── Particle ──────────────────────────────────────────────────────────────────
 class Particle {
   constructor(x, y, vx, vy, color, size, life) {
@@ -863,6 +891,16 @@ class Player {
         ctx.beginPath(); ctx.arc(x + off, y, r, 0, Math.PI * 2); ctx.fill();
         ctx.restore();
       }
+    }
+
+    // ── Player name tag (world space, below circle) ───────────
+    if (this._displayName) {
+      ctx.save();
+      ctx.font = '7px Orbitron, monospace';
+      ctx.textAlign = 'center';
+      ctx.fillStyle = 'rgba(255,255,255,0.38)';
+      ctx.fillText(this._displayName, x, y + r + 13);
+      ctx.restore();
     }
   }
 }
@@ -2416,10 +2454,14 @@ class Bodyguard {
   constructor(x, y, tier = 'light') {
     this.x = x; this.y = y;
     this.dead = false; this.dying = false;
+    this._tier = tier;
     const tiers = {
-      light: { hp:80,  speed:170, damage:25, fireRate:600, color:'#44CCFF', radius:14 },
-      heavy: { hp:200, speed:140, damage:45, fireRate:800, color:'#FF8844', radius:18 },
-      elite: { hp:150, speed:190, damage:38, fireRate:500, color:'#AAFFAA', radius:15 },
+      light:  { hp:80,  speed:170, damage:25, fireRate:600,  color:'#44CCFF', radius:14 },
+      heavy:  { hp:200, speed:130, damage:50, fireRate:850,  color:'#FF8844', radius:19 },
+      elite:  { hp:150, speed:195, damage:42, fireRate:480,  color:'#AAFFAA', radius:15 },
+      sniper: { hp:100, speed:155, damage:95, fireRate:1400, color:'#FF44FF', radius:14 },
+      medic:  { hp:120, speed:160, damage:18, fireRate:700,  color:'#44FFEE', radius:14 },
+      ghost:  { hp:90,  speed:220, damage:35, fireRate:520,  color:'#CC88FF', radius:13 },
     };
     const cfg  = tiers[tier] || tiers.light;
     this.hp    = cfg.hp; this.maxHp = cfg.hp;
@@ -2427,9 +2469,11 @@ class Bodyguard {
     this.fireRate = cfg.fireRate; this.color = cfg.color; this.radius = cfg.radius;
     this._fireCooldown = Math.random() * cfg.fireRate;
     this._angle  = 0; this._t = 0; this._dyingT = 0;
+    this._healTimer = 4.5;
+    this._onHeal = null;
   }
 
-  update(dt, playerX, playerY, bots, bullets, particles) {
+  update(dt, playerX, playerY, bots, bullets, particles, playerHp = 100, playerMaxHp = 100) {
     this._t += dt;
     if (this.dying) { this._dyingT += dt; if (this._dyingT > 0.6) this.dead = true; return; }
     if (this.hp <= 0) { this.dying = true; return; }
@@ -2443,8 +2487,9 @@ class Bodyguard {
       this.y += (dy / dist) * spd;
     }
 
-    // Target nearest bot in range
-    let target = null, minDist = 360;
+    // Target nearest bot in range (sniper has longer range)
+    const range = this._tier === 'sniper' ? 580 : 360;
+    let target = null, minDist = range;
     for (const bot of bots) {
       if (bot.dead || bot.dying) continue;
       const d = Math.hypot(bot.x - this.x, bot.y - this.y);
@@ -2455,12 +2500,24 @@ class Bodyguard {
       this._fireCooldown -= dt * 1000;
       if (this._fireCooldown <= 0) {
         this._fireCooldown = this.fireRate;
-        bullets.push(new Bullet(this.x, this.y, this._angle, 380, this.damage, true, this.color));
+        const blt = new Bullet(this.x, this.y, this._angle, 380, this.damage, true, this.color);
+        if (this._tier === 'sniper') blt._isPiercing = true;
+        bullets.push(blt);
+      }
+    }
+
+    // Medic: heal player when HP < 70%
+    if (this._tier === 'medic' && !target) {
+      this._healTimer -= dt;
+      if (this._healTimer <= 0 && playerHp < playerMaxHp * 0.7) {
+        this._healTimer = 4.5;
+        if (this._onHeal) this._onHeal(8);
       }
     }
   }
 
   takeDamage(dmg) {
+    if (this._tier === 'ghost' && Math.random() < 0.22) return;
     this.hp -= dmg;
     if (this.hp <= 0) this.dying = true;
   }
