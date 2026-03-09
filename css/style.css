@@ -487,6 +487,67 @@ body {
   order: -1;
 }
 
+/* ── Step Wrapper & Animations ───────────────────────────── */
+.step-wrapper { overflow: hidden; position: relative; width: 100%; }
+.step { display: none; }
+.step.active { display: block; animation: stepIn 0.35s ease forwards; }
+.step.slide-out { display: block; animation: stepOut 0.30s ease forwards; }
+
+@keyframes stepIn  { from { opacity: 0; transform: translateX(40px); }  to { opacity: 1; transform: translateX(0); } }
+@keyframes stepOut { from { opacity: 1; transform: translateX(0); }      to { opacity: 0; transform: translateX(-40px); } }
+
+.step-label {
+  font-family: 'Orbitron', sans-serif; font-size: 11px; letter-spacing: 0.18em;
+  color: rgba(68,238,255,0.65); text-align: center; margin-bottom: 14px;
+}
+
+/* ── Step Nav ────────────────────────────────────────────── */
+.step-nav {
+  display: flex; align-items: center; justify-content: center;
+  gap: 24px; padding: 14px 0 6px;
+}
+.step-nav-btn {
+  font-family: 'Orbitron', sans-serif; font-size: 11px; font-weight: 700;
+  letter-spacing: 0.1em; color: #44EEFF;
+  background: rgba(68,238,255,0.08); border: 1px solid rgba(68,238,255,0.3);
+  border-radius: 6px; padding: 9px 22px; cursor: pointer;
+  transition: background 0.18s, border-color 0.18s;
+}
+.step-nav-btn:hover { background: rgba(68,238,255,0.18); border-color: #44EEFF; }
+.step-nav-btn:disabled { opacity: 0.28; cursor: default; pointer-events: none; }
+.step-dots { display: flex; gap: 10px; align-items: center; }
+.step-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.2);
+  transition: background 0.2s;
+}
+.step-dot.active { background: #44EEFF; border-color: #44EEFF; box-shadow: 0 0 8px #44EEFF; }
+
+/* ── Name Input (Step 3) ─────────────────────────────────── */
+.name-input-wrap {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 8px; margin: 16px auto 24px; max-width: 360px;
+}
+.name-label {
+  font-family: 'Orbitron', sans-serif; font-size: 10px;
+  letter-spacing: 0.18em; color: rgba(68,238,255,0.6);
+}
+.name-input {
+  width: 100%; padding: 12px 16px; box-sizing: border-box;
+  font-family: 'Orbitron', monospace; font-size: 18px; font-weight: 700;
+  text-align: center; letter-spacing: 0.14em;
+  color: #fff; background: rgba(0,0,0,0.5);
+  border: 1px solid rgba(68,238,255,0.35); border-radius: 8px;
+  outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+}
+.name-input:focus { border-color: #44EEFF; box-shadow: 0 0 16px rgba(68,238,255,0.25); }
+.name-input::placeholder { color: rgba(255,255,255,0.2); }
+.name-preview {
+  font-family: 'Orbitron', sans-serif; font-size: 13px;
+  color: rgba(255,255,255,0.45); text-align: center;
+  margin-bottom: 4px; min-height: 20px; letter-spacing: 0.1em;
+}
+
 /* ── Character Customization ──────────────────────────────── */
 .customize-section { display: flex; flex-direction: column; gap: 14px; }
 .customize-panel {

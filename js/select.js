@@ -33,11 +33,45 @@
   let customEffect     = 'none';
   let currentPage      = 1;
   let currentCharPage  = 1;
+  let currentStep      = 1;
 
   const charCards    = document.querySelectorAll('.char-card');
   const allMapCards  = document.querySelectorAll('.map-card');  // all pages
   const startBtn     = document.getElementById('startBtn');
   const startBtnText = document.getElementById('startBtnText');
+  const prevBtn      = document.getElementById('prevBtn');
+  const nextBtn      = document.getElementById('nextBtn');
+
+  // ── Step navigation ──────────────────────────────────────
+  function goToStep(n) {
+    const oldEl = document.getElementById(`step${currentStep}`);
+    const newEl = document.getElementById(`step${n}`);
+    oldEl.classList.add('slide-out');
+    setTimeout(() => {
+      oldEl.classList.remove('active', 'slide-out');
+      newEl.classList.add('active');
+      currentStep = n;
+      _updateStepNav();
+      if (n === 3) document.getElementById('playerNameInput')?.focus();
+    }, 280);
+  }
+
+  function _updateStepNav() {
+    prevBtn.disabled = (currentStep === 1);
+    nextBtn.style.visibility = (currentStep === 3) ? 'hidden' : 'visible';
+    nextBtn.disabled = (currentStep === 2 && !selectedCharId);
+    document.querySelectorAll('.step-dot').forEach(d =>
+      d.classList.toggle('active', +d.dataset.step === currentStep));
+    if (currentStep === 3) {
+      const charData = CONFIG.CHARACTERS.find(c => c.id === selectedCharId);
+      document.getElementById('namePreview').textContent = charData?.name ?? '';
+      startBtn.disabled = !selectedCharId;
+      startBtnText.textContent = selectedCharId ? 'START GAME' : 'GO BACK & SELECT A CHARACTER';
+    }
+  }
+
+  prevBtn.addEventListener('click', () => { if (currentStep > 1) goToStep(currentStep - 1); });
+  nextBtn.addEventListener('click', () => { if (currentStep < 3) goToStep(currentStep + 1); });
 
   // ── Character selection ──────────────────────────────────
   charCards.forEach(card => {
@@ -47,6 +81,7 @@
       selectedCharId = card.dataset.char;
       startBtn.disabled = false;
       startBtnText.textContent = 'START GAME';
+      _updateStepNav();
     });
   });
 
@@ -141,6 +176,8 @@
     const charData = CONFIG.CHARACTERS.find(c => c.id === selectedCharId);
     const mapData  = CONFIG.MAPS.find(m => m.id === selectedMapId) || CONFIG.MAPS[0];
     if (!charData) return;
+    const nameVal = (document.getElementById('playerNameInput')?.value || '').trim();
+    localStorage.setItem('playerName',     nameVal || 'ANONYMOUS');
     localStorage.setItem('selectedChar',   JSON.stringify(charData));
     localStorage.setItem('selectedMap',    JSON.stringify(mapData));
     localStorage.setItem('customization',  JSON.stringify({ neonColor: customNeonColor, mask: customMask, effect: customEffect }));
@@ -208,7 +245,10 @@
     if (e.code === 'Escape' && modesModal && modesModal.style.display !== 'none') {
       modesModal.style.display = 'none'; return;
     }
-    // Enter = start
-    if (e.code === 'Enter' && !startBtn.disabled) startBtn.click();
+    // Enter = advance step or start
+    if (e.code === 'Enter') {
+      if (currentStep === 3) { if (!startBtn.disabled) startBtn.click(); }
+      else if (!nextBtn.disabled) nextBtn.click();
+    }
   });
 })();

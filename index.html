@@ -18,6 +18,13 @@
       <p class="logo-sub">⬡ CHOOSE YOUR IDENTITY ⬡</p>
     </div>
 
+    <!-- ── Step Wrapper ─────────────────────────────────── -->
+    <div id="stepWrapper" class="step-wrapper">
+
+      <!-- STEP 2: Character + Customization (shown second) -->
+      <div id="step2" class="step">
+        <p class="step-label">STEP 2 OF 3 &nbsp;·&nbsp; CHOOSE YOUR CHARACTER</p>
+
     <!-- Characters -->
     <div class="char-section">
       <!-- Character page tabs -->
@@ -495,6 +502,12 @@
 
       </div>
     </div>
+
+      </div><!-- end #step2 -->
+
+      <!-- STEP 1: Map Selection (shown first, active by default) -->
+      <div id="step1" class="step active">
+        <p class="step-label">STEP 1 OF 3 &nbsp;·&nbsp; SELECT YOUR MAP</p>
 
     <!-- ── Map Selection ─────────────────────────────────── -->
     <div class="map-section">
@@ -984,13 +997,36 @@
 
     </div><!-- end .map-section -->
 
-    <!-- Start button area -->
-    <div class="start-area">
-      <p class="start-hint">1–4 CHAR · Q–I MAP · TAB PAGE · ↵ START</p>
-      <button class="start-btn" id="startBtn" disabled>
-        <span id="startBtnText">SELECT A CHARACTER</span>
-      </button>
-      <button class="modes-btn" id="modesBtn">📋 MAPS &amp; MODES</button>
+      </div><!-- end #step1 -->
+
+      <!-- STEP 3: Name + Start -->
+      <div id="step3" class="step">
+        <p class="step-label">STEP 3 OF 3 &nbsp;·&nbsp; ENTER YOUR IDENTITY</p>
+        <div id="namePreview" class="name-preview"></div>
+        <div class="name-input-wrap">
+          <div class="name-label">PLAYER NAME</div>
+          <input id="playerNameInput" class="name-input" type="text" maxlength="20"
+            placeholder="ANONYMOUS" autocomplete="off" spellcheck="false">
+        </div>
+        <div class="start-area">
+          <button class="start-btn" id="startBtn" disabled>
+            <span id="startBtnText">SELECT A CHARACTER</span>
+          </button>
+          <button class="modes-btn" id="modesBtn">📋 MAPS &amp; MODES</button>
+        </div>
+      </div><!-- end #step3 -->
+
+    </div><!-- end #stepWrapper -->
+
+    <!-- Step Navigation -->
+    <div class="step-nav">
+      <button class="step-nav-btn" id="prevBtn" disabled>◀ PREV</button>
+      <div class="step-dots">
+        <span class="step-dot active" data-step="1"></span>
+        <span class="step-dot" data-step="2"></span>
+        <span class="step-dot" data-step="3"></span>
+      </div>
+      <button class="step-nav-btn" id="nextBtn">NEXT ▶</button>
     </div>
 
     <!-- Maps & Modes Modal -->

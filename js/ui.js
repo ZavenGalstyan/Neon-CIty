@@ -239,7 +239,7 @@ class HUD {
     const rowH = 22;
     const panH = districtLayout.length * rowH + 10 + (shopDiscount > 0 ? 18 : 0);
     const px   = W - panW - HUD_PAD;
-    const py   = 68;
+    const py   = 100;  // below kills (y=88)
 
     // Panel background
     ctx.save();
@@ -573,14 +573,17 @@ class HUD {
     }
   }
 
-  // ── Top-right: money + kills + wave ───────────────────────────────────────
+  // ── Top-right: money + kills ───────────────────────────────────────────────
   renderMoney(money) {
     const ctx = this.ctx;
     const W   = this.canvas.width;
     ctx.save();
-    ctx.font = 'bold 28px Orbitron, monospace'; ctx.textAlign = 'right';
+    ctx.font = 'bold 28px Orbitron, monospace';
+    const txt = `$ ${money.toLocaleString()}`;
+    this._lastMoneyW = ctx.measureText(txt).width; // used by renderSurviveTimer
+    ctx.textAlign = 'right';
     ctx.shadowColor = '#FFD700'; ctx.shadowBlur = 20; ctx.fillStyle = '#FFD700';
-    ctx.fillText(`$ ${money.toLocaleString()}`, W - 16, 48);
+    ctx.fillText(txt, W - 16, 48);
     ctx.font = '9px Orbitron, monospace'; ctx.fillStyle = 'rgba(255,215,0,0.45)';
     ctx.fillText('MONEY', W - 16, 62);
     ctx.restore();
@@ -1013,23 +1016,35 @@ class HUD {
   }
 
   // ── Overlay screens ────────────────────────────────────────────────────────
-  renderGameOver(money, kills) {
+  renderGameOver(money, kills, surviveSeconds = 0) {
     const ctx = this.ctx;
     const W = this.canvas.width, H = this.canvas.height;
     ctx.fillStyle = 'rgba(0,0,0,0.84)'; ctx.fillRect(0,0,W,H);
+
+    // Format survival time as "X MINUTES Y SECONDS" (or just seconds if < 60)
+    const sm = Math.floor(surviveSeconds / 60);
+    const ss = Math.floor(surviveSeconds % 60);
+    const timeTxt = sm > 0
+      ? `${sm} MINUTE${sm !== 1 ? 'S' : ''} ${ss} SECOND${ss !== 1 ? 'S' : ''}`
+      : `${ss} SECOND${ss !== 1 ? 'S' : ''}`;
+
     ctx.save();
     ctx.textAlign = 'center';
     ctx.shadowColor = '#FF0033'; ctx.shadowBlur = 40;
     ctx.font = 'bold 72px Orbitron, monospace'; ctx.fillStyle = '#FF0033';
-    ctx.fillText('GAME OVER', W/2, H/2-80);
+    ctx.fillText('GAME OVER', W/2, H/2-90);
+    ctx.shadowColor = '#44FFAA'; ctx.shadowBlur = 16;
+    ctx.font = 'bold 16px Orbitron, monospace'; ctx.fillStyle = '#AAFFCC';
+    ctx.fillText(`SURVIVED  ${timeTxt}`, W/2, H/2-42);
     ctx.shadowColor = '#FFD700'; ctx.shadowBlur = 20;
     ctx.font = 'bold 28px Orbitron, monospace'; ctx.fillStyle = '#FFD700';
-    ctx.fillText(`$ ${money.toLocaleString()}  EARNED`, W/2, H/2-10);
+    ctx.fillText(`$ ${money.toLocaleString()}  EARNED`, W/2, H/2+4);
     ctx.shadowColor = '#FF4444';
     ctx.font = '22px Orbitron, monospace'; ctx.fillStyle = '#FF6666';
-    ctx.fillText(`${kills} ENEMIES DOWN`, W/2, H/2+35);
+    ctx.fillText(`${kills} ENEMIES DOWN`, W/2, H/2+48);
     ctx.font = '14px Orbitron, monospace'; ctx.fillStyle = 'rgba(255,255,255,0.5)';
-    ctx.fillText('[R] RESTART   ·   [ESC] / CLICK = MENU', W/2, H/2+90);
+    ctx.shadowBlur = 0;
+    ctx.fillText('[R] RESTART   ·   [ESC] / CLICK = MENU', W/2, H/2+100);
     ctx.restore();
   }
 
@@ -1165,6 +1180,23 @@ class HUD {
     ctx.lineTo(x+r,y+h); ctx.quadraticCurveTo(x,y+h,x,y+h-r);
     ctx.lineTo(x,y+r); ctx.quadraticCurveTo(x,y,x+r,y);
     ctx.closePath();
+  }
+
+  // ── Survival timer — sits to the LEFT of the money block ──────────────────
+  renderSurviveTimer(ctx, W, seconds) {
+    const m   = Math.floor(seconds / 60);
+    const s   = Math.floor(seconds % 60);
+    const d   = Math.floor((seconds % 1) * 10);
+    const txt = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}.${d}`;
+    // Align right edge just left of the money block (gap = 20px)
+    const x = W - 16 - (this._lastMoneyW || 140) - 20;
+    ctx.save();
+    ctx.font = 'bold 14px Orbitron, monospace'; ctx.textAlign = 'right';
+    ctx.fillStyle = '#AAFFAA'; ctx.shadowColor = '#44FF88'; ctx.shadowBlur = 10;
+    ctx.fillText(txt, x, 48);
+    ctx.font = '8px Orbitron, monospace'; ctx.fillStyle = 'rgba(68,255,136,0.45)'; ctx.shadowBlur = 0;
+    ctx.fillText('SURVIVED', x, 62);
+    ctx.restore();
   }
 
   _rgb(hex) {

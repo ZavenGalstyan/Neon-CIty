@@ -525,13 +525,16 @@ class ShopManager {
   // ── Security tab ─────────────────────────────────────────
   _drawSecurity(ctx, px, cy, PW, PH, player, money, mx, my) {
     const guards = [
-      { tier:'light', name:'LIGHT GUARD',  desc:'Fast. Armed with pistol.',  price:1500, hp:80,  color:'#44CCFF' },
-      { tier:'heavy', name:'HEAVY GUARD',  desc:'Tough. Heavy firepower.',   price:3500, hp:200, color:'#FF8844' },
-      { tier:'elite', name:'ELITE GUARD',  desc:'Best-in-class. Fast & lethal.', price:5000, hp:150, color:'#AAFFAA' },
+      { tier:'light',  name:'LIGHT GUARD',  desc:'Pistol. Fast responder.',    price:1500, hp:80,  dmg:25, color:'#44CCFF' },
+      { tier:'heavy',  name:'HEAVY GUARD',  desc:'Shotgun. Tanky frontline.',  price:3500, hp:200, dmg:50, color:'#FF8844' },
+      { tier:'elite',  name:'ELITE GUARD',  desc:'Best-in-class. Lethal.',     price:5000, hp:150, dmg:42, color:'#AAFFAA' },
+      { tier:'sniper', name:'SNIPER GUARD', desc:'Long range. 95 dmg/shot.',   price:6000, hp:100, dmg:95, color:'#FF44FF' },
+      { tier:'medic',  name:'MEDIC GUARD',  desc:'Heals you when HP < 70%.',   price:4000, hp:120, dmg:18, color:'#44FFEE' },
+      { tier:'ghost',  name:'GHOST GUARD',  desc:'Fast. 22% bullet dodge.',    price:7000, hp:90,  dmg:35, color:'#CC88FF' },
     ];
     const gap  = 18, cols = 3;
     const cardW = Math.floor((PW - gap * (cols + 1)) / cols);
-    const cardH = 190;
+    const cardH = 175;
     const startY = cy + 10;
 
     // Guard count header
@@ -539,12 +542,14 @@ class ShopManager {
     ctx.save();
     ctx.font = 'bold 11px Orbitron, monospace'; ctx.textAlign = 'center';
     ctx.fillStyle = '#AAFFAA'; ctx.shadowColor = '#44FF88'; ctx.shadowBlur = 10;
-    ctx.fillText(`ACTIVE GUARDS: ${guardCount} / 4`, px + PW / 2, cy + 28);
+    ctx.fillText(`ACTIVE GUARDS: ${guardCount} / 6`, px + PW / 2, cy + 28);
     ctx.restore();
 
     guards.forEach((g, i) => {
-      const cx2 = px + gap + i * (cardW + gap);
-      const ry  = startY + 40;
+      const row  = i < 3 ? 0 : 1;
+      const col  = i % cols;
+      const cx2 = px + gap + col * (cardW + gap);
+      const ry  = startY + 40 + row * (cardH + 14);
       const hover = mx >= cx2 && mx <= cx2 + cardW && my >= ry && my <= ry + cardH;
 
       // Card
@@ -555,33 +560,33 @@ class ShopManager {
       this._rr(ctx, cx2, ry, cardW, cardH, 8); ctx.fill(); ctx.stroke();
 
       // Guard silhouette
-      const mx2 = cx2 + cardW / 2, my2 = ry + 62;
+      const mx2 = cx2 + cardW / 2, my2 = ry + 52;
       ctx.fillStyle = g.color + '99';
-      ctx.beginPath(); ctx.arc(mx2, my2, 22, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(mx2, my2, 20, 0, Math.PI * 2); ctx.fill();
       ctx.strokeStyle = g.color; ctx.lineWidth = 2; ctx.shadowColor = g.color; ctx.shadowBlur = 12;
-      ctx.beginPath(); ctx.arc(mx2, my2, 22, 0, Math.PI * 2); ctx.stroke();
+      ctx.beginPath(); ctx.arc(mx2, my2, 20, 0, Math.PI * 2); ctx.stroke();
       // Head
       ctx.fillStyle = g.color;
-      ctx.beginPath(); ctx.arc(mx2, my2 - 28, 10, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(mx2, my2 - 25, 9, 0, Math.PI * 2); ctx.fill();
       // Gun
       ctx.strokeStyle = '#CCC'; ctx.lineWidth = 3; ctx.lineCap = 'round';
-      ctx.beginPath(); ctx.moveTo(mx2 + 18, my2 - 4); ctx.lineTo(mx2 + 36, my2 - 4); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(mx2 + 16, my2 - 4); ctx.lineTo(mx2 + 33, my2 - 4); ctx.stroke();
 
       // Name
       ctx.shadowBlur = 0;
-      ctx.font = 'bold 12px Orbitron, monospace'; ctx.textAlign = 'center'; ctx.fillStyle = g.color;
-      ctx.fillText(g.name, mx2, ry + 110);
+      ctx.font = 'bold 11px Orbitron, monospace'; ctx.textAlign = 'center'; ctx.fillStyle = g.color;
+      ctx.fillText(g.name, mx2, ry + 90);
 
-      // HP
+      // HP + DMG
       ctx.font = '9px Orbitron, monospace'; ctx.fillStyle = 'rgba(255,255,255,0.55)';
-      ctx.fillText(`HP: ${g.hp}`, mx2, ry + 128);
+      ctx.fillText(`HP: ${g.hp}  DMG: ${g.dmg}`, mx2, ry + 106);
 
       // Desc
       ctx.font = '9px Orbitron, monospace'; ctx.fillStyle = 'rgba(255,255,255,0.4)';
-      ctx.fillText(g.desc, mx2, ry + 144);
+      ctx.fillText(g.desc, mx2, ry + 120);
 
       // Price button
-      const btnY = ry + cardH - 34, btnW = cardW - 24, btnX = cx2 + 12;
+      const btnY = ry + cardH - 32, btnW = cardW - 24, btnX = cx2 + 12;
       const canBuy = money >= g.price;
       ctx.fillStyle = canBuy ? (hover ? `rgba(${this._rgb(g.color)},0.25)` : `rgba(${this._rgb(g.color)},0.12)`) : 'rgba(100,100,100,0.12)';
       ctx.strokeStyle = canBuy ? g.color : '#555'; ctx.lineWidth = 1;
@@ -593,11 +598,16 @@ class ShopManager {
 
       const tier = g.tier, price = g.price, color = g.color;
       this._pushArea(btnX, btnY, btnW, 26, (p, gameRef) => {
-        if ((gameRef._bodyguards || []).length >= 4) { this._msg('MAX 4 GUARDS', '#FF4466'); return; }
+        if ((gameRef._bodyguards || []).length >= 6) { this._msg('MAX 6 GUARDS', '#FF4466'); return; }
         if (gameRef.money < price) { this._msg('NOT ENOUGH MONEY', '#FF4466'); return; }
         gameRef.money -= price;
         const bg = new Bodyguard(p.x + rnd(-50, 50), p.y + rnd(-50, 50), tier);
         bg._color = color;
+        if (tier === 'medic') {
+          bg._onHeal = (amt) => {
+            gameRef.player.hp = Math.min(gameRef.player.maxHp, gameRef.player.hp + amt);
+          };
+        }
         gameRef._bodyguards.push(bg);
         window.audio?.buy();
         this._msg(`${tier.toUpperCase()} GUARD HIRED!`, color);
@@ -605,7 +615,7 @@ class ShopManager {
     });
 
     // Dismiss button
-    const dismissY = startY + 40 + cardH + 16;
+    const dismissY = startY + 40 + cardH * 2 + 14 + 16;
     const dismissX = px + PW / 2 - 100;
     const dismissHover = mx >= dismissX && mx <= dismissX + 200 && my >= dismissY && my <= dismissY + 28;
     ctx.save();

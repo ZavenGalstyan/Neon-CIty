@@ -203,6 +203,10 @@ class Game {
     this._campaignKills   = 0;   // kills this level
     this._levelComplete   = false;
     this._levelCompleteT  = 0;
+    // ── Player identity + survival timer ──────────────────────
+    this._playerName  = (localStorage.getItem('playerName') || 'ANONYMOUS').toUpperCase();
+    this._surviveTime = 0;
+    this.player._displayName = this._playerName;
     // ── Ambient Traffic ────────────────────────────────────────
     this._ambientCars     = [];
     this._ambientSpawnT   = 0;
@@ -384,6 +388,8 @@ class Game {
 
   // ── Update ─────────────────────────────────────────────────
   _update(dt) {
+    // Survival timer
+    this._surviveTime += dt;
     // Achievement popup decay
     if (this._achPopup) { this._achPopup.timer -= dt; if (this._achPopup.timer <= 0) this._achPopup = null; }
 
@@ -590,7 +596,7 @@ class Game {
 
     // ── Bodyguards ─────────────────────────────────────────
     for (const bg of this._bodyguards) {
-      bg.update(dt, this.player.x, this.player.y, this.bots, this.bullets, this.particles);
+      bg.update(dt, this.player.x, this.player.y, this.bots, this.bullets, this.particles, this.player.hp, this.player.maxHp);
     }
     this._bodyguards = this._bodyguards.filter(bg => !bg.dead);
 
@@ -2733,6 +2739,7 @@ class Game {
       if (this._globalEvent) this.hud.renderEventBanner(ctx, W, H, this._globalEvent, this._eventAnnounceTimer);
       if (this._playerDrone) this.hud.renderDroneStatus(this._playerDrone, this._droneControl);
       this.hud.renderDamageNumbers();
+      this.hud.renderSurviveTimer(ctx, W, this._surviveTime);
       if (this._districtLayout && this._currentDistrict) {
         this.hud.renderDistrictHUD(this._districtLayout, this._reputation, this._currentDistrict, this._shopDiscount);
         if (this._districtTimer > 0) this.hud.renderDistrictEntry(this._currentDistrict, this._districtTimer);
@@ -2773,7 +2780,7 @@ class Game {
       }
     }
     if (this.state === 'gameover') {
-      this.hud.renderGameOver(this.money, this.kills);
+      this.hud.renderGameOver(this.money, this.kills, this._surviveTime);
       if (this.input.mouseJustDown) { this._destroy(); window.location.href = 'index.html'; }
     }
 
