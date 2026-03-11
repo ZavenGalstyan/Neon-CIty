@@ -57,16 +57,16 @@
     }
   </script>
 
-  <!-- Scripts (order matters) -->
+  <!-- Scripts (load order: data → utils → core → entities → systems) -->
   <script src="js/config.js"></script>
   <script src="js/utils.js"></script>
-  <script src="js/audio.js"></script>
-  <script src="js/input.js"></script>
-  <script src="js/map.js"></script>
-  <script src="js/entities.js"></script>
-  <script src="js/ui.js"></script>
-  <script src="js/shop.js"></script>
-  <script src="js/game.js"></script>
+  <script src="js/systems/audio.js"></script>
+  <script src="js/core/input.js"></script>
+  <script src="js/core/map.js"></script>
+  <script src="js/entities/entities.js"></script>
+  <script src="js/systems/ui.js"></script>
+  <script src="js/systems/shop.js"></script>
+  <script src="js/core/game.js"></script>
 
   <script>
     // Show touch controls on touch devices
