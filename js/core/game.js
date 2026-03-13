@@ -177,6 +177,10 @@ class Game {
     this._casino          = new CasinoManager();
     this._casinoHosts     = [];
     this._nearCasinoHost  = false;
+    // ── Building NPC Shop ─────────────────────────────────────
+    this._buildingNpcs    = [];
+    this._nearBuildingNpc = false;
+    this._buildingShop    = new BuildingShopManager();
     // ── Grenades ──────────────────────────────────────────────
     this._grenades        = [];
     this._grenadeCount    = 0;
@@ -307,6 +311,9 @@ class Game {
       } else if (this._indoor?.isCasino && this._nearCasinoHost) {
         if      (this.state === 'playing')  { this._casino.open();  this.state = 'casino'; }
         else if (this.state === 'casino')   { this._casino.close(); this.state = 'playing'; }
+      } else if (this._indoor && !this._indoor.isDealership && !this._indoor.isCasino && !this._indoor.isMetro && this._nearBuildingNpc) {
+        if      (this.state === 'playing')      { this._buildingShop.open(this._indoor._buildingType ?? 0); this.state = 'buildingshop'; }
+        else if (this.state === 'buildingshop') { this._buildingShop.close(); this.state = 'playing'; }
       }
       return;
     }
@@ -330,7 +337,8 @@ class Game {
       if (this.state === 'blackmarket') { this._bmOpen = false; this.state = 'playing'; return; }
       if (this.state === 'shop')    { this.shop.close(); this.state = 'playing'; return; }
       if (this.state === 'carshop') { this._dealership.close(); this.state = 'playing'; return; }
-      if (this.state === 'casino')  { this._casino.close();     this.state = 'playing'; return; }
+      if (this.state === 'casino')       { this._casino.close();       this.state = 'playing'; return; }
+      if (this.state === 'buildingshop') { this._buildingShop.close(); this.state = 'playing'; return; }
       if (this.state === 'paused')  { this.state = 'playing'; return; }  // ESC = resume
       if (this.state === 'playing') { this.state = 'paused'; return; }
       if (this.state === 'gameover'){ this._destroy(); window.location.href = 'index.html'; return; }
@@ -1504,6 +1512,9 @@ class Game {
       if (this._indoor.isMetro) {
         this._metroWaveTimer = undefined;
       }
+      if (this.state === 'buildingshop') { this._buildingShop.close(); this.state = 'playing'; }
+      this._buildingNpcs    = [];
+      this._nearBuildingNpc = false;
       const door = this._indoor.doorDoor;
       this.player.x = door.wx;
       this.player.y = door.wy + 80;  // far enough to avoid instantly re-entering
@@ -1555,6 +1566,11 @@ class Game {
             }
           }
         }
+        // Spawn interactive NPC for all regular buildings
+        if (!room.isDealership && !room.isCasino && !room.isHome && !room.isMetro) {
+          const bType = typeof room._buildingType === 'number' ? room._buildingType : 0;
+          this._buildingNpcs = [new BuildingNPC(room.entryX + 60, room.entryY - 110, bType)];
+        }
         return;
       }
     }
@@ -1593,6 +1609,13 @@ class Game {
     if (this.player.y >= _exitThreshold) { this._tryEnterExit(); return; }
 
     for (const bot of this._indoorBots) bot.update(dt, this.player, room, this._indoorBullets, this.particles);
+    if (!room.isMetro) {
+      for (const npc of this._buildingNpcs) npc.update(dt);
+      this._nearBuildingNpc = this._buildingNpcs.some(
+        npc => Math.hypot(npc.x - this.player.x, npc.y - this.player.y) < (npc._interactR || 65)
+      );
+      if (this.state === 'buildingshop') this._buildingShop.update(dt);
+    }
     for (const b of this._indoorBullets) b.update(dt, room);
 
     for (const b of this._indoorBullets) {
@@ -1764,6 +1787,7 @@ class Game {
     for (const bot of this._indoorBots)  bot.render(ctx);
     for (const b of this._indoorBullets) if (b.isPlayer)  b.render(ctx);
     if (!this.player.dead) this.player.render(ctx);
+    for (const npc of this._buildingNpcs) npc.render(ctx);
     ctx.save();
     ctx.font = 'bold 11px Orbitron, monospace'; ctx.textAlign = 'center';
     ctx.fillStyle = '#FFFFAA'; ctx.shadowColor = '#FFFF00'; ctx.shadowBlur = 10;
@@ -2491,7 +2515,7 @@ class Game {
     const W   = this.canvas.width, H = this.canvas.height;
     const shake = this.hud.getShakeOffset();
 
-    this.canvas.style.cursor = (this.state === 'shop' || this.state === 'blackmarket' || this.state === 'carshop' || this.state === 'casino') ? 'default' : 'none';
+    this.canvas.style.cursor = (this.state === 'shop' || this.state === 'blackmarket' || this.state === 'carshop' || this.state === 'casino' || this.state === 'buildingshop') ? 'default' : 'none';
 
     ctx.clearRect(0, 0, W, H);
     ctx.fillStyle = '#08080f';
@@ -2734,6 +2758,7 @@ class Game {
       if (this._siegeMode)    this.hud.renderModeBadge('🛡 SIEGE · DEFEND THE CENTER', '#44AAFF');
       if (this._campaignMode) this.hud.renderCampaignLevel(this._campaignLevel, this._campaignKills, this._campaignTarget, this._levelComplete, this._levelCompleteT);
       if (this.player.companion && !this.player.companion.dead) this.hud.renderCompanionHP(this.player.companion);
+      if (this.player._buffs && this.player._buffs.size > 0) this.hud.renderActiveBuffs(this.player._buffs);
       this.hud.renderAchButton(this._achPanelOpen);
       if (!this._zombieMode && !this._lifeMode) this.hud.renderDayNight(this._nightAlpha, this._gameTime);
       if (this._globalEvent) this.hud.renderEventBanner(ctx, W, H, this._globalEvent, this._eventAnnounceTimer);
@@ -2811,6 +2836,16 @@ class Game {
       if (this.input.mouseJustDown) {
         this._casino.handleClick(this.input.mouseScreen.x, this.input.mouseScreen.y, this.player, this);
         if (!this._casino.isOpen) this.state = 'playing';
+      }
+    }
+
+    // Building NPC shop overlay
+    if (this.state === 'buildingshop') {
+      this._buildingShop.render(ctx, W, H, this.player, this.money,
+                                this.input.mouseScreen.x, this.input.mouseScreen.y);
+      if (this.input.mouseJustDown) {
+        this._buildingShop.handleClick(this.input.mouseScreen.x, this.input.mouseScreen.y, this.player, this);
+        if (!this._buildingShop.isOpen) this.state = 'playing';
       }
     }
 

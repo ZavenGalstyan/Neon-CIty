@@ -1421,3 +1421,322 @@ class CasinoManager {
 
   _rr(ctx, x, y, w, h, r) { ctx.beginPath(); ctx.roundRect(x, y, w, h, r); }
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// BuildingShopManager  — interactive purchase menu for all 24 building types
+// ─────────────────────────────────────────────────────────────────────────────
+class BuildingShopManager {
+  constructor() {
+    this.isOpen    = false;
+    this._bType    = 0;
+    this._areas    = [];
+    this._feedback = null;
+  }
+
+  open(buildingType) {
+    this.isOpen = true;
+    this._bType = buildingType ?? 0;
+    this._areas = [];
+  }
+  close()  { this.isOpen = false; this._areas = []; }
+  toggle(t){ this.isOpen ? this.close() : this.open(t); }
+
+  update(dt) {
+    if (this._feedback) { this._feedback.t -= dt; if (this._feedback.t <= 0) this._feedback = null; }
+  }
+
+  handleClick(sx, sy, player, gameRef) {
+    if (!this.isOpen) return false;
+    for (const a of this._areas) {
+      if (sx >= a.x && sx <= a.x + a.w && sy >= a.y && sy <= a.y + a.h) {
+        a.action(player, gameRef);
+        return true;
+      }
+    }
+    return true;
+  }
+
+  _msg(text, color = '#44FF88') { this._feedback = { msg: text, color, t: 2.0 }; }
+
+  // ── Apply a single effect object to the player/game ──────────────────────
+  _applyEffect(eff, player, gameRef) {
+    if (!eff) return;
+    switch (eff.type) {
+      case 'heal':
+        player.health = Math.min(player.maxHealth, player.health + (eff.amount || 40));
+        this._msg(`+${eff.amount} HP!`, '#44FF88');
+        break;
+      case 'healFull':
+        player.health = player.maxHealth;
+        this._msg('FULLY HEALED!', '#44FF88');
+        break;
+      case 'buff': {
+        const b = Object.assign({}, eff);  // copy
+        b.remaining = b.duration || 10;
+        b.maxDur    = b.remaining;
+        player._buffs.set(eff.id, b);
+        this._msg(`${eff.name} ACTIVE (${eff.duration}s)!`, eff.color || '#44EEFF');
+        break;
+      }
+      case 'money':
+        gameRef.money += eff.amount || 0;
+        this._msg(`+$${eff.amount}!`, '#FFDD00');
+        break;
+      case 'moneyHack': {
+        const gain = (gameRef.wave || 1) * 120;
+        gameRef.money += gain;
+        this._msg(`HACK: +$${gain}!`, '#00FF88');
+        break;
+      }
+      case 'loan':
+        gameRef.money += eff.give || 0;
+        gameRef._loanDebt = (gameRef._loanDebt || 0) + (eff.debt || 0);
+        this._msg(`BORROWED $${eff.give}! Owes $${eff.debt}`, '#FFCC00');
+        break;
+      case 'grenades':
+        gameRef._grenadeCount = Math.min(9, (gameRef._grenadeCount || 0) + (eff.amount || 1));
+        this._msg(`+${eff.amount} GRENADES!`, '#FF8800');
+        break;
+      case 'perm':
+        switch (eff.stat) {
+          case 'health':   player.maxHealth += eff.amount; player.health = Math.min(player.health + eff.amount, player.maxHealth); break;
+          case 'speed':    player.speed     += eff.amount; break;
+          case 'damage':   player.damageMult = Math.round((player.damageMult + eff.amount) * 100) / 100; break;
+          case 'armor':    player.armor      = Math.min(0.75, player.armor + eff.amount); break;
+          case 'fireRate': player.fireRateMult = Math.max(0.15, player.fireRateMult * (eff.amount || 0.95)); break;
+        }
+        this._msg('PERMANENT UPGRADE!', '#FFD700');
+        break;
+      case 'permRandom': {
+        const perms = ['health','speed','damage','armor'];
+        const chosen = perms[Math.floor(Math.random() * perms.length)];
+        const vals   = { health:20, speed:10, damage:0.08, armor:0.06 };
+        this._applyEffect({ type:'perm', stat:chosen, amount:vals[chosen] }, player, gameRef);
+        this._msg(`MUTATION: ${chosen.toUpperCase()} UP!`, '#55FF99');
+        break;
+      }
+      case 'clearWanted':
+        gameRef._wantedLevel = 0;
+        gameRef._wantedKills = 0;
+        this._msg('WANTED LEVEL CLEARED!', '#4477FF');
+        break;
+      case 'invincible':
+        player.invincible = eff.duration || 3;
+        this._msg(`INVINCIBLE ${eff.duration}s!`, '#FFDD00');
+        break;
+      case 'bodyguard':
+        if (gameRef._bodyguards && gameRef._bodyguards.length < 2) {
+          const { Bodyguard } = window; // access from global scope via game
+          gameRef._spawnBodyguard && gameRef._spawnBodyguard();
+          this._msg('BODYGUARD HIRED!', '#44FF88');
+        } else { this._msg('ALREADY HAVE MAX GUARDS', '#FF4444'); return false; }
+        break;
+      case 'randomWeapon': {
+        const all = CONFIG.WEAPONS.filter(w => !player.ownedWeapons.has(w.id));
+        if (all.length === 0) { this._msg('YOU HAVE ALL WEAPONS!', '#FFDD00'); return false; }
+        const w = all[Math.floor(Math.random() * all.length)];
+        player.ownedWeapons.add(w.id);
+        player.equipWeapon(w.id);
+        this._msg(`GOT: ${w.id.toUpperCase()}!`, '#44EEFF');
+        break;
+      }
+      case 'random': {
+        const opts = [
+          { type:'heal', amount:60 },
+          { type:'buff', id:'rnd_spd', name:'LUCKY SPEED', icon:'🎲', color:'#FFDD44', duration:15, speedAdd:80 },
+          { type:'buff', id:'rnd_dmg', name:'LUCKY DMG',   icon:'🎲', color:'#FF4444', duration:15, dmgMult:1.4 },
+          { type:'money', amount:500 },
+          { type:'money', amount:-200 },
+        ];
+        this._applyEffect(opts[Math.floor(Math.random() * opts.length)], player, gameRef);
+        break;
+      }
+      case 'heist': {
+        if (Math.random() < 0.5) {
+          gameRef.money += 1500;
+          this._msg('HEIST SUCCESS! +$1500', '#FFD700');
+        } else {
+          gameRef.money = Math.max(0, gameRef.money - 400);
+          this._msg('CAUGHT! -$400', '#FF4444');
+        }
+        break;
+      }
+      case 'repairVehicle':
+        if (gameRef._playerVehicle) {
+          gameRef._playerVehicle.hp = gameRef._playerVehicle.maxHp;
+          this._msg('VEHICLE REPAIRED!', '#44FFCC');
+        } else { this._msg('NO VEHICLE TO REPAIR', '#FF4444'); return false; }
+        break;
+      case 'escape': {
+        player.invincible = 5;
+        const rp = gameRef.map.randomRoadPos();
+        player.x = rp.x; player.y = rp.y;
+        gameRef._indoor = null;
+        gameRef._indoorBots = []; gameRef._indoorBullets = []; gameRef._indoorPickups = [];
+        this._msg('ESCAPED!', '#44AAFF');
+        break;
+      }
+      case 'penthouse': {
+        player.health = player.maxHealth;
+        const bigBuff = { type:'buff', id:'pent', name:'PENTHOUSE', icon:'🌟', color:'#CC66FF', duration:15, speedAdd:40, dmgMult:1.2, fireMult:0.75, armorAdd:0.20 };
+        this._applyEffect(bigBuff, player, gameRef);
+        this._msg('PENTHOUSE PACKAGE!', '#CC66FF');
+        break;
+      }
+      case 'multi':
+        for (const sub of (eff.effects || [])) this._applyEffect(sub, player, gameRef);
+        break;
+    }
+    return true;
+  }
+
+  // ── Main render ─────────────────────────────────────────────────────────
+  render(ctx, W, H, player, money, mx, my) {
+    if (!this.isOpen) return;
+    this._areas = [];
+    const cfg = CONFIG.BUILDING_INTERACTIONS[this._bType] || CONFIG.BUILDING_INTERACTIONS[0];
+    const PW  = Math.min(620, W - 40);
+    const PH  = Math.min(460, H - 50);
+    const px  = (W - PW) / 2;
+    const py  = (H - PH) / 2;
+    const nc  = cfg.npcColor;
+
+    // Dim
+    ctx.fillStyle = 'rgba(0,0,0,0.82)';
+    ctx.fillRect(0, 0, W, H);
+
+    // Panel
+    ctx.save();
+    ctx.shadowColor = nc; ctx.shadowBlur = 36;
+    ctx.fillStyle   = '#06060f';
+    ctx.strokeStyle = nc + 'AA';
+    ctx.lineWidth   = 1.5;
+    this._rr(ctx, px, py, PW, PH, 12); ctx.fill(); ctx.stroke();
+    ctx.restore();
+
+    // Top glow stripe
+    ctx.save();
+    const tg = ctx.createLinearGradient(px, py, px, py + 58);
+    tg.addColorStop(0, nc + '18'); tg.addColorStop(1, nc + '00');
+    ctx.fillStyle = tg; this._rr(ctx, px, py, PW, 58, 12); ctx.fill();
+    ctx.restore();
+
+    // Corner accents
+    this._corners(ctx, px, py, PW, PH, nc);
+
+    // NPC icon circle
+    ctx.save();
+    ctx.shadowColor = nc; ctx.shadowBlur = 18;
+    ctx.fillStyle = nc;
+    ctx.beginPath(); ctx.arc(px + 42, py + 36, 20, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#FFDDBB'; ctx.beginPath(); ctx.arc(px + 42, py + 29, 12, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#0a0a0a'; ctx.beginPath(); ctx.arc(px + 42, py + 41, 11, Math.PI, 0); ctx.fill();
+    ctx.restore();
+
+    // Title
+    ctx.save();
+    ctx.font = 'bold 15px Orbitron, monospace'; ctx.textAlign = 'left';
+    ctx.fillStyle = nc; ctx.shadowColor = nc; ctx.shadowBlur = 12;
+    ctx.fillText(cfg.npcName, px + 72, py + 30);
+    ctx.font = '11px Orbitron, monospace'; ctx.fillStyle = 'rgba(255,255,255,0.55)'; ctx.shadowBlur = 0;
+    ctx.fillText(cfg.dialogue, px + 72, py + 48);
+    ctx.restore();
+
+    // Divider
+    ctx.strokeStyle = nc + '30'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(px + 16, py + 65); ctx.lineTo(px + PW - 16, py + 65); ctx.stroke();
+
+    // Money display
+    ctx.save();
+    ctx.font = 'bold 12px Orbitron, monospace'; ctx.textAlign = 'right';
+    ctx.fillStyle = '#FFDD44'; ctx.shadowColor = '#FFDD44'; ctx.shadowBlur = 8;
+    ctx.fillText(`$${money.toLocaleString()}`, px + PW - 16, py + 56);
+    ctx.restore();
+
+    // Items
+    const ITEM_H = 90, ITEM_W = PW - 32, ITEM_X = px + 16;
+    let iy = py + 78;
+    for (const item of cfg.items) {
+      const hov   = mx >= ITEM_X && mx <= ITEM_X + ITEM_W && my >= iy && my <= iy + ITEM_H - 6;
+      const canAf = money >= item.price || item.price === 0;
+
+      // Item box
+      ctx.save();
+      ctx.fillStyle = hov ? nc + '20' : 'rgba(255,255,255,0.04)';
+      ctx.strokeStyle = hov ? nc + '88' : 'rgba(255,255,255,0.10)';
+      ctx.shadowColor = hov ? nc : 'transparent'; ctx.shadowBlur = hov ? 12 : 0;
+      ctx.lineWidth = 1;
+      this._rr(ctx, ITEM_X, iy, ITEM_W, ITEM_H - 8, 7); ctx.fill(); ctx.stroke();
+      ctx.restore();
+
+      // Icon
+      ctx.save();
+      ctx.font = '28px serif'; ctx.textAlign = 'center';
+      ctx.fillText(item.icon, ITEM_X + 30, iy + 50);
+      ctx.restore();
+
+      // Item name + desc
+      ctx.save();
+      ctx.textAlign = 'left';
+      ctx.font = 'bold 12px Orbitron, monospace';
+      ctx.fillStyle = canAf ? '#ffffff' : '#666666'; ctx.shadowBlur = 0;
+      ctx.fillText(item.name, ITEM_X + 60, iy + 28);
+      ctx.font = '10px Orbitron, monospace'; ctx.fillStyle = canAf ? 'rgba(255,255,255,0.65)' : 'rgba(120,120,120,0.65)';
+      ctx.fillText(item.desc, ITEM_X + 60, iy + 46);
+      ctx.restore();
+
+      // Price badge
+      const priceStr = item.price === 0 ? 'FREE' : `$${item.price}`;
+      const pw2 = 70, ph2 = 26, px2 = ITEM_X + ITEM_W - 82, py2 = iy + 24;
+      ctx.save();
+      ctx.fillStyle   = canAf ? nc : '#333333';
+      ctx.strokeStyle = canAf ? nc + 'AA' : '#555555';
+      ctx.shadowColor = canAf ? nc : 'transparent'; ctx.shadowBlur = canAf ? 8 : 0;
+      ctx.lineWidth   = 1;
+      this._rr(ctx, px2, py2, pw2, ph2, 5); ctx.fill(); ctx.stroke();
+      ctx.font = 'bold 11px Orbitron, monospace'; ctx.textAlign = 'center';
+      ctx.fillStyle = canAf ? '#000000' : '#555555'; ctx.shadowBlur = 0;
+      ctx.fillText(priceStr, px2 + pw2 / 2, py2 + 17);
+      ctx.restore();
+
+      // Click area
+      const capturedItem = item;
+      this._areas.push({ x: ITEM_X, y: iy, w: ITEM_W, h: ITEM_H - 8,
+        action: (pl, gr) => {
+          if (gr.money < capturedItem.price) { this._msg('NOT ENOUGH CASH!', '#FF4444'); return; }
+          gr.money -= capturedItem.price;
+          const ok = this._applyEffect(capturedItem.effect, pl, gr);
+          window.audio?.buy();
+        }
+      });
+
+      iy += ITEM_H;
+    }
+
+    // Feedback
+    if (this._feedback) {
+      const alpha = Math.min(1, this._feedback.t / 0.6);
+      ctx.save(); ctx.globalAlpha = alpha;
+      ctx.font = 'bold 14px Orbitron, monospace'; ctx.textAlign = 'center';
+      ctx.fillStyle = this._feedback.color; ctx.shadowColor = this._feedback.color; ctx.shadowBlur = 16;
+      ctx.fillText(this._feedback.msg, W / 2, py + PH - 16);
+      ctx.restore();
+    }
+
+    // Close hint
+    ctx.save();
+    ctx.font = '10px Orbitron, monospace'; ctx.fillStyle = 'rgba(255,255,255,0.22)'; ctx.textAlign = 'center';
+    ctx.fillText('[T] or [ESC] CLOSE', W / 2, py + PH - 4);
+    ctx.restore();
+  }
+
+  _rr(ctx, x, y, w, h, r) { ctx.beginPath(); ctx.roundRect(x, y, w, h, r); }
+  _corners(ctx, px, py, PW, PH, col) {
+    const L = 14;
+    ctx.save(); ctx.strokeStyle = col; ctx.lineWidth = 2;
+    for (const [x2, y2, dx, dy] of [[px,py,L,0],[px,py,0,L],[px+PW,py,-L,0],[px+PW,py,0,L],[px,py+PH,L,0],[px,py+PH,0,-L],[px+PW,py+PH,-L,0],[px+PW,py+PH,0,-L]]) {
+      ctx.beginPath(); ctx.moveTo(x2, y2); ctx.lineTo(x2+dx, y2+dy); ctx.stroke();
+    }
+    ctx.restore();
+  }
+}

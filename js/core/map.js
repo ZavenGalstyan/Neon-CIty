@@ -406,6 +406,44 @@ class GameMap {
         }
       }
     }
+
+    // ── Pseudo-3D south-wall depth pass ───────────────────────
+    // Drawn AFTER all tiles so the wall face sits on top of sidewalks below.
+    const wallH = Math.round(S * 0.14);
+    for (let y = sy; y <= ey; y++) {
+      for (let x = sx; x <= ex; x++) {
+        if (this.tiles[y][x] !== TILE.BUILDING) continue;
+        const below = (y + 1 < this.H) ? this.tiles[y + 1][x] : TILE.ROAD;
+        if (below === TILE.BUILDING) continue;
+        const wx2 = x * S, wy2 = y * S;
+        const bc = this.buildingColors[y][x];
+        // Darken building colour ~55% for south-facing wall
+        const rr = Math.round(parseInt(bc.slice(1,3),16) * 0.55);
+        const gg = Math.round(parseInt(bc.slice(3,5),16) * 0.55);
+        const bb = Math.round(parseInt(bc.slice(5,7),16) * 0.55);
+        ctx.fillStyle = `rgb(${rr},${gg},${bb})`;
+        ctx.fillRect(wx2, wy2 + S, S, wallH);
+        // Top-edge shadow where roof meets wall
+        ctx.fillStyle = 'rgba(0,0,0,0.52)';
+        ctx.fillRect(wx2, wy2 + S, S, 3);
+        // Bottom-edge ambient occlusion
+        ctx.fillStyle = 'rgba(0,0,0,0.22)';
+        ctx.fillRect(wx2, wy2 + S + wallH - 3, S, 3);
+        // Window slots on the wall face
+        if (this.buildingWindows[y][x]) {
+          const wc = cfg.windowColors[(Math.floor(x/2) + Math.floor(y/2)) % cfg.windowColors.length];
+          ctx.save();
+          ctx.shadowColor = wc; ctx.shadowBlur = 6; ctx.fillStyle = wc + 'AA';
+          const wW = 10, wHh = 7;
+          for (let wi = 0; wi < 3; wi++) {
+            const wx3 = wx2 + 8 + wi * Math.floor((S - 16) / 3);
+            if (wx3 + wW < wx2 + S - 6)
+              ctx.fillRect(wx3, wy2 + S + 3, wW, wHh);
+          }
+          ctx.restore();
+        }
+      }
+    }
   }
 
   // ── Metro entrance icon ───────────────────────────────────

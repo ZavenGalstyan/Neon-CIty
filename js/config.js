@@ -761,6 +761,186 @@ const CONFIG = {
 
   GRENADE: { damage:120, blastRadius:95, fuseTime:2.0, price:500 },
 
+  // ── Building Interactions ────────────────────────────────
+  // 24 entries matching BUILDING_TYPES indices 0-23.
+  // Each entry: { npcName, npcColor, dialogue, items:[{id,name,price,icon,desc,effect}] }
+  // effect types: heal | healFull | buff | perm | money | moneyHack | loan | grenades
+  //               randomWeapon | random | heist | clearWanted | invincible | bodyguard
+  //               repairVehicle | multi (sub-effects array) | escape | permRandom
+  // buff fields: speedAdd, fireMult(<1=faster), dmgMult, armorAdd, regenAdd, dodgeAdd,
+  //              moneyMult, noPolice, botsConfused, piercingBullets, explosiveBullets,
+  //              leechAdd, pendingMoney
+  BUILDING_INTERACTIONS: [
+    // 0 RESTAURANT
+    { npcName:'CHEF', npcColor:'#FF8844', dialogue:'"Welcome! Try our specials."',
+      items:[
+        { id:'burger',   name:'BURGER',        price:120, icon:'🍔', desc:'+40 HP',                  effect:{type:'heal',amount:40} },
+        { id:'espresso', name:'ESPRESSO',       price:170, icon:'☕', desc:'Speed +70  for 12s',      effect:{type:'buff',id:'esp',name:'CAFFEINATED',icon:'☕',color:'#FF8844',duration:12,speedAdd:70} },
+        { id:'special',  name:"CHEF'S SPECIAL", price:320, icon:'⭐', desc:'+60 HP + Speed 8s',       effect:{type:'multi',effects:[{type:'heal',amount:60},{type:'buff',id:'chef',name:"CHEF'S MEAL",icon:'⭐',color:'#FF8844',duration:8,speedAdd:50}]} },
+    ]},
+    // 1 OFFICE
+    { npcName:'EXECUTIVE', npcColor:'#4488FF', dialogue:'"Let\'s talk business."',
+      items:[
+        { id:'bribe',    name:'BRIBE POLICE',  price:400, icon:'💼', desc:'Clear wanted level',      effect:{type:'clearWanted'} },
+        { id:'deal',     name:'CORP DEAL',      price:550, icon:'📈', desc:'2× kill money for 60s',   effect:{type:'buff',id:'money',name:'CORP DEAL',icon:'📈',color:'#4488FF',duration:60,moneyMult:2} },
+        { id:'security', name:'HIRE GUARD',     price:700, icon:'🛡', desc:'Hire a bodyguard',        effect:{type:'bodyguard'} },
+    ]},
+    // 2 HOTEL
+    { npcName:'RECEPTIONIST', npcColor:'#CC66FF', dialogue:'"Our suites are your sanctuary."',
+      items:[
+        { id:'rest',     name:'REST',           price:200, icon:'🛌', desc:'Full HP + Regen 20s',     effect:{type:'multi',effects:[{type:'healFull'},{type:'buff',id:'regen',name:'RESTED',icon:'🛌',color:'#CC66FF',duration:20,regenAdd:4}]} },
+        { id:'minibar',  name:'MINI-BAR',        price:150, icon:'🍾', desc:'+30 HP + Dmg 10s',       effect:{type:'multi',effects:[{type:'heal',amount:30},{type:'buff',id:'mbar',name:'MINI-BAR',icon:'🍾',color:'#CC66FF',duration:10,dmgMult:1.28}]} },
+        { id:'pent',     name:'PENTHOUSE',       price:600, icon:'🌟', desc:'Full HP + all buffs 15s', effect:{type:'penthouse'} },
+    ]},
+    // 3 MARKET
+    { npcName:'SHOPKEEPER', npcColor:'#44FF88', dialogue:'"Got supplies? Sure do!"',
+      items:[
+        { id:'hpack',    name:'HEALTH PACK',    price:130, icon:'💊', desc:'+50 HP',                  effect:{type:'heal',amount:50} },
+        { id:'ammo',     name:'AMMO CRATE',      price:110, icon:'📦', desc:'Fire rate ×1.8 for 8s',   effect:{type:'buff',id:'ammo',name:'AMMO UP',icon:'📦',color:'#44FF88',duration:8,fireMult:0.55} },
+        { id:'grens',    name:'3× GRENADES',     price:300, icon:'💣', desc:'+3 grenades',             effect:{type:'grenades',amount:3} },
+    ]},
+    // 4 ARCADE
+    { npcName:'ATTENDANT', npcColor:'#FFDD00', dialogue:'"Insert coin. Play to win."',
+      items:[
+        { id:'play',     name:'PLAY GAME',       price:100, icon:'🕹', desc:'Random buff or cash',     effect:{type:'random'} },
+        { id:'hiscore',  name:'HIGH-SCORE BET',  price:200, icon:'🏆', desc:'+450 cash',               effect:{type:'money',amount:450} },
+        { id:'power',    name:'POWER-UP',         price:350, icon:'⚡', desc:'Fire rate ×2 for 15s',    effect:{type:'buff',id:'pow',name:'POWER-UP',icon:'⚡',color:'#FFDD00',duration:15,fireMult:0.5} },
+    ]},
+    // 5 PHARMACY
+    { npcName:'PHARMACIST', npcColor:'#44FFCC', dialogue:'"We have what you need."',
+      items:[
+        { id:'pills',    name:'PAIN PILLS',      price:90,  icon:'💊', desc:'+35 HP',                  effect:{type:'heal',amount:35} },
+        { id:'stim',     name:'STIMULANT',        price:250, icon:'💉', desc:'Speed +90 for 10s',       effect:{type:'buff',id:'stim',name:'STIMULANT',icon:'💉',color:'#44FFCC',duration:10,speedAdd:90} },
+        { id:'shield',   name:'SHIELD DRUG',      price:380, icon:'🛡', desc:'Armor +30% for 18s',      effect:{type:'buff',id:'shd',name:'SHIELDED',icon:'🛡',color:'#44FFCC',duration:18,armorAdd:0.30} },
+    ]},
+    // 6 GYM
+    { npcName:'TRAINER', npcColor:'#FF6644', dialogue:'"No pain, no gain!"',
+      items:[
+        { id:'protein',  name:'PROTEIN SHAKE',   price:200, icon:'💪', desc:'+30 Max HP (perm)',       effect:{type:'perm',stat:'health',amount:30} },
+        { id:'workout',  name:'WORKOUT',           price:350, icon:'🏋', desc:'Speed +15 (perm)',        effect:{type:'perm',stat:'speed',amount:15} },
+        { id:'ster',     name:'STEROIDS',           price:450, icon:'⚡', desc:'Damage ×1.4 for 25s',    effect:{type:'buff',id:'ster',name:'STEROIDS',icon:'⚡',color:'#FF6644',duration:25,dmgMult:1.4} },
+    ]},
+    // 7 BANK
+    { npcName:'BANKER', npcColor:'#FFCC44', dialogue:'"Your money is safe here... probably."',
+      items:[
+        { id:'loan',     name:'CASH LOAN',        price:0,   icon:'💵', desc:'Borrow $600 (costs $800 later)', effect:{type:'loan',give:600,debt:800} },
+        { id:'invest',   name:'INVESTMENT',        price:400, icon:'📈', desc:'+$700 awarded next wave',        effect:{type:'buff',id:'inv',name:'INVESTED',icon:'📈',color:'#FFCC44',duration:999,pendingMoney:700} },
+        { id:'heist',    name:'VAULT HEIST',        price:200, icon:'🏦', desc:'50% chance: +$1500 or -$400',    effect:{type:'heist'} },
+    ]},
+    // 8 NIGHTCLUB
+    { npcName:'DJ', npcColor:'#FF00CC', dialogue:'"The night is young. Dance!"',
+      items:[
+        { id:'vip',      name:'VIP ENTRY',          price:150, icon:'🎵', desc:'3s invincibility + dance',       effect:{type:'invincible',duration:3} },
+        { id:'rave',     name:'RAVE PILL',           price:300, icon:'💊', desc:'Speed+Fire for 20s',             effect:{type:'buff',id:'rave',name:'RAVING',icon:'🎵',color:'#FF00CC',duration:20,speedAdd:55,fireMult:0.65} },
+        { id:'djvip',    name:'VIP PASS',            price:500, icon:'🌟', desc:'Fire rate perm +8%',             effect:{type:'perm',stat:'fireRate',amount:0.92} },
+    ]},
+    // 9 HOSPITAL
+    { npcName:'DOCTOR', npcColor:'#FF4444', dialogue:'"You look terrible. I can help."',
+      items:[
+        { id:'surgery',  name:'SURGERY',            price:400, icon:'🏥', desc:'Full HP restore',                effect:{type:'healFull'} },
+        { id:'bandage',  name:'BANDAGE',             price:100, icon:'🩹', desc:'+60 HP',                         effect:{type:'heal',amount:60} },
+        { id:'adr',      name:'ADRENALINE',          price:300, icon:'💉', desc:'3s invincible + Speed 8s',       effect:{type:'multi',effects:[{type:'invincible',duration:3},{type:'buff',id:'adr',name:'ADRENALINE',icon:'💉',color:'#FF4444',duration:8,speedAdd:70}]} },
+    ]},
+    // 10 GARAGE
+    { npcName:'MECHANIC', npcColor:'#778899', dialogue:'"I can tune anything with wheels."',
+      items:[
+        { id:'tune',     name:'TUNE-UP',            price:150, icon:'🔧', desc:'Speed +70 for 30s',              effect:{type:'buff',id:'vspd',name:'TUNED',icon:'🔧',color:'#778899',duration:30,speedAdd:70} },
+        { id:'plate',    name:'ARMOR PLATING',       price:450, icon:'🛡', desc:'Armor +35% for 20s',             effect:{type:'buff',id:'varm',name:'ARMORED',icon:'🛡',color:'#778899',duration:20,armorAdd:0.35} },
+        { id:'nitro',    name:'NITRO KIT',           price:280, icon:'🚀', desc:'Speed +120 for 8s',              effect:{type:'buff',id:'nit',name:'NITRO',icon:'🚀',color:'#FF8800',duration:8,speedAdd:120} },
+    ]},
+    // 11 BAR
+    { npcName:'BARTENDER', npcColor:'#FFAA22', dialogue:'"What\'ll it be, friend?"',
+      items:[
+        { id:'cocktail', name:'COCKTAIL',            price:180, icon:'🍹', desc:'Speed +80 for 12s',              effect:{type:'buff',id:'cktl',name:'BUZZED',icon:'🍹',color:'#FFAA22',duration:12,speedAdd:80} },
+        { id:'whiskey',  name:'WHISKEY SHOT',         price:130, icon:'🥃', desc:'Damage ×1.35 for 8s',           effect:{type:'buff',id:'whsk',name:'WHISKEY',icon:'🥃',color:'#FFAA22',duration:8,dmgMult:1.35} },
+        { id:'brew',     name:'MIDNIGHT BREW',        price:350, icon:'🍺', desc:'Speed+Dmg+Fire for 10s',        effect:{type:'buff',id:'brew',name:'HAMMERED',icon:'🍺',color:'#FF6600',duration:10,speedAdd:50,dmgMult:1.25,fireMult:0.72} },
+    ]},
+    // 12 PAWNSHOP
+    { npcName:'PAWNBROKER', npcColor:'#CC8833', dialogue:'"I buy junk, sell treasure."',
+      items:[
+        { id:'sell',     name:'SELL LOOT',           price:0,   icon:'💰', desc:'+400 cash (always)',             effect:{type:'money',amount:400} },
+        { id:'mystery',  name:'MYSTERY BOX',          price:250, icon:'📦', desc:'Random weapon or buff',         effect:{type:'random'} },
+        { id:'blkammo',  name:'BULK AMMO',            price:100, icon:'🔫', desc:'Fire rate ×1.7 for 10s',        effect:{type:'buff',id:'bammo',name:'LOADED',icon:'🔫',color:'#CC8833',duration:10,fireMult:0.58} },
+    ]},
+    // 13 TECH LAB
+    { npcName:'SCIENTIST', npcColor:'#00FFCC', dialogue:'"Science! Beautiful science."',
+      items:[
+        { id:'cyber',    name:'CYBERNETICS',          price:450, icon:'🤖', desc:'Armor +0.08 (perm)',             effect:{type:'perm',stat:'armor',amount:0.08} },
+        { id:'nano',     name:'NANO-BOTS',            price:500, icon:'🔬', desc:'Leech +4 HP per kill 20s',       effect:{type:'buff',id:'nano',name:'NANO-BOTS',icon:'🔬',color:'#00FFCC',duration:20,leechAdd:4} },
+        { id:'oc',       name:'OVERCLOCK',            price:380, icon:'⚡', desc:'Fire rate ×2.5 for 12s',        effect:{type:'buff',id:'oc',name:'OVERCLOCKED',icon:'⚡',color:'#00FFCC',duration:12,fireMult:0.40} },
+    ]},
+    // 14 WAREHOUSE
+    { npcName:'FOREMAN', npcColor:'#888888', dialogue:'"We got crates of everything."',
+      items:[
+        { id:'cache',    name:'SUPPLY CACHE',         price:200, icon:'📦', desc:'+50 HP + ammo boost 8s',        effect:{type:'multi',effects:[{type:'heal',amount:50},{type:'buff',id:'sup',name:'SUPPLIED',icon:'📦',color:'#888888',duration:8,fireMult:0.60}]} },
+        { id:'wcrate',   name:'WEAPON CRATE',          price:350, icon:'🔫', desc:'Random weapon unlock',          effect:{type:'randomWeapon'} },
+        { id:'blkm',     name:'BLACK MARKET',          price:600, icon:'🌑', desc:'+2 grenades + Dmg 15s',         effect:{type:'multi',effects:[{type:'grenades',amount:2},{type:'buff',id:'blk',name:'BLACK MKT',icon:'🌑',color:'#888888',duration:15,dmgMult:1.3}]} },
+    ]},
+    // 15 POLICE STATION
+    { npcName:'CAPTAIN', npcColor:'#4477FF', dialogue:'"Keep it legal... or don\'t."',
+      items:[
+        { id:'bribe2',   name:'BRIBE CAPTAIN',        price:500, icon:'💸', desc:'Clear wanted + no cops 60s',    effect:{type:'multi',effects:[{type:'clearWanted'},{type:'buff',id:'nolaw',name:'IMMUNITY',icon:'💸',color:'#4477FF',duration:60,noPolice:true}]} },
+        { id:'tip',      name:'TIP OFF',               price:300, icon:'📋', desc:'Clear wanted + $500',           effect:{type:'multi',effects:[{type:'clearWanted'},{type:'money',amount:500}]} },
+        { id:'dep',      name:'DEPUTIZE',              price:400, icon:'⭐', desc:'No police spawns for 45s',      effect:{type:'buff',id:'dep',name:'DEPUTIZED',icon:'⭐',color:'#4477FF',duration:45,noPolice:true} },
+    ]},
+    // 16 TATTOO PARLOR
+    { npcName:'ARTIST', npcColor:'#FF44AA', dialogue:'"Pain is just weakness leaving the body."',
+      items:[
+        { id:'war',      name:'WAR TATTOO',            price:300, icon:'💀', desc:'Damage +10% (perm)',            effect:{type:'perm',stat:'damage',amount:0.10} },
+        { id:'sleeve',   name:'FULL SLEEVE',           price:500, icon:'🎨', desc:'Speed +12 (perm)',              effect:{type:'perm',stat:'speed',amount:12} },
+        { id:'uvtat',    name:'UV TATTOO',              price:200, icon:'✨', desc:'Dodge +8% for 20s',             effect:{type:'buff',id:'uv',name:'UV GLOW',icon:'✨',color:'#FF44AA',duration:20,dodgeAdd:0.08} },
+    ]},
+    // 17 AMMO DEPOT
+    { npcName:'ARMS DEALER', npcColor:'#FF6600', dialogue:'"I sell the loudest solutions."',
+      items:[
+        { id:'bulk',     name:'BULK AMMO',             price:200, icon:'📦', desc:'Fire rate ×2.2 for 12s',        effect:{type:'buff',id:'blk2',name:'OVERLOADED',icon:'📦',color:'#FF6600',duration:12,fireMult:0.45} },
+        { id:'exprd',    name:'EXPLOSIVE ROUNDS',       price:420, icon:'💥', desc:'Bullets AoE splash for 15s',   effect:{type:'buff',id:'exp',name:'EXPLOSIVE',icon:'💥',color:'#FF6600',duration:15,explosiveBullets:true} },
+        { id:'hical',    name:'HIGH CALIBER',           price:320, icon:'🔫', desc:'Damage ×1.5 for 20s',          effect:{type:'buff',id:'hcal',name:'HIGH-CAL',icon:'🔫',color:'#FF6600',duration:20,dmgMult:1.5} },
+    ]},
+    // 18 HACKER DEN
+    { npcName:'HACKER', npcColor:'#00FF88', dialogue:'"The city is just a system. I own it."',
+      items:[
+        { id:'hkpol',    name:'HACK POLICE',           price:300, icon:'💻', desc:'Clear wanted level',            effect:{type:'clearWanted'} },
+        { id:'hkmny',    name:'MONEY HACK',            price:400, icon:'💰', desc:'Wave × $120 instant cash',      effect:{type:'moneyHack'} },
+        { id:'wpnmod',   name:'WEAPON MOD',            price:600, icon:'⚙',  desc:'Piercing bullets for 15s',      effect:{type:'buff',id:'prc',name:'PIERCING',icon:'⚙',color:'#00FF88',duration:15,piercingBullets:true} },
+    ]},
+    // 19 DOJO
+    { npcName:'SENSEI', npcColor:'#FFDD00', dialogue:'"The sword and the self are one."',
+      items:[
+        { id:'train',    name:'TRAINING',              price:300, icon:'⚔',  desc:'Damage +8% (perm)',             effect:{type:'perm',stat:'damage',amount:0.08} },
+        { id:'med',      name:'MEDITATE',               price:200, icon:'🧘', desc:'+50 HP + no wanted 15s',        effect:{type:'multi',effects:[{type:'heal',amount:50},{type:'buff',id:'zen',name:'ZEN',icon:'🧘',color:'#FFDD00',duration:15,noPolice:true}]} },
+        { id:'kiai',     name:'KIAI FOCUS',             price:250, icon:'🥋', desc:'Dodge +12% for 12s',            effect:{type:'buff',id:'kai',name:'KIAI',icon:'🥋',color:'#FFDD00',duration:12,dodgeAdd:0.12} },
+    ]},
+    // 20 SAFEHOUSE
+    { npcName:'CONTACT', npcColor:'#44AAFF', dialogue:'"Lie low. Stay sharp."',
+      items:[
+        { id:'safe',     name:'SAFE REST',             price:150, icon:'🏠', desc:'+60 HP',                        effect:{type:'heal',amount:60} },
+        { id:'armory',   name:'ARMORY ACCESS',          price:420, icon:'🔫', desc:'Random weapon unlock',          effect:{type:'randomWeapon'} },
+        { id:'escape',   name:'ESCAPE PLAN',            price:350, icon:'🚁', desc:'5s invincible + teleport',      effect:{type:'escape'} },
+    ]},
+    // 21 CHOP SHOP
+    { npcName:'MECHANIC', npcColor:'#AA5522', dialogue:'"Bring it in rough, take it out mean."',
+      items:[
+        { id:'repair',   name:'REPAIR JOB',            price:200, icon:'🔧', desc:'Restore vehicle HP',            effect:{type:'repairVehicle'} },
+        { id:'hotrod',   name:'HOT ROD MOD',           price:380, icon:'🏎', desc:'Speed +100 for 20s',            effect:{type:'buff',id:'rod',name:'HOT ROD',icon:'🏎',color:'#AA5522',duration:20,speedAdd:100} },
+        { id:'spray',    name:'RESPRAY',                price:250, icon:'🎨', desc:'Clear wanted level',            effect:{type:'clearWanted'} },
+    ]},
+    // 22 RADIO STATION
+    { npcName:'DJ', npcColor:'#FF88CC', dialogue:'"You\'re live on NEON FM!"',
+      items:[
+        { id:'broad',    name:'BROADCAST',             price:200, icon:'📻', desc:'Bots confused for 12s',         effect:{type:'buff',id:'brd',name:'BROADCAST',icon:'📻',color:'#FF88CC',duration:12,botsConfused:true} },
+        { id:'hype',     name:'HYPE TRACK',            price:300, icon:'🎸', desc:'Kill money ×2 for 20s',         effect:{type:'buff',id:'hyp',name:'HYPED',icon:'🎸',color:'#FF88CC',duration:20,moneyMult:2} },
+        { id:'shout',    name:'SHOUTOUT',               price:150, icon:'🎤', desc:'+$350',                         effect:{type:'money',amount:350} },
+    ]},
+    // 23 UNDERGROUND LAB
+    { npcName:'DR. CHAOS', npcColor:'#55FF99', dialogue:'"Science has no limits here."',
+      items:[
+        { id:'mutagen',  name:'MUTAGEN',               price:450, icon:'🧬', desc:'Random permanent upgrade',      effect:{type:'permRandom'} },
+        { id:'serum',    name:'SUPER SERUM',           price:700, icon:'💉', desc:'Speed+Dmg+Fire+Armor for 30s', effect:{type:'buff',id:'ser',name:'SUPER SERUM',icon:'💉',color:'#55FF99',duration:30,speedAdd:70,dmgMult:1.3,fireMult:0.75,armorAdd:0.20} },
+        { id:'mind',     name:'MIND CONTROL',          price:600, icon:'🧠', desc:'Bots confused + Dmg ×1.2 15s', effect:{type:'buff',id:'mnd',name:'MIND CTRL',icon:'🧠',color:'#55FF99',duration:15,botsConfused:true,dmgMult:1.2} },
+    ]},
+  ],
+
   // ── Districts ─────────────────────────────────────────────
   DISTRICTS: [
     { id:'dangerous',  name:'DANGEROUS DISTRICT', shortName:'DANGER ZONE', color:'#FF4444', tint:'rgba(255,68,68,0.055)',

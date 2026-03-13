@@ -1199,6 +1199,43 @@ class HUD {
     ctx.restore();
   }
 
+  // ── Active buff icons (top-right) ──────────────────────────────────────────
+  renderActiveBuffs(buffs) {
+    const ctx = this.ctx;
+    const W   = this.canvas.width;
+    const SLOT_W = 52, SLOT_H = 48, PAD = 4;
+    let bx = W - 16;
+    let by = 72;  // below wave/kills row
+    for (const [id, b] of buffs) {
+      if (!b.remaining || b.remaining <= 0) continue;
+      const col  = b.color || '#44EEFF';
+      const pct  = b.maxDur > 0 ? Math.max(0, b.remaining / b.maxDur) : 1;
+      bx -= SLOT_W + PAD;
+      // Card bg
+      ctx.save();
+      ctx.fillStyle   = 'rgba(0,0,0,0.72)';
+      ctx.strokeStyle = col + '88';
+      ctx.lineWidth   = 1;
+      ctx.shadowColor = col; ctx.shadowBlur = pct > 0.3 ? 8 : 0;
+      ctx.beginPath(); ctx.roundRect(bx, by, SLOT_W, SLOT_H, 5); ctx.fill(); ctx.stroke();
+      // Icon
+      ctx.font = '18px serif'; ctx.textAlign = 'center'; ctx.shadowBlur = 0;
+      ctx.fillText(b.icon || '✦', bx + SLOT_W / 2, by + 22);
+      // Label
+      ctx.font = 'bold 6px Orbitron, monospace'; ctx.fillStyle = col; ctx.shadowBlur = 0;
+      ctx.fillText((b.name || id).slice(0, 8).toUpperCase(), bx + SLOT_W / 2, by + 33);
+      // Countdown bar
+      ctx.fillStyle = '#222';
+      ctx.fillRect(bx + 4, by + 38, SLOT_W - 8, 5);
+      ctx.fillStyle = col;
+      ctx.fillRect(bx + 4, by + 38, Math.round((SLOT_W - 8) * pct), 5);
+      // Timer text
+      ctx.font = '6px Orbitron, monospace'; ctx.fillStyle = 'rgba(255,255,255,0.55)';
+      ctx.fillText(`${Math.ceil(b.remaining)}s`, bx + SLOT_W / 2, by + 47);
+      ctx.restore();
+    }
+  }
+
   _rgb(hex) {
     const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
     return `${r},${g},${b}`;
