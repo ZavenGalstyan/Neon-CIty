@@ -281,6 +281,7 @@ class GameMap {
       this.portals.push({ x: (pos1.tx + 0.5) * S, y: (pos1.ty + 0.5) * S, paired: 1, _animT: 0 });
       this.portals.push({ x: (pos2.tx + 0.5) * S, y: (pos2.ty + 0.5) * S, paired: 0, _animT: 1.5 });
     }
+    this._buildStreetLights(); this._buildCacti();
   }
 
   // ── Metropolis city generation ────────────────────────────
@@ -426,6 +427,237 @@ class GameMap {
     const p2y = ryArr[ryArr.length - 3]   ?? ryArr[ryArr.length - 1];
     this.portals.push({ x: (p1x + 0.5) * S, y: (p1y + 0.5) * S, paired: 1, _animT: 0 });
     this.portals.push({ x: (p2x + 0.5) * S, y: (p2y + 0.5) * S, paired: 0, _animT: 1.5 });
+    this._buildStreetLights(); this._buildCacti();
+  }
+
+  // ── Street light generation ───────────────────────────────
+  // Builds this.streetLights array: one entry per sidewalk tile
+  // adjacent to a road, spaced out by a position hash.
+  _buildStreetLights() {
+    this.streetLights = [];
+    const S = this.S;
+    // Colour palette: amber (×2 weight), cool-white, pink, cyan
+    const PAL = [
+      [255, 210, 110],
+      [255, 210, 110],
+      [220, 240, 255],
+      [255, 140, 220],
+      [110, 240, 255],
+    ];
+    for (let y = 1; y < this.H - 1; y++) {
+      for (let x = 1; x < this.W - 1; x++) {
+        if (this.tiles[y][x] !== TILE.SIDEWALK) continue;
+        // Determine if any cardinal neighbour is a road
+        const nN = this.tiles[y - 1][x] === TILE.ROAD;
+        const nS = this.tiles[y + 1][x] === TILE.ROAD;
+        const nW = this.tiles[y][x - 1] === TILE.ROAD;
+        const nE = this.tiles[y][x + 1] === TILE.ROAD;
+        const roadSides = (nN?1:0) + (nS?1:0) + (nW?1:0) + (nE?1:0);
+        // Skip corner tiles (adjacent to 2+ roads) and non-road-adjacent tiles
+        if (roadSides !== 1) continue;
+        // Space lights every ~5 tiles using a deterministic hash
+        if (((x * 7 + y * 11) >>> 0) % 5 !== 0) continue;
+        // Skip park tiles (metropolis only)
+        if (this._parkTiles && this._parkTiles.has(`${x},${y}`)) continue;
+        // Direction from sidewalk toward road (arm points this way)
+        const armDx = nW ? -1 : nE ? 1 : 0;
+        const armDy = nN ? -1 : nS ? 1 : 0;
+        // Colour from palette
+        const h = ((x * 1531 + y * 743) >>> 0) % PAL.length;
+        const [r, g, b] = PAL[h];
+        this.streetLights.push({
+          wx: (x + 0.5) * S,
+          wy: (y + 0.5) * S,
+          r, g, b, armDx, armDy,
+        });
+      }
+    }
+  }
+
+  // ── Street light poles (world-space, drawn before entities) ─
+  // Shows the physical pole + arm + lamp housing in world coords.
+  // ctx is already translated to world-space by the caller.
+  renderStreetLightPoles(ctx, camX, camY, canvasW, canvasH, nightAlpha) {
+    if (!this.streetLights || !this.streetLights.length || nightAlpha < 0.01) return;
+    const margin = 80;
+    const x0 = camX - margin, y0 = camY - margin;
+    const x1 = camX + canvasW + margin, y1 = camY + canvasH + margin;
+    const S  = this.S;
+    const lit = nightAlpha > 0.01;
+
+    ctx.save();
+    for (const lt of this.streetLights) {
+      if (lt.wx < x0 || lt.wx > x1 || lt.wy < y0 || lt.wy > y1) continue;
+
+      const bx = lt.wx, by = lt.wy;            // pole base (tile centre)
+      const reach = S * 0.44;                   // arm length in world px
+      const lx = bx + lt.armDx * reach;         // lamp centre x
+      const ly = by + lt.armDy * reach;         // lamp centre y
+
+      // ── Pole shadow (subtle dark oval) ──────────────────────
+      ctx.globalAlpha = 0.18;
+      ctx.fillStyle   = '#000';
+      ctx.beginPath();
+      ctx.ellipse(bx + 2, by + 2, 4, 2.5, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+
+      // ── Pole (slim metallic bar) ─────────────────────────────
+      const pG = ctx.createLinearGradient(bx - 2, by, bx + 2, by);
+      pG.addColorStop(0,   '#3a3a50');
+      pG.addColorStop(0.4, '#7a7a99');
+      pG.addColorStop(1,   '#282838');
+      ctx.fillStyle = pG;
+      ctx.fillRect(bx - 2, by - 3, 4, 6);
+
+      // ── Arm (thin line from pole toward road) ────────────────
+      ctx.strokeStyle = '#505068';
+      ctx.lineWidth   = 1.8;
+      ctx.beginPath();
+      ctx.moveTo(bx, by);
+      ctx.lineTo(lx, ly);
+      ctx.stroke();
+
+      // ── Lamp housing (dark trapezoid / rect) ─────────────────
+      ctx.fillStyle = '#1e1e2e';
+      ctx.beginPath();
+      ctx.arc(lx, ly, 5.5, 0, Math.PI * 2);
+      ctx.fill();
+
+      // ── Bulb (dim off-state during day, bright at night) ─────
+      const bulbAlpha = lit ? 0.55 + nightAlpha * 0.45 : 0.12;
+      ctx.fillStyle   = `rgba(${lt.r},${lt.g},${lt.b},${bulbAlpha})`;
+      ctx.shadowColor = `rgb(${lt.r},${lt.g},${lt.b})`;
+      ctx.shadowBlur  = lit ? 10 * nightAlpha : 0;
+      ctx.beginPath();
+      ctx.arc(lx, ly, 3.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+    }
+    ctx.restore();
+  }
+
+  // ── Street light glows (additive, after night overlay) ──────
+  // Must be called AFTER the dark night overlay rect so the
+  // additive ('lighter') compositing punches through the darkness.
+  // ctx must be translated to world-space by the caller.
+  renderStreetLightGlows(ctx, camX, camY, canvasW, canvasH, nightAlpha) {
+    if (!this.streetLights || !this.streetLights.length || nightAlpha < 0.01) return;
+    const margin = 120;
+    const x0 = camX - margin, y0 = camY - margin;
+    const x1 = camX + canvasW + margin, y1 = camY + canvasH + margin;
+    const S  = this.S;
+    const a  = nightAlpha; // 0 → 1
+
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter'; // additive blending
+
+    for (const lt of this.streetLights) {
+      if (lt.wx < x0 || lt.wx > x1 || lt.wy < y0 || lt.wy > y1) continue;
+
+      const lx = lt.wx + lt.armDx * (S * 0.44);
+      const ly = lt.wy + lt.armDy * (S * 0.44);
+      const { r, g, b } = lt;
+
+      // Tight halo around the bulb
+      const halo = ctx.createRadialGradient(lx, ly, 0, lx, ly, 24);
+      halo.addColorStop(0,   `rgba(${r},${g},${b},${(a * 0.70).toFixed(3)})`);
+      halo.addColorStop(0.4, `rgba(${r},${g},${b},${(a * 0.30).toFixed(3)})`);
+      halo.addColorStop(1,   `rgba(${r},${g},${b},0)`);
+      ctx.fillStyle = halo;
+      ctx.beginPath();
+      ctx.arc(lx, ly, 24, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Wide soft ground pool (slightly oval, follows arm direction)
+      const poolRx = lt.armDy !== 0 ? 52 : 72; // wider perpendicular to arm
+      const poolRy = lt.armDy !== 0 ? 72 : 52;
+      const pool = ctx.createRadialGradient(lx, ly, 0, lx, ly, Math.max(poolRx, poolRy));
+      pool.addColorStop(0,   `rgba(${r},${g},${b},${(a * 0.22).toFixed(3)})`);
+      pool.addColorStop(0.5, `rgba(${r},${g},${b},${(a * 0.09).toFixed(3)})`);
+      pool.addColorStop(1,   `rgba(${r},${g},${b},0)`);
+      ctx.fillStyle = pool;
+      ctx.beginPath();
+      ctx.ellipse(lx, ly, poolRx, poolRy, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    ctx.restore();
+  }
+
+  // ── Cactus decoration generation (desert maps) ───────────
+  _buildCacti() {
+    this.cacti = [];
+    if (!this.config.desert) return;
+    const T = this.S, W = this.W, H = this.H;
+    for (let ty = 1; ty < H - 1; ty++) {
+      for (let tx = 1; tx < W - 1; tx++) {
+        if (this.tiles[ty][tx] !== TILE.SIDEWALK) continue;
+        // Sparse placement: deterministic hash for spacing
+        if (((tx * 13 + ty * 7) >>> 0) % 6 !== 0) continue;
+        const wx = tx * T + T * 0.5 + (Math.random() - 0.5) * T * 0.38;
+        const wy = ty * T + T * 0.5 + (Math.random() - 0.5) * T * 0.38;
+        const h = 18 + Math.random() * 26;
+        const style = Math.floor(Math.random() * 3); // 0=tall, 1=double-arm, 2=squat
+        this.cacti.push({ wx, wy, h, style });
+      }
+    }
+  }
+
+  renderCacti(ctx, camX, camY, canvasW, canvasH) {
+    if (!this.cacti || !this.cacti.length) return;
+    for (const c of this.cacti) {
+      const sx = c.wx - camX + canvasW * 0.5;
+      const sy = c.wy - camY + canvasH * 0.5;
+      if (sx < -80 || sx > canvasW + 80 || sy < -80 || sy > canvasH + 80) continue;
+      this._drawCactus(ctx, sx, sy, c.h, c.style);
+    }
+  }
+
+  _drawCactus(ctx, x, y, h, style) {
+    const w = h * 0.20;
+    ctx.save();
+    ctx.shadowColor = '#000'; ctx.shadowBlur = 4;
+
+    const cg = ctx.createLinearGradient(x - w, y, x + w, y);
+    cg.addColorStop(0, '#2a6018'); cg.addColorStop(0.45, '#3a8028'); cg.addColorStop(1, '#2a6018');
+    ctx.fillStyle = cg;
+
+    // Main trunk
+    ctx.beginPath();
+    ctx.roundRect(x - w, y - h, w * 2, h, w * 0.85);
+    ctx.fill();
+
+    if (style === 1 || style === 0) {
+      // Left arm: horizontal elbow then upward
+      const ay = y - h * 0.52;
+      const aw = w * 0.78, ah = h * 0.36;
+      ctx.beginPath(); ctx.roundRect(x - w * 3.2, ay, w * 2.5, w * 1.5, w * 0.6); ctx.fill();
+      ctx.beginPath(); ctx.roundRect(x - w * 3.2 - aw * 0.1, ay - ah, aw * 1.0, ah, w * 0.7); ctx.fill();
+    }
+    if (style === 1) {
+      // Right arm
+      const ay = y - h * 0.38;
+      const aw = w * 0.78, ah = h * 0.28;
+      ctx.beginPath(); ctx.roundRect(x + w * 0.8, ay, w * 2.4, w * 1.5, w * 0.6); ctx.fill();
+      ctx.beginPath(); ctx.roundRect(x + w * 0.8 + aw * 0.05, ay - ah, aw * 1.0, ah, w * 0.7); ctx.fill();
+    }
+
+    ctx.shadowBlur = 0;
+
+    // Spine dots down the trunk
+    ctx.fillStyle = 'rgba(255,255,220,0.30)';
+    const spines = style === 2 ? 4 : 6;
+    for (let i = 0; i < spines; i++) {
+      const sy2 = y - h * 0.08 - i * h * (0.82 / spines);
+      ctx.beginPath(); ctx.arc(x - w * 1.12, sy2, 1.5, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(x + w * 1.12, sy2, 1.5, 0, Math.PI * 2); ctx.fill();
+    }
+    // Top rounded nub
+    ctx.fillStyle = '#226610';
+    ctx.beginPath(); ctx.arc(x, y - h, w * 0.88, 0, Math.PI * 2); ctx.fill();
+
+    ctx.restore();
   }
 
   _blockColor(seed) {
@@ -504,14 +736,6 @@ class GameMap {
           if (isRowR && !isColR) {
             ctx.fillStyle = 'rgba(255,255,255,0.06)';
             ctx.fillRect(wx, wy + S/2 - 2, S, 4);
-          }
-          // Street light at intersections
-          if (isColR && isRowR) {
-            ctx.save();
-            ctx.shadowColor = cfg.lightGlow; ctx.shadowBlur = 30;
-            ctx.fillStyle   = cfg.lightColor;
-            ctx.beginPath(); ctx.arc(wx + S/2, wy + S/2, 4, 0, Math.PI * 2); ctx.fill();
-            ctx.restore();
           }
         } else if (tile === TILE.SIDEWALK) {
           const isPark = this._parkTiles && this._parkTiles.has(`${x},${y}`);

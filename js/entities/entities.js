@@ -79,13 +79,14 @@ class Decal {
     this.type     = type; // 'blood' | 'hole'
     this.lifetime = 15.0;
     this.dead     = false;
-    const s = type === 'blood' ? rnd(12, 22) : rnd(3, 6);
+    const isZBlood = type === 'zombie_blood';
+    const s = (type === 'blood' || isZBlood) ? rnd(isZBlood ? 16 : 12, isZBlood ? 28 : 22) : rnd(3, 6);
     this._size   = s;
     this._splats = [];
-    const n = type === 'blood' ? Math.floor(rnd(3, 7)) : 1;
+    const n = isZBlood ? Math.floor(rnd(5, 10)) : type === 'blood' ? Math.floor(rnd(3, 7)) : 1;
     for (let i = 0; i < n; i++) {
       const a = Math.random() * Math.PI * 2;
-      const d = Math.random() * s * 0.6;
+      const d = Math.random() * s * (isZBlood ? 1.1 : 0.6);
       this._splats.push({ dx: Math.cos(a)*d, dy: Math.sin(a)*d, r: rnd(s*0.35, s*0.75) });
     }
   }
@@ -96,8 +97,8 @@ class Decal {
     const alpha = Math.min(1, this.lifetime / 3.0) * 0.78;
     ctx.save();
     ctx.globalAlpha = alpha;
-    if (this.type === 'blood') {
-      ctx.fillStyle = '#3a0000';
+    if (this.type === 'blood' || this.type === 'zombie_blood') {
+      ctx.fillStyle = this.type === 'zombie_blood' ? '#1a4a04' : '#3a0000';
       for (const s of this._splats) {
         ctx.beginPath(); ctx.arc(this.x + s.dx, this.y + s.dy, s.r, 0, Math.PI * 2); ctx.fill();
       }
@@ -150,6 +151,15 @@ class Weather {
           this._p.push({ x: Math.random()*W, y: Math.random()*H, r: rnd(80,220), spd: rnd(6,20), col: cols[i%cols.length], a: rnd(0.025,0.08), dir: Math.random()*Math.PI*2 });
         break;
       }
+      case 'blizzard': {
+        // Fine snow layer
+        for (let i = 0; i < 220; i++)
+          this._p.push({ x: Math.random()*W*1.3-W*0.15, y: Math.random()*H, spd: rnd(70,190), r: rnd(1.2,3.0), a: rnd(0.25,0.70), drift: rnd(30,80), big: false });
+        // Large drifting flakes
+        for (let i = 0; i < 38; i++)
+          this._p.push({ x: Math.random()*W, y: Math.random()*H, spd: rnd(28,70), r: rnd(3.5,7.5), a: rnd(0.12,0.38), drift: rnd(15,50), big: true });
+        break;
+      }
     }
   }
 
@@ -193,6 +203,18 @@ class Weather {
           p.x += Math.cos(p.dir)*p.spd*dt; p.y += Math.sin(p.dir)*p.spd*dt;
           if (p.x < -p.r) p.x = W+p.r; if (p.x > W+p.r) p.x = -p.r;
           if (p.y < -p.r) p.y = H+p.r; if (p.y > H+p.r) p.y = -p.r;
+        }
+        break;
+      }
+      case 'blizzard': {
+        for (const p of this._p) {
+          p.y += p.spd * dt;
+          p.x += p.drift * dt;
+          // Subtle horizontal sway
+          p.x += Math.sin(p.y * 0.012 + p.drift) * (p.big ? 14 : 6) * dt;
+          if (p.y > H + p.r*2) { p.y = -p.r*2; p.x = Math.random()*W*1.3-W*0.15; }
+          if (p.x > W + 50) p.x = -50;
+          if (p.x < -50) p.x = W + 50;
         }
         break;
       }
@@ -263,6 +285,36 @@ class Weather {
           g.addColorStop(0, p.col + 'AA'); g.addColorStop(1, p.col + '00');
           ctx.fillStyle = g; ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fill();
         }
+        ctx.restore(); break;
+      }
+      case 'blizzard': {
+        ctx.save();
+        // Fine snow — solid white dots
+        ctx.fillStyle = 'rgba(230,245,255,0.92)';
+        for (const p of this._p) {
+          if (p.big) continue;
+          ctx.globalAlpha = p.a;
+          ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fill();
+        }
+        // Large flakes — soft glow
+        for (const p of this._p) {
+          if (!p.big) continue;
+          ctx.globalAlpha = p.a * 0.55;
+          const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r * 2.5);
+          g.addColorStop(0, 'rgba(200,230,255,1)'); g.addColorStop(1, 'rgba(180,220,255,0)');
+          ctx.fillStyle = g; ctx.beginPath(); ctx.arc(p.x, p.y, p.r * 2.5, 0, Math.PI*2); ctx.fill();
+          // Core bright dot
+          ctx.globalAlpha = p.a;
+          ctx.fillStyle = 'rgba(240,250,255,0.95)';
+          ctx.beginPath(); ctx.arc(p.x, p.y, p.r * 0.55, 0, Math.PI*2); ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+        // Cold blue ground tint
+        ctx.fillStyle = 'rgba(180,215,255,0.055)'; ctx.fillRect(0, 0, W, H);
+        // Vignette — darker cold edges
+        const vg = ctx.createRadialGradient(W/2, H/2, H*0.22, W/2, H/2, H*0.88);
+        vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(4,14,30,0.28)');
+        ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
         ctx.restore(); break;
       }
     }
@@ -1256,6 +1308,8 @@ class Bot {
     this._eyeBlink      = 0;
     this._eyeBlinkTimer = rnd(1, 4);
     this._animT         = 0;
+    this._sirenT        = 0; // police/swat: drives flashing light phase
+    this._mapTheme = mapConfig ? (mapConfig.snow ? 'snow' : mapConfig.desert ? 'desert' : null) : null;
   }
 
   update(dt, player, gameMap, bullets, particles) {
@@ -1266,6 +1320,9 @@ class Bot {
     }
 
     this._animT += dt;
+    if (this.type === 'police' || this.type === 'swat' || this.type === 'heavyswat') {
+      this._sirenT += dt;
+    }
     const dist        = Math.hypot(player.x - this.x, player.y - this.y);
     const attackRange = this._cfg.attackRange;
     const visionRange = this._cfg.visionRange;
@@ -1400,7 +1457,9 @@ class Bot {
     const ds = this.dying ? Math.max(0, this.dyingTimer / (this.type === 'mini' ? 0.12 : 0.35)) : 1;
     ctx.save();
     ctx.translate(x, y); ctx.scale(ds, ds); ctx.translate(-x, -y);
-    if      (this.type === 'mini')                                                  this._renderMini(ctx, x, y, r);
+    if      (this._mapTheme === 'snow')                                             this._renderSnowman(ctx, x, y, r);
+    else if (this._mapTheme === 'desert')                                           this._renderDesertEnemy(ctx, x, y, r);
+    else if (this.type === 'mini')                                                  this._renderMini(ctx, x, y, r);
     else if (this.type === 'big')                                                   this._renderBig(ctx, x, y, r);
     else if (this.type === 'police' || this.type === 'swat' || this.type === 'heavyswat') this._renderPolice(ctx, x, y, r);
     else if (this.type === 'sniper')                                                this._renderSniper(ctx, x, y, r);
@@ -1689,6 +1748,34 @@ class Bot {
     ctx.restore();
 
     this._renderHPBar(ctx, x, y, r, isHeavy?56:40, isHeavy?6:5);
+
+    // ── Police/SWAT siren lights (alternating red ↔ blue, fixed above head) ─
+    if (!this.dying) {
+      const phase = (this._sirenT * 5) % 1;
+      const redOn = phase < 0.5;
+      // Fixed world-space position: centered directly above the officer
+      const ly = y - r - 7;
+      ctx.save();
+      // Red light (left side, fixed)
+      const redCol  = redOn  ? '#FF1010' : '#881010';
+      const redGlow = redOn  ? '#FF0000' : '#440000';
+      ctx.shadowColor = redGlow; ctx.shadowBlur = redOn ? 18 : 4;
+      ctx.fillStyle   = redCol; ctx.globalAlpha = redOn ? 1.0 : 0.35;
+      ctx.beginPath(); ctx.arc(x - 6, ly, 4.5, 0, Math.PI * 2); ctx.fill();
+      // Blue light (right side, fixed)
+      const bluCol  = redOn  ? '#103088' : '#1030FF';
+      const bluGlow = redOn  ? '#001144' : '#0044FF';
+      ctx.shadowColor = bluGlow; ctx.shadowBlur = redOn ? 4 : 18;
+      ctx.fillStyle   = bluCol; ctx.globalAlpha = redOn ? 0.35 : 1.0;
+      ctx.beginPath(); ctx.arc(x + 6, ly, 4.5, 0, Math.PI * 2); ctx.fill();
+      ctx.shadowBlur = 0; ctx.globalAlpha = 1;
+      // Ground colour spill (additive)
+      ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = 0.09;
+      ctx.fillStyle = redOn ? '#FF0000' : '#0044FF';
+      ctx.beginPath(); ctx.arc(x, y, r * 1.6, 0, Math.PI * 2); ctx.fill();
+      ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
+      ctx.restore();
+    }
   }
 
   _renderSniper(ctx, x, y, r) {
@@ -1943,6 +2030,434 @@ class Bot {
       ctx.restore();
     }
     this._renderHPBar(ctx, x, y, r, 70, 8);
+  }
+
+  // ── SNOWMAN: themed render for snow maps ──────────────────
+  _renderSnowman(ctx, x, y, r) {
+    const isMini   = this.type === 'mini';
+    const isBig    = this.type === 'big' || this.type === 'juggernaut';
+    const isPolice = this.type === 'police' || this.type === 'swat' || this.type === 'heavyswat';
+    const isBomber = this.type === 'bomber';
+
+    // Ground shadow
+    ctx.save(); ctx.globalAlpha = 0.20; ctx.fillStyle = '#000';
+    ctx.beginPath(); ctx.ellipse(x+2, y+r*0.60, r*(isBig?1.10:0.88), r*0.26, 0, 0, Math.PI*2); ctx.fill();
+    ctx.restore();
+
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(this._angle - Math.PI / 2);
+
+    const ss = isMini ? 0.78 : isBig ? 1.22 : 1.0;
+    const sb = r * 0.50 * ss;  // bottom sphere radius
+    const sm = r * 0.38 * ss;  // middle sphere radius
+    const sh = r * 0.30 * ss;  // head sphere radius
+
+    const by_ = r * 0.26;
+    const my_ = by_ - sb * 0.78 - sm * 0.78;
+    const hy_ = my_ - sm * 0.78 - sh * 0.78;
+
+    // Snow ball draw helper
+    const drawBall = (cy, br) => {
+      const g = ctx.createRadialGradient(-br*0.28, cy-br*0.28, 0.5, 0, cy, br);
+      g.addColorStop(0, '#ffffff'); g.addColorStop(0.6, '#d8eeff'); g.addColorStop(1, '#9abbcc');
+      ctx.fillStyle = g; ctx.shadowColor = '#aaddff'; ctx.shadowBlur = 7;
+      ctx.beginPath(); ctx.arc(0, cy, br, 0, Math.PI*2); ctx.fill();
+      ctx.shadowBlur = 0;
+    };
+
+    if (isMini) {
+      // 2-ball mini snowman
+      const by2 = r * 0.18, hy2 = by2 - sb * 0.88;
+      drawBall(by2, sb);
+      drawBall(hy2, sh * 1.1);
+      // Eyes
+      ctx.fillStyle = '#111';
+      ctx.beginPath(); ctx.arc(-sh*0.28, hy2 - sh*0.06, sh*0.10, 0, Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc( sh*0.28, hy2 - sh*0.06, sh*0.10, 0, Math.PI*2); ctx.fill();
+      // Carrot nose
+      ctx.fillStyle = '#FF6600';
+      ctx.beginPath(); ctx.moveTo(0, hy2 - sh*0.28); ctx.lineTo(sh*0.11, hy2 + sh*0.04); ctx.lineTo(-sh*0.11, hy2 + sh*0.04); ctx.closePath(); ctx.fill();
+    } else {
+      // 3-ball snowman
+      drawBall(by_, sb);
+      drawBall(my_, sm);
+      drawBall(hy_, sh);
+
+      // Coal buttons (3) on middle
+      ctx.fillStyle = '#1a1a2a';
+      for (let i = 0; i < 3; i++)
+        { ctx.beginPath(); ctx.arc(0, my_ - sm*0.28 + i*sm*0.30, sm*0.08, 0, Math.PI*2); ctx.fill(); }
+
+      // Stick arms
+      ctx.strokeStyle = '#5a3a18'; ctx.lineWidth = isBig ? 3 : 2; ctx.lineCap = 'round';
+      for (const s of [-1, 1]) {
+        ctx.beginPath(); ctx.moveTo(s * sm * 0.95, my_ + sm*0.10);
+        ctx.lineTo(s * (sm * 0.95 + r*0.46), my_ + sm*0.10 - r*0.18*s);
+        ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(s*(sm*0.95 + r*0.28), my_ + sm*0.10 - r*0.12*s);
+        ctx.lineTo(s*(sm*0.95 + r*0.40), my_ + sm*0.10 - r*0.30*s);
+        ctx.stroke();
+      }
+
+      // Coal eyes
+      ctx.fillStyle = '#111';
+      ctx.beginPath(); ctx.arc(-sh*0.30, hy_ - sh*0.06, sh*0.10, 0, Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc( sh*0.30, hy_ - sh*0.06, sh*0.10, 0, Math.PI*2); ctx.fill();
+
+      // Carrot nose
+      ctx.fillStyle = '#FF6600';
+      ctx.beginPath(); ctx.moveTo(0, hy_ - sh*0.30); ctx.lineTo(sh*0.11, hy_ + sh*0.05); ctx.lineTo(-sh*0.11, hy_ + sh*0.05); ctx.closePath(); ctx.fill();
+
+      // Mouth (coal dots)
+      ctx.fillStyle = '#111';
+      for (let i = -2; i <= 2; i++) {
+        ctx.beginPath(); ctx.arc(i * sh*0.14, hy_ + sh*0.32 + Math.abs(i)*sh*0.05, sh*0.06, 0, Math.PI*2); ctx.fill();
+      }
+
+      // Hat
+      if (isPolice) {
+        ctx.fillStyle = '#10102a';
+        ctx.beginPath(); ctx.ellipse(0, hy_ - sh*0.68, sh*0.48, sh*0.17, 0, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.roundRect(-sh*0.29, hy_ - sh*1.30, sh*0.58, sh*0.64, sh*0.06); ctx.fill();
+        ctx.fillStyle = '#FFDD44'; ctx.shadowColor = '#FFDD44'; ctx.shadowBlur = 5;
+        ctx.beginPath(); ctx.arc(sh*0.28, my_ - sm*0.50, sh*0.14, 0, Math.PI*2); ctx.fill();
+        ctx.shadowBlur = 0;
+      } else if (isBig) {
+        ctx.fillStyle = '#0a1a0a';
+        ctx.beginPath(); ctx.ellipse(0, hy_ - sh*0.72, sh*0.54, sh*0.20, 0, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.roundRect(-sh*0.34, hy_ - sh*1.44, sh*0.68, sh*0.74, sh*0.06); ctx.fill();
+        ctx.fillStyle = this.accentColor;
+        ctx.beginPath(); ctx.roundRect(-sh*0.34, hy_ - sh*0.90, sh*0.68, sh*0.16, sh*0.04); ctx.fill();
+      } else {
+        ctx.fillStyle = '#0d1a2e';
+        ctx.beginPath(); ctx.ellipse(0, hy_ - sh*0.68, sh*0.44, sh*0.16, 0, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.roundRect(-sh*0.26, hy_ - sh*1.24, sh*0.52, sh*0.58, sh*0.05); ctx.fill();
+        // Scarf
+        ctx.fillStyle = this.bodyColor; ctx.globalAlpha = 0.88;
+        ctx.beginPath(); ctx.ellipse(0, my_ - sm*0.65, sm*0.56, sm*0.18, 0, 0, Math.PI*2); ctx.fill();
+        ctx.globalAlpha = 1;
+      }
+
+      // Bomber fuse
+      if (isBomber) {
+        ctx.fillStyle = '#AA4400';
+        ctx.beginPath(); ctx.arc(0, by_ - sb*0.22, sm*0.30, 0, Math.PI*2); ctx.fill();
+        ctx.strokeStyle = '#884400'; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(0, by_ - sb*0.50); ctx.lineTo(sm*0.26, by_ - sb*0.90); ctx.stroke();
+        ctx.fillStyle = '#FF8800'; ctx.shadowColor = '#FF4400'; ctx.shadowBlur = 9;
+        ctx.beginPath(); ctx.arc(sm*0.26, by_ - sb*0.90, sm*0.12, 0, Math.PI*2); ctx.fill();
+        ctx.shadowBlur = 0;
+      }
+    }
+
+    ctx.restore();
+
+    // Ice-blue gun barrel
+    const gl = r + 10;
+    const gx = x + Math.cos(this._angle)*gl, gy = y + Math.sin(this._angle)*gl;
+    const ga0x = x + Math.cos(this._angle)*r*0.55, ga0y = y + Math.sin(this._angle)*r*0.55;
+    ctx.save(); ctx.lineCap = 'round';
+    ctx.strokeStyle = 'rgba(0,0,0,0.45)'; ctx.lineWidth = 5;
+    ctx.beginPath(); ctx.moveTo(ga0x+1, ga0y+1.5); ctx.lineTo(gx+1, gy+1.5); ctx.stroke();
+    ctx.strokeStyle = '#88ccff'; ctx.lineWidth = 3.5;
+    ctx.beginPath(); ctx.moveTo(ga0x, ga0y); ctx.lineTo(gx, gy); ctx.stroke();
+    ctx.restore();
+
+    this._renderHPBar(ctx, x, y, r, 40, 5);
+  }
+
+  // ── DESERT ENEMY: dispatches to sub-renders ───────────────
+  _renderDesertEnemy(ctx, x, y, r) {
+    if (this.type === 'mini')                                         this._renderScarab(ctx, x, y, r);
+    else if (this.type === 'big' || this.type === 'juggernaut')       this._renderSandGolem(ctx, x, y, r);
+    else                                                               this._renderMummy(ctx, x, y, r);
+    this._renderHPBar(ctx, x, y, r, 40, 5);
+  }
+
+  // ── SCARAB: fast beetle mini enemy ───────────────────────
+  _renderScarab(ctx, x, y, r) {
+    ctx.save(); ctx.globalAlpha = 0.18; ctx.fillStyle = '#000';
+    ctx.beginPath(); ctx.ellipse(x+1, y+r*0.35, r*1.05, r*0.22, 0, 0, Math.PI*2); ctx.fill();
+    ctx.restore();
+
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(this._angle - Math.PI / 2);
+
+    // Abdomen (oval)
+    const ag = ctx.createRadialGradient(0, r*0.18, 1, 0, r*0.12, r*0.55);
+    ag.addColorStop(0, '#22aa44'); ag.addColorStop(0.5, '#116622'); ag.addColorStop(1, '#0a3a14');
+    ctx.fillStyle = ag; ctx.shadowColor = '#00ff88'; ctx.shadowBlur = 8;
+    ctx.beginPath(); ctx.ellipse(0, r*0.12, r*0.46, r*0.52, 0, 0, Math.PI*2); ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // Shell sheen
+    ctx.strokeStyle = 'rgba(80,255,120,0.30)'; ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.ellipse(0, r*0.10, r*0.28, r*0.32, 0.3, Math.PI*1.2, Math.PI*1.8); ctx.stroke();
+
+    // Thorax
+    const tg = ctx.createRadialGradient(0, -r*0.24, 1, 0, -r*0.20, r*0.32);
+    tg.addColorStop(0, '#33cc55'); tg.addColorStop(1, '#115522');
+    ctx.fillStyle = tg;
+    ctx.beginPath(); ctx.ellipse(0, -r*0.24, r*0.34, r*0.30, 0, 0, Math.PI*2); ctx.fill();
+
+    // 6 legs (3 per side) scuttling animation
+    const legSwing = Math.sin(Date.now() * 0.014) * 0.28;
+    ctx.strokeStyle = '#0a3a10'; ctx.lineWidth = 1.4; ctx.lineCap = 'round';
+    for (let i = 0; i < 3; i++) {
+      const ly = -r*0.12 + i * r*0.22;
+      const swing = (i % 2 === 0) ? legSwing : -legSwing;
+      for (const s of [-1, 1]) {
+        ctx.beginPath(); ctx.moveTo(s * r*0.42, ly);
+        ctx.lineTo(s * r*(0.76 + Math.abs(swing)*0.2), ly + r*0.22 + swing*s*r*0.18);
+        ctx.stroke();
+      }
+    }
+
+    // Head with pincers
+    ctx.fillStyle = '#0a4018';
+    ctx.beginPath(); ctx.ellipse(0, -r*0.60, r*0.22, r*0.18, 0, 0, Math.PI*2); ctx.fill();
+    // Compound eyes
+    for (const s of [-1, 1]) {
+      ctx.fillStyle = '#88FF44'; ctx.shadowColor = '#44FF00'; ctx.shadowBlur = 6;
+      ctx.beginPath(); ctx.arc(s*r*0.14, -r*0.64, r*0.09, 0, Math.PI*2); ctx.fill();
+      ctx.shadowBlur = 0;
+    }
+    // Antennae
+    ctx.strokeStyle = '#226600'; ctx.lineWidth = 1;
+    for (const s of [-1, 1]) {
+      ctx.beginPath(); ctx.moveTo(s*r*0.10, -r*0.72); ctx.lineTo(s*r*0.32, -r*0.98); ctx.stroke();
+      ctx.beginPath(); ctx.arc(s*r*0.32, -r*0.98, r*0.05, 0, Math.PI*2); ctx.fill();
+    }
+    // Pincers
+    ctx.strokeStyle = '#0a3010'; ctx.lineWidth = 2;
+    for (const s of [-1, 1]) {
+      ctx.beginPath(); ctx.moveTo(s*r*0.16, -r*0.72); ctx.lineTo(s*r*0.30, -r*0.88); ctx.stroke();
+    }
+
+    ctx.restore();
+  }
+
+  // ── MUMMY: bandage-wrapped ancient soldier ────────────────
+  _renderMummy(ctx, x, y, r) {
+    const isPolice  = this.type === 'police' || this.type === 'swat' || this.type === 'heavyswat';
+    const isSniper  = this.type === 'sniper';
+
+    ctx.save(); ctx.globalAlpha = 0.20; ctx.fillStyle = '#000';
+    ctx.beginPath(); ctx.ellipse(x+3, y+r*0.52, r*1.0, r*0.25, 0, 0, Math.PI*2); ctx.fill();
+    ctx.restore();
+
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(this._angle - Math.PI / 2);
+
+    const bw = r * 0.56, bh = r * 0.82;
+    const hhr = r * 0.46;
+    const walk = Math.sin(Date.now() * 0.005) * 0.22;
+
+    // Legs — wrapped
+    for (const s of [-1, 1]) {
+      ctx.fillStyle = '#d4c090';
+      ctx.beginPath(); ctx.ellipse(s*r*0.26, r*0.22+s*walk*r*0.22, r*0.18, r*0.38, s*walk*0.18, 0, Math.PI*2); ctx.fill();
+      // Bandage strips on legs
+      ctx.strokeStyle = '#b8a070'; ctx.lineWidth = 1.5; ctx.globalAlpha = 0.6;
+      for (let i = 0; i < 3; i++) {
+        const ly = r*0.08 + i*r*0.12;
+        ctx.beginPath(); ctx.moveTo(s*r*0.14, ly); ctx.lineTo(s*r*0.36, ly+r*0.02); ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+      // Foot
+      ctx.fillStyle = '#a08050';
+      ctx.beginPath(); ctx.ellipse(s*r*0.28+s*0.05*r, r*0.54, r*0.20, r*0.09, 0, 0, Math.PI*2); ctx.fill();
+    }
+
+    // Torso — bandage wrapping
+    const tg = ctx.createLinearGradient(-bw, -bh*0.42, bw, bh*0.32);
+    tg.addColorStop(0, '#e8d8a8'); tg.addColorStop(1, '#c8b880');
+    ctx.fillStyle = tg; ctx.shadowColor = '#000'; ctx.shadowBlur = 8;
+    ctx.beginPath(); ctx.roundRect(-bw, -bh*0.42, bw*2, bh*0.78, [bw*0.22, bw*0.22, bw*0.14, bw*0.14]); ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // Bandage strip details on torso (horizontal lines)
+    ctx.strokeStyle = '#b8a460'; ctx.lineWidth = 1.4; ctx.globalAlpha = 0.55;
+    for (let i = 0; i < 5; i++) {
+      const by2 = -bh*0.36 + i * bh*0.18;
+      ctx.beginPath(); ctx.moveTo(-bw*0.88, by2); ctx.lineTo(bw*0.88, by2 + (i%2===0?2:-2)); ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+
+    // Diagonal wrap bands
+    ctx.strokeStyle = '#c8b06a'; ctx.lineWidth = 1.8; ctx.globalAlpha = 0.40;
+    ctx.beginPath(); ctx.moveTo(-bw*0.85, -bh*0.42); ctx.lineTo(bw*0.85, bh*0.22); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(bw*0.85, -bh*0.42); ctx.lineTo(-bw*0.85, bh*0.22); ctx.stroke();
+    ctx.globalAlpha = 1;
+
+    // Scarab amulet
+    if (isPolice) {
+      ctx.fillStyle = '#FFDD44'; ctx.shadowColor = '#FFAA00'; ctx.shadowBlur = 8;
+      ctx.beginPath(); ctx.ellipse(0, -bh*0.10, bw*0.26, bw*0.20, 0, 0, Math.PI*2); ctx.fill();
+      ctx.shadowBlur = 0;
+    }
+
+    // Arms — outstretched (classic mummy pose)
+    for (const s of [-1, 1]) {
+      ctx.save(); ctx.translate(s * bw * 0.94, -bh * 0.26);
+      ctx.rotate(s * 0.55 + walk * s * 0.14);
+      ctx.fillStyle = '#d4c090';
+      ctx.beginPath(); ctx.roundRect(-r*0.14, -r*0.62, r*0.28, r*0.72, r*0.10); ctx.fill();
+      // Bandage on arm
+      ctx.strokeStyle = '#b8a070'; ctx.lineWidth = 1.3; ctx.globalAlpha = 0.55;
+      for (let i=0; i<3; i++) { ctx.beginPath(); ctx.moveTo(-r*0.15, -r*0.42+i*r*0.18); ctx.lineTo(r*0.15, -r*0.40+i*r*0.18); ctx.stroke(); }
+      ctx.globalAlpha = 1;
+      // Rotted hand
+      ctx.fillStyle = '#c4a878';
+      ctx.beginPath(); ctx.ellipse(0, r*0.14, r*0.16, r*0.17, 0, 0, Math.PI*2); ctx.fill();
+      ctx.restore();
+    }
+
+    // Head — fully wrapped
+    const hy = -bh * 0.46;
+    const hg = ctx.createRadialGradient(-hhr*0.2, hy-hhr*0.2, 1, 0, hy, hhr);
+    hg.addColorStop(0, '#ede0b0'); hg.addColorStop(1, '#c8a860');
+    ctx.fillStyle = hg; ctx.shadowColor = '#000'; ctx.shadowBlur = 8;
+    ctx.beginPath(); ctx.ellipse(0, hy, hhr, hhr*0.94, 0, 0, Math.PI*2); ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // Head bandage strips
+    ctx.strokeStyle = '#b8a060'; ctx.lineWidth = 1.6; ctx.globalAlpha = 0.55;
+    for (let i = 0; i < 4; i++) {
+      ctx.beginPath(); ctx.moveTo(-hhr*0.95, hy - hhr*0.50 + i*hhr*0.34); ctx.lineTo(hhr*0.95, hy - hhr*0.52 + i*hhr*0.34); ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+
+    // Glowing golden eyes (ancient)
+    for (const s of [-1, 1]) {
+      ctx.fillStyle = '#FFCC44'; ctx.shadowColor = '#FFAA00'; ctx.shadowBlur = 12;
+      ctx.beginPath(); ctx.ellipse(s*hhr*0.30, hy - hhr*0.06, hhr*0.17, hhr*0.13, 0, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#FF6600'; ctx.shadowBlur = 0;
+      ctx.beginPath(); ctx.ellipse(s*hhr*0.30, hy - hhr*0.06, hhr*0.08, hhr*0.10, 0, 0, Math.PI*2); ctx.fill();
+    }
+
+    // Headdress (police/swat = anubis nemes headcloth)
+    if (isPolice) {
+      ctx.fillStyle = '#2a1a04';
+      ctx.beginPath(); ctx.moveTo(-hhr*0.90, hy-hhr*0.55); ctx.lineTo(-hhr*1.10, hy+hhr*0.50);
+      ctx.lineTo(-hhr*0.70, hy+hhr*0.65); ctx.lineTo(-hhr*0.85, hy-hhr*0.52); ctx.closePath(); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(hhr*0.90, hy-hhr*0.55); ctx.lineTo(hhr*1.10, hy+hhr*0.50);
+      ctx.lineTo(hhr*0.70, hy+hhr*0.65); ctx.lineTo(hhr*0.85, hy-hhr*0.52); ctx.closePath(); ctx.fill();
+      // Gold bands on headdress
+      ctx.strokeStyle = '#FFDD44'; ctx.lineWidth = 1.2; ctx.globalAlpha = 0.55;
+      ctx.beginPath(); ctx.moveTo(-hhr*0.95, hy-hhr*0.20); ctx.lineTo(-hhr*0.68, hy-hhr*0.20); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(hhr*0.68, hy-hhr*0.20); ctx.lineTo(hhr*0.95, hy-hhr*0.20); ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
+
+    ctx.restore();
+
+    // Ancient scepter / crook (pointing in angle direction)
+    const gl = r + 14;
+    const gx = x + Math.cos(this._angle)*gl, gy = y + Math.sin(this._angle)*gl;
+    const ga0x = x + Math.cos(this._angle)*r*0.55, ga0y = y + Math.sin(this._angle)*r*0.55;
+    ctx.save(); ctx.lineCap = 'round';
+    ctx.strokeStyle = 'rgba(0,0,0,0.45)'; ctx.lineWidth = 5;
+    ctx.beginPath(); ctx.moveTo(ga0x+1, ga0y+1.5); ctx.lineTo(gx+1, gy+1.5); ctx.stroke();
+    ctx.strokeStyle = isPolice ? '#FFDD44' : '#c8a040'; ctx.lineWidth = 3.5;
+    ctx.beginPath(); ctx.moveTo(ga0x, ga0y); ctx.lineTo(gx, gy); ctx.stroke();
+    ctx.restore();
+  }
+
+  // ── SAND GOLEM: massive ancient construct ─────────────────
+  _renderSandGolem(ctx, x, y, r) {
+    const isJug = this.type === 'juggernaut';
+
+    ctx.save(); ctx.globalAlpha = 0.28; ctx.fillStyle = '#000';
+    ctx.beginPath(); ctx.ellipse(x+4, y+r*0.58, r*(isJug?1.35:1.15), r*0.32, 0, 0, Math.PI*2); ctx.fill();
+    ctx.restore();
+
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(this._angle - Math.PI / 2);
+
+    const bw = r * (isJug ? 1.0 : 0.88);
+    const bh = r * (isJug ? 1.0 : 0.90);
+
+    // Stone-sand cracked body
+    const pulse = 1 + Math.sin(Date.now()*0.003)*0.015;
+    const bg = ctx.createRadialGradient(0, 0, r*0.1, 0, 0, r*0.95);
+    bg.addColorStop(0, '#c8a050'); bg.addColorStop(0.6, '#a07830'); bg.addColorStop(1, '#6a4e1a');
+    ctx.fillStyle = bg; ctx.shadowColor = '#FF8800'; ctx.shadowBlur = isJug ? 18 : 10;
+    ctx.beginPath(); ctx.roundRect(-bw*pulse, -bh*0.44*pulse, bw*2*pulse, bh*0.88*pulse, [bw*0.18, bw*0.18, bw*0.12, bw*0.12]); ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // Crack lines on body
+    ctx.strokeStyle = '#4a3010'; ctx.lineWidth = 1.2; ctx.globalAlpha = 0.55;
+    ctx.beginPath(); ctx.moveTo(-bw*0.28, -bh*0.38); ctx.lineTo(-bw*0.10, bh*0.12); ctx.lineTo(-bw*0.22, bh*0.30); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(bw*0.22, -bh*0.28); ctx.lineTo(bw*0.38, bh*0.22); ctx.stroke();
+    ctx.globalAlpha = 1;
+
+    // Sandy dust rings
+    ctx.strokeStyle = 'rgba(200,160,60,0.18)'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(0, 0, r*1.05 + Math.sin(Date.now()*0.004)*4, 0, Math.PI*2); ctx.stroke();
+
+    // Legs — stone pillars
+    for (const s of [-1, 1]) {
+      ctx.fillStyle = '#8a6228';
+      ctx.beginPath(); ctx.ellipse(s*r*0.32, r*0.22, r*0.22, r*0.40, s*0.12, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#6a4a18';
+      ctx.beginPath(); ctx.ellipse(s*r*0.34+s*0.06*r, r*0.56, r*0.26, r*0.12, 0, 0, Math.PI*2); ctx.fill();
+    }
+
+    // Massive arms
+    for (const s of [-1, 1]) {
+      ctx.save(); ctx.translate(s * bw * 0.95, -bh*0.20);
+      ctx.rotate(s * 0.50);
+      ctx.fillStyle = '#9a7832';
+      ctx.beginPath(); ctx.roundRect(-r*0.24, -r*0.74, r*0.48, r*0.84, r*0.14); ctx.fill();
+      // Giant sandy fist
+      ctx.fillStyle = '#c8a040';
+      ctx.beginPath(); ctx.ellipse(0, r*0.18, r*0.30, r*0.28, 0, 0, Math.PI*2); ctx.fill();
+      // Crack on fist
+      ctx.strokeStyle = '#6a4a10'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(-r*0.14, r*0.10); ctx.lineTo(-r*0.04, r*0.28); ctx.stroke();
+      ctx.restore();
+    }
+
+    // Head — ancient carved stone
+    const hhr = r * (isJug ? 0.54 : 0.46);
+    const hy  = -bh * 0.46;
+    const hg  = ctx.createRadialGradient(-hhr*0.2, hy-hhr*0.2, 1, 0, hy, hhr);
+    hg.addColorStop(0, '#d4a858'); hg.addColorStop(1, '#8a6230');
+    ctx.fillStyle = hg; ctx.shadowColor = '#000'; ctx.shadowBlur = 8;
+    ctx.beginPath(); ctx.arc(0, hy, hhr, 0, Math.PI*2); ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // Glowing amber eyes
+    for (const s of [-1, 1]) {
+      ctx.fillStyle = '#FFCC00'; ctx.shadowColor = '#FF8800'; ctx.shadowBlur = 16;
+      ctx.beginPath(); ctx.ellipse(s*hhr*0.30, hy - hhr*0.06, hhr*0.20, hhr*0.15, 0, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#FF4400'; ctx.shadowBlur = 0;
+      ctx.beginPath(); ctx.ellipse(s*hhr*0.30, hy - hhr*0.06, hhr*0.10, hhr*0.11, 0, 0, Math.PI*2); ctx.fill();
+    }
+
+    // Ancient runes carved in torso
+    ctx.strokeStyle = 'rgba(255,180,60,0.30)'; ctx.lineWidth = 0.9;
+    for (let i = 0; i < 3; i++) {
+      ctx.beginPath(); ctx.moveTo(-bw*0.48 + i*bw*0.38, -bh*0.28); ctx.lineTo(-bw*0.44 + i*bw*0.38, -bh*0.06); ctx.stroke();
+    }
+
+    ctx.restore();
+
+    // Sandy weapon — heavy stone club
+    const gl = r + 14;
+    const gx = x + Math.cos(this._angle)*gl, gy = y + Math.sin(this._angle)*gl;
+    const ga0x = x + Math.cos(this._angle)*r*0.55, ga0y = y + Math.sin(this._angle)*r*0.55;
+    ctx.save(); ctx.lineCap = 'round';
+    ctx.strokeStyle = 'rgba(0,0,0,0.45)'; ctx.lineWidth = 7;
+    ctx.beginPath(); ctx.moveTo(ga0x+1, ga0y+1.5); ctx.lineTo(gx+1, gy+1.5); ctx.stroke();
+    ctx.strokeStyle = '#c8a040'; ctx.lineWidth = 6;
+    ctx.beginPath(); ctx.moveTo(ga0x, ga0y); ctx.lineTo(gx, gy); ctx.stroke();
+    ctx.restore();
   }
 
   _renderHPBar(ctx, x, y, r, bw, bh) {
@@ -2764,14 +3279,21 @@ class ZombieBot {
     this.type = type;
     this._cfg = CONFIG.ZOMBIE_CONFIGS[type];
 
-    this.hp     = this._cfg.hp + Math.floor(wave * 8);
+    // Individual size — each zombie is a different scale (0.68 → 1.42)
+    this._scale  = 0.68 + Math.random() * 0.74;
+    // Big = slower/tankier, small = faster/frailer
+    const sc = this._scale;
+    this.radius = Math.round(this._cfg.radius * sc);
+    this.speed  = this._cfg.speed * (1.25 - sc * 0.25);  // inverse speed scaling
+    this.damage = Math.round(this._cfg.damage * (0.8 + sc * 0.2));
+    this.hp     = Math.round((this._cfg.hp + wave * 8) * (0.7 + sc * 0.3));
     this.maxHp  = this.hp;
-    this.radius = this._cfg.radius;
-    this.speed  = this._cfg.speed;
-    this.damage = this._cfg.damage;
 
     this.dead  = false;
     this.dying = false;
+    this._isZombie    = true;
+    this._style       = Math.floor(Math.random() * 4); // colour variant
+    this._headStyle   = Math.floor(Math.random() * 4); // head shape variant
     this._dyingTimer  = 0;
     this._angle       = 0;
     this._contactTimer = 0;   // cooldown between melee hits (seconds)
@@ -2828,78 +3350,609 @@ class ZombieBot {
     this.hp -= amount;
     this._damagedTimer = 1.5;
 
-    // Green particle burst
-    for (let i = 0; i < 5; i++) {
-      const a   = Math.random() * Math.PI * 2;
-      const spd = 60 + Math.random() * 80;
-      particles.push(new Particle(this.x, this.y, Math.cos(a) * spd, Math.sin(a) * spd,
-                                  '#88FF44', 3, 0.3 + Math.random() * 0.3));
+    // Hit spray
+    for (let i = 0; i < 3; i++) {
+      const a = Math.random() * Math.PI * 2;
+      particles.push(new Particle(this.x, this.y, Math.cos(a)*(40+Math.random()*70), Math.sin(a)*(40+Math.random()*70),
+        Math.random()<0.5?'#55BB11':'#33DD00', 1.5+Math.random()*2.0, 0.22+Math.random()*0.28));
     }
 
     if (this.hp <= 0) {
       this.dying = true;
       this._dyingTimer = 0.3;
+      // Death burst
+      const dc = this.type==='brute'?11 : this.type==='bloater'?13 : this.type==='charger'?9 : 7;
+      const cols = ['#55BB11','#33DD00','#77FF33','#1a4a04','#226600'];
+      for (let i = 0; i < dc; i++) {
+        const a = Math.random()*Math.PI*2, spd = 30+Math.random()*110;
+        particles.push(new Particle(this.x,this.y,Math.cos(a)*spd,Math.sin(a)*spd,
+          cols[Math.floor(Math.random()*cols.length)], 2+Math.random()*3, 0.30+Math.random()*0.45));
+      }
+      // 1 goop chunk
+      const ga = Math.random()*Math.PI*2;
+      particles.push(new Particle(this.x,this.y,Math.cos(ga)*22,Math.sin(ga)*22,'#1a4a04',5+Math.random()*4,0.45+Math.random()*0.5));
     }
   }
 
   render(ctx) {
     if (this.dead) return;
     const x = this.x, y = this.y, r = this.radius;
-    const t = this.dying ? Math.max(0, this._dyingTimer / 0.3) : 1;
+    const td   = this.dying ? Math.max(0, this._dyingTimer / 0.3) : 1;
+    const walk = Math.sin(Date.now() * 0.007 * (this._rageMult > 1 ? 2.2 : 1)) * 0.28;
+
+    // Each type has its own dedicated render for truly distinct silhouettes
+    if (this.type === 'crawler') { this._renderCrawler(ctx, x, y, r, td, walk); ctx.restore(); this._renderZombieHPBar(ctx, x, y, r); return; }
+    if (this.type === 'charger') { this._renderCharger(ctx, x, y, r, td, walk); ctx.restore(); this._renderZombieHPBar(ctx, x, y, r); return; }
+    if (this.type === 'runner')  { this._renderRunner (ctx, x, y, r, td, walk); this._renderZombieHPBar(ctx, x, y, r); return; }
+    if (this.type === 'brute')   { this._renderBrute  (ctx, x, y, r, td, walk); this._renderZombieHPBar(ctx, x, y, r); return; }
+    if (this.type === 'bloater') { this._renderBloater(ctx, x, y, r, td, walk); this._renderZombieHPBar(ctx, x, y, r); return; }
+    if (this.type === 'mutant')  { this._renderMutant (ctx, x, y, r, td, walk); this._renderZombieHPBar(ctx, x, y, r); return; }
+
+    const sv = this._zSkin(this._style);
+    const skinBase = sv.base, skinDark = sv.dark;
+    const bloodCol = sv.wound;
 
     ctx.save();
+    ctx.globalAlpha = td;
     ctx.translate(x, y);
-    ctx.globalAlpha = t;
+    ctx.rotate(this._angle - Math.PI / 2);
 
-    // Rage glow for enraged runner
-    if (this._rageMult > 1) {
-      ctx.shadowColor = '#99FF44';
-      ctx.shadowBlur  = 18;
+    // Ground shadow
+    ctx.globalAlpha = td * 0.20;
+    ctx.fillStyle = '#000';
+    ctx.beginPath();
+    ctx.ellipse(2, r * 0.42, r * 0.92, r * 0.22, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = td;
+
+    // Rage glow
+    if (this._rageMult > 1) { ctx.shadowColor = '#FF3300'; ctx.shadowBlur = 20; }
+
+    // ── Legs (uneven shambling) ───────────────────────────────
+    for (const s of [-1, 1]) {
+      const legOff = s * walk * r * 0.22;
+      ctx.fillStyle = skinDark;
+      ctx.beginPath();
+      ctx.ellipse(s * r * 0.28, r * 0.18 + legOff, r * 0.19, r * 0.40, s * walk * 0.28, 0, Math.PI * 2);
+      ctx.fill();
+      // Foot / boot remnant
+      ctx.fillStyle = '#100808';
+      ctx.beginPath();
+      ctx.ellipse(s * r * 0.30 + s * 0.06 * r, r * 0.52 + legOff, r * 0.22, r * 0.10, 0, 0, Math.PI * 2);
+      ctx.fill();
     }
 
-    // Spiky star body (7 spikes)
-    const spikes = 7;
+    // ── Torso ────────────────────────────────────────────────
+    const bw = r * 0.64;
+    const bh = r * 0.80;
+    ctx.shadowColor = '#000'; ctx.shadowBlur = 7;
+    const tg = ctx.createLinearGradient(-bw, -bh * 0.44, bw, bh * 0.36);
+    tg.addColorStop(0, skinBase); tg.addColorStop(1, skinDark);
+    ctx.fillStyle = tg;
     ctx.beginPath();
-    for (let i = 0; i < spikes * 2; i++) {
-      const a  = (i / (spikes * 2)) * Math.PI * 2 - Math.PI / 2;
-      const sr = i % 2 === 0 ? r : r * 0.55;
-      if (i === 0) ctx.moveTo(Math.cos(a) * sr, Math.sin(a) * sr);
-      else         ctx.lineTo(Math.cos(a) * sr, Math.sin(a) * sr);
-    }
-    ctx.closePath();
-    ctx.fillStyle   = this._cfg.color;
+    ctx.roundRect(-bw, -bh * 0.44, bw * 2, bh * 0.82, [bw * 0.22, bw * 0.22, bw * 0.14, bw * 0.14]);
     ctx.fill();
-    ctx.strokeStyle = this._cfg.accent;
-    ctx.lineWidth   = 1.5;
-    ctx.stroke();
-    ctx.shadowBlur  = 0;
+    ctx.shadowBlur = 0;
 
-    // Eyes oriented toward movement angle
-    const perpX = -Math.sin(this._angle);
-    const perpY =  Math.cos(this._angle);
-    const fwdX  = Math.cos(this._angle) * r * 0.35;
-    const fwdY  = Math.sin(this._angle) * r * 0.35;
-    const eo    = r * 0.28;
-    ctx.fillStyle = '#fff';
-    ctx.beginPath();
-    ctx.arc(fwdX + perpX * eo, fwdY + perpY * eo, 3, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.arc(fwdX - perpX * eo, fwdY - perpY * eo, 3, 0, Math.PI * 2);
-    ctx.fill();
+    // Torn shirt scraps (colour varies by style)
+    ctx.fillStyle = sv.rag;
+    ctx.globalAlpha = td * 0.55;
+    ctx.beginPath(); ctx.roundRect(-bw * 0.7, -bh * 0.38, bw * 0.55, bh * 0.30, 3); ctx.fill();
+    ctx.beginPath(); ctx.roundRect(bw * 0.15, -bh * 0.44, bw * 0.5, bh * 0.25, 3); ctx.fill();
+    ctx.globalAlpha = td;
+
+    // Style-specific torso detail
+    ctx.globalAlpha = td * 0.45;
+    if (this._style === 1) { // brown: exposed ribs
+      ctx.strokeStyle = '#2a1408'; ctx.lineWidth = 1.0;
+      for (let ri = 0; ri < 4; ri++) { ctx.beginPath(); ctx.arc(0, -bh*0.28 + ri*bh*0.18, bw*0.70, Math.PI*0.15, Math.PI*0.85); ctx.stroke(); }
+    } else if (this._style === 2) { // pale: dark veins
+      ctx.strokeStyle = '#336688'; ctx.lineWidth = 1.2;
+      ctx.beginPath(); ctx.moveTo(-bw*0.4,-bh*0.38); ctx.bezierCurveTo(-bw*0.55,0, bw*0.2,-bh*0.1, bw*0.1,bh*0.22); ctx.stroke();
+    } else if (this._style === 3) { // purple: fungal spots
+      ctx.fillStyle = '#550077';
+      for (let fi = 0; fi < 5; fi++) { ctx.beginPath(); ctx.arc(-bw*0.5+fi*bw*0.25, -bh*0.2+fi*bh*0.1, r*0.08, 0, Math.PI*2); ctx.fill(); }
+    }
+    ctx.globalAlpha = td;
+
+    // Blood streaks
+    ctx.strokeStyle = bloodCol; ctx.lineWidth = 1.5; ctx.globalAlpha = td * 0.70;
+    ctx.beginPath(); ctx.moveTo(-r * 0.14, -bh * 0.28); ctx.lineTo(-r * 0.20, bh * 0.14); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(r * 0.10, -bh * 0.10); ctx.lineTo(r * 0.16, bh * 0.28); ctx.stroke();
+    ctx.globalAlpha = td;
+
+    // ── Arms (outstretched reaching) ─────────────────────────
+    const armReach = 0.58;
+    for (const s of [-1, 1]) {
+      ctx.save();
+      ctx.translate(s * bw * 0.90, -bh * 0.28);
+      ctx.rotate(s * armReach + walk * s * 0.18);
+      ctx.fillStyle = skinDark;
+      ctx.beginPath();
+      ctx.roundRect(-r * 0.15, -r * 0.64, r * 0.30, r * 0.74, r * 0.10);
+      ctx.fill();
+      // Rotted hand
+      ctx.fillStyle = skinBase;
+      ctx.beginPath(); ctx.ellipse(0, r * 0.14, r * 0.17, r * 0.19, 0, 0, Math.PI * 2); ctx.fill();
+      // Bony claws
+      ctx.strokeStyle = '#0a0808'; ctx.lineWidth = 1.3;
+      for (let fi = -1; fi <= 1; fi++) {
+        ctx.beginPath();
+        ctx.moveTo(fi * r * 0.09, r * 0.16);
+        ctx.lineTo(fi * r * 0.11, r * 0.28);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    // ── Head ─────────────────────────────────────────────────
+    const hhr = r * 0.50;
+    const hy  = -bh * 0.48;
+    this._drawZombieHead(ctx, 0, hy, hhr, skinBase, skinDark, '#ddc87a', '#880000', bloodCol, td);
 
     ctx.restore();
 
-    // HP bar — always for brute/bloater, brief flash after damage for others
-    const showBar = this.type === 'brute' || this.type === 'bloater' || this._damagedTimer > 0;
-    if (showBar && !this.dying) {
-      const bw = r * 2 + 8, bh = 3;
-      const bx = x - bw / 2, by = y - r - 10;
-      ctx.save();
-      ctx.fillStyle = '#111';  ctx.fillRect(bx, by, bw, bh);
-      ctx.fillStyle = '#44FF44'; ctx.fillRect(bx, by, bw * (this.hp / this.maxHp), bh);
+    this._renderZombieHPBar(ctx, x, y, r);
+  }
+
+  // ── Shared zombie skin palette helper ────────────────────
+  _zSkin(style) {
+    return [
+      { base:'#22301a', dark:'#304222', rag:'#0e1a08', wound:'#5a0c0c' },
+      { base:'#382808', dark:'#503a10', rag:'#1a1008', wound:'#7a0808' },
+      { base:'#1a2a2a', dark:'#263838', rag:'#0a1414', wound:'#5a0a2a' },
+      { base:'#2a1a30', dark:'#3a2440', rag:'#140e18', wound:'#7700aa' },
+    ][style & 3];
+  }
+
+  // ── Shared head renderer — 4 distinct head shapes ─────────
+  // cx,cy = centre in local ctx; skinBase/skinDark for fill; eyeCol/pupilCol/woundCol for details
+  _drawZombieHead(ctx, cx, cy, hhr, skinBase, skinDark, eyeCol, pupilCol, woundCol, td) {
+    const hs = this._headStyle;
+    // 0=oval  1=wide & flat  2=tall narrow skull  3=lopsided
+    const hrx = hs===1 ? hhr*1.38 : hs===2 ? hhr*0.70 : hs===3 ? hhr*1.12 : hhr;
+    const hry = hs===1 ? hhr*0.76 : hs===2 ? hhr*1.32 : hs===3 ? hhr*0.90 : hhr;
+    const tilt = hs===3 ? 0.20 : 0;
+
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(tilt);
+
+    // Head fill
+    const hg = ctx.createRadialGradient(-hrx*0.18,-hry*0.18,1,0,0,Math.max(hrx,hry));
+    hg.addColorStop(0, skinDark); hg.addColorStop(1, skinBase);
+    ctx.fillStyle=hg; ctx.shadowColor='#000'; ctx.shadowBlur=8;
+    ctx.beginPath(); ctx.ellipse(0,0,hrx,hry,0,0,Math.PI*2); ctx.fill();
+    ctx.shadowBlur=0;
+
+    // Head-style detail
+    if (hs===1) { // wide: heavy brow ridge
+      ctx.fillStyle='rgba(0,0,0,0.32)';
+      ctx.beginPath(); ctx.ellipse(0,-hry*0.36,hrx*0.76,hry*0.17,0,0,Math.PI*2); ctx.fill();
+    } else if (hs===2) { // tall skull: faint suture line
+      ctx.strokeStyle='rgba(255,255,255,0.07)'; ctx.lineWidth=1.0;
+      ctx.beginPath(); ctx.moveTo(0,-hry*0.90); ctx.lineTo(0,-hry*0.30); ctx.stroke();
+    } else if (hs===3) { // lopsided: chin lump
+      ctx.fillStyle=skinDark;
+      ctx.beginPath(); ctx.ellipse(hrx*0.30,hry*0.58,hrx*0.34,hry*0.20,0.4,0,Math.PI*2); ctx.fill();
+    }
+
+    // Jaw (open, rotting)
+    ctx.fillStyle='#060402';
+    ctx.beginPath(); ctx.ellipse(0, hry*0.54, hrx*0.46, hry*0.20, 0, 0, Math.PI*2); ctx.fill();
+    // Teeth — count varies by head style
+    const tCount = hs===1?4 : hs===2?2 : 3;
+    const tSpacing = hrx*0.36 / Math.max(tCount-1,1);
+    ctx.fillStyle = hs===2 ? '#ddcc88' : '#bbaa66';
+    for (let ti=0; ti<tCount; ti++) {
+      const tx2 = -hrx*0.18 + ti*tSpacing;
+      ctx.beginPath(); ctx.roundRect(tx2-hry*0.07, hry*0.40, hry*0.13, hry*0.20, 2); ctx.fill();
+    }
+    // Blood drip
+    ctx.fillStyle=woundCol; ctx.globalAlpha=td*0.75;
+    ctx.beginPath(); ctx.ellipse(hrx*0.06, hry*0.72, 1.8, 3.5, 0.2, 0, Math.PI*2); ctx.fill();
+    ctx.globalAlpha=td;
+
+    // Eyes — shape varies
+    const ey = -hry*0.08;
+    const spread = hs===1 ? hrx*0.36 : hs===2 ? hrx*0.28 : hrx*0.30;
+    const eyeW = hs===1 ? hrx*0.22 : hs===2 ? hrx*0.18 : hrx*0.20;
+    const eyeH = hs===1 ? hry*0.12 : hs===2 ? hry*0.18 : hry*0.15;
+    for (const s of [-1,1]) {
+      ctx.fillStyle=eyeCol; ctx.shadowColor=pupilCol==='#880000'?'#DD1100':'#00BB44'; ctx.shadowBlur=this._rageMult>1?14:5;
+      ctx.beginPath(); ctx.ellipse(s*spread, ey, eyeW, eyeH, 0, 0, Math.PI*2); ctx.fill();
+      // Bloodshot vein
+      ctx.strokeStyle=woundCol; ctx.lineWidth=0.7; ctx.globalAlpha=td*0.5;
+      ctx.beginPath(); ctx.moveTo(s*spread-eyeW*0.85,ey); ctx.lineTo(s*spread-eyeW*0.15,ey); ctx.stroke();
+      ctx.globalAlpha=td;
+      // Pupil
+      ctx.fillStyle=pupilCol; ctx.shadowBlur=this._rageMult>1?10:3;
+      ctx.beginPath(); ctx.ellipse(s*spread,ey,eyeW*0.50,eyeH*0.80,0,0,Math.PI*2); ctx.fill();
+      ctx.shadowBlur=0;
+    }
+    // Head wound
+    ctx.globalAlpha=td*0.60; ctx.fillStyle=woundCol;
+    ctx.beginPath(); ctx.ellipse(-hrx*0.26,-hry*0.30,hrx*0.18,hry*0.09,-0.55,0,Math.PI*2); ctx.fill();
+    ctx.globalAlpha=td;
+    ctx.restore();
+  }
+
+  // ── RUNNER: very thin, lean, fast ────────────────────────
+  // Long skinny torso, trailing arms, craned-forward head
+  _renderRunner(ctx, x, y, r, td, walk) {
+    const sv = this._zSkin(this._style);
+    ctx.save();
+    ctx.globalAlpha = td;
+    ctx.translate(x, y);
+    ctx.rotate(this._angle - Math.PI / 2);
+
+    // Ground shadow (narrow)
+    ctx.globalAlpha = td * 0.15; ctx.fillStyle = '#000';
+    ctx.beginPath(); ctx.ellipse(0, r*0.38, r*0.55, r*0.14, 0, 0, Math.PI*2); ctx.fill();
+    ctx.globalAlpha = td;
+
+    if (this._rageMult > 1) { ctx.shadowColor = '#FF2200'; ctx.shadowBlur = 18; }
+
+    // Legs — long, thin, stride pose
+    for (const s of [-1, 1]) {
+      const legA = s * walk * 0.55;
+      ctx.save(); ctx.translate(s * r*0.16, r*0.22);
+      ctx.rotate(legA);
+      ctx.fillStyle = sv.dark;
+      ctx.beginPath(); ctx.roundRect(-r*0.10, 0, r*0.20, r*0.60, r*0.08); ctx.fill();
+      // Foot
+      ctx.fillStyle = '#0e0808';
+      ctx.beginPath(); ctx.ellipse(s*r*0.04, r*0.62, r*0.18, r*0.08, 0, 0, Math.PI*2); ctx.fill();
       ctx.restore();
     }
+
+    // Thin torso
+    const bw = r*0.30, bh = r*0.92;
+    const tg = ctx.createLinearGradient(-bw, -bh*0.44, bw, bh*0.36);
+    tg.addColorStop(0, sv.base); tg.addColorStop(1, sv.dark);
+    ctx.fillStyle = tg; ctx.shadowColor = '#000'; ctx.shadowBlur = 5;
+    ctx.beginPath(); ctx.roundRect(-bw, -bh*0.44, bw*2, bh*0.82, bw*0.25); ctx.fill();
+    ctx.shadowBlur = 0;
+    // Torn scraps
+    ctx.fillStyle = sv.rag; ctx.globalAlpha = td*0.5;
+    ctx.beginPath(); ctx.roundRect(-bw*0.9, -bh*0.35, bw*0.8, bh*0.22, 2); ctx.fill();
+    ctx.globalAlpha = td;
+    // Blood streak
+    ctx.strokeStyle = sv.wound; ctx.lineWidth = 1.2; ctx.globalAlpha = td*0.6;
+    ctx.beginPath(); ctx.moveTo(0, -bh*0.28); ctx.lineTo(r*0.06, bh*0.14); ctx.stroke();
+    ctx.globalAlpha = td;
+
+    // Arms — trailing behind (sprinting)
+    for (const s of [-1, 1]) {
+      ctx.save(); ctx.translate(s*bw*0.85, -bh*0.22);
+      ctx.rotate(s * -0.65 + walk*s*0.2); // swept back
+      ctx.fillStyle = sv.dark;
+      ctx.beginPath(); ctx.roundRect(-r*0.09, -r*0.55, r*0.18, r*0.60, r*0.07); ctx.fill();
+      // Bony hand
+      ctx.fillStyle = sv.base;
+      ctx.beginPath(); ctx.ellipse(0, r*0.08, r*0.12, r*0.14, 0, 0, Math.PI*2); ctx.fill();
+      ctx.restore();
+    }
+
+    // Head — craned far forward
+    const hhr = r*0.36;
+    const hy  = -bh*0.44 - hhr*0.85;
+    this._drawZombieHead(ctx, 0, hy, hhr, sv.base, sv.dark, '#ffee88', '#CC0000', sv.wound, td);
+    ctx.restore();
+  }
+
+  // ── BRUTE: massive wide body, tiny head, huge arms ────────
+  _renderBrute(ctx, x, y, r, td, walk) {
+    ctx.save();
+    ctx.globalAlpha = td;
+    ctx.translate(x, y);
+    ctx.rotate(this._angle - Math.PI / 2);
+
+    // Big ground shadow
+    ctx.globalAlpha = td*0.25; ctx.fillStyle = '#000';
+    ctx.beginPath(); ctx.ellipse(4, r*0.5, r*1.3, r*0.32, 0, 0, Math.PI*2); ctx.fill();
+    ctx.globalAlpha = td;
+
+    // Short wide legs
+    for (const s of [-1, 1]) {
+      const legOff = s * walk * r * 0.14;
+      ctx.fillStyle = '#3a1606';
+      ctx.beginPath(); ctx.ellipse(s*r*0.42, r*0.20+legOff, r*0.30, r*0.38, s*walk*0.15, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#180804';
+      ctx.beginPath(); ctx.ellipse(s*r*0.44+s*0.06*r, r*0.52+legOff, r*0.30, r*0.12, 0, 0, Math.PI*2); ctx.fill();
+    }
+
+    // MASSIVE wide torso
+    const bw = r*1.10, bh = r*0.68;
+    const tg = ctx.createLinearGradient(-bw, -bh*0.44, bw, bh*0.36);
+    tg.addColorStop(0, '#3a1808'); tg.addColorStop(1, '#5a2a10');
+    ctx.fillStyle = tg; ctx.shadowColor = '#000'; ctx.shadowBlur = 10;
+    ctx.beginPath(); ctx.roundRect(-bw, -bh*0.44, bw*2, bh*0.82, [bw*0.15,bw*0.15,bw*0.10,bw*0.10]); ctx.fill();
+    ctx.shadowBlur = 0;
+    // Torn rags on huge torso
+    ctx.fillStyle = '#180808'; ctx.globalAlpha = td*0.5;
+    ctx.beginPath(); ctx.roundRect(-bw*0.7,-bh*0.38,bw*0.55,bh*0.28,3); ctx.fill();
+    ctx.beginPath(); ctx.roundRect(bw*0.18,-bh*0.44,bw*0.48,bh*0.22,3); ctx.fill();
+    ctx.globalAlpha = td;
+    // Exposed rib arcs
+    ctx.strokeStyle = '#2a1006'; ctx.lineWidth = 1.2; ctx.globalAlpha = td*0.45;
+    for (let ri=0;ri<3;ri++) { ctx.beginPath(); ctx.arc(0,-bh*0.22+ri*bh*0.22,bw*0.62,Math.PI*0.18,Math.PI*0.82); ctx.stroke(); }
+    ctx.globalAlpha = td;
+
+    // HUGE arms
+    for (const s of [-1, 1]) {
+      ctx.save(); ctx.translate(s*bw*0.92, -bh*0.22);
+      ctx.rotate(s*0.42 + walk*s*0.12);
+      ctx.fillStyle = '#4a2010';
+      ctx.beginPath(); ctx.roundRect(-r*0.28, -r*0.72, r*0.56, r*0.82, r*0.12); ctx.fill();
+      // Massive fist
+      ctx.fillStyle = '#3a1808';
+      ctx.beginPath(); ctx.ellipse(0, r*0.16, r*0.28, r*0.26, 0, 0, Math.PI*2); ctx.fill();
+      ctx.strokeStyle = '#0a0404'; ctx.lineWidth = 1.6;
+      for (let fi=-1;fi<=1;fi++) { ctx.beginPath(); ctx.moveTo(fi*r*0.14,r*0.20); ctx.lineTo(fi*r*0.17,r*0.36); ctx.stroke(); }
+      ctx.restore();
+    }
+
+    // Tiny head (small relative to massive body)
+    const hhr = r*0.36;
+    const hy  = -bh*0.44 - hhr;
+    this._drawZombieHead(ctx, 0, hy, hhr, '#2e1006', '#4a1c0a', '#ffcc66', '#880000', '#5a0c0c', td);
+    ctx.restore();
+  }
+
+  // ── BLOATER: huge round fat body ─────────────────────────
+  _renderBloater(ctx, x, y, r, td, walk) {
+    ctx.save();
+    ctx.globalAlpha = td;
+    ctx.translate(x, y);
+    ctx.rotate(this._angle - Math.PI / 2);
+
+    // Very wide shadow
+    ctx.globalAlpha=td*0.22; ctx.fillStyle='#000';
+    ctx.beginPath(); ctx.ellipse(4, r*0.55, r*1.4, r*0.30, 0, 0, Math.PI*2); ctx.fill();
+    ctx.globalAlpha=td;
+
+    // Stubby legs barely visible under belly
+    for (const s of [-1,1]) {
+      ctx.fillStyle='#223318';
+      ctx.beginPath(); ctx.ellipse(s*r*0.30, r*0.65, r*0.20, r*0.28, 0, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle='#0e1808';
+      ctx.beginPath(); ctx.ellipse(s*r*0.32, r*0.88, r*0.22, r*0.09, 0, 0, Math.PI*2); ctx.fill();
+    }
+
+    // ROUND MASSIVE BODY — almost circular
+    const pulse = 1 + Math.sin(Date.now()*0.003)*0.03; // subtle throb
+    const bw = r*0.96*pulse, bh = r*0.96/pulse;
+    const bg = ctx.createRadialGradient(0,0,r*0.1,0,0,r*0.95);
+    bg.addColorStop(0,'#3a5a1a'); bg.addColorStop(0.7,'#223314'); bg.addColorStop(1,'#142208');
+    ctx.fillStyle=bg; ctx.shadowColor='#000'; ctx.shadowBlur=12;
+    ctx.beginPath(); ctx.ellipse(0, 0, bw, bh, 0, 0, Math.PI*2); ctx.fill();
+    ctx.shadowBlur=0;
+    // Swollen veins on belly
+    ctx.strokeStyle='#558822'; ctx.lineWidth=1.4; ctx.globalAlpha=td*0.55;
+    ctx.beginPath(); ctx.moveTo(-bw*0.6,-bh*0.2); ctx.bezierCurveTo(-bw*0.8,0,-bw*0.5,bh*0.3,-bw*0.2,bh*0.5); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(bw*0.4,-bh*0.3); ctx.bezierCurveTo(bw*0.75,0,bw*0.6,bh*0.4,bw*0.1,bh*0.55); ctx.stroke();
+    ctx.globalAlpha=td;
+    // Stretch marks / tears
+    ctx.strokeStyle='#1a4a08'; ctx.lineWidth=1.0; ctx.globalAlpha=td*0.40;
+    for (let sm=0;sm<5;sm++) {
+      const a = (sm/5)*Math.PI - Math.PI*0.3;
+      ctx.beginPath(); ctx.moveTo(Math.cos(a)*bw*0.5,Math.sin(a)*bh*0.5); ctx.lineTo(Math.cos(a)*bw*0.85,Math.sin(a)*bh*0.85); ctx.stroke();
+    }
+    ctx.globalAlpha=td;
+
+    // Tiny stub arms
+    for (const s of [-1,1]) {
+      ctx.fillStyle='#334d22';
+      ctx.beginPath(); ctx.ellipse(s*bw*0.88, -bh*0.1, r*0.16, r*0.28, s*0.5, 0, Math.PI*2); ctx.fill();
+    }
+
+    // Head — sits right on top of body, no neck
+    const hhr=r*0.40;
+    const hy=-bh*0.82;
+    this._drawZombieHead(ctx, 0, hy, hhr, '#223310', '#3a5018', '#ddcc88', '#004400', '#336600', td);
+    ctx.restore();
+  }
+
+  // ── MUTANT: deformed, one huge arm, asymmetric ────────────
+  _renderMutant(ctx, x, y, r, td, walk) {
+    const sv = this._zSkin(this._style);
+    ctx.save();
+    ctx.globalAlpha = td;
+    ctx.translate(x, y);
+    ctx.rotate(this._angle - Math.PI / 2);
+
+    // Shadow
+    ctx.globalAlpha=td*0.18; ctx.fillStyle='#000';
+    ctx.beginPath(); ctx.ellipse(3,r*0.44,r*1.05,r*0.24,0,0,Math.PI*2); ctx.fill();
+    ctx.globalAlpha=td;
+
+    // Legs — one normal, one deformed shorter
+    ctx.fillStyle = sv.dark;
+    ctx.beginPath(); ctx.ellipse(-r*0.24, r*0.20+walk*r*0.20, r*0.19, r*0.40, -walk*0.25, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#334400'; // mutated leg — slightly different
+    ctx.beginPath(); ctx.ellipse(r*0.26, r*0.26-walk*r*0.15, r*0.24, r*0.32, walk*0.30, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#0e0808';
+    ctx.beginPath(); ctx.ellipse(-r*0.26, r*0.52, r*0.22, r*0.10, 0, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(r*0.30, r*0.52, r*0.20, r*0.10, 0, 0, Math.PI*2); ctx.fill();
+
+    // Torso — slightly asymmetric
+    const bw=r*0.62, bh=r*0.85;
+    const tg=ctx.createLinearGradient(-bw,-bh*0.44,bw,bh*0.36);
+    tg.addColorStop(0,sv.base); tg.addColorStop(1,sv.dark);
+    ctx.fillStyle=tg; ctx.shadowColor='#000'; ctx.shadowBlur=7;
+    ctx.beginPath();
+    // Asymmetric: right side bulges (tumor/mutation)
+    ctx.moveTo(-bw, bh*0.38);
+    ctx.bezierCurveTo(-bw,-bh*0.44+bh*0.20, -bw*0.50,-bh*0.44, 0,-bh*0.44);
+    ctx.bezierCurveTo(bw*0.60,-bh*0.44, bw*1.18,-bh*0.10, bw*1.08,bh*0.38);
+    ctx.closePath();
+    ctx.fill(); ctx.shadowBlur=0;
+    // Tumor growth on right
+    const tumG=ctx.createRadialGradient(bw*0.72,0,2,bw*0.72,0,r*0.36);
+    tumG.addColorStop(0,'#aabb00'); tumG.addColorStop(1,'#445500');
+    ctx.fillStyle=tumG; ctx.globalAlpha=td*0.85;
+    ctx.beginPath(); ctx.ellipse(bw*0.72,0,r*0.32,r*0.38,0.3,0,Math.PI*2); ctx.fill();
+    ctx.globalAlpha=td;
+    // Torn scraps
+    ctx.fillStyle=sv.rag; ctx.globalAlpha=td*0.5;
+    ctx.beginPath(); ctx.roundRect(-bw*0.7,-bh*0.38,bw*0.55,bh*0.28,3); ctx.fill();
+    ctx.globalAlpha=td;
+
+    // LEFT ARM — small, withered
+    ctx.save(); ctx.translate(-bw*0.88,-bh*0.28);
+    ctx.rotate(-0.45+walk*(-0.15));
+    ctx.fillStyle=sv.dark;
+    ctx.beginPath(); ctx.roundRect(-r*0.09,-r*0.42,r*0.18,r*0.50,r*0.07); ctx.fill();
+    ctx.fillStyle=sv.base;
+    ctx.beginPath(); ctx.ellipse(0,r*0.12,r*0.10,r*0.12,0,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+
+    // RIGHT ARM — huge mutated arm
+    ctx.save(); ctx.translate(bw*0.95,-bh*0.20);
+    ctx.rotate(0.60+walk*0.18);
+    ctx.fillStyle='#445500';
+    ctx.beginPath(); ctx.roundRect(-r*0.22,-r*0.90,r*0.44,r*1.05,r*0.14); ctx.fill();
+    // Huge mutant claws
+    ctx.fillStyle='#334400';
+    ctx.beginPath(); ctx.ellipse(0,r*0.20,r*0.26,r*0.24,0,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle='#111'; ctx.lineWidth=1.8;
+    for (let fi=-2;fi<=2;fi++) { ctx.beginPath(); ctx.moveTo(fi*r*0.10,r*0.22); ctx.lineTo(fi*r*0.13,r*0.42); ctx.stroke(); }
+    ctx.restore();
+
+    // Head
+    const hhr=r*0.46;
+    const hy=-bh*0.48;
+    this._drawZombieHead(ctx, 0, hy, hhr, sv.base, sv.dark, '#ccee44', '#224400', sv.wound, td);
+    ctx.restore();
+  }
+
+  _renderZombieHPBar(ctx, x, y, r) {
+    const showBar = this.type === 'brute' || this.type === 'bloater' || this.type === 'charger' || this._damagedTimer > 0;
+    if (showBar && !this.dying) {
+      const bw2 = r * 2 + 8, bh2 = 3;
+      const bx2 = x - bw2 / 2, by2 = y - r - 10;
+      ctx.save();
+      ctx.fillStyle = '#111'; ctx.fillRect(bx2, by2, bw2, bh2);
+      ctx.fillStyle = '#44FF44'; ctx.fillRect(bx2, by2, bw2 * (this.hp / this.maxHp), bh2);
+      ctx.restore();
+    }
+  }
+
+  // ── Crawler: flat fast ground-hugger ─────────────────────
+  _renderCrawler(ctx, x, y, r, td, walk) {
+    ctx.translate(x, y);
+    ctx.rotate(this._angle - Math.PI / 2);
+    // Flat elongated body (crawling on all fours)
+    const bw = r * 1.1, bh = r * 0.38;
+    // Ground shadow
+    ctx.globalAlpha = td * 0.18; ctx.fillStyle = '#000';
+    ctx.beginPath(); ctx.ellipse(2, r * 0.15, r * 1.1, r * 0.14, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.globalAlpha = td;
+    // Body — low slung
+    const cg = ctx.createLinearGradient(-bw, -bh, bw, bh);
+    cg.addColorStop(0, '#2a3a10'); cg.addColorStop(1, '#3a5018');
+    ctx.fillStyle = cg; ctx.shadowColor = '#000'; ctx.shadowBlur = 6;
+    ctx.beginPath(); ctx.ellipse(0, 0, bw, bh, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.shadowBlur = 0;
+    // Clawed front limbs (outstretched)
+    for (const s of [-1, 1]) {
+      ctx.fillStyle = '#304418';
+      ctx.beginPath(); ctx.ellipse(s * r * 0.52, -r * 0.55 + walk * s * r * 0.18, r * 0.14, r * 0.32, s * 0.3, 0, Math.PI * 2); ctx.fill();
+      // Claws
+      ctx.strokeStyle = '#0a0a06'; ctx.lineWidth = 1.1;
+      for (let fi = -1; fi <= 1; fi++) {
+        ctx.beginPath();
+        ctx.moveTo(s * r * 0.52 + fi * r * 0.06, -r * 0.72);
+        ctx.lineTo(s * r * 0.54 + fi * r * 0.07, -r * 0.86);
+        ctx.stroke();
+      }
+    }
+    // Head — narrow and forward
+    const hhr = r * 0.40;
+    ctx.fillStyle = '#304018'; ctx.shadowColor = '#000'; ctx.shadowBlur = 5;
+    ctx.beginPath(); ctx.ellipse(0, -r * 0.72, hhr * 0.7, hhr, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.shadowBlur = 0;
+    // Eyes — small yellow predator eyes
+    for (const s of [-1, 1]) {
+      ctx.fillStyle = '#BBFF22'; ctx.shadowColor = '#88FF00'; ctx.shadowBlur = 7;
+      ctx.beginPath(); ctx.ellipse(s * hhr * 0.30, -r * 0.78, hhr * 0.14, hhr * 0.12, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#111'; ctx.shadowBlur = 0;
+      ctx.beginPath(); ctx.ellipse(s * hhr * 0.30, -r * 0.78, hhr * 0.06, hhr * 0.09, 0, 0, Math.PI * 2); ctx.fill();
+    }
+    // Speed-line motion blur hint on body
+    ctx.strokeStyle = '#44660888'; ctx.lineWidth = 1; ctx.globalAlpha = td * 0.30;
+    for (let li = 1; li <= 3; li++) {
+      ctx.beginPath(); ctx.moveTo(-bw * 0.6, bh * li * 0.5); ctx.lineTo(bw * 0.4, bh * li * 0.5); ctx.stroke();
+    }
+    ctx.globalAlpha = td;
+  }
+
+  // ── Charger: muscular blood-red berserker ─────────────────
+  _renderCharger(ctx, x, y, r, td, walk) {
+    ctx.translate(x, y);
+    ctx.rotate(this._angle - Math.PI / 2);
+    const bw = r * 0.74, bh = r * 0.88;
+    // Rage glow
+    ctx.shadowColor = '#FF2200'; ctx.shadowBlur = 22 + Math.sin(Date.now() * 0.012) * 8;
+    // Ground shadow
+    ctx.globalAlpha = td * 0.24; ctx.fillStyle = '#000';
+    ctx.beginPath(); ctx.ellipse(3, r * 0.44, r * 0.95, r * 0.24, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.globalAlpha = td;
+    // Legs — pumping hard
+    for (const s of [-1, 1]) {
+      const legOff = s * walk * r * 0.32;
+      ctx.fillStyle = '#7a0a06';
+      ctx.beginPath(); ctx.ellipse(s * r * 0.30, r * 0.18 + legOff, r * 0.21, r * 0.42, s * walk * 0.35, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#2a0404';
+      ctx.beginPath(); ctx.ellipse(s * r * 0.32 + s * 0.07 * r, r * 0.54 + legOff, r * 0.24, r * 0.11, 0, 0, Math.PI * 2); ctx.fill();
+    }
+    // Torso — wide, muscular
+    const rg = ctx.createLinearGradient(-bw, -bh * 0.44, bw, bh * 0.36);
+    rg.addColorStop(0, '#9a1408'); rg.addColorStop(1, '#5a0c04');
+    ctx.fillStyle = rg;
+    ctx.beginPath(); ctx.roundRect(-bw, -bh * 0.44, bw * 2, bh * 0.82, [bw * 0.22, bw * 0.22, bw * 0.14, bw * 0.14]); ctx.fill();
+    // Veins on chest
+    ctx.strokeStyle = '#CC1100'; ctx.lineWidth = 1.4; ctx.globalAlpha = td * 0.55;
+    ctx.beginPath(); ctx.moveTo(-r*0.22, -bh*0.35); ctx.lineTo(-r*0.30, bh*0.12); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(r*0.18, -bh*0.22); ctx.lineTo(r*0.26, bh*0.20); ctx.stroke();
+    ctx.globalAlpha = td;
+    // Arms — massive, forward-thrust
+    for (const s of [-1, 1]) {
+      ctx.save(); ctx.translate(s * bw * 0.92, -bh * 0.30);
+      ctx.rotate(s * 0.45 + walk * s * 0.22);
+      ctx.fillStyle = '#7a1008';
+      ctx.beginPath(); ctx.roundRect(-r * 0.18, -r * 0.68, r * 0.36, r * 0.78, r * 0.12); ctx.fill();
+      ctx.fillStyle = '#5a0c06';
+      ctx.beginPath(); ctx.ellipse(0, r * 0.16, r * 0.20, r * 0.22, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = '#1a0404'; ctx.lineWidth = 1.4;
+      for (let fi = -1; fi <= 1; fi++) {
+        ctx.beginPath(); ctx.moveTo(fi * r * 0.11, r * 0.18); ctx.lineTo(fi * r * 0.14, r * 0.32); ctx.stroke();
+      }
+      ctx.restore();
+    }
+    // Head — brutish, low brow
+    const hhr = r * 0.52;
+    const hg  = ctx.createRadialGradient(-hhr * 0.2, -bh * 0.50, 1, 0, -bh * 0.48, hhr);
+    hg.addColorStop(0, '#8a1006'); hg.addColorStop(1, '#4a0804');
+    ctx.fillStyle = hg;
+    ctx.beginPath(); ctx.arc(0, -bh * 0.48, hhr, 0, Math.PI * 2); ctx.fill();
+    // Jaw
+    ctx.fillStyle = '#2a0404';
+    ctx.beginPath(); ctx.ellipse(0, -bh * 0.48 + hhr * 0.56, hhr * 0.52, hhr * 0.22, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#ccaa66';
+    for (let ti = -1; ti <= 1; ti++) {
+      ctx.beginPath(); ctx.roundRect(ti * hhr * 0.24 - hhr * 0.09, -bh * 0.48 + hhr * 0.42, hhr * 0.16, hhr * 0.22, 2); ctx.fill();
+    }
+    // Eyes — solid burning orange
+    const ey = -bh * 0.48 - hhr * 0.06;
+    for (const s of [-1, 1]) {
+      ctx.fillStyle = '#FF4400'; ctx.shadowColor = '#FF2200'; ctx.shadowBlur = 14;
+      ctx.beginPath(); ctx.ellipse(s * hhr * 0.30, ey, hhr * 0.18, hhr * 0.14, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#FF8800'; ctx.shadowBlur = 0;
+      ctx.beginPath(); ctx.ellipse(s * hhr * 0.30, ey, hhr * 0.08, hhr * 0.10, 0, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.shadowBlur = 0;
   }
 }
 
