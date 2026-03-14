@@ -187,6 +187,9 @@ class Game {
     // ── Metro ─────────────────────────────────────────────────
     this._metroWave       = 0;
     this._metroWaveTimer  = undefined;
+    // ── Big Map & Waypoint ────────────────────────────────────
+    this._waypointDoor       = null;
+    this._buildingEntryCooldown = 0; // prevents auto-exit/re-entry right after entering
     // ── Glitch Mode ───────────────────────────────────────────
     this._glitchPortals      = [];
     this._glitchPortalTimer  = 0;
@@ -286,12 +289,20 @@ class Game {
       this._togglePlayerDrone();
       return;
     }
-    if (e.code === 'KeyN' && (this.state === 'playing' || this.state === 'blackmarket')) {
-      if (this._bmOpen) { this._bmOpen = false; this.state = 'playing'; }
-      else if (this._bmVendor && !this._arenaMode) {
-        if (Math.hypot(this._bmVendor.x - this.player.x, this._bmVendor.y - this.player.y) < 70)
-          { this._bmOpen = true; this.state = 'blackmarket'; }
+    if (e.code === 'KeyN') {
+      // Close big map
+      if (this.state === 'bigmap') { this.state = 'playing'; return; }
+      // Black market (near vendor at night)
+      if (this.state === 'playing' || this.state === 'blackmarket') {
+        if (this._bmOpen) { this._bmOpen = false; this.state = 'playing'; return; }
+        if (this._bmVendor && !this._arenaMode) {
+          if (Math.hypot(this._bmVendor.x - this.player.x, this._bmVendor.y - this.player.y) < 70) {
+            this._bmOpen = true; this.state = 'blackmarket'; return;
+          }
+        }
       }
+      // Open big map (outdoor, not in combat menus)
+      if (this.state === 'playing' && !this._indoor) { this.state = 'bigmap'; }
       return;
     }
     if (e.code === 'KeyF' && this.state === 'playing') {
@@ -335,6 +346,7 @@ class Game {
       return;
     }
     if (e.code === 'Escape') {
+      if (this.state === 'bigmap') { this.state = 'playing'; return; }
       if (this.state === 'blackmarket') { this._bmOpen = false; this.state = 'playing'; return; }
       if (this.state === 'shop')    { this.shop.close(); this.state = 'playing'; return; }
       if (this.state === 'carshop') { this._dealership.close(); this.state = 'playing'; return; }
@@ -392,7 +404,7 @@ class Game {
       }
     }
 
-    this._render();
+    try { this._render(); } catch(e) { console.error('render error:', e); }
     this.input.flush();
     this._raf = requestAnimationFrame((t) => this._loop(t));
   }
@@ -654,15 +666,18 @@ class Game {
     }
 
     // ── Door animation + auto walk-through entry ───────────
+    if (this._buildingEntryCooldown > 0) this._buildingEntryCooldown -= dt;
     if (!this._indoor && !this._playerVehicle) {
       this.map.updateDoors(this.player.x, this.player.y, dt);
-      for (const door of this.map.doors) {
-        if (door._openAmt >= 0.85) {
-          const dist = Math.hypot(door.wx - this.player.x, door.wy - this.player.y);
-          if (dist < 30) {
-            this._tryEnterExit();
-            if (this._indoor) return; // stop outdoor update immediately after entering
-            break;
+      if (this._buildingEntryCooldown <= 0) {
+        for (const door of this.map.doors) {
+          if (door._openAmt >= 0.85) {
+            const dist = Math.hypot(door.wx - this.player.x, door.wy - this.player.y);
+            if (dist < 30) {
+              this._tryEnterExit();
+              if (this._indoor) return; // stop outdoor update immediately after entering
+              break;
+            }
           }
         }
       }
@@ -1539,6 +1554,10 @@ class Game {
       const door = this._indoor.doorDoor;
       this.player.x = door.wx;
       this.player.y = door.wy + 80;  // far enough to avoid instantly re-entering
+      // Snap camera so player is visible immediately on exit
+      this.camX = this.player.x - this.canvas.width  / 2;
+      this.camY = this.player.y - this.canvas.height / 2;
+      this._buildingEntryCooldown = 1.2; // also block re-entry for a moment
       window.audio?.doorClose();
       this._indoor        = null;
       this._indoorBots    = [];
@@ -1555,12 +1574,9 @@ class Game {
         room.isRestaurant   = (door.specialType === 'restaurant');
         room.isHome         = (door.specialType === 'home');
         room._doorSpecial   = door.specialType;
-        if (this.map._blockTypes) {
-          const R2 = this.map.ROAD_EVERY;
-          const bx2 = Math.floor(door.tx / R2), by2 = Math.floor(door.ty / R2);
-          room._buildingType = this.map._blockTypes[`${bx2},${by2}`] ?? 0;
-        } else { room._buildingType = 0; }
+        room._buildingType  = typeof door.bTypeIdx === 'number' ? door.bTypeIdx : 0;
         this._indoor = room;
+        this._buildingEntryCooldown = 1.2; // block auto-exit for 1.2s after entering
         window.audio?.doorOpen();
         this._achStats.buildingsEntered++;
         this._checkAchievements();
@@ -1627,7 +1643,7 @@ class Game {
     this.player.update(dt, this.input, room, this._indoorBullets, this.particles);
     if (this.player.dead && this.state === 'playing') this.state = 'gameover';
     const _exitThreshold = room.isMetro ? room.roomH - room.S : room.roomH - 5;
-    if (this.player.y >= _exitThreshold) { this._tryEnterExit(); return; }
+    if (this._buildingEntryCooldown <= 0 && this.player.y >= _exitThreshold) { this._tryEnterExit(); return; }
 
     for (const bot of this._indoorBots) bot.update(dt, this.player, room, this._indoorBullets, this.particles);
     if (!room.isMetro) {
@@ -1734,7 +1750,7 @@ class Game {
     this.player.inVehicle = false;
     this.player.update(dt, this.input, room, this._indoorBullets, this.particles);
     if (this.player.dead && this.state === 'playing') this.state = 'gameover';
-    if (this.player.y >= room.roomH - 5) { this._tryEnterExit(); return; }
+    if (this._buildingEntryCooldown <= 0 && this.player.y >= room.roomH - 5) { this._tryEnterExit(); return; }
     for (const b of this._indoorBullets) b.update(dt, room);
     this._indoorBullets = this._indoorBullets.filter(b => !b.dead);
     for (const sp of this._salespersons) sp.update(dt);
@@ -1756,7 +1772,7 @@ class Game {
     if (this.state === 'playing') {
       this.player.update(dt, this.input, room, this._indoorBullets, this.particles);
       if (this.player.dead) this.state = 'gameover';
-      if (this.player.y >= room.roomH - 5) { this._tryEnterExit(); return; }
+      if (this._buildingEntryCooldown <= 0 && this.player.y >= room.roomH - 5) { this._tryEnterExit(); return; }
     }
     for (const h of this._casinoHosts) h.update(dt);
     this._nearCasinoHost = this._casinoHosts.some(
@@ -1800,7 +1816,10 @@ class Game {
         }
       }
     }
-    this._renderIndoorFurniture(ctx, room);
+    ctx.save();
+    try { this._renderIndoorFurniture(ctx, room); } catch(e) { console.error('furniture render error:', e); }
+    ctx.restore();
+    ctx.globalAlpha = 1;
     for (const d of this.decals)         d.render(ctx);
     for (const p of this._indoorPickups) p.render(ctx);
     for (const p of this.particles)      p.render(ctx);
@@ -2257,7 +2276,7 @@ class Game {
       }
       // ── Neon sign ────────────────────────────────
       ctx.fillStyle = '#FF00AA'; ctx.shadowColor = '#FF00CC'; ctx.shadowBlur = 18;
-      ctx.font = `bold ${Math.round(r*0.9)}px Orbitron, monospace`; ctx.textAlign = 'center';
+      ctx.font = 'bold 14px Orbitron, monospace'; ctx.textAlign = 'center';
       ctx.fillText('NEON CLUB', cx, topY+42); ctx.shadowBlur = 0;
 
     } else if (type === 9) { // HOSPITAL
@@ -2554,7 +2573,7 @@ class Game {
       }
       // Neon TATTOO sign
       ctx.fillStyle = '#FF44AA'; ctx.shadowColor = '#FF00CC'; ctx.shadowBlur = 15;
-      ctx.font = `bold ${Math.round(r*0.75)}px Orbitron, monospace`; ctx.textAlign = 'center';
+      ctx.font = 'bold 12px Orbitron, monospace'; ctx.textAlign = 'center';
       ctx.fillText('INK CITY', cx-W*0.1, midY+30); ctx.shadowBlur = 0;
 
     } else if (type === 17) { // AMMO DEPOT
@@ -3149,7 +3168,7 @@ class Game {
     const W   = this.canvas.width, H = this.canvas.height;
     const shake = this.hud.getShakeOffset();
 
-    this.canvas.style.cursor = (this.state === 'shop' || this.state === 'blackmarket' || this.state === 'carshop' || this.state === 'casino' || this.state === 'buildingshop') ? 'default' : 'none';
+    this.canvas.style.cursor = (this.state === 'shop' || this.state === 'blackmarket' || this.state === 'carshop' || this.state === 'casino' || this.state === 'buildingshop' || this.state === 'bigmap') ? 'default' : 'none';
 
     ctx.clearRect(0, 0, W, H);
     ctx.fillStyle = '#08080f';
@@ -3159,6 +3178,7 @@ class Game {
     if (this._indoor) {
       this._renderIndoorScene(ctx, W, H, shake);
     } else {
+      ctx.globalAlpha = 1;
       ctx.save();
       ctx.translate(-this.camX + shake.x, -this.camY + shake.y);
       this.map.render(ctx, this.camX, this.camY, W, H);
@@ -3364,6 +3384,7 @@ class Game {
     const playing = this.state !== 'gameover';
     if (playing) {
       this.hud.renderMinimap(this.map, this.player, this.bots, this.camX, this.camY, this.boss, this._districtLayout);
+      if (this._waypointDoor) this.hud.renderWaypointNav(this.player, this._waypointDoor, this.map);
       this.hud.renderHealthBar(this.player);
       this.hud.renderControls(this._arenaMode, this._isMobile);
       if (this._isMobile) this.hud.renderMobileHints(this._arenaMode);
@@ -3504,6 +3525,28 @@ class Game {
             }
             break;
           }
+        }
+      }
+    }
+
+    // ── Big-map overlay ───────────────────────────────────────
+    if (this.state === 'bigmap') {
+      const mx = this.input.mouseScreen.x, my = this.input.mouseScreen.y;
+      const hoveredDoor = this.hud.renderBigMap(
+        ctx, W, H, this.map, this.player, this.map.doors,
+        this._waypointDoor, mx, my
+      );
+      if (this.input.mouseJustDown) {
+        if (hoveredDoor) {
+          // Toggle: click same door again clears waypoint, otherwise set it
+          const same = this._waypointDoor &&
+            this._waypointDoor.tx === hoveredDoor.tx &&
+            this._waypointDoor.ty === hoveredDoor.ty;
+          this._waypointDoor = same ? null : hoveredDoor;
+          this.state = 'playing';
+        } else {
+          // Click empty space closes map
+          this.state = 'playing';
         }
       }
     }

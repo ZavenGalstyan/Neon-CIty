@@ -1240,4 +1240,242 @@ class HUD {
     const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
     return `${r},${g},${b}`;
   }
+
+  // ── Compute building info for a door ─────────────────────────────────────
+  _doorInfo(door, gameMap) {
+    if (door.specialType === 'dealership') return { name: 'CAR DEALER', color: '#FFCC00' };
+    if (door.specialType === 'casino')     return { name: 'CASINO',     color: '#FF44AA' };
+    if (door.specialType === 'home')       return { name: 'HOME',       color: '#88FFCC' };
+    const bIdx = typeof door.bTypeIdx === 'number' ? door.bTypeIdx : 0;
+    const bt = CONFIG.BUILDING_TYPES[bIdx] || CONFIG.BUILDING_TYPES[0];
+    return { name: bt.name, color: bt.color };
+  }
+
+  // ── Full-screen big-map overlay ────────────────────────────────────────────
+  // Returns the door the cursor is currently hovering over (or null).
+  renderBigMap(ctx, W, H, gameMap, player, doors, waypointDoor, mx, my) {
+    const t = performance.now() / 1000;
+
+    // Background
+    ctx.fillStyle = 'rgba(1,2,6,0.97)';
+    ctx.fillRect(0, 0, W, H);
+
+    // Map area
+    const padX = 68, padY = 62;
+    const mapW = W - padX * 2;
+    const mapH = H - padY * 2 - 36; // 36px for legend row
+    const ox = padX, oy = padY;
+    const scX = mapW / (gameMap.W * gameMap.S);
+    const scY = mapH / (gameMap.H * gameMap.S);
+
+    // Outer glow frame
+    ctx.save();
+    ctx.shadowColor = '#44EEFF'; ctx.shadowBlur = 28;
+    ctx.strokeStyle = 'rgba(68,238,255,0.28)'; ctx.lineWidth = 1.5;
+    this._rr(ctx, ox - 8, oy - 8, mapW + 16, mapH + 16, 10); ctx.stroke();
+    ctx.restore();
+
+    // Clipped map image
+    ctx.save();
+    ctx.beginPath(); this._rr(ctx, ox, oy, mapW, mapH, 6); ctx.clip();
+    ctx.drawImage(gameMap.minimapCanvas, ox, oy, mapW, mapH);
+    ctx.restore();
+
+    // Map border
+    ctx.save();
+    ctx.strokeStyle = 'rgba(68,238,255,0.22)'; ctx.lineWidth = 1;
+    this._rr(ctx, ox, oy, mapW, mapH, 6); ctx.stroke();
+    ctx.restore();
+
+    // Title
+    ctx.save();
+    ctx.textAlign = 'center';
+    ctx.font = 'bold 16px Orbitron, monospace';
+    ctx.fillStyle = '#44EEFF'; ctx.shadowColor = '#44EEFF'; ctx.shadowBlur = 18;
+    ctx.fillText('▸ CITY MAP', W / 2, oy - 20);
+    ctx.font = '8.5px Orbitron, monospace';
+    ctx.fillStyle = 'rgba(255,255,255,0.38)'; ctx.shadowBlur = 0;
+    ctx.fillText('[N] CLOSE  ·  CLICK BUILDING → SET DESTINATION  ·  CLICK AGAIN → CLEAR', W / 2, oy - 7);
+    ctx.restore();
+
+    // ── Building markers ──────────────────────────────────────
+    let hoveredDoor = null;
+    const isWP = d => waypointDoor && d.tx === waypointDoor.tx && d.ty === waypointDoor.ty;
+
+    for (const door of doors) {
+      const sx = ox + door.wx * scX;
+      const sy = oy + door.wy * scY;
+      if (sx < ox || sx > ox + mapW || sy < oy || sy > oy + mapH) continue;
+      const info  = this._doorInfo(door, gameMap);
+      const wp    = isWP(door);
+      const hover = Math.hypot(mx - sx, my - sy) < 13;
+      if (hover) hoveredDoor = door;
+
+      const r = wp || hover ? 6 : 4;
+      ctx.save();
+      ctx.shadowColor = info.color;
+      ctx.shadowBlur  = wp ? 20 : hover ? 14 : 5;
+      ctx.fillStyle   = info.color + (wp || hover ? 'FF' : 'BB');
+      ctx.beginPath(); ctx.arc(sx, sy, r, 0, Math.PI * 2); ctx.fill();
+      // Specular highlight
+      ctx.fillStyle = 'rgba(255,255,255,0.3)';
+      ctx.beginPath(); ctx.arc(sx - r * 0.3, sy - r * 0.35, r * 0.42, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+
+      // Waypoint pin
+      if (wp) {
+        const pulse = Math.sin(t * 4) * 0.4 + 0.6;
+        ctx.save();
+        ctx.strokeStyle = info.color; ctx.lineWidth = 2;
+        ctx.shadowColor = info.color; ctx.shadowBlur = 12 * pulse;
+        // Pole
+        ctx.beginPath(); ctx.moveTo(sx, sy - r); ctx.lineTo(sx, sy - r - 18); ctx.stroke();
+        // Flag
+        ctx.fillStyle = info.color;
+        ctx.beginPath(); ctx.moveTo(sx, sy - r - 18); ctx.lineTo(sx + 11, sy - r - 13); ctx.lineTo(sx, sy - r - 8); ctx.closePath(); ctx.fill();
+        // Pulsing ring
+        ctx.globalAlpha = pulse * 0.55;
+        ctx.beginPath(); ctx.arc(sx, sy, r + 5 + pulse * 5, 0, Math.PI * 2); ctx.stroke();
+        ctx.globalAlpha = 1;
+        ctx.restore();
+      }
+    }
+
+    // Player marker
+    {
+      const px = ox + player.x * scX;
+      const py = oy + player.y * scY;
+      const pulse = Math.sin(t * 3) * 0.3 + 0.7;
+      ctx.save();
+      ctx.shadowColor = player.color; ctx.shadowBlur = 18 * pulse;
+      // Outer ring
+      ctx.strokeStyle = player.color + '70'; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.arc(px, py, 9 + pulse * 3, 0, Math.PI * 2); ctx.stroke();
+      // Body
+      ctx.fillStyle = player.color;
+      ctx.beginPath(); ctx.arc(px, py, 5.5, 0, Math.PI * 2); ctx.fill();
+      // White core
+      ctx.fillStyle = '#FFFFFF'; ctx.shadowBlur = 0;
+      ctx.beginPath(); ctx.arc(px, py, 2.2, 0, Math.PI * 2); ctx.fill();
+      // YOU label
+      ctx.font = 'bold 7.5px Orbitron, monospace'; ctx.textAlign = 'center';
+      ctx.fillStyle = '#FFF'; ctx.shadowColor = player.color; ctx.shadowBlur = 8;
+      ctx.fillText('YOU', px, py - 15);
+      ctx.restore();
+    }
+
+    // Hover tooltip
+    if (hoveredDoor) {
+      const info = this._doorInfo(hoveredDoor, gameMap);
+      const sx   = ox + hoveredDoor.wx * scX;
+      const sy   = oy + hoveredDoor.wy * scY;
+      const ttW  = 140, ttH = 28;
+      const ttX  = Math.min(sx + 12, W - ttW - 10);
+      const ttY  = Math.max(sy - 34, oy + 4);
+      ctx.save();
+      ctx.fillStyle = 'rgba(2,4,14,0.95)';
+      ctx.strokeStyle = info.color + 'CC'; ctx.lineWidth = 1.2;
+      ctx.shadowColor = info.color; ctx.shadowBlur = 10;
+      ctx.beginPath(); ctx.roundRect(ttX, ttY, ttW, ttH, 5); ctx.fill(); ctx.stroke();
+      ctx.font = 'bold 9px Orbitron, monospace';
+      ctx.textAlign = 'left'; ctx.fillStyle = info.color; ctx.shadowBlur = 0;
+      ctx.fillText(info.name, ttX + 10, ttY + 11);
+      ctx.fillStyle = 'rgba(255,255,255,0.5)';
+      ctx.font = '7.5px Orbitron, monospace';
+      ctx.fillText(isWP(hoveredDoor) ? '📍 DESTINATION SET  ·  click to clear' : 'click to set as destination', ttX + 10, ttY + 22);
+      ctx.restore();
+    }
+
+    // ── Legend row ────────────────────────────────────────────
+    const legY   = oy + mapH + 18;
+    const seen   = new Map();
+    for (const door of doors) {
+      const info = this._doorInfo(door, gameMap);
+      if (!seen.has(info.name)) seen.set(info.name, info.color);
+    }
+    const entries = [...seen.entries()];
+    const colW    = Math.min(128, (W - 40) / Math.max(1, entries.length));
+    const maxCols = Math.min(entries.length, Math.floor((W - 40) / colW));
+    ctx.save();
+    ctx.font = '7px Orbitron, monospace'; ctx.textAlign = 'left';
+    for (let i = 0; i < maxCols; i++) {
+      const [name, color] = entries[i];
+      const lx = 20 + i * colW;
+      ctx.fillStyle = color; ctx.shadowColor = color; ctx.shadowBlur = 5;
+      ctx.beginPath(); ctx.arc(lx + 5, legY, 3.5, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = 'rgba(255,255,255,0.6)'; ctx.shadowBlur = 0;
+      ctx.fillText(name, lx + 13, legY + 3.5);
+    }
+    ctx.restore();
+
+    return hoveredDoor;
+  }
+
+  // ── Waypoint navigation overlay on minimap ────────────────────────────────
+  renderWaypointNav(player, waypointDoor, gameMap) {
+    if (!waypointDoor) return;
+    const ctx  = this.ctx;
+    const H    = this.canvas.height;
+    const mmX  = HUD_PAD;
+    const mmY  = H - HUD_PAD - 82 - 10 - HUD_MM_H - 22;
+    const mmW  = HUD_MM_W;
+    const mmH  = HUD_MM_H;
+    const sx   = gameMap.mmScaleX;
+    const sy   = gameMap.mmScaleY;
+    const info = this._doorInfo(waypointDoor, gameMap);
+    const t    = performance.now() / 1000;
+    const pulse = Math.sin(t * 4) * 0.4 + 0.6;
+
+    // Waypoint dot + ring on minimap
+    const wpX = mmX + waypointDoor.wx * sx;
+    const wpY = mmY + waypointDoor.wy * sy;
+    ctx.save();
+    ctx.shadowColor = info.color; ctx.shadowBlur = 8 * pulse;
+    ctx.fillStyle   = info.color;
+    ctx.beginPath(); ctx.arc(wpX, wpY, 3, 0, Math.PI * 2); ctx.fill();
+    ctx.globalAlpha = pulse * 0.65;
+    ctx.strokeStyle = info.color; ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.arc(wpX, wpY, 4 + pulse * 3, 0, Math.PI * 2); ctx.stroke();
+    ctx.globalAlpha = 1;
+    ctx.restore();
+
+    // Dashed line from player to waypoint (clipped to minimap)
+    const plX = mmX + player.x * sx;
+    const plY = mmY + player.y * sy;
+    ctx.save();
+    ctx.beginPath(); ctx.rect(mmX, mmY, mmW, mmH); ctx.clip();
+    ctx.strokeStyle = info.color + '66'; ctx.lineWidth = 1;
+    ctx.setLineDash([3, 4]);
+    ctx.beginPath(); ctx.moveTo(plX, plY); ctx.lineTo(wpX, wpY); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.restore();
+
+    // Directional badge just above the minimap panel
+    const dx   = waypointDoor.wx - player.x;
+    const dy   = waypointDoor.wy - player.y;
+    const dist = Math.round(Math.hypot(dx, dy));
+    const ang  = Math.atan2(dy, dx);
+    const bgY  = mmY - 30;
+
+    ctx.save();
+    ctx.fillStyle   = 'rgba(0,0,0,0.80)';
+    ctx.strokeStyle = info.color + '88'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.roundRect(mmX - 4, bgY, mmW + 8, 26, 4); ctx.fill(); ctx.stroke();
+
+    // Arrow
+    ctx.save();
+    ctx.translate(mmX + 12, bgY + 13);
+    ctx.rotate(ang);
+    ctx.fillStyle = info.color; ctx.shadowColor = info.color; ctx.shadowBlur = 7;
+    ctx.beginPath(); ctx.moveTo(8, 0); ctx.lineTo(-5, -4.5); ctx.lineTo(-5, 4.5); ctx.closePath(); ctx.fill();
+    ctx.restore();
+
+    ctx.font = 'bold 7.5px Orbitron, monospace'; ctx.textAlign = 'left';
+    ctx.fillStyle = info.color; ctx.shadowColor = info.color; ctx.shadowBlur = 5;
+    ctx.fillText(info.name.length > 12 ? info.name.slice(0, 12) + '…' : info.name, mmX + 26, bgY + 10);
+    ctx.fillStyle = 'rgba(255,255,255,0.5)'; ctx.shadowBlur = 0;
+    ctx.font = '6.5px Orbitron, monospace';
+    ctx.fillText(`${dist}px  ·  [N] MAP`, mmX + 26, bgY + 21);
+    ctx.restore();
+  }
 }

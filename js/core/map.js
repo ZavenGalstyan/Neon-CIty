@@ -259,10 +259,10 @@ class GameMap {
       }
     }
     for (const door of this.doors) {
-      if (door.specialType) {
-        const R2 = this.ROAD_EVERY;
-        this._blockTypes[`${Math.floor(door.tx/R2)},${Math.floor(door.ty/R2)}`] = door.specialType;
-      }
+      const R2 = this.ROAD_EVERY;
+      const key = `${Math.floor(door.tx/R2)},${Math.floor(door.ty/R2)}`;
+      if (door.specialType) this._blockTypes[key] = door.specialType;
+      door.bTypeIdx = (this._blockTypes[key] >= 0) ? this._blockTypes[key] : 0;
     }
 
     // ── Teleport Portals (normal maps only, not arena/zombie/life) ──
@@ -412,10 +412,10 @@ class GameMap {
       }
     }
     for (const door of this.doors) {
-      if (door.specialType) {
-        const R2 = this.ROAD_EVERY;
-        this._blockTypes[`${Math.floor(door.tx / R2)},${Math.floor(door.ty / R2)}`] = door.specialType;
-      }
+      const R2 = this.ROAD_EVERY;
+      const key = `${Math.floor(door.tx/R2)},${Math.floor(door.ty/R2)}`;
+      if (door.specialType) this._blockTypes[key] = door.specialType;
+      door.bTypeIdx = (this._blockTypes[key] >= 0) ? this._blockTypes[key] : 0;
     }
 
     // ── Portals at well-separated road intersections ──────────
@@ -621,7 +621,7 @@ class GameMap {
 
             // Determine sign text and color
             let signText, signColor;
-            const bTypeIdx2 = Math.floor(Math.abs(Math.sin(x * 17.3 + y * 11.7)) * CONFIG.BUILDING_TYPES.length);
+            const bTypeIdx2 = doorEntry.bTypeIdx ?? Math.floor(Math.abs(Math.sin(x * 17.3 + y * 11.7)) * CONFIG.BUILDING_TYPES.length);
             if (doorEntry.specialType === 'dealership') {
               signText = 'CAR DEALER'; signColor = '#FFCC00';
             } else if (doorEntry.specialType === 'casino') {
