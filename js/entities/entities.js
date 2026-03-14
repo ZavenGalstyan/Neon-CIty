@@ -76,18 +76,47 @@ class Particle {
 class Decal {
   constructor(x, y, type) {
     this.x = x; this.y = y;
-    this.type     = type; // 'blood' | 'hole'
+    this.type     = type; // 'blood' | 'zombie_blood' | 'ice_blood' | 'water_blood' | 'hole'
     this.lifetime = 15.0;
     this.dead     = false;
     const isZBlood = type === 'zombie_blood';
-    const s = (type === 'blood' || isZBlood) ? rnd(isZBlood ? 16 : 12, isZBlood ? 28 : 22) : rnd(3, 6);
+    const isIceBlood = type === 'ice_blood';
+    const isWaterBlood = type === 'water_blood';
+    const isBloodType = type === 'blood' || isZBlood || isIceBlood || isWaterBlood;
+    const s = isBloodType ? rnd(isZBlood ? 16 : isIceBlood ? 14 : isWaterBlood ? 15 : 12, isZBlood ? 28 : isIceBlood ? 24 : isWaterBlood ? 26 : 22) : rnd(3, 6);
     this._size   = s;
     this._splats = [];
-    const n = isZBlood ? Math.floor(rnd(5, 10)) : type === 'blood' ? Math.floor(rnd(3, 7)) : 1;
+    const n = isZBlood ? Math.floor(rnd(5, 10)) : isIceBlood ? Math.floor(rnd(4, 8)) : isWaterBlood ? Math.floor(rnd(5, 9)) : type === 'blood' ? Math.floor(rnd(3, 7)) : 1;
     for (let i = 0; i < n; i++) {
       const a = Math.random() * Math.PI * 2;
-      const d = Math.random() * s * (isZBlood ? 1.1 : 0.6);
+      const d = Math.random() * s * (isZBlood ? 1.1 : isIceBlood ? 0.8 : isWaterBlood ? 0.9 : 0.6);
       this._splats.push({ dx: Math.cos(a)*d, dy: Math.sin(a)*d, r: rnd(s*0.35, s*0.75) });
+    }
+    // Ice blood: add ice crystal shards
+    if (isIceBlood) {
+      this._crystals = [];
+      const nc = Math.floor(rnd(3, 6));
+      for (let i = 0; i < nc; i++) {
+        this._crystals.push({
+          angle: Math.random() * Math.PI * 2,
+          len: rnd(s * 0.4, s * 0.9),
+          width: rnd(1.5, 3)
+        });
+      }
+    }
+    // Water blood: add bubble effects
+    if (isWaterBlood) {
+      this._bubbles = [];
+      const nb = Math.floor(rnd(4, 8));
+      for (let i = 0; i < nb; i++) {
+        const ba = Math.random() * Math.PI * 2;
+        const bd = Math.random() * s * 0.8;
+        this._bubbles.push({
+          dx: Math.cos(ba) * bd,
+          dy: Math.sin(ba) * bd,
+          r: rnd(2, 5)
+        });
+      }
     }
   }
 
@@ -102,6 +131,59 @@ class Decal {
       for (const s of this._splats) {
         ctx.beginPath(); ctx.arc(this.x + s.dx, this.y + s.dy, s.r, 0, Math.PI * 2); ctx.fill();
       }
+    } else if (this.type === 'ice_blood') {
+      // Ice/snow splatter - cyan-white crystalline effect
+      // Base snow splat
+      const grad = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this._size);
+      grad.addColorStop(0, 'rgba(200, 240, 255, 0.9)');
+      grad.addColorStop(0.5, 'rgba(136, 221, 255, 0.7)');
+      grad.addColorStop(1, 'rgba(100, 180, 220, 0.3)');
+      ctx.fillStyle = grad;
+      for (const s of this._splats) {
+        ctx.beginPath(); ctx.arc(this.x + s.dx, this.y + s.dy, s.r, 0, Math.PI * 2); ctx.fill();
+      }
+      // Ice crystal shards
+      ctx.strokeStyle = 'rgba(200, 245, 255, 0.85)';
+      ctx.shadowColor = '#88DDFF';
+      ctx.shadowBlur = 4;
+      for (const c of this._crystals) {
+        ctx.lineWidth = c.width;
+        ctx.beginPath();
+        ctx.moveTo(this.x, this.y);
+        ctx.lineTo(this.x + Math.cos(c.angle) * c.len, this.y + Math.sin(c.angle) * c.len);
+        ctx.stroke();
+      }
+      ctx.shadowBlur = 0;
+      // Sparkle highlight
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+      ctx.beginPath(); ctx.arc(this.x - this._size * 0.2, this.y - this._size * 0.2, this._size * 0.15, 0, Math.PI * 2); ctx.fill();
+    } else if (this.type === 'water_blood') {
+      // Water/ocean splatter - blue watery effect with bubbles
+      const grad = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this._size);
+      grad.addColorStop(0, 'rgba(0, 150, 200, 0.8)');
+      grad.addColorStop(0.4, 'rgba(0, 100, 180, 0.6)');
+      grad.addColorStop(1, 'rgba(0, 60, 120, 0.2)');
+      ctx.fillStyle = grad;
+      for (const s of this._splats) {
+        ctx.beginPath(); ctx.arc(this.x + s.dx, this.y + s.dy, s.r, 0, Math.PI * 2); ctx.fill();
+      }
+      // Bubble effects
+      ctx.strokeStyle = 'rgba(150, 220, 255, 0.7)';
+      ctx.lineWidth = 1;
+      for (const b of this._bubbles) {
+        ctx.beginPath();
+        ctx.arc(this.x + b.dx, this.y + b.dy, b.r, 0, Math.PI * 2);
+        ctx.stroke();
+        // Bubble highlight
+        ctx.fillStyle = 'rgba(200, 240, 255, 0.5)';
+        ctx.beginPath();
+        ctx.arc(this.x + b.dx - b.r * 0.3, this.y + b.dy - b.r * 0.3, b.r * 0.3, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      // Water ripple
+      ctx.strokeStyle = 'rgba(100, 200, 255, 0.4)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.arc(this.x, this.y, this._size * 0.8, 0, Math.PI * 2); ctx.stroke();
     } else {
       ctx.fillStyle = '#070707';
       ctx.beginPath(); ctx.arc(this.x, this.y, this._size, 0, Math.PI * 2); ctx.fill();
@@ -444,7 +526,7 @@ class Pickup {
 
 // ─── Vehicle ───────────────────────────────────────────────────────────────────
 class Vehicle {
-  constructor(x, y, color) {
+  constructor(x, y, color, mapConfig) {
     this.x = x; this.y = y;
     this.color     = color;
     this.radius    = 28;
@@ -460,6 +542,10 @@ class Vehicle {
     this._ejected      = false;
     this._damageFlash  = 0;
     this._animT        = 0;
+    this._isOcean      = !!(mapConfig && mapConfig.ocean);
+    this._isPolice     = false;
+    this._isMiniBoat   = false;  // Small boat for ocean maps
+    this._sirenPhase   = 0;
   }
 
   update(dt, occupant, input, gameMap) {
@@ -517,10 +603,16 @@ class Vehicle {
       const t = this._explodeTimer / 0.9;
       ctx.save();
       ctx.globalAlpha = t * 0.85;
-      ctx.shadowColor = '#FF8800'; ctx.shadowBlur = 50;
-      ctx.fillStyle   = '#FF4400';
+      ctx.shadowColor = this._isOcean ? '#00AACC' : '#FF8800'; ctx.shadowBlur = 50;
+      ctx.fillStyle   = this._isOcean ? '#0088AA' : '#FF4400';
       ctx.beginPath(); ctx.arc(this.x, this.y, this.radius * (2.2 - t * 0.9), 0, Math.PI * 2); ctx.fill();
       ctx.restore();
+      return;
+    }
+
+    // Ocean map: render ship instead of car
+    if (this._isOcean) {
+      this._renderShip(ctx);
       return;
     }
 
@@ -669,6 +761,40 @@ class Vehicle {
     ctx.beginPath(); ctx.moveTo(hw - 3, hlY1 - 2); ctx.lineTo(hw + 42, hlY1 - 13); ctx.lineTo(hw + 42, hlY1 + 13); ctx.closePath(); ctx.fill();
     ctx.beginPath(); ctx.moveTo(hw - 3, hlY2 - 2); ctx.lineTo(hw + 42, hlY2 - 13); ctx.lineTo(hw + 42, hlY2 + 13); ctx.closePath(); ctx.fill();
 
+    // ── Police siren lights (flashing red/blue) ────────────────
+    if (this._isPolice) {
+      this._sirenPhase += 0.18;
+      const sirenOn1 = Math.sin(this._sirenPhase) > 0;
+      const sirenOn2 = Math.sin(this._sirenPhase + Math.PI) > 0;
+
+      // Light bar on roof
+      ctx.fillStyle = '#222';
+      ctx.beginPath();
+      ctx.roundRect(-hw * 0.3, -hh * 0.4, hw * 0.6, hh * 0.8, 2);
+      ctx.fill();
+
+      // Blue light (left)
+      if (sirenOn1) {
+        ctx.fillStyle = '#0066FF';
+        ctx.shadowColor = '#0066FF';
+        ctx.shadowBlur = 22;
+        ctx.beginPath();
+        ctx.arc(-hw * 0.12, 0, 4, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Red light (right)
+      if (sirenOn2) {
+        ctx.fillStyle = '#FF0044';
+        ctx.shadowColor = '#FF0044';
+        ctx.shadowBlur = 22;
+        ctx.beginPath();
+        ctx.arc(hw * 0.12, 0, 4, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.shadowBlur = 0;
+    }
+
     // ── Taillights ────────────────────────────────────────────
     ctx.fillStyle = '#FF2200'; ctx.shadowColor = '#FF2200'; ctx.shadowBlur = 10;
     ctx.beginPath(); ctx.ellipse(-hw + 5, hlY1, 2.6, 2.0, 0, 0, Math.PI * 2); ctx.fill();
@@ -696,6 +822,355 @@ class Vehicle {
       ctx.fillRect(bx2, by2, bw * pct, bh);
       ctx.shadowBlur = 0;
       ctx.strokeStyle = 'rgba(255,255,255,0.18)'; ctx.lineWidth = 0.5;
+      ctx.strokeRect(bx2, by2, bw, bh);
+    }
+  }
+
+  _renderShip(ctx) {
+    const flash = this._damageFlash > 0;
+    this._sirenPhase += 0.15;
+
+    // Render mini boat (speedboat) differently
+    if (this._isMiniBoat) {
+      this._renderMiniBoat(ctx);
+      return;
+    }
+
+    // Water wake/ripple effect
+    ctx.save();
+    ctx.globalAlpha = 0.25;
+    const waveOffset = Math.sin(this._animT * 3) * 3;
+    ctx.strokeStyle = '#00CCFF';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.ellipse(this.x - Math.cos(this.angle) * 10, this.y - Math.sin(this.angle) * 10 + waveOffset,
+                this.width * 0.6, this.height * 0.4, this.angle, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    ctx.rotate(this.angle);
+
+    const hw = this.width / 2 + 5;
+    const hh = this.height / 2 + 3;
+
+    // Ship hull shadow
+    ctx.save();
+    ctx.globalAlpha = 0.35;
+    ctx.fillStyle = '#001122';
+    ctx.beginPath();
+    ctx.ellipse(4, 4, hw * 0.9, hh * 0.7, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    // Ship hull (pointed bow)
+    const hullGrad = ctx.createLinearGradient(-hw, 0, hw, 0);
+    if (flash) {
+      hullGrad.addColorStop(0, '#FF6644');
+      hullGrad.addColorStop(1, '#CC3322');
+    } else {
+      hullGrad.addColorStop(0, this._darkenVehicleColor(this.color, 0.7));
+      hullGrad.addColorStop(0.5, this.color);
+      hullGrad.addColorStop(1, this._lightenVehicleColor(this.color, 1.2));
+    }
+    ctx.fillStyle = hullGrad;
+    ctx.shadowColor = flash ? '#FF4444' : this.color;
+    ctx.shadowBlur = 12;
+    ctx.beginPath();
+    ctx.moveTo(hw + 8, 0);           // Bow point
+    ctx.lineTo(hw - 5, -hh);         // Starboard front
+    ctx.lineTo(-hw + 5, -hh * 0.8);  // Starboard rear
+    ctx.lineTo(-hw, 0);              // Stern
+    ctx.lineTo(-hw + 5, hh * 0.8);   // Port rear
+    ctx.lineTo(hw - 5, hh);          // Port front
+    ctx.closePath();
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // Deck
+    ctx.fillStyle = '#1a1a2a';
+    ctx.beginPath();
+    ctx.moveTo(hw - 2, 0);
+    ctx.lineTo(hw - 10, -hh + 5);
+    ctx.lineTo(-hw + 10, -hh * 0.7 + 3);
+    ctx.lineTo(-hw + 5, 0);
+    ctx.lineTo(-hw + 10, hh * 0.7 - 3);
+    ctx.lineTo(hw - 10, hh - 5);
+    ctx.closePath();
+    ctx.fill();
+
+    // Cabin/bridge
+    ctx.fillStyle = this._darkenVehicleColor(this.color, 0.5);
+    ctx.beginPath();
+    ctx.roundRect(-hw * 0.3, -hh * 0.5, hw * 0.7, hh, 3);
+    ctx.fill();
+
+    // Cabin windows
+    ctx.fillStyle = 'rgba(100, 200, 255, 0.5)';
+    ctx.beginPath();
+    ctx.roundRect(-hw * 0.15, -hh * 0.35, hw * 0.45, hh * 0.7, 2);
+    ctx.fill();
+    // Window glare
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+    ctx.beginPath();
+    ctx.roundRect(-hw * 0.12, -hh * 0.3, hw * 0.15, hh * 0.5, 1);
+    ctx.fill();
+
+    // Mast/antenna
+    ctx.strokeStyle = '#445566';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(0, -hh - 12);
+    ctx.stroke();
+
+    // Flag on mast
+    ctx.fillStyle = this.color;
+    ctx.beginPath();
+    ctx.moveTo(0, -hh - 12);
+    ctx.lineTo(8, -hh - 8);
+    ctx.lineTo(0, -hh - 4);
+    ctx.closePath();
+    ctx.fill();
+
+    // Port lights (navigation)
+    ctx.fillStyle = '#FF0000';
+    ctx.shadowColor = '#FF0000';
+    ctx.shadowBlur = 8;
+    ctx.beginPath();
+    ctx.arc(hw - 8, hh - 3, 2.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Starboard light
+    ctx.fillStyle = '#00FF00';
+    ctx.shadowColor = '#00FF00';
+    ctx.beginPath();
+    ctx.arc(hw - 8, -hh + 3, 2.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // Police ship siren lights (red and blue flashing) - VERY VISIBLE
+    if (this._isPolice) {
+      const sirenOn1 = Math.sin(this._sirenPhase) > 0;
+      const sirenOn2 = Math.sin(this._sirenPhase + Math.PI) > 0;
+
+      // Large light bar base on TOP of cabin (above everything)
+      ctx.fillStyle = '#000000';
+      ctx.strokeStyle = '#444';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.roundRect(-12, -hh - 8, 24, 10, 3);
+      ctx.fill();
+      ctx.stroke();
+
+      // Blue light (left) - BIG and BRIGHT
+      if (sirenOn1) {
+        // Outer glow
+        ctx.fillStyle = 'rgba(0, 100, 255, 0.3)';
+        ctx.beginPath();
+        ctx.arc(-6, -hh - 3, 18, 0, Math.PI * 2);
+        ctx.fill();
+        // Main light
+        ctx.fillStyle = '#0088FF';
+        ctx.shadowColor = '#0066FF';
+        ctx.shadowBlur = 50;
+        ctx.beginPath();
+        ctx.arc(-6, -hh - 3, 8, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fill(); // Double fill for brightness
+        // Bright center
+        ctx.fillStyle = '#66CCFF';
+        ctx.beginPath();
+        ctx.arc(-6, -hh - 3, 4, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Red light (right) - BIG and BRIGHT
+      if (sirenOn2) {
+        // Outer glow
+        ctx.fillStyle = 'rgba(255, 0, 50, 0.3)';
+        ctx.beginPath();
+        ctx.arc(6, -hh - 3, 18, 0, Math.PI * 2);
+        ctx.fill();
+        // Main light
+        ctx.fillStyle = '#FF0044';
+        ctx.shadowColor = '#FF0044';
+        ctx.shadowBlur = 50;
+        ctx.beginPath();
+        ctx.arc(6, -hh - 3, 8, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fill(); // Double fill for brightness
+        // Bright center
+        ctx.fillStyle = '#FF6688';
+        ctx.beginPath();
+        ctx.arc(6, -hh - 3, 4, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.shadowBlur = 0;
+
+      // "COAST GUARD" text on hull
+      ctx.fillStyle = '#FFFFFF';
+      ctx.font = 'bold 6px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText('COAST', 0, hh * 0.3);
+      ctx.fillText('GUARD', 0, hh * 0.6);
+    }
+
+    // Bow light
+    ctx.fillStyle = '#FFFFFF';
+    ctx.shadowColor = '#FFFFFF';
+    ctx.shadowBlur = 15;
+    ctx.beginPath();
+    ctx.arc(hw + 4, 0, 3, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // Wake bubbles at stern
+    ctx.fillStyle = 'rgba(150, 220, 255, 0.4)';
+    for (let i = 0; i < 3; i++) {
+      const bx = -hw - 8 - i * 6 + Math.sin(this._animT * 5 + i) * 2;
+      const by = (Math.random() - 0.5) * hh * 0.6;
+      ctx.beginPath();
+      ctx.arc(bx, by, 2 + Math.random() * 2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    ctx.restore();
+
+    // HP bar
+    if (this.hp < this.maxHp) {
+      const bw = 58, bh = 5, bx2 = this.x - bw/2, by2 = this.y - this.radius - 18;
+      const pct = this.hp / this.maxHp;
+      ctx.fillStyle = '#001122';
+      ctx.fillRect(bx2, by2, bw, bh);
+      ctx.fillStyle = pct > 0.5 ? '#00FFAA' : pct > 0.25 ? '#FFCC00' : '#FF4444';
+      ctx.shadowColor = ctx.fillStyle;
+      ctx.shadowBlur = 6;
+      ctx.fillRect(bx2, by2, bw * pct, bh);
+      ctx.shadowBlur = 0;
+      ctx.strokeStyle = 'rgba(100,200,255,0.3)';
+      ctx.lineWidth = 0.5;
+      ctx.strokeRect(bx2, by2, bw, bh);
+    }
+  }
+
+  _renderMiniBoat(ctx) {
+    const flash = this._damageFlash > 0;
+
+    // Small wake ripple
+    ctx.save();
+    ctx.globalAlpha = 0.2;
+    ctx.strokeStyle = '#00AADD';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.ellipse(this.x - Math.cos(this.angle) * 6, this.y - Math.sin(this.angle) * 6,
+                this.width * 0.5, this.height * 0.35, this.angle, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    ctx.rotate(this.angle);
+
+    const hw = this.width / 2;
+    const hh = this.height / 2;
+
+    // Shadow
+    ctx.save();
+    ctx.globalAlpha = 0.3;
+    ctx.fillStyle = '#001122';
+    ctx.beginPath();
+    ctx.ellipse(2, 2, hw * 0.8, hh * 0.6, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    // Speedboat hull - sleek pointed shape
+    const hullGrad = ctx.createLinearGradient(-hw, 0, hw, 0);
+    if (flash) {
+      hullGrad.addColorStop(0, '#FF6644');
+      hullGrad.addColorStop(1, '#CC3322');
+    } else {
+      hullGrad.addColorStop(0, this._darkenVehicleColor(this.color, 0.6));
+      hullGrad.addColorStop(0.5, this.color);
+      hullGrad.addColorStop(1, this._lightenVehicleColor(this.color, 1.15));
+    }
+    ctx.fillStyle = hullGrad;
+    ctx.shadowColor = flash ? '#FF4444' : this.color;
+    ctx.shadowBlur = 8;
+    ctx.beginPath();
+    ctx.moveTo(hw + 6, 0);           // Bow point
+    ctx.lineTo(hw - 4, -hh * 0.9);   // Starboard
+    ctx.lineTo(-hw + 2, -hh * 0.7);  // Rear starboard
+    ctx.lineTo(-hw, 0);              // Stern
+    ctx.lineTo(-hw + 2, hh * 0.7);   // Rear port
+    ctx.lineTo(hw - 4, hh * 0.9);    // Port
+    ctx.closePath();
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // Deck
+    ctx.fillStyle = '#1a2030';
+    ctx.beginPath();
+    ctx.moveTo(hw - 2, 0);
+    ctx.lineTo(hw - 8, -hh * 0.6);
+    ctx.lineTo(-hw + 6, -hh * 0.5);
+    ctx.lineTo(-hw + 4, 0);
+    ctx.lineTo(-hw + 6, hh * 0.5);
+    ctx.lineTo(hw - 8, hh * 0.6);
+    ctx.closePath();
+    ctx.fill();
+
+    // Small windscreen
+    ctx.fillStyle = 'rgba(100, 200, 255, 0.45)';
+    ctx.beginPath();
+    ctx.moveTo(hw * 0.2, -hh * 0.4);
+    ctx.lineTo(hw * 0.5, -hh * 0.35);
+    ctx.lineTo(hw * 0.5, hh * 0.35);
+    ctx.lineTo(hw * 0.2, hh * 0.4);
+    ctx.closePath();
+    ctx.fill();
+
+    // Outboard motor at stern
+    ctx.fillStyle = '#333';
+    ctx.beginPath();
+    ctx.roundRect(-hw - 3, -hh * 0.25, 6, hh * 0.5, 1);
+    ctx.fill();
+
+    // Bow light
+    ctx.fillStyle = '#FFFFFF';
+    ctx.shadowColor = '#FFFFFF';
+    ctx.shadowBlur = 10;
+    ctx.beginPath();
+    ctx.arc(hw + 3, 0, 2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // Wake spray
+    ctx.fillStyle = 'rgba(180, 230, 255, 0.35)';
+    for (let i = 0; i < 2; i++) {
+      const bx = -hw - 4 - i * 4 + Math.sin(this._animT * 6 + i) * 1.5;
+      const by = (Math.random() - 0.5) * hh * 0.5;
+      ctx.beginPath();
+      ctx.arc(bx, by, 1.5 + Math.random(), 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    ctx.restore();
+
+    // HP bar for mini boat
+    if (this.hp < this.maxHp) {
+      const bw = 40, bh = 4, bx2 = this.x - bw/2, by2 = this.y - this.radius - 12;
+      const pct = this.hp / this.maxHp;
+      ctx.fillStyle = '#001122';
+      ctx.fillRect(bx2, by2, bw, bh);
+      ctx.fillStyle = pct > 0.5 ? '#00FFAA' : pct > 0.25 ? '#FFCC00' : '#FF4444';
+      ctx.shadowColor = ctx.fillStyle;
+      ctx.shadowBlur = 5;
+      ctx.fillRect(bx2, by2, bw * pct, bh);
+      ctx.shadowBlur = 0;
+      ctx.strokeStyle = 'rgba(100,200,255,0.25)';
+      ctx.lineWidth = 0.5;
       ctx.strokeRect(bx2, by2, bw, bh);
     }
   }
@@ -1309,7 +1784,7 @@ class Bot {
     this._eyeBlinkTimer = rnd(1, 4);
     this._animT         = 0;
     this._sirenT        = 0; // police/swat: drives flashing light phase
-    this._mapTheme = mapConfig ? (mapConfig.snow ? 'snow' : mapConfig.desert ? 'desert' : null) : null;
+    this._mapTheme = mapConfig ? (mapConfig.snow ? 'snow' : mapConfig.desert ? 'desert' : mapConfig.ocean ? 'ocean' : null) : null;
   }
 
   update(dt, player, gameMap, bullets, particles) {
@@ -1459,6 +1934,7 @@ class Bot {
     ctx.translate(x, y); ctx.scale(ds, ds); ctx.translate(-x, -y);
     if      (this._mapTheme === 'snow')                                             this._renderSnowman(ctx, x, y, r);
     else if (this._mapTheme === 'desert')                                           this._renderDesertEnemy(ctx, x, y, r);
+    else if (this._mapTheme === 'ocean')                                            this._renderOceanEnemy(ctx, x, y, r);
     else if (this.type === 'mini')                                                  this._renderMini(ctx, x, y, r);
     else if (this.type === 'big')                                                   this._renderBig(ctx, x, y, r);
     else if (this.type === 'police' || this.type === 'swat' || this.type === 'heavyswat') this._renderPolice(ctx, x, y, r);
@@ -2460,6 +2936,407 @@ class Bot {
     ctx.restore();
   }
 
+  // ── OCEAN ENEMY: dispatches to water-themed renders ────────
+  _renderOceanEnemy(ctx, x, y, r) {
+    if (this.type === 'big' || this.type === 'juggernaut')       this._renderLeviathan(ctx, x, y, r);
+    else if (this.type === 'police' || this.type === 'swat' || this.type === 'heavyswat') this._renderCoastGuard(ctx, x, y, r);
+    else                                                          this._renderSeaWarrior(ctx, x, y, r);
+    this._renderHPBar(ctx, x, y, r, 40, 5);
+  }
+
+  // ── SEA WARRIOR: aquatic humanoid with scales and fins ─────
+  _renderSeaWarrior(ctx, x, y, r) {
+    const isSniper = this.type === 'sniper';
+    const isBomber = this.type === 'bomber';
+    const walk = Math.sin(Date.now() * 0.006) * 0.18;
+
+    // Shadow/ripple effect
+    ctx.save(); ctx.globalAlpha = 0.22; ctx.fillStyle = '#003366';
+    ctx.beginPath(); ctx.ellipse(x+2, y+r*0.45, r*1.1, r*0.26, 0, 0, Math.PI*2); ctx.fill();
+    ctx.restore();
+
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(this._angle - Math.PI / 2);
+
+    const bw = r * 0.54, bh = r * 0.76;
+
+    // Legs with fins
+    for (const s of [-1, 1]) {
+      // Leg
+      const lg = ctx.createLinearGradient(s*r*0.24, -r*0.14, s*r*0.24, r*0.50);
+      lg.addColorStop(0, '#006688'); lg.addColorStop(1, '#003344');
+      ctx.fillStyle = lg;
+      ctx.beginPath(); ctx.ellipse(s*r*0.24, r*0.12+s*walk*r*0.18, r*0.16, r*0.34, s*walk*0.14, 0, Math.PI*2); ctx.fill();
+      // Webbed foot
+      ctx.fillStyle = '#00AACC';
+      ctx.beginPath(); ctx.ellipse(s*r*0.26, r*0.42, r*0.18, r*0.10, s*0.20, 0, Math.PI*2); ctx.fill();
+      // Fin on leg
+      ctx.fillStyle = 'rgba(0,180,220,0.6)';
+      ctx.beginPath();
+      ctx.moveTo(s*r*0.38, r*0.05); ctx.lineTo(s*r*0.58, r*0.20); ctx.lineTo(s*r*0.38, r*0.30);
+      ctx.closePath(); ctx.fill();
+    }
+
+    // Torso with scales pattern
+    const tg = ctx.createRadialGradient(0, -bh*0.1, bw*0.3, 0, 0, bw*1.4);
+    tg.addColorStop(0, '#00AACC'); tg.addColorStop(0.6, '#006688'); tg.addColorStop(1, '#003344');
+    ctx.fillStyle = tg; ctx.shadowColor = '#00CCFF'; ctx.shadowBlur = 10;
+    ctx.beginPath(); ctx.roundRect(-bw, -bh*0.40, bw*2, bh*0.82, [bw*0.20, bw*0.20, bw*0.12, bw*0.12]); ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // Scale pattern on torso
+    ctx.fillStyle = 'rgba(0,200,255,0.25)';
+    for (let row = 0; row < 3; row++) {
+      for (let col = 0; col < 4; col++) {
+        const sx = -bw*0.65 + col*bw*0.35 + (row%2)*bw*0.18;
+        const sy = -bh*0.32 + row*bh*0.24;
+        ctx.beginPath();
+        ctx.arc(sx, sy, bw*0.14, 0, Math.PI, true);
+        ctx.fill();
+      }
+    }
+
+    // Arms with fins
+    for (const s of [-1, 1]) {
+      ctx.save(); ctx.translate(s * bw * 0.92, -bh * 0.22);
+      ctx.rotate(s * 0.48 + walk * s * 0.12);
+      // Arm
+      const ag = ctx.createLinearGradient(0, -r*0.55, 0, r*0.10);
+      ag.addColorStop(0, '#00AACC'); ag.addColorStop(1, '#004466');
+      ctx.fillStyle = ag;
+      ctx.beginPath(); ctx.roundRect(-r*0.13, -r*0.58, r*0.26, r*0.68, r*0.09); ctx.fill();
+      // Webbed hand
+      ctx.fillStyle = '#00CCEE';
+      ctx.beginPath(); ctx.ellipse(0, r*0.14, r*0.15, r*0.14, 0, 0, Math.PI*2); ctx.fill();
+      // Clawed fingers
+      ctx.strokeStyle = '#88EEFF'; ctx.lineWidth = 2; ctx.lineCap = 'round';
+      for (let f = -1; f <= 1; f++) {
+        ctx.beginPath(); ctx.moveTo(f*r*0.08, r*0.20); ctx.lineTo(f*r*0.12, r*0.32); ctx.stroke();
+      }
+      // Arm fin
+      ctx.fillStyle = 'rgba(0,200,255,0.5)';
+      ctx.beginPath();
+      ctx.moveTo(-r*0.08, -r*0.50); ctx.lineTo(-r*0.24, -r*0.38); ctx.lineTo(-r*0.08, -r*0.20);
+      ctx.closePath(); ctx.fill();
+      ctx.restore();
+    }
+
+    // Back fin (dorsal)
+    ctx.fillStyle = 'rgba(0,180,220,0.7)';
+    ctx.beginPath();
+    ctx.moveTo(0, -bh*0.36); ctx.lineTo(-bw*0.20, -bh*0.70); ctx.lineTo(bw*0.20, -bh*0.70);
+    ctx.closePath(); ctx.fill();
+
+    // Head with fish features
+    const hhr = r * 0.44;
+    const hy = -bh * 0.44;
+    const hg = ctx.createRadialGradient(-hhr*0.2, hy-hhr*0.2, 1, 0, hy, hhr);
+    hg.addColorStop(0, '#00CCEE'); hg.addColorStop(0.7, '#0088AA'); hg.addColorStop(1, '#005577');
+    ctx.fillStyle = hg; ctx.shadowColor = '#00CCFF'; ctx.shadowBlur = 8;
+    ctx.beginPath(); ctx.ellipse(0, hy, hhr, hhr*0.90, 0, 0, Math.PI*2); ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // Gill slits
+    ctx.strokeStyle = '#003355'; ctx.lineWidth = 1.5; ctx.globalAlpha = 0.6;
+    for (const s of [-1, 1]) {
+      for (let i = 0; i < 3; i++) {
+        ctx.beginPath();
+        ctx.moveTo(s*hhr*0.70, hy - hhr*0.20 + i*hhr*0.18);
+        ctx.lineTo(s*hhr*0.85, hy - hhr*0.12 + i*hhr*0.18);
+        ctx.stroke();
+      }
+    }
+    ctx.globalAlpha = 1;
+
+    // Glowing eyes
+    for (const s of [-1, 1]) {
+      ctx.fillStyle = '#44FFFF'; ctx.shadowColor = '#00FFFF'; ctx.shadowBlur = 12;
+      ctx.beginPath(); ctx.ellipse(s*hhr*0.32, hy - hhr*0.06, hhr*0.16, hhr*0.12, 0, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#88FFFF'; ctx.shadowBlur = 0;
+      ctx.beginPath(); ctx.ellipse(s*hhr*0.32, hy - hhr*0.06, hhr*0.07, hhr*0.08, 0, 0, Math.PI*2); ctx.fill();
+    }
+
+    // Head fin crest
+    ctx.fillStyle = 'rgba(0,200,255,0.65)';
+    ctx.beginPath();
+    ctx.moveTo(-hhr*0.50, hy - hhr*0.55);
+    ctx.lineTo(0, hy - hhr*1.10);
+    ctx.lineTo(hhr*0.50, hy - hhr*0.55);
+    ctx.closePath(); ctx.fill();
+
+    ctx.restore();
+
+    // Trident weapon
+    const gl = r + 16;
+    const gx = x + Math.cos(this._angle)*gl, gy = y + Math.sin(this._angle)*gl;
+    const ga0x = x + Math.cos(this._angle)*r*0.50, ga0y = y + Math.sin(this._angle)*r*0.50;
+    ctx.save(); ctx.lineCap = 'round';
+    // Shadow
+    ctx.strokeStyle = 'rgba(0,0,0,0.45)'; ctx.lineWidth = 5;
+    ctx.beginPath(); ctx.moveTo(ga0x+1, ga0y+1.5); ctx.lineTo(gx+1, gy+1.5); ctx.stroke();
+    // Trident shaft
+    ctx.strokeStyle = '#0088AA'; ctx.lineWidth = 3.5;
+    ctx.beginPath(); ctx.moveTo(ga0x, ga0y); ctx.lineTo(gx, gy); ctx.stroke();
+    // Trident prongs
+    const tx = gx, ty = gy;
+    const tAngle = this._angle;
+    ctx.strokeStyle = '#00CCFF'; ctx.lineWidth = 2.5;
+    for (let p = -1; p <= 1; p++) {
+      const pAngle = tAngle + p * 0.25;
+      ctx.beginPath();
+      ctx.moveTo(tx, ty);
+      ctx.lineTo(tx + Math.cos(pAngle)*12, ty + Math.sin(pAngle)*12);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  // ── LEVIATHAN: giant sea monster ────────────────────────────
+  _renderLeviathan(ctx, x, y, r) {
+    const isJug = this.type === 'juggernaut';
+    const pulse = 1 + Math.sin(Date.now()*0.003)*0.02;
+
+    // Deep shadow
+    ctx.save(); ctx.globalAlpha = 0.30; ctx.fillStyle = '#001122';
+    ctx.beginPath(); ctx.ellipse(x+4, y+r*0.58, r*(isJug?1.40:1.20), r*0.35, 0, 0, Math.PI*2); ctx.fill();
+    ctx.restore();
+
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(this._angle - Math.PI / 2);
+
+    const bw = r * (isJug ? 1.05 : 0.90);
+    const bh = r * (isJug ? 1.05 : 0.95);
+
+    // Massive body
+    const bg = ctx.createRadialGradient(0, 0, r*0.15, 0, 0, r*1.0);
+    bg.addColorStop(0, '#005577'); bg.addColorStop(0.5, '#003355'); bg.addColorStop(1, '#001833');
+    ctx.fillStyle = bg; ctx.shadowColor = '#0088CC'; ctx.shadowBlur = 16;
+    ctx.beginPath(); ctx.roundRect(-bw*pulse, -bh*0.48*pulse, bw*2*pulse, bh*0.96*pulse, [bw*0.22]); ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // Barnacle/scale patches
+    ctx.fillStyle = 'rgba(0,180,200,0.35)';
+    for (let i = 0; i < 5; i++) {
+      const bx = (Math.random()-0.5)*bw*1.4;
+      const by = (Math.random()-0.5)*bh*0.7;
+      ctx.beginPath(); ctx.arc(bx, by, bw*0.12 + Math.random()*bw*0.08, 0, Math.PI*2); ctx.fill();
+    }
+
+    // Massive tentacle-like legs
+    for (const s of [-1, 1]) {
+      ctx.fillStyle = '#004466';
+      ctx.beginPath(); ctx.ellipse(s*r*0.38, r*0.25, r*0.26, r*0.52, s*0.15, 0, Math.PI*2); ctx.fill();
+      // Suckers
+      ctx.fillStyle = '#0066AA';
+      for (let i = 0; i < 3; i++) {
+        ctx.beginPath(); ctx.arc(s*r*0.38, r*0.05 + i*r*0.22, r*0.08, 0, Math.PI*2); ctx.fill();
+      }
+    }
+
+    // Massive arms
+    for (const s of [-1, 1]) {
+      ctx.save(); ctx.translate(s * bw, -bh*0.18);
+      ctx.rotate(s * 0.45);
+      ctx.fillStyle = '#003855';
+      ctx.beginPath(); ctx.roundRect(-r*0.28, -r*0.80, r*0.56, r*0.95, r*0.16); ctx.fill();
+      // Giant claw
+      ctx.fillStyle = '#00AACC';
+      ctx.beginPath(); ctx.ellipse(0, r*0.22, r*0.38, r*0.32, 0, 0, Math.PI*2); ctx.fill();
+      // Pincer claws
+      ctx.strokeStyle = '#00DDFF'; ctx.lineWidth = 4; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(-r*0.15, r*0.30); ctx.lineTo(-r*0.28, r*0.55); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(r*0.15, r*0.30); ctx.lineTo(r*0.28, r*0.55); ctx.stroke();
+      ctx.restore();
+    }
+
+    // Head - monstrous
+    const hhr = r * (isJug ? 0.58 : 0.50);
+    const hy = -bh * 0.50;
+    const hg = ctx.createRadialGradient(-hhr*0.2, hy-hhr*0.2, 1, 0, hy, hhr);
+    hg.addColorStop(0, '#0088AA'); hg.addColorStop(0.7, '#005577'); hg.addColorStop(1, '#002233');
+    ctx.fillStyle = hg; ctx.shadowColor = '#00AACC'; ctx.shadowBlur = 12;
+    ctx.beginPath(); ctx.arc(0, hy, hhr, 0, Math.PI*2); ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // Multiple glowing eyes
+    const eyePositions = [[-0.35, -0.12], [0.35, -0.12], [-0.18, 0.15], [0.18, 0.15]];
+    for (const [ex, ey] of eyePositions) {
+      ctx.fillStyle = '#00FFFF'; ctx.shadowColor = '#00FFFF'; ctx.shadowBlur = 10;
+      ctx.beginPath(); ctx.ellipse(hhr*ex, hy + hhr*ey, hhr*0.12, hhr*0.10, 0, 0, Math.PI*2); ctx.fill();
+    }
+    ctx.shadowBlur = 0;
+
+    // Maw with teeth
+    ctx.fillStyle = '#001122';
+    ctx.beginPath();
+    ctx.arc(0, hy + hhr*0.25, hhr*0.45, 0.1, Math.PI - 0.1);
+    ctx.fill();
+    // Teeth
+    ctx.fillStyle = '#88EEFF';
+    for (let i = 0; i < 5; i++) {
+      const tAngle = 0.3 + i * 0.5;
+      ctx.beginPath();
+      ctx.moveTo(Math.cos(tAngle)*hhr*0.40, hy + hhr*0.25 + Math.sin(tAngle)*hhr*0.40);
+      ctx.lineTo(Math.cos(tAngle)*hhr*0.28, hy + hhr*0.25 + Math.sin(tAngle)*hhr*0.25);
+      ctx.lineTo(Math.cos(tAngle+0.15)*hhr*0.40, hy + hhr*0.25 + Math.sin(tAngle+0.15)*hhr*0.40);
+      ctx.closePath(); ctx.fill();
+    }
+
+    // Dorsal spines
+    ctx.fillStyle = '#00AACC';
+    for (let i = 0; i < 4; i++) {
+      const sy = -bh*0.44 + i*bh*0.22;
+      ctx.beginPath();
+      ctx.moveTo(-bw*0.08, sy); ctx.lineTo(0, sy - bh*0.18); ctx.lineTo(bw*0.08, sy);
+      ctx.closePath(); ctx.fill();
+    }
+
+    ctx.restore();
+
+    // Anchor weapon
+    const gl = r + 18;
+    const gx = x + Math.cos(this._angle)*gl, gy = y + Math.sin(this._angle)*gl;
+    const ga0x = x + Math.cos(this._angle)*r*0.55, ga0y = y + Math.sin(this._angle)*r*0.55;
+    ctx.save(); ctx.lineCap = 'round';
+    ctx.strokeStyle = 'rgba(0,0,0,0.50)'; ctx.lineWidth = 8;
+    ctx.beginPath(); ctx.moveTo(ga0x+2, ga0y+2); ctx.lineTo(gx+2, gy+2); ctx.stroke();
+    ctx.strokeStyle = '#005588'; ctx.lineWidth = 6;
+    ctx.beginPath(); ctx.moveTo(ga0x, ga0y); ctx.lineTo(gx, gy); ctx.stroke();
+    // Anchor flukes
+    ctx.strokeStyle = '#0088AA'; ctx.lineWidth = 4;
+    const ax = gx, ay = gy;
+    const aAngle = this._angle;
+    ctx.beginPath();
+    ctx.moveTo(ax + Math.cos(aAngle - 0.8)*14, ay + Math.sin(aAngle - 0.8)*14);
+    ctx.lineTo(ax, ay);
+    ctx.lineTo(ax + Math.cos(aAngle + 0.8)*14, ay + Math.sin(aAngle + 0.8)*14);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  // ── COAST GUARD: armored naval officer ──────────────────────
+  _renderCoastGuard(ctx, x, y, r) {
+    const isSwat = this.type === 'swat' || this.type === 'heavyswat';
+    const walk = Math.sin(Date.now() * 0.005) * 0.16;
+
+    ctx.save(); ctx.globalAlpha = 0.20; ctx.fillStyle = '#002244';
+    ctx.beginPath(); ctx.ellipse(x+2, y+r*0.50, r*1.05, r*0.24, 0, 0, Math.PI*2); ctx.fill();
+    ctx.restore();
+
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(this._angle - Math.PI / 2);
+
+    const bw = r * 0.52, bh = r * 0.74;
+
+    // Legs in naval uniform
+    for (const s of [-1, 1]) {
+      ctx.fillStyle = '#002244';
+      ctx.beginPath(); ctx.ellipse(s*r*0.22, r*0.14+s*walk*r*0.16, r*0.15, r*0.32, s*walk*0.12, 0, Math.PI*2); ctx.fill();
+      // Boots
+      ctx.fillStyle = '#001122';
+      ctx.beginPath(); ctx.ellipse(s*r*0.24, r*0.42, r*0.18, r*0.10, s*0.15, 0, Math.PI*2); ctx.fill();
+    }
+
+    // Torso - naval uniform
+    const tg = ctx.createLinearGradient(-bw, -bh*0.40, bw, bh*0.35);
+    tg.addColorStop(0, '#0066AA'); tg.addColorStop(0.5, '#004488'); tg.addColorStop(1, '#003366');
+    ctx.fillStyle = tg; ctx.shadowColor = '#0088CC'; ctx.shadowBlur = 8;
+    ctx.beginPath(); ctx.roundRect(-bw, -bh*0.38, bw*2, bh*0.78, [bw*0.18, bw*0.18, bw*0.10, bw*0.10]); ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // Gold buttons
+    ctx.fillStyle = '#FFCC44';
+    for (let i = 0; i < 4; i++) {
+      ctx.beginPath(); ctx.arc(0, -bh*0.28 + i*bh*0.16, bw*0.09, 0, Math.PI*2); ctx.fill();
+    }
+
+    // Epaulettes
+    for (const s of [-1, 1]) {
+      ctx.fillStyle = '#FFDD66';
+      ctx.beginPath(); ctx.ellipse(s*bw*0.95, -bh*0.32, bw*0.20, bw*0.12, 0, 0, Math.PI*2); ctx.fill();
+      // Fringe
+      ctx.strokeStyle = '#FFCC44'; ctx.lineWidth = 1;
+      for (let f = 0; f < 4; f++) {
+        ctx.beginPath();
+        ctx.moveTo(s*bw*0.85 + s*f*bw*0.06, -bh*0.28);
+        ctx.lineTo(s*bw*0.85 + s*f*bw*0.06, -bh*0.18);
+        ctx.stroke();
+      }
+    }
+
+    // Arms
+    for (const s of [-1, 1]) {
+      ctx.save(); ctx.translate(s * bw * 0.90, -bh * 0.20);
+      ctx.rotate(s * 0.42 + walk * s * 0.10);
+      ctx.fillStyle = '#004488';
+      ctx.beginPath(); ctx.roundRect(-r*0.12, -r*0.55, r*0.24, r*0.65, r*0.08); ctx.fill();
+      // Gold cuff
+      ctx.fillStyle = '#FFCC44';
+      ctx.beginPath(); ctx.roundRect(-r*0.13, r*0.02, r*0.26, r*0.08, r*0.03); ctx.fill();
+      // Gloved hand
+      ctx.fillStyle = '#EEEEDD';
+      ctx.beginPath(); ctx.ellipse(0, r*0.14, r*0.12, r*0.12, 0, 0, Math.PI*2); ctx.fill();
+      ctx.restore();
+    }
+
+    // Head
+    const hhr = r * 0.42;
+    const hy = -bh * 0.42;
+    ctx.fillStyle = '#CC9977';
+    ctx.beginPath(); ctx.arc(0, hy, hhr, 0, Math.PI*2); ctx.fill();
+
+    // Captain's cap
+    ctx.fillStyle = '#002244';
+    ctx.beginPath(); ctx.ellipse(0, hy - hhr*0.72, hhr*1.15, hhr*0.35, 0, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#003366';
+    ctx.beginPath(); ctx.roundRect(-hhr*0.90, hy - hhr*1.20, hhr*1.80, hhr*0.55, [hhr*0.15, hhr*0.15, 0, 0]); ctx.fill();
+    // Cap badge
+    ctx.fillStyle = '#FFDD44'; ctx.shadowColor = '#FFAA00'; ctx.shadowBlur = 6;
+    ctx.beginPath(); ctx.arc(0, hy - hhr*0.85, hhr*0.18, 0, Math.PI*2); ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // Eyes
+    for (const s of [-1, 1]) {
+      ctx.fillStyle = '#FFFFFF';
+      ctx.beginPath(); ctx.ellipse(s*hhr*0.30, hy - hhr*0.02, hhr*0.14, hhr*0.11, 0, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#224488';
+      ctx.beginPath(); ctx.ellipse(s*hhr*0.30, hy - hhr*0.02, hhr*0.08, hhr*0.09, 0, 0, Math.PI*2); ctx.fill();
+    }
+
+    // Stern expression
+    ctx.strokeStyle = '#664433'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(-hhr*0.25, hy + hhr*0.28); ctx.lineTo(hhr*0.25, hy + hhr*0.28); ctx.stroke();
+
+    ctx.restore();
+
+    // Harpoon gun
+    const gl = r + 15;
+    const gx = x + Math.cos(this._angle)*gl, gy = y + Math.sin(this._angle)*gl;
+    const ga0x = x + Math.cos(this._angle)*r*0.50, ga0y = y + Math.sin(this._angle)*r*0.50;
+    ctx.save(); ctx.lineCap = 'round';
+    ctx.strokeStyle = 'rgba(0,0,0,0.45)'; ctx.lineWidth = 6;
+    ctx.beginPath(); ctx.moveTo(ga0x+1, ga0y+1.5); ctx.lineTo(gx+1, gy+1.5); ctx.stroke();
+    ctx.strokeStyle = '#445566'; ctx.lineWidth = 4;
+    ctx.beginPath(); ctx.moveTo(ga0x, ga0y); ctx.lineTo(gx, gy); ctx.stroke();
+    // Harpoon tip
+    ctx.strokeStyle = '#88AACC'; ctx.lineWidth = 2;
+    const hx = gx, hy2 = gy;
+    const hAngle = this._angle;
+    ctx.beginPath();
+    ctx.moveTo(hx, hy2);
+    ctx.lineTo(hx + Math.cos(hAngle)*10, hy2 + Math.sin(hAngle)*10);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(hx + Math.cos(hAngle)*6 + Math.cos(hAngle - 0.6)*6, hy2 + Math.sin(hAngle)*6 + Math.sin(hAngle - 0.6)*6);
+    ctx.lineTo(hx + Math.cos(hAngle)*10, hy2 + Math.sin(hAngle)*10);
+    ctx.lineTo(hx + Math.cos(hAngle)*6 + Math.cos(hAngle + 0.6)*6, hy2 + Math.sin(hAngle)*6 + Math.sin(hAngle + 0.6)*6);
+    ctx.stroke();
+    ctx.restore();
+  }
+
   _renderHPBar(ctx, x, y, r, bw, bh) {
     const bx2 = x - bw/2, by2 = y - r - 16;
     const pct = this.health / this.maxHealth;
@@ -2511,6 +3388,11 @@ const BOSS_CONFIGS = {
     name: 'THE EXECUTIONER', color: '#FF0044', accent: '#FF6688',
     radius: 42, speed: 92,  hp: 1100, dmg: 30, fr: 820,  bspd: 390,
     special: 'burst',    // ring of bullets
+  },
+  ocean_depths: {
+    name: 'THE KRAKEN',     color: '#00AACC', accent: '#00EEFF',
+    radius: 48, speed: 55,  hp: 1400, dmg: 35, fr: 1100, bspd: 280,
+    special: 'slam',    // tidal wave slam + water burst
   },
 };
 
@@ -2816,13 +3698,14 @@ class BossBot {
 
     // Per-boss body
     switch (this.mapId) {
-      case 'downtown':   this._renderKingpin(ctx, x, y, r, pulse); break;
-      case 'industrial': this._renderColossus(ctx, x, y, r, pulse); break;
-      case 'suburbs':    this._renderSwarmQueen(ctx, x, y, r, pulse); break;
-      case 'ruins':      this._renderWarlord(ctx, x, y, r, pulse); break;
-      case 'docks':      this._renderHarbormaster(ctx, x, y, r, pulse); break;
-      case 'casino':     this._renderDealer(ctx, x, y, r, pulse); break;
-      default:           this._renderKingpin(ctx, x, y, r, pulse); break;
+      case 'downtown':     this._renderKingpin(ctx, x, y, r, pulse); break;
+      case 'industrial':   this._renderColossus(ctx, x, y, r, pulse); break;
+      case 'suburbs':      this._renderSwarmQueen(ctx, x, y, r, pulse); break;
+      case 'ruins':        this._renderWarlord(ctx, x, y, r, pulse); break;
+      case 'docks':        this._renderHarbormaster(ctx, x, y, r, pulse); break;
+      case 'casino':       this._renderDealer(ctx, x, y, r, pulse); break;
+      case 'ocean_depths': this._renderKraken(ctx, x, y, r, pulse); break;
+      default:             this._renderKingpin(ctx, x, y, r, pulse); break;
     }
 
     // Name + enrage label
@@ -3134,6 +4017,164 @@ class BossBot {
     ctx.strokeStyle = '#FF88AA'; ctx.lineWidth = 3;
     ctx.beginPath(); ctx.moveTo(gx, gy); ctx.lineTo(gx + Math.cos(this._angle)*14, gy + Math.sin(this._angle)*14); ctx.stroke();
     ctx.restore();
+  }
+
+  _renderKraken(ctx, x, y, r, pulse) {
+    // Massive tentacled sea monster - THE KRAKEN
+
+    // Water ripple aura
+    ctx.save();
+    ctx.strokeStyle = 'rgba(0,200,255,0.25)';
+    ctx.lineWidth = 2;
+    for (let i = 0; i < 3; i++) {
+      const rippleR = r + 15 + i * 12 + pulse * 8;
+      ctx.globalAlpha = 0.3 - i * 0.08;
+      ctx.beginPath();
+      ctx.arc(x, y, rippleR, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    // Main body - bulbous head
+    ctx.save();
+    ctx.shadowColor = '#00CCFF';
+    ctx.shadowBlur = 25 + pulse * 18;
+    const bodyGrad = ctx.createRadialGradient(x - r * 0.25, y - r * 0.25, 2, x, y, r);
+    bodyGrad.addColorStop(0, '#00EEFF');
+    bodyGrad.addColorStop(0.4, '#00AACC');
+    bodyGrad.addColorStop(0.7, '#006688');
+    bodyGrad.addColorStop(1, '#003344');
+    ctx.fillStyle = bodyGrad;
+    ctx.beginPath();
+    ctx.arc(x, y, r * 0.85, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    // Tentacles (8 writhing appendages)
+    ctx.save();
+    const tentacleCount = 8;
+    for (let i = 0; i < tentacleCount; i++) {
+      const baseAngle = (i / tentacleCount) * Math.PI * 2 + this._pulseT * 0.3;
+      const waveOffset = Math.sin(this._pulseT * 2 + i * 0.8) * 0.3;
+
+      ctx.strokeStyle = i % 2 === 0 ? '#00AACC' : '#006688';
+      ctx.lineWidth = 6 - i * 0.3;
+      ctx.lineCap = 'round';
+      ctx.shadowColor = '#00CCFF';
+      ctx.shadowBlur = 8;
+
+      const startX = x + Math.cos(baseAngle) * r * 0.7;
+      const startY = y + Math.sin(baseAngle) * r * 0.7;
+      const midX = x + Math.cos(baseAngle + waveOffset) * r * 1.3;
+      const midY = y + Math.sin(baseAngle + waveOffset) * r * 1.3;
+      const endX = x + Math.cos(baseAngle + waveOffset * 1.5) * r * 1.7;
+      const endY = y + Math.sin(baseAngle + waveOffset * 1.5) * r * 1.7;
+
+      ctx.beginPath();
+      ctx.moveTo(startX, startY);
+      ctx.quadraticCurveTo(midX, midY, endX, endY);
+      ctx.stroke();
+
+      // Suction cups on tentacles
+      ctx.fillStyle = '#004466';
+      ctx.shadowBlur = 0;
+      for (let s = 0; s < 3; s++) {
+        const t = 0.3 + s * 0.25;
+        const sx = startX + (endX - startX) * t + Math.sin(this._pulseT + s) * 3;
+        const sy = startY + (endY - startY) * t + Math.cos(this._pulseT + s) * 3;
+        ctx.beginPath();
+        ctx.arc(sx, sy, 3 - s * 0.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+    ctx.restore();
+
+    // Mantle/hood texture
+    ctx.save();
+    ctx.strokeStyle = 'rgba(0,180,220,0.4)';
+    ctx.lineWidth = 1.5;
+    for (let i = 0; i < 4; i++) {
+      const arcR = r * (0.3 + i * 0.15);
+      ctx.beginPath();
+      ctx.arc(x, y, arcR, Math.PI * 0.8, Math.PI * 2.2);
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    // Multiple glowing eyes (6 eyes arranged around head)
+    const eyePositions = [
+      { angle: this._angle - 0.4, dist: 0.45 },
+      { angle: this._angle + 0.4, dist: 0.45 },
+      { angle: this._angle - 0.15, dist: 0.55 },
+      { angle: this._angle + 0.15, dist: 0.55 },
+      { angle: this._angle - 0.6, dist: 0.35 },
+      { angle: this._angle + 0.6, dist: 0.35 },
+    ];
+
+    for (const eye of eyePositions) {
+      const ex = x + Math.cos(eye.angle) * r * eye.dist;
+      const ey = y + Math.sin(eye.angle) * r * eye.dist;
+
+      // Eye glow
+      ctx.save();
+      ctx.fillStyle = '#00FFFF';
+      ctx.shadowColor = '#00FFFF';
+      ctx.shadowBlur = 15 + pulse * 8;
+      ctx.beginPath();
+      ctx.ellipse(ex, ey, 6, 5, eye.angle, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Pupil
+      ctx.fillStyle = '#000033';
+      ctx.shadowBlur = 0;
+      ctx.beginPath();
+      ctx.ellipse(ex + Math.cos(this._angle) * 2, ey + Math.sin(this._angle) * 2, 2.5, 3, eye.angle, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    // Beak/mouth
+    ctx.save();
+    const beakX = x + Math.cos(this._angle) * r * 0.4;
+    const beakY = y + Math.sin(this._angle) * r * 0.4;
+    ctx.fillStyle = '#FF6600';
+    ctx.shadowColor = '#FF4400';
+    ctx.shadowBlur = 8;
+    ctx.beginPath();
+    ctx.moveTo(beakX + Math.cos(this._angle) * 12, beakY + Math.sin(this._angle) * 12);
+    ctx.lineTo(beakX + Math.cos(this._angle - 0.6) * 6, beakY + Math.sin(this._angle - 0.6) * 6);
+    ctx.lineTo(beakX + Math.cos(this._angle + 0.6) * 6, beakY + Math.sin(this._angle + 0.6) * 6);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+
+    // Bubbles around the kraken
+    ctx.save();
+    ctx.fillStyle = 'rgba(150,230,255,0.4)';
+    for (let i = 0; i < 6; i++) {
+      const bubbleAngle = this._pulseT * 0.5 + i * 1.1;
+      const bubbleR = r * 1.2 + Math.sin(bubbleAngle * 2) * 15;
+      const bx = x + Math.cos(bubbleAngle) * bubbleR;
+      const by = y + Math.sin(bubbleAngle) * bubbleR;
+      const bSize = 3 + Math.sin(this._pulseT + i) * 2;
+      ctx.beginPath();
+      ctx.arc(bx, by, bSize, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+
+    // Enrage: extra tentacle glow
+    if (this._enraged) {
+      ctx.save();
+      ctx.strokeStyle = 'rgba(255,100,100,0.5)';
+      ctx.lineWidth = 3;
+      ctx.shadowColor = '#FF4444';
+      ctx.shadowBlur = 15;
+      ctx.beginPath();
+      ctx.arc(x, y, r + 8 + pulse * 5, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
   }
 }
 

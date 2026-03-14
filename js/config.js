@@ -585,6 +585,48 @@ const CONFIG = {
       },
     },
     {
+      id: 'ocean_depths',
+      name: 'OCEAN DEPTHS',
+      desc: 'A vast ocean arena. Floating ships and platforms. Water warriors rise from the deep.',
+      theme: '#0088CC',
+      tags: ['OCEAN', 'WATER', 'NAUTICAL'],
+      previewGridSize: 18,
+      previewBg: '#001828',
+      previewRoad: 'rgba(0,136,204,0.50)',
+
+      mapW: 44, mapH: 44, tileSize: 80, roadEvery: 10,
+
+      roadColor:       '#001830',    // Deep ocean floor
+      sidewalkColor:   '#002040',    // Shallow water platforms
+      buildingPalette: ['#003355','#004466','#002a44','#003860','#002540','#004060','#003050','#004575'],  // Ship hulls
+      neonColors:      ['#00CCFF','#0099DD','#44DDFF','#00FFFF','#0066AA','#88EEFF'],
+      windowColors:    ['#66DDFF','#88EEFF','#44CCEE','#AAFFFF'],
+      lightColor:      '#00CCFF',
+      lightGlow:       '#0088AA',
+      neonFreq:        7,
+      weather:         'fog',        // Ocean mist
+      ocean:           true,
+
+      botPalettes: {
+        // Water warriors - aquatic themed colors
+        normal: [
+          { body:'#005577', accent:'#00AACC' },  // Deep sea blue
+          { body:'#006688', accent:'#00BBDD' },  // Ocean teal
+          { body:'#004455', accent:'#0099BB' },  // Dark aqua
+          { body:'#007799', accent:'#00CCEE' },  // Bright sea
+        ],
+        big:    [
+          { body:'#003344', accent:'#006688' },  // Leviathan dark
+          { body:'#002838', accent:'#005577' },  // Abyss dweller
+        ],
+        police: [
+          { body:'#004466', accent:'#0099CC' },  // Coast guard
+          { body:'#003355', accent:'#0088BB' },
+        ],
+        swat:   [{ body:'#002233', accent:'#006699' }],  // Navy seal
+      },
+    },
+    {
       id: 'metropolis', name: 'METROPOLIS',
       desc: 'A vast living city — commercial towers, residential flats, grimy industrial, gangster slums, and a central park. The largest map.',
       theme: '#FF9933', tags: ['OPEN WORLD', 'CITY', 'ZONES'],

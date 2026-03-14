@@ -872,7 +872,7 @@ class Game {
             v.takeDamage(10, this.particles);
             v._ramCooldown = 0.38;
             if (bot.dying) {
-              const _dType = bot._isZombie ? 'zombie_blood' : 'blood'; const _dCount = bot._isZombie ? 3 : 1; for (let _di = 0; _di < _dCount; _di++) { const _dOx = (Math.random()-0.5)*40, _dOy = (Math.random()-0.5)*40; this.decals.push(new Decal(bot.x + (_di===0?0:_dOx), bot.y + (_di===0?0:_dOy), _dType)); }
+              const _dType = bot._isZombie ? 'zombie_blood' : this.map.config.snow ? 'ice_blood' : this.map.config.ocean ? 'water_blood' : 'blood'; const _dCount = bot._isZombie ? 3 : 1; for (let _di = 0; _di < _dCount; _di++) { const _dOx = (Math.random()-0.5)*40, _dOy = (Math.random()-0.5)*40; this.decals.push(new Decal(bot.x + (_di===0?0:_dOx), bot.y + (_di===0?0:_dOy), _dType)); }
               const mult   = this._streakMultiplier();
               const wMult  = (this.player._wealthMult || 1) * (this._hardcoreMode ? 3 : 1) * (this._blitzMode ? 5 : 1);
               const earned = Math.round(CONFIG.MONEY_PER_KILL * bot._cfg.moneyMult * mult * wMult);
@@ -923,7 +923,7 @@ class Game {
           if (b.special && !bot.dying) this._applyBulletSpecial(b.special, bot, b);
           b.dead = true;
           if (bot.dying) {
-            const _dType = bot._isZombie ? 'zombie_blood' : 'blood'; const _dCount = bot._isZombie ? 3 : 1; for (let _di = 0; _di < _dCount; _di++) { const _dOx = (Math.random()-0.5)*40, _dOy = (Math.random()-0.5)*40; this.decals.push(new Decal(bot.x + (_di===0?0:_dOx), bot.y + (_di===0?0:_dOy), _dType)); }
+            const _dType = bot._isZombie ? 'zombie_blood' : this.map.config.snow ? 'ice_blood' : this.map.config.ocean ? 'water_blood' : 'blood'; const _dCount = bot._isZombie ? 3 : 1; for (let _di = 0; _di < _dCount; _di++) { const _dOx = (Math.random()-0.5)*40, _dOy = (Math.random()-0.5)*40; this.decals.push(new Decal(bot.x + (_di===0?0:_dOx), bot.y + (_di===0?0:_dOy), _dType)); }
             const mult   = this._streakMultiplier();
             const wMult  = (this.player._wealthMult || 1) * (this._hardcoreMode ? 3 : 1) * (this._blitzMode ? 5 : 1);
             const earned = Math.round(CONFIG.MONEY_PER_KILL * bot._cfg.moneyMult * mult * wMult);
@@ -1135,14 +1135,34 @@ class Game {
 
   _spawnVehicles() {
     const colors = ['#CC3333', '#3366BB', '#CC9900', '#339944', '#AA33AA', '#336688'];
+    const oceanColors = ['#0077AA', '#005588', '#006699', '#008899', '#004466'];
+    const isOcean = !!this.map.config.ocean;
     const count  = 3 + Math.floor(Math.random() * 2);
     for (let i = 0; i < count; i++) {
       let rp;
+      // Try to find a road position (not near buildings)
       for (let t = 0; t < 12; t++) {
         rp = this.map.randomRoadPos();
         if (Math.hypot(rp.x - this.player.x, rp.y - this.player.y) > 220) break;
       }
-      this.vehicles.push(new Vehicle(rp.x, rp.y, colors[i % colors.length]));
+      const isPoliceVehicle = (i === 0); // First vehicle is always police/coast guard
+      const isMiniBoat = isOcean && (i >= 2); // On ocean, vehicles after first 2 are mini boats
+      const vehicleColor = isPoliceVehicle ? (isOcean ? '#0055AA' : '#1144BB')
+                         : isOcean ? oceanColors[i % oceanColors.length]
+                         : colors[i % colors.length];
+      const v = new Vehicle(rp.x, rp.y, vehicleColor, this.map.config);
+      v._isPolice = isPoliceVehicle;
+      v._isMiniBoat = isMiniBoat;
+      // Mini boats are smaller and faster
+      if (isMiniBoat) {
+        v.width = 36;
+        v.height = 18;
+        v.radius = 18;
+        v.speed = 340;
+        v.hp = 120;
+        v.maxHp = 120;
+      }
+      this.vehicles.push(v);
     }
   }
 
@@ -1321,11 +1341,13 @@ class Game {
 
     // Weighted type selection — higher waves introduce advanced types
     const r    = Math.random();
+    const isSnowMap = !!this.map.config.snow;
+    const isOceanMap = !!this.map.config.ocean;
     let type;
     if (this.wave >= 10 && r < 0.06)       type = 'juggernaut';
     else if (this.wave >= 6  && r < 0.14)  type = 'sniper';
     else if (this.wave >= 4  && r < 0.22)  type = 'bomber';
-    else if (r < 0.38)                     type = 'mini';
+    else if (r < 0.38)                     type = (isSnowMap || isOceanMap) ? 'normal' : 'mini';  // No mini enemies on snow/ocean maps
     else if (r < 0.84)                     type = 'normal';
     else                                   type = 'big';
 
@@ -1426,7 +1448,7 @@ class Game {
       const a = Math.random() * Math.PI * 2, s = rnd(40, 100);
       this.particles.push(new Particle(g.x, g.y, Math.cos(a)*s, Math.sin(a)*s, '#FFEE88', rnd(2,5), 0.5));
     }
-    this.decals.push(new Decal(g.x, g.y, 'blood'));
+    this.decals.push(new Decal(g.x, g.y, this.map.config.snow ? 'ice_blood' : this.map.config.ocean ? 'water_blood' : 'blood'));
     this.hud.shake(10);
     for (const bot of this.bots) {
       if (bot.dead || bot.dying) continue;
@@ -1434,7 +1456,7 @@ class Game {
         bot.takeDamage(dmg, this.particles);
         this.hud.addDamageNumber(bot.x, bot.y - 30, dmg, this.camX, this.camY, '#FF8800');
         if (bot.dying) {
-          const _dType = bot._isZombie ? 'zombie_blood' : 'blood'; const _dCount = bot._isZombie ? 3 : 1; for (let _di = 0; _di < _dCount; _di++) { const _dOx = (Math.random()-0.5)*40, _dOy = (Math.random()-0.5)*40; this.decals.push(new Decal(bot.x + (_di===0?0:_dOx), bot.y + (_di===0?0:_dOy), _dType)); }
+          const _dType = bot._isZombie ? 'zombie_blood' : this.map.config.snow ? 'ice_blood' : this.map.config.ocean ? 'water_blood' : 'blood'; const _dCount = bot._isZombie ? 3 : 1; for (let _di = 0; _di < _dCount; _di++) { const _dOx = (Math.random()-0.5)*40, _dOy = (Math.random()-0.5)*40; this.decals.push(new Decal(bot.x + (_di===0?0:_dOx), bot.y + (_di===0?0:_dOy), _dType)); }
           const mult   = this._streakMultiplier();
           const wMult  = (this.player._wealthMult || 1) * (this._hardcoreMode ? 3 : 1) * (this._blitzMode ? 5 : 1);
           const earned = Math.round(CONFIG.MONEY_PER_KILL * bot._cfg.moneyMult * mult * wMult);
@@ -1537,7 +1559,7 @@ class Game {
       }
     } else if (item.type === 'vehicle') {
       // Spawn prototype vehicle near player
-      const pv = new Vehicle(this.player.x + 80, this.player.y, '#CCDDFF');
+      const pv = new Vehicle(this.player.x + 80, this.player.y, '#CCDDFF', this.map.config);
       pv.hp    = 500;
       pv.maxHp = 500;
       this.vehicles.push(pv);
@@ -1697,7 +1719,7 @@ class Game {
           this.hud.addDamageNumber(bot.x, bot.y - 30, b.damage, -offX, -offY, '#FF6666');
           b.dead = true;
           if (bot.dying) {
-            const _dType = bot._isZombie ? 'zombie_blood' : 'blood'; const _dCount = bot._isZombie ? 3 : 1; for (let _di = 0; _di < _dCount; _di++) { const _dOx = (Math.random()-0.5)*40, _dOy = (Math.random()-0.5)*40; this.decals.push(new Decal(bot.x + (_di===0?0:_dOx), bot.y + (_di===0?0:_dOy), _dType)); }
+            const _dType = bot._isZombie ? 'zombie_blood' : this.map.config.snow ? 'ice_blood' : this.map.config.ocean ? 'water_blood' : 'blood'; const _dCount = bot._isZombie ? 3 : 1; for (let _di = 0; _di < _dCount; _di++) { const _dOx = (Math.random()-0.5)*40, _dOy = (Math.random()-0.5)*40; this.decals.push(new Decal(bot.x + (_di===0?0:_dOx), bot.y + (_di===0?0:_dOy), _dType)); }
             const mult   = this._streakMultiplier();
             const wMult  = (this.player._wealthMult || 1) * (this._hardcoreMode ? 3 : 1) * (this._blitzMode ? 5 : 1);
             const earned = Math.round(CONFIG.MONEY_PER_KILL * bot._cfg.moneyMult * mult * wMult);

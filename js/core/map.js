@@ -726,20 +726,96 @@ class GameMap {
         const isRowR = this._rySet ? this._rySet.has(y) : (y % R === 0);
 
         if (tile === TILE.ROAD) {
-          ctx.fillStyle = cfg.roadColor;
-          ctx.fillRect(wx, wy, S, S);
-          // Centre dashed lines
-          if (isColR && !isRowR) {
-            ctx.fillStyle = 'rgba(255,255,255,0.06)';
-            ctx.fillRect(wx + S/2 - 2, wy, 4, S);
-          }
-          if (isRowR && !isColR) {
-            ctx.fillStyle = 'rgba(255,255,255,0.06)';
-            ctx.fillRect(wx, wy + S/2 - 2, S, 4);
+          if (cfg.ocean) {
+            // Ocean water rendering
+            const wavePhase = (Date.now() * 0.001 + x * 0.3 + y * 0.2) % (Math.PI * 2);
+            const waveIntensity = Math.sin(wavePhase) * 0.15 + 0.85;
+
+            // Deep water base
+            const waterGrad = ctx.createLinearGradient(wx, wy, wx + S, wy + S);
+            waterGrad.addColorStop(0, `rgba(0,40,80,${waveIntensity})`);
+            waterGrad.addColorStop(0.5, `rgba(0,60,100,${waveIntensity})`);
+            waterGrad.addColorStop(1, `rgba(0,50,90,${waveIntensity})`);
+            ctx.fillStyle = waterGrad;
+            ctx.fillRect(wx, wy, S, S);
+
+            // Wave highlights
+            const waveY = wy + S * 0.3 + Math.sin(wavePhase) * 5;
+            ctx.strokeStyle = 'rgba(100,200,255,0.15)';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(wx, waveY);
+            ctx.quadraticCurveTo(wx + S/2, waveY - 4, wx + S, waveY);
+            ctx.stroke();
+
+            const waveY2 = wy + S * 0.65 + Math.sin(wavePhase + 1) * 4;
+            ctx.strokeStyle = 'rgba(80,180,255,0.12)';
+            ctx.beginPath();
+            ctx.moveTo(wx, waveY2);
+            ctx.quadraticCurveTo(wx + S/2, waveY2 + 3, wx + S, waveY2);
+            ctx.stroke();
+
+            // Occasional foam/sparkle
+            if ((x * 7 + y * 13) % 11 === 0) {
+              ctx.fillStyle = 'rgba(200,240,255,0.25)';
+              ctx.beginPath();
+              ctx.arc(wx + S * 0.3 + Math.sin(wavePhase * 2) * 5, wy + S * 0.5, 3, 0, Math.PI * 2);
+              ctx.fill();
+            }
+          } else {
+            ctx.fillStyle = cfg.roadColor;
+            ctx.fillRect(wx, wy, S, S);
+            // Centre dashed lines
+            if (isColR && !isRowR) {
+              ctx.fillStyle = 'rgba(255,255,255,0.06)';
+              ctx.fillRect(wx + S/2 - 2, wy, 4, S);
+            }
+            if (isRowR && !isColR) {
+              ctx.fillStyle = 'rgba(255,255,255,0.06)';
+              ctx.fillRect(wx, wy + S/2 - 2, S, 4);
+            }
           }
         } else if (tile === TILE.SIDEWALK) {
           const isPark = this._parkTiles && this._parkTiles.has(`${x},${y}`);
-          if (isPark) {
+          if (cfg.ocean) {
+            // Ocean: floating wooden dock/platform
+            const dockGrad = ctx.createLinearGradient(wx, wy, wx, wy + S);
+            dockGrad.addColorStop(0, '#3a2a1a');
+            dockGrad.addColorStop(0.5, '#4a3a28');
+            dockGrad.addColorStop(1, '#2a1a10');
+            ctx.fillStyle = dockGrad;
+            ctx.fillRect(wx + 2, wy + 2, S - 4, S - 4);
+
+            // Wooden plank lines
+            ctx.strokeStyle = 'rgba(80,60,40,0.6)';
+            ctx.lineWidth = 1;
+            for (let pl = 0; pl < 4; pl++) {
+              const plY = wy + 8 + pl * (S - 16) / 3;
+              ctx.beginPath();
+              ctx.moveTo(wx + 4, plY);
+              ctx.lineTo(wx + S - 4, plY);
+              ctx.stroke();
+            }
+
+            // Dock edge highlight
+            ctx.strokeStyle = 'rgba(100,80,60,0.5)';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(wx + 3, wy + 3, S - 6, S - 6);
+
+            // Rope/mooring post occasionally
+            if ((x * 5 + y * 3) % 9 === 0) {
+              ctx.fillStyle = '#5a4a3a';
+              ctx.beginPath();
+              ctx.arc(wx + S/2, wy + S/2, 5, 0, Math.PI * 2);
+              ctx.fill();
+              // Rope coil
+              ctx.strokeStyle = '#8a7a5a';
+              ctx.lineWidth = 1.5;
+              ctx.beginPath();
+              ctx.arc(wx + S/2, wy + S/2, 8, 0, Math.PI * 1.5);
+              ctx.stroke();
+            }
+          } else if (isPark) {
             // Park: lush green ground
             ctx.fillStyle = '#0d2010';
             ctx.fillRect(wx, wy, S, S);
