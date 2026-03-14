@@ -538,6 +538,34 @@ const CONFIG = {
         big:    [{ body:'#001133', accent:'#003366' }],
       },
     },
+    {
+      id: 'metropolis', name: 'METROPOLIS',
+      desc: 'A vast living city — commercial towers, residential flats, grimy industrial, gangster slums, and a central park. The largest map.',
+      theme: '#FF9933', tags: ['OPEN WORLD', 'CITY', 'ZONES'],
+      previewGridSize: 12, previewBg: '#060408', previewRoad: 'rgba(255,153,51,0.40)',
+      mapW: 90, mapH: 60, tileSize: 80, roadEvery: 9,
+      roadColor: '#07060a', sidewalkColor: '#0f0e14',
+      buildingPalette: ['#0f0e18','#141220','#111018','#181520','#0d0c16','#131220','#0f0d18','#161420'],
+      // Zone-specific building palettes
+      zonePalettes: {
+        commercial:  ['#101828','#0e1a2e','#0c1622','#12202e','#0e1c2c','#101e30','#0c1820','#142230'],
+        residential: ['#1a1008','#201408','#18120a','#221608','#1c140c','#201810','#18100a','#241608'],
+        industrial:  ['#0a0a0c','#0c0e0c','#080a08','#0e1010','#0a0c0a','#0c0e0e','#080c0a','#101010'],
+        slums:       ['#14100c','#1a140e','#12100a','#160e0c','#1c1210','#180e0c','#14120e','#1a1612'],
+      },
+      neonColors: ['#FF9933','#FFCC44','#FF6600','#FFAA22','#FF4400','#FFDD00'],
+      windowColors: ['#FF9933','#FFCC55','#FF8800','#FFAA44'],
+      lightColor: '#FF9933', lightGlow: '#CC7722', neonFreq: 8,
+      weather: 'clear',
+      metropolis: true,
+      botPalettes: {
+        mini:   [{ body:'#441100', accent:'#FF6622' }, { body:'#332200', accent:'#FFAA22' }],
+        normal: [{ body:'#553300', accent:'#FF9933' }, { body:'#442200', accent:'#FF6600' }, { body:'#661100', accent:'#FF4422' }],
+        big:    [{ body:'#221100', accent:'#994422' }, { body:'#330a00', accent:'#882211' }],
+        police: [{ body:'#112233', accent:'#4488CC' }, { body:'#0a1a2a', accent:'#3366AA' }],
+        swat:   [{ body:'#0a0a12', accent:'#336699' }],
+      },
+    },
   ],
 
   // ── Weapons ─────────────────────────────────────────────

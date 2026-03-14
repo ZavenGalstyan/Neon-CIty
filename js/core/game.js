@@ -194,6 +194,7 @@ class Game {
     this._bodyguards         = [];
     // ── Life Mode ─────────────────────────────────────────────
     this._lifeMode        = !!this.map.config.lifeMode;
+    this._metropolisMode  = !!this.map.config.metropolis;
     this._cityNpcs        = [];
     // ── Special Modes ─────────────────────────────────────────
     this._survivalMode    = !!this.map.config.survival;
@@ -257,7 +258,7 @@ class Game {
     this._spawnVehicles();
     if (this._arenaMode)    this._startArenaWave();
     if (this._zombieMode)   this._startZombieWave();
-    if (this._lifeMode)     this._spawnCityNpcs();
+    if (this._lifeMode || this._metropolisMode) this._spawnCityNpcs();
     if (this._campaignMode) this._startCampaignLevel();
     this._spawnAmbientTraffic();
 
@@ -1326,12 +1327,14 @@ class Game {
 
   _spawnAmbientTraffic() {
     if (this._arenaMode || this._zombieMode) return;
-    const count = 6 + Math.floor(Math.random() * 4);
+    const base  = this._metropolisMode ? 12 : 6;
+    const count = base + Math.floor(Math.random() * 6);
     for (let i = 0; i < count; i++) this._respawnAmbientCar();
   }
 
   _respawnAmbientCar() {
-    if (this._ambientCars.length >= 14) return;
+    const maxCars = this._metropolisMode ? 22 : 14;
+    if (this._ambientCars.length >= maxCars) return;
     // Spawn off-camera on a road tile
     const margin  = 200;
     const W       = this.canvas.width, H = this.canvas.height;
@@ -1423,7 +1426,8 @@ class Game {
 
   // ── Life Mode: city NPC spawning ───────────────────────────
   _spawnCityNpcs() {
-    const count = 14 + Math.floor(Math.random() * 8);
+    const base  = this._metropolisMode ? 28 : 14;
+    const count = base + Math.floor(Math.random() * 10);
     for (let i = 0; i < count; i++) {
       const pos = this.map.randomRoadPos();
       this._cityNpcs.push(new CityNPC(pos.x, pos.y, this.map));

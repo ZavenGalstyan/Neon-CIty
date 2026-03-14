@@ -472,75 +472,169 @@ class Vehicle {
       return;
     }
 
-    // 3D ground shadow (further, flatter)
-    ctx.save(); ctx.globalAlpha = 0.30; ctx.fillStyle = '#000';
+    const flash     = this._damageFlash > 0;
+    const isSports  = this.speed >= 400 && !this.bulletproof;
+    const isHeavy   = this.radius >= 31 && !this.bulletproof;
+    const isArmored = !!this.bulletproof;
+
+    // ── Ground shadow ─────────────────────────────────────────
+    ctx.save(); ctx.globalAlpha = 0.32; ctx.fillStyle = '#000';
     ctx.beginPath();
-    ctx.ellipse(this.x + 8, this.y + this.height * 0.5 + 6,
-                this.width * 0.50, this.height * 0.24, this.angle, 0, Math.PI * 2);
+    ctx.ellipse(this.x + 7, this.y + this.height * 0.45 + 8,
+                this.width * 0.52, this.height * 0.28, this.angle, 0, Math.PI * 2);
     ctx.fill(); ctx.restore();
 
-    // Vehicle height illusion: draw south side wall
-    const VH = 8; // vehicle height in px
     ctx.save();
     ctx.translate(this.x, this.y); ctx.rotate(this.angle);
-    const flash = this._damageFlash > 0;
-    const sideCol = flash ? '#CC3322' : this._darkenVehicleColor(this.color);
-    ctx.fillStyle = sideCol;
-    // South face (bottom of car in top-down)
     const hw = this.width / 2, hh = this.height / 2;
+
+    // ── Pseudo-3D south wall ──────────────────────────────────
+    const VH = isArmored ? 12 : isHeavy ? 10 : 7;
+    ctx.fillStyle = flash ? '#CC3322' : this._darkenVehicleColor(this.color);
     ctx.beginPath();
-    ctx.moveTo(-hw,  hh);
-    ctx.lineTo( hw,  hh);
-    ctx.lineTo( hw,  hh + VH);
-    ctx.lineTo(-hw,  hh + VH);
+    ctx.moveTo(-hw, hh); ctx.lineTo(hw, hh);
+    ctx.lineTo(hw, hh + VH); ctx.lineTo(-hw, hh + VH);
     ctx.closePath(); ctx.fill();
-    // East face (right side)
-    ctx.fillStyle = flash ? '#DD4433' : this._darkenVehicleColor(this.color, 0.75);
+    // East face
+    ctx.fillStyle = flash ? '#DD4433' : this._darkenVehicleColor(this.color, 0.72);
     ctx.beginPath();
-    ctx.moveTo(hw,  -hh);
-    ctx.lineTo(hw,   hh);
-    ctx.lineTo(hw + VH * 0.5, hh + VH * 0.5);
-    ctx.lineTo(hw + VH * 0.5, -hh + VH * 0.5);
+    ctx.moveTo(hw, -hh); ctx.lineTo(hw, hh);
+    ctx.lineTo(hw + VH * 0.55, hh + VH * 0.3);
+    ctx.lineTo(hw + VH * 0.55, -hh + VH * 0.3);
     ctx.closePath(); ctx.fill();
-    ctx.restore();
-
-    // Body top face
-    ctx.save();
-    ctx.translate(this.x, this.y); ctx.rotate(this.angle);
-    ctx.shadowColor = flash ? '#FF4444' : this.color;
-    ctx.shadowBlur  = flash ? 22 : 10;
-    ctx.fillStyle   = flash ? '#FF6644' : this.color;
-    ctx.beginPath(); ctx.roundRect(-this.width/2, -this.height/2, this.width, this.height, 5); ctx.fill();
-
-    // Windshield (front)
-    ctx.fillStyle = 'rgba(180,230,255,0.36)';
-    ctx.beginPath(); ctx.roundRect(this.width/2 - 19, -this.height/2 + 3, 15, this.height - 6, 3); ctx.fill();
-    // Rear window
-    ctx.fillStyle = 'rgba(180,230,255,0.20)';
-    ctx.beginPath(); ctx.roundRect(-this.width/2 + 4, -this.height/2 + 3, 11, this.height - 6, 3); ctx.fill();
-    // Roof panel (darker)
-    ctx.fillStyle = 'rgba(0,0,0,0.22)';
-    ctx.beginPath(); ctx.roundRect(-this.width/2 + 16, -this.height/2 + 4, this.width - 30, this.height - 8, 3); ctx.fill();
-
-    // Wheels
-    ctx.fillStyle = '#161616'; ctx.shadowBlur = 0;
-    const wx = this.width / 2 - 4, wy = this.height / 2 + 1;
-    for (const [sx2, sy2] of [[-wx, -wy - 1], [-wx, wy - 6], [wx - 9, -wy - 1], [wx - 9, wy - 6]]) {
-      ctx.beginPath(); ctx.roundRect(sx2, sy2, 10, 7, 2); ctx.fill();
+    // Armor rivets on south wall
+    if (isArmored) {
+      ctx.fillStyle = '#6a7a8a';
+      for (let ri = -2; ri <= 2; ri++) {
+        ctx.beginPath(); ctx.arc(ri * (hw * 0.46), hh + VH * 0.5, 1.8, 0, Math.PI * 2); ctx.fill();
+      }
     }
 
-    // Headlights
-    ctx.fillStyle = '#FFFFDD'; ctx.shadowColor = '#FFFF88'; ctx.shadowBlur = 18;
-    ctx.beginPath(); ctx.arc(this.width/2 - 5, -this.height/2 + 4, 3.5, 0, Math.PI * 2); ctx.fill();
-    ctx.beginPath(); ctx.arc(this.width/2 - 5,  this.height/2 - 4, 3.5, 0, Math.PI * 2); ctx.fill();
-    // Taillights
-    ctx.fillStyle = '#FF2200'; ctx.shadowColor = '#FF2200'; ctx.shadowBlur = 10;
-    ctx.beginPath(); ctx.arc(-this.width/2 + 5, -this.height/2 + 4, 2.5, 0, Math.PI * 2); ctx.fill();
-    ctx.beginPath(); ctx.arc(-this.width/2 + 5,  this.height/2 - 4, 2.5, 0, Math.PI * 2); ctx.fill();
+    // ── Body top face ─────────────────────────────────────────
+    const bodyG = ctx.createLinearGradient(-hw, -hh, hw * 0.6, hh);
+    if (flash) {
+      bodyG.addColorStop(0, '#FF8866'); bodyG.addColorStop(1, '#CC3322');
+    } else {
+      bodyG.addColorStop(0, this._lightenVehicleColor(this.color, 1.38));
+      bodyG.addColorStop(0.55, this.color);
+      bodyG.addColorStop(1, this._darkenVehicleColor(this.color, 0.82));
+    }
+    ctx.shadowColor = flash ? '#FF4444' : this.color;
+    ctx.shadowBlur  = flash ? 22 : 8;
+    ctx.fillStyle   = bodyG;
+    if (isSports) {
+      // Wedge: wider front, tapered rear
+      ctx.beginPath();
+      ctx.moveTo(-hw, hh * 0.82); ctx.lineTo(-hw * 0.82, hh);
+      ctx.lineTo(hw, hh);          ctx.lineTo(hw, -hh);
+      ctx.lineTo(-hw, -hh * 0.78); ctx.closePath(); ctx.fill();
+    } else {
+      ctx.beginPath(); ctx.roundRect(-hw, -hh, this.width, this.height, isArmored ? 2 : 5); ctx.fill();
+    }
+    ctx.shadowBlur = 0;
 
+    // ── Windshield (front = +X in rotated space) ──────────────
+    const wsTint = isArmored ? 'rgba(80,130,150,0.42)' : 'rgba(175,235,255,0.42)';
+    ctx.fillStyle = wsTint;
+    if (isSports) {
+      ctx.beginPath();
+      ctx.moveTo(hw - 21, -hh + 3); ctx.lineTo(hw - 4, -hh + 3);
+      ctx.lineTo(hw - 4, hh - 3);   ctx.lineTo(hw - 21, hh - 3);
+      ctx.closePath(); ctx.fill();
+    } else if (isArmored) {
+      ctx.beginPath(); ctx.roundRect(hw - 18, -hh + 5, 12, this.height - 10, 1); ctx.fill();
+    } else {
+      ctx.beginPath(); ctx.roundRect(hw - 21, -hh + 3, 16, this.height - 6, 3); ctx.fill();
+    }
+    // Glass glare strip
+    ctx.fillStyle = 'rgba(255,255,255,0.24)';
+    ctx.beginPath(); ctx.roundRect(hw - 19, -hh + 4, 4, this.height * 0.36, 1); ctx.fill();
+
+    // ── Rear window (-X) ─────────────────────────────────────
+    if (!isSports) {
+      ctx.fillStyle = 'rgba(140,205,230,0.18)';
+      ctx.beginPath(); ctx.roundRect(-hw + 4, -hh + 4, isArmored ? 8 : 11, this.height - 8, 2); ctx.fill();
+    }
+
+    // ── Roof cabin ────────────────────────────────────────────
+    ctx.fillStyle = 'rgba(0,0,0,0.28)';
+    if (isSports) {
+      ctx.beginPath(); ctx.roundRect(-hw * 0.28, -hh + 3, hw * 0.68, this.height - 6, 3); ctx.fill();
+    } else {
+      const rfX = -hw + (isArmored ? 14 : 18);
+      const rfW = this.width - (isArmored ? 24 : 36);
+      ctx.beginPath(); ctx.roundRect(rfX, -hh + 4, rfW, this.height - 8, 3); ctx.fill();
+    }
+
+    // ── Chrome trim lines ─────────────────────────────────────
+    ctx.strokeStyle = 'rgba(215,228,242,0.52)'; ctx.lineWidth = 1.0; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(-hw + 5, -hh + 1.2); ctx.lineTo(hw - 5, -hh + 1.2); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(-hw + 5,  hh - 1.2); ctx.lineTo(hw - 5,  hh - 1.2); ctx.stroke();
+
+    // ── Armor plate lines ─────────────────────────────────────
+    if (isArmored) {
+      ctx.strokeStyle = 'rgba(75,100,120,0.55)'; ctx.lineWidth = 1.4;
+      for (const sy3 of [-hh * 0.52, hh * 0.52]) {
+        ctx.beginPath(); ctx.moveTo(-hw + 14, sy3); ctx.lineTo(hw - 20, sy3); ctx.stroke();
+      }
+      ctx.strokeStyle = 'rgba(55,75,95,0.38)'; ctx.lineWidth = 0.9;
+      ctx.beginPath(); ctx.moveTo(0, -hh + 3); ctx.lineTo(0, hh - 3); ctx.stroke();
+    }
+
+    // ── Spoiler (sports only) ─────────────────────────────────
+    if (isSports) {
+      ctx.fillStyle = this._darkenVehicleColor(this.color, 0.62);
+      ctx.beginPath(); ctx.roundRect(-hw - 4, -hh * 0.68, 5, hh * 1.36, 1); ctx.fill();
+      ctx.fillStyle = this._darkenVehicleColor(this.color, 0.50);
+      ctx.beginPath(); ctx.roundRect(-hw - 3.5, -hh * 0.72, 7.5, 2.8, 1); ctx.fill();
+    }
+
+    // ── Wheels ────────────────────────────────────────────────
+    const wWh = isArmored ? 12 : isHeavy ? 11 : 9;
+    const wHh = isArmored ? 8  : isHeavy ? 7  : 6;
+    const wxo = hw - 4, wyo = hh + 1;
+    for (const [wX, wY] of [[-wxo + wWh/2, -wyo + wHh/2], [-wxo + wWh/2, wyo - wHh/2 - 1],
+                              [wxo - wWh/2 - 1, -wyo + wHh/2], [wxo - wWh/2 - 1, wyo - wHh/2 - 1]]) {
+      // Tire
+      ctx.fillStyle = '#111';
+      ctx.beginPath(); ctx.ellipse(wX, wY, wWh / 2 + 1.2, wHh / 2 + 1.2, 0, 0, Math.PI * 2); ctx.fill();
+      // Rim
+      ctx.fillStyle = isArmored ? '#5a6a7a' : '#C4CDD6';
+      ctx.beginPath(); ctx.ellipse(wX, wY, wWh / 2 - 0.8, wHh / 2 - 0.8, 0, 0, Math.PI * 2); ctx.fill();
+      // Hub
+      ctx.fillStyle = '#8a8a8a';
+      ctx.beginPath(); ctx.arc(wX, wY, 1.6, 0, Math.PI * 2); ctx.fill();
+    }
+
+    // ── Headlights ────────────────────────────────────────────
+    const hlY1 = -hh + (isArmored ? 5 : 4), hlY2 = hh - (isArmored ? 5 : 4);
+    ctx.fillStyle = flash ? 'rgba(255,255,180,0.5)' : 'rgba(255,255,210,1)';
+    ctx.shadowColor = '#FFFF88'; ctx.shadowBlur = 22;
+    ctx.beginPath(); ctx.ellipse(hw - 5, hlY1, 3.8, isArmored ? 2.5 : 3.2, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(hw - 5, hlY2, 3.8, isArmored ? 2.5 : 3.2, 0, 0, Math.PI * 2); ctx.fill();
+    // Light beams
+    ctx.shadowBlur = 0; ctx.fillStyle = 'rgba(255,255,180,0.08)';
+    ctx.beginPath(); ctx.moveTo(hw - 3, hlY1 - 2); ctx.lineTo(hw + 42, hlY1 - 13); ctx.lineTo(hw + 42, hlY1 + 13); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(hw - 3, hlY2 - 2); ctx.lineTo(hw + 42, hlY2 - 13); ctx.lineTo(hw + 42, hlY2 + 13); ctx.closePath(); ctx.fill();
+
+    // ── Taillights ────────────────────────────────────────────
+    ctx.fillStyle = '#FF2200'; ctx.shadowColor = '#FF2200'; ctx.shadowBlur = 10;
+    ctx.beginPath(); ctx.ellipse(-hw + 5, hlY1, 2.6, 2.0, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(-hw + 5, hlY2, 2.6, 2.0, 0, 0, Math.PI * 2); ctx.fill();
+
+    // ── Exhaust ───────────────────────────────────────────────
+    if (!isArmored) {
+      ctx.fillStyle = '#1c1c1c'; ctx.shadowBlur = 0;
+      ctx.beginPath(); ctx.ellipse(-hw + 3, hh * (isSports ? 0.58 : 0.42), 3.2, 2, 0, 0, Math.PI * 2); ctx.fill();
+      if (isSports) {
+        ctx.beginPath(); ctx.ellipse(-hw + 3, -hh * 0.58, 3.2, 2, 0, 0, Math.PI * 2); ctx.fill();
+      }
+    }
+
+    ctx.shadowBlur = 0;
     ctx.restore();
 
-    // HP bar (only when damaged)
+    // ── HP bar ────────────────────────────────────────────────
     if (this.hp < this.maxHp) {
       const bw = 58, bh = 5, bx2 = this.x - bw/2, by2 = this.y - this.radius - 14;
       const pct = this.hp / this.maxHp;
@@ -554,11 +648,17 @@ class Vehicle {
     }
   }
 
-  // Darken a CSS hex colour by factor (0=black, 1=original). factor defaults to 0.58.
   _darkenVehicleColor(hex, factor = 0.58) {
     const r = Math.round(parseInt(hex.slice(1,3),16) * factor);
     const g = Math.round(parseInt(hex.slice(3,5),16) * factor);
     const b = Math.round(parseInt(hex.slice(5,7),16) * factor);
+    return `rgb(${r},${g},${b})`;
+  }
+
+  _lightenVehicleColor(hex, factor = 1.35) {
+    const r = Math.min(255, Math.round(parseInt(hex.slice(1,3),16) * factor));
+    const g = Math.min(255, Math.round(parseInt(hex.slice(3,5),16) * factor));
+    const b = Math.min(255, Math.round(parseInt(hex.slice(5,7),16) * factor));
     return `rgb(${r},${g},${b})`;
   }
 }
@@ -3447,59 +3547,128 @@ class AmbientCar {
 
   render(ctx) {
     const w = this.width, h = this.height;
+    const bs = this.bodyStyle;
     ctx.save();
     ctx.translate(this.x, this.y);
     ctx.rotate(this.angle + Math.PI / 2);
 
-    // Shadow
-    ctx.save(); ctx.globalAlpha = 0.22; ctx.fillStyle = '#000';
-    ctx.beginPath(); ctx.ellipse(3, 5, w * 0.48, h * 0.38, 0, 0, Math.PI * 2); ctx.fill();
+    // Ground shadow
+    ctx.save(); ctx.globalAlpha = 0.20; ctx.fillStyle = '#000';
+    ctx.beginPath(); ctx.ellipse(2, 5, w * 0.50, h * 0.36, 0, 0, Math.PI * 2); ctx.fill();
     ctx.restore();
 
-    // Body
-    ctx.shadowColor = this.color; ctx.shadowBlur = 5;
-    ctx.fillStyle   = this.color;
-    ctx.beginPath(); ctx.roundRect(-w/2, -h/2, w, h, 4); ctx.fill();
-
-    // Windshield / cabin
-    ctx.shadowBlur = 0;
-    if (this.bodyStyle === 2) {  // sports — low wedge
-      ctx.fillStyle = 'rgba(0,200,255,0.32)';
-      ctx.beginPath(); ctx.roundRect(-w/2 + 7, -h/2 + 2, w - 14, h - 6, 2); ctx.fill();
-    } else if (this.bodyStyle === 3) {  // van — cab + cargo
-      ctx.fillStyle = 'rgba(0,180,255,0.28)';
-      ctx.beginPath(); ctx.roundRect(-w/2 + 4, -h/2 + 2, w * 0.38, h / 2, 2); ctx.fill();
+    // ── Body with paint gradient ──────────────────────────────
+    const bG = ctx.createLinearGradient(-w/2, 0, w * 0.5, 0);
+    bG.addColorStop(0, this._acBrighten(this.color, 1.32));
+    bG.addColorStop(0.55, this.color);
+    bG.addColorStop(1, this._acDarken(this.color, 0.72));
+    ctx.shadowColor = this.color; ctx.shadowBlur = 4;
+    ctx.fillStyle = bG;
+    if (bs === 2) {  // sports: wedge
+      ctx.beginPath();
+      ctx.moveTo(-w/2, h/2 * 0.78); ctx.lineTo(-w/2 * 0.82, h/2);
+      ctx.lineTo(w/2, h/2);          ctx.lineTo(w/2, -h/2);
+      ctx.lineTo(-w/2, -h/2 * 0.74); ctx.closePath(); ctx.fill();
+    } else if (bs === 1) {  // SUV: boxy, slightly taller
+      ctx.beginPath(); ctx.roundRect(-w/2, -h/2, w, h, 2); ctx.fill();
     } else {
-      ctx.fillStyle = 'rgba(0,200,255,0.28)';
-      ctx.beginPath(); ctx.roundRect(-w/2 + 5, -h/2 + 2, w - 10, h / 2, 2); ctx.fill();
+      ctx.beginPath(); ctx.roundRect(-w/2, -h/2, w, h, 4); ctx.fill();
+    }
+    ctx.shadowBlur = 0;
+
+    // ── Windshield ────────────────────────────────────────────
+    if (bs === 3) {  // van: front cab slit
+      ctx.fillStyle = 'rgba(160,220,255,0.30)';
+      ctx.beginPath(); ctx.roundRect(-w/2 + 3, -h/2 + 2, w * 0.36, h/2 - 1, 1); ctx.fill();
+    } else {
+      ctx.fillStyle = 'rgba(175,235,255,0.38)';
+      ctx.beginPath(); ctx.roundRect(w/2 - 17, -h/2 + 2, 13, h - 4, 2); ctx.fill();
+      // Glare
+      ctx.fillStyle = 'rgba(255,255,255,0.22)';
+      ctx.beginPath(); ctx.roundRect(w/2 - 16, -h/2 + 3, 3.5, h * 0.34, 1); ctx.fill();
     }
 
-    // Taxi sign
-    if (this.bodyStyle === 4) {
-      ctx.fillStyle = '#FFCC00'; ctx.shadowColor = '#FFCC00'; ctx.shadowBlur = 6;
-      ctx.beginPath(); ctx.roundRect(-8, -h/2 - 5, 16, 5, 2); ctx.fill();
+    // ── Rear window ───────────────────────────────────────────
+    if (bs !== 3) {
+      ctx.fillStyle = 'rgba(140,200,230,0.16)';
+      ctx.beginPath(); ctx.roundRect(-w/2 + 3, -h/2 + 2, 9, h - 4, 1); ctx.fill();
+    }
+
+    // ── Roof cabin ────────────────────────────────────────────
+    ctx.fillStyle = 'rgba(0,0,0,0.24)';
+    if (bs === 3) {  // van: cargo bay darker
+      ctx.beginPath(); ctx.roundRect(w * 0.05, -h/2 + 2, w * 0.36, h - 4, 1); ctx.fill();
+    } else if (bs === 2) {  // sports: low center cabin
+      ctx.beginPath(); ctx.roundRect(-w * 0.14, -h/2 + 2, w * 0.34, h - 4, 2); ctx.fill();
+    } else {
+      ctx.beginPath(); ctx.roundRect(-w/2 + 14, -h/2 + 2, w - 26, h - 4, 2); ctx.fill();
+    }
+
+    // ── Chrome trim ───────────────────────────────────────────
+    ctx.strokeStyle = 'rgba(210,226,240,0.48)'; ctx.lineWidth = 0.8; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(-w/2 + 4, -h/2 + 1); ctx.lineTo(w/2 - 4, -h/2 + 1); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(-w/2 + 4,  h/2 - 1); ctx.lineTo(w/2 - 4,  h/2 - 1); ctx.stroke();
+
+    // ── Taxi sign ─────────────────────────────────────────────
+    if (bs === 4) {
+      ctx.fillStyle = '#FFCC00'; ctx.shadowColor = '#FFCC00'; ctx.shadowBlur = 9;
+      ctx.beginPath(); ctx.roundRect(-9, -h/2 - 6, 18, 6, 2); ctx.fill();
       ctx.shadowBlur = 0;
+      ctx.fillStyle = '#000'; ctx.font = 'bold 4px monospace';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('TAXI', 0, -h/2 - 3);
+      ctx.textBaseline = 'alphabetic';
     }
 
-    // Wheels
-    ctx.fillStyle = '#1a1a1a';
-    const ww = 9, wh = 5;
-    const wx2 = w/2 - 3, wy2 = h/2;
-    for (const [sx, sy] of [[-wx2, -wy2 + 1], [-wx2, wy2 - 6], [wx2 - ww, -wy2 + 1], [wx2 - ww, wy2 - 6]]) {
-      ctx.beginPath(); ctx.roundRect(sx, sy, ww, wh, 1.5); ctx.fill();
+    // ── Spoiler (sports) ──────────────────────────────────────
+    if (bs === 2) {
+      ctx.fillStyle = this._acDarken(this.color, 0.60);
+      ctx.beginPath(); ctx.roundRect(-w/2 - 4, -h/2 * 0.62, 4, h * 1.24, 1); ctx.fill();
+      ctx.fillStyle = this._acDarken(this.color, 0.50);
+      ctx.beginPath(); ctx.roundRect(-w/2 - 3.5, -h/2 * 0.68, 6.5, 2.4, 1); ctx.fill();
     }
 
-    // Headlights (front = negative y after rotation)
-    const blink = this._lightT % 1 < 0.5 ? 1 : 0.7;
-    ctx.fillStyle = `rgba(255,255,200,${blink})`; ctx.shadowColor = '#FFFF88'; ctx.shadowBlur = 14;
-    ctx.beginPath(); ctx.arc(-w/2 + 5, -h/2 + 4, 2.5, 0, Math.PI * 2); ctx.fill();
-    ctx.beginPath(); ctx.arc(-w/2 + 5,  h/2 - 4, 2.5, 0, Math.PI * 2); ctx.fill();
+    // ── Wheels ────────────────────────────────────────────────
+    const ww2 = 7, wh2 = 4.5;
+    const wxo2 = w/2 - 3.5, wyo2 = h/2 - 0.5;
+    for (const [wX, wY] of [[-wxo2 + ww2/2, -wyo2 + wh2/2], [-wxo2 + ww2/2, wyo2 - wh2/2],
+                              [wxo2 - ww2/2 - 1, -wyo2 + wh2/2], [wxo2 - ww2/2 - 1, wyo2 - wh2/2]]) {
+      // Tire
+      ctx.fillStyle = '#181818';
+      ctx.beginPath(); ctx.ellipse(wX, wY, ww2/2 + 0.9, wh2/2 + 0.9, 0, 0, Math.PI * 2); ctx.fill();
+      // Rim
+      ctx.fillStyle = bs === 1 ? '#8898A8' : '#C0CAD2';
+      ctx.beginPath(); ctx.ellipse(wX, wY, ww2/2 - 0.7, wh2/2 - 0.7, 0, 0, Math.PI * 2); ctx.fill();
+      // Hub
+      ctx.fillStyle = '#777';
+      ctx.beginPath(); ctx.arc(wX, wY, 1.1, 0, Math.PI * 2); ctx.fill();
+    }
 
-    // Taillights
-    ctx.fillStyle = '#FF1100'; ctx.shadowColor = '#FF0000'; ctx.shadowBlur = 8;
-    ctx.beginPath(); ctx.arc(w/2 - 5, -h/2 + 4, 2, 0, Math.PI * 2); ctx.fill();
-    ctx.beginPath(); ctx.arc(w/2 - 5,  h/2 - 4, 2, 0, Math.PI * 2); ctx.fill();
+    // ── Headlights (front = -y in rotated space) ──────────────
+    const blink = this._lightT % 1.2 < 0.9 ? 1 : 0.6;
+    ctx.fillStyle = `rgba(255,255,205,${blink})`; ctx.shadowColor = '#FFFF88'; ctx.shadowBlur = 13;
+    ctx.beginPath(); ctx.ellipse(-w/2 + 4, -h/2 + 3, 2.8, 1.9, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(-w/2 + 4,  h/2 - 3, 2.8, 1.9, 0, 0, Math.PI * 2); ctx.fill();
 
+    // ── Taillights ────────────────────────────────────────────
+    ctx.fillStyle = '#FF1100'; ctx.shadowColor = '#FF0000'; ctx.shadowBlur = 7;
+    ctx.beginPath(); ctx.ellipse(w/2 - 4, -h/2 + 3, 2.2, 1.5, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(w/2 - 4,  h/2 - 3, 2.2, 1.5, 0, 0, Math.PI * 2); ctx.fill();
+
+    ctx.shadowBlur = 0;
     ctx.restore();
+  }
+
+  _acBrighten(hex, f) {
+    const r = Math.min(255, Math.round(parseInt(hex.slice(1,3),16) * f));
+    const g = Math.min(255, Math.round(parseInt(hex.slice(3,5),16) * f));
+    const b = Math.min(255, Math.round(parseInt(hex.slice(5,7),16) * f));
+    return `rgb(${r},${g},${b})`;
+  }
+  _acDarken(hex, f) {
+    const r = Math.round(parseInt(hex.slice(1,3),16) * f);
+    const g = Math.round(parseInt(hex.slice(3,5),16) * f);
+    const b = Math.round(parseInt(hex.slice(5,7),16) * f);
+    return `rgb(${r},${g},${b})`;
   }
 }
