@@ -294,23 +294,29 @@ class Bullet {
   }
 
   render(ctx) {
+    // Glowing trail
     for (let i = 0; i < this.trail.length; i++) {
       const t = this.trail[i];
       ctx.save();
-      ctx.globalAlpha = (i / this.trail.length) * 0.35;
+      ctx.globalAlpha = (i / this.trail.length) * 0.32;
       ctx.fillStyle = this.color;
       ctx.beginPath();
-      ctx.arc(t.x, t.y, this.radius * 0.55, 0, Math.PI * 2);
+      ctx.arc(t.x, t.y, this.radius * 0.5, 0, Math.PI * 2);
       ctx.fill();
       ctx.restore();
     }
+    // Sphere: radial gradient bright top-left → body colour → dark edge
     ctx.save();
-    ctx.shadowColor = this.color; ctx.shadowBlur = 16;
-    ctx.fillStyle = this.color;
+    ctx.shadowColor = this.color; ctx.shadowBlur = 18;
+    const sg = ctx.createRadialGradient(
+      this.x - this.radius * 0.32, this.y - this.radius * 0.38, 0.5,
+      this.x, this.y, this.radius
+    );
+    sg.addColorStop(0,   '#ffffff');
+    sg.addColorStop(0.3, this.color);
+    sg.addColorStop(1,   this.color + '55');
+    ctx.fillStyle = sg;
     ctx.beginPath(); ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2); ctx.fill();
-    ctx.shadowBlur = 4;
-    ctx.fillStyle = '#fff';
-    ctx.beginPath(); ctx.arc(this.x, this.y, this.radius * 0.4, 0, Math.PI * 2); ctx.fill();
     ctx.restore();
   }
 }
@@ -466,50 +472,169 @@ class Vehicle {
       return;
     }
 
-    // Shadow
-    ctx.save(); ctx.globalAlpha = 0.28; ctx.fillStyle = '#000';
+    const flash     = this._damageFlash > 0;
+    const isSports  = this.speed >= 400 && !this.bulletproof;
+    const isHeavy   = this.radius >= 31 && !this.bulletproof;
+    const isArmored = !!this.bulletproof;
+
+    // ── Ground shadow ─────────────────────────────────────────
+    ctx.save(); ctx.globalAlpha = 0.32; ctx.fillStyle = '#000';
     ctx.beginPath();
-    ctx.ellipse(this.x + 5, this.y + 7, this.width * 0.47, this.height * 0.38, this.angle, 0, Math.PI * 2);
+    ctx.ellipse(this.x + 7, this.y + this.height * 0.45 + 8,
+                this.width * 0.52, this.height * 0.28, this.angle, 0, Math.PI * 2);
     ctx.fill(); ctx.restore();
 
-    // Body
     ctx.save();
     ctx.translate(this.x, this.y); ctx.rotate(this.angle);
-    const flash = this._damageFlash > 0;
-    ctx.shadowColor = flash ? '#FF4444' : this.color;
-    ctx.shadowBlur  = flash ? 22 : 10;
-    ctx.fillStyle   = flash ? '#FF6644' : this.color;
-    ctx.beginPath(); ctx.roundRect(-this.width/2, -this.height/2, this.width, this.height, 5); ctx.fill();
+    const hw = this.width / 2, hh = this.height / 2;
 
-    // Windshield (front)
-    ctx.fillStyle = 'rgba(180,230,255,0.36)';
-    ctx.beginPath(); ctx.roundRect(this.width/2 - 19, -this.height/2 + 3, 15, this.height - 6, 3); ctx.fill();
-    // Rear window
-    ctx.fillStyle = 'rgba(180,230,255,0.20)';
-    ctx.beginPath(); ctx.roundRect(-this.width/2 + 4, -this.height/2 + 3, 11, this.height - 6, 3); ctx.fill();
-    // Roof panel (darker)
-    ctx.fillStyle = 'rgba(0,0,0,0.22)';
-    ctx.beginPath(); ctx.roundRect(-this.width/2 + 16, -this.height/2 + 4, this.width - 30, this.height - 8, 3); ctx.fill();
-
-    // Wheels
-    ctx.fillStyle = '#161616'; ctx.shadowBlur = 0;
-    const wx = this.width / 2 - 4, wy = this.height / 2 + 1;
-    for (const [sx2, sy2] of [[-wx, -wy - 1], [-wx, wy - 6], [wx - 9, -wy - 1], [wx - 9, wy - 6]]) {
-      ctx.beginPath(); ctx.roundRect(sx2, sy2, 10, 7, 2); ctx.fill();
+    // ── Pseudo-3D south wall ──────────────────────────────────
+    const VH = isArmored ? 12 : isHeavy ? 10 : 7;
+    ctx.fillStyle = flash ? '#CC3322' : this._darkenVehicleColor(this.color);
+    ctx.beginPath();
+    ctx.moveTo(-hw, hh); ctx.lineTo(hw, hh);
+    ctx.lineTo(hw, hh + VH); ctx.lineTo(-hw, hh + VH);
+    ctx.closePath(); ctx.fill();
+    // East face
+    ctx.fillStyle = flash ? '#DD4433' : this._darkenVehicleColor(this.color, 0.72);
+    ctx.beginPath();
+    ctx.moveTo(hw, -hh); ctx.lineTo(hw, hh);
+    ctx.lineTo(hw + VH * 0.55, hh + VH * 0.3);
+    ctx.lineTo(hw + VH * 0.55, -hh + VH * 0.3);
+    ctx.closePath(); ctx.fill();
+    // Armor rivets on south wall
+    if (isArmored) {
+      ctx.fillStyle = '#6a7a8a';
+      for (let ri = -2; ri <= 2; ri++) {
+        ctx.beginPath(); ctx.arc(ri * (hw * 0.46), hh + VH * 0.5, 1.8, 0, Math.PI * 2); ctx.fill();
+      }
     }
 
-    // Headlights
-    ctx.fillStyle = '#FFFFDD'; ctx.shadowColor = '#FFFF88'; ctx.shadowBlur = 18;
-    ctx.beginPath(); ctx.arc(this.width/2 - 5, -this.height/2 + 4, 3.5, 0, Math.PI * 2); ctx.fill();
-    ctx.beginPath(); ctx.arc(this.width/2 - 5,  this.height/2 - 4, 3.5, 0, Math.PI * 2); ctx.fill();
-    // Taillights
-    ctx.fillStyle = '#FF2200'; ctx.shadowColor = '#FF2200'; ctx.shadowBlur = 10;
-    ctx.beginPath(); ctx.arc(-this.width/2 + 5, -this.height/2 + 4, 2.5, 0, Math.PI * 2); ctx.fill();
-    ctx.beginPath(); ctx.arc(-this.width/2 + 5,  this.height/2 - 4, 2.5, 0, Math.PI * 2); ctx.fill();
+    // ── Body top face ─────────────────────────────────────────
+    const bodyG = ctx.createLinearGradient(-hw, -hh, hw * 0.6, hh);
+    if (flash) {
+      bodyG.addColorStop(0, '#FF8866'); bodyG.addColorStop(1, '#CC3322');
+    } else {
+      bodyG.addColorStop(0, this._lightenVehicleColor(this.color, 1.38));
+      bodyG.addColorStop(0.55, this.color);
+      bodyG.addColorStop(1, this._darkenVehicleColor(this.color, 0.82));
+    }
+    ctx.shadowColor = flash ? '#FF4444' : this.color;
+    ctx.shadowBlur  = flash ? 22 : 8;
+    ctx.fillStyle   = bodyG;
+    if (isSports) {
+      // Wedge: wider front, tapered rear
+      ctx.beginPath();
+      ctx.moveTo(-hw, hh * 0.82); ctx.lineTo(-hw * 0.82, hh);
+      ctx.lineTo(hw, hh);          ctx.lineTo(hw, -hh);
+      ctx.lineTo(-hw, -hh * 0.78); ctx.closePath(); ctx.fill();
+    } else {
+      ctx.beginPath(); ctx.roundRect(-hw, -hh, this.width, this.height, isArmored ? 2 : 5); ctx.fill();
+    }
+    ctx.shadowBlur = 0;
 
+    // ── Windshield (front = +X in rotated space) ──────────────
+    const wsTint = isArmored ? 'rgba(80,130,150,0.42)' : 'rgba(175,235,255,0.42)';
+    ctx.fillStyle = wsTint;
+    if (isSports) {
+      ctx.beginPath();
+      ctx.moveTo(hw - 21, -hh + 3); ctx.lineTo(hw - 4, -hh + 3);
+      ctx.lineTo(hw - 4, hh - 3);   ctx.lineTo(hw - 21, hh - 3);
+      ctx.closePath(); ctx.fill();
+    } else if (isArmored) {
+      ctx.beginPath(); ctx.roundRect(hw - 18, -hh + 5, 12, this.height - 10, 1); ctx.fill();
+    } else {
+      ctx.beginPath(); ctx.roundRect(hw - 21, -hh + 3, 16, this.height - 6, 3); ctx.fill();
+    }
+    // Glass glare strip
+    ctx.fillStyle = 'rgba(255,255,255,0.24)';
+    ctx.beginPath(); ctx.roundRect(hw - 19, -hh + 4, 4, this.height * 0.36, 1); ctx.fill();
+
+    // ── Rear window (-X) ─────────────────────────────────────
+    if (!isSports) {
+      ctx.fillStyle = 'rgba(140,205,230,0.18)';
+      ctx.beginPath(); ctx.roundRect(-hw + 4, -hh + 4, isArmored ? 8 : 11, this.height - 8, 2); ctx.fill();
+    }
+
+    // ── Roof cabin ────────────────────────────────────────────
+    ctx.fillStyle = 'rgba(0,0,0,0.28)';
+    if (isSports) {
+      ctx.beginPath(); ctx.roundRect(-hw * 0.28, -hh + 3, hw * 0.68, this.height - 6, 3); ctx.fill();
+    } else {
+      const rfX = -hw + (isArmored ? 14 : 18);
+      const rfW = this.width - (isArmored ? 24 : 36);
+      ctx.beginPath(); ctx.roundRect(rfX, -hh + 4, rfW, this.height - 8, 3); ctx.fill();
+    }
+
+    // ── Chrome trim lines ─────────────────────────────────────
+    ctx.strokeStyle = 'rgba(215,228,242,0.52)'; ctx.lineWidth = 1.0; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(-hw + 5, -hh + 1.2); ctx.lineTo(hw - 5, -hh + 1.2); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(-hw + 5,  hh - 1.2); ctx.lineTo(hw - 5,  hh - 1.2); ctx.stroke();
+
+    // ── Armor plate lines ─────────────────────────────────────
+    if (isArmored) {
+      ctx.strokeStyle = 'rgba(75,100,120,0.55)'; ctx.lineWidth = 1.4;
+      for (const sy3 of [-hh * 0.52, hh * 0.52]) {
+        ctx.beginPath(); ctx.moveTo(-hw + 14, sy3); ctx.lineTo(hw - 20, sy3); ctx.stroke();
+      }
+      ctx.strokeStyle = 'rgba(55,75,95,0.38)'; ctx.lineWidth = 0.9;
+      ctx.beginPath(); ctx.moveTo(0, -hh + 3); ctx.lineTo(0, hh - 3); ctx.stroke();
+    }
+
+    // ── Spoiler (sports only) ─────────────────────────────────
+    if (isSports) {
+      ctx.fillStyle = this._darkenVehicleColor(this.color, 0.62);
+      ctx.beginPath(); ctx.roundRect(-hw - 4, -hh * 0.68, 5, hh * 1.36, 1); ctx.fill();
+      ctx.fillStyle = this._darkenVehicleColor(this.color, 0.50);
+      ctx.beginPath(); ctx.roundRect(-hw - 3.5, -hh * 0.72, 7.5, 2.8, 1); ctx.fill();
+    }
+
+    // ── Wheels ────────────────────────────────────────────────
+    const wWh = isArmored ? 12 : isHeavy ? 11 : 9;
+    const wHh = isArmored ? 8  : isHeavy ? 7  : 6;
+    const wxo = hw - 4, wyo = hh + 1;
+    for (const [wX, wY] of [[-wxo + wWh/2, -wyo + wHh/2], [-wxo + wWh/2, wyo - wHh/2 - 1],
+                              [wxo - wWh/2 - 1, -wyo + wHh/2], [wxo - wWh/2 - 1, wyo - wHh/2 - 1]]) {
+      // Tire
+      ctx.fillStyle = '#111';
+      ctx.beginPath(); ctx.ellipse(wX, wY, wWh / 2 + 1.2, wHh / 2 + 1.2, 0, 0, Math.PI * 2); ctx.fill();
+      // Rim
+      ctx.fillStyle = isArmored ? '#5a6a7a' : '#C4CDD6';
+      ctx.beginPath(); ctx.ellipse(wX, wY, wWh / 2 - 0.8, wHh / 2 - 0.8, 0, 0, Math.PI * 2); ctx.fill();
+      // Hub
+      ctx.fillStyle = '#8a8a8a';
+      ctx.beginPath(); ctx.arc(wX, wY, 1.6, 0, Math.PI * 2); ctx.fill();
+    }
+
+    // ── Headlights ────────────────────────────────────────────
+    const hlY1 = -hh + (isArmored ? 5 : 4), hlY2 = hh - (isArmored ? 5 : 4);
+    ctx.fillStyle = flash ? 'rgba(255,255,180,0.5)' : 'rgba(255,255,210,1)';
+    ctx.shadowColor = '#FFFF88'; ctx.shadowBlur = 22;
+    ctx.beginPath(); ctx.ellipse(hw - 5, hlY1, 3.8, isArmored ? 2.5 : 3.2, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(hw - 5, hlY2, 3.8, isArmored ? 2.5 : 3.2, 0, 0, Math.PI * 2); ctx.fill();
+    // Light beams
+    ctx.shadowBlur = 0; ctx.fillStyle = 'rgba(255,255,180,0.08)';
+    ctx.beginPath(); ctx.moveTo(hw - 3, hlY1 - 2); ctx.lineTo(hw + 42, hlY1 - 13); ctx.lineTo(hw + 42, hlY1 + 13); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(hw - 3, hlY2 - 2); ctx.lineTo(hw + 42, hlY2 - 13); ctx.lineTo(hw + 42, hlY2 + 13); ctx.closePath(); ctx.fill();
+
+    // ── Taillights ────────────────────────────────────────────
+    ctx.fillStyle = '#FF2200'; ctx.shadowColor = '#FF2200'; ctx.shadowBlur = 10;
+    ctx.beginPath(); ctx.ellipse(-hw + 5, hlY1, 2.6, 2.0, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(-hw + 5, hlY2, 2.6, 2.0, 0, 0, Math.PI * 2); ctx.fill();
+
+    // ── Exhaust ───────────────────────────────────────────────
+    if (!isArmored) {
+      ctx.fillStyle = '#1c1c1c'; ctx.shadowBlur = 0;
+      ctx.beginPath(); ctx.ellipse(-hw + 3, hh * (isSports ? 0.58 : 0.42), 3.2, 2, 0, 0, Math.PI * 2); ctx.fill();
+      if (isSports) {
+        ctx.beginPath(); ctx.ellipse(-hw + 3, -hh * 0.58, 3.2, 2, 0, 0, Math.PI * 2); ctx.fill();
+      }
+    }
+
+    ctx.shadowBlur = 0;
     ctx.restore();
 
-    // HP bar (only when damaged)
+    // ── HP bar ────────────────────────────────────────────────
     if (this.hp < this.maxHp) {
       const bw = 58, bh = 5, bx2 = this.x - bw/2, by2 = this.y - this.radius - 14;
       const pct = this.hp / this.maxHp;
@@ -521,6 +646,20 @@ class Vehicle {
       ctx.strokeStyle = 'rgba(255,255,255,0.18)'; ctx.lineWidth = 0.5;
       ctx.strokeRect(bx2, by2, bw, bh);
     }
+  }
+
+  _darkenVehicleColor(hex, factor = 0.58) {
+    const r = Math.round(parseInt(hex.slice(1,3),16) * factor);
+    const g = Math.round(parseInt(hex.slice(3,5),16) * factor);
+    const b = Math.round(parseInt(hex.slice(5,7),16) * factor);
+    return `rgb(${r},${g},${b})`;
+  }
+
+  _lightenVehicleColor(hex, factor = 1.35) {
+    const r = Math.min(255, Math.round(parseInt(hex.slice(1,3),16) * factor));
+    const g = Math.min(255, Math.round(parseInt(hex.slice(3,5),16) * factor));
+    const b = Math.min(255, Math.round(parseInt(hex.slice(5,7),16) * factor));
+    return `rgb(${r},${g},${b})`;
   }
 }
 
@@ -567,6 +706,12 @@ class Player {
     this._custEffect = _cust.effect || 'none';
     this._effectT    = 0;
 
+    // ── Active Buffs (building interactions) ──────────────
+    // Map<id, {name,icon,color,remaining,maxDur, speedAdd?,fireMult?,dmgMult?,armorAdd?,
+    //          regenAdd?,dodgeAdd?,moneyMult?,noPolice?,botsConfused?,piercingBullets?,
+    //          explosiveBullets?,leechAdd?,pendingMoney?}>
+    this._buffs = new Map();
+
     // ── Animal Companion ──────────────────────────────────
     this.companion = charData.companion ? new AnimalCompanion(charData.companion) : null;
     if (this.companion) { this.companion.x = spawnX; this.companion.y = spawnY; }
@@ -599,13 +744,17 @@ class Player {
 
   _activeDamage() {
     const base = this._weapon.damage > 0 ? this._weapon.damage : this.charData.damage;
-    return Math.max(1, Math.round(base * this.damageMult));
+    let mult = this.damageMult;
+    for (const b of this._buffs.values()) if (b.dmgMult) mult *= b.dmgMult;
+    return Math.max(1, Math.round(base * mult));
   }
 
   _activeFireRate() {
     const base = this._weapon.fireRate > 0 ? this._weapon.fireRate : this.charData.fireRate;
     const ammoBonusMult = this._ammoBoost > 0 ? Math.max(0.35, 0.72 / (this._ammoCapMult || 1)) : 1.0;
-    return base * this.fireRateMult * ammoBonusMult;
+    let rate = base * this.fireRateMult * ammoBonusMult;
+    for (const b of this._buffs.values()) if (b.fireMult) rate *= b.fireMult;
+    return Math.max(35, rate);
   }
 
   _activeSpread()      { return this._weapon.spread; }
@@ -649,8 +798,18 @@ class Player {
     if (input.isDown('KeyA') || input.isDown('ArrowLeft'))  dx -= 1;
     if (input.isDown('KeyD') || input.isDown('ArrowRight')) dx += 1;
 
+    // Tick active buffs
+    if (this._buffs.size > 0) {
+      for (const [id, b] of this._buffs) {
+        b.remaining -= dt;
+        if (b.remaining <= 0) this._buffs.delete(id);
+      }
+    }
+
     const dir  = new Vec2(dx, dy).norm();
-    const dist = this.speed * dt;
+    let buffedSpd = this.speed;
+    for (const b of this._buffs.values()) if (b.speedAdd) buffedSpd += b.speedAdd;
+    const dist = buffedSpd * dt;
     if (dx !== 0 || dy !== 0) {
       this._footAnim += dt * 8;
       const nx = this.x + dir.x * dist;
@@ -667,8 +826,10 @@ class Player {
       this.fireCooldown = this._activeFireRate();
     }
 
-    if (this.regenRate > 0 && this.health < this.maxHealth) {
-      this.health = Math.min(this.maxHealth, this.health + this.regenRate * dt);
+    let totalRegen = this.regenRate;
+    for (const b of this._buffs.values()) if (b.regenAdd) totalRegen += b.regenAdd;
+    if (totalRegen > 0 && this.health < this.maxHealth) {
+      this.health = Math.min(this.maxHealth, this.health + totalRegen * dt);
     }
 
     if (this._ammoBoost > 0) this._ammoBoost -= dt;
@@ -719,8 +880,13 @@ class Player {
 
   takeDamage(amount, hud) {
     if (this.invincible > 0) return;
-    if (this._dodgeChance && Math.random() < this._dodgeChance) return 0;
-    const reduced = Math.max(1, Math.round(amount * (1 - this.armor)));
+    let dodge = this._dodgeChance || 0;
+    for (const b of this._buffs.values()) if (b.dodgeAdd) dodge += b.dodgeAdd;
+    if (dodge > 0 && Math.random() < dodge) return 0;
+    let totalArmor = this.armor;
+    for (const b of this._buffs.values()) if (b.armorAdd) totalArmor += b.armorAdd;
+    totalArmor = Math.min(0.85, totalArmor);
+    const reduced = Math.max(1, Math.round(amount * (1 - totalArmor)));
     this.health  -= reduced;
     this.invincible = 0.15;
     if (hud) hud.shake(6);
@@ -730,59 +896,121 @@ class Player {
 
   render(ctx) {
     const x = this.x, y = this.y, r = this.radius;
+    const ang = this.angle;
     const wColor = this._weaponColor();
 
+    // ── Ground shadow ──────────────────────────────────────────
     ctx.save();
-    ctx.globalAlpha = 0.28;
+    ctx.globalAlpha = 0.35;
     ctx.fillStyle = '#000';
     ctx.beginPath();
-    ctx.ellipse(x + 3, y + 5, r * 0.9, r * 0.5, 0, 0, Math.PI * 2);
+    ctx.ellipse(x + 5, y + r * 0.6, r * 1.2, r * 0.32, 0, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
 
+    // ── Humanoid body in rotated space ────────────────────────
     ctx.save();
-    ctx.shadowColor = this.color; ctx.shadowBlur = 28;
-    ctx.strokeStyle = this.color; ctx.lineWidth = 2.5; ctx.globalAlpha = 0.55;
-    ctx.beginPath(); ctx.arc(x, y, r + 5, 0, Math.PI * 2); ctx.stroke();
+    ctx.translate(x, y);
+    ctx.rotate(ang - Math.PI / 2); // character faces "up" in local space
+    const bw = r * 0.65, bh = r * 0.92, hhr = r * 0.55;
+
+    // Legs
+    for (const s of [-1, 1]) {
+      ctx.fillStyle = '#1a1a2e';
+      ctx.beginPath(); ctx.ellipse(s * r * 0.29, r * 0.32, r * 0.22, r * 0.44, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#120c06';
+      ctx.beginPath(); ctx.ellipse(s * (r * 0.3 + s * r * 0.07), r * 0.66, r * 0.26, r * 0.16, -s * 0.28, 0, Math.PI * 2); ctx.fill();
+    }
+
+    // Torso
+    const tGrad = ctx.createLinearGradient(-bw, -bh * 0.48, bw, bh * 0.38);
+    tGrad.addColorStop(0, this.color + 'EE'); tGrad.addColorStop(1, this.color + '88');
+    ctx.fillStyle = tGrad; ctx.shadowColor = this.color; ctx.shadowBlur = 14;
+    ctx.beginPath(); ctx.roundRect(-bw, -bh * 0.48, bw * 2, bh * 0.86, [bw * 0.36, bw * 0.36, bw * 0.2, bw * 0.2]); ctx.fill();
+    ctx.shadowBlur = 0;
+    // Chest plate
+    ctx.fillStyle = this.accent + '50';
+    ctx.beginPath(); ctx.roundRect(-bw * 0.5, -bh * 0.4, bw * 1.0, bh * 0.44, bw * 0.14); ctx.fill();
+    // Vest seam
+    ctx.strokeStyle = this.color + '88'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(0, -bh * 0.42); ctx.lineTo(0, bh * 0.04); ctx.stroke();
+    // Belt
+    ctx.fillStyle = '#111'; ctx.beginPath(); ctx.roundRect(-bw * 0.82, bh * 0.22, bw * 1.64, r * 0.15, 2); ctx.fill();
+    ctx.fillStyle = '#CCC'; ctx.beginPath(); ctx.roundRect(-r * 0.11, bh * 0.21, r * 0.22, r * 0.17, 2); ctx.fill();
+
+    // Off-arm (left)
+    ctx.fillStyle = this.color + 'BB';
+    ctx.beginPath(); ctx.roundRect(-bw * 1.18, -bh * 0.36, r * 0.28, r * 0.72, r * 0.1); ctx.fill();
+    ctx.fillStyle = '#FFDDBB';
+    ctx.beginPath(); ctx.ellipse(-bw * 1.06, bh * 0.18, r * 0.17, r * 0.19, 0, 0, Math.PI * 2); ctx.fill();
+
+    // Gun arm (right, angled forward)
+    ctx.fillStyle = this.color + 'BB';
+    ctx.save(); ctx.translate(bw * 1.08, -bh * 0.18); ctx.rotate(-0.44);
+    ctx.beginPath(); ctx.roundRect(-r * 0.13, -r * 0.62, r * 0.26, r * 0.66, r * 0.1); ctx.fill();
+    ctx.restore();
+    ctx.fillStyle = '#FFDDBB';
+    ctx.beginPath(); ctx.ellipse(bw * 0.88 + r * 0.23, -bh * 0.22 - r * 0.44, r * 0.17, r * 0.2, -0.44, 0, Math.PI * 2); ctx.fill();
+
+    // Head (skin)
+    const hGrad = ctx.createRadialGradient(-hhr * 0.22, -bh * 0.5 - hhr * 0.2, 1, 0, -bh * 0.5, hhr);
+    hGrad.addColorStop(0, '#FFE8CC'); hGrad.addColorStop(0.7, '#E8C89A'); hGrad.addColorStop(1, '#C8A070');
+    ctx.fillStyle = hGrad; ctx.shadowColor = this.accent; ctx.shadowBlur = 12;
+    ctx.beginPath(); ctx.arc(0, -bh * 0.5, hhr, 0, Math.PI * 2); ctx.fill();
+    ctx.shadowBlur = 0;
+    // Helmet / hair
+    ctx.fillStyle = this.color; ctx.shadowColor = this.color; ctx.shadowBlur = 8;
+    ctx.beginPath(); ctx.arc(0, -bh * 0.5, hhr * 1.02, Math.PI * 0.7, Math.PI * 2.3);
+    ctx.lineTo(0, -bh * 0.5); ctx.closePath(); ctx.fill();
+    // Visor strip
+    ctx.fillStyle = this.accent + '90';
+    ctx.beginPath(); ctx.rect(-hhr * 0.85, -bh * 0.5 - hhr * 0.1, hhr * 1.7, hhr * 0.28); ctx.fill();
+    ctx.shadowBlur = 0;
+    // Eyes
+    const ey = -bh * 0.5 + hhr * 0.06;
+    ctx.fillStyle = '#111122';
+    ctx.beginPath(); ctx.ellipse(-hhr * 0.28, ey, hhr * 0.18, hhr * 0.14, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse( hhr * 0.28, ey, hhr * 0.18, hhr * 0.14, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = this.accent; ctx.shadowColor = this.accent; ctx.shadowBlur = 5;
+    ctx.beginPath(); ctx.arc(-hhr * 0.24, ey, hhr * 0.07, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc( hhr * 0.32, ey, hhr * 0.07, 0, Math.PI * 2); ctx.fill();
+    ctx.shadowBlur = 0;
+
+    ctx.restore(); // end rotated body
+
+    // ── Outer energy ring ──────────────────────────────────────
+    ctx.save();
+    ctx.shadowColor = this.color; ctx.shadowBlur = 22;
+    ctx.strokeStyle = this.color + '66'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(x, y, r + 4, 0, Math.PI * 2); ctx.stroke();
     ctx.restore();
 
-    ctx.save();
-    ctx.shadowColor = this.color; ctx.shadowBlur = 18;
-    const grad = ctx.createRadialGradient(x - r * 0.3, y - r * 0.3, 1, x, y, r);
-    grad.addColorStop(0, this.accent);
-    grad.addColorStop(1, this.color + '99');
-    ctx.fillStyle = grad;
-    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
-    ctx.restore();
-
+    // ── Gun (world space) ─────────────────────────────────────
     const gunLen = r + 14;
-    const gx = x + Math.cos(this.angle) * gunLen;
-    const gy = y + Math.sin(this.angle) * gunLen;
+    const gx = x + Math.cos(ang) * gunLen;
+    const gy = y + Math.sin(ang) * gunLen;
+    const bx0 = x + Math.cos(ang) * (r - 2), by0 = y + Math.sin(ang) * (r - 2);
     ctx.save();
     ctx.shadowColor = wColor; ctx.shadowBlur = 12;
     if (this._weapon && this._weapon.melee) {
-      // Knife blade
-      ctx.strokeStyle = '#AADDFF'; ctx.lineWidth = 3; ctx.lineCap = 'round';
-      ctx.beginPath();
-      ctx.moveTo(x + Math.cos(this.angle) * (r - 2), y + Math.sin(this.angle) * (r - 2));
-      ctx.lineTo(gx + Math.cos(this.angle) * 10, gy + Math.sin(this.angle) * 10);
-      ctx.stroke();
-      // Blade edge
-      ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(gx, gy);
-      ctx.lineTo(gx + Math.cos(this.angle) * 10, gy + Math.sin(this.angle) * 10);
-      ctx.stroke();
+      const tipX = gx + Math.cos(ang) * 10, tipY = gy + Math.sin(ang) * 10;
+      ctx.strokeStyle = 'rgba(0,0,0,0.55)'; ctx.lineWidth = 5; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(bx0+1.2, by0+1.8); ctx.lineTo(tipX+1.2, tipY+1.8); ctx.stroke();
+      ctx.strokeStyle = '#AADDFF'; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.moveTo(bx0, by0); ctx.lineTo(tipX, tipY); ctx.stroke();
+      ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1.2;
+      ctx.beginPath(); ctx.moveTo(gx, gy); ctx.lineTo(tipX, tipY); ctx.stroke();
     } else {
-      ctx.strokeStyle = wColor; ctx.lineWidth = 5; ctx.lineCap = 'round';
-      ctx.beginPath();
-      ctx.moveTo(x + Math.cos(this.angle) * (r - 2), y + Math.sin(this.angle) * (r - 2));
-      ctx.lineTo(gx, gy);
-      ctx.stroke();
+      ctx.strokeStyle = 'rgba(0,0,0,0.60)'; ctx.lineWidth = 7; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(bx0+1.2, by0+1.8); ctx.lineTo(gx+1.2, gy+1.8); ctx.stroke();
+      ctx.strokeStyle = wColor; ctx.lineWidth = 5;
+      ctx.beginPath(); ctx.moveTo(bx0, by0); ctx.lineTo(gx, gy); ctx.stroke();
+      ctx.strokeStyle = 'rgba(255,255,255,0.32)'; ctx.lineWidth = 1.8;
+      ctx.beginPath(); ctx.moveTo(bx0-0.8, by0-0.8); ctx.lineTo(gx-0.8, gy-0.8); ctx.stroke();
       ctx.strokeStyle = '#ddd'; ctx.lineWidth = 3;
       ctx.beginPath();
-      ctx.moveTo(gx - Math.cos(this.angle) * 2, gy - Math.sin(this.angle) * 2);
-      ctx.lineTo(gx + Math.cos(this.angle) * 8, gy + Math.sin(this.angle) * 8);
+      ctx.moveTo(gx - Math.cos(ang)*2, gy - Math.sin(ang)*2);
+      ctx.lineTo(gx + Math.cos(ang)*8, gy + Math.sin(ang)*8);
       ctx.stroke();
     }
     ctx.restore();
@@ -799,17 +1027,17 @@ class Player {
         ctx.shadowColor  = '#88CCFF'; ctx.shadowBlur = 14;
         ctx.lineCap      = 'round';
         ctx.beginPath();
-        ctx.arc(x, y, swingRange, this.angle - arcSpan / 2, this.angle + arcSpan / 2);
+        ctx.arc(x, y, swingRange, ang - arcSpan / 2, ang + arcSpan / 2);
         ctx.stroke();
         // Tip glow
-        const tipX = x + Math.cos(this.angle) * swingRange;
-        const tipY = y + Math.sin(this.angle) * swingRange;
+        const tipX = x + Math.cos(ang) * swingRange;
+        const tipY = y + Math.sin(ang) * swingRange;
         ctx.fillStyle = '#DDEEFF'; ctx.shadowBlur = 20;
         ctx.beginPath(); ctx.arc(tipX, tipY, 5, 0, Math.PI * 2); ctx.fill();
         ctx.restore();
       } else {
-        const fx = x + Math.cos(this.angle) * (gunLen + 12);
-        const fy = y + Math.sin(this.angle) * (gunLen + 12);
+        const fx = x + Math.cos(ang) * (gunLen + 12);
+        const fy = y + Math.sin(ang) * (gunLen + 12);
         ctx.save();
         ctx.shadowColor = wColor; ctx.shadowBlur = 30;
         ctx.fillStyle   = '#ffffaa';
@@ -1216,293 +1444,504 @@ class Bot {
   }
 
   _renderNormal(ctx, x, y, r) {
-    // Shadow
-    ctx.save(); ctx.globalAlpha = 0.22; ctx.fillStyle = '#000';
-    ctx.beginPath(); ctx.ellipse(x+3, y+4, r*0.9, r*0.5, 0, 0, Math.PI*2); ctx.fill();
+    // Ground shadow
+    ctx.save(); ctx.globalAlpha = 0.28; ctx.fillStyle = '#000';
+    ctx.beginPath(); ctx.ellipse(x+4, y+r*0.55, r*1.1, r*0.28, 0, 0, Math.PI*2); ctx.fill();
     ctx.restore();
 
-    // Body (rotated square)
     ctx.save();
-    ctx.shadowColor = this.bodyColor; ctx.shadowBlur = 14; ctx.fillStyle = this.bodyColor;
-    ctx.translate(x, y); ctx.rotate(this._angle + Math.PI/4);
-    const s = r * 0.85;
-    ctx.beginPath(); ctx.roundRect(-s, -s, s*2, s*2, 4); ctx.fill();
-    ctx.restore();
+    ctx.translate(x, y); ctx.rotate(this._angle - Math.PI/2);
+    const bw = r*0.6, bh = r*0.88, hhr = r*0.5;
 
-    // Hex pattern
-    ctx.save();
-    ctx.strokeStyle = this.accentColor; ctx.lineWidth = 1.5; ctx.globalAlpha = 0.55;
-    ctx.translate(x, y); ctx.rotate(this._angle);
-    ctx.beginPath();
-    for (let i = 0; i < 6; i++) {
-      const a = (i/6)*Math.PI*2;
-      i === 0 ? ctx.moveTo(Math.cos(a)*r*0.4, Math.sin(a)*r*0.4)
-              : ctx.lineTo(Math.cos(a)*r*0.4, Math.sin(a)*r*0.4);
+    // Legs
+    for (const s of [-1,1]) {
+      ctx.fillStyle = '#111120';
+      ctx.beginPath(); ctx.ellipse(s*r*0.28, r*0.3, r*0.2, r*0.4, 0, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#0a0a10';
+      ctx.beginPath(); ctx.ellipse(s*r*0.3+s*r*0.06, r*0.62, r*0.23, r*0.14, -s*0.25, 0, Math.PI*2); ctx.fill();
     }
-    ctx.closePath(); ctx.stroke();
-    ctx.restore();
-
-    // Eyes
-    const eyeOpen = this._eyeBlink > 0 ? 0.1 : 1.0;
-    const fwdX = Math.cos(this._angle)*r*0.4, fwdY = Math.sin(this._angle)*r*0.4;
-    const perpX = -Math.sin(this._angle)*r*0.3, perpY = Math.cos(this._angle)*r*0.3;
-    for (let i = -1; i <= 1; i += 2) {
-      ctx.save();
-      ctx.shadowColor = '#FF0000'; ctx.shadowBlur = 12; ctx.fillStyle = '#FF2222';
-      ctx.beginPath();
-      ctx.ellipse(x+fwdX+perpX*i, y+fwdY+perpY*i, 3.5, 3.5*eyeOpen, 0, 0, Math.PI*2);
-      ctx.fill(); ctx.restore();
-    }
-
+    // Torso (hoodie)
+    const tg = ctx.createLinearGradient(-bw, -bh*0.46, bw, bh*0.36);
+    tg.addColorStop(0, this.bodyColor+'EE'); tg.addColorStop(1, this.bodyColor+'88');
+    ctx.fillStyle = tg; ctx.shadowColor = this.bodyColor; ctx.shadowBlur = 10;
+    ctx.beginPath(); ctx.roundRect(-bw, -bh*0.46, bw*2, bh*0.82, [bw*0.35, bw*0.35, bw*0.18, bw*0.18]); ctx.fill();
+    ctx.shadowBlur = 0;
+    // Pocket detail
+    ctx.fillStyle = this.bodyColor+'55'; ctx.beginPath(); ctx.roundRect(-bw*0.45, bh*0.02, bw*0.9, bh*0.24, bw*0.12); ctx.fill();
+    // Belt
+    ctx.fillStyle = '#0a0a0a'; ctx.beginPath(); ctx.roundRect(-bw*0.8, bh*0.22, bw*1.6, r*0.14, 2); ctx.fill();
+    // Off-arm
+    ctx.fillStyle = this.bodyColor+'AA';
+    ctx.beginPath(); ctx.roundRect(-bw*1.16, -bh*0.34, r*0.26, r*0.68, r*0.1); ctx.fill();
+    ctx.fillStyle = '#EEDDBB'; ctx.beginPath(); ctx.ellipse(-bw*1.04, bh*0.16, r*0.16, r*0.18, 0, 0, Math.PI*2); ctx.fill();
     // Gun arm
-    const gl = r + 12, gx = x + Math.cos(this._angle)*gl, gy = y + Math.sin(this._angle)*gl;
-    ctx.save();
-    ctx.shadowColor = '#888'; ctx.shadowBlur = 5;
-    ctx.strokeStyle = '#666'; ctx.lineWidth = 4; ctx.lineCap = 'round';
-    ctx.beginPath();
-    ctx.moveTo(x + Math.cos(this._angle)*r, y + Math.sin(this._angle)*r);
-    ctx.lineTo(gx, gy); ctx.stroke(); ctx.restore();
+    ctx.fillStyle = this.bodyColor+'AA';
+    ctx.save(); ctx.translate(bw*1.06, -bh*0.16); ctx.rotate(-0.42);
+    ctx.beginPath(); ctx.roundRect(-r*0.12, -r*0.58, r*0.24, r*0.62, r*0.1); ctx.fill(); ctx.restore();
+    // Head
+    const hg = ctx.createRadialGradient(-hhr*0.2, -bh*0.5-hhr*0.2, 1, 0, -bh*0.48, hhr);
+    hg.addColorStop(0,'#FFE8CC'); hg.addColorStop(0.7,'#E0B88A'); hg.addColorStop(1,'#C09060');
+    ctx.fillStyle = hg; ctx.beginPath(); ctx.arc(0, -bh*0.48, hhr, 0, Math.PI*2); ctx.fill();
+    // Hood / cap
+    ctx.fillStyle = this.bodyColor; ctx.shadowColor = this.bodyColor; ctx.shadowBlur = 7;
+    ctx.beginPath(); ctx.arc(0, -bh*0.48, hhr*1.04, Math.PI*0.65, Math.PI*2.35);
+    ctx.lineTo(0, -bh*0.48); ctx.closePath(); ctx.fill(); ctx.shadowBlur = 0;
+    // Cap brim forward
+    ctx.fillStyle = this.accentColor;
+    ctx.beginPath(); ctx.ellipse(0, -bh*0.48-hhr*0.92, hhr*0.7, hhr*0.18, 0, 0, Math.PI*2); ctx.fill();
+    // Glowing red eyes
+    const ey = -bh*0.48+hhr*0.08;
+    ctx.fillStyle = '#FF2222'; ctx.shadowColor = '#FF0000'; ctx.shadowBlur = 8;
+    ctx.beginPath(); ctx.ellipse(-hhr*0.27, ey, hhr*0.16, hhr*0.12, 0, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse( hhr*0.27, ey, hhr*0.16, hhr*0.12, 0, 0, Math.PI*2); ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.restore();
 
-    // Health bar
-    const bw = 40, bh = 5, bx2 = x-bw/2, by2 = y-r-14;
-    const pct = this.health / this.maxHealth;
-    ctx.fillStyle = '#1a1a1a'; ctx.fillRect(bx2, by2, bw, bh);
-    ctx.fillStyle = pct > 0.6 ? '#44FF44' : pct > 0.3 ? '#FFCC00' : '#FF4444';
-    ctx.fillRect(bx2, by2, bw*pct, bh);
-    ctx.strokeStyle = 'rgba(255,255,255,0.2)'; ctx.lineWidth = 0.5;
-    ctx.strokeRect(bx2, by2, bw, bh);
+    // Gun barrel
+    const gl = r+12, gx = x+Math.cos(this._angle)*gl, gy = y+Math.sin(this._angle)*gl;
+    const ga0x = x+Math.cos(this._angle)*r, ga0y = y+Math.sin(this._angle)*r;
+    ctx.save(); ctx.lineCap = 'round';
+    ctx.strokeStyle = 'rgba(0,0,0,0.55)'; ctx.lineWidth = 6;
+    ctx.beginPath(); ctx.moveTo(ga0x+1,ga0y+1.5); ctx.lineTo(gx+1,gy+1.5); ctx.stroke();
+    ctx.strokeStyle = this.accentColor; ctx.lineWidth = 4;
+    ctx.beginPath(); ctx.moveTo(ga0x,ga0y); ctx.lineTo(gx,gy); ctx.stroke();
+    ctx.strokeStyle = 'rgba(255,255,255,0.22)'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(ga0x-0.7,ga0y-0.7); ctx.lineTo(gx-0.7,gy-0.7); ctx.stroke();
+    ctx.restore();
+
+    this._renderHPBar(ctx, x, y, r, 40, 5);
   }
 
   _renderBig(ctx, x, y, r) {
-    // Shadow
-    ctx.save(); ctx.globalAlpha = 0.3; ctx.fillStyle = '#000';
-    ctx.beginPath(); ctx.ellipse(x+5, y+7, r*0.95, r*0.55, 0, 0, Math.PI*2); ctx.fill();
+    // Ground shadow
+    ctx.save(); ctx.globalAlpha = 0.36; ctx.fillStyle = '#000';
+    ctx.beginPath(); ctx.ellipse(x+6, y+r*0.58, r*1.2, r*0.32, 0, 0, Math.PI*2); ctx.fill();
     ctx.restore();
 
-    // Outer armor ring
+    // Outer armor glow ring
+    ctx.save(); ctx.strokeStyle = this.accentColor+'66'; ctx.lineWidth = 3;
+    ctx.shadowColor = this.bodyColor; ctx.shadowBlur = 18;
+    ctx.beginPath(); ctx.arc(x, y, r+5, 0, Math.PI*2); ctx.stroke(); ctx.restore();
+
     ctx.save();
-    ctx.strokeStyle = this.accentColor; ctx.lineWidth = 5; ctx.globalAlpha = 0.45;
-    ctx.shadowColor = this.bodyColor; ctx.shadowBlur = 12;
-    ctx.beginPath(); ctx.arc(x, y, r + 6, 0, Math.PI*2); ctx.stroke();
-    ctx.restore();
+    ctx.translate(x, y); ctx.rotate(this._angle - Math.PI/2);
+    const bw = r*0.72, bh = r*0.96, hhr = r*0.56;
 
-    // Body (thick square)
-    ctx.save();
-    ctx.shadowColor = this.bodyColor; ctx.shadowBlur = 20; ctx.fillStyle = this.bodyColor;
-    ctx.translate(x, y); ctx.rotate(this._angle + Math.PI/4);
-    const s = r * 0.9;
-    ctx.beginPath(); ctx.roundRect(-s, -s, s*2, s*2, 6); ctx.fill();
-    ctx.fillStyle = this.accentColor + '22';
-    ctx.beginPath(); ctx.roundRect(-s*0.55, -s*0.55, s*1.1, s*1.1, 4); ctx.fill();
-    ctx.restore();
-
-    // Rivets
-    ctx.save(); ctx.fillStyle = this.accentColor;
-    for (let i = 0; i < 4; i++) {
-      const ba = this._angle + Math.PI/4 + (i/4)*Math.PI*2;
-      ctx.beginPath(); ctx.arc(x + Math.cos(ba)*r*0.78, y + Math.sin(ba)*r*0.78, 3.5, 0, Math.PI*2); ctx.fill();
+    // Legs (thick, armored)
+    for (const s of [-1,1]) {
+      ctx.fillStyle = '#1a1820';
+      ctx.beginPath(); ctx.ellipse(s*r*0.32, r*0.32, r*0.26, r*0.46, 0, 0, Math.PI*2); ctx.fill();
+      // Knee plate
+      ctx.fillStyle = this.accentColor+'88';
+      ctx.beginPath(); ctx.ellipse(s*r*0.32, r*0.22, r*0.18, r*0.14, 0, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#0e0c12';
+      ctx.beginPath(); ctx.ellipse(s*r*0.33+s*r*0.08, r*0.68, r*0.28, r*0.16, -s*0.25, 0, Math.PI*2); ctx.fill();
     }
-    ctx.restore();
-
-    // Cyclops eye
-    const ex = x + Math.cos(this._angle)*r*0.35, ey = y + Math.sin(this._angle)*r*0.35;
-    ctx.save();
-    ctx.fillStyle = '#FF4400'; ctx.shadowColor = '#FF2200'; ctx.shadowBlur = 18;
-    ctx.beginPath(); ctx.arc(ex, ey, 7.5, 0, Math.PI*2); ctx.fill();
-    ctx.fillStyle = '#FFAA44'; ctx.shadowBlur = 0;
-    ctx.beginPath(); ctx.arc(ex, ey, 3.5, 0, Math.PI*2); ctx.fill();
-    ctx.restore();
-
-    // Heavy gun arm
-    const gl = r + 14, gx = x + Math.cos(this._angle)*gl, gy = y + Math.sin(this._angle)*gl;
-    ctx.save();
-    ctx.strokeStyle = this.accentColor; ctx.shadowColor = this.bodyColor; ctx.shadowBlur = 8;
-    ctx.lineWidth = 10; ctx.lineCap = 'round';
-    ctx.beginPath();
-    ctx.moveTo(x + Math.cos(this._angle)*(r-3), y + Math.sin(this._angle)*(r-3));
-    ctx.lineTo(gx, gy); ctx.stroke();
-    ctx.strokeStyle = '#ddd'; ctx.lineWidth = 4;
-    ctx.beginPath(); ctx.moveTo(gx, gy); ctx.lineTo(gx + Math.cos(this._angle)*14, gy + Math.sin(this._angle)*14); ctx.stroke();
-    ctx.restore();
-
-    // Health bar (wide)
-    const bw = 60, bh = 6, bx2 = x-bw/2, by2 = y-r-18;
-    const pct = this.health / this.maxHealth;
-    ctx.fillStyle = '#1a1a1a'; ctx.fillRect(bx2, by2, bw, bh);
-    ctx.fillStyle = pct > 0.6 ? '#FF8800' : pct > 0.3 ? '#FFAA00' : '#FF4444';
-    ctx.shadowColor = '#FF8800'; ctx.shadowBlur = 6;
-    ctx.fillRect(bx2, by2, bw*pct, bh);
+    // Heavy torso (armored)
+    const tg = ctx.createLinearGradient(-bw, -bh*0.48, bw, bh*0.4);
+    tg.addColorStop(0, this.bodyColor+'EE'); tg.addColorStop(1, this.bodyColor+'77');
+    ctx.fillStyle = tg; ctx.shadowColor = this.bodyColor; ctx.shadowBlur = 16;
+    ctx.beginPath(); ctx.roundRect(-bw, -bh*0.48, bw*2, bh*0.88, [bw*0.3, bw*0.3, bw*0.18, bw*0.18]); ctx.fill();
     ctx.shadowBlur = 0;
-    ctx.strokeStyle = 'rgba(255,255,255,0.2)'; ctx.lineWidth = 0.5;
-    ctx.strokeRect(bx2, by2, bw, bh);
+    // Chest armor plates
+    ctx.fillStyle = this.accentColor+'40';
+    ctx.beginPath(); ctx.roundRect(-bw*0.56, -bh*0.42, bw*0.52, bh*0.46, bw*0.12); ctx.fill();
+    ctx.beginPath(); ctx.roundRect( bw*0.04, -bh*0.42, bw*0.52, bh*0.46, bw*0.12); ctx.fill();
+    // Center seam
+    ctx.fillStyle = '#0a0a10'; ctx.fillRect(-r*0.06, -bh*0.44, r*0.12, bh*0.5);
+    // Shoulder pads
+    for (const s of [-1,1]) {
+      ctx.fillStyle = this.bodyColor; ctx.shadowColor = this.bodyColor; ctx.shadowBlur = 8;
+      ctx.beginPath(); ctx.ellipse(s*bw*1.1, -bh*0.28, r*0.32, r*0.24, s*0.3, 0, Math.PI*2); ctx.fill();
+      ctx.shadowBlur = 0;
+      // Rivet on shoulder
+      ctx.fillStyle = this.accentColor;
+      ctx.beginPath(); ctx.arc(s*bw*1.1, -bh*0.28, r*0.1, 0, Math.PI*2); ctx.fill();
+    }
+    // Heavy arms
+    for (const s of [-1,1]) {
+      ctx.fillStyle = this.bodyColor+'CC';
+      ctx.beginPath(); ctx.roundRect(s*bw*0.9, -bh*0.22, s*r*0.32, r*0.7, r*0.1); ctx.fill();
+    }
+    // Head (armored helmet)
+    const hg = ctx.createRadialGradient(-hhr*0.18, -bh*0.5-hhr*0.18, 1, 0, -bh*0.48, hhr);
+    hg.addColorStop(0, this.bodyColor+'FF'); hg.addColorStop(1, this.bodyColor+'88');
+    ctx.fillStyle = hg; ctx.shadowColor = this.bodyColor; ctx.shadowBlur = 14;
+    ctx.beginPath(); ctx.arc(0, -bh*0.48, hhr, 0, Math.PI*2); ctx.fill();
+    // Visor (red cyclops)
+    ctx.fillStyle = '#FF4400'; ctx.shadowColor = '#FF2200'; ctx.shadowBlur = 18;
+    ctx.beginPath(); ctx.rect(-hhr*0.8, -bh*0.48-hhr*0.12, hhr*1.6, hhr*0.3); ctx.fill();
+    ctx.fillStyle = '#FFAA33'; ctx.shadowBlur = 0;
+    ctx.beginPath(); ctx.arc(0, -bh*0.48, hhr*0.16, 0, Math.PI*2); ctx.fill();
+    // Helmet ridge
+    ctx.fillStyle = this.accentColor;
+    ctx.beginPath(); ctx.rect(-hhr*0.12, -bh*0.48-hhr, hhr*0.24, hhr); ctx.fill();
+    ctx.restore();
+
+    // Heavy gun
+    const gl = r+14, gx = x+Math.cos(this._angle)*gl, gy = y+Math.sin(this._angle)*gl;
+    const gsx = x+Math.cos(this._angle)*(r-3), gsy = y+Math.sin(this._angle)*(r-3);
+    ctx.save(); ctx.lineCap = 'round';
+    ctx.strokeStyle = 'rgba(0,0,0,0.60)'; ctx.lineWidth = 13;
+    ctx.beginPath(); ctx.moveTo(gsx+1.5,gsy+2); ctx.lineTo(gx+1.5,gy+2); ctx.stroke();
+    ctx.strokeStyle = this.accentColor; ctx.shadowColor = this.bodyColor; ctx.shadowBlur = 8; ctx.lineWidth = 10;
+    ctx.beginPath(); ctx.moveTo(gsx,gsy); ctx.lineTo(gx,gy); ctx.stroke();
+    ctx.strokeStyle = 'rgba(255,255,255,0.20)'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(gsx-1,gsy-1); ctx.lineTo(gx-1,gy-1); ctx.stroke();
+    ctx.strokeStyle = '#ddd'; ctx.lineWidth = 4; ctx.shadowBlur = 0;
+    ctx.beginPath(); ctx.moveTo(gx,gy); ctx.lineTo(gx+Math.cos(this._angle)*14,gy+Math.sin(this._angle)*14); ctx.stroke();
+    ctx.restore();
+
+    this._renderHPBar(ctx, x, y, r, 60, 6);
   }
 
   _renderPolice(ctx, x, y, r) {
     const isSwat  = this.type === 'swat' || this.type === 'heavyswat';
     const isHeavy = this.type === 'heavyswat';
-    const bodyCol   = isSwat ? '#181818' : '#1144BB';
-    const accentCol = isSwat ? (isHeavy ? '#444' : '#555') : '#4488FF';
+    const bodyCol   = isSwat ? '#181828' : '#1144BB';
+    const accentCol = isSwat ? (isHeavy ? '#5566AA' : '#7788CC') : '#4488FF';
+    const eyeCol    = isSwat ? '#FF5500' : '#88BBFF';
 
-    // Shadow
-    ctx.save(); ctx.globalAlpha = 0.22; ctx.fillStyle = '#000';
-    ctx.beginPath(); ctx.ellipse(x+3, y+4, r*0.9, r*0.5, 0, 0, Math.PI*2); ctx.fill();
+    // Ground shadow
+    ctx.save(); ctx.globalAlpha = 0.28; ctx.fillStyle = '#000';
+    ctx.beginPath(); ctx.ellipse(x+4, y+r*0.55, r*1.1, r*0.28, 0, 0, Math.PI*2); ctx.fill();
     ctx.restore();
 
-    // Body
     ctx.save();
-    ctx.shadowColor = bodyCol; ctx.shadowBlur = isHeavy ? 18 : 12; ctx.fillStyle = bodyCol;
-    ctx.translate(x, y); ctx.rotate(this._angle + Math.PI/4);
-    const s = r * 0.87;
-    ctx.beginPath(); ctx.roundRect(-s, -s, s*2, s*2, isHeavy ? 3 : 5); ctx.fill();
-    // Uniform stripe / badge
+    ctx.translate(x, y); ctx.rotate(this._angle - Math.PI/2);
+    const bw = r*(isHeavy?0.7:0.62), bh = r*(isHeavy?0.94:0.9), hhr = r*(isHeavy?0.56:0.52);
+
+    // Legs
+    for (const s of [-1,1]) {
+      ctx.fillStyle = isSwat ? '#101018' : '#0a1a44';
+      ctx.beginPath(); ctx.ellipse(s*r*0.28, r*0.3, r*0.21, r*0.42, 0, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#080810';
+      ctx.beginPath(); ctx.ellipse(s*r*0.3+s*r*0.06, r*0.64, r*0.24, r*0.14, -s*0.25, 0, Math.PI*2); ctx.fill();
+    }
+    // Torso (uniform)
+    const tg = ctx.createLinearGradient(-bw, -bh*0.46, bw, bh*0.36);
+    tg.addColorStop(0, bodyCol+'EE'); tg.addColorStop(1, bodyCol+'88');
+    ctx.fillStyle = tg; ctx.shadowColor = bodyCol; ctx.shadowBlur = 12;
+    ctx.beginPath(); ctx.roundRect(-bw, -bh*0.46, bw*2, bh*0.84, [bw*0.32, bw*0.32, bw*0.18, bw*0.18]); ctx.fill();
+    ctx.shadowBlur = 0;
     if (!isSwat) {
-      ctx.fillStyle = '#FFD700'; // gold badge
-      ctx.fillRect(-s*0.22, -s*0.22, s*0.44, s*0.38);
+      // Police badge
+      ctx.fillStyle = '#FFD700'; ctx.shadowColor = '#FFD700'; ctx.shadowBlur = 5;
+      ctx.beginPath(); ctx.arc(0, -bh*0.16, r*0.15, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#AA8800'; ctx.font = `bold ${Math.round(r*0.1)}px monospace`; ctx.textAlign = 'center';
+      ctx.fillText('★', 0, -bh*0.12);
+      ctx.shadowBlur = 0;
+      // Blue stripe
+      ctx.fillStyle = accentCol+'88';
+      ctx.beginPath(); ctx.roundRect(-bw*0.5, -bh*0.46, bw*1.0, bh*0.12, bw*0.1); ctx.fill();
     } else {
-      ctx.strokeStyle = accentCol; ctx.lineWidth = isHeavy ? 3 : 2; ctx.globalAlpha = 0.55;
-      ctx.strokeRect(-s*0.55, -s*0.55, s*1.1, s*1.1);
+      // SWAT tactical vest
+      ctx.fillStyle = accentCol+'30';
+      ctx.beginPath(); ctx.roundRect(-bw*0.52, -bh*0.4, bw*1.04, bh*0.44, bw*0.12); ctx.fill();
+      ctx.strokeStyle = accentCol+'60'; ctx.lineWidth = 1;
+      ctx.strokeRect(-bw*0.52, -bh*0.4, bw*1.04, bh*0.44);
+      // SWAT text
+      ctx.fillStyle = '#CCDDFF'; ctx.font = `bold ${Math.round(r*0.14)}px monospace`; ctx.textAlign = 'center';
+      ctx.fillText('SWAT', 0, -bh*0.14);
     }
-    ctx.restore();
-
-    // Helmet / cap (forward-facing)
-    ctx.save();
-    ctx.translate(x, y); ctx.rotate(this._angle);
-    const capCol = isSwat ? '#2a2a2a' : '#002288';
-    ctx.fillStyle = capCol; ctx.shadowColor = capCol; ctx.shadowBlur = 6;
-    ctx.beginPath(); ctx.ellipse(r*0.28, 0, r*0.42, r*0.3, 0, 0, Math.PI*2); ctx.fill();
-    if (isSwat) {
-      ctx.fillStyle = 'rgba(80,160,220,0.3)';
-      ctx.beginPath(); ctx.ellipse(r*0.32, 0, r*0.32, r*0.2, 0, 0, Math.PI*2); ctx.fill();
-    }
-    ctx.restore();
-
+    // Belt
+    ctx.fillStyle = '#0a0a14'; ctx.beginPath(); ctx.roundRect(-bw*0.82, bh*0.2, bw*1.64, r*0.14, 2); ctx.fill();
+    // Arms
+    ctx.fillStyle = bodyCol+'BB';
+    ctx.beginPath(); ctx.roundRect(-bw*1.14, -bh*0.34, r*0.26, r*0.7, r*0.1); ctx.fill();
+    ctx.fillStyle = '#EEDDBB'; ctx.beginPath(); ctx.ellipse(-bw*1.02, bh*0.18, r*0.16, r*0.18, 0, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = bodyCol+'BB';
+    ctx.save(); ctx.translate(bw*1.06, -bh*0.16); ctx.rotate(-0.42);
+    ctx.beginPath(); ctx.roundRect(-r*0.12, -r*0.58, r*0.24, r*0.62, r*0.1); ctx.fill(); ctx.restore();
+    // Head (helmet)
+    const hg = ctx.createRadialGradient(-hhr*0.2, -bh*0.5-hhr*0.2, 1, 0, -bh*0.48, hhr);
+    hg.addColorStop(0, isSwat?'#333344':'#1144CC'); hg.addColorStop(1, isSwat?'#111122':'#002288');
+    ctx.fillStyle = hg; ctx.shadowColor = bodyCol; ctx.shadowBlur = 10;
+    ctx.beginPath(); ctx.arc(0, -bh*0.48, hhr, 0, Math.PI*2); ctx.fill();
+    // Visor (police: blue tint, SWAT: dark with red glow)
+    ctx.fillStyle = isSwat ? 'rgba(60,80,200,0.35)' : 'rgba(80,120,255,0.4)';
+    ctx.shadowColor = isSwat ? '#3344FF' : '#4466FF'; ctx.shadowBlur = 6;
+    ctx.beginPath(); ctx.rect(-hhr*0.82, -bh*0.48-hhr*0.1, hhr*1.64, hhr*0.28); ctx.fill();
+    ctx.shadowBlur = 0;
+    // Cap brim / helmet rim
+    ctx.fillStyle = isSwat ? '#222233' : '#001166';
+    ctx.beginPath(); ctx.ellipse(0, -bh*0.48-hhr*0.9, hhr*0.82, hhr*0.2, 0, 0, Math.PI*2); ctx.fill();
     // Eyes
-    const eyeOpen = this._eyeBlink > 0 ? 0.1 : 1.0;
-    const fwdX = Math.cos(this._angle)*r*0.36, fwdY = Math.sin(this._angle)*r*0.36;
-    const perpX = -Math.sin(this._angle)*r*0.28, perpY = Math.cos(this._angle)*r*0.28;
-    for (let i = -1; i <= 1; i += 2) {
-      ctx.save();
-      ctx.shadowColor = isSwat ? '#FF4400' : '#4488FF'; ctx.shadowBlur = 10;
-      ctx.fillStyle = isSwat ? '#FF3300' : '#DDDDFF';
-      ctx.beginPath();
-      ctx.ellipse(x+fwdX+perpX*i, y+fwdY+perpY*i, 3, 3*eyeOpen, 0, 0, Math.PI*2);
-      ctx.fill(); ctx.restore();
-    }
+    const ey = -bh*0.48+hhr*0.06;
+    ctx.fillStyle = eyeCol; ctx.shadowColor = eyeCol; ctx.shadowBlur = 8;
+    ctx.beginPath(); ctx.ellipse(-hhr*0.27, ey, hhr*0.16, hhr*0.12, 0, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse( hhr*0.27, ey, hhr*0.16, hhr*0.12, 0, 0, Math.PI*2); ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.restore();
 
     // Gun
-    const gl = r + (isHeavy ? 17 : 12);
-    const gx = x + Math.cos(this._angle)*gl, gy = y + Math.sin(this._angle)*gl;
-    ctx.save();
+    const gl = r+(isHeavy?17:12);
+    const gx = x+Math.cos(this._angle)*gl, gy = y+Math.sin(this._angle)*gl;
+    const gsxP = x+Math.cos(this._angle)*(r-2), gsyP = y+Math.sin(this._angle)*(r-2);
+    ctx.save(); ctx.lineCap = 'round';
+    ctx.strokeStyle = 'rgba(0,0,0,0.55)'; ctx.lineWidth = (isHeavy?9:4)+3;
+    ctx.beginPath(); ctx.moveTo(gsxP+1.2,gsyP+1.8); ctx.lineTo(gx+1.2,gy+1.8); ctx.stroke();
     ctx.shadowColor = accentCol; ctx.shadowBlur = 6;
-    ctx.strokeStyle = accentCol; ctx.lineWidth = isHeavy ? 9 : 4; ctx.lineCap = 'round';
-    ctx.beginPath();
-    ctx.moveTo(x + Math.cos(this._angle)*(r-2), y + Math.sin(this._angle)*(r-2));
-    ctx.lineTo(gx, gy); ctx.stroke(); ctx.restore();
+    ctx.strokeStyle = accentCol; ctx.lineWidth = isHeavy?9:4;
+    ctx.beginPath(); ctx.moveTo(gsxP,gsyP); ctx.lineTo(gx,gy); ctx.stroke();
+    ctx.strokeStyle = 'rgba(255,255,255,0.25)'; ctx.lineWidth = isHeavy?2.5:1.5; ctx.shadowBlur = 0;
+    ctx.beginPath(); ctx.moveTo(gsxP-0.8,gsyP-0.8); ctx.lineTo(gx-0.8,gy-0.8); ctx.stroke();
+    ctx.restore();
 
-    // HP bar
-    const bw = isHeavy ? 56 : 40, bh = isHeavy ? 6 : 5;
-    const bx2 = x-bw/2, by2 = y-r-14;
-    const pct = this.health / this.maxHealth;
-    ctx.fillStyle = '#1a1a1a'; ctx.fillRect(bx2, by2, bw, bh);
-    ctx.fillStyle = pct > 0.6 ? accentCol : pct > 0.3 ? '#FFCC00' : '#FF4444';
-    ctx.fillRect(bx2, by2, bw*pct, bh);
-    ctx.strokeStyle = 'rgba(255,255,255,0.2)'; ctx.lineWidth = 0.5;
-    ctx.strokeRect(bx2, by2, bw, bh);
+    this._renderHPBar(ctx, x, y, r, isHeavy?56:40, isHeavy?6:5);
   }
 
   _renderSniper(ctx, x, y, r) {
-    // Lean, hooded figure with long rifle
-    ctx.save();
-    ctx.shadowColor = '#4488BB'; ctx.shadowBlur = 14;
-    const g = ctx.createRadialGradient(x - r*0.3, y - r*0.3, 0.5, x, y, r);
-    g.addColorStop(0, this.accentColor); g.addColorStop(1, this.bodyColor + 'CC');
-    ctx.fillStyle = g;
-    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
-    // Scope ring
-    ctx.strokeStyle = '#88DDFF'; ctx.lineWidth = 1.5; ctx.globalAlpha = 0.6;
-    ctx.beginPath(); ctx.arc(x, y, r + 4, 0, Math.PI * 2); ctx.stroke();
-    ctx.globalAlpha = 1;
+    // Ground shadow
+    ctx.save(); ctx.globalAlpha = 0.24; ctx.fillStyle = '#000';
+    ctx.beginPath(); ctx.ellipse(x+4, y+r*0.52, r*1.05, r*0.26, 0, 0, Math.PI*2); ctx.fill();
     ctx.restore();
-    // Long rifle barrel
-    const gl = r + 22;
+
+    // Scope/laser ring
+    ctx.save(); ctx.strokeStyle = '#88DDFF44'; ctx.lineWidth = 1.5;
+    ctx.shadowColor = '#44AAFF'; ctx.shadowBlur = 10;
+    ctx.beginPath(); ctx.arc(x, y, r+5, 0, Math.PI*2); ctx.stroke(); ctx.restore();
+
     ctx.save();
+    ctx.translate(x, y); ctx.rotate(this._angle - Math.PI/2);
+    const bw = r*0.56, bh = r*0.88, hhr = r*0.5;
+
+    // Legs (sleek, camo)
+    for (const s of [-1,1]) {
+      ctx.fillStyle = '#1a2218';
+      ctx.beginPath(); ctx.ellipse(s*r*0.26, r*0.28, r*0.19, r*0.4, 0, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#0e120c';
+      ctx.beginPath(); ctx.ellipse(s*r*0.27+s*r*0.06, r*0.6, r*0.22, r*0.13, -s*0.22, 0, Math.PI*2); ctx.fill();
+    }
+    // Long coat torso
+    const tg = ctx.createLinearGradient(-bw, -bh*0.46, bw, bh*0.36);
+    tg.addColorStop(0, this.bodyColor+'DD'); tg.addColorStop(1, this.bodyColor+'66');
+    ctx.fillStyle = tg; ctx.shadowColor = '#4488BB'; ctx.shadowBlur = 10;
+    ctx.beginPath(); ctx.roundRect(-bw, -bh*0.46, bw*2, bh*0.84, [bw*0.3, bw*0.3, bw*0.14, bw*0.14]); ctx.fill();
+    ctx.shadowBlur = 0;
+    // Coat lapels
+    ctx.fillStyle = this.bodyColor+'88';
+    ctx.beginPath(); ctx.moveTo(-bw*0.5,-bh*0.46); ctx.lineTo(0,-bh*0.1); ctx.lineTo(bw*0.5,-bh*0.46); ctx.closePath(); ctx.fill();
+    // Scope device on chest
+    ctx.fillStyle = '#88DDFF'; ctx.shadowColor = '#44AAFF'; ctx.shadowBlur = 8;
+    ctx.beginPath(); ctx.arc(0, -bh*0.18, r*0.12, 0, Math.PI*2); ctx.fill();
+    ctx.shadowBlur = 0;
+    // Belt
+    ctx.fillStyle = '#151512'; ctx.beginPath(); ctx.roundRect(-bw*0.8, bh*0.2, bw*1.6, r*0.13, 2); ctx.fill();
+    // Off-arm
+    ctx.fillStyle = this.bodyColor+'AA';
+    ctx.beginPath(); ctx.roundRect(-bw*1.12, -bh*0.32, r*0.24, r*0.66, r*0.1); ctx.fill();
+    // Head (tactical balaclava)
+    const hg = ctx.createRadialGradient(-hhr*0.18,-bh*0.5-hhr*0.18,1, 0,-bh*0.48,hhr);
+    hg.addColorStop(0,'#2a3428'); hg.addColorStop(1,'#1a2018');
+    ctx.fillStyle = hg; ctx.shadowColor = '#334433'; ctx.shadowBlur = 8;
+    ctx.beginPath(); ctx.arc(0, -bh*0.48, hhr, 0, Math.PI*2); ctx.fill();
+    ctx.shadowBlur = 0;
+    // Scope eye piece
+    ctx.fillStyle = '#88DDFF'; ctx.shadowColor = '#44AAFF'; ctx.shadowBlur = 12;
+    ctx.beginPath(); ctx.ellipse(hhr*0.28, -bh*0.48+hhr*0.08, hhr*0.22, hhr*0.16, 0, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#002244'; ctx.shadowBlur = 0;
+    ctx.beginPath(); ctx.ellipse(hhr*0.28, -bh*0.48+hhr*0.08, hhr*0.12, hhr*0.09, 0, 0, Math.PI*2); ctx.fill();
+    // Other eye (glowing blue)
+    ctx.fillStyle = '#4499FF'; ctx.shadowColor = '#2277FF'; ctx.shadowBlur = 6;
+    ctx.beginPath(); ctx.ellipse(-hhr*0.28, -bh*0.48+hhr*0.08, hhr*0.14, hhr*0.11, 0, 0, Math.PI*2); ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.restore();
+
+    // Long rifle
+    const gl = r+22;
+    const gbx = x+Math.cos(this._angle)*(r-2), gby = y+Math.sin(this._angle)*(r-2);
+    const gtx = x+Math.cos(this._angle)*gl, gty = y+Math.sin(this._angle)*gl;
+    ctx.save(); ctx.lineCap = 'round';
+    ctx.strokeStyle = 'rgba(0,0,0,0.55)'; ctx.lineWidth = 5;
+    ctx.beginPath(); ctx.moveTo(gbx+1.2,gby+1.8); ctx.lineTo(gtx+1.2,gty+1.8); ctx.stroke();
     ctx.shadowColor = '#88DDFF'; ctx.shadowBlur = 8;
-    ctx.strokeStyle = '#88DDFF'; ctx.lineWidth = 3; ctx.lineCap = 'round';
-    ctx.beginPath();
-    ctx.moveTo(x + Math.cos(this._angle)*(r-2), y + Math.sin(this._angle)*(r-2));
-    ctx.lineTo(x + Math.cos(this._angle)*gl, y + Math.sin(this._angle)*gl);
-    ctx.stroke();
+    ctx.strokeStyle = '#88DDFF'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(gbx,gby); ctx.lineTo(gtx,gty); ctx.stroke();
+    ctx.strokeStyle = 'rgba(255,255,255,0.30)'; ctx.lineWidth = 1.2; ctx.shadowBlur = 0;
+    ctx.beginPath(); ctx.moveTo(gbx-0.8,gby-0.8); ctx.lineTo(gtx-0.8,gty-0.8); ctx.stroke();
     // Scope
     ctx.strokeStyle = '#CCDDFF'; ctx.lineWidth = 5;
-    const sm = 0.55;
     ctx.beginPath();
-    ctx.moveTo(x + Math.cos(this._angle)*(r+4), y + Math.sin(this._angle)*(r+4));
-    ctx.lineTo(x + Math.cos(this._angle)*(r+12), y + Math.sin(this._angle)*(r+12));
+    ctx.moveTo(x+Math.cos(this._angle)*(r+4), y+Math.sin(this._angle)*(r+4));
+    ctx.lineTo(x+Math.cos(this._angle)*(r+12), y+Math.sin(this._angle)*(r+12));
     ctx.stroke();
     ctx.restore();
     this._renderHPBar(ctx, x, y, r, 42, 5);
   }
 
   _renderBomber(ctx, x, y, r) {
-    // Stocky with explosive vest
+    // Ground shadow
+    ctx.save(); ctx.globalAlpha = 0.28; ctx.fillStyle = '#000';
+    ctx.beginPath(); ctx.ellipse(x+4, y+r*0.56, r*1.1, r*0.28, 0, 0, Math.PI*2); ctx.fill();
+    ctx.restore();
+
+    // Vest heat glow
+    ctx.save(); ctx.strokeStyle = '#FF660044'; ctx.lineWidth = 3;
+    ctx.shadowColor = '#FF4400'; ctx.shadowBlur = 18;
+    ctx.beginPath(); ctx.arc(x, y, r+4, 0, Math.PI*2); ctx.stroke(); ctx.restore();
+
     ctx.save();
-    ctx.shadowColor = '#FF6600'; ctx.shadowBlur = 18;
-    const g = ctx.createRadialGradient(x, y - r*0.3, 0.5, x, y, r);
-    g.addColorStop(0, '#FF8833'); g.addColorStop(1, this.bodyColor + 'CC');
-    ctx.fillStyle = g;
-    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
-    // Vest stripes
-    ctx.strokeStyle = '#FFAA44'; ctx.lineWidth = 2.5; ctx.globalAlpha = 0.7;
-    for (let i = -1; i <= 1; i++) {
-      const ox = Math.cos(this._angle + Math.PI/2) * (i * 5);
-      const oy = Math.sin(this._angle + Math.PI/2) * (i * 5);
-      ctx.beginPath();
-      ctx.arc(x + ox, y + oy, r * 0.65, this._angle - 0.5, this._angle + 0.5);
-      ctx.stroke();
+    ctx.translate(x, y); ctx.rotate(this._angle - Math.PI/2);
+    const bw = r*0.66, bh = r*0.9, hhr = r*0.5;
+
+    // Legs (stocky)
+    for (const s of [-1,1]) {
+      ctx.fillStyle = '#1a1208';
+      ctx.beginPath(); ctx.ellipse(s*r*0.3, r*0.32, r*0.24, r*0.43, 0, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#0e0a04';
+      ctx.beginPath(); ctx.ellipse(s*r*0.32+s*r*0.07, r*0.65, r*0.26, r*0.15, -s*0.25, 0, Math.PI*2); ctx.fill();
     }
+    // Explosive vest torso
+    const tg = ctx.createLinearGradient(-bw,-bh*0.46, bw, bh*0.36);
+    tg.addColorStop(0, '#4a3822'); tg.addColorStop(0.5, '#3a2a18'); tg.addColorStop(1, '#2a1c10');
+    ctx.fillStyle = tg; ctx.shadowColor = '#FF6600'; ctx.shadowBlur = 12;
+    ctx.beginPath(); ctx.roundRect(-bw, -bh*0.46, bw*2, bh*0.84, [bw*0.3, bw*0.3, bw*0.18, bw*0.18]); ctx.fill();
+    ctx.shadowBlur = 0;
+    // Vest pockets (bomb pouches)
+    const pouchColor = '#556644';
+    for (const [px2, py2] of [[-bw*0.55,-bh*0.36],[bw*0.15,-bh*0.36],[-bw*0.55,-bh*0.06],[bw*0.15,-bh*0.06]]) {
+      ctx.fillStyle = pouchColor; ctx.strokeStyle = '#667755'; ctx.lineWidth = 0.7;
+      ctx.beginPath(); ctx.roundRect(px2, py2, bw*0.38, bh*0.24, 3); ctx.fill(); ctx.stroke();
+    }
+    // Vest straps (orange warning)
+    ctx.strokeStyle = '#FFAA22'; ctx.lineWidth = 2; ctx.globalAlpha = 0.8;
+    ctx.beginPath(); ctx.moveTo(-bw*0.12,-bh*0.46); ctx.lineTo(-bw*0.12, bh*0.22); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo( bw*0.12,-bh*0.46); ctx.lineTo( bw*0.12, bh*0.22); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(-bw*0.5, -bh*0.12); ctx.lineTo( bw*0.5, -bh*0.12); ctx.stroke();
     ctx.globalAlpha = 1;
-    // Bomb in hand
-    const bx2 = x + Math.cos(this._angle) * (r + 10);
-    const by2 = y + Math.sin(this._angle) * (r + 10);
+    // Belt with detonator
+    ctx.fillStyle = '#0e0a04'; ctx.beginPath(); ctx.roundRect(-bw*0.8, bh*0.2, bw*1.6, r*0.15, 2); ctx.fill();
+    ctx.fillStyle = '#FF3300'; ctx.shadowColor = '#FF3300'; ctx.shadowBlur = 5;
+    ctx.beginPath(); ctx.roundRect(-r*0.18, bh*0.19, r*0.36, r*0.18, 3); ctx.fill();
+    ctx.shadowBlur = 0;
+    // Arms
+    ctx.fillStyle = '#3a2a18BB';
+    ctx.beginPath(); ctx.roundRect(-bw*1.14,-bh*0.34, r*0.28, r*0.7, r*0.1); ctx.fill();
+    ctx.fillStyle = '#EEDDBB'; ctx.beginPath(); ctx.ellipse(-bw*1.02, bh*0.18, r*0.17, r*0.19, 0, 0, Math.PI*2); ctx.fill();
+    // Head (balaclava, angry)
+    const hg = ctx.createRadialGradient(-hhr*0.18,-bh*0.5-hhr*0.18,1, 0,-bh*0.48,hhr);
+    hg.addColorStop(0,'#2a2010'); hg.addColorStop(1,'#1a1408');
+    ctx.fillStyle = hg; ctx.shadowColor = '#FF4400'; ctx.shadowBlur = 8;
+    ctx.beginPath(); ctx.arc(0, -bh*0.48, hhr, 0, Math.PI*2); ctx.fill(); ctx.shadowBlur = 0;
+    // Angry red eyes
+    ctx.fillStyle = '#FF4400'; ctx.shadowColor = '#FF2200'; ctx.shadowBlur = 12;
+    ctx.beginPath(); ctx.ellipse(-hhr*0.3, -bh*0.48+hhr*0.06, hhr*0.2, hhr*0.13, -0.2, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse( hhr*0.3, -bh*0.48+hhr*0.06, hhr*0.2, hhr*0.13,  0.2, 0, Math.PI*2); ctx.fill();
+    ctx.shadowBlur = 0;
+    // Angry brow line
+    ctx.strokeStyle = '#FF6622'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(-hhr*0.5,-bh*0.48-hhr*0.02); ctx.lineTo(-hhr*0.12,-bh*0.48+hhr*0.06); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo( hhr*0.5,-bh*0.48-hhr*0.02); ctx.lineTo( hhr*0.12,-bh*0.48+hhr*0.06); ctx.stroke();
+    ctx.restore();
+
+    // Bomb in hand (world space)
+    const bx2 = x+Math.cos(this._angle)*(r+10), by2 = y+Math.sin(this._angle)*(r+10);
+    ctx.save();
     ctx.fillStyle = '#334433'; ctx.strokeStyle = '#88CC88'; ctx.lineWidth = 1.5;
-    ctx.beginPath(); ctx.ellipse(bx2, by2, 8, 6, this._angle, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-    ctx.fillStyle = '#FF4400'; ctx.beginPath(); ctx.arc(bx2, by2 - 8, 2.5, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(bx2,by2, 8, 6, this._angle, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#FF3300'; ctx.shadowColor = '#FF3300'; ctx.shadowBlur = 8;
+    ctx.beginPath(); ctx.arc(bx2+Math.cos(this._angle-Math.PI/2)*8, by2+Math.sin(this._angle-Math.PI/2)*8, 3, 0, Math.PI*2); ctx.fill();
     ctx.restore();
     this._renderHPBar(ctx, x, y, r, 44, 5);
   }
 
   _renderJuggernaut(ctx, x, y, r) {
-    // Massive armored behemoth
+    // Massive ground shadow
+    ctx.save(); ctx.globalAlpha = 0.42; ctx.fillStyle = '#000';
+    ctx.beginPath(); ctx.ellipse(x+8, y+r*0.62, r*1.3, r*0.35, 0, 0, Math.PI*2); ctx.fill();
+    ctx.restore();
+
+    // Power armor aura
+    ctx.save(); ctx.strokeStyle = '#FFAA0055'; ctx.lineWidth = 4;
+    ctx.shadowColor = '#FF8800'; ctx.shadowBlur = 24;
+    ctx.beginPath(); ctx.arc(x, y, r+6, 0, Math.PI*2); ctx.stroke(); ctx.restore();
+
     ctx.save();
-    ctx.shadowColor = '#666666'; ctx.shadowBlur = 24;
-    const g = ctx.createRadialGradient(x - r*0.25, y - r*0.25, 1, x, y, r);
-    g.addColorStop(0, '#555555'); g.addColorStop(1, '#111111');
-    ctx.fillStyle = g;
-    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
-    // Armor plates
-    ctx.strokeStyle = '#888888'; ctx.lineWidth = 3;
-    ctx.beginPath(); ctx.arc(x, y, r - 4, -0.6, 0.6); ctx.stroke();
-    ctx.beginPath(); ctx.arc(x, y, r - 4, Math.PI - 0.6, Math.PI + 0.6); ctx.stroke();
-    // Minigun barrels
-    const gl = r + 14;
+    ctx.translate(x, y); ctx.rotate(this._angle - Math.PI/2);
+    const bw = r*0.82, bh = r*1.02, hhr = r*0.6;
+
+    // Legs (massive power armor legs)
+    for (const s of [-1,1]) {
+      ctx.fillStyle = '#2a2a2a';
+      ctx.beginPath(); ctx.ellipse(s*r*0.38, r*0.35, r*0.3, r*0.5, 0, 0, Math.PI*2); ctx.fill();
+      // Leg armor plates
+      ctx.fillStyle = '#444444';
+      ctx.beginPath(); ctx.ellipse(s*r*0.38, r*0.2, r*0.22, r*0.18, 0, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#FFAA00'; ctx.shadowColor = '#FF8800'; ctx.shadowBlur = 5;
+      ctx.beginPath(); ctx.arc(s*r*0.38, r*0.2, r*0.09, 0, Math.PI*2); ctx.fill();
+      ctx.shadowBlur = 0;
+      // Boot
+      ctx.fillStyle = '#1a1a1a';
+      ctx.beginPath(); ctx.ellipse(s*r*0.4+s*r*0.1, r*0.72, r*0.32, r*0.18, -s*0.25, 0, Math.PI*2); ctx.fill();
+    }
+    // Massive torso (power armor)
+    const tg = ctx.createLinearGradient(-bw,-bh*0.48, bw, bh*0.4);
+    tg.addColorStop(0, '#555555'); tg.addColorStop(0.5, '#333333'); tg.addColorStop(1, '#111111');
+    ctx.fillStyle = tg; ctx.shadowColor = '#666666'; ctx.shadowBlur = 20;
+    ctx.beginPath(); ctx.roundRect(-bw,-bh*0.48, bw*2, bh*0.9, [bw*0.28, bw*0.28, bw*0.16, bw*0.16]); ctx.fill();
+    ctx.shadowBlur = 0;
+    // Chest armor segments
+    ctx.fillStyle = '#444444'; ctx.strokeStyle = '#666666'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.roundRect(-bw*0.6,-bh*0.44, bw*0.54, bh*0.46, 5); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.roundRect( bw*0.06,-bh*0.44, bw*0.54, bh*0.46, 5); ctx.fill(); ctx.stroke();
+    // Chest reactor core
+    ctx.fillStyle = '#FFAA00'; ctx.shadowColor = '#FF8800'; ctx.shadowBlur = 16;
+    ctx.beginPath(); ctx.arc(0, -bh*0.18, r*0.18, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#FFEE88'; ctx.shadowBlur = 0;
+    ctx.beginPath(); ctx.arc(0, -bh*0.18, r*0.09, 0, Math.PI*2); ctx.fill();
+    // Spine bolts
+    ctx.fillStyle = '#888888';
+    ctx.beginPath(); ctx.moveTo(-r*0.08,-bh*0.46); ctx.lineTo(r*0.08,-bh*0.46);
+    ctx.lineTo(r*0.08, bh*0.28); ctx.lineTo(-r*0.08, bh*0.28); ctx.fill();
+    // Massive shoulder pads
+    for (const s of [-1,1]) {
+      ctx.fillStyle = '#555555'; ctx.shadowColor = '#444444'; ctx.shadowBlur = 8;
+      ctx.beginPath(); ctx.ellipse(s*bw*1.18,-bh*0.32, r*0.42, r*0.3, s*0.25, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#FFAA00'; ctx.shadowColor = '#FF8800'; ctx.shadowBlur = 5;
+      ctx.beginPath(); ctx.arc(s*bw*1.18,-bh*0.32, r*0.13, 0, Math.PI*2); ctx.fill();
+      ctx.shadowBlur = 0;
+    }
+    // Heavy arms
+    for (const s of [-1,1]) {
+      ctx.fillStyle = '#444444';
+      ctx.beginPath(); ctx.roundRect(s*bw*0.92, -bh*0.24, s*r*0.38, r*0.78, r*0.12); ctx.fill();
+    }
+    // Head (full face power helmet)
+    const hg = ctx.createRadialGradient(-hhr*0.2,-bh*0.5-hhr*0.2,1, 0,-bh*0.48,hhr);
+    hg.addColorStop(0,'#555555'); hg.addColorStop(1,'#222222');
+    ctx.fillStyle = hg; ctx.shadowColor = '#666666'; ctx.shadowBlur = 14;
+    ctx.beginPath(); ctx.arc(0, -bh*0.48, hhr, 0, Math.PI*2); ctx.fill();
+    ctx.shadowBlur = 0;
+    // Full visor (glowing orange/red)
+    ctx.fillStyle = '#FF4400'; ctx.shadowColor = '#FF2200'; ctx.shadowBlur = 18;
+    ctx.beginPath(); ctx.rect(-hhr*0.84, -bh*0.48-hhr*0.12, hhr*1.68, hhr*0.32); ctx.fill();
+    // Dual eye scanners
+    ctx.fillStyle = '#FFEE44'; ctx.shadowColor = '#FFCC00'; ctx.shadowBlur = 10;
+    ctx.beginPath(); ctx.ellipse(-hhr*0.3, -bh*0.48, hhr*0.2, hhr*0.14, 0, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse( hhr*0.3, -bh*0.48, hhr*0.2, hhr*0.14, 0, 0, Math.PI*2); ctx.fill();
+    // Helmet crest
+    ctx.fillStyle = '#FFAA00'; ctx.shadowColor = '#FF8800'; ctx.shadowBlur = 8;
+    ctx.beginPath(); ctx.rect(-r*0.14, -bh*0.48-hhr, r*0.28, hhr*0.65); ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.restore();
+
+    // 3x Minigun barrels
+    const gl = r+14;
     for (let i = -1; i <= 1; i++) {
-      const off = i * 4;
-      const ox = Math.cos(this._angle + Math.PI/2) * off;
-      const oy = Math.sin(this._angle + Math.PI/2) * off;
-      ctx.save();
-      ctx.strokeStyle = '#FFAA00'; ctx.lineWidth = 4; ctx.lineCap = 'round';
-      ctx.beginPath();
-      ctx.moveTo(x + ox + Math.cos(this._angle)*(r-2), y + oy + Math.sin(this._angle)*(r-2));
-      ctx.lineTo(x + ox + Math.cos(this._angle)*gl, y + oy + Math.sin(this._angle)*gl);
-      ctx.stroke();
+      const off = i*4;
+      const ox = Math.cos(this._angle+Math.PI/2)*off, oy = Math.sin(this._angle+Math.PI/2)*off;
+      const mg0x = x+ox+Math.cos(this._angle)*(r-2), mg0y = y+oy+Math.sin(this._angle)*(r-2);
+      const mg1x = x+ox+Math.cos(this._angle)*gl,    mg1y = y+oy+Math.sin(this._angle)*gl;
+      ctx.save(); ctx.lineCap = 'round';
+      ctx.strokeStyle = 'rgba(0,0,0,0.55)'; ctx.lineWidth = 6;
+      ctx.beginPath(); ctx.moveTo(mg0x+1.2,mg0y+1.8); ctx.lineTo(mg1x+1.2,mg1y+1.8); ctx.stroke();
+      ctx.strokeStyle = '#FFAA00'; ctx.shadowColor = '#FF8800'; ctx.shadowBlur = 5; ctx.lineWidth = 4;
+      ctx.beginPath(); ctx.moveTo(mg0x,mg0y); ctx.lineTo(mg1x,mg1y); ctx.stroke();
+      ctx.strokeStyle = 'rgba(255,220,100,0.30)'; ctx.lineWidth = 1.5; ctx.shadowBlur = 0;
+      ctx.beginPath(); ctx.moveTo(mg0x-0.8,mg0y-0.8); ctx.lineTo(mg1x-0.8,mg1y-0.8); ctx.stroke();
       ctx.restore();
     }
-    // Glowing eyes
-    ctx.fillStyle = '#FF4400'; ctx.shadowColor = '#FF4400'; ctx.shadowBlur = 14;
-    const eOff = r * 0.35;
-    ctx.beginPath(); ctx.arc(x + Math.cos(this._angle - 0.4)*eOff, y + Math.sin(this._angle - 0.4)*eOff, 3.5, 0, Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.arc(x + Math.cos(this._angle + 0.4)*eOff, y + Math.sin(this._angle + 0.4)*eOff, 3.5, 0, Math.PI*2); ctx.fill();
-    ctx.restore();
     this._renderHPBar(ctx, x, y, r, 70, 8);
   }
 
@@ -1840,9 +2279,24 @@ class BossBot {
     ctx.beginPath(); ctx.arc(x, y, r + 18 + pulse * 12, 0, Math.PI * 2); ctx.stroke();
     ctx.restore();
 
-    // Shadow
-    ctx.save(); ctx.globalAlpha = 0.3; ctx.fillStyle = '#000';
-    ctx.beginPath(); ctx.ellipse(x + 6, y + 9, r, r * 0.5, 0, 0, Math.PI * 2); ctx.fill();
+    // 3D ground shadow
+    const H3D_boss = Math.round(r * 0.36);
+    ctx.save(); ctx.globalAlpha = 0.36; ctx.fillStyle = '#000';
+    ctx.beginPath(); ctx.ellipse(x + 8, y + r + H3D_boss + 5, r * 1.1, r * 0.28, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+
+    // Boss cylinder body (side walls)
+    ctx.save();
+    const bcg = ctx.createLinearGradient(x - r, y, x + r, y + H3D_boss);
+    bcg.addColorStop(0, this.color + 'BB');
+    bcg.addColorStop(1, this.color + '1A');
+    ctx.fillStyle = bcg; ctx.shadowColor = this.color; ctx.shadowBlur = 14;
+    ctx.beginPath();
+    ctx.moveTo(x - r, y); ctx.lineTo(x - r * 0.82, y + H3D_boss);
+    ctx.lineTo(x + r * 0.82, y + H3D_boss); ctx.lineTo(x + r, y);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = this.color + '44';
+    ctx.beginPath(); ctx.ellipse(x, y + H3D_boss, r * 0.88, r * 0.27, 0, 0, Math.PI * 2); ctx.fill();
     ctx.restore();
 
     // Per-boss body
@@ -2611,6 +3065,71 @@ class Salesperson {
   }
 }
 
+// ─── BuildingNPC ─────────────────────────────────────────────────────────────
+// Interactive NPC that appears inside buildings. Unique per building type.
+class BuildingNPC {
+  constructor(x, y, buildingType) {
+    const cfg        = CONFIG.BUILDING_INTERACTIONS[buildingType] || CONFIG.BUILDING_INTERACTIONS[0];
+    this.x = x; this.y = y;
+    this.radius      = 18;
+    this.color       = cfg.npcColor;
+    this.name        = cfg.npcName;
+    this.dialogue    = cfg.dialogue;
+    this._waveT      = 0;
+    this._interactR  = 65; // interaction radius
+  }
+
+  update(dt) { this._waveT += dt * 1.2; }
+
+  render(ctx) {
+    const sway = Math.sin(this._waveT) * 2.5;
+    const H3D  = 8;
+
+    // Shadow
+    ctx.save(); ctx.globalAlpha = 0.28; ctx.fillStyle = '#000';
+    ctx.beginPath(); ctx.ellipse(this.x + 4, this.y + this.radius + H3D + 3, this.radius * 0.9, this.radius * 0.28, 0, 0, Math.PI * 2);
+    ctx.fill(); ctx.restore();
+
+    // Body cylinder
+    ctx.save();
+    ctx.translate(this.x + sway, this.y);
+    const grad = ctx.createLinearGradient(-this.radius, 0, this.radius, H3D);
+    grad.addColorStop(0, this.color + 'CC'); grad.addColorStop(1, this.color + '22');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.moveTo(-this.radius, 0); ctx.lineTo(-this.radius * 0.82, H3D);
+    ctx.lineTo(this.radius * 0.82, H3D); ctx.lineTo(this.radius, 0);
+    ctx.closePath(); ctx.fill();
+    // Top disc
+    ctx.shadowColor = this.color; ctx.shadowBlur = 16;
+    const tg = ctx.createRadialGradient(-this.radius * 0.3, -this.radius * 0.3, 1, 0, 0, this.radius);
+    tg.addColorStop(0, '#FFEECC'); tg.addColorStop(1, this.color + 'BB');
+    ctx.fillStyle = tg;
+    ctx.beginPath(); ctx.arc(0, 0, this.radius, 0, Math.PI * 2); ctx.fill();
+    // Specular
+    ctx.fillStyle = 'rgba(255,255,255,0.2)';
+    ctx.beginPath(); ctx.arc(-5, -5, 5, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+
+    // [E] interact prompt + dialogue bubble
+    const dist = 0; // rendered regardless; game shows/hides by proximity
+    ctx.save();
+    ctx.font = 'bold 7px Orbitron, monospace';
+    ctx.textAlign = 'center';
+    // Name badge
+    ctx.fillStyle = 'rgba(0,0,0,0.72)';
+    ctx.beginPath(); ctx.roundRect(this.x + sway - 32, this.y - this.radius - 28, 64, 14, 3); ctx.fill();
+    ctx.fillStyle = this.color; ctx.shadowColor = this.color; ctx.shadowBlur = 8;
+    ctx.fillText(this.name, this.x + sway, this.y - this.radius - 17);
+    // [T] hint
+    ctx.shadowBlur = 0; ctx.fillStyle = 'rgba(0,0,0,0.70)';
+    ctx.beginPath(); ctx.roundRect(this.x + sway - 18, this.y - this.radius - 44, 36, 13, 3); ctx.fill();
+    ctx.fillStyle = '#FFDD44'; ctx.font = 'bold 6.5px Orbitron, monospace';
+    ctx.fillText('[T] TALK', this.x + sway, this.y - this.radius - 34);
+    ctx.restore();
+  }
+}
+
 // ─── CityNPC ──────────────────────────────────────────────────────────────────
 class CityNPC {
   constructor(x, y, map) {
@@ -3028,59 +3547,128 @@ class AmbientCar {
 
   render(ctx) {
     const w = this.width, h = this.height;
+    const bs = this.bodyStyle;
     ctx.save();
     ctx.translate(this.x, this.y);
     ctx.rotate(this.angle + Math.PI / 2);
 
-    // Shadow
-    ctx.save(); ctx.globalAlpha = 0.22; ctx.fillStyle = '#000';
-    ctx.beginPath(); ctx.ellipse(3, 5, w * 0.48, h * 0.38, 0, 0, Math.PI * 2); ctx.fill();
+    // Ground shadow
+    ctx.save(); ctx.globalAlpha = 0.20; ctx.fillStyle = '#000';
+    ctx.beginPath(); ctx.ellipse(2, 5, w * 0.50, h * 0.36, 0, 0, Math.PI * 2); ctx.fill();
     ctx.restore();
 
-    // Body
-    ctx.shadowColor = this.color; ctx.shadowBlur = 5;
-    ctx.fillStyle   = this.color;
-    ctx.beginPath(); ctx.roundRect(-w/2, -h/2, w, h, 4); ctx.fill();
-
-    // Windshield / cabin
-    ctx.shadowBlur = 0;
-    if (this.bodyStyle === 2) {  // sports — low wedge
-      ctx.fillStyle = 'rgba(0,200,255,0.32)';
-      ctx.beginPath(); ctx.roundRect(-w/2 + 7, -h/2 + 2, w - 14, h - 6, 2); ctx.fill();
-    } else if (this.bodyStyle === 3) {  // van — cab + cargo
-      ctx.fillStyle = 'rgba(0,180,255,0.28)';
-      ctx.beginPath(); ctx.roundRect(-w/2 + 4, -h/2 + 2, w * 0.38, h / 2, 2); ctx.fill();
+    // ── Body with paint gradient ──────────────────────────────
+    const bG = ctx.createLinearGradient(-w/2, 0, w * 0.5, 0);
+    bG.addColorStop(0, this._acBrighten(this.color, 1.32));
+    bG.addColorStop(0.55, this.color);
+    bG.addColorStop(1, this._acDarken(this.color, 0.72));
+    ctx.shadowColor = this.color; ctx.shadowBlur = 4;
+    ctx.fillStyle = bG;
+    if (bs === 2) {  // sports: wedge
+      ctx.beginPath();
+      ctx.moveTo(-w/2, h/2 * 0.78); ctx.lineTo(-w/2 * 0.82, h/2);
+      ctx.lineTo(w/2, h/2);          ctx.lineTo(w/2, -h/2);
+      ctx.lineTo(-w/2, -h/2 * 0.74); ctx.closePath(); ctx.fill();
+    } else if (bs === 1) {  // SUV: boxy, slightly taller
+      ctx.beginPath(); ctx.roundRect(-w/2, -h/2, w, h, 2); ctx.fill();
     } else {
-      ctx.fillStyle = 'rgba(0,200,255,0.28)';
-      ctx.beginPath(); ctx.roundRect(-w/2 + 5, -h/2 + 2, w - 10, h / 2, 2); ctx.fill();
+      ctx.beginPath(); ctx.roundRect(-w/2, -h/2, w, h, 4); ctx.fill();
+    }
+    ctx.shadowBlur = 0;
+
+    // ── Windshield ────────────────────────────────────────────
+    if (bs === 3) {  // van: front cab slit
+      ctx.fillStyle = 'rgba(160,220,255,0.30)';
+      ctx.beginPath(); ctx.roundRect(-w/2 + 3, -h/2 + 2, w * 0.36, h/2 - 1, 1); ctx.fill();
+    } else {
+      ctx.fillStyle = 'rgba(175,235,255,0.38)';
+      ctx.beginPath(); ctx.roundRect(w/2 - 17, -h/2 + 2, 13, h - 4, 2); ctx.fill();
+      // Glare
+      ctx.fillStyle = 'rgba(255,255,255,0.22)';
+      ctx.beginPath(); ctx.roundRect(w/2 - 16, -h/2 + 3, 3.5, h * 0.34, 1); ctx.fill();
     }
 
-    // Taxi sign
-    if (this.bodyStyle === 4) {
-      ctx.fillStyle = '#FFCC00'; ctx.shadowColor = '#FFCC00'; ctx.shadowBlur = 6;
-      ctx.beginPath(); ctx.roundRect(-8, -h/2 - 5, 16, 5, 2); ctx.fill();
+    // ── Rear window ───────────────────────────────────────────
+    if (bs !== 3) {
+      ctx.fillStyle = 'rgba(140,200,230,0.16)';
+      ctx.beginPath(); ctx.roundRect(-w/2 + 3, -h/2 + 2, 9, h - 4, 1); ctx.fill();
+    }
+
+    // ── Roof cabin ────────────────────────────────────────────
+    ctx.fillStyle = 'rgba(0,0,0,0.24)';
+    if (bs === 3) {  // van: cargo bay darker
+      ctx.beginPath(); ctx.roundRect(w * 0.05, -h/2 + 2, w * 0.36, h - 4, 1); ctx.fill();
+    } else if (bs === 2) {  // sports: low center cabin
+      ctx.beginPath(); ctx.roundRect(-w * 0.14, -h/2 + 2, w * 0.34, h - 4, 2); ctx.fill();
+    } else {
+      ctx.beginPath(); ctx.roundRect(-w/2 + 14, -h/2 + 2, w - 26, h - 4, 2); ctx.fill();
+    }
+
+    // ── Chrome trim ───────────────────────────────────────────
+    ctx.strokeStyle = 'rgba(210,226,240,0.48)'; ctx.lineWidth = 0.8; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(-w/2 + 4, -h/2 + 1); ctx.lineTo(w/2 - 4, -h/2 + 1); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(-w/2 + 4,  h/2 - 1); ctx.lineTo(w/2 - 4,  h/2 - 1); ctx.stroke();
+
+    // ── Taxi sign ─────────────────────────────────────────────
+    if (bs === 4) {
+      ctx.fillStyle = '#FFCC00'; ctx.shadowColor = '#FFCC00'; ctx.shadowBlur = 9;
+      ctx.beginPath(); ctx.roundRect(-9, -h/2 - 6, 18, 6, 2); ctx.fill();
       ctx.shadowBlur = 0;
+      ctx.fillStyle = '#000'; ctx.font = 'bold 4px monospace';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('TAXI', 0, -h/2 - 3);
+      ctx.textBaseline = 'alphabetic';
     }
 
-    // Wheels
-    ctx.fillStyle = '#1a1a1a';
-    const ww = 9, wh = 5;
-    const wx2 = w/2 - 3, wy2 = h/2;
-    for (const [sx, sy] of [[-wx2, -wy2 + 1], [-wx2, wy2 - 6], [wx2 - ww, -wy2 + 1], [wx2 - ww, wy2 - 6]]) {
-      ctx.beginPath(); ctx.roundRect(sx, sy, ww, wh, 1.5); ctx.fill();
+    // ── Spoiler (sports) ──────────────────────────────────────
+    if (bs === 2) {
+      ctx.fillStyle = this._acDarken(this.color, 0.60);
+      ctx.beginPath(); ctx.roundRect(-w/2 - 4, -h/2 * 0.62, 4, h * 1.24, 1); ctx.fill();
+      ctx.fillStyle = this._acDarken(this.color, 0.50);
+      ctx.beginPath(); ctx.roundRect(-w/2 - 3.5, -h/2 * 0.68, 6.5, 2.4, 1); ctx.fill();
     }
 
-    // Headlights (front = negative y after rotation)
-    const blink = this._lightT % 1 < 0.5 ? 1 : 0.7;
-    ctx.fillStyle = `rgba(255,255,200,${blink})`; ctx.shadowColor = '#FFFF88'; ctx.shadowBlur = 14;
-    ctx.beginPath(); ctx.arc(-w/2 + 5, -h/2 + 4, 2.5, 0, Math.PI * 2); ctx.fill();
-    ctx.beginPath(); ctx.arc(-w/2 + 5,  h/2 - 4, 2.5, 0, Math.PI * 2); ctx.fill();
+    // ── Wheels ────────────────────────────────────────────────
+    const ww2 = 7, wh2 = 4.5;
+    const wxo2 = w/2 - 3.5, wyo2 = h/2 - 0.5;
+    for (const [wX, wY] of [[-wxo2 + ww2/2, -wyo2 + wh2/2], [-wxo2 + ww2/2, wyo2 - wh2/2],
+                              [wxo2 - ww2/2 - 1, -wyo2 + wh2/2], [wxo2 - ww2/2 - 1, wyo2 - wh2/2]]) {
+      // Tire
+      ctx.fillStyle = '#181818';
+      ctx.beginPath(); ctx.ellipse(wX, wY, ww2/2 + 0.9, wh2/2 + 0.9, 0, 0, Math.PI * 2); ctx.fill();
+      // Rim
+      ctx.fillStyle = bs === 1 ? '#8898A8' : '#C0CAD2';
+      ctx.beginPath(); ctx.ellipse(wX, wY, ww2/2 - 0.7, wh2/2 - 0.7, 0, 0, Math.PI * 2); ctx.fill();
+      // Hub
+      ctx.fillStyle = '#777';
+      ctx.beginPath(); ctx.arc(wX, wY, 1.1, 0, Math.PI * 2); ctx.fill();
+    }
 
-    // Taillights
-    ctx.fillStyle = '#FF1100'; ctx.shadowColor = '#FF0000'; ctx.shadowBlur = 8;
-    ctx.beginPath(); ctx.arc(w/2 - 5, -h/2 + 4, 2, 0, Math.PI * 2); ctx.fill();
-    ctx.beginPath(); ctx.arc(w/2 - 5,  h/2 - 4, 2, 0, Math.PI * 2); ctx.fill();
+    // ── Headlights (front = -y in rotated space) ──────────────
+    const blink = this._lightT % 1.2 < 0.9 ? 1 : 0.6;
+    ctx.fillStyle = `rgba(255,255,205,${blink})`; ctx.shadowColor = '#FFFF88'; ctx.shadowBlur = 13;
+    ctx.beginPath(); ctx.ellipse(-w/2 + 4, -h/2 + 3, 2.8, 1.9, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(-w/2 + 4,  h/2 - 3, 2.8, 1.9, 0, 0, Math.PI * 2); ctx.fill();
 
+    // ── Taillights ────────────────────────────────────────────
+    ctx.fillStyle = '#FF1100'; ctx.shadowColor = '#FF0000'; ctx.shadowBlur = 7;
+    ctx.beginPath(); ctx.ellipse(w/2 - 4, -h/2 + 3, 2.2, 1.5, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(w/2 - 4,  h/2 - 3, 2.2, 1.5, 0, 0, Math.PI * 2); ctx.fill();
+
+    ctx.shadowBlur = 0;
     ctx.restore();
+  }
+
+  _acBrighten(hex, f) {
+    const r = Math.min(255, Math.round(parseInt(hex.slice(1,3),16) * f));
+    const g = Math.min(255, Math.round(parseInt(hex.slice(3,5),16) * f));
+    const b = Math.min(255, Math.round(parseInt(hex.slice(5,7),16) * f));
+    return `rgb(${r},${g},${b})`;
+  }
+  _acDarken(hex, f) {
+    const r = Math.round(parseInt(hex.slice(1,3),16) * f);
+    const g = Math.round(parseInt(hex.slice(3,5),16) * f);
+    const b = Math.round(parseInt(hex.slice(5,7),16) * f);
+    return `rgb(${r},${g},${b})`;
   }
 }
