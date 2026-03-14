@@ -539,6 +539,52 @@ const CONFIG = {
       },
     },
     {
+      id: 'frozen_tundra',
+      name: 'FROZEN TUNDRA',
+      desc: 'A city locked in eternal winter. Blizzard conditions. Ice soldiers never stop coming.',
+      theme: '#88DDFF',
+      tags: ['WINTER', 'ICE', 'BLIZZARD'],
+      previewGridSize: 16,
+      previewBg: '#030c14',
+      previewRoad: 'rgba(136,221,255,0.40)',
+
+      mapW: 38, mapH: 38, tileSize: 80, roadEvery: 8,
+
+      roadColor:       '#060e18',
+      sidewalkColor:   '#0c1a28',
+      buildingPalette: ['#0d1e2e','#101e30','#0c1c2c','#0e2030','#0a1a28','#102230','#0c1e30','#0e1c2a'],
+      neonColors:      ['#88DDFF','#AAEEFF','#66CCFF','#CCFFFF','#44BBEE'],
+      windowColors:    ['#AADDFF','#CCEEFF','#88CCFF','#DDEEFF'],
+      lightColor:      '#AADDFF',
+      lightGlow:       '#55AACC',
+      neonFreq:        8,
+      weather:         'blizzard',
+      snow:            true,
+
+      botPalettes: {
+        mini:   [
+          { body:'#2a6688', accent:'#88CCEE' },
+          { body:'#1e5577', accent:'#66BBDD' },
+          { body:'#336699', accent:'#99DDEE' },
+        ],
+        normal: [
+          { body:'#1a4466', accent:'#4499CC' },
+          { body:'#1e5077', accent:'#55AACC' },
+          { body:'#225588', accent:'#66BBDD' },
+          { body:'#2a5e88', accent:'#77CCEE' },
+        ],
+        big:    [
+          { body:'#0d2a44', accent:'#2266AA' },
+          { body:'#0e2c40', accent:'#1a5588' },
+        ],
+        police: [
+          { body:'#1a3a5a', accent:'#44AAFF' },
+          { body:'#0e2a42', accent:'#3388CC' },
+        ],
+        swat:   [{ body:'#0a1e30', accent:'#2266AA' }],
+      },
+    },
+    {
       id: 'metropolis', name: 'METROPOLIS',
       desc: 'A vast living city — commercial towers, residential flats, grimy industrial, gangster slums, and a central park. The largest map.',
       theme: '#FF9933', tags: ['OPEN WORLD', 'CITY', 'ZONES'],
@@ -768,6 +814,8 @@ const CONFIG = {
     brute:    { speed:36,  hp:300, damage:38, radius:28, color:'#44AA33', accent:'#225511', moneyMult:2.5,  melee:true  },
     mutant:   { speed:68,  hp:130, damage:20, radius:20, color:'#AAFF44', accent:'#77CC22', moneyMult:1.5,  melee:false, acidRate:2200, acidSpeed:180 },
     bloater:  { speed:30,  hp:200, damage:22, radius:30, color:'#DDBB00', accent:'#886600', moneyMult:2.0,  melee:false, acidRate:1600, acidSpeed:140 },
+    crawler:  { speed:195, hp:40,  damage:25, radius:12, color:'#558833', accent:'#334411', moneyMult:1.2,  melee:true  },
+    charger:  { speed:210, hp:75,  damage:40, radius:16, color:'#CC1100', accent:'#881100', moneyMult:1.8,  melee:true  },
   },
 
   // ── Global Events ────────────────────────────────────────

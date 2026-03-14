@@ -341,6 +341,69 @@ class AudioManager {
     });
   }
 
+  /** Start a continuously looping police siren (call once when police appear) */
+  startSiren() {
+    if (this._sirenOsc) return; // already running
+    if (!this.enabled) return;
+    const ctx = this._getCtx();
+    if (!ctx) return;
+    this._resume(ctx);
+    try {
+      // Square-wave carrier for a hard, aggressive wail
+      const osc  = ctx.createOscillator();
+      const gain = ctx.createGain();
+      // Waveshaper adds harsh clipping on top of the square wave
+      const shaper = ctx.createWaveShaper();
+      const curve  = new Float32Array(256);
+      for (let i = 0; i < 256; i++) {
+        const x = (i * 2) / 256 - 1;
+        curve[i] = Math.tanh(x * 4); // hard clip
+      }
+      shaper.curve = curve;
+      // LFO sweeps 660 → 980 Hz (wider swing = more aggressive)
+      const lfo     = ctx.createOscillator();
+      const lfoGain = ctx.createGain();
+      lfo.type            = 'sine';
+      lfo.frequency.value = 0.72; // slightly faster cycle
+      lfoGain.gain.value  = 160;  // ±160 Hz swing
+      osc.type            = 'square';
+      osc.frequency.value = 820;
+      lfo.connect(lfoGain);
+      lfoGain.connect(osc.frequency);
+      gain.gain.value = 0;
+      gain.gain.linearRampToValueAtTime(0.18, ctx.currentTime + 0.08);
+      osc.connect(shaper);
+      shaper.connect(gain);
+      gain.connect(this._out);
+      lfo.start();
+      osc.start();
+      this._sirenOsc    = osc;
+      this._sirenLfo    = lfo;
+      this._sirenGain   = gain;
+      this._sirenShaper = shaper;
+    } catch (_) {}
+  }
+
+  /** Stop the looping police siren smoothly */
+  stopSiren() {
+    if (!this._sirenOsc) return;
+    const ctx = this._getCtx();
+    try {
+      const t = ctx ? ctx.currentTime : 0;
+      if (this._sirenGain) {
+        this._sirenGain.gain.setValueAtTime(this._sirenGain.gain.value, t);
+        this._sirenGain.gain.linearRampToValueAtTime(0, t + 0.35);
+      }
+      const stop = t + 0.36;
+      this._sirenOsc.stop(stop);
+      this._sirenLfo.stop(stop);
+    } catch (_) {}
+    this._sirenOsc    = null;
+    this._sirenLfo    = null;
+    this._sirenGain   = null;
+    this._sirenShaper = null;
+  }
+
   /** Boss killed — dramatic descending chord + noise crash */
   bossKill() {
     this._play('bossKill', 3000, (ctx, out, t) => {

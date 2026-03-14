@@ -110,6 +110,9 @@ class Game {
     this._wantedKills = 0;
     this._wantedDecay = 0;   // seconds since last kill (decay after 10s)
     this._policeTimer = 0;
+    this._policeSirenTimer = 0; // throttle siren sound
+    this._sirenPlaying = false;
+    this._desertMode  = !!this.map.config.desert;
 
     // Weather
     this.weather = new Weather(this.map.config.weather || 'clear');
@@ -711,6 +714,23 @@ class Game {
       }
     }
 
+    // ── Police siren sound (start/stop continuous loop) ────
+    this._policeSirenTimer -= dt;
+    if (this._policeSirenTimer <= 0) {
+      this._policeSirenTimer = 0.3; // check every 0.3s
+      const hasPoliceNear = !this.player.dead && this.bots.some(b =>
+        !b.dead && (b.type === 'police' || b.type === 'swat' || b.type === 'heavyswat') &&
+        Math.hypot(b.x - this.player.x, b.y - this.player.y) < 520
+      );
+      if (hasPoliceNear && !this._sirenPlaying) {
+        window.audio?.startSiren();
+        this._sirenPlaying = true;
+      } else if (!hasPoliceNear && this._sirenPlaying) {
+        window.audio?.stopSiren();
+        this._sirenPlaying = false;
+      }
+    }
+
     // ── Police spawn ───────────────────────────────────────
     if (this._wantedLevel > 0 && !this._zombieMode && !this._lifeMode) {
       const intervals = [0, 9000, 6000, 4000, 2400];
@@ -852,7 +872,7 @@ class Game {
             v.takeDamage(10, this.particles);
             v._ramCooldown = 0.38;
             if (bot.dying) {
-              this.decals.push(new Decal(bot.x, bot.y, 'blood'));
+              const _dType = bot._isZombie ? 'zombie_blood' : 'blood'; const _dCount = bot._isZombie ? 3 : 1; for (let _di = 0; _di < _dCount; _di++) { const _dOx = (Math.random()-0.5)*40, _dOy = (Math.random()-0.5)*40; this.decals.push(new Decal(bot.x + (_di===0?0:_dOx), bot.y + (_di===0?0:_dOy), _dType)); }
               const mult   = this._streakMultiplier();
               const wMult  = (this.player._wealthMult || 1) * (this._hardcoreMode ? 3 : 1) * (this._blitzMode ? 5 : 1);
               const earned = Math.round(CONFIG.MONEY_PER_KILL * bot._cfg.moneyMult * mult * wMult);
@@ -903,7 +923,7 @@ class Game {
           if (b.special && !bot.dying) this._applyBulletSpecial(b.special, bot, b);
           b.dead = true;
           if (bot.dying) {
-            this.decals.push(new Decal(bot.x, bot.y, 'blood'));
+            const _dType = bot._isZombie ? 'zombie_blood' : 'blood'; const _dCount = bot._isZombie ? 3 : 1; for (let _di = 0; _di < _dCount; _di++) { const _dOx = (Math.random()-0.5)*40, _dOy = (Math.random()-0.5)*40; this.decals.push(new Decal(bot.x + (_di===0?0:_dOx), bot.y + (_di===0?0:_dOy), _dType)); }
             const mult   = this._streakMultiplier();
             const wMult  = (this.player._wealthMult || 1) * (this._hardcoreMode ? 3 : 1) * (this._blitzMode ? 5 : 1);
             const earned = Math.round(CONFIG.MONEY_PER_KILL * bot._cfg.moneyMult * mult * wMult);
@@ -1244,10 +1264,12 @@ class Game {
       type = 'shambler';
     } else if (w <= 4) {
       type = r < 0.6 ? 'shambler' : 'runner';
-    } else if (w <= 7) {
-      type = r < 0.35 ? 'shambler' : r < 0.65 ? 'runner' : r < 0.88 ? 'brute' : 'mutant';
+    } else if (w <= 6) {
+      type = r < 0.30 ? 'shambler' : r < 0.55 ? 'runner' : r < 0.75 ? 'brute' : r < 0.90 ? 'mutant' : 'crawler';
+    } else if (w <= 10) {
+      type = r < 0.18 ? 'runner' : r < 0.38 ? 'brute' : r < 0.58 ? 'mutant' : r < 0.72 ? 'bloater' : r < 0.88 ? 'crawler' : 'charger';
     } else {
-      type = r < 0.25 ? 'runner' : r < 0.50 ? 'brute' : r < 0.78 ? 'mutant' : 'bloater';
+      type = r < 0.12 ? 'shambler' : r < 0.28 ? 'brute' : r < 0.44 ? 'mutant' : r < 0.58 ? 'bloater' : r < 0.74 ? 'crawler' : 'charger';
     }
     const pos = this.map.randomRoadPos();
     this.bots.push(new ZombieBot(pos.x, pos.y, w, type));
@@ -1412,7 +1434,7 @@ class Game {
         bot.takeDamage(dmg, this.particles);
         this.hud.addDamageNumber(bot.x, bot.y - 30, dmg, this.camX, this.camY, '#FF8800');
         if (bot.dying) {
-          this.decals.push(new Decal(bot.x, bot.y, 'blood'));
+          const _dType = bot._isZombie ? 'zombie_blood' : 'blood'; const _dCount = bot._isZombie ? 3 : 1; for (let _di = 0; _di < _dCount; _di++) { const _dOx = (Math.random()-0.5)*40, _dOy = (Math.random()-0.5)*40; this.decals.push(new Decal(bot.x + (_di===0?0:_dOx), bot.y + (_di===0?0:_dOy), _dType)); }
           const mult   = this._streakMultiplier();
           const wMult  = (this.player._wealthMult || 1) * (this._hardcoreMode ? 3 : 1) * (this._blitzMode ? 5 : 1);
           const earned = Math.round(CONFIG.MONEY_PER_KILL * bot._cfg.moneyMult * mult * wMult);
@@ -1675,7 +1697,7 @@ class Game {
           this.hud.addDamageNumber(bot.x, bot.y - 30, b.damage, -offX, -offY, '#FF6666');
           b.dead = true;
           if (bot.dying) {
-            this.decals.push(new Decal(bot.x, bot.y, 'blood'));
+            const _dType = bot._isZombie ? 'zombie_blood' : 'blood'; const _dCount = bot._isZombie ? 3 : 1; for (let _di = 0; _di < _dCount; _di++) { const _dOx = (Math.random()-0.5)*40, _dOy = (Math.random()-0.5)*40; this.decals.push(new Decal(bot.x + (_di===0?0:_dOx), bot.y + (_di===0?0:_dOy), _dType)); }
             const mult   = this._streakMultiplier();
             const wMult  = (this.player._wealthMult || 1) * (this._hardcoreMode ? 3 : 1) * (this._blitzMode ? 5 : 1);
             const earned = Math.round(CONFIG.MONEY_PER_KILL * bot._cfg.moneyMult * mult * wMult);
@@ -3182,6 +3204,7 @@ class Game {
       ctx.save();
       ctx.translate(-this.camX + shake.x, -this.camY + shake.y);
       this.map.render(ctx, this.camX, this.camY, W, H);
+      this.map.renderStreetLightPoles(ctx, this.camX, this.camY, W, H, this._nightAlpha);
       this.map.renderMetroEntrance(ctx);
       if (this._districtLayout) {
         const mapPxW = this.map.W * this.map.S;
@@ -3319,8 +3342,25 @@ class Game {
     if (this._nightAlpha > 0.01) {
       ctx.save();
       ctx.globalAlpha = this._nightAlpha;
-      ctx.fillStyle = '#000820';
+      ctx.fillStyle = this.map.config.snow ? '#000e28' : '#000820';
       ctx.fillRect(0, 0, W, H);
+      ctx.restore();
+    }
+
+    // Snow map: permanent cold-blue tint (always winter)
+    if (this.map.config.snow) {
+      ctx.save();
+      ctx.fillStyle = 'rgba(8,32,72,0.16)';
+      ctx.fillRect(0, 0, W, H);
+      ctx.restore();
+    }
+
+    // Street light glows — additive, world-space, after night overlay
+    // so the warm halos visibly punch through the darkness
+    if (!this._indoor && this._nightAlpha > 0.01) {
+      ctx.save();
+      ctx.translate(-this.camX + shake.x, -this.camY + shake.y);
+      this.map.renderStreetLightGlows(ctx, this.camX, this.camY, W, H, this._nightAlpha);
       ctx.restore();
     }
 
