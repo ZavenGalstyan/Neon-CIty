@@ -199,7 +199,7 @@ class GameMap {
             const rand  = Math.abs(Math.sin(seed2 * 4.71));
             if (rand < 0.09) {
               const type = Math.abs(Math.sin(seed2 * 2.37)) > 0.5 ? 2 : 1;
-              const door = { tx, ty, type, wx: (tx + 0.5) * S, wy: (ty + 1) * S - 4 };
+              const door = { tx, ty, type, wx: (tx + 0.5) * S, wy: (ty + 1) * S - 4, _openAmt: 0 };
               this.doors.push(door);
               this._doorMap.set(`${tx},${ty}`, door);
             }
@@ -378,7 +378,7 @@ class GameMap {
                          zone === 'residential' ? 0.13 : 0.09;
           if (Math.abs(Math.sin(seed2 * 4.71)) < chance) {
             const type = Math.abs(Math.sin(seed2 * 2.37)) > 0.5 ? 2 : 1;
-            const door = { tx, ty, type, wx: (tx + 0.5) * S, wy: (ty + 1) * S - 4 };
+            const door = { tx, ty, type, wx: (tx + 0.5) * S, wy: (ty + 1) * S - 4, _openAmt: 0 };
             this.doors.push(door);
             this._doorMap.set(`${tx},${ty}`, door);
           }
@@ -462,6 +462,17 @@ class GameMap {
     const roads = [];
     for (let i = 0; i < this.W; i++) if (i % R === 0) roads.push(i);
     return new Vec2((rndChoice(roads) + 0.5) * S, (rndChoice(roads) + 0.5) * S);
+  }
+
+  // ── Door animation update ─────────────────────────────────
+  updateDoors(px, py, dt) {
+    const speed = 3.5; // panels per second (0→1 range)
+    for (const door of this.doors) {
+      const dist = Math.hypot(door.wx - px, door.wy - py);
+      const target = dist < 62 ? 1 : 0;
+      const delta  = target - door._openAmt;
+      door._openAmt = Math.max(0, Math.min(1, door._openAmt + Math.sign(delta) * speed * dt));
+    }
   }
 
   // ── Main render ───────────────────────────────────────────
@@ -602,8 +613,8 @@ class GameMap {
           // Door on south face of building
           const doorEntry = this._doorMap.get(`${x},${y}`);
           if (doorEntry) {
-            const dw  = doorEntry.type === 2 ? 28 : 22;
-            const dh  = 30;
+            const dw  = doorEntry.type === 2 ? 52 : 38;
+            const dh  = 52;
             const dx2 = wx + S / 2 - dw / 2;
             const dy2 = wy + S - dh;
             const cx2 = wx + S / 2; // center x
@@ -645,31 +656,71 @@ class GameMap {
             ctx.moveTo(dx2 + dw + 3, dy2 - 1); ctx.lineTo(dx2 + dw + 3, dy2 + dh); ctx.lineTo(dx2 - 3, dy2 + dh);
             ctx.stroke();
 
-            // ── Door panels ───────────────────────────────────
+            // ── Door panels (animated open/close) ─────────────
+            const oa = doorEntry._openAmt || 0;
+            // Dark interior revealed as door opens
+            if (oa > 0.02) {
+              const warmA = oa * 0.55;
+              ctx.fillStyle = `rgba(8,5,2,${oa * 0.92})`;
+              ctx.beginPath(); ctx.roundRect(dx2 + 1, dy2 + 1, dw - 2, dh - 2, 1); ctx.fill();
+              // Warm light spill from inside when fully open
+              if (oa > 0.7) {
+                const glow = ctx.createRadialGradient(cx2, dy2 + dh, 0, cx2, dy2 + dh, 28 * oa);
+                glow.addColorStop(0, `rgba(255,210,120,${warmA * 0.6})`);
+                glow.addColorStop(1, 'rgba(255,180,60,0)');
+                ctx.fillStyle = glow; ctx.fillRect(cx2 - 30, dy2, 60, dh + 12);
+              }
+            }
+            ctx.save();
+            // Clip panels within door frame so they slide behind the frame
+            ctx.beginPath(); ctx.rect(dx2, dy2, dw, dh); ctx.clip();
             if (doorEntry.type === 2) {
               const panW = (dw - 3) / 2;
               for (let d = 0; d < 2; d++) {
-                const pdx = dx2 + 1 + d * (panW + 1);
-                ctx.fillStyle = isGlass ? 'rgba(90,155,200,0.38)' : '#3a240e';
+                const slideDir = d === 0 ? -1 : 1;
+                const pdx = dx2 + 1 + d * (panW + 1) + slideDir * oa * (panW + 2);
+                const panAlpha = Math.max(0, 1 - oa * 0.7);
+                ctx.fillStyle = isGlass
+                  ? `rgba(90,155,200,${0.38 * panAlpha})`
+                  : `rgba(58,36,14,${panAlpha})`;
                 ctx.beginPath(); ctx.roundRect(pdx, dy2 + 1, panW, dh - 2, 1); ctx.fill();
-                ctx.fillStyle = isGlass ? 'rgba(180,225,255,0.22)' : 'rgba(0,0,0,0.22)';
-                ctx.beginPath(); ctx.roundRect(pdx + 2, dy2 + 3, panW - 4, (dh - 8) / 2, 1); ctx.fill();
-                ctx.beginPath(); ctx.roundRect(pdx + 2, dy2 + (dh - 8) / 2 + 6, panW - 4, (dh - 8) / 2 - 2, 1); ctx.fill();
-                // Handle
-                ctx.fillStyle = '#D4AF37'; ctx.shadowColor = '#D4AF37'; ctx.shadowBlur = 5;
-                ctx.beginPath(); ctx.arc(pdx + panW - 4, dy2 + dh * 0.50, 2.1, 0, Math.PI * 2); ctx.fill();
+                if (panAlpha > 0.1) {
+                  ctx.fillStyle = isGlass
+                    ? `rgba(180,225,255,${0.22 * panAlpha})`
+                    : `rgba(0,0,0,${0.22 * panAlpha})`;
+                  ctx.beginPath(); ctx.roundRect(pdx + 2, dy2 + 3, panW - 4, (dh - 8) / 2, 1); ctx.fill();
+                  ctx.beginPath(); ctx.roundRect(pdx + 2, dy2 + (dh - 8) / 2 + 6, panW - 4, (dh - 8) / 2 - 2, 1); ctx.fill();
+                  if (panAlpha > 0.4) {
+                    ctx.fillStyle = `rgba(212,175,55,${panAlpha})`;
+                    ctx.shadowColor = '#D4AF37'; ctx.shadowBlur = 5 * panAlpha;
+                    ctx.beginPath(); ctx.arc(pdx + panW - 4, dy2 + dh * 0.50, 2.1, 0, Math.PI * 2); ctx.fill();
+                    ctx.shadowBlur = 0;
+                  }
+                }
               }
             } else {
-              ctx.fillStyle = isGlass ? 'rgba(90,160,210,0.40)' : '#3e2a10';
-              ctx.beginPath(); ctx.roundRect(dx2 + 1, dy2 + 1, dw - 2, dh - 2, 1); ctx.fill();
-              ctx.fillStyle = isGlass ? 'rgba(185,228,255,0.24)' : 'rgba(0,0,0,0.20)';
-              ctx.beginPath(); ctx.roundRect(dx2 + 3, dy2 + 3, dw - 6, (dh - 8) / 2, 1); ctx.fill();
-              ctx.fillStyle = 'rgba(0,0,0,0.16)';
-              ctx.beginPath(); ctx.roundRect(dx2 + 3, dy2 + (dh - 8) / 2 + 6, dw - 6, (dh - 8) / 2 - 2, 1); ctx.fill();
-              // Handle
-              ctx.fillStyle = '#D4AF37'; ctx.shadowColor = '#D4AF37'; ctx.shadowBlur = 5;
-              ctx.beginPath(); ctx.arc(dx2 + dw - 5, dy2 + dh * 0.50, 2.3, 0, Math.PI * 2); ctx.fill();
+              const slideX = oa * (dw + 2);
+              const panAlpha = Math.max(0, 1 - oa * 0.7);
+              ctx.fillStyle = isGlass
+                ? `rgba(90,160,210,${0.40 * panAlpha})`
+                : `rgba(62,42,16,${panAlpha})`;
+              ctx.beginPath(); ctx.roundRect(dx2 + 1 - slideX, dy2 + 1, dw - 2, dh - 2, 1); ctx.fill();
+              if (panAlpha > 0.1) {
+                ctx.fillStyle = isGlass
+                  ? `rgba(185,228,255,${0.24 * panAlpha})`
+                  : `rgba(0,0,0,${0.20 * panAlpha})`;
+                ctx.beginPath(); ctx.roundRect(dx2 + 3 - slideX, dy2 + 3, dw - 6, (dh - 8) / 2, 1); ctx.fill();
+                ctx.fillStyle = `rgba(0,0,0,${0.16 * panAlpha})`;
+                ctx.beginPath(); ctx.roundRect(dx2 + 3 - slideX, dy2 + (dh - 8) / 2 + 6, dw - 6, (dh - 8) / 2 - 2, 1); ctx.fill();
+                if (panAlpha > 0.4) {
+                  ctx.fillStyle = `rgba(212,175,55,${panAlpha})`;
+                  ctx.shadowColor = '#D4AF37'; ctx.shadowBlur = 5 * panAlpha;
+                  ctx.beginPath(); ctx.arc(dx2 + dw - 5 - slideX, dy2 + dh * 0.50, 2.3, 0, Math.PI * 2); ctx.fill();
+                  ctx.shadowBlur = 0;
+                }
+              }
             }
+            ctx.restore();
             ctx.shadowBlur = 0;
 
             // ── Awning / canopy ───────────────────────────────

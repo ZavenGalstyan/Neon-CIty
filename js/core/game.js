@@ -340,6 +340,8 @@ class Game {
       if (this.state === 'carshop') { this._dealership.close(); this.state = 'playing'; return; }
       if (this.state === 'casino')       { this._casino.close();       this.state = 'playing'; return; }
       if (this.state === 'buildingshop') { this._buildingShop.close(); this.state = 'playing'; return; }
+      // ESC while inside a building — exit it
+      if (this._indoor) { this._tryEnterExit(); return; }
       if (this.state === 'paused')  { this.state = 'playing'; return; }  // ESC = resume
       if (this.state === 'playing') { this.state = 'paused'; return; }
       if (this.state === 'gameover'){ this._destroy(); window.location.href = 'index.html'; return; }
@@ -649,6 +651,21 @@ class Game {
       }
     } else if (!this._indoor) {
       for (const portal of this._portals) portal._animT += dt;
+    }
+
+    // ── Door animation + auto walk-through entry ───────────
+    if (!this._indoor && !this._playerVehicle) {
+      this.map.updateDoors(this.player.x, this.player.y, dt);
+      for (const door of this.map.doors) {
+        if (door._openAmt >= 0.85) {
+          const dist = Math.hypot(door.wx - this.player.x, door.wy - this.player.y);
+          if (dist < 30) {
+            this._tryEnterExit();
+            if (this._indoor) return; // stop outdoor update immediately after entering
+            break;
+          }
+        }
+      }
     }
 
     // ── Campaign level complete countdown ──────────────────
