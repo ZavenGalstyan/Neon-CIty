@@ -525,147 +525,55 @@
       <div id="mapPage1">
       <div class="maps-grid">
 
-        <!-- Downtown -->
-        <div class="map-card" data-map="downtown">
-          <div class="map-preview" style="--mg:16px;--mbg:#080812;--mr:rgba(68,238,255,0.38);">
+        <!-- NEON CITY - Unified map with color themes -->
+        <div class="map-card map-card--neon-city selected" data-map="neon_city" style="grid-column: span 3;">
+          <div class="map-preview" id="neonCityPreview" style="--mg:16px;--mbg:#080812;--mr:rgba(68,238,255,0.4);height:140px;">
             <div class="map-preview-inner">
-              <!-- Road intersection dots -->
-              <div class="road-dot" style="top:25%;left:25%"></div>
-              <div class="road-dot" style="top:25%;left:75%"></div>
-              <div class="road-dot" style="top:75%;left:25%"></div>
-              <div class="road-dot" style="top:75%;left:75%"></div>
+              <!-- Animated neon dots -->
+              <div class="road-dot" id="neonDot1" style="top:20%;left:20%"></div>
+              <div class="road-dot" id="neonDot2" style="top:20%;left:50%"></div>
+              <div class="road-dot" id="neonDot3" style="top:20%;left:80%"></div>
+              <div class="road-dot" id="neonDot4" style="top:50%;left:20%"></div>
+              <div class="road-dot" id="neonDot5" style="top:50%;left:50%;width:10px;height:10px;margin:-5px 0 0 -5px"></div>
+              <div class="road-dot" id="neonDot6" style="top:50%;left:80%"></div>
+              <div class="road-dot" id="neonDot7" style="top:80%;left:20%"></div>
+              <div class="road-dot" id="neonDot8" style="top:80%;left:50%"></div>
+              <div class="road-dot" id="neonDot9" style="top:80%;left:80%"></div>
             </div>
           </div>
           <div class="map-info">
             <div class="map-header">
-              <h4 class="map-name" style="color:#44EEFF;text-shadow:0 0 8px #44EEFF">DOWNTOWN</h4>
+              <h4 class="map-name" id="neonCityTitle" style="color:#44EEFF;text-shadow:0 0 12px #44EEFF">NEON CITY</h4>
               <span class="map-num">01</span>
             </div>
-            <p class="map-desc">Dense neon city. Tight corners everywhere.</p>
-            <div class="map-tags">
-              <span class="map-tag" style="--tc:#44EEFF">URBAN</span>
-              <span class="map-tag" style="--tc:#44EEFF">DENSE</span>
-              <span class="map-tag" style="--tc:#44EEFF">40×40</span>
-            </div>
-          </div>
-        </div>
+            <p class="map-desc">The ultimate neon playground. Choose your color theme below.</p>
 
-        <!-- Industrial -->
-        <div class="map-card" data-map="industrial">
-          <div class="map-preview" style="--mg:22px;--mbg:#0a0804;--mr:rgba(255,140,0,0.38);">
-            <div class="map-preview-inner">
-              <div class="road-dot" style="top:25%;left:25%;background:#FF8800;box-shadow:0 0 6px #FF8800"></div>
-              <div class="road-dot" style="top:25%;left:75%;background:#FF8800;box-shadow:0 0 6px #FF8800"></div>
-              <div class="road-dot" style="top:75%;left:25%;background:#FF8800;box-shadow:0 0 6px #FF8800"></div>
-              <div class="road-dot" style="top:75%;left:75%;background:#FF8800;box-shadow:0 0 6px #FF8800"></div>
+            <!-- Color Theme Selector -->
+            <div class="neon-color-selector" style="display:flex;gap:8px;margin:10px 0;justify-content:center;flex-wrap:wrap;">
+              <button class="neon-theme-btn active" data-theme="cyan" style="--btn-color:#44EEFF" title="Cyan Neon">
+                <span class="theme-color" style="background:#44EEFF;box-shadow:0 0 12px #44EEFF"></span>
+              </button>
+              <button class="neon-theme-btn" data-theme="orange" style="--btn-color:#FF8800" title="Orange Flame">
+                <span class="theme-color" style="background:#FF8800;box-shadow:0 0 12px #FF8800"></span>
+              </button>
+              <button class="neon-theme-btn" data-theme="green" style="--btn-color:#44FF88" title="Green Matrix">
+                <span class="theme-color" style="background:#44FF88;box-shadow:0 0 12px #44FF88"></span>
+              </button>
+              <button class="neon-theme-btn" data-theme="red" style="--btn-color:#FF4444" title="Red Danger">
+                <span class="theme-color" style="background:#FF4444;box-shadow:0 0 12px #FF4444"></span>
+              </button>
+              <button class="neon-theme-btn" data-theme="blue" style="--btn-color:#00AACC" title="Blue Ocean">
+                <span class="theme-color" style="background:#00AACC;box-shadow:0 0 12px #00AACC"></span>
+              </button>
+              <button class="neon-theme-btn" data-theme="yellow" style="--btn-color:#FFCC00" title="Yellow Gold">
+                <span class="theme-color" style="background:#FFCC00;box-shadow:0 0 12px #FFCC00"></span>
+              </button>
             </div>
-          </div>
-          <div class="map-info">
-            <div class="map-header">
-              <h4 class="map-name" style="color:#FF8800;text-shadow:0 0 8px #FF8800">INDUSTRIAL</h4>
-              <span class="map-num">02</span>
-            </div>
-            <p class="map-desc">Heavy warehouses. Wide open killing grounds.</p>
-            <div class="map-tags">
-              <span class="map-tag" style="--tc:#FF8800">OPEN</span>
-              <span class="map-tag" style="--tc:#FF8800">WIDE</span>
-              <span class="map-tag" style="--tc:#FF8800">36×36</span>
-            </div>
-          </div>
-        </div>
 
-        <!-- Suburbs -->
-        <div class="map-card" data-map="suburbs">
-          <div class="map-preview" style="--mg:12px;--mbg:#04080a;--mr:rgba(68,255,136,0.38);">
-            <div class="map-preview-inner">
-              <div class="road-dot" style="top:25%;left:25%;background:#44FF88;box-shadow:0 0 6px #44FF88"></div>
-              <div class="road-dot" style="top:25%;left:75%;background:#44FF88;box-shadow:0 0 6px #44FF88"></div>
-              <div class="road-dot" style="top:75%;left:25%;background:#44FF88;box-shadow:0 0 6px #44FF88"></div>
-              <div class="road-dot" style="top:75%;left:75%;background:#44FF88;box-shadow:0 0 6px #44FF88"></div>
-            </div>
-          </div>
-          <div class="map-info">
-            <div class="map-header">
-              <h4 class="map-name" style="color:#44FF88;text-shadow:0 0 8px #44FF88">SUBURBS</h4>
-              <span class="map-num">03</span>
-            </div>
-            <p class="map-desc">Tight residential grid. No place to hide.</p>
             <div class="map-tags">
-              <span class="map-tag" style="--tc:#44FF88">MAZE</span>
-              <span class="map-tag" style="--tc:#44FF88">TIGHT</span>
-              <span class="map-tag" style="--tc:#44FF88">50×50</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Ruins -->
-        <div class="map-card" data-map="ruins">
-          <div class="map-preview" style="--mg:19px;--mbg:#0a0404;--mr:rgba(255,60,60,0.38);">
-            <div class="map-preview-inner">
-              <div class="road-dot" style="top:25%;left:25%;background:#FF4444;box-shadow:0 0 6px #FF4444"></div>
-              <div class="road-dot" style="top:25%;left:75%;background:#FF4444;box-shadow:0 0 6px #FF4444"></div>
-              <div class="road-dot" style="top:75%;left:25%;background:#FF4444;box-shadow:0 0 6px #FF4444"></div>
-              <div class="road-dot" style="top:75%;left:75%;background:#FF4444;box-shadow:0 0 6px #FF4444"></div>
-            </div>
-          </div>
-          <div class="map-info">
-            <div class="map-header">
-              <h4 class="map-name" style="color:#FF4444;text-shadow:0 0 8px #FF4444">RUINS</h4>
-              <span class="map-num">04</span>
-            </div>
-            <p class="map-desc">Collapsed city. Blood soaked streets.</p>
-            <div class="map-tags">
-              <span class="map-tag" style="--tc:#FF4444">DANGER</span>
-              <span class="map-tag" style="--tc:#FF4444">DARK</span>
-              <span class="map-tag" style="--tc:#FF4444">38×38</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Docks -->
-        <div class="map-card" data-map="docks">
-          <div class="map-preview" style="--mg:11px;--mbg:#020b10;--mr:rgba(0,170,204,0.38);">
-            <div class="map-preview-inner">
-              <div class="road-dot" style="top:25%;left:25%;background:#00AACC;box-shadow:0 0 6px #00AACC"></div>
-              <div class="road-dot" style="top:25%;left:75%;background:#00AACC;box-shadow:0 0 6px #00AACC"></div>
-              <div class="road-dot" style="top:75%;left:25%;background:#00AACC;box-shadow:0 0 6px #00AACC"></div>
-              <div class="road-dot" style="top:75%;left:75%;background:#00AACC;box-shadow:0 0 6px #00AACC"></div>
-            </div>
-          </div>
-          <div class="map-info">
-            <div class="map-header">
-              <h4 class="map-name" style="color:#00AACC;text-shadow:0 0 8px #00AACC">DOCKS</h4>
-              <span class="map-num">05</span>
-            </div>
-            <p class="map-desc">Port district. Narrow alleys. Hidden dangers.</p>
-            <div class="map-tags">
-              <span class="map-tag" style="--tc:#00AACC">PORT</span>
-              <span class="map-tag" style="--tc:#00AACC">NARROW</span>
-              <span class="map-tag" style="--tc:#00AACC">34×34</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Casino Strip -->
-        <div class="map-card" data-map="casino">
-          <div class="map-preview" style="--mg:27px;--mbg:#0c0900;--mr:rgba(255,204,0,0.38);">
-            <div class="map-preview-inner">
-              <div class="road-dot" style="top:25%;left:25%;background:#FFCC00;box-shadow:0 0 6px #FFCC00"></div>
-              <div class="road-dot" style="top:25%;left:75%;background:#FFCC00;box-shadow:0 0 6px #FFCC00"></div>
-              <div class="road-dot" style="top:75%;left:25%;background:#FFCC00;box-shadow:0 0 6px #FFCC00"></div>
-              <div class="road-dot" style="top:75%;left:75%;background:#FFCC00;box-shadow:0 0 6px #FFCC00"></div>
-            </div>
-          </div>
-          <div class="map-info">
-            <div class="map-header">
-              <h4 class="map-name" style="color:#FFCC00;text-shadow:0 0 8px #FFCC00">CASINO STRIP</h4>
-              <span class="map-num">06</span>
-            </div>
-            <p class="map-desc">Neon-lit boulevard. Wide open. High risk.</p>
-            <div class="map-tags">
-              <span class="map-tag" style="--tc:#FFCC00">NEON</span>
-              <span class="map-tag" style="--tc:#FFCC00">OPEN</span>
-              <span class="map-tag" style="--tc:#FFCC00">44×44</span>
+              <span class="map-tag" id="neonCityTag1" style="--tc:#44EEFF">CUSTOMIZABLE</span>
+              <span class="map-tag" id="neonCityTag2" style="--tc:#44EEFF">CLASSIC</span>
+              <span class="map-tag" id="neonCityTag3" style="--tc:#44EEFF">42×42</span>
             </div>
           </div>
         </div>
@@ -691,7 +599,7 @@
           <div class="map-info">
             <div class="map-header">
               <h4 class="map-name" style="color:#88DDFF;text-shadow:0 0 10px #88DDFF">🏙 LIFE MODE</h4>
-              <span class="map-num" style="color:#88DDFF">07</span>
+              <span class="map-num" style="color:#88DDFF">02</span>
             </div>
             <p class="map-desc">Peaceful sandbox city. Buy a home, eat out, drive freely. No enemies.</p>
             <div class="map-tags">
@@ -714,7 +622,7 @@
           <div class="map-info">
             <div class="map-header">
               <h4 class="map-name" style="color:#FF0044;text-shadow:0 0 10px #FF0044">☠ ARENA ☠</h4>
-              <span class="map-num" style="color:#FF0044">08</span>
+              <span class="map-num" style="color:#FF0044">03</span>
             </div>
             <p class="map-desc">Enclosed kill-zone. Kill-based waves. Boss every 4 waves. No shop. No escape.</p>
             <div class="map-tags">
@@ -740,7 +648,7 @@
           <div class="map-info">
             <div class="map-header">
               <h4 class="map-name" style="color:#44FF88;text-shadow:0 0 10px #44FF88">☣ ZOMBIE OUTBREAK ☣</h4>
-              <span class="map-num" style="color:#44FF88">09</span>
+              <span class="map-num" style="color:#44FF88">04</span>
             </div>
             <p class="map-desc">Neon City has fallen. The infected never stop coming. Survive as long as you can.</p>
             <div class="map-tags">
@@ -759,99 +667,75 @@
       <div id="mapPage2" style="display:none">
         <div class="maps-grid">
 
-          <!-- Harbor -->
-          <div class="map-card" data-map="harbor">
-            <div class="map-preview" style="--mg:20px;--mbg:#020b10;--mr:rgba(0,204,221,0.38);">
+          <!-- WASTELAND - Unified map with big buildings and color themes -->
+          <div class="map-card map-card--wasteland" data-map="wasteland" style="grid-column: span 3;">
+            <div class="map-preview" id="wastelandPreview" style="--mg:25px;--mbg:#0a0602;--mr:rgba(255,102,34,0.38);height:140px;">
               <div class="map-preview-inner">
-                <div class="road-dot" style="top:25%;left:25%;background:#00CCDD;box-shadow:0 0 6px #00CCDD"></div>
-                <div class="road-dot" style="top:25%;left:75%;background:#00CCDD;box-shadow:0 0 6px #00CCDD"></div>
-                <div class="road-dot" style="top:75%;left:25%;background:#00CCDD;box-shadow:0 0 6px #00CCDD"></div>
-                <div class="road-dot" style="top:75%;left:75%;background:#00CCDD;box-shadow:0 0 6px #00CCDD"></div>
+                <!-- Sparse dots to show big buildings/open terrain -->
+                <div class="road-dot" id="wastelandDot1" style="top:15%;left:15%;background:#FF6622;box-shadow:0 0 8px #FF6622"></div>
+                <div class="road-dot" id="wastelandDot2" style="top:15%;left:85%;background:#FF6622;box-shadow:0 0 8px #FF6622"></div>
+                <div class="road-dot" id="wastelandDot3" style="top:50%;left:50%;background:#FF6622;box-shadow:0 0 12px #FF6622;width:12px;height:12px;margin:-6px 0 0 -6px"></div>
+                <div class="road-dot" id="wastelandDot4" style="top:85%;left:15%;background:#FF6622;box-shadow:0 0 8px #FF6622"></div>
+                <div class="road-dot" id="wastelandDot5" style="top:85%;left:85%;background:#FF6622;box-shadow:0 0 8px #FF6622"></div>
               </div>
             </div>
             <div class="map-info">
               <div class="map-header">
-                <h4 class="map-name" style="color:#00CCDD;text-shadow:0 0 8px #00CCDD">HARBOR</h4>
-                <span class="map-num">10</span>
+                <h4 class="map-name" id="wastelandTitle" style="color:#FF6622;text-shadow:0 0 12px #FF6622">WASTELAND</h4>
+                <span class="map-num">05</span>
               </div>
-              <p class="map-desc">Industrial waterfront. Cranes, containers, fog-soaked danger.</p>
+              <p class="map-desc">Massive open terrain with huge buildings. Choose your color theme below.</p>
+
+              <!-- Color Theme Selector -->
+              <div class="wasteland-color-selector" style="display:flex;gap:8px;margin:10px 0;justify-content:center;flex-wrap:wrap;">
+                <button class="wasteland-theme-btn" data-theme="teal" style="--btn-color:#00CCDD" title="Teal Harbor">
+                  <span class="theme-color" style="background:#00CCDD;box-shadow:0 0 12px #00CCDD"></span>
+                </button>
+                <button class="wasteland-theme-btn" data-theme="pink" style="--btn-color:#FF44CC" title="Pink Neon">
+                  <span class="theme-color" style="background:#FF44CC;box-shadow:0 0 12px #FF44CC"></span>
+                </button>
+                <button class="wasteland-theme-btn" data-theme="green" style="--btn-color:#88AA44" title="Green Military">
+                  <span class="theme-color" style="background:#88AA44;box-shadow:0 0 12px #88AA44"></span>
+                </button>
+                <button class="wasteland-theme-btn active" data-theme="orange" style="--btn-color:#FF6622" title="Orange Badlands">
+                  <span class="theme-color" style="background:#FF6622;box-shadow:0 0 12px #FF6622"></span>
+                </button>
+              </div>
+
               <div class="map-tags">
-                <span class="map-tag" style="--tc:#00CCDD">PORT</span>
-                <span class="map-tag" style="--tc:#00CCDD">FOG</span>
-                <span class="map-tag" style="--tc:#00CCDD">38×38</span>
+                <span class="map-tag" id="wastelandTag1" style="--tc:#FF6622">CUSTOMIZABLE</span>
+                <span class="map-tag" id="wastelandTag2" style="--tc:#FF6622">BIG BUILDINGS</span>
+                <span class="map-tag" id="wastelandTag3" style="--tc:#FF6622">44×44</span>
               </div>
             </div>
           </div>
 
-          <!-- Neon District -->
-          <div class="map-card" data-map="neon_district">
-            <div class="map-preview" style="--mg:14px;--mbg:#0a0010;--mr:rgba(255,68,204,0.45);">
+          <!-- Jungle Safari -->
+          <div class="map-card map-card--jungle" data-map="jungle" style="grid-column: span 3;">
+            <div class="experimental-badge" style="background:#44AA22;box-shadow:0 0 14px rgba(68,170,34,0.7);color:#fff">🌴 WILD</div>
+            <div class="map-preview" id="junglePreview" style="--mg:18px;--mbg:#0a1808;--mr:rgba(139,90,43,0.5);height:140px;">
               <div class="map-preview-inner">
-                <div class="road-dot" style="top:25%;left:25%;background:#FF44CC;box-shadow:0 0 8px #FF44CC"></div>
-                <div class="road-dot" style="top:25%;left:75%;background:#FF44CC;box-shadow:0 0 8px #FF44CC"></div>
-                <div class="road-dot" style="top:75%;left:25%;background:#FF44CC;box-shadow:0 0 8px #FF44CC"></div>
-                <div class="road-dot" style="top:75%;left:75%;background:#FF44CC;box-shadow:0 0 8px #FF44CC"></div>
-                <div class="road-dot" style="top:50%;left:50%;background:#FF00FF;box-shadow:0 0 12px #FF00FF;width:8px;height:8px;margin:-4px 0 0 -4px"></div>
+                <!-- Tree dots pattern -->
+                <div class="road-dot" style="top:15%;left:20%;background:#228B22;box-shadow:0 0 10px #228B22;width:12px;height:12px;margin:-6px 0 0 -6px"></div>
+                <div class="road-dot" style="top:25%;left:60%;background:#2E8B57;box-shadow:0 0 8px #2E8B57;width:10px;height:10px;margin:-5px 0 0 -5px"></div>
+                <div class="road-dot" style="top:40%;left:35%;background:#44AA22;box-shadow:0 0 12px #44AA22;width:14px;height:14px;margin:-7px 0 0 -7px"></div>
+                <div class="road-dot" style="top:55%;left:80%;background:#228B22;box-shadow:0 0 10px #228B22;width:11px;height:11px;margin:-5px 0 0 -5px"></div>
+                <div class="road-dot" style="top:70%;left:15%;background:#2E8B57;box-shadow:0 0 8px #2E8B57;width:9px;height:9px;margin:-4px 0 0 -4px"></div>
+                <div class="road-dot" style="top:75%;left:50%;background:#44AA22;box-shadow:0 0 10px #44AA22;width:12px;height:12px;margin:-6px 0 0 -6px"></div>
+                <div class="road-dot" style="top:85%;left:75%;background:#228B22;box-shadow:0 0 8px #228B22;width:8px;height:8px;margin:-4px 0 0 -4px"></div>
               </div>
             </div>
             <div class="map-info">
               <div class="map-header">
-                <h4 class="map-name" style="color:#FF44CC;text-shadow:0 0 8px #FF44CC">NEON DISTRICT</h4>
-                <span class="map-num">11</span>
+                <h4 class="map-name" style="color:#44AA22;text-shadow:0 0 12px #44AA22">🌴 JUNGLE SAFARI 🦁</h4>
+                <span class="map-num" style="color:#44AA22">06</span>
               </div>
-              <p class="map-desc">The city's pulsing heart. Every surface screams in light.</p>
+              <p class="map-desc">Deep in the wild. Animal predators hunt you. Ride horses through dirt paths. Survive nature's fury.</p>
               <div class="map-tags">
-                <span class="map-tag" style="--tc:#FF44CC">NEON</span>
-                <span class="map-tag" style="--tc:#FF44CC">DENSE</span>
-                <span class="map-tag" style="--tc:#FF44CC">42×42</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Military Base -->
-          <div class="map-card" data-map="military">
-            <div class="map-preview" style="--mg:24px;--mbg:#060804;--mr:rgba(136,170,68,0.38);">
-              <div class="map-preview-inner">
-                <div class="road-dot" style="top:25%;left:25%;background:#88AA44;box-shadow:0 0 6px #88AA44"></div>
-                <div class="road-dot" style="top:25%;left:75%;background:#88AA44;box-shadow:0 0 6px #88AA44"></div>
-                <div class="road-dot" style="top:75%;left:25%;background:#88AA44;box-shadow:0 0 6px #88AA44"></div>
-                <div class="road-dot" style="top:75%;left:75%;background:#88AA44;box-shadow:0 0 6px #88AA44"></div>
-              </div>
-            </div>
-            <div class="map-info">
-              <div class="map-header">
-                <h4 class="map-name" style="color:#88AA44;text-shadow:0 0 8px #88AA44">MILITARY BASE</h4>
-                <span class="map-num">12</span>
-              </div>
-              <p class="map-desc">Fortified compound. Armored patrols. Heavy resistance.</p>
-              <div class="map-tags">
-                <span class="map-tag" style="--tc:#88AA44">MILITARY</span>
-                <span class="map-tag" style="--tc:#88AA44">SANDSTORM</span>
-                <span class="map-tag" style="--tc:#88AA44">36×36</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Badlands -->
-          <div class="map-card" data-map="badlands">
-            <div class="map-preview" style="--mg:25px;--mbg:#0a0602;--mr:rgba(255,102,34,0.38);">
-              <div class="map-preview-inner">
-                <div class="road-dot" style="top:25%;left:25%;background:#FF6622;box-shadow:0 0 6px #FF6622"></div>
-                <div class="road-dot" style="top:25%;left:75%;background:#FF6622;box-shadow:0 0 6px #FF6622"></div>
-                <div class="road-dot" style="top:75%;left:25%;background:#FF6622;box-shadow:0 0 6px #FF6622"></div>
-                <div class="road-dot" style="top:75%;left:75%;background:#FF6622;box-shadow:0 0 6px #FF6622"></div>
-              </div>
-            </div>
-            <div class="map-info">
-              <div class="map-header">
-                <h4 class="map-name" style="color:#FF6622;text-shadow:0 0 8px #FF6622">BADLANDS</h4>
-                <span class="map-num">13</span>
-              </div>
-              <p class="map-desc">Scorched wasteland. No cover. No mercy. Endless sky.</p>
-              <div class="map-tags">
-                <span class="map-tag" style="--tc:#FF6622">WASTELAND</span>
-                <span class="map-tag" style="--tc:#FF6622">OPEN</span>
-                <span class="map-tag" style="--tc:#FF6622">44×44</span>
+                <span class="map-tag" style="--tc:#44AA22">ANIMALS</span>
+                <span class="map-tag" style="--tc:#44AA22">MELEE ONLY</span>
+                <span class="map-tag" style="--tc:#44AA22">HORSES</span>
+                <span class="map-tag" style="--tc:#44AA22">48×48</span>
               </div>
             </div>
           </div>
@@ -870,7 +754,7 @@
             <div class="map-info">
               <div class="map-header">
                 <h4 class="map-name" style="color:#FF4400;text-shadow:0 0 10px #FF2200">⚡ BLITZ MODE</h4>
-                <span class="map-num" style="color:#FF4400">17</span>
+                <span class="map-num" style="color:#FF4400">07</span>
               </div>
               <p class="map-desc">Triple speed carnage. Everyone moves at 3× speed. 5× money. No time to think.</p>
               <div class="map-tags">
@@ -896,7 +780,7 @@
             <div class="map-info">
               <div class="map-header">
                 <h4 class="map-name" style="color:#44AAFF;text-shadow:0 0 10px #44AAFF">🛡 SIEGE MODE</h4>
-                <span class="map-num" style="color:#44AAFF">18</span>
+                <span class="map-num" style="color:#44AAFF">08</span>
               </div>
               <p class="map-desc">Hold the center. Endless assault from all 4 sides. The city falls — or you do.</p>
               <div class="map-tags">
@@ -928,13 +812,48 @@
             <div class="map-info">
               <div class="map-header">
                 <h4 class="map-name" style="color:#88DDFF;text-shadow:0 0 10px #88DDFF">❄ FROZEN TUNDRA</h4>
-                <span class="map-num" style="color:#88DDFF">20</span>
+                <span class="map-num" style="color:#88DDFF">09</span>
               </div>
               <p class="map-desc">A city locked in eternal winter. Blizzard rages. Ice soldiers never stop coming.</p>
               <div class="map-tags">
                 <span class="map-tag" style="--tc:#88DDFF">WINTER</span>
                 <span class="map-tag" style="--tc:#AAEEFF">BLIZZARD</span>
                 <span class="map-tag" style="--tc:#66CCFF">38×38</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Ocean Depths -->
+          <div class="map-card" data-map="ocean_depths">
+            <div class="experimental-badge" style="background:linear-gradient(90deg,#0066AA,#00CCFF);box-shadow:0 0 14px rgba(0,136,204,0.75);color:#fff">🌊 OCEAN</div>
+            <div class="map-preview" style="--mg:18px;--mbg:#001828;--mr:rgba(0,136,204,0.50);">
+              <div class="map-preview-inner">
+                <!-- Wave patterns -->
+                <div class="road-dot" style="top:20%;left:25%;background:#00CCFF;box-shadow:0 0 10px #00CCFF"></div>
+                <div class="road-dot" style="top:25%;left:75%;background:#0099DD;box-shadow:0 0 8px #0099DD"></div>
+                <div class="road-dot" style="top:70%;left:30%;background:#44DDFF;box-shadow:0 0 8px #44DDFF"></div>
+                <div class="road-dot" style="top:75%;left:70%;background:#00FFFF;box-shadow:0 0 10px #00FFFF"></div>
+                <div class="road-dot" style="top:50%;left:50%;background:#88EEFF;box-shadow:0 0 20px #00CCFF;width:14px;height:14px;margin:-7px 0 0 -7px"></div>
+                <!-- Bubble particles -->
+                <div style="position:absolute;top:35%;left:20%;width:4px;height:4px;border-radius:50%;background:rgba(100,220,255,0.5);border:1px solid rgba(150,230,255,0.6)"></div>
+                <div style="position:absolute;top:55%;left:80%;width:3px;height:3px;border-radius:50%;background:rgba(100,220,255,0.4);border:1px solid rgba(150,230,255,0.5)"></div>
+                <div style="position:absolute;top:15%;left:55%;width:3px;height:3px;border-radius:50%;background:rgba(100,220,255,0.45);border:1px solid rgba(150,230,255,0.55)"></div>
+                <div style="position:absolute;top:85%;left:45%;width:4px;height:4px;border-radius:50%;background:rgba(100,220,255,0.5);border:1px solid rgba(150,230,255,0.6)"></div>
+                <!-- Wave lines -->
+                <div style="position:absolute;top:40%;left:10%;right:10%;height:1px;background:linear-gradient(90deg,transparent,rgba(0,200,255,0.3),transparent);"></div>
+                <div style="position:absolute;top:60%;left:15%;right:15%;height:1px;background:linear-gradient(90deg,transparent,rgba(0,200,255,0.25),transparent);"></div>
+              </div>
+            </div>
+            <div class="map-info">
+              <div class="map-header">
+                <h4 class="map-name" style="color:#00CCFF;text-shadow:0 0 10px #00CCFF">🌊 OCEAN DEPTHS</h4>
+                <span class="map-num" style="color:#00CCFF">10</span>
+              </div>
+              <p class="map-desc">A vast ocean arena. Floating ships and platforms. Water warriors rise from the deep.</p>
+              <div class="map-tags">
+                <span class="map-tag" style="--tc:#00CCFF">OCEAN</span>
+                <span class="map-tag" style="--tc:#00FFFF">NAUTICAL</span>
+                <span class="map-tag" style="--tc:#44DDFF">44×44</span>
               </div>
             </div>
           </div>
@@ -962,7 +881,7 @@
             <div class="map-info">
               <div class="map-header">
                 <h4 class="map-name" style="color:#FF9933;text-shadow:0 0 10px #FF9933">🌆 METROPOLIS</h4>
-                <span class="map-num" style="color:#FF9933">19</span>
+                <span class="map-num" style="color:#FF9933">11</span>
               </div>
               <p class="map-desc">A vast living city: commercial towers, residential flats, industrial zones, gangster slums, and a lush central park. The biggest map ever.</p>
               <div class="map-tags">
@@ -993,7 +912,7 @@
             <div class="map-info">
               <div class="map-header">
                 <h4 class="map-name" style="color:#FF2244;text-shadow:0 0 10px #FF2244">☠ SURVIVAL MODE</h4>
-                <span class="map-num" style="color:#FF2244">14</span>
+                <span class="map-num" style="color:#FF2244">12</span>
               </div>
               <p class="map-desc">No shop. No mercy. Live or die by the gun. Blood rain never stops.</p>
               <div class="map-tags">
@@ -1020,7 +939,7 @@
             <div class="map-info">
               <div class="map-header">
                 <h4 class="map-name" style="color:#FF8800;text-shadow:0 0 10px #FF8800">⚡ HARDCORE MODE</h4>
-                <span class="map-num" style="color:#FF8800">15</span>
+                <span class="map-num" style="color:#FF8800">13</span>
               </div>
               <p class="map-desc">Enemies deal 2× damage. You earn 3× money. Only legends survive.</p>
               <div class="map-tags">
@@ -1046,7 +965,7 @@
             <div class="map-info">
               <div class="map-header">
                 <h4 class="map-name" style="color:#FFDD00;text-shadow:0 0 10px #FFDD00">★ CAMPAIGN</h4>
-                <span class="map-num" style="color:#FFDD00">16</span>
+                <span class="map-num" style="color:#FFDD00">14</span>
               </div>
               <p class="map-desc">100 levels of escalating warfare. Boss every 10. Can you reach level 100?</p>
               <div class="map-tags">
