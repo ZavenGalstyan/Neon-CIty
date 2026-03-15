@@ -93,170 +93,237 @@ const CONFIG = {
     },
   ],
 
-  // ── Maps ────────────────────────────────────────────────
-  MAPS: [
-    {
-      id: 'downtown',
-      name: 'DOWNTOWN',
-      desc: 'Dense neon city. Tight corners everywhere.',
+  // ── Color Themes for Neon City ──────────────────────────
+  // These define the 6 color variations for the unified Neon City map
+  NEON_CITY_THEMES: {
+    cyan: {
+      name: 'CYAN NEON',
       theme: '#44EEFF',
-      tags: ['URBAN', 'DENSE'],
-      previewGridSize: 16,   // px — visual only
-      previewBg:   '#080812',
+      previewBg: '#080812',
       previewRoad: 'rgba(68,238,255,0.4)',
-
-      // Gameplay
-      mapW: 40, mapH: 40, tileSize: 80, roadEvery: 9,
-
-      // Rendering
-      roadColor:      '#111118',
-      sidewalkColor:  '#1a1a28',
+      roadColor: '#111118',
+      sidewalkColor: '#1a1a28',
       buildingPalette: ['#1a1a2e','#16213e','#0f3460','#1a1a2e','#12212e','#1e1e30','#151530','#1c1c2e'],
-      neonColors:     ['#FF0066','#00FFCC','#FFCC00','#FF6600'],
-      windowColors:   ['#FFEE88','#88EEFF','#FF88CC','#88FFAA'],
-      lightColor:     '#FFCC66',
-      lightGlow:      '#FFAA44',
-      neonFreq:       11,
+      neonColors: ['#44EEFF','#00FFCC','#66FFFF','#00DDEE'],
+      windowColors: ['#88EEFF','#AAFFFF','#66DDFF','#CCFFFF'],
+      lightColor: '#88EEFF',
+      lightGlow: '#44EEFF',
       weather: 'rain',
       botPalettes: {
-        mini:   [{ body:'#7722EE', accent:'#AA66FF' }, { body:'#5511CC', accent:'#8844DD' }, { body:'#9933FF', accent:'#CC77FF' }],
-        normal: [{ body:'#FF3344', accent:'#FF0022' }, { body:'#FF6600', accent:'#FF4400' }, { body:'#AA0000', accent:'#CC2222' }, { body:'#DD0066', accent:'#FF0088' }],
-        big:    [{ body:'#884400', accent:'#CC6600' }, { body:'#553300', accent:'#886644' }],
+        mini:   [{ body:'#0066AA', accent:'#44EEFF' }, { body:'#0055AA', accent:'#33DDEE' }, { body:'#0077BB', accent:'#55FFFF' }],
+        normal: [{ body:'#0088AA', accent:'#44EEFF' }, { body:'#006699', accent:'#33CCDD' }, { body:'#007799', accent:'#44DDEE' }, { body:'#0099BB', accent:'#66FFFF' }],
+        big:    [{ body:'#004466', accent:'#0088AA' }, { body:'#003355', accent:'#006688' }],
       },
     },
-    {
-      id: 'industrial',
-      name: 'INDUSTRIAL',
-      desc: 'Heavy warehouses. Wide open killing grounds.',
+    orange: {
+      name: 'ORANGE FLAME',
       theme: '#FF8800',
-      tags: ['OPEN', 'WIDE'],
-      previewGridSize: 22,
-      previewBg:   '#0a0804',
+      previewBg: '#0a0804',
       previewRoad: 'rgba(255,140,0,0.4)',
-
-      mapW: 36, mapH: 36, tileSize: 80, roadEvery: 12,
-
-      roadColor:      '#0d0d10',
-      sidewalkColor:  '#141210',
+      roadColor: '#0d0d10',
+      sidewalkColor: '#141210',
       buildingPalette: ['#1a1510','#201a10','#181210','#222015','#1c1810','#161210','#1a1410','#201810'],
-      neonColors:     ['#FF6600','#FFAA00','#FF3300','#FFCC00'],
-      windowColors:   ['#FF8800','#FFAA44','#FF6600','#FFCC44'],
-      lightColor:     '#FF8844',
-      lightGlow:      '#FF6600',
-      neonFreq:       8,
+      neonColors: ['#FF8800','#FFAA00','#FF6600','#FFCC00'],
+      windowColors: ['#FF8800','#FFAA44','#FF6600','#FFCC44'],
+      lightColor: '#FF8844',
+      lightGlow: '#FF6600',
       weather: 'smoke',
       botPalettes: {
-        mini:   [{ body:'#BB4400', accent:'#FF6600' }, { body:'#993300', accent:'#DD5500' }, { body:'#CC5500', accent:'#FF7700' }],
-        normal: [{ body:'#884422', accent:'#CC6633' }, { body:'#AA5500', accent:'#DD7700' }, { body:'#993300', accent:'#CC5511' }, { body:'#7A3310', accent:'#AA5522' }],
-        big:    [{ body:'#553311', accent:'#886644' }, { body:'#664422', accent:'#997755' }],
+        mini:   [{ body:'#BB4400', accent:'#FF8800' }, { body:'#993300', accent:'#DD6600' }, { body:'#CC5500', accent:'#FF9900' }],
+        normal: [{ body:'#884422', accent:'#FF8800' }, { body:'#AA5500', accent:'#FF9900' }, { body:'#993300', accent:'#DD6600' }, { body:'#BB6600', accent:'#FFAA00' }],
+        big:    [{ body:'#553311', accent:'#AA6622' }, { body:'#664422', accent:'#BB7733' }],
       },
     },
-    {
-      id: 'suburbs',
-      name: 'SUBURBS',
-      desc: 'Tight residential grid. No place to hide.',
+    green: {
+      name: 'GREEN MATRIX',
       theme: '#44FF88',
-      tags: ['MAZE', 'TIGHT'],
-      previewGridSize: 12,
-      previewBg:   '#04080a',
+      previewBg: '#04080a',
       previewRoad: 'rgba(68,255,136,0.38)',
-
-      mapW: 50, mapH: 50, tileSize: 80, roadEvery: 7,
-
-      roadColor:      '#0c1210',
-      sidewalkColor:  '#121a14',
+      roadColor: '#0c1210',
+      sidewalkColor: '#121a14',
       buildingPalette: ['#0f1e14','#111e18','#0e1a12','#131f16','#101c14','#0f1c12','#121e15','#0e1c12'],
-      neonColors:     ['#00FF88','#44FFAA','#00CC66','#88FFCC'],
-      windowColors:   ['#88FFCC','#AAFFDD','#66FFAA','#CCFFEE'],
-      lightColor:     '#88FFCC',
-      lightGlow:      '#44FF88',
-      neonFreq:       14,
+      neonColors: ['#44FF88','#00FF66','#66FFAA','#22DD66'],
+      windowColors: ['#88FFCC','#AAFFDD','#66FFAA','#CCFFEE'],
+      lightColor: '#88FFCC',
+      lightGlow: '#44FF88',
       weather: 'clear',
       botPalettes: {
-        mini:   [{ body:'#009944', accent:'#00DD66' }, { body:'#007733', accent:'#00BB55' }, { body:'#00AA44', accent:'#00EE77' }],
-        normal: [{ body:'#00AA44', accent:'#00FF66' }, { body:'#008833', accent:'#00CC55' }, { body:'#006633', accent:'#009944' }, { body:'#00BB55', accent:'#00FF77' }],
-        big:    [{ body:'#224411', accent:'#447733' }, { body:'#335522', accent:'#558844' }],
+        mini:   [{ body:'#009944', accent:'#44FF88' }, { body:'#007733', accent:'#33DD77' }, { body:'#00AA55', accent:'#55FF99' }],
+        normal: [{ body:'#00AA44', accent:'#44FF88' }, { body:'#008833', accent:'#33DD66' }, { body:'#006633', accent:'#22AA55' }, { body:'#00BB55', accent:'#55FF99' }],
+        big:    [{ body:'#224411', accent:'#448833' }, { body:'#335522', accent:'#559944' }],
       },
     },
-    {
-      id: 'ruins',
-      name: 'RUINS',
-      desc: 'Collapsed city. Blood soaked streets.',
+    red: {
+      name: 'RED DANGER',
       theme: '#FF4444',
-      tags: ['DANGER', 'DARK'],
-      previewGridSize: 19,
-      previewBg:   '#0a0404',
+      previewBg: '#0a0404',
       previewRoad: 'rgba(255,60,60,0.38)',
-
-      mapW: 38, mapH: 38, tileSize: 80, roadEvery: 10,
-
-      roadColor:      '#100808',
-      sidewalkColor:  '#180f0f',
+      roadColor: '#100808',
+      sidewalkColor: '#180f0f',
       buildingPalette: ['#1e0a0a','#1a0808','#200c0c','#1c0a0a','#180808','#1e0c0c','#1c0a08','#200a0a'],
-      neonColors:     ['#FF2200','#FF4400','#CC0000','#FF6644'],
-      windowColors:   ['#FF4444','#FF6666','#FF2222','#FF8888'],
-      lightColor:     '#FF5544',
-      lightGlow:      '#CC2222',
-      neonFreq:       9,
+      neonColors: ['#FF4444','#FF2222','#FF6666','#DD2222'],
+      windowColors: ['#FF4444','#FF6666','#FF2222','#FF8888'],
+      lightColor: '#FF5544',
+      lightGlow: '#FF4444',
       weather: 'sandstorm',
       botPalettes: {
-        mini:   [{ body:'#880022', accent:'#CC2244' }, { body:'#660011', accent:'#AA1133' }, { body:'#991122', accent:'#DD3344' }],
-        normal: [{ body:'#CC1100', accent:'#FF2200' }, { body:'#990000', accent:'#CC1100' }, { body:'#AA0000', accent:'#DD1100' }, { body:'#BB1100', accent:'#EE2200' }],
-        big:    [{ body:'#551100', accent:'#882211' }, { body:'#441100', accent:'#773311' }],
+        mini:   [{ body:'#880022', accent:'#FF4444' }, { body:'#660011', accent:'#DD3333' }, { body:'#991122', accent:'#FF5555' }],
+        normal: [{ body:'#CC1100', accent:'#FF4444' }, { body:'#990000', accent:'#DD2222' }, { body:'#AA0000', accent:'#EE3333' }, { body:'#BB1100', accent:'#FF5555' }],
+        big:    [{ body:'#551100', accent:'#992222' }, { body:'#441100', accent:'#883322' }],
       },
     },
-    {
-      id: 'docks',
-      name: 'DOCKS',
-      desc: 'Port district. Narrow alleys. Hidden dangers.',
+    blue: {
+      name: 'BLUE OCEAN',
       theme: '#00AACC',
-      tags: ['PORT', 'NARROW'],
-      previewGridSize: 11,
-      previewBg:   '#020b10',
+      previewBg: '#020b10',
       previewRoad: 'rgba(0,170,204,0.38)',
-
-      mapW: 34, mapH: 34, tileSize: 80, roadEvery: 6,
-
-      roadColor:      '#060c12',
-      sidewalkColor:  '#0c1520',
+      roadColor: '#060c12',
+      sidewalkColor: '#0c1520',
       buildingPalette: ['#0a1a28','#081522','#0c2033','#0a1c2a','#082030','#0c1a28','#0a1c30','#091820'],
-      neonColors:     ['#00AACC','#0088AA','#00CCDD','#0066BB'],
-      windowColors:   ['#88DDFF','#AAEEFF','#66CCEE','#CCFFFF'],
-      lightColor:     '#88DDFF',
-      lightGlow:      '#00AACC',
-      neonFreq:       10,
+      neonColors: ['#00AACC','#0088DD','#00CCEE','#0066BB'],
+      windowColors: ['#88DDFF','#AAEEFF','#66CCEE','#CCFFFF'],
+      lightColor: '#88DDFF',
+      lightGlow: '#00AACC',
       weather: 'fog',
       botPalettes: {
-        mini:   [{ body:'#0066AA', accent:'#0099CC' }, { body:'#005588', accent:'#0077BB' }, { body:'#0077BB', accent:'#00AADD' }],
-        normal: [{ body:'#005577', accent:'#0088AA' }, { body:'#006688', accent:'#0099BB' }, { body:'#004466', accent:'#007799' }, { body:'#007799', accent:'#00AABB' }],
+        mini:   [{ body:'#0066AA', accent:'#00AACC' }, { body:'#005588', accent:'#0099BB' }, { body:'#0077BB', accent:'#00BBDD' }],
+        normal: [{ body:'#005577', accent:'#00AACC' }, { body:'#006688', accent:'#00BBDD' }, { body:'#004466', accent:'#0099BB' }, { body:'#007799', accent:'#00CCEE' }],
         big:    [{ body:'#003355', accent:'#006688' }, { body:'#004466', accent:'#007799' }],
       },
     },
-    {
-      id: 'casino',
-      name: 'CASINO STRIP',
-      desc: 'Neon-lit boulevard. Wide open. High risk.',
+    yellow: {
+      name: 'YELLOW GOLD',
       theme: '#FFCC00',
-      tags: ['NEON', 'OPEN'],
-      previewGridSize: 27,
-      previewBg:   '#0c0900',
+      previewBg: '#0c0900',
       previewRoad: 'rgba(255,204,0,0.38)',
-
-      mapW: 44, mapH: 44, tileSize: 80, roadEvery: 14,
-
-      roadColor:      '#0f0d08',
-      sidewalkColor:  '#1a1508',
+      roadColor: '#0f0d08',
+      sidewalkColor: '#1a1508',
       buildingPalette: ['#1a1408','#201a0a','#181208','#22180a','#1c1608','#16120a','#1a140a','#201808'],
-      neonColors:     ['#FFCC00','#FF8800','#FF44AA','#FF0066'],
-      windowColors:   ['#FFEE88','#FFDD44','#FF88CC','#FFCC66'],
-      lightColor:     '#FFCC44',
-      lightGlow:      '#FFAA00',
-      neonFreq:       7,
+      neonColors: ['#FFCC00','#FFDD00','#FFAA00','#FFE033'],
+      windowColors: ['#FFEE88','#FFDD44','#FFCC66','#FFF0AA'],
+      lightColor: '#FFCC44',
+      lightGlow: '#FFCC00',
       weather: 'neon_haze',
       botPalettes: {
         mini:   [{ body:'#BB8800', accent:'#FFCC00' }, { body:'#CC9900', accent:'#FFDD00' }, { body:'#AA7700', accent:'#EEBB00' }],
-        normal: [{ body:'#AA6600', accent:'#FF9900' }, { body:'#CC8800', accent:'#FFBB00' }, { body:'#884400', accent:'#CC6600' }, { body:'#BB7700', accent:'#FFAA00' }],
+        normal: [{ body:'#AA6600', accent:'#FFCC00' }, { body:'#CC8800', accent:'#FFDD00' }, { body:'#884400', accent:'#DDAA00' }, { body:'#BB7700', accent:'#FFBB00' }],
         big:    [{ body:'#665500', accent:'#AA8800' }, { body:'#554400', accent:'#997700' }],
+      },
+    },
+  },
+
+  // ── Color Themes for Wasteland ──────────────────────────
+  // These define the 4 color variations for the unified Wasteland map (big buildings)
+  WASTELAND_THEMES: {
+    teal: {
+      name: 'TEAL HARBOR',
+      theme: '#00CCDD',
+      previewBg: '#020b10',
+      previewRoad: 'rgba(0,204,221,0.38)',
+      roadColor: '#090e10',
+      sidewalkColor: '#0d1418',
+      buildingPalette: ['#0a1a1e','#0e2028','#091820','#0c1e26','#0a1c22','#0d1e28','#0b1a20','#0f2030'],
+      neonColors: ['#00CCDD','#0088AA','#00EEFF','#0066BB'],
+      windowColors: ['#00CCDD','#44DDEE','#88EEFF','#00AABB'],
+      lightColor: '#00CCDD',
+      lightGlow: '#00AACC',
+      weather: 'fog',
+      botPalettes: {
+        mini:   [{ body:'#005566', accent:'#00CCDD' }, { body:'#003344', accent:'#0088AA' }],
+        normal: [{ body:'#006688', accent:'#00CCDD' }, { body:'#004466', accent:'#0088AA' }, { body:'#007799', accent:'#00BBDD' }],
+        big:    [{ body:'#003350', accent:'#005577' }, { body:'#00445E', accent:'#006688' }],
+      },
+    },
+    pink: {
+      name: 'PINK NEON',
+      theme: '#FF44CC',
+      previewBg: '#0a0010',
+      previewRoad: 'rgba(255,68,204,0.45)',
+      roadColor: '#0d0012',
+      sidewalkColor: '#14001e',
+      buildingPalette: ['#1a0028','#200030','#180024','#1e002c','#160020','#1c0030','#180028','#200035'],
+      neonColors: ['#FF44CC','#FF00FF','#CC44FF','#FF44AA'],
+      windowColors: ['#FF44CC','#FF88DD','#DD44FF','#FF22AA'],
+      lightColor: '#FF44CC',
+      lightGlow: '#CC00AA',
+      weather: 'neon_haze',
+      botPalettes: {
+        mini:   [{ body:'#880044', accent:'#FF44CC' }, { body:'#660033', accent:'#FF00AA' }],
+        normal: [{ body:'#AA0066', accent:'#FF44CC' }, { body:'#880055', accent:'#DD44AA' }, { body:'#CC0088', accent:'#FF66CC' }],
+        big:    [{ body:'#550033', accent:'#AA0066' }, { body:'#660044', accent:'#BB0077' }],
+      },
+    },
+    green: {
+      name: 'GREEN MILITARY',
+      theme: '#88AA44',
+      previewBg: '#060804',
+      previewRoad: 'rgba(136,170,68,0.38)',
+      roadColor: '#0a0c08',
+      sidewalkColor: '#101408',
+      buildingPalette: ['#141e08','#1a2810','#101a06','#182010','#141c08','#1c2414','#121a06','#182210'],
+      neonColors: ['#88AA44','#AACC55','#66AA22','#AABB66'],
+      windowColors: ['#88AA44','#AACC66','#BBDD88','#99BB55'],
+      lightColor: '#AACC55',
+      lightGlow: '#88AA33',
+      weather: 'sandstorm',
+      botPalettes: {
+        mini:   [{ body:'#445522', accent:'#88AA44' }, { body:'#334418', accent:'#668833' }],
+        normal: [{ body:'#556633', accent:'#88AA55' }, { body:'#3d5520', accent:'#7a9944' }, { body:'#6a8840', accent:'#99BB66' }],
+        big:    [{ body:'#3a5018', accent:'#688840' }, { body:'#446028', accent:'#7aaa55' }],
+      },
+    },
+    orange: {
+      name: 'ORANGE BADLANDS',
+      theme: '#FF6622',
+      previewBg: '#0a0602',
+      previewRoad: 'rgba(255,102,34,0.38)',
+      roadColor: '#0c0a06',
+      sidewalkColor: '#14100a',
+      buildingPalette: ['#1e1408','#28180a','#1a1206','#24160c','#1c1408','#221610','#181006','#2a1c0e'],
+      neonColors: ['#FF6622','#FF8844','#CC4400','#FFAA66'],
+      windowColors: ['#FF8844','#FFAA66','#FF6633','#FFCC88'],
+      lightColor: '#FF8844',
+      lightGlow: '#CC4400',
+      weather: 'sandstorm',
+      botPalettes: {
+        mini:   [{ body:'#883311', accent:'#FF6622' }, { body:'#662200', accent:'#CC4400' }],
+        normal: [{ body:'#AA4422', accent:'#FF6633' }, { body:'#882200', accent:'#CC4422' }, { body:'#CC5533', accent:'#FF7744' }],
+        big:    [{ body:'#662211', accent:'#AA3322' }, { body:'#773322', accent:'#BB4433' }],
+      },
+    },
+  },
+
+  // ── Maps ────────────────────────────────────────────────
+  MAPS: [
+    {
+      id: 'neon_city',
+      name: 'NEON CITY',
+      desc: 'The ultimate neon playground. Choose your color theme.',
+      theme: '#44EEFF',  // Default, will be overridden by selected color theme
+      tags: ['CUSTOMIZABLE', 'CLASSIC'],
+      previewGridSize: 16,
+      previewBg: '#080812',
+      previewRoad: 'rgba(68,238,255,0.4)',
+      hasColorThemes: true,  // Flag to show color picker in UI
+      defaultTheme: 'cyan',
+
+      // Gameplay - balanced medium map
+      mapW: 42, mapH: 42, tileSize: 80, roadEvery: 9,
+
+      // Rendering - defaults (will be overridden by theme)
+      roadColor: '#111118',
+      sidewalkColor: '#1a1a28',
+      buildingPalette: ['#1a1a2e','#16213e','#0f3460','#1a1a2e','#12212e','#1e1e30','#151530','#1c1c2e'],
+      neonColors: ['#44EEFF','#00FFCC','#66FFFF','#00DDEE'],
+      windowColors: ['#88EEFF','#AAFFFF','#66DDFF','#CCFFFF'],
+      lightColor: '#88EEFF',
+      lightGlow: '#44EEFF',
+      neonFreq: 10,
+      weather: 'rain',
+      botPalettes: {
+        mini:   [{ body:'#0066AA', accent:'#44EEFF' }, { body:'#0055AA', accent:'#33DDEE' }, { body:'#0077BB', accent:'#55FFFF' }],
+        normal: [{ body:'#0088AA', accent:'#44EEFF' }, { body:'#006699', accent:'#33CCDD' }, { body:'#007799', accent:'#44DDEE' }, { body:'#0099BB', accent:'#66FFFF' }],
+        big:    [{ body:'#004466', accent:'#0088AA' }, { body:'#003355', accent:'#006688' }],
       },
     },
     {
@@ -328,97 +395,102 @@ const CONFIG = {
     },
 
     // ── Page 2 Maps ─────────────────────────────────────────
+    // WASTELAND - Unified map with big buildings and color themes
     {
-      id: 'harbor',
-      name: 'HARBOR',
-      desc: 'Industrial waterfront. Cranes, containers, fog-soaked danger.',
-      theme: '#00CCDD',
-      tags: ['PORT', 'FOG', 'INDUSTRIAL'],
-      previewGridSize: 20,
-      previewBg: '#020b10',
-      previewRoad: 'rgba(0,204,221,0.38)',
-      mapW: 38, mapH: 38, tileSize: 80, roadEvery: 10,
-      roadColor: '#090e10',
-      sidewalkColor: '#0d1418',
-      buildingPalette: ['#0a1a1e','#0e2028','#091820','#0c1e26','#0a1c22','#0d1e28','#0b1a20','#0f2030'],
-      neonColors: ['#00CCDD','#0088AA','#00EEFF','#0066BB'],
-      windowColors: ['#00CCDD','#44DDEE','#88EEFF','#00AABB'],
-      lightColor: '#00CCDD', lightGlow: '#00AACC', neonFreq: 9,
-      weather: 'fog',
-      botPalettes: {
-        mini:   [{ body:'#005566', accent:'#00AABB' }, { body:'#003344', accent:'#0088AA' }],
-        normal: [{ body:'#006688', accent:'#00CCDD' }, { body:'#004466', accent:'#0088AA' }, { body:'#007799', accent:'#00BBDD' }],
-        big:    [{ body:'#003350', accent:'#005577' }, { body:'#00445E', accent:'#006688' }],
-      },
-    },
-    {
-      id: 'neon_district',
-      name: 'NEON DISTRICT',
-      desc: 'The city\'s pulsing heart. Every surface screams in light.',
-      theme: '#FF44CC',
-      tags: ['NEON', 'DENSE', 'VIBRANT'],
-      previewGridSize: 14,
-      previewBg: '#0a0010',
-      previewRoad: 'rgba(255,68,204,0.45)',
-      mapW: 42, mapH: 42, tileSize: 80, roadEvery: 9,
-      roadColor: '#0d0012',
-      sidewalkColor: '#14001e',
-      buildingPalette: ['#1a0028','#200030','#180024','#1e002c','#160020','#1c0030','#180028','#200035'],
-      neonColors: ['#FF44CC','#FF00FF','#CC44FF','#FF44AA'],
-      windowColors: ['#FF44CC','#FF88DD','#DD44FF','#FF22AA'],
-      lightColor: '#FF44CC', lightGlow: '#CC00AA', neonFreq: 7,
-      weather: 'neon_haze',
-      botPalettes: {
-        mini:   [{ body:'#880044', accent:'#FF44CC' }, { body:'#660033', accent:'#FF00AA' }],
-        normal: [{ body:'#AA0066', accent:'#FF44CC' }, { body:'#880055', accent:'#DD44AA' }, { body:'#CC0088', accent:'#FF66CC' }],
-        big:    [{ body:'#550033', accent:'#AA0066' }, { body:'#660044', accent:'#BB0077' }],
-      },
-    },
-    {
-      id: 'military',
-      name: 'MILITARY BASE',
-      desc: 'Fortified compound. Armored patrols. Heavy resistance.',
-      theme: '#88AA44',
-      tags: ['MILITARY', 'OPEN', 'DANGER'],
-      previewGridSize: 24,
-      previewBg: '#060804',
-      previewRoad: 'rgba(136,170,68,0.38)',
-      mapW: 36, mapH: 36, tileSize: 80, roadEvery: 11,
-      roadColor: '#0a0c08',
-      sidewalkColor: '#101408',
-      buildingPalette: ['#141e08','#1a2810','#101a06','#182010','#141c08','#1c2414','#121a06','#182210'],
-      neonColors: ['#88AA44','#AACC55','#66AA22','#AABB66'],
-      windowColors: ['#88AA44','#AACC66','#BBDD88','#99BB55'],
-      lightColor: '#AACC55', lightGlow: '#88AA33', neonFreq: 14,
-      weather: 'sandstorm',
-      botPalettes: {
-        mini:   [{ body:'#445522', accent:'#88AA44' }, { body:'#334418', accent:'#668833' }],
-        normal: [{ body:'#556633', accent:'#88AA55' }, { body:'#3d5520', accent:'#7a9944' }, { body:'#6a8840', accent:'#99BB66' }],
-        big:    [{ body:'#3a5018', accent:'#688840' }, { body:'#446028', accent:'#7aaa55' }],
-      },
-    },
-    {
-      id: 'badlands',
-      name: 'BADLANDS',
-      desc: 'Scorched wasteland. No cover. No mercy. Endless sky.',
-      theme: '#FF6622',
-      tags: ['WASTELAND', 'OPEN', 'BRUTAL'],
+      id: 'wasteland',
+      name: 'WASTELAND',
+      desc: 'Massive open terrain with huge buildings. Choose your color theme.',
+      theme: '#FF6622',  // Default orange
+      tags: ['CUSTOMIZABLE', 'BIG BUILDINGS'],
       previewGridSize: 25,
       previewBg: '#0a0602',
       previewRoad: 'rgba(255,102,34,0.38)',
+      hasColorThemes: true,
+      defaultTheme: 'orange',
+
+      // Gameplay - big buildings like badlands
       mapW: 44, mapH: 44, tileSize: 80, roadEvery: 13,
+
+      // Rendering defaults (orange theme)
       roadColor: '#0c0a06',
       sidewalkColor: '#14100a',
       buildingPalette: ['#1e1408','#28180a','#1a1206','#24160c','#1c1408','#221610','#181006','#2a1c0e'],
       neonColors: ['#FF6622','#FF8844','#CC4400','#FFAA66'],
       windowColors: ['#FF8844','#FFAA66','#FF6633','#FFCC88'],
-      lightColor: '#FF8844', lightGlow: '#CC4400', neonFreq: 16,
+      lightColor: '#FF8844',
+      lightGlow: '#CC4400',
+      neonFreq: 12,
       weather: 'sandstorm',
       botPalettes: {
         mini:   [{ body:'#883311', accent:'#FF6622' }, { body:'#662200', accent:'#CC4400' }],
         normal: [{ body:'#AA4422', accent:'#FF6633' }, { body:'#882200', accent:'#CC4422' }, { body:'#CC5533', accent:'#FF7744' }],
         big:    [{ body:'#662211', accent:'#AA3322' }, { body:'#773322', accent:'#BB4433' }],
       },
+    },
+
+    // ── Jungle World ───────────────────────────────────────
+    {
+      id: 'jungle',
+      name: 'JUNGLE SAFARI',
+      desc: 'Deep in the wild. Animal predators hunt you. Ride horses. Survive nature.',
+      theme: '#44AA22',
+      tags: ['NATURE', 'ANIMALS', 'MELEE'],
+      previewGridSize: 18,
+      previewBg: '#0a1808',
+      previewRoad: 'rgba(139,90,43,0.5)',
+
+      mapW: 48, mapH: 48, tileSize: 80, roadEvery: 8,
+
+      // Jungle terrain colors
+      roadColor:      '#5a3d1e',    // Dirt path
+      sidewalkColor:  '#3d5a28',    // Grass/undergrowth
+      buildingPalette: ['#1a3010','#254520','#1e3818','#2a4a25','#223d1c','#2e5028','#1c3515','#305530'],  // Trees
+      neonColors:     ['#44AA22','#66CC44','#88DD66','#22BB44'],  // Jungle greens
+      windowColors:   ['#FFEE44','#FFDD22','#FFCC00','#FFE066'],  // Fireflies/eyes
+      lightColor:     '#88DD44',
+      lightGlow:      '#44AA22',
+      neonFreq:       5,
+      weather:        'jungle_rain',
+      jungle:         true,         // Flag for jungle-specific rendering
+
+      // Animal enemies (melee only)
+      botPalettes: {
+        // Small animals - monkeys
+        mini:   [
+          { body:'#8B4513', accent:'#D2691E', animal:'monkey' },
+          { body:'#654321', accent:'#8B4513', animal:'monkey' },
+        ],
+        // Medium animals - tigers, panthers
+        normal: [
+          { body:'#FF8C00', accent:'#000000', animal:'tiger' },
+          { body:'#1a1a1a', accent:'#333333', animal:'panther' },
+          { body:'#228B22', accent:'#006400', animal:'snake' },
+          { body:'#808080', accent:'#505050', animal:'wolf' },
+        ],
+        // Large animals - gorillas, rhinos
+        big:    [
+          { body:'#2F2F2F', accent:'#1a1a1a', animal:'gorilla' },
+          { body:'#696969', accent:'#404040', animal:'rhino' },
+        ],
+        // Police - crocodiles
+        police: [
+          { body:'#2E8B57', accent:'#006400', animal:'crocodile' },
+          { body:'#3CB371', accent:'#228B22', animal:'crocodile' },
+        ],
+        // SWAT - large crocodiles
+        swat:   [{ body:'#1a4a2e', accent:'#0a2a1a', animal:'crocodile' }],
+      },
+
+      // Jungle boss config
+      bossConfig: {
+        name: 'KING KONG',
+        type: 'giant_gorilla',
+        color: '#1a1a1a',
+        accent: '#333333'
+      },
+
+      // Background birds
+      birds: true,
     },
 
     // ── Campaign Mode ───────────────────────────────────────

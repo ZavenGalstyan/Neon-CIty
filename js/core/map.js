@@ -726,7 +726,62 @@ class GameMap {
         const isRowR = this._rySet ? this._rySet.has(y) : (y % R === 0);
 
         if (tile === TILE.ROAD) {
-          if (cfg.ocean) {
+          if (cfg.jungle) {
+            // Jungle: dirt path with rocks and sand
+            const pathSeed = x * 17 + y * 31;
+            const pathVariant = pathSeed % 5;
+
+            // Base dirt color
+            const dirtGrad = ctx.createLinearGradient(wx, wy, wx + S, wy + S);
+            if (pathVariant < 2) {
+              // Brown dirt
+              dirtGrad.addColorStop(0, '#5a3d1e');
+              dirtGrad.addColorStop(0.5, '#6a4a28');
+              dirtGrad.addColorStop(1, '#4a3018');
+            } else if (pathVariant < 4) {
+              // Sandy path
+              dirtGrad.addColorStop(0, '#8a7a5a');
+              dirtGrad.addColorStop(0.5, '#9a8a68');
+              dirtGrad.addColorStop(1, '#7a6a4a');
+            } else {
+              // Rocky path
+              dirtGrad.addColorStop(0, '#4a4a48');
+              dirtGrad.addColorStop(0.5, '#5a5a55');
+              dirtGrad.addColorStop(1, '#3a3a38');
+            }
+            ctx.fillStyle = dirtGrad;
+            ctx.fillRect(wx, wy, S, S);
+
+            // Random rocks on path
+            if ((x * 7 + y * 11) % 8 === 0) {
+              ctx.fillStyle = '#6a6a68';
+              ctx.beginPath();
+              ctx.ellipse(wx + 20 + (pathSeed % 30), wy + 25 + (pathSeed % 25), 8, 6, 0, 0, Math.PI * 2);
+              ctx.fill();
+              ctx.fillStyle = '#5a5a58';
+              ctx.beginPath();
+              ctx.ellipse(wx + 50 + (pathSeed % 20), wy + 55 + (pathSeed % 15), 6, 4, 0, 0, Math.PI * 2);
+              ctx.fill();
+            }
+
+            // Path edge grass tufts
+            ctx.fillStyle = 'rgba(60,120,40,0.4)';
+            if ((x + y) % 3 === 0) {
+              ctx.fillRect(wx, wy, 8, 4);
+              ctx.fillRect(wx + S - 8, wy + S - 4, 8, 4);
+            }
+
+            // Footprint marks occasionally
+            if ((x * 5 + y * 3) % 12 === 0) {
+              ctx.fillStyle = 'rgba(40,30,15,0.3)';
+              ctx.beginPath();
+              ctx.ellipse(wx + S/3, wy + S/2, 5, 8, 0.3, 0, Math.PI * 2);
+              ctx.fill();
+              ctx.beginPath();
+              ctx.ellipse(wx + S/2 + 10, wy + S/2 + 15, 5, 8, -0.2, 0, Math.PI * 2);
+              ctx.fill();
+            }
+          } else if (cfg.ocean) {
             // Ocean water rendering
             const wavePhase = (Date.now() * 0.001 + x * 0.3 + y * 0.2) % (Math.PI * 2);
             const waveIntensity = Math.sin(wavePhase) * 0.15 + 0.85;
@@ -777,7 +832,53 @@ class GameMap {
           }
         } else if (tile === TILE.SIDEWALK) {
           const isPark = this._parkTiles && this._parkTiles.has(`${x},${y}`);
-          if (cfg.ocean) {
+          if (cfg.jungle) {
+            // Jungle: grass and undergrowth
+            const grassSeed = x * 23 + y * 37;
+
+            // Base grass
+            const grassGrad = ctx.createLinearGradient(wx, wy, wx + S, wy + S);
+            grassGrad.addColorStop(0, '#2a4a20');
+            grassGrad.addColorStop(0.5, '#3a5a28');
+            grassGrad.addColorStop(1, '#1a3a18');
+            ctx.fillStyle = grassGrad;
+            ctx.fillRect(wx, wy, S, S);
+
+            // Grass texture variation
+            ctx.fillStyle = 'rgba(50,100,40,0.3)';
+            ctx.fillRect(wx + 5 + (grassSeed % 20), wy + 5 + (grassSeed % 20), 25, 18);
+
+            // Tall grass tufts
+            ctx.strokeStyle = '#4a8a38';
+            ctx.lineWidth = 1.5;
+            const tufts = 3 + (grassSeed % 3);
+            for (let t = 0; t < tufts; t++) {
+              const tx = wx + 10 + ((grassSeed + t * 17) % 55);
+              const ty = wy + S - 5;
+              const th = 12 + (grassSeed + t) % 10;
+              ctx.beginPath();
+              ctx.moveTo(tx, ty);
+              ctx.quadraticCurveTo(tx - 3 + (t % 2) * 6, ty - th/2, tx + (t % 2 ? 4 : -4), ty - th);
+              ctx.stroke();
+            }
+
+            // Flowers occasionally
+            if ((x * 3 + y * 7) % 13 === 0) {
+              const flowerColors = ['#FF6688', '#FFEE44', '#FF88FF', '#88DDFF'];
+              ctx.fillStyle = flowerColors[grassSeed % 4];
+              ctx.beginPath();
+              ctx.arc(wx + 25 + (grassSeed % 30), wy + 35 + (grassSeed % 25), 4, 0, Math.PI * 2);
+              ctx.fill();
+            }
+
+            // Small ferns
+            if ((x * 5 + y * 3) % 7 === 0) {
+              ctx.fillStyle = '#2a6a28';
+              ctx.beginPath();
+              ctx.ellipse(wx + S/2, wy + S/2 + 10, 12, 6, 0.2, 0, Math.PI * 2);
+              ctx.fill();
+            }
+          } else if (cfg.ocean) {
             // Ocean: floating wooden dock/platform
             const dockGrad = ctx.createLinearGradient(wx, wy, wx, wy + S);
             dockGrad.addColorStop(0, '#3a2a1a');
@@ -853,16 +954,120 @@ class GameMap {
             ctx.fillRect(wx, wy, S, S);
           }
         } else {
-          // Building
-          ctx.fillStyle = this.buildingColors[y][x];
-          ctx.fillRect(wx, wy, S, S);
-          // Edge highlight
-          ctx.fillStyle = 'rgba(255,255,255,0.04)';
-          ctx.fillRect(wx, wy, S, 3);
-          ctx.fillRect(wx, wy, 3, S);
+          // Building (or Tree in jungle)
+          if (cfg.jungle) {
+            // Jungle: render trees instead of buildings
+            const treeSeed = x * 41 + y * 59;
+            const treeType = treeSeed % 5;
+
+            // Ground under tree
+            ctx.fillStyle = '#1a3010';
+            ctx.fillRect(wx, wy, S, S);
+
+            // Tree shadow
+            ctx.save();
+            ctx.globalAlpha = 0.35;
+            ctx.fillStyle = '#000';
+            ctx.beginPath();
+            ctx.ellipse(wx + S/2 + 8, wy + S - 12, 28, 14, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+
+            // Tree trunk
+            const trunkWidth = 8 + (treeSeed % 6);
+            const trunkHeight = 25 + (treeSeed % 15);
+            ctx.fillStyle = '#4a3018';
+            ctx.fillRect(wx + S/2 - trunkWidth/2, wy + S - trunkHeight - 8, trunkWidth, trunkHeight);
+            // Trunk texture
+            ctx.strokeStyle = '#3a2010';
+            ctx.lineWidth = 1;
+            for (let tl = 0; tl < 3; tl++) {
+              ctx.beginPath();
+              ctx.moveTo(wx + S/2 - trunkWidth/2 + 2, wy + S - trunkHeight - 5 + tl * 8);
+              ctx.lineTo(wx + S/2 + trunkWidth/2 - 2, wy + S - trunkHeight + tl * 8);
+              ctx.stroke();
+            }
+
+            // Tree canopy based on type
+            ctx.save();
+            if (treeType < 2) {
+              // Round tree (like oak)
+              ctx.shadowColor = '#228B22';
+              ctx.shadowBlur = 15;
+              ctx.fillStyle = '#1a5a18';
+              ctx.beginPath();
+              ctx.arc(wx + S/2, wy + S/2 - 10, 30, 0, Math.PI * 2);
+              ctx.fill();
+              ctx.fillStyle = '#2a7a28';
+              ctx.beginPath();
+              ctx.arc(wx + S/2 - 8, wy + S/2 - 18, 20, 0, Math.PI * 2);
+              ctx.fill();
+              ctx.fillStyle = '#3a8a38';
+              ctx.beginPath();
+              ctx.arc(wx + S/2 + 10, wy + S/2 - 5, 18, 0, Math.PI * 2);
+              ctx.fill();
+            } else if (treeType < 4) {
+              // Palm tree style
+              ctx.shadowColor = '#44AA22';
+              ctx.shadowBlur = 12;
+              // Palm fronds
+              const frondCount = 6;
+              for (let f = 0; f < frondCount; f++) {
+                const angle = (f / frondCount) * Math.PI * 2;
+                const fx = wx + S/2 + Math.cos(angle) * 25;
+                const fy = wy + S/2 - 15 + Math.sin(angle) * 12;
+                ctx.fillStyle = '#2a6a20';
+                ctx.beginPath();
+                ctx.ellipse(fx, fy, 18, 6, angle, 0, Math.PI * 2);
+                ctx.fill();
+              }
+              // Palm center
+              ctx.fillStyle = '#3a8a30';
+              ctx.beginPath();
+              ctx.arc(wx + S/2, wy + S/2 - 15, 8, 0, Math.PI * 2);
+              ctx.fill();
+            } else {
+              // Bushy tree
+              ctx.shadowColor = '#228B22';
+              ctx.shadowBlur = 10;
+              ctx.fillStyle = '#1a4a15';
+              ctx.beginPath();
+              ctx.arc(wx + S/2, wy + S/2, 28, 0, Math.PI * 2);
+              ctx.fill();
+              ctx.fillStyle = '#2a5a25';
+              ctx.beginPath();
+              ctx.arc(wx + S/2 - 12, wy + S/2 - 8, 15, 0, Math.PI * 2);
+              ctx.fill();
+              ctx.beginPath();
+              ctx.arc(wx + S/2 + 12, wy + S/2 - 5, 16, 0, Math.PI * 2);
+              ctx.fill();
+              ctx.fillStyle = '#3a6a35';
+              ctx.beginPath();
+              ctx.arc(wx + S/2, wy + S/2 - 15, 12, 0, Math.PI * 2);
+              ctx.fill();
+            }
+            ctx.restore();
+
+            // Occasional vines
+            if ((x * 3 + y * 7) % 11 === 0) {
+              ctx.strokeStyle = '#3a7a30';
+              ctx.lineWidth = 2;
+              ctx.beginPath();
+              ctx.moveTo(wx + S/2 - 15, wy + S/2 - 20);
+              ctx.quadraticCurveTo(wx + S/2 - 25, wy + S/2 + 10, wx + S/2 - 20, wy + S - 10);
+              ctx.stroke();
+            }
+          } else {
+            ctx.fillStyle = this.buildingColors[y][x];
+            ctx.fillRect(wx, wy, S, S);
+            // Edge highlight
+            ctx.fillStyle = 'rgba(255,255,255,0.04)';
+            ctx.fillRect(wx, wy, S, 3);
+            ctx.fillRect(wx, wy, 3, S);
+          }
 
           // ── Metropolis zone-specific building decoration ────
-          if (this._rxSet) {
+          if (this._rxSet && !cfg.jungle) {
             const zx2 = x / this.W, zy2 = y / this.H;
             const isComm = zy2 < 0.35 && zx2 < 0.45;
             const isRes  = zy2 < 0.35 && zx2 >= 0.45;
@@ -887,8 +1092,8 @@ class GameMap {
             }
           }
 
-          // Windows
-          if (this.buildingWindows[y][x]) {
+          // Windows (not in jungle)
+          if (!cfg.jungle && this.buildingWindows[y][x]) {
             const wc = cfg.windowColors[(Math.floor(x/2) + Math.floor(y/2)) % cfg.windowColors.length];
             ctx.save();
             ctx.shadowColor = wc; ctx.shadowBlur = 8; ctx.fillStyle = wc;
@@ -901,8 +1106,22 @@ class GameMap {
             }
             ctx.restore();
           }
-          // Neon sign strips
-          if ((x + y) % cfg.neonFreq === 0) {
+          // Fireflies in jungle trees
+          if (cfg.jungle && (x * 7 + y * 11) % 9 === 0) {
+            const fireflyPhase = (Date.now() * 0.003 + x + y) % (Math.PI * 2);
+            const fireflyAlpha = Math.sin(fireflyPhase) * 0.5 + 0.5;
+            ctx.save();
+            ctx.globalAlpha = fireflyAlpha * 0.8;
+            ctx.fillStyle = '#FFFF44';
+            ctx.shadowColor = '#FFFF44';
+            ctx.shadowBlur = 8;
+            ctx.beginPath();
+            ctx.arc(wx + 20 + (x * 13) % 40, wy + 25 + (y * 17) % 30, 2, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+          }
+          // Neon sign strips (not in jungle)
+          if (!cfg.jungle && (x + y) % cfg.neonFreq === 0) {
             const nc = cfg.neonColors[(x * 3 + y) % cfg.neonColors.length];
             ctx.save();
             ctx.shadowColor = nc; ctx.shadowBlur = 12;

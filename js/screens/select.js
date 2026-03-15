@@ -28,6 +28,8 @@
 (function () {
   let selectedCharId   = null;
   let selectedMapId    = CONFIG.MAPS[0].id;  // default: first map
+  let selectedNeonTheme = 'cyan';  // Default color theme for Neon City
+  let selectedWastelandTheme = 'orange';  // Default color theme for Wasteland
   let customNeonColor  = 'default';
   let customMask       = 'none';
   let customEffect     = 'none';
@@ -96,6 +98,152 @@
       selectedMapId = card.dataset.map;
     });
   });
+
+  // ── Neon City color theme selection ────────────────────────
+  const neonThemeBtns = document.querySelectorAll('.neon-theme-btn');
+  const neonCityCard = document.querySelector('.map-card--neon-city');
+  const neonCityPreview = document.getElementById('neonCityPreview');
+  const neonCityTitle = document.getElementById('neonCityTitle');
+  const neonCityTag1 = document.getElementById('neonCityTag1');
+  const neonCityTag2 = document.getElementById('neonCityTag2');
+  const neonCityTag3 = document.getElementById('neonCityTag3');
+
+  // Color theme data for UI updates
+  const themeColors = {
+    cyan:   { color: '#44EEFF', bg: '#080812', road: 'rgba(68,238,255,0.4)' },
+    orange: { color: '#FF8800', bg: '#0a0804', road: 'rgba(255,140,0,0.4)' },
+    green:  { color: '#44FF88', bg: '#04080a', road: 'rgba(68,255,136,0.38)' },
+    red:    { color: '#FF4444', bg: '#0a0404', road: 'rgba(255,60,60,0.38)' },
+    blue:   { color: '#00AACC', bg: '#020b10', road: 'rgba(0,170,204,0.38)' },
+    yellow: { color: '#FFCC00', bg: '#0c0900', road: 'rgba(255,204,0,0.38)' }
+  };
+
+  function updateNeonCityTheme(themeName) {
+    const theme = themeColors[themeName];
+    if (!theme) return;
+
+    selectedNeonTheme = themeName;
+
+    // Update card border glow color
+    if (neonCityCard) {
+      neonCityCard.style.setProperty('--neon-theme-color', theme.color);
+      neonCityCard.style.setProperty('--neon-theme-glow', theme.color.replace('#', 'rgba(') + ',0.5)');
+      neonCityCard.style.borderColor = theme.color;
+    }
+
+    // Update preview colors
+    if (neonCityPreview) {
+      neonCityPreview.style.setProperty('--mbg', theme.bg);
+      neonCityPreview.style.setProperty('--mr', theme.road);
+    }
+
+    // Update all preview dots
+    for (let i = 1; i <= 9; i++) {
+      const dot = document.getElementById('neonDot' + i);
+      if (dot) {
+        dot.style.background = theme.color;
+        dot.style.boxShadow = `0 0 8px ${theme.color}`;
+      }
+    }
+
+    // Update title
+    if (neonCityTitle) {
+      neonCityTitle.style.color = theme.color;
+      neonCityTitle.style.textShadow = `0 0 12px ${theme.color}`;
+    }
+
+    // Update tags
+    [neonCityTag1, neonCityTag2, neonCityTag3].forEach(tag => {
+      if (tag) tag.style.setProperty('--tc', theme.color);
+    });
+
+    // Update button active states
+    neonThemeBtns.forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.theme === themeName);
+    });
+  }
+
+  neonThemeBtns.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation(); // Prevent triggering map card click
+      updateNeonCityTheme(btn.dataset.theme);
+    });
+  });
+
+  // Initialize with default theme
+  updateNeonCityTheme('cyan');
+
+  // ── Wasteland color theme selection ────────────────────────
+  const wastelandThemeBtns = document.querySelectorAll('.wasteland-theme-btn');
+  const wastelandCard = document.querySelector('.map-card--wasteland');
+  const wastelandPreview = document.getElementById('wastelandPreview');
+  const wastelandTitle = document.getElementById('wastelandTitle');
+  const wastelandTag1 = document.getElementById('wastelandTag1');
+  const wastelandTag2 = document.getElementById('wastelandTag2');
+  const wastelandTag3 = document.getElementById('wastelandTag3');
+
+  // Wasteland color theme data for UI updates
+  const wastelandColors = {
+    teal:   { color: '#00CCDD', bg: '#020b10', road: 'rgba(0,204,221,0.38)' },
+    pink:   { color: '#FF44CC', bg: '#0a0010', road: 'rgba(255,68,204,0.45)' },
+    green:  { color: '#88AA44', bg: '#060804', road: 'rgba(136,170,68,0.38)' },
+    orange: { color: '#FF6622', bg: '#0a0602', road: 'rgba(255,102,34,0.38)' }
+  };
+
+  function updateWastelandTheme(themeName) {
+    const theme = wastelandColors[themeName];
+    if (!theme) return;
+
+    selectedWastelandTheme = themeName;
+
+    // Update card border glow color
+    if (wastelandCard) {
+      wastelandCard.style.setProperty('--wasteland-theme-color', theme.color);
+      wastelandCard.style.setProperty('--wasteland-theme-glow', theme.color.replace('#', 'rgba(') + ',0.5)');
+      wastelandCard.style.borderColor = theme.color;
+    }
+
+    // Update preview colors
+    if (wastelandPreview) {
+      wastelandPreview.style.setProperty('--mbg', theme.bg);
+      wastelandPreview.style.setProperty('--mr', theme.road);
+    }
+
+    // Update all preview dots
+    for (let i = 1; i <= 5; i++) {
+      const dot = document.getElementById('wastelandDot' + i);
+      if (dot) {
+        dot.style.background = theme.color;
+        dot.style.boxShadow = `0 0 8px ${theme.color}`;
+      }
+    }
+
+    // Update title
+    if (wastelandTitle) {
+      wastelandTitle.style.color = theme.color;
+      wastelandTitle.style.textShadow = `0 0 12px ${theme.color}`;
+    }
+
+    // Update tags
+    [wastelandTag1, wastelandTag2, wastelandTag3].forEach(tag => {
+      if (tag) tag.style.setProperty('--tc', theme.color);
+    });
+
+    // Update button active states
+    wastelandThemeBtns.forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.theme === themeName);
+    });
+  }
+
+  wastelandThemeBtns.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation(); // Prevent triggering map card click
+      updateWastelandTheme(btn.dataset.theme);
+    });
+  });
+
+  // Initialize wasteland with default theme
+  updateWastelandTheme('orange');
 
   // ── Character page switching ──────────────────────────────
   const charTab1  = document.getElementById('charTab1');
@@ -174,8 +322,53 @@
   startBtn.addEventListener('click', () => {
     if (!selectedCharId) return;
     const charData = CONFIG.CHARACTERS.find(c => c.id === selectedCharId);
-    const mapData  = CONFIG.MAPS.find(m => m.id === selectedMapId) || CONFIG.MAPS[0];
+    let mapData  = CONFIG.MAPS.find(m => m.id === selectedMapId) || CONFIG.MAPS[0];
     if (!charData) return;
+
+    // If Neon City is selected, apply the selected color theme
+    if (mapData.id === 'neon_city' && CONFIG.NEON_CITY_THEMES && CONFIG.NEON_CITY_THEMES[selectedNeonTheme]) {
+      const theme = CONFIG.NEON_CITY_THEMES[selectedNeonTheme];
+      // Create a merged map config with the theme colors applied
+      mapData = {
+        ...mapData,
+        theme: theme.theme,
+        previewBg: theme.previewBg,
+        previewRoad: theme.previewRoad,
+        roadColor: theme.roadColor,
+        sidewalkColor: theme.sidewalkColor,
+        buildingPalette: theme.buildingPalette,
+        neonColors: theme.neonColors,
+        windowColors: theme.windowColors,
+        lightColor: theme.lightColor,
+        lightGlow: theme.lightGlow,
+        weather: theme.weather,
+        botPalettes: theme.botPalettes,
+        selectedTheme: selectedNeonTheme  // Store which theme was selected
+      };
+    }
+
+    // If Wasteland is selected, apply the selected color theme
+    if (mapData.id === 'wasteland' && CONFIG.WASTELAND_THEMES && CONFIG.WASTELAND_THEMES[selectedWastelandTheme]) {
+      const theme = CONFIG.WASTELAND_THEMES[selectedWastelandTheme];
+      // Create a merged map config with the theme colors applied
+      mapData = {
+        ...mapData,
+        theme: theme.theme,
+        previewBg: theme.previewBg,
+        previewRoad: theme.previewRoad,
+        roadColor: theme.roadColor,
+        sidewalkColor: theme.sidewalkColor,
+        buildingPalette: theme.buildingPalette,
+        neonColors: theme.neonColors,
+        windowColors: theme.windowColors,
+        lightColor: theme.lightColor,
+        lightGlow: theme.lightGlow,
+        weather: theme.weather,
+        botPalettes: theme.botPalettes,
+        selectedTheme: selectedWastelandTheme  // Store which theme was selected
+      };
+    }
+
     const nameVal = (document.getElementById('playerNameInput')?.value || '').trim();
     localStorage.setItem('playerName',     nameVal || 'ANONYMOUS');
     localStorage.setItem('selectedChar',   JSON.stringify(charData));

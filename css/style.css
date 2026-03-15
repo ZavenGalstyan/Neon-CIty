@@ -322,21 +322,220 @@ body {
 .map-card:hover { transform: translateY(-4px); }
 
 /* Per-map hover + selected colours */
-.map-card[data-map="downtown"]:hover   { border-color: rgba(68,238,255,0.4);  box-shadow: 0 8px 30px rgba(0,0,0,0.5); }
-.map-card[data-map="industrial"]:hover { border-color: rgba(255,136,0,0.4);   box-shadow: 0 8px 30px rgba(0,0,0,0.5); }
-.map-card[data-map="suburbs"]:hover    { border-color: rgba(68,255,136,0.4);  box-shadow: 0 8px 30px rgba(0,0,0,0.5); }
-.map-card[data-map="ruins"]:hover      { border-color: rgba(255,68,68,0.4);   box-shadow: 0 8px 30px rgba(0,0,0,0.5); }
-.map-card[data-map="docks"]:hover      { border-color: rgba(0,170,204,0.4);   box-shadow: 0 8px 30px rgba(0,0,0,0.5); }
-.map-card[data-map="casino"]:hover     { border-color: rgba(255,204,0,0.4);   box-shadow: 0 8px 30px rgba(0,0,0,0.5); }
+.map-card[data-map="neon_city"]:hover  { border-color: rgba(68,238,255,0.4);  box-shadow: 0 8px 30px rgba(0,0,0,0.5); }
 .map-card[data-map="arena"]:hover      { border-color: rgba(255,0,68,0.55);   box-shadow: 0 8px 36px rgba(255,0,68,0.22); }
 
-.map-card[data-map="downtown"].selected   { transform: translateY(-5px); border-color: #44EEFF; box-shadow: 0 0 24px rgba(68,238,255,0.5), 0 12px 40px rgba(0,0,0,0.6); }
-.map-card[data-map="industrial"].selected { transform: translateY(-5px); border-color: #FF8800; box-shadow: 0 0 24px rgba(255,136,0,0.5), 0 12px 40px rgba(0,0,0,0.6); }
-.map-card[data-map="suburbs"].selected    { transform: translateY(-5px); border-color: #44FF88; box-shadow: 0 0 24px rgba(68,255,136,0.5), 0 12px 40px rgba(0,0,0,0.6); }
-.map-card[data-map="ruins"].selected      { transform: translateY(-5px); border-color: #FF4444; box-shadow: 0 0 24px rgba(255,68,68,0.5), 0 12px 40px rgba(0,0,0,0.6); }
-.map-card[data-map="docks"].selected      { transform: translateY(-5px); border-color: #00AACC; box-shadow: 0 0 24px rgba(0,170,204,0.5), 0 12px 40px rgba(0,0,0,0.6); }
-.map-card[data-map="casino"].selected     { transform: translateY(-5px); border-color: #FFCC00; box-shadow: 0 0 24px rgba(255,204,0,0.5), 0 12px 40px rgba(0,0,0,0.6); }
+.map-card[data-map="neon_city"].selected  { transform: translateY(-5px); border-color: var(--neon-theme-color, #44EEFF); box-shadow: 0 0 24px var(--neon-theme-glow, rgba(68,238,255,0.5)), 0 12px 40px rgba(0,0,0,0.6); }
 .map-card[data-map="arena"].selected      { transform: translateY(-4px); border-color: #FF0044; box-shadow: 0 0 30px rgba(255,0,68,0.6),  0 12px 40px rgba(0,0,0,0.7); }
+
+/* Neon City color theme selector */
+.map-card--neon-city {
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 20px;
+  padding: 16px 20px;
+  min-height: 180px;
+  background: linear-gradient(135deg, rgba(20,20,35,0.95) 0%, rgba(10,10,20,0.98) 100%);
+}
+.map-card--neon-city .map-preview {
+  width: 200px;
+  flex-shrink: 0;
+  height: auto;
+  min-height: 140px;
+}
+.map-card--neon-city .map-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.map-card--neon-city .map-name {
+  font-size: 22px;
+  letter-spacing: 0.15em;
+}
+.map-card--neon-city .map-desc {
+  font-size: 13px;
+  margin: 6px 0 10px 0;
+}
+@media (max-width: 600px) {
+  .map-card--neon-city {
+    flex-direction: column;
+    min-height: auto;
+    padding: 12px;
+  }
+  .map-card--neon-city .map-preview {
+    width: 100%;
+    height: 80px;
+    min-height: 80px;
+  }
+}
+.neon-color-selector { padding: 4px 0; }
+.neon-theme-btn {
+  width: 36px; height: 36px;
+  border: 2px solid rgba(255,255,255,0.15);
+  border-radius: 50%;
+  background: rgba(0,0,0,0.6);
+  cursor: pointer;
+  padding: 4px;
+  transition: all 0.2s ease;
+  position: relative;
+}
+.neon-theme-btn:hover {
+  transform: scale(1.15);
+  border-color: var(--btn-color);
+  box-shadow: 0 0 15px var(--btn-color);
+}
+.neon-theme-btn.active {
+  transform: scale(1.2);
+  border-color: var(--btn-color);
+  box-shadow: 0 0 20px var(--btn-color), inset 0 0 10px rgba(255,255,255,0.15);
+}
+.neon-theme-btn.active::after {
+  content: '';
+  position: absolute;
+  top: -4px; left: -4px; right: -4px; bottom: -4px;
+  border: 2px solid var(--btn-color);
+  border-radius: 50%;
+  animation: themePulse 1.5s ease-in-out infinite;
+}
+@keyframes themePulse {
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(1.1); }
+}
+.theme-color {
+  display: block;
+  width: 100%; height: 100%;
+  border-radius: 50%;
+}
+
+/* Wasteland map card styling */
+.map-card--wasteland {
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 20px;
+  padding: 16px 20px;
+  min-height: 180px;
+  background: linear-gradient(135deg, rgba(30,20,10,0.95) 0%, rgba(15,10,5,0.98) 100%);
+}
+.map-card--wasteland .map-preview {
+  width: 200px;
+  flex-shrink: 0;
+  height: auto;
+  min-height: 140px;
+}
+.map-card--wasteland .map-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.map-card--wasteland .map-name {
+  font-size: 22px;
+  letter-spacing: 0.15em;
+}
+.map-card--wasteland .map-desc {
+  font-size: 13px;
+  margin: 6px 0 10px 0;
+}
+.map-card[data-map="wasteland"]:hover { border-color: rgba(255,102,34,0.4); box-shadow: 0 8px 30px rgba(0,0,0,0.5); }
+.map-card[data-map="wasteland"].selected { transform: translateY(-5px); border-color: var(--wasteland-theme-color, #FF6622); box-shadow: 0 0 24px var(--wasteland-theme-glow, rgba(255,102,34,0.5)), 0 12px 40px rgba(0,0,0,0.6); }
+
+/* Wasteland theme buttons */
+.wasteland-theme-btn {
+  width: 36px; height: 36px;
+  border: 2px solid rgba(255,255,255,0.15);
+  border-radius: 50%;
+  background: rgba(0,0,0,0.6);
+  cursor: pointer;
+  padding: 4px;
+  transition: all 0.2s ease;
+  position: relative;
+}
+.wasteland-theme-btn:hover {
+  transform: scale(1.15);
+  border-color: var(--btn-color);
+  box-shadow: 0 0 15px var(--btn-color);
+}
+.wasteland-theme-btn.active {
+  transform: scale(1.2);
+  border-color: var(--btn-color);
+  box-shadow: 0 0 20px var(--btn-color), inset 0 0 10px rgba(255,255,255,0.15);
+}
+.wasteland-theme-btn.active::after {
+  content: '';
+  position: absolute;
+  top: -4px; left: -4px; right: -4px; bottom: -4px;
+  border: 2px solid var(--btn-color);
+  border-radius: 50%;
+  animation: themePulse 1.5s ease-in-out infinite;
+}
+
+@media (max-width: 600px) {
+  .map-card--wasteland {
+    flex-direction: column;
+    min-height: auto;
+    padding: 12px;
+  }
+  .map-card--wasteland .map-preview {
+    width: 100%;
+    height: 80px;
+    min-height: 80px;
+  }
+}
+
+/* Jungle map card styling */
+.map-card--jungle {
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 20px;
+  padding: 16px 20px;
+  min-height: 180px;
+  background: linear-gradient(135deg, rgba(10,30,15,0.95) 0%, rgba(5,20,10,0.98) 100%);
+  border: 1px solid rgba(68,170,34,0.3);
+}
+.map-card--jungle .map-preview {
+  width: 200px;
+  flex-shrink: 0;
+  height: auto;
+  min-height: 140px;
+  background-image: none;
+  background-color: #0a1808;
+}
+.map-card--jungle .map-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.map-card--jungle .map-name {
+  font-size: 22px;
+  letter-spacing: 0.12em;
+}
+.map-card--jungle .map-desc {
+  font-size: 13px;
+  margin: 6px 0 10px 0;
+}
+.map-card[data-map="jungle"]:hover { border-color: rgba(68,170,34,0.5); box-shadow: 0 8px 30px rgba(0,0,0,0.5), 0 0 20px rgba(68,170,34,0.15); }
+.map-card[data-map="jungle"].selected { transform: translateY(-5px); border-color: #44AA22; box-shadow: 0 0 24px rgba(68,170,34,0.5), 0 12px 40px rgba(0,0,0,0.6); }
+
+@media (max-width: 600px) {
+  .map-card--jungle {
+    flex-direction: column;
+    min-height: auto;
+    padding: 12px;
+  }
+  .map-card--jungle .map-preview {
+    width: 100%;
+    height: 80px;
+    min-height: 80px;
+  }
+}
 
 /* Life Mode + Arena + Zombie — 3-per-row grid */
 .special-maps-row {
