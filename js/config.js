@@ -428,69 +428,41 @@ const CONFIG = {
       },
     },
 
-    // ── Jungle World ───────────────────────────────────────
+    // ── Robot City ───────────────────────────────────────────
     {
-      id: 'jungle',
-      name: 'JUNGLE SAFARI',
-      desc: 'Deep in the wild. Animal predators hunt you. Ride horses. Survive nature.',
-      theme: '#44AA22',
-      tags: ['NATURE', 'ANIMALS', 'MELEE'],
+      id: 'robot_city',
+      name: 'ROBOT CITY',
+      desc: 'A machine metropolis gone rogue. All enemies are robots. A Titan Mech rules.',
+      theme: '#00DDFF',
+      tags: ['ROBOTS', 'ELECTRIC', 'FUTURISTIC'],
       previewGridSize: 18,
-      previewBg: '#0a1808',
-      previewRoad: 'rgba(139,90,43,0.5)',
+      previewBg: '#050c14',
+      previewRoad: 'rgba(0,180,220,0.4)',
 
-      mapW: 48, mapH: 48, tileSize: 80, roadEvery: 8,
+      mapW: 44, mapH: 44, tileSize: 80, roadEvery: 8,
 
-      // Jungle terrain colors
-      roadColor:      '#5a3d1e',    // Dirt path
-      sidewalkColor:  '#3d5a28',    // Grass/undergrowth
-      buildingPalette: ['#1a3010','#254520','#1e3818','#2a4a25','#223d1c','#2e5028','#1c3515','#305530'],  // Trees
-      neonColors:     ['#44AA22','#66CC44','#88DD66','#22BB44'],  // Jungle greens
-      windowColors:   ['#FFEE44','#FFDD22','#FFCC00','#FFE066'],  // Fireflies/eyes
-      lightColor:     '#88DD44',
-      lightGlow:      '#44AA22',
-      neonFreq:       5,
-      weather:        'jungle_rain',
-      jungle:         true,         // Flag for jungle-specific rendering
+      roadColor:       '#0a1018',   // Dark metal grid floor
+      sidewalkColor:   '#0d1420',   // Circuit board platform
+      buildingPalette: ['#0c1822','#101e2a','#0e1c28','#121e2e','#0a1620','#101c2a','#0c1a24','#0e1e2c'],
+      neonColors:      ['#00DDFF','#00FFCC','#44EEFF','#0099FF'],
+      windowColors:    ['#00DDFF','#44EEFF','#00BBDD','#22CCFF'],
+      lightColor:      '#00DDFF',
+      lightGlow:       '#0099FF',
+      neonFreq:        4,
+      weather:         'electric',
+      robot:           true,
 
-      // Animal enemies (melee only)
       botPalettes: {
-        // Small animals - monkeys
-        mini:   [
-          { body:'#8B4513', accent:'#D2691E', animal:'monkey' },
-          { body:'#654321', accent:'#8B4513', animal:'monkey' },
-        ],
-        // Medium animals - tigers, panthers
-        normal: [
-          { body:'#FF8C00', accent:'#000000', animal:'tiger' },
-          { body:'#1a1a1a', accent:'#333333', animal:'panther' },
-          { body:'#228B22', accent:'#006400', animal:'snake' },
-          { body:'#808080', accent:'#505050', animal:'wolf' },
-        ],
-        // Large animals - gorillas, rhinos
-        big:    [
-          { body:'#2F2F2F', accent:'#1a1a1a', animal:'gorilla' },
-          { body:'#696969', accent:'#404040', animal:'rhino' },
-        ],
-        // Police - crocodiles
-        police: [
-          { body:'#2E8B57', accent:'#006400', animal:'crocodile' },
-          { body:'#3CB371', accent:'#228B22', animal:'crocodile' },
-        ],
-        // SWAT - large crocodiles
-        swat:   [{ body:'#1a4a2e', accent:'#0a2a1a', animal:'crocodile' }],
+        mini:      [{ body:'#1a2a3a', accent:'#00DDFF' }, { body:'#0e1e2e', accent:'#44EEFF' }],
+        normal:    [{ body:'#1c2e40', accent:'#00CCFF' }, { body:'#162438', accent:'#22EEFF' }, { body:'#1a2c3c', accent:'#00AACC' }],
+        big:       [{ body:'#0e1e30', accent:'#FF4400' }, { body:'#101c2c', accent:'#FF6600' }],
+        police:    [{ body:'#0a1a3a', accent:'#4466FF' }, { body:'#0c1c38', accent:'#2244EE' }],
+        swat:      [{ body:'#1a0a0a', accent:'#FF2200' }],
+        heavyswat: [{ body:'#1a1400', accent:'#FFCC00' }],
+        sniper:    [{ body:'#080e16', accent:'#00FF88' }],
+        bomber:    [{ body:'#1a0e00', accent:'#FF8800' }],
+        juggernaut:[{ body:'#101010', accent:'#FF0000' }],
       },
-
-      // Jungle boss config
-      bossConfig: {
-        name: 'KING KONG',
-        type: 'giant_gorilla',
-        color: '#1a1a1a',
-        accent: '#333333'
-      },
-
-      // Background birds
-      birds: true,
     },
 
     // ── Campaign Mode ───────────────────────────────────────

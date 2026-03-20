@@ -50,15 +50,12 @@ class Particle {
 
   render(ctx) {
     const alpha = Math.max(0, this.life / this.maxLife);
-    ctx.save();
     ctx.globalAlpha = alpha;
-    ctx.shadowColor = this.color;
-    ctx.shadowBlur  = 8;
     ctx.fillStyle   = this.color;
     ctx.beginPath();
     ctx.arc(this.x, this.y, this.size * alpha, 0, Math.PI * 2);
     ctx.fill();
-    ctx.restore();
+    ctx.globalAlpha = 1;
   }
 
   static burst(x, y, color, count, sMin, sMax, szMin, szMax, lMin, lMax) {
@@ -242,16 +239,18 @@ class Weather {
           this._p.push({ x: Math.random()*W, y: Math.random()*H, spd: rnd(28,70), r: rnd(3.5,7.5), a: rnd(0.12,0.38), drift: rnd(15,50), big: true });
         break;
       }
-      case 'jungle_rain': {
-        // Rain droplets
-        for (let i = 0; i < 180; i++)
-          this._p.push({ type: 'rain', x: Math.random()*W*1.2-W*0.1, y: Math.random()*H, spd: rnd(400,750), len: rnd(8,16), a: rnd(0.18,0.48) });
-        // Fog patches for jungle mist
+      case 'electric': {
+        // Electrical sparks — fast-moving streaks
+        for (let i = 0; i < 55; i++) {
+          const ml = rnd(0.12, 0.45);
+          this._p.push({ type: 'spark', x: Math.random()*W, y: Math.random()*H,
+            vx: rnd(-220, 220), vy: rnd(-50, 50),
+            len: rnd(6, 22), a: rnd(0.2, 0.75),
+            life: Math.random()*ml, maxLife: ml });
+        }
+        // Horizontal scan-lines
         for (let i = 0; i < 10; i++)
-          this._p.push({ type: 'fog', x: Math.random()*W, y: Math.random()*H, r: rnd(150,350), spd: rnd(8,22), a: rnd(0.03,0.09), dir: Math.random()*Math.PI*2 });
-        // Birds in the background
-        for (let i = 0; i < 12; i++)
-          this._p.push({ type: 'bird', x: Math.random()*W, y: rnd(20,H*0.35), spd: rnd(60,140), wingPhase: Math.random()*Math.PI*2, size: rnd(4,9), a: rnd(0.5,0.85) });
+          this._p.push({ type: 'scanline', y: Math.random()*H, a: rnd(0.03, 0.09), spd: rnd(40, 160) });
         break;
       }
     }
@@ -312,21 +311,21 @@ class Weather {
         }
         break;
       }
-      case 'jungle_rain': {
+      case 'electric': {
         for (const p of this._p) {
-          if (p.type === 'rain') {
-            p.y += p.spd * dt; p.x += p.spd * 0.08 * dt;
-            if (p.y > H + 30) { p.y = -30; p.x = Math.random()*W*1.2-W*0.1; }
-            if (p.x > W + 20) p.x = -20;
-          } else if (p.type === 'fog') {
-            p.x += Math.cos(p.dir)*p.spd*dt; p.y += Math.sin(p.dir)*p.spd*dt;
-            if (p.x < -p.r*2) p.x = W+p.r; if (p.x > W+p.r*2) p.x = -p.r;
-            if (p.y < -p.r*2) p.y = H+p.r; if (p.y > H+p.r*2) p.y = -p.r;
-          } else if (p.type === 'bird') {
-            p.x += p.spd * dt;
-            p.wingPhase += 12 * dt;
-            p.y += Math.sin(p.wingPhase * 0.15) * 8 * dt;  // Gentle up/down
-            if (p.x > W + 30) { p.x = -30; p.y = rnd(20, H*0.35); }
+          if (p.type === 'spark') {
+            p.x += p.vx * dt; p.y += p.vy * dt;
+            p.life -= dt;
+            if (p.life <= 0 || p.x < -30 || p.x > W + 30 || p.y < -20 || p.y > H + 20) {
+              p.x = Math.random()*W; p.y = Math.random()*H;
+              p.vx = rnd(-220, 220); p.vy = rnd(-50, 50);
+              p.maxLife = rnd(0.12, 0.45);
+              p.life = p.maxLife;
+              p.a = rnd(0.2, 0.75); p.len = rnd(6, 22);
+            }
+          } else if (p.type === 'scanline') {
+            p.y += p.spd * dt;
+            if (p.y > H + 2) p.y = -2;
           }
         }
         break;
@@ -368,36 +367,40 @@ class Weather {
       }
       case 'fog': {
         ctx.save();
+        // Flat soft fog patches — no radialGradient per particle
+        ctx.fillStyle = 'rgba(200,220,240,0.55)';
         for (const p of this._p) {
-          ctx.globalAlpha = p.a;
-          const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r);
-          g.addColorStop(0, 'rgba(200,220,240,0.85)'); g.addColorStop(1, 'rgba(200,220,240,0)');
-          ctx.fillStyle = g; ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fill();
+          ctx.globalAlpha = p.a * 0.55;
+          ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fill();
         }
+        ctx.globalAlpha = 0.28;
+        ctx.fillStyle = 'rgba(0,18,28,1)';
+        ctx.fillRect(0, 0, W, H);
         ctx.globalAlpha = 1;
-        const vg = ctx.createRadialGradient(W/2, H/2, H*0.28, W/2, H/2, H*0.92);
-        vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,18,28,0.38)');
-        ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
         ctx.restore(); break;
       }
       case 'smoke': {
         ctx.save();
+        ctx.fillStyle = 'rgba(75,55,35,0.5)';
         for (const p of this._p) {
-          ctx.globalAlpha = p.a;
-          const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r);
-          g.addColorStop(0, 'rgba(75,55,35,0.65)'); g.addColorStop(1, 'rgba(38,28,18,0)');
-          ctx.fillStyle = g; ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fill();
+          ctx.globalAlpha = p.a * 0.45;
+          ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fill();
         }
+        ctx.globalAlpha = 1;
         ctx.restore(); break;
       }
       case 'neon_haze': {
         ctx.save();
         for (const p of this._p) {
-          ctx.globalAlpha = p.a;
-          const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r);
-          g.addColorStop(0, p.col + 'AA'); g.addColorStop(1, p.col + '00');
-          ctx.fillStyle = g; ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fill();
+          // Outer glow ring with globalAlpha instead of radialGradient
+          ctx.globalAlpha = p.a * 0.22;
+          ctx.fillStyle = p.col;
+          ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fill();
+          // Bright core
+          ctx.globalAlpha = p.a * 0.7;
+          ctx.beginPath(); ctx.arc(p.x, p.y, p.r * 0.35, 0, Math.PI*2); ctx.fill();
         }
+        ctx.globalAlpha = 1;
         ctx.restore(); break;
       }
       case 'blizzard': {
@@ -430,62 +433,33 @@ class Weather {
         ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
         ctx.restore(); break;
       }
-      case 'jungle_rain': {
+      case 'electric': {
         ctx.save();
-        // Birds in background (render first, behind rain)
+        // Scan lines — thin horizontal bands
         for (const p of this._p) {
-          if (p.type !== 'bird') continue;
-          ctx.globalAlpha = p.a * 0.7;
-          ctx.fillStyle = '#1a1a1a';
-          const wingUp = Math.sin(p.wingPhase) * p.size * 0.6;
-          const x = p.x, y = p.y, s = p.size;
-          // Body
-          ctx.beginPath();
-          ctx.ellipse(x, y, s * 1.2, s * 0.4, 0, 0, Math.PI * 2);
-          ctx.fill();
-          // Left wing
-          ctx.beginPath();
-          ctx.moveTo(x - s * 0.3, y);
-          ctx.quadraticCurveTo(x - s * 1.5, y - wingUp - s * 0.5, x - s * 2, y - wingUp);
-          ctx.quadraticCurveTo(x - s * 1.2, y - wingUp * 0.3, x - s * 0.3, y);
-          ctx.fill();
-          // Right wing
-          ctx.beginPath();
-          ctx.moveTo(x + s * 0.3, y);
-          ctx.quadraticCurveTo(x + s * 1.5, y - wingUp - s * 0.5, x + s * 2, y - wingUp);
-          ctx.quadraticCurveTo(x + s * 1.2, y - wingUp * 0.3, x + s * 0.3, y);
-          ctx.fill();
-          // Tail
-          ctx.beginPath();
-          ctx.moveTo(x - s * 1.2, y);
-          ctx.lineTo(x - s * 2, y + s * 0.3);
-          ctx.lineTo(x - s * 2, y - s * 0.2);
-          ctx.closePath();
-          ctx.fill();
-        }
-        // Fog/mist patches
-        for (const p of this._p) {
-          if (p.type !== 'fog') continue;
+          if (p.type !== 'scanline') continue;
           ctx.globalAlpha = p.a;
-          const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r);
-          g.addColorStop(0, 'rgba(180,220,180,0.7)'); g.addColorStop(1, 'rgba(160,200,160,0)');
-          ctx.fillStyle = g; ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fill();
+          ctx.fillStyle = 'rgba(0,210,255,1)';
+          ctx.fillRect(0, p.y, W, 1);
         }
-        // Rain droplets
-        ctx.strokeStyle = 'rgba(140,180,160,0.55)'; ctx.lineWidth = 0.9;
+        // Electrical sparks
+        ctx.lineWidth = 1.2;
         for (const p of this._p) {
-          if (p.type !== 'rain') continue;
-          ctx.globalAlpha = p.a;
-          ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x + p.len*0.08, p.y + p.len); ctx.stroke();
+          if (p.type !== 'spark') continue;
+          const fade = p.maxLife > 0 ? (p.life / p.maxLife) : 1;
+          ctx.globalAlpha = p.a * fade;
+          ctx.strokeStyle = (p.len % 3 === 0) ? 'rgba(0,255,200,1)' : 'rgba(0,200,255,1)';
+          ctx.beginPath();
+          ctx.moveTo(p.x, p.y);
+          ctx.lineTo(p.x - p.vx * 0.055, p.y - p.vy * 0.055);
+          ctx.stroke();
         }
         ctx.globalAlpha = 1;
-        // Green jungle tint overlay
-        const gr = ctx.createLinearGradient(0, H*0.7, 0, H);
-        gr.addColorStop(0, 'rgba(40,90,40,0)'); gr.addColorStop(1, 'rgba(30,70,30,0.06)');
-        ctx.fillStyle = gr; ctx.fillRect(0, 0, W, H);
-        // Vignette — darker jungle edges
+        // Subtle electric-blue tint
+        ctx.fillStyle = 'rgba(0,20,40,0.07)'; ctx.fillRect(0, 0, W, H);
+        // Vignette
         const vg2 = ctx.createRadialGradient(W/2, H/2, H*0.25, W/2, H/2, H*0.9);
-        vg2.addColorStop(0, 'rgba(0,0,0,0)'); vg2.addColorStop(1, 'rgba(10,25,10,0.32)');
+        vg2.addColorStop(0, 'rgba(0,0,0,0)'); vg2.addColorStop(1, 'rgba(0,10,25,0.28)');
         ctx.fillStyle = vg2; ctx.fillRect(0, 0, W, H);
         ctx.restore(); break;
       }
@@ -518,30 +492,21 @@ class Bullet {
   }
 
   render(ctx) {
-    // Glowing trail
+    // Trail — no save/restore per point for perf
     for (let i = 0; i < this.trail.length; i++) {
       const t = this.trail[i];
-      ctx.save();
-      ctx.globalAlpha = (i / this.trail.length) * 0.32;
+      ctx.globalAlpha = (i / this.trail.length) * 0.28;
       ctx.fillStyle = this.color;
       ctx.beginPath();
       ctx.arc(t.x, t.y, this.radius * 0.5, 0, Math.PI * 2);
       ctx.fill();
-      ctx.restore();
     }
-    // Sphere: radial gradient bright top-left → body colour → dark edge
-    ctx.save();
-    ctx.shadowColor = this.color; ctx.shadowBlur = 18;
-    const sg = ctx.createRadialGradient(
-      this.x - this.radius * 0.32, this.y - this.radius * 0.38, 0.5,
-      this.x, this.y, this.radius
-    );
-    sg.addColorStop(0,   '#ffffff');
-    sg.addColorStop(0.3, this.color);
-    sg.addColorStop(1,   this.color + '55');
-    ctx.fillStyle = sg;
+    // Core bullet — flat fill, no shadowBlur, no radialGradient
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = this.color;
     ctx.beginPath(); ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2); ctx.fill();
-    ctx.restore();
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath(); ctx.arc(this.x, this.y, this.radius * 0.42, 0, Math.PI * 2); ctx.fill();
   }
 }
 
@@ -590,18 +555,22 @@ class Pickup {
       cash:   { color: '#FFD700', glow: '#FFAA00', icon: '$' },
     }[this.type] || { color: '#FFFFFF', glow: '#AAAAAA', icon: '?' };
 
-    ctx.save();
+    // Outer glow ring via globalAlpha instead of shadowBlur
+    ctx.globalAlpha = alpha * (0.28 + pulse * 0.15);
+    ctx.fillStyle   = cfg.color;
+    ctx.beginPath(); ctx.arc(this.x, this.y, r + 5 + pulse * 2, 0, Math.PI * 2); ctx.fill();
+    // Body
     ctx.globalAlpha = alpha;
-    ctx.shadowColor = cfg.glow; ctx.shadowBlur = 14 + pulse * 8;
     ctx.fillStyle   = cfg.color + '33';
     ctx.beginPath(); ctx.arc(this.x, this.y, r + 5, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = cfg.color;
     ctx.beginPath(); ctx.arc(this.x, this.y, r, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = '#fff'; ctx.shadowBlur = 5;
+    ctx.fillStyle = '#fff';
     ctx.font = `bold ${Math.round(r * 0.9)}px serif`;
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillText(cfg.icon, this.x, this.y + 1);
-    ctx.restore();
+    ctx.globalAlpha = 1;
+    ctx.textBaseline = 'alphabetic';
   }
 
   applyTo(player) {
@@ -633,11 +602,9 @@ class Vehicle {
     this._damageFlash  = 0;
     this._animT        = 0;
     this._isOcean      = !!(mapConfig && mapConfig.ocean);
-    this._isJungle     = !!(mapConfig && mapConfig.jungle);
     this._isPolice     = false;
     this._isMiniBoat   = false;  // Small boat for ocean maps
     this._sirenPhase   = 0;
-    this._horseGait    = 0;  // Horse animation phase for jungle maps
   }
 
   update(dt, occupant, input, gameMap) {
@@ -667,8 +634,7 @@ class Vehicle {
         if (!gameMap.isBlockedCircle(nx, this.y, this.radius - 4)) this.x = nx;
         const ny = this.y + dy * d;
         if (!gameMap.isBlockedCircle(this.x, ny, this.radius - 4)) this.y = ny;
-        // Animate horse gait when moving
-        if (this._isJungle) this._horseGait += dt * 12;
+
       }
       occupant.x = this.x;
       occupant.y = this.y;
@@ -695,24 +661,21 @@ class Vehicle {
   render(ctx) {
     if (this._exploding) {
       const t = this._explodeTimer / 0.9;
-      ctx.save();
+      // Explosion — outer ring + inner core, no shadowBlur
+      const exColor = this._isOcean ? '#0088AA' : '#FF4400';
+      ctx.globalAlpha = t * 0.35;
+      ctx.fillStyle   = exColor;
+      ctx.beginPath(); ctx.arc(this.x, this.y, this.radius * (2.6 - t * 1.0), 0, Math.PI * 2); ctx.fill();
       ctx.globalAlpha = t * 0.85;
-      ctx.shadowColor = this._isOcean ? '#00AACC' : '#FF8800'; ctx.shadowBlur = 50;
-      ctx.fillStyle   = this._isOcean ? '#0088AA' : '#FF4400';
+      ctx.fillStyle   = this._isOcean ? '#00CCEE' : '#FF8822';
       ctx.beginPath(); ctx.arc(this.x, this.y, this.radius * (2.2 - t * 0.9), 0, Math.PI * 2); ctx.fill();
-      ctx.restore();
+      ctx.globalAlpha = 1;
       return;
     }
 
     // Ocean map: render ship instead of car
     if (this._isOcean) {
       this._renderShip(ctx);
-      return;
-    }
-
-    // Jungle map: render horse instead of car
-    if (this._isJungle) {
-      this._renderHorse(ctx);
       return;
     }
 
@@ -754,18 +717,8 @@ class Vehicle {
       }
     }
 
-    // ── Body top face ─────────────────────────────────────────
-    const bodyG = ctx.createLinearGradient(-hw, -hh, hw * 0.6, hh);
-    if (flash) {
-      bodyG.addColorStop(0, '#FF8866'); bodyG.addColorStop(1, '#CC3322');
-    } else {
-      bodyG.addColorStop(0, this._lightenVehicleColor(this.color, 1.38));
-      bodyG.addColorStop(0.55, this.color);
-      bodyG.addColorStop(1, this._darkenVehicleColor(this.color, 0.82));
-    }
-    ctx.shadowColor = flash ? '#FF4444' : this.color;
-    ctx.shadowBlur  = flash ? 22 : 8;
-    ctx.fillStyle   = bodyG;
+    // ── Body top face — flat color, no gradient for perf ─────
+    ctx.fillStyle = flash ? '#CC3322' : this.color;
     if (isSports) {
       // Wedge: wider front, tapered rear
       ctx.beginPath();
@@ -775,7 +728,20 @@ class Vehicle {
     } else {
       ctx.beginPath(); ctx.roundRect(-hw, -hh, this.width, this.height, isArmored ? 2 : 5); ctx.fill();
     }
-    ctx.shadowBlur = 0;
+    // Flash highlight instead of shadowBlur
+    if (flash) {
+      ctx.globalAlpha = 0.38;
+      ctx.fillStyle = '#FF6644';
+      if (isSports) {
+        ctx.beginPath();
+        ctx.moveTo(-hw, hh * 0.82); ctx.lineTo(-hw * 0.82, hh);
+        ctx.lineTo(hw, hh);          ctx.lineTo(hw, -hh);
+        ctx.lineTo(-hw, -hh * 0.78); ctx.closePath(); ctx.fill();
+      } else {
+        ctx.beginPath(); ctx.roundRect(-hw, -hh, this.width, this.height, isArmored ? 2 : 5); ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+    }
 
     // ── Windshield (front = +X in rotated space) ──────────────
     const wsTint = isArmored ? 'rgba(80,130,150,0.42)' : 'rgba(175,235,255,0.42)';
@@ -853,11 +819,10 @@ class Vehicle {
     // ── Headlights ────────────────────────────────────────────
     const hlY1 = -hh + (isArmored ? 5 : 4), hlY2 = hh - (isArmored ? 5 : 4);
     ctx.fillStyle = flash ? 'rgba(255,255,180,0.5)' : 'rgba(255,255,210,1)';
-    ctx.shadowColor = '#FFFF88'; ctx.shadowBlur = 22;
     ctx.beginPath(); ctx.ellipse(hw - 5, hlY1, 3.8, isArmored ? 2.5 : 3.2, 0, 0, Math.PI * 2); ctx.fill();
     ctx.beginPath(); ctx.ellipse(hw - 5, hlY2, 3.8, isArmored ? 2.5 : 3.2, 0, 0, Math.PI * 2); ctx.fill();
     // Light beams
-    ctx.shadowBlur = 0; ctx.fillStyle = 'rgba(255,255,180,0.08)';
+    ctx.fillStyle = 'rgba(255,255,180,0.08)';
     ctx.beginPath(); ctx.moveTo(hw - 3, hlY1 - 2); ctx.lineTo(hw + 42, hlY1 - 13); ctx.lineTo(hw + 42, hlY1 + 13); ctx.closePath(); ctx.fill();
     ctx.beginPath(); ctx.moveTo(hw - 3, hlY2 - 2); ctx.lineTo(hw + 42, hlY2 - 13); ctx.lineTo(hw + 42, hlY2 + 13); ctx.closePath(); ctx.fill();
 
@@ -873,43 +838,37 @@ class Vehicle {
       ctx.roundRect(-hw * 0.3, -hh * 0.4, hw * 0.6, hh * 0.8, 2);
       ctx.fill();
 
-      // Blue light (left)
+      // Blue light (left) — halo via globalAlpha instead of shadowBlur
       if (sirenOn1) {
-        ctx.fillStyle = '#0066FF';
-        ctx.shadowColor = '#0066FF';
-        ctx.shadowBlur = 22;
-        ctx.beginPath();
-        ctx.arc(-hw * 0.12, 0, 4, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.globalAlpha = 0.35; ctx.fillStyle = '#0044CC';
+        ctx.beginPath(); ctx.arc(-hw * 0.12, 0, 9, 0, Math.PI * 2); ctx.fill();
+        ctx.globalAlpha = 1; ctx.fillStyle = '#0066FF';
+        ctx.beginPath(); ctx.arc(-hw * 0.12, 0, 4, 0, Math.PI * 2); ctx.fill();
       }
 
       // Red light (right)
       if (sirenOn2) {
-        ctx.fillStyle = '#FF0044';
-        ctx.shadowColor = '#FF0044';
-        ctx.shadowBlur = 22;
-        ctx.beginPath();
-        ctx.arc(hw * 0.12, 0, 4, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.globalAlpha = 0.35; ctx.fillStyle = '#CC0033';
+        ctx.beginPath(); ctx.arc(hw * 0.12, 0, 9, 0, Math.PI * 2); ctx.fill();
+        ctx.globalAlpha = 1; ctx.fillStyle = '#FF0044';
+        ctx.beginPath(); ctx.arc(hw * 0.12, 0, 4, 0, Math.PI * 2); ctx.fill();
       }
-      ctx.shadowBlur = 0;
     }
 
     // ── Taillights ────────────────────────────────────────────
-    ctx.fillStyle = '#FF2200'; ctx.shadowColor = '#FF2200'; ctx.shadowBlur = 10;
+    ctx.fillStyle = '#FF2200';
     ctx.beginPath(); ctx.ellipse(-hw + 5, hlY1, 2.6, 2.0, 0, 0, Math.PI * 2); ctx.fill();
     ctx.beginPath(); ctx.ellipse(-hw + 5, hlY2, 2.6, 2.0, 0, 0, Math.PI * 2); ctx.fill();
 
     // ── Exhaust ───────────────────────────────────────────────
     if (!isArmored) {
-      ctx.fillStyle = '#1c1c1c'; ctx.shadowBlur = 0;
+      ctx.fillStyle = '#1c1c1c';
       ctx.beginPath(); ctx.ellipse(-hw + 3, hh * (isSports ? 0.58 : 0.42), 3.2, 2, 0, 0, Math.PI * 2); ctx.fill();
       if (isSports) {
         ctx.beginPath(); ctx.ellipse(-hw + 3, -hh * 0.58, 3.2, 2, 0, 0, Math.PI * 2); ctx.fill();
       }
     }
 
-    ctx.shadowBlur = 0;
     ctx.restore();
 
     // ── HP bar ────────────────────────────────────────────────
@@ -918,9 +877,7 @@ class Vehicle {
       const pct = this.hp / this.maxHp;
       ctx.fillStyle = '#111'; ctx.fillRect(bx2, by2, bw, bh);
       ctx.fillStyle   = pct > 0.5 ? '#44FF88' : pct > 0.25 ? '#FFCC00' : '#FF4444';
-      ctx.shadowColor = ctx.fillStyle; ctx.shadowBlur = 6;
       ctx.fillRect(bx2, by2, bw * pct, bh);
-      ctx.shadowBlur = 0;
       ctx.strokeStyle = 'rgba(255,255,255,0.18)'; ctx.lineWidth = 0.5;
       ctx.strokeRect(bx2, by2, bw, bh);
     }
@@ -1275,198 +1232,6 @@ class Vehicle {
     }
   }
 
-  _renderHorse(ctx) {
-    const flash = this._damageFlash > 0;
-    const gait = this._horseGait;
-    const legSwing = Math.sin(gait) * 0.35;
-    const bodyBob = Math.abs(Math.sin(gait * 2)) * 3;
-
-    // Ground shadow
-    ctx.save();
-    ctx.globalAlpha = 0.3;
-    ctx.fillStyle = '#000';
-    ctx.beginPath();
-    ctx.ellipse(this.x + 4, this.y + 20, 32, 10, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
-
-    ctx.save();
-    ctx.translate(this.x, this.y - bodyBob);
-    ctx.rotate(this.angle);
-
-    const hw = 32, hh = 14;
-    const bodyColor = flash ? '#FF6644' : this.color;
-    const darkBody = flash ? '#CC4422' : this._darkenVehicleColor(this.color, 0.7);
-    const lightBody = flash ? '#FFAA88' : this._lightenVehicleColor(this.color, 1.2);
-
-    // Legs (4 legs with galloping animation)
-    ctx.fillStyle = darkBody;
-    // Back left leg
-    ctx.save();
-    ctx.translate(-hw + 8, hh - 2);
-    ctx.rotate(legSwing);
-    ctx.fillRect(-3, 0, 6, 18);
-    ctx.restore();
-    // Back right leg
-    ctx.save();
-    ctx.translate(-hw + 8, -hh + 2);
-    ctx.rotate(-legSwing);
-    ctx.fillRect(-3, 0, 6, 18);
-    ctx.restore();
-    // Front left leg
-    ctx.save();
-    ctx.translate(hw - 14, hh - 2);
-    ctx.rotate(-legSwing * 0.8);
-    ctx.fillRect(-3, 0, 6, 20);
-    ctx.restore();
-    // Front right leg
-    ctx.save();
-    ctx.translate(hw - 14, -hh + 2);
-    ctx.rotate(legSwing * 0.8);
-    ctx.fillRect(-3, 0, 6, 20);
-    ctx.restore();
-
-    // Tail
-    ctx.save();
-    ctx.translate(-hw - 2, 0);
-    ctx.rotate(Math.sin(gait * 0.5) * 0.3);
-    ctx.fillStyle = darkBody;
-    ctx.beginPath();
-    ctx.moveTo(0, -4);
-    ctx.quadraticCurveTo(-18, 0, -22, 8);
-    ctx.quadraticCurveTo(-18, 0, 0, 4);
-    ctx.fill();
-    ctx.restore();
-
-    // Body (elongated oval)
-    const bodyGrad = ctx.createLinearGradient(-hw, -hh, hw * 0.5, hh);
-    bodyGrad.addColorStop(0, lightBody);
-    bodyGrad.addColorStop(0.5, bodyColor);
-    bodyGrad.addColorStop(1, darkBody);
-    ctx.fillStyle = bodyGrad;
-    ctx.beginPath();
-    ctx.ellipse(0, 0, hw, hh, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Belly lighter stripe
-    ctx.fillStyle = lightBody;
-    ctx.globalAlpha = 0.3;
-    ctx.beginPath();
-    ctx.ellipse(0, hh * 0.4, hw * 0.7, hh * 0.3, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.globalAlpha = 1;
-
-    // Neck
-    ctx.fillStyle = bodyColor;
-    ctx.beginPath();
-    ctx.moveTo(hw - 8, -hh * 0.6);
-    ctx.quadraticCurveTo(hw + 12, -hh * 1.4, hw + 8, -hh * 2.2);
-    ctx.quadraticCurveTo(hw + 4, -hh * 2.4, hw - 2, -hh * 1.8);
-    ctx.quadraticCurveTo(hw - 6, -hh * 1.2, hw - 8, hh * 0.6);
-    ctx.fill();
-
-    // Head
-    ctx.fillStyle = bodyGrad;
-    ctx.beginPath();
-    ctx.ellipse(hw + 14, -hh * 2.4, 10, 7, 0.3, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Snout
-    ctx.fillStyle = darkBody;
-    ctx.beginPath();
-    ctx.ellipse(hw + 22, -hh * 2.2, 6, 4, 0.2, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Nostrils
-    ctx.fillStyle = '#1a1a1a';
-    ctx.beginPath();
-    ctx.arc(hw + 26, -hh * 2.4, 1.5, 0, Math.PI * 2);
-    ctx.arc(hw + 26, -hh * 2.0, 1.5, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Eye
-    ctx.fillStyle = '#1a1a1a';
-    ctx.beginPath();
-    ctx.arc(hw + 10, -hh * 2.6, 3, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = '#FFFFFF';
-    ctx.beginPath();
-    ctx.arc(hw + 11, -hh * 2.7, 1, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Ears
-    ctx.fillStyle = bodyColor;
-    ctx.beginPath();
-    ctx.moveTo(hw + 6, -hh * 2.9);
-    ctx.lineTo(hw + 3, -hh * 3.5);
-    ctx.lineTo(hw + 8, -hh * 3.1);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.moveTo(hw + 12, -hh * 2.9);
-    ctx.lineTo(hw + 15, -hh * 3.5);
-    ctx.lineTo(hw + 10, -hh * 3.1);
-    ctx.fill();
-
-    // Mane
-    ctx.fillStyle = darkBody;
-    for (let i = 0; i < 6; i++) {
-      const mx = hw - 4 + i * 3;
-      const my = -hh * (1.2 + i * 0.15);
-      const mWobble = Math.sin(gait + i * 0.5) * 3;
-      ctx.beginPath();
-      ctx.moveTo(mx, my);
-      ctx.quadraticCurveTo(mx - 6 + mWobble, my - 8, mx - 3, my - 12);
-      ctx.quadraticCurveTo(mx + mWobble, my - 6, mx + 2, my);
-      ctx.fill();
-    }
-
-    // Saddle
-    ctx.fillStyle = '#4a3020';
-    ctx.beginPath();
-    ctx.ellipse(0, -hh * 0.3, 12, 8, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = '#6a4a38';
-    ctx.beginPath();
-    ctx.ellipse(0, -hh * 0.5, 10, 5, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Stirrups
-    ctx.strokeStyle = '#3a2a1a';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(-4, hh * 0.2);
-    ctx.lineTo(-6, hh + 6);
-    ctx.moveTo(4, hh * 0.2);
-    ctx.lineTo(6, hh + 6);
-    ctx.stroke();
-
-    // Reins
-    ctx.strokeStyle = '#3a2a1a';
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.moveTo(0, -hh * 0.5);
-    ctx.quadraticCurveTo(hw * 0.6, -hh * 1.5, hw + 8, -hh * 2.2);
-    ctx.stroke();
-
-    ctx.restore();
-
-    // HP bar
-    if (this.hp < this.maxHp) {
-      const bw = 50, bh = 5, bx2 = this.x - bw/2, by2 = this.y - 45;
-      const pct = this.hp / this.maxHp;
-      ctx.fillStyle = '#1a1a0a';
-      ctx.fillRect(bx2, by2, bw, bh);
-      ctx.fillStyle = pct > 0.5 ? '#88DD44' : pct > 0.25 ? '#DDAA22' : '#DD4422';
-      ctx.shadowColor = ctx.fillStyle;
-      ctx.shadowBlur = 6;
-      ctx.fillRect(bx2, by2, bw * pct, bh);
-      ctx.shadowBlur = 0;
-      ctx.strokeStyle = 'rgba(100,150,50,0.4)';
-      ctx.lineWidth = 0.5;
-      ctx.strokeRect(bx2, by2, bw, bh);
-    }
-  }
-
   _darkenVehicleColor(hex, factor = 0.58) {
     const r = Math.round(parseInt(hex.slice(1,3),16) * factor);
     const g = Math.round(parseInt(hex.slice(3,5),16) * factor);
@@ -1744,9 +1509,8 @@ class Player {
     // Torso
     const tGrad = ctx.createLinearGradient(-bw, -bh * 0.48, bw, bh * 0.38);
     tGrad.addColorStop(0, this.color + 'EE'); tGrad.addColorStop(1, this.color + '88');
-    ctx.fillStyle = tGrad; ctx.shadowColor = this.color; ctx.shadowBlur = 14;
+    ctx.fillStyle = tGrad;
     ctx.beginPath(); ctx.roundRect(-bw, -bh * 0.48, bw * 2, bh * 0.86, [bw * 0.36, bw * 0.36, bw * 0.2, bw * 0.2]); ctx.fill();
-    ctx.shadowBlur = 0;
     // Chest plate
     ctx.fillStyle = this.accent + '50';
     ctx.beginPath(); ctx.roundRect(-bw * 0.5, -bh * 0.4, bw * 1.0, bh * 0.44, bw * 0.14); ctx.fill();
@@ -1774,35 +1538,31 @@ class Player {
     // Head (skin)
     const hGrad = ctx.createRadialGradient(-hhr * 0.22, -bh * 0.5 - hhr * 0.2, 1, 0, -bh * 0.5, hhr);
     hGrad.addColorStop(0, '#FFE8CC'); hGrad.addColorStop(0.7, '#E8C89A'); hGrad.addColorStop(1, '#C8A070');
-    ctx.fillStyle = hGrad; ctx.shadowColor = this.accent; ctx.shadowBlur = 12;
+    ctx.fillStyle = hGrad;
     ctx.beginPath(); ctx.arc(0, -bh * 0.5, hhr, 0, Math.PI * 2); ctx.fill();
-    ctx.shadowBlur = 0;
     // Helmet / hair
-    ctx.fillStyle = this.color; ctx.shadowColor = this.color; ctx.shadowBlur = 8;
+    ctx.fillStyle = this.color;
     ctx.beginPath(); ctx.arc(0, -bh * 0.5, hhr * 1.02, Math.PI * 0.7, Math.PI * 2.3);
     ctx.lineTo(0, -bh * 0.5); ctx.closePath(); ctx.fill();
     // Visor strip
     ctx.fillStyle = this.accent + '90';
     ctx.beginPath(); ctx.rect(-hhr * 0.85, -bh * 0.5 - hhr * 0.1, hhr * 1.7, hhr * 0.28); ctx.fill();
-    ctx.shadowBlur = 0;
     // Eyes
     const ey = -bh * 0.5 + hhr * 0.06;
     ctx.fillStyle = '#111122';
     ctx.beginPath(); ctx.ellipse(-hhr * 0.28, ey, hhr * 0.18, hhr * 0.14, 0, 0, Math.PI * 2); ctx.fill();
     ctx.beginPath(); ctx.ellipse( hhr * 0.28, ey, hhr * 0.18, hhr * 0.14, 0, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = this.accent; ctx.shadowColor = this.accent; ctx.shadowBlur = 5;
+    ctx.fillStyle = this.accent;
     ctx.beginPath(); ctx.arc(-hhr * 0.24, ey, hhr * 0.07, 0, Math.PI * 2); ctx.fill();
     ctx.beginPath(); ctx.arc( hhr * 0.32, ey, hhr * 0.07, 0, Math.PI * 2); ctx.fill();
-    ctx.shadowBlur = 0;
 
     ctx.restore(); // end rotated body
 
     // ── Outer energy ring ──────────────────────────────────────
-    ctx.save();
-    ctx.shadowColor = this.color; ctx.shadowBlur = 22;
-    ctx.strokeStyle = this.color + '66'; ctx.lineWidth = 2;
+    ctx.globalAlpha = 0.42;
+    ctx.strokeStyle = this.color; ctx.lineWidth = 2;
     ctx.beginPath(); ctx.arc(x, y, r + 4, 0, Math.PI * 2); ctx.stroke();
-    ctx.restore();
+    ctx.globalAlpha = 1;
 
     // ── Gun (world space) ─────────────────────────────────────
     const gunLen = r + 14;
@@ -1810,7 +1570,6 @@ class Player {
     const gy = y + Math.sin(ang) * gunLen;
     const bx0 = x + Math.cos(ang) * (r - 2), by0 = y + Math.sin(ang) * (r - 2);
     ctx.save();
-    ctx.shadowColor = wColor; ctx.shadowBlur = 12;
     if (this._weapon && this._weapon.melee) {
       const tipX = gx + Math.cos(ang) * 10, tipY = gy + Math.sin(ang) * 10;
       ctx.strokeStyle = 'rgba(0,0,0,0.55)'; ctx.lineWidth = 5; ctx.lineCap = 'round';
@@ -1843,16 +1602,17 @@ class Player {
         ctx.globalAlpha  = Math.min(1, this._muzzleFlash / 0.12) * 0.72;
         ctx.strokeStyle  = '#AADDFF';
         ctx.lineWidth    = 2.5;
-        ctx.shadowColor  = '#88CCFF'; ctx.shadowBlur = 14;
         ctx.lineCap      = 'round';
         ctx.beginPath();
         ctx.arc(x, y, swingRange, ang - arcSpan / 2, ang + arcSpan / 2);
         ctx.stroke();
-        // Tip glow
+        // Tip glow via globalAlpha
         const tipX = x + Math.cos(ang) * swingRange;
         const tipY = y + Math.sin(ang) * swingRange;
-        ctx.fillStyle = '#DDEEFF'; ctx.shadowBlur = 20;
+        ctx.globalAlpha = Math.min(1, this._muzzleFlash / 0.12) * 0.72;
+        ctx.fillStyle = '#DDEEFF';
         ctx.beginPath(); ctx.arc(tipX, tipY, 5, 0, Math.PI * 2); ctx.fill();
+        ctx.globalAlpha = 1;
         ctx.restore();
       } else {
         const fx = x + Math.cos(ang) * (gunLen + 12);
@@ -2076,8 +1836,8 @@ class Bot {
     this._eyeBlinkTimer = rnd(1, 4);
     this._animT         = 0;
     this._sirenT        = 0; // police/swat: drives flashing light phase
-    this._mapTheme = mapConfig ? (mapConfig.snow ? 'snow' : mapConfig.desert ? 'desert' : mapConfig.ocean ? 'ocean' : mapConfig.jungle ? 'jungle' : null) : null;
-    this._animalType = palette?.animal || null;  // For jungle: monkey, tiger, gorilla, etc.
+    this._mapTheme = mapConfig ? (mapConfig.snow ? 'snow' : mapConfig.desert ? 'desert' : mapConfig.ocean ? 'ocean' : mapConfig.robot ? 'robot' : null) : null;
+    this._animalType = pal?.animal || null;
   }
 
   update(dt, player, gameMap, bullets, particles) {
@@ -2162,8 +1922,7 @@ class Bot {
       this._stuckTimer = 0;
     }
 
-    // Shooting (jungle animals are melee-only - no ranged attacks)
-    if (this.state === BOT_STATE.ATTACK && this._mapTheme !== 'jungle') {
+    if (this.state === BOT_STATE.ATTACK) {
       this.fireCooldown -= dt * 1000;
       if (this.fireCooldown <= 0) {
         this._shoot(bullets, particles);
@@ -2228,7 +1987,7 @@ class Bot {
     if      (this._mapTheme === 'snow')                                             this._renderSnowman(ctx, x, y, r);
     else if (this._mapTheme === 'desert')                                           this._renderDesertEnemy(ctx, x, y, r);
     else if (this._mapTheme === 'ocean')                                            this._renderOceanEnemy(ctx, x, y, r);
-    else if (this._mapTheme === 'jungle')                                           this._renderJungleAnimal(ctx, x, y, r);
+    else if (this._mapTheme === 'robot')                                            this._renderRobotUnit(ctx, x, y, r);
     else if (this.type === 'mini')                                                  this._renderMini(ctx, x, y, r);
     else if (this.type === 'big')                                                   this._renderBig(ctx, x, y, r);
     else if (this.type === 'police' || this.type === 'swat' || this.type === 'heavyswat') this._renderPolice(ctx, x, y, r);
@@ -2240,14 +1999,15 @@ class Bot {
   }
 
   _renderMini(ctx, x, y, r) {
-    // Glowing orb
-    ctx.save();
-    ctx.shadowColor = this.bodyColor; ctx.shadowBlur = 12;
-    const g = ctx.createRadialGradient(x - r*0.3, y - r*0.3, 0.5, x, y, r);
-    g.addColorStop(0, this.accentColor); g.addColorStop(1, this.bodyColor + 'BB');
-    ctx.fillStyle = g;
+    // Outer glow via globalAlpha instead of shadowBlur/radialGradient
+    ctx.globalAlpha = 0.35;
+    ctx.fillStyle = this.bodyColor;
+    ctx.beginPath(); ctx.arc(x, y, r * 1.45, 0, Math.PI * 2); ctx.fill();
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = this.accentColor;
+    ctx.beginPath(); ctx.arc(x, y, r * 0.55, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = this.bodyColor;
     ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
-    ctx.restore();
 
     // Spinning ring
     ctx.save();
@@ -2289,12 +2049,9 @@ class Bot {
       ctx.fillStyle = '#0a0a10';
       ctx.beginPath(); ctx.ellipse(s*r*0.3+s*r*0.06, r*0.62, r*0.23, r*0.14, -s*0.25, 0, Math.PI*2); ctx.fill();
     }
-    // Torso (hoodie)
-    const tg = ctx.createLinearGradient(-bw, -bh*0.46, bw, bh*0.36);
-    tg.addColorStop(0, this.bodyColor+'EE'); tg.addColorStop(1, this.bodyColor+'88');
-    ctx.fillStyle = tg; ctx.shadowColor = this.bodyColor; ctx.shadowBlur = 10;
+    // Torso (hoodie) — flat color for perf
+    ctx.fillStyle = this.bodyColor + 'EE';
     ctx.beginPath(); ctx.roundRect(-bw, -bh*0.46, bw*2, bh*0.82, [bw*0.35, bw*0.35, bw*0.18, bw*0.18]); ctx.fill();
-    ctx.shadowBlur = 0;
     // Pocket detail
     ctx.fillStyle = this.bodyColor+'55'; ctx.beginPath(); ctx.roundRect(-bw*0.45, bh*0.02, bw*0.9, bh*0.24, bw*0.12); ctx.fill();
     // Belt
@@ -2307,23 +2064,21 @@ class Bot {
     ctx.fillStyle = this.bodyColor+'AA';
     ctx.save(); ctx.translate(bw*1.06, -bh*0.16); ctx.rotate(-0.42);
     ctx.beginPath(); ctx.roundRect(-r*0.12, -r*0.58, r*0.24, r*0.62, r*0.1); ctx.fill(); ctx.restore();
-    // Head
-    const hg = ctx.createRadialGradient(-hhr*0.2, -bh*0.5-hhr*0.2, 1, 0, -bh*0.48, hhr);
-    hg.addColorStop(0,'#FFE8CC'); hg.addColorStop(0.7,'#E0B88A'); hg.addColorStop(1,'#C09060');
-    ctx.fillStyle = hg; ctx.beginPath(); ctx.arc(0, -bh*0.48, hhr, 0, Math.PI*2); ctx.fill();
+    // Head — flat skin color for perf
+    ctx.fillStyle = '#E0B88A';
+    ctx.beginPath(); ctx.arc(0, -bh*0.48, hhr, 0, Math.PI*2); ctx.fill();
     // Hood / cap
-    ctx.fillStyle = this.bodyColor; ctx.shadowColor = this.bodyColor; ctx.shadowBlur = 7;
+    ctx.fillStyle = this.bodyColor;
     ctx.beginPath(); ctx.arc(0, -bh*0.48, hhr*1.04, Math.PI*0.65, Math.PI*2.35);
-    ctx.lineTo(0, -bh*0.48); ctx.closePath(); ctx.fill(); ctx.shadowBlur = 0;
+    ctx.lineTo(0, -bh*0.48); ctx.closePath(); ctx.fill();
     // Cap brim forward
     ctx.fillStyle = this.accentColor;
     ctx.beginPath(); ctx.ellipse(0, -bh*0.48-hhr*0.92, hhr*0.7, hhr*0.18, 0, 0, Math.PI*2); ctx.fill();
-    // Glowing red eyes
+    // Eyes — bright flat red dots
     const ey = -bh*0.48+hhr*0.08;
-    ctx.fillStyle = '#FF2222'; ctx.shadowColor = '#FF0000'; ctx.shadowBlur = 8;
+    ctx.fillStyle = '#FF2222';
     ctx.beginPath(); ctx.ellipse(-hhr*0.27, ey, hhr*0.16, hhr*0.12, 0, 0, Math.PI*2); ctx.fill();
     ctx.beginPath(); ctx.ellipse( hhr*0.27, ey, hhr*0.16, hhr*0.12, 0, 0, Math.PI*2); ctx.fill();
-    ctx.shadowBlur = 0;
     ctx.restore();
 
     // Gun barrel
@@ -2347,10 +2102,11 @@ class Bot {
     ctx.beginPath(); ctx.ellipse(x+6, y+r*0.58, r*1.2, r*0.32, 0, 0, Math.PI*2); ctx.fill();
     ctx.restore();
 
-    // Outer armor glow ring
-    ctx.save(); ctx.strokeStyle = this.accentColor+'66'; ctx.lineWidth = 3;
-    ctx.shadowColor = this.bodyColor; ctx.shadowBlur = 18;
-    ctx.beginPath(); ctx.arc(x, y, r+5, 0, Math.PI*2); ctx.stroke(); ctx.restore();
+    // Outer armor glow ring — globalAlpha instead of shadowBlur
+    ctx.globalAlpha = 0.38;
+    ctx.strokeStyle = this.accentColor; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.arc(x, y, r+5, 0, Math.PI*2); ctx.stroke();
+    ctx.globalAlpha = 1;
 
     ctx.save();
     ctx.translate(x, y); ctx.rotate(this._angle - Math.PI/2);
@@ -2366,12 +2122,9 @@ class Bot {
       ctx.fillStyle = '#0e0c12';
       ctx.beginPath(); ctx.ellipse(s*r*0.33+s*r*0.08, r*0.68, r*0.28, r*0.16, -s*0.25, 0, Math.PI*2); ctx.fill();
     }
-    // Heavy torso (armored)
-    const tg = ctx.createLinearGradient(-bw, -bh*0.48, bw, bh*0.4);
-    tg.addColorStop(0, this.bodyColor+'EE'); tg.addColorStop(1, this.bodyColor+'77');
-    ctx.fillStyle = tg; ctx.shadowColor = this.bodyColor; ctx.shadowBlur = 16;
+    // Heavy torso (armored) — flat color for perf
+    ctx.fillStyle = this.bodyColor + 'EE';
     ctx.beginPath(); ctx.roundRect(-bw, -bh*0.48, bw*2, bh*0.88, [bw*0.3, bw*0.3, bw*0.18, bw*0.18]); ctx.fill();
-    ctx.shadowBlur = 0;
     // Chest armor plates
     ctx.fillStyle = this.accentColor+'40';
     ctx.beginPath(); ctx.roundRect(-bw*0.56, -bh*0.42, bw*0.52, bh*0.46, bw*0.12); ctx.fill();
@@ -2380,9 +2133,8 @@ class Bot {
     ctx.fillStyle = '#0a0a10'; ctx.fillRect(-r*0.06, -bh*0.44, r*0.12, bh*0.5);
     // Shoulder pads
     for (const s of [-1,1]) {
-      ctx.fillStyle = this.bodyColor; ctx.shadowColor = this.bodyColor; ctx.shadowBlur = 8;
+      ctx.fillStyle = this.bodyColor;
       ctx.beginPath(); ctx.ellipse(s*bw*1.1, -bh*0.28, r*0.32, r*0.24, s*0.3, 0, Math.PI*2); ctx.fill();
-      ctx.shadowBlur = 0;
       // Rivet on shoulder
       ctx.fillStyle = this.accentColor;
       ctx.beginPath(); ctx.arc(s*bw*1.1, -bh*0.28, r*0.1, 0, Math.PI*2); ctx.fill();
@@ -2392,15 +2144,13 @@ class Bot {
       ctx.fillStyle = this.bodyColor+'CC';
       ctx.beginPath(); ctx.roundRect(s*bw*0.9, -bh*0.22, s*r*0.32, r*0.7, r*0.1); ctx.fill();
     }
-    // Head (armored helmet)
-    const hg = ctx.createRadialGradient(-hhr*0.18, -bh*0.5-hhr*0.18, 1, 0, -bh*0.48, hhr);
-    hg.addColorStop(0, this.bodyColor+'FF'); hg.addColorStop(1, this.bodyColor+'88');
-    ctx.fillStyle = hg; ctx.shadowColor = this.bodyColor; ctx.shadowBlur = 14;
+    // Head (armored helmet) — flat color for perf
+    ctx.fillStyle = this.bodyColor;
     ctx.beginPath(); ctx.arc(0, -bh*0.48, hhr, 0, Math.PI*2); ctx.fill();
     // Visor (red cyclops)
-    ctx.fillStyle = '#FF4400'; ctx.shadowColor = '#FF2200'; ctx.shadowBlur = 18;
+    ctx.fillStyle = '#FF4400';
     ctx.beginPath(); ctx.rect(-hhr*0.8, -bh*0.48-hhr*0.12, hhr*1.6, hhr*0.3); ctx.fill();
-    ctx.fillStyle = '#FFAA33'; ctx.shadowBlur = 0;
+    ctx.fillStyle = '#FFAA33';
     ctx.beginPath(); ctx.arc(0, -bh*0.48, hhr*0.16, 0, Math.PI*2); ctx.fill();
     // Helmet ridge
     ctx.fillStyle = this.accentColor;
@@ -2413,11 +2163,11 @@ class Bot {
     ctx.save(); ctx.lineCap = 'round';
     ctx.strokeStyle = 'rgba(0,0,0,0.60)'; ctx.lineWidth = 13;
     ctx.beginPath(); ctx.moveTo(gsx+1.5,gsy+2); ctx.lineTo(gx+1.5,gy+2); ctx.stroke();
-    ctx.strokeStyle = this.accentColor; ctx.shadowColor = this.bodyColor; ctx.shadowBlur = 8; ctx.lineWidth = 10;
+    ctx.strokeStyle = this.accentColor; ctx.lineWidth = 10;
     ctx.beginPath(); ctx.moveTo(gsx,gsy); ctx.lineTo(gx,gy); ctx.stroke();
     ctx.strokeStyle = 'rgba(255,255,255,0.20)'; ctx.lineWidth = 3;
     ctx.beginPath(); ctx.moveTo(gsx-1,gsy-1); ctx.lineTo(gx-1,gy-1); ctx.stroke();
-    ctx.strokeStyle = '#ddd'; ctx.lineWidth = 4; ctx.shadowBlur = 0;
+    ctx.strokeStyle = '#ddd'; ctx.lineWidth = 4;
     ctx.beginPath(); ctx.moveTo(gx,gy); ctx.lineTo(gx+Math.cos(this._angle)*14,gy+Math.sin(this._angle)*14); ctx.stroke();
     ctx.restore();
 
@@ -2447,19 +2197,15 @@ class Bot {
       ctx.fillStyle = '#080810';
       ctx.beginPath(); ctx.ellipse(s*r*0.3+s*r*0.06, r*0.64, r*0.24, r*0.14, -s*0.25, 0, Math.PI*2); ctx.fill();
     }
-    // Torso (uniform)
-    const tg = ctx.createLinearGradient(-bw, -bh*0.46, bw, bh*0.36);
-    tg.addColorStop(0, bodyCol+'EE'); tg.addColorStop(1, bodyCol+'88');
-    ctx.fillStyle = tg; ctx.shadowColor = bodyCol; ctx.shadowBlur = 12;
+    // Torso (uniform) — flat color for perf
+    ctx.fillStyle = bodyCol + 'EE';
     ctx.beginPath(); ctx.roundRect(-bw, -bh*0.46, bw*2, bh*0.84, [bw*0.32, bw*0.32, bw*0.18, bw*0.18]); ctx.fill();
-    ctx.shadowBlur = 0;
     if (!isSwat) {
       // Police badge
-      ctx.fillStyle = '#FFD700'; ctx.shadowColor = '#FFD700'; ctx.shadowBlur = 5;
+      ctx.fillStyle = '#FFD700';
       ctx.beginPath(); ctx.arc(0, -bh*0.16, r*0.15, 0, Math.PI*2); ctx.fill();
       ctx.fillStyle = '#AA8800'; ctx.font = `bold ${Math.round(r*0.1)}px monospace`; ctx.textAlign = 'center';
       ctx.fillText('★', 0, -bh*0.12);
-      ctx.shadowBlur = 0;
       // Blue stripe
       ctx.fillStyle = accentCol+'88';
       ctx.beginPath(); ctx.roundRect(-bw*0.5, -bh*0.46, bw*1.0, bh*0.12, bw*0.1); ctx.fill();
@@ -2482,25 +2228,20 @@ class Bot {
     ctx.fillStyle = bodyCol+'BB';
     ctx.save(); ctx.translate(bw*1.06, -bh*0.16); ctx.rotate(-0.42);
     ctx.beginPath(); ctx.roundRect(-r*0.12, -r*0.58, r*0.24, r*0.62, r*0.1); ctx.fill(); ctx.restore();
-    // Head (helmet)
-    const hg = ctx.createRadialGradient(-hhr*0.2, -bh*0.5-hhr*0.2, 1, 0, -bh*0.48, hhr);
-    hg.addColorStop(0, isSwat?'#333344':'#1144CC'); hg.addColorStop(1, isSwat?'#111122':'#002288');
-    ctx.fillStyle = hg; ctx.shadowColor = bodyCol; ctx.shadowBlur = 10;
+    // Head (helmet) — flat color for perf
+    ctx.fillStyle = isSwat ? '#222233' : '#1144CC';
     ctx.beginPath(); ctx.arc(0, -bh*0.48, hhr, 0, Math.PI*2); ctx.fill();
-    // Visor (police: blue tint, SWAT: dark with red glow)
+    // Visor
     ctx.fillStyle = isSwat ? 'rgba(60,80,200,0.35)' : 'rgba(80,120,255,0.4)';
-    ctx.shadowColor = isSwat ? '#3344FF' : '#4466FF'; ctx.shadowBlur = 6;
     ctx.beginPath(); ctx.rect(-hhr*0.82, -bh*0.48-hhr*0.1, hhr*1.64, hhr*0.28); ctx.fill();
-    ctx.shadowBlur = 0;
     // Cap brim / helmet rim
     ctx.fillStyle = isSwat ? '#222233' : '#001166';
     ctx.beginPath(); ctx.ellipse(0, -bh*0.48-hhr*0.9, hhr*0.82, hhr*0.2, 0, 0, Math.PI*2); ctx.fill();
-    // Eyes
+    // Eyes — flat color
     const ey = -bh*0.48+hhr*0.06;
-    ctx.fillStyle = eyeCol; ctx.shadowColor = eyeCol; ctx.shadowBlur = 8;
+    ctx.fillStyle = eyeCol;
     ctx.beginPath(); ctx.ellipse(-hhr*0.27, ey, hhr*0.16, hhr*0.12, 0, 0, Math.PI*2); ctx.fill();
     ctx.beginPath(); ctx.ellipse( hhr*0.27, ey, hhr*0.16, hhr*0.12, 0, 0, Math.PI*2); ctx.fill();
-    ctx.shadowBlur = 0;
     ctx.restore();
 
     // Gun
@@ -2555,9 +2296,8 @@ class Bot {
     ctx.restore();
 
     // Scope/laser ring
-    ctx.save(); ctx.strokeStyle = '#88DDFF44'; ctx.lineWidth = 1.5;
-    ctx.shadowColor = '#44AAFF'; ctx.shadowBlur = 10;
-    ctx.beginPath(); ctx.arc(x, y, r+5, 0, Math.PI*2); ctx.stroke(); ctx.restore();
+    ctx.globalAlpha = 0.28; ctx.strokeStyle = '#88DDFF'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.arc(x, y, r+5, 0, Math.PI*2); ctx.stroke(); ctx.globalAlpha = 1;
 
     ctx.save();
     ctx.translate(x, y); ctx.rotate(this._angle - Math.PI/2);
@@ -2570,19 +2310,15 @@ class Bot {
       ctx.fillStyle = '#0e120c';
       ctx.beginPath(); ctx.ellipse(s*r*0.27+s*r*0.06, r*0.6, r*0.22, r*0.13, -s*0.22, 0, Math.PI*2); ctx.fill();
     }
-    // Long coat torso
-    const tg = ctx.createLinearGradient(-bw, -bh*0.46, bw, bh*0.36);
-    tg.addColorStop(0, this.bodyColor+'DD'); tg.addColorStop(1, this.bodyColor+'66');
-    ctx.fillStyle = tg; ctx.shadowColor = '#4488BB'; ctx.shadowBlur = 10;
+    // Long coat torso — flat color for perf
+    ctx.fillStyle = this.bodyColor + 'DD';
     ctx.beginPath(); ctx.roundRect(-bw, -bh*0.46, bw*2, bh*0.84, [bw*0.3, bw*0.3, bw*0.14, bw*0.14]); ctx.fill();
-    ctx.shadowBlur = 0;
     // Coat lapels
     ctx.fillStyle = this.bodyColor+'88';
     ctx.beginPath(); ctx.moveTo(-bw*0.5,-bh*0.46); ctx.lineTo(0,-bh*0.1); ctx.lineTo(bw*0.5,-bh*0.46); ctx.closePath(); ctx.fill();
     // Scope device on chest
-    ctx.fillStyle = '#88DDFF'; ctx.shadowColor = '#44AAFF'; ctx.shadowBlur = 8;
+    ctx.fillStyle = '#88DDFF';
     ctx.beginPath(); ctx.arc(0, -bh*0.18, r*0.12, 0, Math.PI*2); ctx.fill();
-    ctx.shadowBlur = 0;
     // Belt
     ctx.fillStyle = '#151512'; ctx.beginPath(); ctx.roundRect(-bw*0.8, bh*0.2, bw*1.6, r*0.13, 2); ctx.fill();
     // Off-arm
@@ -3631,686 +3367,280 @@ class Bot {
     ctx.restore();
   }
 
-  // ── JUNGLE ANIMAL: dispatches to animal-themed renders ────────
-  _renderJungleAnimal(ctx, x, y, r) {
-    const animalType = this._animalType || 'tiger';
-    if (this.type === 'big' || this.type === 'juggernaut') {
-      if (animalType === 'gorilla') this._renderGorilla(ctx, x, y, r);
-      else this._renderRhino(ctx, x, y, r);
-    } else if (this.type === 'police' || this.type === 'swat' || this.type === 'heavyswat') {
-      this._renderCrocodile(ctx, x, y, r);
-    } else if (this.type === 'mini') {
-      this._renderMonkey(ctx, x, y, r);
-    } else {
-      if (animalType === 'tiger') this._renderTiger(ctx, x, y, r);
-      else if (animalType === 'panther') this._renderPanther(ctx, x, y, r);
-      else if (animalType === 'snake') this._renderSnake(ctx, x, y, r);
-      else this._renderWolf(ctx, x, y, r);
-    }
+  // ── ROBOT UNIT: dispatches to robot-themed renders ───────────
+  _renderRobotUnit(ctx, x, y, r) {
+    if      (this.type === 'mini')                                      this._renderScoutDrone(ctx, x, y, r);
+    else if (this.type === 'big')                                       this._renderHeavyMech(ctx, x, y, r);
+    else if (this.type === 'juggernaut')                               this._renderTitanMech(ctx, x, y, r);
+    else if (this.type === 'police' || this.type === 'swat')           this._renderSecurityUnit(ctx, x, y, r);
+    else if (this.type === 'heavyswat')                                this._renderBattleAndroid(ctx, x, y, r);
+    else if (this.type === 'sniper')                                   this._renderTargetingDrone(ctx, x, y, r);
+    else if (this.type === 'bomber')                                   this._renderExplosiveUnit(ctx, x, y, r);
+    else                                                               this._renderHumanoidBot(ctx, x, y, r);
     this._renderHPBar(ctx, x, y, r, 40, 5);
   }
 
-  // ── MONKEY: small agile enemy ─────
-  _renderMonkey(ctx, x, y, r) {
-    const walk = Math.sin(Date.now() * 0.008) * 0.2;
-
+  // ── SCOUT DRONE: mini flying robot ─────
+  _renderScoutDrone(ctx, x, y, r) {
+    const hover = Math.sin(Date.now() * 0.006) * 2.5;
+    ctx.save(); ctx.translate(x, y + hover);
     // Shadow
-    ctx.save(); ctx.globalAlpha = 0.25; ctx.fillStyle = '#000';
-    ctx.beginPath(); ctx.ellipse(x+2, y+r*0.4, r*0.9, r*0.22, 0, 0, Math.PI*2); ctx.fill();
-    ctx.restore();
-
-    ctx.save();
-    ctx.translate(x, y);
-    ctx.rotate(this._angle - Math.PI / 2);
-
-    // Tail
-    ctx.strokeStyle = '#8B4513';
-    ctx.lineWidth = 4;
-    ctx.beginPath();
-    ctx.moveTo(0, r*0.4);
-    ctx.quadraticCurveTo(r*0.8, r*0.6, r*0.6, -r*0.2);
-    ctx.stroke();
-
+    ctx.globalAlpha = 0.18; ctx.fillStyle = '#000';
+    ctx.beginPath(); ctx.ellipse(0, r * 0.55, r * 0.7, r * 0.2, 0, 0, Math.PI*2); ctx.fill();
+    ctx.globalAlpha = 1;
+    // Rotor arms
+    ctx.fillStyle = '#1a2a3a';
+    ctx.fillRect(-r*1.1, -r*0.12, r*0.5, r*0.12);
+    ctx.fillRect(r*0.6, -r*0.12, r*0.5, r*0.12);
+    // Rotor discs
+    ctx.fillStyle = 'rgba(0,200,255,0.25)';
+    ctx.beginPath(); ctx.ellipse(-r*0.88, -r*0.06, r*0.28, r*0.09, 0, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(r*0.88, -r*0.06, r*0.28, r*0.09, 0, 0, Math.PI*2); ctx.fill();
     // Body
-    ctx.fillStyle = '#8B4513';
-    ctx.beginPath();
-    ctx.ellipse(0, 0, r*0.5, r*0.6, 0, 0, Math.PI*2);
-    ctx.fill();
-
-    // Arms
-    for (const s of [-1, 1]) {
-      ctx.fillStyle = '#A0522D';
-      ctx.beginPath();
-      ctx.ellipse(s*r*0.45, r*0.1 + walk*s*r*0.15, r*0.15, r*0.35, s*0.3, 0, Math.PI*2);
-      ctx.fill();
-    }
-
-    // Head
-    ctx.fillStyle = '#D2691E';
-    ctx.beginPath();
-    ctx.arc(0, -r*0.5, r*0.38, 0, Math.PI*2);
-    ctx.fill();
-
-    // Face
-    ctx.fillStyle = '#FFDAB9';
-    ctx.beginPath();
-    ctx.ellipse(0, -r*0.45, r*0.25, r*0.2, 0, 0, Math.PI*2);
-    ctx.fill();
-
-    // Eyes
-    ctx.fillStyle = '#000';
-    ctx.beginPath();
-    ctx.arc(-r*0.12, -r*0.52, r*0.06, 0, Math.PI*2);
-    ctx.arc(r*0.12, -r*0.52, r*0.06, 0, Math.PI*2);
-    ctx.fill();
-
-    // Ears
-    for (const s of [-1, 1]) {
-      ctx.fillStyle = '#D2691E';
-      ctx.beginPath();
-      ctx.arc(s*r*0.32, -r*0.65, r*0.12, 0, Math.PI*2);
-      ctx.fill();
-    }
-
+    ctx.fillStyle = '#1c2e40';
+    ctx.beginPath(); ctx.ellipse(0, 0, r*0.62, r*0.42, 0, 0, Math.PI*2); ctx.fill();
+    // Lens/eye
+    const eyePulse = Math.sin(Date.now() * 0.004) * 0.3 + 0.7;
+    ctx.fillStyle = `rgba(255,50,50,${eyePulse})`;
+    ctx.beginPath(); ctx.arc(0, -r*0.05, r*0.2, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.beginPath(); ctx.arc(r*0.06, -r*0.1, r*0.07, 0, Math.PI*2); ctx.fill();
+    // Gun barrel (points toward angle)
+    ctx.fillStyle = '#0a1828';
+    ctx.fillRect(-r*0.06, r*0.3, r*0.12, r*0.32);
     ctx.restore();
   }
 
-  // ── TIGER: powerful striped predator ─────
-  _renderTiger(ctx, x, y, r) {
-    const walk = Math.sin(Date.now() * 0.006) * 0.15;
-
-    // Shadow
-    ctx.save(); ctx.globalAlpha = 0.3; ctx.fillStyle = '#000';
-    ctx.beginPath(); ctx.ellipse(x+3, y+r*0.45, r*1.2, r*0.25, 0, 0, Math.PI*2); ctx.fill();
-    ctx.restore();
-
-    ctx.save();
-    ctx.translate(x, y);
-    ctx.rotate(this._angle - Math.PI / 2);
-
-    // Tail
-    ctx.strokeStyle = '#FF8C00';
-    ctx.lineWidth = 5;
-    ctx.beginPath();
-    ctx.moveTo(0, r*0.55);
-    ctx.quadraticCurveTo(r*0.6, r*0.8, r*0.4, r*0.3);
-    ctx.stroke();
-    // Tail stripes
-    ctx.strokeStyle = '#000';
-    ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.moveTo(r*0.25, r*0.72); ctx.lineTo(r*0.35, r*0.58); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(r*0.4, r*0.52); ctx.lineTo(r*0.45, r*0.38); ctx.stroke();
-
-    // Back legs
-    for (const s of [-1, 1]) {
-      ctx.fillStyle = '#FF8C00';
-      ctx.beginPath();
-      ctx.ellipse(s*r*0.35, r*0.3 + walk*s*r*0.12, r*0.22, r*0.35, s*0.15, 0, Math.PI*2);
-      ctx.fill();
-    }
-
-    // Body
-    const bg = ctx.createLinearGradient(0, -r*0.4, 0, r*0.4);
-    bg.addColorStop(0, '#FF8C00'); bg.addColorStop(0.5, '#FFA500'); bg.addColorStop(1, '#FF8C00');
-    ctx.fillStyle = bg;
-    ctx.beginPath();
-    ctx.ellipse(0, 0, r*0.6, r*0.75, 0, 0, Math.PI*2);
-    ctx.fill();
-
-    // Body stripes
-    ctx.strokeStyle = '#000';
-    ctx.lineWidth = 3;
-    for (let i = -2; i <= 2; i++) {
-      ctx.beginPath();
-      ctx.moveTo(-r*0.45, i*r*0.18);
-      ctx.quadraticCurveTo(0, i*r*0.18 - r*0.08, r*0.45, i*r*0.18);
-      ctx.stroke();
-    }
-
-    // Front legs
-    for (const s of [-1, 1]) {
-      ctx.fillStyle = '#FF8C00';
-      ctx.beginPath();
-      ctx.ellipse(s*r*0.4, -r*0.2 - walk*s*r*0.1, r*0.18, r*0.3, s*0.2, 0, Math.PI*2);
-      ctx.fill();
-      // Paw
-      ctx.fillStyle = '#FFD700';
-      ctx.beginPath();
-      ctx.ellipse(s*r*0.45, -r*0.45, r*0.12, r*0.08, 0, 0, Math.PI*2);
-      ctx.fill();
-    }
-
+  // ── HUMANOID BOT: standard android enemy ─────
+  _renderHumanoidBot(ctx, x, y, r) {
+    const walk = Math.sin(Date.now() * 0.007) * 0.14;
+    ctx.save(); ctx.translate(x, y);
+    // Leg stubs
+    ctx.fillStyle = '#162438';
+    ctx.fillRect(-r*0.35, r*0.45, r*0.25, r*0.48);
+    ctx.fillRect(r*0.1, r*0.45 + walk*6, r*0.25, r*0.48);
+    // Torso
+    ctx.fillStyle = '#1c2e40';
+    ctx.beginPath(); ctx.roundRect(-r*0.55, -r*0.45, r*1.1, r*0.95, r*0.12); ctx.fill();
+    // Chest panel glow
+    ctx.fillStyle = 'rgba(0,210,255,0.35)';
+    ctx.fillRect(-r*0.25, -r*0.28, r*0.5, r*0.35);
     // Head
-    ctx.fillStyle = '#FF8C00';
-    ctx.beginPath();
-    ctx.arc(0, -r*0.65, r*0.4, 0, Math.PI*2);
-    ctx.fill();
-
-    // White muzzle
-    ctx.fillStyle = '#FFF8DC';
-    ctx.beginPath();
-    ctx.ellipse(0, -r*0.55, r*0.22, r*0.18, 0, 0, Math.PI*2);
-    ctx.fill();
-
-    // Nose
-    ctx.fillStyle = '#FF6B6B';
-    ctx.beginPath();
-    ctx.ellipse(0, -r*0.6, r*0.08, r*0.05, 0, 0, Math.PI*2);
-    ctx.fill();
-
-    // Eyes (fierce)
-    ctx.fillStyle = '#FFD700';
-    ctx.beginPath();
-    ctx.ellipse(-r*0.15, -r*0.72, r*0.08, r*0.06, -0.2, 0, Math.PI*2);
-    ctx.ellipse(r*0.15, -r*0.72, r*0.08, r*0.06, 0.2, 0, Math.PI*2);
-    ctx.fill();
-    ctx.fillStyle = '#000';
-    ctx.beginPath();
-    ctx.arc(-r*0.15, -r*0.72, r*0.04, 0, Math.PI*2);
-    ctx.arc(r*0.15, -r*0.72, r*0.04, 0, Math.PI*2);
-    ctx.fill();
-
-    // Ears
-    for (const s of [-1, 1]) {
-      ctx.fillStyle = '#FF8C00';
-      ctx.beginPath();
-      ctx.moveTo(s*r*0.28, -r*0.85);
-      ctx.lineTo(s*r*0.38, -r*1.05);
-      ctx.lineTo(s*r*0.18, -r*0.9);
-      ctx.closePath();
-      ctx.fill();
-    }
-
+    ctx.fillStyle = '#162438';
+    ctx.beginPath(); ctx.roundRect(-r*0.32, -r*0.95, r*0.64, r*0.54, r*0.1); ctx.fill();
+    // Visor
+    ctx.fillStyle = 'rgba(0,200,255,0.6)';
+    ctx.fillRect(-r*0.26, -r*0.85, r*0.52, r*0.2);
+    // Arm stubs
+    ctx.fillStyle = '#1a2a38';
+    ctx.fillRect(-r*0.82, -r*0.4, r*0.28, r*0.5);
+    ctx.fillRect(r*0.54, -r*0.4 + walk*4, r*0.28, r*0.5);
+    // Gun
+    ctx.fillStyle = '#0a1020';
+    ctx.fillRect(r*0.55, -r*0.15, r*0.42, r*0.12);
     ctx.restore();
   }
 
-  // ── PANTHER: sleek black predator ─────
-  _renderPanther(ctx, x, y, r) {
+  // ── HEAVY MECH: big armored robot ─────
+  _renderHeavyMech(ctx, x, y, r) {
+    const step = Math.sin(Date.now() * 0.004) * 0.1;
+    ctx.save(); ctx.translate(x, y);
+    // Thick legs
+    ctx.fillStyle = '#101c2c';
+    ctx.beginPath(); ctx.roundRect(-r*0.48, r*0.4, r*0.38, r*0.62, r*0.06); ctx.fill();
+    ctx.beginPath(); ctx.roundRect(r*0.1, r*0.4 + step*8, r*0.38, r*0.62, r*0.06); ctx.fill();
+    // Wide torso
+    ctx.fillStyle = '#0e1e30';
+    ctx.beginPath(); ctx.roundRect(-r*0.78, -r*0.52, r*1.56, r*0.96, r*0.1); ctx.fill();
+    // Shoulder cannons
+    ctx.fillStyle = '#FF4400';
+    ctx.beginPath(); ctx.arc(-r*0.82, -r*0.42, r*0.22, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(r*0.82, -r*0.42, r*0.22, 0, Math.PI*2); ctx.fill();
+    // Cannon barrels
+    ctx.fillStyle = '#080e18';
+    ctx.fillRect(-r*0.92, -r*0.48, r*0.48, r*0.12);
+    ctx.fillRect(r*0.44, -r*0.48, r*0.48, r*0.12);
+    // Head block
+    ctx.fillStyle = '#101a28';
+    ctx.beginPath(); ctx.roundRect(-r*0.3, -r*1.02, r*0.6, r*0.52, r*0.08); ctx.fill();
+    // Red visor
+    ctx.fillStyle = 'rgba(255,60,0,0.75)';
+    ctx.fillRect(-r*0.24, -r*0.92, r*0.48, r*0.18);
+    // Chest glow
+    ctx.fillStyle = 'rgba(255,80,0,0.28)';
+    ctx.beginPath(); ctx.arc(0, -r*0.05, r*0.28, 0, Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  // ── SECURITY UNIT: police-style android ─────
+  _renderSecurityUnit(ctx, x, y, r) {
     const walk = Math.sin(Date.now() * 0.007) * 0.12;
-
-    ctx.save(); ctx.globalAlpha = 0.35; ctx.fillStyle = '#000';
-    ctx.beginPath(); ctx.ellipse(x+3, y+r*0.45, r*1.1, r*0.22, 0, 0, Math.PI*2); ctx.fill();
-    ctx.restore();
-
-    ctx.save();
-    ctx.translate(x, y);
-    ctx.rotate(this._angle - Math.PI / 2);
-
-    // Tail
-    ctx.strokeStyle = '#1a1a1a';
-    ctx.lineWidth = 5;
-    ctx.beginPath();
-    ctx.moveTo(0, r*0.5);
-    ctx.quadraticCurveTo(r*0.7, r*0.7, r*0.5, 0);
-    ctx.stroke();
-
-    // Body
-    const bg = ctx.createRadialGradient(0, 0, 0, 0, 0, r*0.8);
-    bg.addColorStop(0, '#333'); bg.addColorStop(1, '#1a1a1a');
-    ctx.fillStyle = bg;
-    ctx.beginPath();
-    ctx.ellipse(0, 0, r*0.55, r*0.7, 0, 0, Math.PI*2);
-    ctx.fill();
-
+    ctx.save(); ctx.translate(x, y);
     // Legs
-    for (const s of [-1, 1]) {
-      ctx.fillStyle = '#1a1a1a';
-      ctx.beginPath();
-      ctx.ellipse(s*r*0.38, r*0.15 + walk*s*r*0.1, r*0.16, r*0.32, s*0.1, 0, Math.PI*2);
-      ctx.fill();
-    }
-
-    // Head
-    ctx.fillStyle = '#222';
+    ctx.fillStyle = '#0c1c3a';
+    ctx.fillRect(-r*0.36, r*0.42, r*0.26, r*0.5);
+    ctx.fillRect(r*0.1, r*0.42 + walk*5, r*0.26, r*0.5);
+    // Torso — blue-tinted armor
+    ctx.fillStyle = '#0a1a3a';
+    ctx.beginPath(); ctx.roundRect(-r*0.58, -r*0.5, r*1.16, r*0.95, r*0.1); ctx.fill();
+    // Shield badge
+    ctx.fillStyle = 'rgba(50,100,255,0.45)';
     ctx.beginPath();
-    ctx.arc(0, -r*0.58, r*0.38, 0, Math.PI*2);
-    ctx.fill();
-
-    // Eyes (glowing)
-    ctx.fillStyle = '#AAFF00';
-    ctx.shadowColor = '#AAFF00';
-    ctx.shadowBlur = 8;
-    ctx.beginPath();
-    ctx.ellipse(-r*0.14, -r*0.62, r*0.07, r*0.05, -0.15, 0, Math.PI*2);
-    ctx.ellipse(r*0.14, -r*0.62, r*0.07, r*0.05, 0.15, 0, Math.PI*2);
-    ctx.fill();
-    ctx.shadowBlur = 0;
-
-    // Ears
-    for (const s of [-1, 1]) {
-      ctx.fillStyle = '#1a1a1a';
-      ctx.beginPath();
-      ctx.moveTo(s*r*0.25, -r*0.8);
-      ctx.lineTo(s*r*0.35, -r*0.98);
-      ctx.lineTo(s*r*0.15, -r*0.85);
-      ctx.closePath();
-      ctx.fill();
-    }
-
+    ctx.moveTo(0, -r*0.42); ctx.lineTo(r*0.28, -r*0.18); ctx.lineTo(r*0.22, r*0.18);
+    ctx.lineTo(0, r*0.3); ctx.lineTo(-r*0.22, r*0.18); ctx.lineTo(-r*0.28, -r*0.18);
+    ctx.closePath(); ctx.fill();
+    // Head — rounded helmet
+    ctx.fillStyle = '#0c1c38';
+    ctx.beginPath(); ctx.arc(0, -r*0.72, r*0.38, 0, Math.PI*2); ctx.fill();
+    // Blue visor strip
+    ctx.fillStyle = 'rgba(60,140,255,0.7)';
+    ctx.fillRect(-r*0.3, -r*0.82, r*0.6, r*0.18);
+    // Arms
+    ctx.fillStyle = '#0a182e';
+    ctx.fillRect(-r*0.84, -r*0.38, r*0.28, r*0.44);
+    ctx.fillRect(r*0.56, -r*0.38 + walk*4, r*0.28, r*0.44);
+    // Siren flash
+    const sirenOn = Math.sin(Date.now() * 0.008) > 0;
+    ctx.fillStyle = sirenOn ? 'rgba(60,140,255,0.8)' : 'rgba(255,60,60,0.8)';
+    ctx.fillRect(-r*0.14, -r*1.12, r*0.28, r*0.1);
     ctx.restore();
   }
 
-  // ── SNAKE: slithering reptile ─────
-  _renderSnake(ctx, x, y, r) {
-    const slither = Math.sin(Date.now() * 0.008) * 0.3;
-
-    ctx.save();
-    ctx.translate(x, y);
-    ctx.rotate(this._angle - Math.PI / 2);
-
-    // Body segments
-    ctx.fillStyle = '#228B22';
-    const segments = 6;
-    for (let i = 0; i < segments; i++) {
-      const sx = Math.sin(slither + i * 0.8) * r * 0.2;
-      const sy = r * 0.15 * i - r * 0.3;
-      const sr = r * 0.22 - i * 0.02;
-      ctx.beginPath();
-      ctx.arc(sx, sy, sr, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    // Pattern
-    ctx.fillStyle = '#006400';
-    for (let i = 0; i < segments; i += 2) {
-      const sx = Math.sin(slither + i * 0.8) * r * 0.2;
-      const sy = r * 0.15 * i - r * 0.3;
-      ctx.beginPath();
-      ctx.arc(sx, sy, r * 0.12, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
+  // ── BATTLE ANDROID: heavy swat robot ─────
+  _renderBattleAndroid(ctx, x, y, r) {
+    const walk = Math.sin(Date.now() * 0.005) * 0.1;
+    ctx.save(); ctx.translate(x, y);
+    // Legs
+    ctx.fillStyle = '#1a1400';
+    ctx.fillRect(-r*0.42, r*0.4, r*0.32, r*0.56);
+    ctx.fillRect(r*0.1, r*0.4 + walk*7, r*0.32, r*0.56);
+    // Torso — black with yellow markings
+    ctx.fillStyle = '#1a1400';
+    ctx.beginPath(); ctx.roundRect(-r*0.68, -r*0.56, r*1.36, r*0.98, r*0.1); ctx.fill();
+    // Yellow hazard stripes
+    ctx.fillStyle = 'rgba(255,200,0,0.5)';
+    ctx.fillRect(-r*0.55, -r*0.18, r*1.1, r*0.12);
+    ctx.fillRect(-r*0.55, r*0.12, r*1.1, r*0.12);
     // Head
-    const hx = Math.sin(slither) * r * 0.15;
-    ctx.fillStyle = '#228B22';
-    ctx.beginPath();
-    ctx.ellipse(hx, -r * 0.5, r * 0.25, r * 0.18, slither * 0.3, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Eyes
-    ctx.fillStyle = '#FFD700';
-    ctx.beginPath();
-    ctx.arc(hx - r*0.1, -r*0.55, r*0.05, 0, Math.PI*2);
-    ctx.arc(hx + r*0.1, -r*0.55, r*0.05, 0, Math.PI*2);
-    ctx.fill();
-
-    // Tongue
-    ctx.strokeStyle = '#FF0000';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(hx, -r*0.65);
-    ctx.lineTo(hx, -r*0.8);
-    ctx.moveTo(hx, -r*0.75);
-    ctx.lineTo(hx - r*0.08, -r*0.85);
-    ctx.moveTo(hx, -r*0.75);
-    ctx.lineTo(hx + r*0.08, -r*0.85);
-    ctx.stroke();
-
+    ctx.fillStyle = '#141000';
+    ctx.beginPath(); ctx.roundRect(-r*0.34, -r*1.0, r*0.68, r*0.48, r*0.08); ctx.fill();
+    // Yellow visor
+    ctx.fillStyle = 'rgba(255,180,0,0.75)';
+    ctx.fillRect(-r*0.28, -r*0.9, r*0.56, r*0.18);
+    // Arms — thick
+    ctx.fillStyle = '#12100a';
+    ctx.fillRect(-r*0.96, -r*0.48, r*0.3, r*0.56);
+    ctx.fillRect(r*0.66, -r*0.48 + walk*4, r*0.3, r*0.56);
+    // Dual gun barrels
+    ctx.fillStyle = '#0a0800';
+    ctx.fillRect(-r*1.08, -r*0.3, r*0.46, r*0.1);
+    ctx.fillRect(-r*1.08, -r*0.18, r*0.46, r*0.1);
     ctx.restore();
   }
 
-  // ── WOLF: pack hunter ─────
-  _renderWolf(ctx, x, y, r) {
-    const walk = Math.sin(Date.now() * 0.006) * 0.15;
-
-    ctx.save(); ctx.globalAlpha = 0.28; ctx.fillStyle = '#000';
-    ctx.beginPath(); ctx.ellipse(x+2, y+r*0.42, r*1.0, r*0.22, 0, 0, Math.PI*2); ctx.fill();
-    ctx.restore();
-
-    ctx.save();
-    ctx.translate(x, y);
-    ctx.rotate(this._angle - Math.PI / 2);
-
-    // Tail
-    ctx.fillStyle = '#808080';
-    ctx.beginPath();
-    ctx.ellipse(r*0.2, r*0.55, r*0.15, r*0.35, 0.5, 0, Math.PI*2);
-    ctx.fill();
-
-    // Body
-    ctx.fillStyle = '#696969';
-    ctx.beginPath();
-    ctx.ellipse(0, 0, r*0.52, r*0.65, 0, 0, Math.PI*2);
-    ctx.fill();
-
-    // Legs
-    for (const s of [-1, 1]) {
-      ctx.fillStyle = '#505050';
-      ctx.beginPath();
-      ctx.ellipse(s*r*0.35, r*0.2 + walk*s*r*0.1, r*0.14, r*0.3, s*0.1, 0, Math.PI*2);
-      ctx.fill();
-    }
-
-    // Head
-    ctx.fillStyle = '#808080';
-    ctx.beginPath();
-    ctx.ellipse(0, -r*0.55, r*0.35, r*0.32, 0, 0, Math.PI*2);
-    ctx.fill();
-
-    // Snout
-    ctx.fillStyle = '#696969';
-    ctx.beginPath();
-    ctx.ellipse(0, -r*0.7, r*0.18, r*0.15, 0, 0, Math.PI*2);
-    ctx.fill();
-
-    // Nose
-    ctx.fillStyle = '#000';
-    ctx.beginPath();
-    ctx.arc(0, -r*0.78, r*0.06, 0, Math.PI*2);
-    ctx.fill();
-
-    // Eyes
-    ctx.fillStyle = '#FFD700';
-    ctx.beginPath();
-    ctx.arc(-r*0.12, -r*0.52, r*0.06, 0, Math.PI*2);
-    ctx.arc(r*0.12, -r*0.52, r*0.06, 0, Math.PI*2);
-    ctx.fill();
-
-    // Ears
-    for (const s of [-1, 1]) {
-      ctx.fillStyle = '#808080';
-      ctx.beginPath();
-      ctx.moveTo(s*r*0.22, -r*0.72);
-      ctx.lineTo(s*r*0.32, -r*0.98);
-      ctx.lineTo(s*r*0.12, -r*0.78);
-      ctx.closePath();
-      ctx.fill();
-    }
-
-    ctx.restore();
-  }
-
-  // ── GORILLA: massive ape (big enemy) ─────
-  _renderGorilla(ctx, x, y, r) {
-    const walk = Math.sin(Date.now() * 0.004) * 0.1;
-
-    ctx.save(); ctx.globalAlpha = 0.35; ctx.fillStyle = '#000';
-    ctx.beginPath(); ctx.ellipse(x+4, y+r*0.5, r*1.3, r*0.3, 0, 0, Math.PI*2); ctx.fill();
-    ctx.restore();
-
-    ctx.save();
-    ctx.translate(x, y);
-    ctx.rotate(this._angle - Math.PI / 2);
-
-    // Massive body
-    const bg = ctx.createRadialGradient(0, 0, 0, 0, 0, r);
-    bg.addColorStop(0, '#3a3a3a'); bg.addColorStop(1, '#1a1a1a');
-    ctx.fillStyle = bg;
-    ctx.beginPath();
-    ctx.ellipse(0, 0, r*0.85, r*0.95, 0, 0, Math.PI*2);
-    ctx.fill();
-
-    // Arms (thick)
-    for (const s of [-1, 1]) {
-      ctx.fillStyle = '#2a2a2a';
-      ctx.beginPath();
-      ctx.ellipse(s*r*0.75, r*0.1 + walk*s*r*0.08, r*0.28, r*0.5, s*0.3, 0, Math.PI*2);
-      ctx.fill();
-      // Fists
-      ctx.fillStyle = '#1a1a1a';
-      ctx.beginPath();
-      ctx.arc(s*r*0.85, r*0.55, r*0.2, 0, Math.PI*2);
-      ctx.fill();
-    }
-
-    // Legs
-    for (const s of [-1, 1]) {
-      ctx.fillStyle = '#2a2a2a';
-      ctx.beginPath();
-      ctx.ellipse(s*r*0.35, r*0.6 + walk*s*r*0.05, r*0.25, r*0.35, 0, 0, Math.PI*2);
-      ctx.fill();
-    }
-
-    // Silver back
-    ctx.fillStyle = '#666';
-    ctx.beginPath();
-    ctx.ellipse(0, -r*0.15, r*0.5, r*0.35, 0, 0, Math.PI*2);
-    ctx.fill();
-
-    // Head
-    ctx.fillStyle = '#1a1a1a';
-    ctx.beginPath();
-    ctx.arc(0, -r*0.65, r*0.42, 0, Math.PI*2);
-    ctx.fill();
-
-    // Face
-    ctx.fillStyle = '#333';
-    ctx.beginPath();
-    ctx.ellipse(0, -r*0.58, r*0.28, r*0.22, 0, 0, Math.PI*2);
-    ctx.fill();
-
-    // Brow ridge
-    ctx.fillStyle = '#1a1a1a';
-    ctx.beginPath();
-    ctx.ellipse(0, -r*0.72, r*0.32, r*0.1, 0, 0, Math.PI);
-    ctx.fill();
-
-    // Eyes
-    ctx.fillStyle = '#FF4444';
-    ctx.shadowColor = '#FF0000';
-    ctx.shadowBlur = 6;
-    ctx.beginPath();
-    ctx.arc(-r*0.12, -r*0.65, r*0.06, 0, Math.PI*2);
-    ctx.arc(r*0.12, -r*0.65, r*0.06, 0, Math.PI*2);
-    ctx.fill();
-    ctx.shadowBlur = 0;
-
-    // Nostrils
-    ctx.fillStyle = '#000';
-    ctx.beginPath();
-    ctx.ellipse(-r*0.06, -r*0.52, r*0.04, r*0.03, 0, 0, Math.PI*2);
-    ctx.ellipse(r*0.06, -r*0.52, r*0.04, r*0.03, 0, 0, Math.PI*2);
-    ctx.fill();
-
-    ctx.restore();
-  }
-
-  // ── RHINO: charging beast (big enemy) ─────
-  _renderRhino(ctx, x, y, r) {
-    const walk = Math.sin(Date.now() * 0.005) * 0.08;
-
-    ctx.save(); ctx.globalAlpha = 0.35; ctx.fillStyle = '#000';
-    ctx.beginPath(); ctx.ellipse(x+4, y+r*0.5, r*1.4, r*0.32, 0, 0, Math.PI*2); ctx.fill();
-    ctx.restore();
-
-    ctx.save();
-    ctx.translate(x, y);
-    ctx.rotate(this._angle - Math.PI / 2);
-
-    // Massive body
-    ctx.fillStyle = '#696969';
-    ctx.beginPath();
-    ctx.ellipse(0, r*0.1, r*0.9, r*0.7, 0, 0, Math.PI*2);
-    ctx.fill();
-
-    // Legs
+  // ── TARGETING DRONE: sniper flying unit ─────
+  _renderTargetingDrone(ctx, x, y, r) {
+    const hover = Math.sin(Date.now() * 0.005) * 3;
+    const rotorSpin = (Date.now() * 0.01) % (Math.PI * 2);
+    ctx.save(); ctx.translate(x, y + hover);
+    // Shadow
+    ctx.globalAlpha = 0.15; ctx.fillStyle = '#000';
+    ctx.beginPath(); ctx.ellipse(0, r * 0.6, r * 0.8, r * 0.22, 0, 0, Math.PI*2); ctx.fill();
+    ctx.globalAlpha = 1;
+    // 4 rotor arms
     for (let i = 0; i < 4; i++) {
-      const lx = (i < 2 ? -1 : 1) * r * 0.45;
-      const ly = (i % 2 === 0 ? -0.2 : 0.35) * r + walk * ((i % 2) * 2 - 1) * r * 0.06;
-      ctx.fillStyle = '#505050';
-      ctx.beginPath();
-      ctx.ellipse(lx, ly, r*0.18, r*0.28, 0, 0, Math.PI*2);
-      ctx.fill();
+      const ang = rotorSpin + i * Math.PI * 0.5;
+      ctx.save(); ctx.rotate(ang);
+      ctx.fillStyle = '#0a1a28';
+      ctx.fillRect(0, -r*0.08, r*1.0, r*0.08);
+      ctx.fillStyle = 'rgba(0,180,255,0.2)';
+      ctx.beginPath(); ctx.ellipse(r*0.92, 0, r*0.18, r*0.06, 0, 0, Math.PI*2); ctx.fill();
+      ctx.restore();
     }
-
-    // Head
-    ctx.fillStyle = '#696969';
-    ctx.beginPath();
-    ctx.ellipse(0, -r*0.55, r*0.5, r*0.4, 0, 0, Math.PI*2);
-    ctx.fill();
-
-    // Horn
-    ctx.fillStyle = '#D2B48C';
-    ctx.beginPath();
-    ctx.moveTo(0, -r*0.85);
-    ctx.lineTo(-r*0.1, -r*0.6);
-    ctx.lineTo(r*0.1, -r*0.6);
-    ctx.closePath();
-    ctx.fill();
-
-    // Small horn
-    ctx.beginPath();
-    ctx.moveTo(0, -r*0.65);
-    ctx.lineTo(-r*0.06, -r*0.52);
-    ctx.lineTo(r*0.06, -r*0.52);
-    ctx.closePath();
-    ctx.fill();
-
-    // Ears
-    for (const s of [-1, 1]) {
-      ctx.fillStyle = '#505050';
-      ctx.beginPath();
-      ctx.ellipse(s*r*0.38, -r*0.72, r*0.12, r*0.18, s*0.4, 0, Math.PI*2);
-      ctx.fill();
-    }
-
-    // Eyes
-    ctx.fillStyle = '#000';
-    ctx.beginPath();
-    ctx.arc(-r*0.22, -r*0.5, r*0.06, 0, Math.PI*2);
-    ctx.arc(r*0.22, -r*0.5, r*0.06, 0, Math.PI*2);
-    ctx.fill();
-
+    // Body
+    ctx.fillStyle = '#080e16';
+    ctx.beginPath(); ctx.arc(0, 0, r*0.44, 0, Math.PI*2); ctx.fill();
+    // Scope lens
+    ctx.fillStyle = '#001820';
+    ctx.beginPath(); ctx.arc(0, 0, r*0.3, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = 'rgba(0,255,100,0.6)';
+    ctx.beginPath(); ctx.arc(0, 0, r*0.18, 0, Math.PI*2); ctx.fill();
+    // Crosshair
+    ctx.strokeStyle = 'rgba(0,255,100,0.4)'; ctx.lineWidth = 0.8;
+    ctx.beginPath(); ctx.moveTo(-r*0.38, 0); ctx.lineTo(r*0.38, 0); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0, -r*0.38); ctx.lineTo(0, r*0.38); ctx.stroke();
+    // Long sniper barrel
+    ctx.fillStyle = '#060c14';
+    ctx.fillRect(-r*0.05, r*0.38, r*0.1, r*0.55);
     ctx.restore();
   }
 
-  // ── CROCODILE: jungle police with siren ─────
-  _renderCrocodile(ctx, x, y, r) {
-    const walk = Math.sin(Date.now() * 0.004) * 0.12;
-    const sirenPhase = Date.now() * 0.008;
-    const sirenOn1 = Math.sin(sirenPhase) > 0;
-    const sirenOn2 = Math.sin(sirenPhase + Math.PI) > 0;
-
-    ctx.save(); ctx.globalAlpha = 0.3; ctx.fillStyle = '#000';
-    ctx.beginPath(); ctx.ellipse(x+3, y+r*0.45, r*1.4, r*0.28, 0, 0, Math.PI*2); ctx.fill();
+  // ── EXPLOSIVE UNIT: bomber robot ─────
+  _renderExplosiveUnit(ctx, x, y, r) {
+    const bob = Math.sin(Date.now() * 0.007) * 2.5;
+    ctx.save(); ctx.translate(x, y + bob);
+    // Round bomb body
+    ctx.fillStyle = '#1a0e00';
+    ctx.beginPath(); ctx.arc(0, 0, r*0.72, 0, Math.PI*2); ctx.fill();
+    // Warning stripes
+    ctx.globalAlpha = 0.4;
+    ctx.fillStyle = '#FF8800';
+    for (let s = 0; s < 4; s++) {
+      ctx.save(); ctx.rotate(s * Math.PI * 0.5 + 0.4);
+      ctx.fillRect(-r*0.08, -r*0.75, r*0.16, r*0.38);
+      ctx.restore();
+    }
+    ctx.globalAlpha = 1;
+    // Orange hazard ring
+    ctx.strokeStyle = 'rgba(255,120,0,0.65)'; ctx.lineWidth = r*0.1;
+    ctx.beginPath(); ctx.arc(0, 0, r*0.6, 0, Math.PI*2); ctx.stroke();
+    // Fuse
+    ctx.strokeStyle = '#886622'; ctx.lineWidth = r*0.08;
+    ctx.beginPath(); ctx.moveTo(0, -r*0.7); ctx.quadraticCurveTo(r*0.3, -r*1.0, r*0.1, -r*1.1); ctx.stroke();
+    // Fuse spark
+    const sparkAmt = Math.sin(Date.now() * 0.015) * 0.5 + 0.5;
+    ctx.fillStyle = `rgba(255,${120+Math.round(sparkAmt*120)},0,${0.7+sparkAmt*0.3})`;
+    ctx.beginPath(); ctx.arc(r*0.1, -r*1.1, r*0.1, 0, Math.PI*2); ctx.fill();
+    // Eye — single red LED
+    const eyeFlash = Math.sin(Date.now() * 0.003) > 0.6;
+    ctx.fillStyle = eyeFlash ? '#FF0000' : '#880000';
+    ctx.beginPath(); ctx.arc(0, -r*0.08, r*0.2, 0, Math.PI*2); ctx.fill();
     ctx.restore();
+  }
 
-    ctx.save();
-    ctx.translate(x, y);
-    ctx.rotate(this._angle - Math.PI / 2);
-
-    // Tail
-    ctx.fillStyle = '#2E8B57';
-    ctx.beginPath();
-    ctx.moveTo(0, r*0.4);
-    ctx.lineTo(-r*0.15, r*0.9);
-    ctx.lineTo(r*0.15, r*0.9);
-    ctx.closePath();
-    ctx.fill();
-    // Tail ridges
-    ctx.strokeStyle = '#1a5a3a';
-    ctx.lineWidth = 2;
-    for (let i = 0; i < 3; i++) {
-      ctx.beginPath();
-      ctx.moveTo(-r*0.08, r*(0.5 + i*0.12));
-      ctx.lineTo(r*0.08, r*(0.5 + i*0.12));
-      ctx.stroke();
-    }
-
-    // Legs
-    for (const s of [-1, 1]) {
-      ctx.fillStyle = '#2E8B57';
-      ctx.beginPath();
-      ctx.ellipse(s*r*0.55, r*0.1 + walk*s*r*0.08, r*0.18, r*0.25, s*0.4, 0, Math.PI*2);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.ellipse(s*r*0.45, -r*0.25 - walk*s*r*0.06, r*0.15, r*0.2, s*0.3, 0, Math.PI*2);
-      ctx.fill();
-    }
-
-    // Body with scales
-    const bg = ctx.createLinearGradient(0, -r*0.3, 0, r*0.4);
-    bg.addColorStop(0, '#3CB371'); bg.addColorStop(0.5, '#2E8B57'); bg.addColorStop(1, '#228B22');
-    ctx.fillStyle = bg;
-    ctx.beginPath();
-    ctx.ellipse(0, 0, r*0.65, r*0.5, 0, 0, Math.PI*2);
-    ctx.fill();
-
-    // Scale pattern
-    ctx.fillStyle = 'rgba(0,80,40,0.4)';
-    for (let row = 0; row < 3; row++) {
-      for (let col = 0; col < 5; col++) {
-        const sx = -r*0.45 + col*r*0.22 + (row%2)*r*0.11;
-        const sy = -r*0.25 + row*r*0.2;
-        ctx.beginPath();
-        ctx.arc(sx, sy, r*0.08, 0, Math.PI, true);
-        ctx.fill();
-      }
-    }
-
-    // Back ridges
-    ctx.fillStyle = '#1a5a3a';
-    for (let i = -2; i <= 2; i++) {
-      ctx.beginPath();
-      ctx.moveTo(i*r*0.15, -r*0.35);
-      ctx.lineTo(i*r*0.15 - r*0.05, -r*0.5);
-      ctx.lineTo(i*r*0.15 + r*0.05, -r*0.5);
-      ctx.closePath();
-      ctx.fill();
-    }
-
-    // Head/snout
-    ctx.fillStyle = '#2E8B57';
-    ctx.beginPath();
-    ctx.ellipse(0, -r*0.6, r*0.35, r*0.28, 0, 0, Math.PI*2);
-    ctx.fill();
-    // Long snout
-    ctx.beginPath();
-    ctx.ellipse(0, -r*0.9, r*0.2, r*0.15, 0, 0, Math.PI*2);
-    ctx.fill();
-    ctx.fillRect(-r*0.2, -r*0.9, r*0.4, r*0.3);
-
-    // Teeth
-    ctx.fillStyle = '#FFF';
-    for (let t = -3; t <= 3; t++) {
-      ctx.beginPath();
-      ctx.moveTo(t*r*0.08, -r*0.75);
-      ctx.lineTo(t*r*0.08 - r*0.02, -r*0.82);
-      ctx.lineTo(t*r*0.08 + r*0.02, -r*0.82);
-      ctx.closePath();
-      ctx.fill();
-    }
-
-    // Eyes
-    ctx.fillStyle = '#FFD700';
-    ctx.beginPath();
-    ctx.ellipse(-r*0.18, -r*0.55, r*0.08, r*0.06, -0.2, 0, Math.PI*2);
-    ctx.ellipse(r*0.18, -r*0.55, r*0.08, r*0.06, 0.2, 0, Math.PI*2);
-    ctx.fill();
-    ctx.fillStyle = '#000';
-    ctx.beginPath();
-    ctx.ellipse(-r*0.18, -r*0.55, r*0.03, r*0.04, 0, 0, Math.PI*2);
-    ctx.ellipse(r*0.18, -r*0.55, r*0.03, r*0.04, 0, 0, Math.PI*2);
-    ctx.fill();
-
-    // POLICE SIREN on back
-    // Light bar base
-    ctx.fillStyle = '#222';
-    ctx.beginPath();
-    ctx.roundRect(-r*0.25, -r*0.15, r*0.5, r*0.2, 3);
-    ctx.fill();
-
-    // Blue light
-    if (sirenOn1) {
-      ctx.fillStyle = '#0066FF';
-      ctx.shadowColor = '#0066FF';
-      ctx.shadowBlur = 25;
-      ctx.beginPath();
-      ctx.arc(-r*0.12, -r*0.05, r*0.1, 0, Math.PI*2);
-      ctx.fill();
-    }
-
-    // Red light
-    if (sirenOn2) {
-      ctx.fillStyle = '#FF0044';
-      ctx.shadowColor = '#FF0044';
-      ctx.shadowBlur = 25;
-      ctx.beginPath();
-      ctx.arc(r*0.12, -r*0.05, r*0.1, 0, Math.PI*2);
-      ctx.fill();
-    }
-    ctx.shadowBlur = 0;
-
+  // ── TITAN MECH: juggernaut massive robot ─────
+  _renderTitanMech(ctx, x, y, r) {
+    const step = Math.sin(Date.now() * 0.003) * 0.08;
+    ctx.save(); ctx.translate(x, y);
+    // Massive legs
+    ctx.fillStyle = '#0c0c0c';
+    ctx.beginPath(); ctx.roundRect(-r*0.6, r*0.42, r*0.48, r*0.7, r*0.06); ctx.fill();
+    ctx.beginPath(); ctx.roundRect(r*0.12, r*0.42 + step*10, r*0.48, r*0.7, r*0.06); ctx.fill();
+    // Massive torso
+    ctx.fillStyle = '#101010';
+    ctx.beginPath(); ctx.roundRect(-r*0.9, -r*0.62, r*1.8, r*1.06, r*0.08); ctx.fill();
+    // Red glowing reactor core
+    const corePulse = Math.sin(Date.now() * 0.004) * 0.2 + 0.8;
+    ctx.fillStyle = `rgba(255,0,0,${corePulse * 0.5})`;
+    ctx.beginPath(); ctx.arc(0, r*0.06, r*0.38, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#FF0000';
+    ctx.beginPath(); ctx.arc(0, r*0.06, r*0.18, 0, Math.PI*2); ctx.fill();
+    // Shoulder weapon mounts
+    ctx.fillStyle = '#0a0a0a';
+    ctx.beginPath(); ctx.roundRect(-r*1.1, -r*0.58, r*0.24, r*0.46, r*0.04); ctx.fill();
+    ctx.beginPath(); ctx.roundRect(r*0.86, -r*0.58, r*0.24, r*0.46, r*0.04); ctx.fill();
+    // Shoulder gun barrels × 2 each side
+    ctx.fillStyle = '#050505';
+    ctx.fillRect(-r*1.28, -r*0.5, r*0.48, r*0.1);
+    ctx.fillRect(-r*1.28, -r*0.36, r*0.48, r*0.1);
+    ctx.fillRect(r*0.8, -r*0.5, r*0.48, r*0.1);
+    ctx.fillRect(r*0.8, -r*0.36, r*0.48, r*0.1);
+    // Helmet
+    ctx.fillStyle = '#0e0e0e';
+    ctx.beginPath(); ctx.roundRect(-r*0.42, -r*1.18, r*0.84, r*0.58, r*0.08); ctx.fill();
+    // Red visor bar
+    ctx.fillStyle = `rgba(255,0,0,${corePulse * 0.85})`;
+    ctx.fillRect(-r*0.36, -r*1.06, r*0.72, r*0.2);
     ctx.restore();
   }
 
@@ -4371,11 +3701,10 @@ const BOSS_CONFIGS = {
     radius: 48, speed: 55,  hp: 1400, dmg: 35, fr: 1100, bspd: 280,
     special: 'slam',    // tidal wave slam + water burst
   },
-  jungle: {
-    name: 'KING KONG',      color: '#3d2b1f', accent: '#8B4513',
-    radius: 52, speed: 75,  hp: 1600, dmg: 40, fr: 1200, bspd: 0,
-    special: 'charge',  // melee charge attack - gorilla doesn't shoot
-    isJungle: true,
+  robot_city: {
+    name: 'SENTINEL',       color: '#0a1828', accent: '#00DDFF',
+    radius: 54, speed: 58,  hp: 1800, dmg: 32, fr: 900, bspd: 340,
+    special: 'burst',   // fires ring of laser bolts
   },
 };
 
@@ -4488,8 +3817,7 @@ class BossBot {
       this._lastX = this.x; this._lastY = this.y; this._stuckTimer = 0;
     }
 
-    // Normal shoot (jungle boss is melee-only - no ranged attacks)
-    if (this.state === BOT_STATE.ATTACK && !this._chargeActive && this.mapId !== 'jungle') {
+    if (this.state === BOT_STATE.ATTACK && !this._chargeActive) {
       this.fireCooldown -= dt * 1000;
       if (this.fireCooldown <= 0) {
         this._shoot(bullets, particles);
@@ -4688,7 +4016,7 @@ class BossBot {
       case 'docks':        this._renderHarbormaster(ctx, x, y, r, pulse); break;
       case 'casino':       this._renderDealer(ctx, x, y, r, pulse); break;
       case 'ocean_depths': this._renderKraken(ctx, x, y, r, pulse); break;
-      case 'jungle':       this._renderKingKong(ctx, x, y, r, pulse); break;
+      case 'robot_city':   this._renderSentinel(ctx, x, y, r, pulse); break;
       default:             this._renderKingpin(ctx, x, y, r, pulse); break;
     }
 
@@ -5161,239 +4489,81 @@ class BossBot {
     }
   }
 
-  _renderKingKong(ctx, x, y, r, pulse) {
-    // KING KONG - Giant Jungle Gorilla Boss
-    const breathe = Math.sin(this._pulseT * 1.5) * 0.08;
-    const chest = 1 + breathe;
+  _renderSentinel(ctx, x, y, r, pulse) {
+    // THE SENTINEL — Giant Mech Boss
+    const breathe = Math.sin(this._pulseT * 1.5) * 0.06;
+    const step = Math.sin(this._pulseT * 1.2) * 0.08;
+    ctx.save(); ctx.translate(x, y);
+    ctx.scale(1 + breathe * 0.5, 1 + breathe * 0.3);
 
-    // Dust cloud aura (ground pound effect)
-    if (this._chargeActive) {
-      ctx.save();
-      ctx.fillStyle = 'rgba(139,90,43,0.3)';
-      for (let i = 0; i < 8; i++) {
-        const dustAngle = this._pulseT * 2 + i * 0.8;
-        const dustR = r * 1.4 + pulse * 20;
-        const dx = x + Math.cos(dustAngle) * dustR;
-        const dy = y + Math.sin(dustAngle) * dustR;
-        ctx.beginPath();
-        ctx.arc(dx, dy, 8 + Math.random() * 6, 0, Math.PI * 2);
-        ctx.fill();
-      }
-      ctx.restore();
+    // Massive legs
+    ctx.fillStyle = '#101010';
+    ctx.beginPath(); ctx.roundRect(-r*0.56, r*0.48, r*0.46, r*0.72, r*0.05); ctx.fill();
+    ctx.beginPath(); ctx.roundRect(r*0.1, r*0.48 + step*12, r*0.46, r*0.72, r*0.05); ctx.fill();
+    // Leg joints
+    ctx.fillStyle = '#00AACC';
+    ctx.beginPath(); ctx.arc(-r*0.33, r*0.52, r*0.1, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(r*0.33, r*0.52 + step*8, r*0.1, 0, Math.PI*2); ctx.fill();
+
+    // Main torso — massive
+    ctx.fillStyle = '#0a1828';
+    ctx.beginPath(); ctx.roundRect(-r*1.0, -r*0.7, r*2.0, r*1.18, r*0.1); ctx.fill();
+    ctx.fillStyle = 'rgba(0,180,255,0.08)';
+    ctx.beginPath(); ctx.roundRect(-r*0.9, -r*0.62, r*1.8, r*1.0, r*0.08); ctx.fill();
+
+    // Reactor core — pulsing
+    const corePulse = Math.sin(this._pulseT * 3) * 0.25 + 0.75;
+    ctx.fillStyle = `rgba(0,200,255,${corePulse * 0.4})`;
+    ctx.beginPath(); ctx.arc(0, r*0.08, r*0.48, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = `rgba(0,240,255,${corePulse})`;
+    ctx.beginPath(); ctx.arc(0, r*0.08, r*0.22, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.beginPath(); ctx.arc(0, r*0.08, r*0.08, 0, Math.PI*2); ctx.fill();
+
+    // Shoulder weapon pods
+    ctx.fillStyle = '#060e1c';
+    ctx.beginPath(); ctx.roundRect(-r*1.42, -r*0.65, r*0.44, r*0.54, r*0.05); ctx.fill();
+    ctx.beginPath(); ctx.roundRect(r*0.98, -r*0.65, r*0.44, r*0.54, r*0.05); ctx.fill();
+    // Weapon pod accent
+    ctx.fillStyle = 'rgba(0,180,255,0.3)';
+    ctx.fillRect(-r*1.38, -r*0.58, r*0.36, r*0.08);
+    ctx.fillRect(r*1.02, -r*0.58, r*0.36, r*0.08);
+    // Gun barrels × 3 per side
+    ctx.fillStyle = '#040a14';
+    for (let b = 0; b < 3; b++) {
+      ctx.fillRect(-r*1.55, -r*0.58 + b * r*0.13, r*0.55, r*0.08);
+      ctx.fillRect(r*1.0, -r*0.58 + b * r*0.13, r*0.55, r*0.08);
+    }
+    // Muzzle flash
+    if (pulse > 0.6) {
+      ctx.fillStyle = `rgba(0,240,255,${(pulse - 0.6) * 2.5})`;
+      ctx.beginPath(); ctx.arc(-r*1.6, -r*0.52, r*0.22, 0, Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(r*1.6, -r*0.52, r*0.22, 0, Math.PI*2); ctx.fill();
     }
 
-    // Main body - massive torso
-    ctx.save();
-    const furGrad = ctx.createRadialGradient(x - r * 0.2, y - r * 0.2, 2, x, y, r * chest);
-    furGrad.addColorStop(0, '#5a4a3a');
-    furGrad.addColorStop(0.5, '#3d2b1f');
-    furGrad.addColorStop(1, '#1a1208');
-    ctx.fillStyle = furGrad;
-    ctx.shadowColor = '#8B4513';
-    ctx.shadowBlur = 15 + pulse * 10;
-    ctx.beginPath();
-    ctx.ellipse(x, y, r * 0.9 * chest, r * 0.95, 0, 0, Math.PI * 2);
-    ctx.fill();
+    // Arms
+    ctx.fillStyle = '#0c1a2c';
+    ctx.beginPath(); ctx.roundRect(-r*1.38, -r*0.12, r*0.4, r*0.68, r*0.06); ctx.fill();
+    ctx.beginPath(); ctx.roundRect(r*0.98, -r*0.12 + step*6, r*0.4, r*0.68, r*0.06); ctx.fill();
+
+    // Head — square helmet with scan visor
+    ctx.fillStyle = '#080e1c';
+    ctx.beginPath(); ctx.roundRect(-r*0.5, -r*1.3, r*1.0, r*0.62, r*0.08); ctx.fill();
+    // Scan visor — glowing cyan bar
+    const visFlicker = Math.sin(this._pulseT * 8) > 0.4 ? 1 : 0.6;
+    ctx.fillStyle = `rgba(0,220,255,${0.7 * visFlicker})`;
+    ctx.fillRect(-r*0.44, -r*1.2, r*0.88, r*0.22);
+    // Antenna
+    ctx.fillStyle = '#060e1a';
+    ctx.fillRect(-r*0.06, -r*1.52, r*0.12, r*0.24);
+    ctx.fillStyle = 'rgba(0,255,200,0.9)';
+    ctx.beginPath(); ctx.arc(0, -r*1.56, r*0.07, 0, Math.PI*2); ctx.fill();
+
+    // Boss name plate
+    ctx.font = `bold ${Math.round(r*0.28)}px monospace`;
+    ctx.fillStyle = '#00DDFF'; ctx.textAlign = 'center';
+    ctx.fillText('SENTINEL', 0, -r*1.75);
     ctx.restore();
-
-    // Fur texture lines
-    ctx.save();
-    ctx.strokeStyle = 'rgba(90,74,58,0.5)';
-    ctx.lineWidth = 1.5;
-    for (let i = 0; i < 12; i++) {
-      const furAngle = (i / 12) * Math.PI * 2;
-      const startR = r * 0.5;
-      const endR = r * 0.88;
-      ctx.beginPath();
-      ctx.moveTo(x + Math.cos(furAngle) * startR, y + Math.sin(furAngle) * startR);
-      ctx.lineTo(x + Math.cos(furAngle + 0.1) * endR, y + Math.sin(furAngle + 0.1) * endR);
-      ctx.stroke();
-    }
-    ctx.restore();
-
-    // Chest plate (silverback)
-    ctx.save();
-    const chestGrad = ctx.createRadialGradient(x, y + r * 0.15, 0, x, y + r * 0.15, r * 0.55);
-    chestGrad.addColorStop(0, '#8a8a8a');
-    chestGrad.addColorStop(0.5, '#5a5a5a');
-    chestGrad.addColorStop(1, '#3d2b1f');
-    ctx.fillStyle = chestGrad;
-    ctx.beginPath();
-    ctx.ellipse(x, y + r * 0.15, r * 0.45 * chest, r * 0.55 * chest, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
-
-    // Massive arms (left and right)
-    for (let side = -1; side <= 1; side += 2) {
-      const armSwing = Math.sin(this._pulseT * 2 + side) * 0.15;
-      const armAngle = side * 0.8 + armSwing;
-      const shoulderX = x + Math.cos(armAngle) * r * 0.7;
-      const shoulderY = y + Math.sin(armAngle) * r * 0.5;
-      const handX = x + Math.cos(armAngle + side * 0.4) * r * 1.4;
-      const handY = y + Math.sin(armAngle + side * 0.4) * r * 1.3;
-
-      // Arm
-      ctx.save();
-      ctx.strokeStyle = '#3d2b1f';
-      ctx.lineWidth = 18;
-      ctx.lineCap = 'round';
-      ctx.shadowColor = '#5a4a3a';
-      ctx.shadowBlur = 6;
-      ctx.beginPath();
-      ctx.moveTo(shoulderX, shoulderY);
-      ctx.quadraticCurveTo(
-        shoulderX + side * r * 0.3, shoulderY + r * 0.5,
-        handX, handY
-      );
-      ctx.stroke();
-      ctx.restore();
-
-      // Fist
-      ctx.save();
-      ctx.fillStyle = '#2a1a10';
-      ctx.shadowColor = '#3d2b1f';
-      ctx.shadowBlur = 8;
-      ctx.beginPath();
-      ctx.arc(handX, handY, 14, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Knuckles
-      ctx.fillStyle = '#1a0a05';
-      for (let k = 0; k < 3; k++) {
-        const ka = armAngle + (k - 1) * 0.25;
-        ctx.beginPath();
-        ctx.arc(handX + Math.cos(ka) * 8, handY + Math.sin(ka) * 8, 3, 0, Math.PI * 2);
-        ctx.fill();
-      }
-      ctx.restore();
-    }
-
-    // Head
-    ctx.save();
-    const headX = x + Math.cos(this._angle) * r * 0.3;
-    const headY = y + Math.sin(this._angle) * r * 0.3 - r * 0.5;
-    const headGrad = ctx.createRadialGradient(headX - 5, headY - 5, 1, headX, headY, 28);
-    headGrad.addColorStop(0, '#4a3a2a');
-    headGrad.addColorStop(1, '#2a1a10');
-    ctx.fillStyle = headGrad;
-    ctx.shadowColor = '#3d2b1f';
-    ctx.shadowBlur = 12;
-    ctx.beginPath();
-    ctx.ellipse(headX, headY, 22, 26, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
-
-    // Face/muzzle
-    ctx.save();
-    const muzzleX = headX + Math.cos(this._angle) * 12;
-    const muzzleY = headY + Math.sin(this._angle) * 10;
-    ctx.fillStyle = '#1a1a1a';
-    ctx.beginPath();
-    ctx.ellipse(muzzleX, muzzleY, 12, 10, this._angle * 0.2, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Nostrils
-    ctx.fillStyle = '#0a0a0a';
-    const nostrilOff = 5;
-    ctx.beginPath();
-    ctx.ellipse(muzzleX + Math.cos(this._angle) * 6 - nostrilOff * Math.sin(this._angle),
-                muzzleY + Math.sin(this._angle) * 6 + nostrilOff * Math.cos(this._angle), 3, 2, 0, 0, Math.PI * 2);
-    ctx.ellipse(muzzleX + Math.cos(this._angle) * 6 + nostrilOff * Math.sin(this._angle),
-                muzzleY + Math.sin(this._angle) * 6 - nostrilOff * Math.cos(this._angle), 3, 2, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
-
-    // Brow ridge
-    ctx.save();
-    ctx.fillStyle = '#3a2a1a';
-    ctx.beginPath();
-    ctx.ellipse(headX + Math.cos(this._angle) * 3, headY + Math.sin(this._angle) * 2 - 10, 18, 6, 0, 0, Math.PI);
-    ctx.fill();
-    ctx.restore();
-
-    // Eyes - fierce and glowing
-    for (let side = -1; side <= 1; side += 2) {
-      const eyeOff = 8;
-      const ex = headX + Math.cos(this._angle) * 5 - Math.sin(this._angle) * eyeOff * side;
-      const ey = headY + Math.sin(this._angle) * 5 + Math.cos(this._angle) * eyeOff * side - 4;
-
-      // Eye socket
-      ctx.save();
-      ctx.fillStyle = '#0a0505';
-      ctx.beginPath();
-      ctx.ellipse(ex, ey, 6, 5, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Eye glow
-      ctx.fillStyle = this._enraged ? '#FF4400' : '#FFAA00';
-      ctx.shadowColor = this._enraged ? '#FF0000' : '#FF8800';
-      ctx.shadowBlur = 10 + pulse * 6;
-      ctx.beginPath();
-      ctx.ellipse(ex, ey, 4, 3, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Pupil
-      ctx.fillStyle = '#000';
-      ctx.shadowBlur = 0;
-      ctx.beginPath();
-      ctx.arc(ex + Math.cos(this._angle) * 1.5, ey + Math.sin(this._angle) * 1.5, 1.5, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
-    }
-
-    // Mouth/teeth when enraged
-    if (this._enraged) {
-      ctx.save();
-      const mouthX = muzzleX + Math.cos(this._angle) * 3;
-      const mouthY = muzzleY + Math.sin(this._angle) * 3 + 5;
-      ctx.fillStyle = '#330000';
-      ctx.beginPath();
-      ctx.ellipse(mouthX, mouthY, 8, 4, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Fangs
-      ctx.fillStyle = '#FFFFDD';
-      for (let f = -1; f <= 1; f += 2) {
-        ctx.beginPath();
-        ctx.moveTo(mouthX + f * 4, mouthY - 2);
-        ctx.lineTo(mouthX + f * 3, mouthY + 4);
-        ctx.lineTo(mouthX + f * 5, mouthY - 1);
-        ctx.fill();
-      }
-      ctx.restore();
-    }
-
-    // Beating chest effect when enraged
-    if (this._enraged && Math.sin(this._pulseT * 8) > 0.7) {
-      ctx.save();
-      ctx.strokeStyle = 'rgba(255,100,50,0.6)';
-      ctx.lineWidth = 3;
-      ctx.shadowColor = '#FF4400';
-      ctx.shadowBlur = 20;
-      ctx.beginPath();
-      ctx.arc(x, y, r + 5 + pulse * 10, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.restore();
-    }
-
-    // Ground cracks when charging
-    if (this._chargeActive) {
-      ctx.save();
-      ctx.strokeStyle = '#5a3d1e';
-      ctx.lineWidth = 2;
-      for (let i = 0; i < 6; i++) {
-        const crackAngle = (i / 6) * Math.PI * 2 + this._pulseT;
-        const crackLen = r * 1.5 + Math.random() * r * 0.5;
-        ctx.beginPath();
-        ctx.moveTo(x, y + r);
-        ctx.lineTo(
-          x + Math.cos(crackAngle) * crackLen,
-          y + r + Math.sin(crackAngle) * crackLen * 0.3
-        );
-        ctx.stroke();
-      }
-      ctx.restore();
-    }
   }
 }
 

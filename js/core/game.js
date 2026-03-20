@@ -113,6 +113,7 @@ class Game {
     this._policeSirenTimer = 0; // throttle siren sound
     this._sirenPlaying = false;
     this._desertMode  = !!this.map.config.desert;
+    this._robotMode   = !!this.map.config.robot;
 
     // Weather
     this.weather = new Weather(this.map.config.weather || 'clear');
@@ -390,22 +391,24 @@ class Game {
     const dt = Math.min((timestamp - this._lastTime) / 1000, 0.05);
     this._lastTime = timestamp;
 
-    if (this.state === 'playing' || this.state === 'blackmarket') this._update(dt);
-    if (this.state === 'shop' || this.state === 'paused') this.shop.update(dt);
-    if (this.state === 'carshop') this._dealership.update(dt);
-    if (this.state === 'casino') {
-      this._casino.update(dt);
-      if (this._casino._pendingPayout !== null) {
-        this.money += this._casino._pendingPayout;
-        this._casino._msg(
-          this._casino._pendingPayout > 0
-            ? `JACKPOT! +$${this._casino._pendingPayout.toLocaleString()}`
-            : 'BETTER LUCK NEXT TIME!',
-          this._casino._pendingPayout > 0 ? '#FFD700' : '#FF4466'
-        );
-        this._casino._pendingPayout = null;
+    try {
+      if (this.state === 'playing' || this.state === 'blackmarket') this._update(dt);
+      if (this.state === 'shop' || this.state === 'paused') this.shop.update(dt);
+      if (this.state === 'carshop') this._dealership.update(dt);
+      if (this.state === 'casino') {
+        this._casino.update(dt);
+        if (this._casino._pendingPayout !== null) {
+          this.money += this._casino._pendingPayout;
+          this._casino._msg(
+            this._casino._pendingPayout > 0
+              ? `JACKPOT! +$${this._casino._pendingPayout.toLocaleString()}`
+              : 'BETTER LUCK NEXT TIME!',
+            this._casino._pendingPayout > 0 ? '#FFD700' : '#FF4466'
+          );
+          this._casino._pendingPayout = null;
+        }
       }
-    }
+    } catch(e) { console.error('update error:', e); }
 
     try { this._render(); } catch(e) { console.error('render error:', e); }
     this.input.flush();
@@ -3373,6 +3376,13 @@ class Game {
     if (this.map.config.snow) {
       ctx.save();
       ctx.fillStyle = 'rgba(8,32,72,0.16)';
+      ctx.fillRect(0, 0, W, H);
+      ctx.restore();
+    }
+    // Robot City: subtle electric-cyan tint
+    if (this._robotMode) {
+      ctx.save();
+      ctx.fillStyle = 'rgba(0,40,60,0.14)';
       ctx.fillRect(0, 0, W, H);
       ctx.restore();
     }
