@@ -436,8 +436,12 @@ class GameMap {
   _buildStreetLights() {
     this.streetLights = [];
     const S = this.S;
-    // Colour palette: amber (×2 weight), cool-white, pink, cyan
-    const PAL = [
+    // Desert: warm oil-lamp amber only. City: amber, cool-white, pink, cyan
+    const PAL = this.config.desert ? [
+      [255, 160,  40],
+      [255, 145,  30],
+      [255, 180,  60],
+    ] : [
       [255, 210, 110],
       [255, 210, 110],
       [220, 240, 255],
@@ -478,7 +482,7 @@ class GameMap {
   // Shows the physical pole + arm + lamp housing in world coords.
   // ctx is already translated to world-space by the caller.
   renderStreetLightPoles(ctx, camX, camY, canvasW, canvasH, nightAlpha) {
-    if (!this.streetLights || !this.streetLights.length || nightAlpha < 0.01) return;
+    if (!this.streetLights || !this.streetLights.length) return;
     const margin = 80;
     const x0 = camX - margin, y0 = camY - margin;
     const x1 = camX + canvasW + margin, y1 = camY + canvasH + margin;
@@ -518,25 +522,34 @@ class GameMap {
       ctx.lineTo(lx, ly);
       ctx.stroke();
 
-      // ── Lamp housing (dark trapezoid / rect) ─────────────────
+      // ── Lamp housing (dome) ───────────────────────────────────
       ctx.fillStyle = '#1e1e2e';
-      ctx.beginPath();
-      ctx.arc(lx, ly, 5.5, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.beginPath(); ctx.arc(lx, ly, 6, 0, Math.PI * 2); ctx.fill();
+      // Bottom rim
+      ctx.fillStyle = 'rgba(80,80,110,0.60)';
+      ctx.fillRect(lx - 6, ly + 3, 12, 2);
 
       // ── Bulb (dim off-state during day, bright at night) ─────
-      const bulbAlpha = lit ? 0.55 + nightAlpha * 0.45 : 0.12;
-      // Halo via globalAlpha instead of shadowBlur
+      const bulbAlpha = lit ? 0.65 + nightAlpha * 0.35 : 0.18;
+      // Outer glow ring (night only)
       if (lit && nightAlpha > 0.05) {
-        ctx.globalAlpha = nightAlpha * 0.3;
+        ctx.globalAlpha = nightAlpha * 0.45;
         ctx.fillStyle   = `rgba(${lt.r},${lt.g},${lt.b},1)`;
-        ctx.beginPath(); ctx.arc(lx, ly, 10, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(lx, ly, 14, 0, Math.PI * 2); ctx.fill();
+        ctx.globalAlpha = nightAlpha * 0.70;
+        ctx.beginPath(); ctx.arc(lx, ly, 9, 0, Math.PI * 2); ctx.fill();
         ctx.globalAlpha = 1;
       }
+      // Core bulb
       ctx.fillStyle   = `rgba(${lt.r},${lt.g},${lt.b},${bulbAlpha})`;
-      ctx.beginPath();
-      ctx.arc(lx, ly, 3.5, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.beginPath(); ctx.arc(lx, ly, 4.5, 0, Math.PI * 2); ctx.fill();
+      // Hot white center
+      if (lit) {
+        ctx.globalAlpha = nightAlpha * 0.85;
+        ctx.fillStyle = `rgba(255,255,255,1)`;
+        ctx.beginPath(); ctx.arc(lx, ly, 2, 0, Math.PI * 2); ctx.fill();
+        ctx.globalAlpha = 1;
+      }
     }
     ctx.restore();
   }
@@ -562,18 +575,33 @@ class GameMap {
       const lx = lt.wx + lt.armDx * (S * 0.44);
       const ly = lt.wy + lt.armDy * (S * 0.44);
       const { r, g, b } = lt;
+      // Ground pool direction: arm points toward road, so light pools there
+      const poolX = lx + lt.armDx * 28;
+      const poolY = ly + lt.armDy * 28;
 
-      // Ground pool — 3 flat circles at decreasing alpha (no radialGradient)
-      ctx.fillStyle = `rgba(${r},${g},${b},1)`;
-      ctx.globalAlpha = a * 0.13;
-      const poolRx = lt.armDy !== 0 ? 52 : 72;
-      const poolRy = lt.armDy !== 0 ? 72 : 52;
-      ctx.beginPath(); ctx.ellipse(lx, ly, poolRx, poolRy, 0, 0, Math.PI * 2); ctx.fill();
-      ctx.globalAlpha = a * 0.22;
-      ctx.beginPath(); ctx.arc(lx, ly, 32, 0, Math.PI * 2); ctx.fill();
-      // Tight bulb halo
-      ctx.globalAlpha = a * 0.55;
-      ctx.beginPath(); ctx.arc(lx, ly, 12, 0, Math.PI * 2); ctx.fill();
+      // ── Large soft ground pool via radial gradient ───────────
+      const poolR = 110;
+      const grd = ctx.createRadialGradient(poolX, poolY, 4, poolX, poolY, poolR);
+      grd.addColorStop(0,    `rgba(${r},${g},${b},${a * 0.38})`);
+      grd.addColorStop(0.22, `rgba(${r},${g},${b},${a * 0.22})`);
+      grd.addColorStop(0.55, `rgba(${r},${g},${b},${a * 0.08})`);
+      grd.addColorStop(1,    `rgba(${r},${g},${b},0)`);
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = grd;
+      ctx.beginPath(); ctx.ellipse(poolX, poolY, poolR, poolR * 0.72, 0, 0, Math.PI * 2); ctx.fill();
+
+      // ── Mid halo ring around the lamp head ────────────────────
+      const haloGrd = ctx.createRadialGradient(lx, ly, 2, lx, ly, 38);
+      haloGrd.addColorStop(0,    `rgba(${r},${g},${b},${a * 0.70})`);
+      haloGrd.addColorStop(0.35, `rgba(${r},${g},${b},${a * 0.28})`);
+      haloGrd.addColorStop(1,    `rgba(${r},${g},${b},0)`);
+      ctx.fillStyle = haloGrd;
+      ctx.beginPath(); ctx.arc(lx, ly, 38, 0, Math.PI * 2); ctx.fill();
+
+      // ── Bright bulb core ──────────────────────────────────────
+      ctx.globalAlpha = a * 0.90;
+      ctx.fillStyle = `rgba(${Math.min(255,r+60)},${Math.min(255,g+60)},${Math.min(255,b+60)},1)`;
+      ctx.beginPath(); ctx.arc(lx, ly, 7, 0, Math.PI * 2); ctx.fill();
       ctx.globalAlpha = 1;
     }
 
@@ -782,6 +810,35 @@ class GameMap {
               if (isColR) ctx.fillRect(wx, wy, 6, S);
               if (isRowR) ctx.fillRect(wx, wy, S, 6);
             }
+          } else if (cfg.desert) {
+            // Desert: sandy dirt road with ripples
+            const dseed = (x * 17 + y * 31) % 5;
+            const sands = ['#c8a05a','#c2985a','#caa862','#be9850','#c4a258'];
+            ctx.fillStyle = sands[dseed];
+            ctx.fillRect(wx, wy, S, S);
+            // Ripple lines (wind-blown sand)
+            if ((x*5 + y*7) % 4 === 0) {
+              ctx.fillStyle = 'rgba(255,220,140,0.20)';
+              ctx.fillRect(wx + 8, wy + Math.round(S*0.32), S - 16, 2);
+              ctx.fillRect(wx + 16, wy + Math.round(S*0.60), S - 32, 1);
+            }
+            // Scattered pebbles
+            if ((x*11 + y*7) % 5 === 0) {
+              ctx.fillStyle = 'rgba(100,65,20,0.42)';
+              ctx.beginPath(); ctx.arc(wx + S*0.28, wy + S*0.40, S*0.055, 0, Math.PI*2); ctx.fill();
+              ctx.beginPath(); ctx.arc(wx + S*0.72, wy + S*0.66, S*0.040, 0, Math.PI*2); ctx.fill();
+            }
+            // Camel hoof-print marks at road center
+            if (isColR && (x*3+y) % 4 === 0) {
+              ctx.fillStyle = 'rgba(90,55,18,0.28)';
+              ctx.beginPath(); ctx.ellipse(wx + S/2 - 9, wy + S*0.34, S*0.065, S*0.045, 0.35, 0, Math.PI*2); ctx.fill();
+              ctx.beginPath(); ctx.ellipse(wx + S/2 + 11, wy + S*0.66, S*0.055, S*0.040, -0.3, 0, Math.PI*2); ctx.fill();
+            }
+            if (isRowR && (x+y*3) % 4 === 0) {
+              ctx.fillStyle = 'rgba(90,55,18,0.28)';
+              ctx.beginPath(); ctx.ellipse(wx + S*0.34, wy + S/2 - 9, S*0.045, S*0.065, 0.35, 0, Math.PI*2); ctx.fill();
+              ctx.beginPath(); ctx.ellipse(wx + S*0.66, wy + S/2 + 11, S*0.040, S*0.055, -0.3, 0, Math.PI*2); ctx.fill();
+            }
           } else {
             ctx.fillStyle = cfg.roadColor;
             ctx.fillRect(wx, wy, S, S);
@@ -862,6 +919,31 @@ class GameMap {
             if ((x * 5 + y * 3) % 9 === 0) {
               ctx.fillStyle = '#5a4a3a';
               ctx.fillRect(wx + S/2 - 4, wy + S/2 - 4, 8, 8);
+            }
+          } else if (cfg.desert) {
+            // Desert: sandstone / ancient paving
+            const pseed = (x * 23 + y * 37) % 4;
+            const stones = ['#a87a3a','#b08422','#9c7020','#a47830'];
+            ctx.fillStyle = stones[pseed];
+            ctx.fillRect(wx, wy, S, S);
+            // Mortar joints
+            ctx.fillStyle = 'rgba(55,35,8,0.28)';
+            ctx.fillRect(wx, wy + Math.round(S*0.50), S, 2);
+            ctx.fillRect(wx + Math.round(S*0.50), wy, 2, S);
+            // Crack lines
+            if ((x*7+y*11) % 7 === 0) {
+              ctx.fillStyle = 'rgba(70,42,10,0.30)';
+              ctx.fillRect(wx + Math.round(S*0.22), wy + Math.round(S*0.20), Math.round(S*0.52), 1);
+              ctx.fillRect(wx + Math.round(S*0.36), wy + Math.round(S*0.60), Math.round(S*0.28), 1);
+            }
+            // Drifted sand in corners
+            ctx.fillStyle = 'rgba(200,168,80,0.18)';
+            ctx.fillRect(wx, wy, 9, 9);
+            ctx.fillRect(wx + S - 9, wy + S - 9, 9, 9);
+            // Occasional sand pile
+            if ((x*13+y*17) % 9 === 0) {
+              ctx.fillStyle = 'rgba(220,185,90,0.25)';
+              ctx.beginPath(); ctx.ellipse(wx + S*0.65, wy + S*0.72, S*0.18, S*0.10, 0, 0, Math.PI*2); ctx.fill();
             }
           } else if (isPark) {
             // Park: lush green ground
@@ -957,6 +1039,38 @@ class GameMap {
             // LED status strip top
             ctx.fillStyle = rseed % 3 === 0 ? 'rgba(0,255,200,0.18)' : 'rgba(0,200,255,0.12)';
             ctx.fillRect(wx + 6, wy + 4, S - 12, 3);
+          } else if (cfg.desert) {
+            // Desert: pyramid / sandstone block
+            const pseed = (x * 41 + y * 59) % 5;
+            const stoneColors = ['#8B6914','#9e7c20','#7a5c10','#A0801e','#8a6818'];
+            ctx.fillStyle = stoneColors[pseed];
+            ctx.fillRect(wx, wy, S, S);
+            // Horizontal sandstone strata banding
+            ctx.fillStyle = 'rgba(255,200,80,0.09)';
+            for (let band = 0; band < 4; band++) {
+              ctx.fillRect(wx, wy + Math.round(band * S / 4), S, 2);
+            }
+            // Sunlit (left) vs shadow (right) face — pyramid look
+            ctx.fillStyle = 'rgba(255,220,100,0.12)';
+            ctx.fillRect(wx, wy, Math.round(S/2), S);
+            ctx.fillStyle = 'rgba(0,0,0,0.14)';
+            ctx.fillRect(wx + Math.round(S/2), wy, Math.round(S/2), S);
+            // Hieroglyph scratches
+            if ((x*7+y*11) % 6 === 0) {
+              ctx.fillStyle = 'rgba(35,20,4,0.30)';
+              ctx.fillRect(wx + Math.round(S*0.22), wy + Math.round(S*0.15), 2, Math.round(S*0.70));
+              ctx.fillRect(wx + Math.round(S*0.50), wy + Math.round(S*0.20), 2, Math.round(S*0.60));
+              ctx.fillRect(wx + Math.round(S*0.72), wy + Math.round(S*0.25), 2, Math.round(S*0.50));
+            }
+            // Torch glow on some blocks
+            if ((x*13+y*19) % 10 === 0) {
+              ctx.globalAlpha = 0.58;
+              ctx.fillStyle = '#FF9933';
+              ctx.beginPath(); ctx.arc(wx + Math.round(S*0.84), wy + Math.round(S*0.28), 5, 0, Math.PI*2); ctx.fill();
+              ctx.fillStyle = 'rgba(255,200,80,0.40)';
+              ctx.beginPath(); ctx.arc(wx + Math.round(S*0.84), wy + Math.round(S*0.28), 9, 0, Math.PI*2); ctx.fill();
+              ctx.globalAlpha = 1;
+            }
           } else {
             ctx.fillStyle = this.buildingColors[y][x];
             ctx.fillRect(wx, wy, S, S);
@@ -992,8 +1106,8 @@ class GameMap {
             }
           }
 
-          // Windows (not in robot/jungle) — no shadowBlur for performance
-          if (!cfg.robot && !cfg.jungle && this.buildingWindows[y][x]) {
+          // Windows (not in robot/jungle/desert) — no shadowBlur for performance
+          if (!cfg.robot && !cfg.jungle && !cfg.desert && this.buildingWindows[y][x]) {
             const wc = cfg.windowColors[(Math.floor(x/2) + Math.floor(y/2)) % cfg.windowColors.length];
             ctx.fillStyle = wc + 'CC';
             for (let wy2 = 0; wy2 < 2; wy2++) {
@@ -1004,8 +1118,8 @@ class GameMap {
               }
             }
           }
-          // Neon sign strips (not in robot/jungle) — no shadowBlur for performance
-          if (!cfg.robot && !cfg.jungle && (x + y) % cfg.neonFreq === 0) {
+          // Neon sign strips (not in robot/jungle/desert) — no shadowBlur for performance
+          if (!cfg.robot && !cfg.jungle && !cfg.desert && (x + y) % cfg.neonFreq === 0) {
             const nc = cfg.neonColors[(x * 3 + y) % cfg.neonColors.length];
             ctx.globalAlpha = 0.65;
             ctx.strokeStyle = nc; ctx.lineWidth = 2;

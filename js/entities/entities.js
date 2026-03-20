@@ -2744,9 +2744,11 @@ class Bot {
 
   // ── DESERT ENEMY: dispatches to sub-renders ───────────────
   _renderDesertEnemy(ctx, x, y, r) {
-    if (this.type === 'mini')                                         this._renderScarab(ctx, x, y, r);
-    else if (this.type === 'big' || this.type === 'juggernaut')       this._renderSandGolem(ctx, x, y, r);
-    else                                                               this._renderMummy(ctx, x, y, r);
+    if (this.type === 'mini')            this._renderScarab(ctx, x, y, r);
+    else if (this.type === 'big')        this._renderSandGolem(ctx, x, y, r);
+    else if (this.type === 'juggernaut') this._renderSandworm(ctx, x, y, r);
+    else if (this.type === 'bomber')     this._renderScorpion(ctx, x, y, r);
+    else                                 this._renderMummy(ctx, x, y, r);
     this._renderHPBar(ctx, x, y, r, 40, 5);
   }
 
@@ -3032,6 +3034,148 @@ class Bot {
     ctx.beginPath(); ctx.moveTo(ga0x+1, ga0y+1.5); ctx.lineTo(gx+1, gy+1.5); ctx.stroke();
     ctx.strokeStyle = '#c8a040'; ctx.lineWidth = 6;
     ctx.beginPath(); ctx.moveTo(ga0x, ga0y); ctx.lineTo(gx, gy); ctx.stroke();
+    ctx.restore();
+  }
+
+  // ── SCORPION: desert bomber — venomous arachnid ──────────
+  _renderScorpion(ctx, x, y, r) {
+    ctx.save(); ctx.globalAlpha = 0.22; ctx.fillStyle = '#000';
+    ctx.beginPath(); ctx.ellipse(x+2, y+r*0.40, r*1.10, r*0.24, 0, 0, Math.PI*2); ctx.fill();
+    ctx.restore();
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(this._angle - Math.PI / 2);
+
+    // Segmented abdomen (6 segments tapering to tail)
+    for (let i = 0; i < 6; i++) {
+      const segR = r * (0.36 - i * 0.042);
+      const segY = -r * 0.20 + i * r * 0.38 - r * 0.60;
+      ctx.fillStyle = i % 2 === 0 ? '#3a1808' : '#2a1004';
+      ctx.beginPath(); ctx.ellipse(0, segY, segR * 0.78, segR, 0, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = 'rgba(255,100,20,0.18)';
+      ctx.beginPath(); ctx.ellipse(-segR*0.2, segY - segR*0.25, segR*0.35, segR*0.25, 0, 0, Math.PI*2); ctx.fill();
+    }
+
+    // Curved stinger tail (metasoma)
+    ctx.save();
+    ctx.strokeStyle = '#2a1004'; ctx.lineWidth = r * 0.28; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    ctx.beginPath(); ctx.moveTo(0, r * 0.60);
+    ctx.bezierCurveTo(r * 0.85, r * 0.45, r * 1.20, -r * 0.10, r * 0.55, -r * 0.72); ctx.stroke();
+    ctx.strokeStyle = '#FF4400'; ctx.lineWidth = r * 0.12; ctx.shadowColor = '#FF2200'; ctx.shadowBlur = 8;
+    ctx.beginPath(); ctx.moveTo(r * 0.55, -r * 0.72); ctx.lineTo(r * 0.30, -r * 1.05); ctx.stroke();
+    ctx.shadowBlur = 0;
+    ctx.restore();
+
+    // Main body (cephalothorax)
+    const bg = ctx.createRadialGradient(-r*0.15, -r*0.10, 1, 0, 0, r*0.56);
+    bg.addColorStop(0, '#5a2a0a'); bg.addColorStop(0.55, '#3a1808'); bg.addColorStop(1, '#200e04');
+    ctx.fillStyle = bg; ctx.shadowColor = '#FF4400'; ctx.shadowBlur = 10;
+    ctx.beginPath(); ctx.ellipse(0, 0, r*0.54, r*0.44, 0, 0, Math.PI*2); ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // 8 legs with scuttle animation
+    const legSwing = Math.sin(Date.now() * 0.018) * 0.32;
+    ctx.strokeStyle = '#2a1004'; ctx.lineWidth = 1.5; ctx.lineCap = 'round';
+    for (let i = 0; i < 4; i++) {
+      const ly2 = -r * 0.24 + i * r * 0.18;
+      const swing = (i % 2 === 0) ? legSwing : -legSwing;
+      for (const s of [-1, 1]) {
+        ctx.beginPath(); ctx.moveTo(s * r * 0.50, ly2);
+        ctx.lineTo(s * r * (0.80 + Math.abs(swing)*0.14), ly2 + r * 0.22 + swing * s * r * 0.12); ctx.stroke();
+      }
+    }
+
+    // Front pedipalp claws
+    for (const s of [-1, 1]) {
+      ctx.save(); ctx.translate(s * r * 0.28, -r * 0.54); ctx.rotate(s * 0.55);
+      ctx.strokeStyle = '#3a1808'; ctx.lineWidth = r * 0.20;
+      ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(s * r * 0.42, -r * 0.52); ctx.stroke();
+      ctx.fillStyle = '#4a2010';
+      ctx.beginPath(); ctx.ellipse(s * r * 0.42, -r * 0.52, r * 0.20, r * 0.12, s * 0.65, 0, Math.PI*2); ctx.fill();
+      ctx.strokeStyle = '#4a2010'; ctx.lineWidth = r * 0.12;
+      ctx.beginPath(); ctx.moveTo(s * r * 0.40, -r * 0.45); ctx.lineTo(s * r * 0.60, -r * 0.32); ctx.stroke();
+      ctx.restore();
+    }
+
+    // Compound eyes (orange glow)
+    for (const s of [-1, 1]) {
+      ctx.fillStyle = '#FF8800'; ctx.shadowColor = '#FF4400'; ctx.shadowBlur = 8;
+      ctx.beginPath(); ctx.arc(s * r * 0.18, -r * 0.38, r * 0.09, 0, Math.PI*2); ctx.fill();
+    }
+    ctx.fillStyle = '#FFAA22'; ctx.shadowColor = '#FF6600'; ctx.shadowBlur = 6;
+    ctx.beginPath(); ctx.arc(0, -r * 0.46, r * 0.08, 0, Math.PI*2); ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.restore();
+  }
+
+  // ── SANDWORM: colossal desert juggernaut — emerging maw ──
+  _renderSandworm(ctx, x, y, r) {
+    const pT = Date.now() * 0.002;
+
+    ctx.save(); ctx.globalAlpha = 0.32; ctx.fillStyle = '#000';
+    ctx.beginPath(); ctx.ellipse(x+6, y+r*0.62, r*1.55, r*0.36, 0, 0, Math.PI*2); ctx.fill();
+    ctx.restore();
+
+    ctx.save();
+    ctx.translate(x, y);
+
+    // Receding body rings
+    for (let i = 2; i >= 0; i--) {
+      const rs = 1 - i * 0.18, ringY = i * r * 0.30 + r * 0.18;
+      ctx.fillStyle = `rgba(${Math.round(140 - i*22)},${Math.round(90 - i*14)},${Math.round(20 - i*4)},1)`;
+      ctx.beginPath(); ctx.ellipse(0, ringY, r * 1.30 * rs, r * 0.38 * rs, 0, 0, Math.PI*2); ctx.fill();
+      ctx.strokeStyle = 'rgba(80,40,5,0.50)'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.ellipse(0, ringY, r * 0.85 * rs, r * 0.25 * rs, 0, 0, Math.PI*2); ctx.stroke();
+    }
+
+    // Frontal collar ring
+    const cG = ctx.createRadialGradient(-r*0.25, -r*0.15, 2, 0, 0, r*1.28);
+    cG.addColorStop(0, '#c8a050'); cG.addColorStop(0.5, '#8a6020'); cG.addColorStop(1, '#4a3010');
+    ctx.fillStyle = cG; ctx.shadowColor = '#D4A017'; ctx.shadowBlur = 16;
+    ctx.beginPath(); ctx.ellipse(0, 0, r * 1.28, r * 0.58, 0, 0, Math.PI*2); ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // Outer teeth ring
+    for (let i = 0; i < 14; i++) {
+      const ang = (i / 14) * Math.PI * 2 + pT * 0.3;
+      const tx2 = Math.cos(ang) * r * 1.22, ty2 = Math.sin(ang) * r * 0.54;
+      ctx.fillStyle = i % 2 === 0 ? '#F5E8C0' : '#D4C8A0';
+      ctx.save(); ctx.translate(tx2, ty2); ctx.rotate(ang + Math.PI/2);
+      ctx.beginPath(); ctx.moveTo(-r*0.08, 0); ctx.lineTo(0, -r*0.22); ctx.lineTo(r*0.08, 0); ctx.closePath(); ctx.fill();
+      ctx.restore();
+    }
+
+    // Dark maw interior
+    const mawG = ctx.createRadialGradient(0, 0, 4, 0, 0, r * 0.65);
+    mawG.addColorStop(0, '#050200'); mawG.addColorStop(0.55, '#1a0e04'); mawG.addColorStop(1, '#3a1e08');
+    ctx.fillStyle = mawG;
+    ctx.beginPath(); ctx.ellipse(0, 0, r * 0.68, r * 0.30, 0, 0, Math.PI*2); ctx.fill();
+
+    // Inner teeth
+    for (let i = 0; i < 8; i++) {
+      const ang = (i / 8) * Math.PI * 2 - pT * 0.5;
+      const tx2 = Math.cos(ang) * r * 0.58, ty2 = Math.sin(ang) * r * 0.26;
+      ctx.fillStyle = '#C8A860';
+      ctx.save(); ctx.translate(tx2, ty2); ctx.rotate(ang + Math.PI/2);
+      ctx.beginPath(); ctx.moveTo(-r*0.06, 0); ctx.lineTo(0, -r*0.15); ctx.lineTo(r*0.06, 0); ctx.closePath(); ctx.fill();
+      ctx.restore();
+    }
+
+    // Glowing pit eyes
+    for (const s of [-1, 1]) {
+      ctx.fillStyle = '#FF8800'; ctx.shadowColor = '#FF4400'; ctx.shadowBlur = 18;
+      ctx.beginPath(); ctx.arc(s * r * 0.28, -r * 0.05, r * 0.14, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#FF2200'; ctx.shadowBlur = 0;
+      ctx.beginPath(); ctx.arc(s * r * 0.28, -r * 0.05, r * 0.07, 0, Math.PI*2); ctx.fill();
+    }
+
+    // Sand spray particles
+    ctx.fillStyle = 'rgba(200,168,60,0.22)';
+    for (let i = 0; i < 8; i++) {
+      const ang = (i / 8) * Math.PI * 2 + pT;
+      ctx.beginPath(); ctx.ellipse(Math.cos(ang)*r*1.48, Math.sin(ang)*r*0.66, r*0.08, r*0.04, ang, 0, Math.PI*2); ctx.fill();
+    }
+
     ctx.restore();
   }
 
@@ -4359,8 +4503,9 @@ class BossBot {
       case 'casino':       this._renderDealer(ctx, x, y, r, pulse); break;
       case 'ocean_depths': this._renderKraken(ctx, x, y, r, pulse); break;
       case 'robot_city':   this._renderSentinel(ctx, x, y, r, pulse); break;
-      case 'jungle':       this._renderJungleLord(ctx, x, y, r, pulse); break;
-      default:             this._renderKingpin(ctx, x, y, r, pulse); break;
+      case 'jungle':        this._renderJungleLord(ctx, x, y, r, pulse); break;
+      case 'desert_sands':  this._renderPharaoh(ctx, x, y, r, pulse); break;
+      default:              this._renderKingpin(ctx, x, y, r, pulse); break;
     }
 
     // Name + enrage label
@@ -5039,6 +5184,156 @@ class BossBot {
       ctx.fillStyle = '#FF4400'; ctx.font = 'bold 9px Orbitron, monospace';
       ctx.fillText('⚡ ENRAGED ⚡', 0, -r*1.85);
     }
+    ctx.restore();
+  }
+
+  // ── PHARAOH GOD — divine ancient ruler of the desert ─────────────────────────
+  _renderPharaoh(ctx, x, y, r, pulse) {
+    const breathe   = Math.sin(this._pulseT * 1.0) * 0.03;
+    const sandSwirl = this._pulseT;
+
+    ctx.save();
+    ctx.translate(x, y);
+
+    // Sandstorm aura
+    if (this._enraged) {
+      ctx.globalAlpha = 0.22 + pulse * 0.14; ctx.fillStyle = '#D4A017';
+      ctx.beginPath(); ctx.arc(0, 0, r * 1.65 + pulse * r * 0.22, 0, Math.PI*2); ctx.fill();
+    }
+    for (let ring = 0; ring < 3; ring++) {
+      const ringR = r * (1.15 + ring * 0.28);
+      ctx.globalAlpha = (0.10 - ring * 0.025) * (0.6 + pulse * 0.4);
+      ctx.strokeStyle = '#D4A017'; ctx.lineWidth = 2.5 - ring * 0.6;
+      ctx.setLineDash([8, 12]); ctx.lineDashOffset = -sandSwirl * (22 + ring * 8);
+      ctx.beginPath(); ctx.arc(0, 0, ringR, 0, Math.PI * 2); ctx.stroke();
+    }
+    ctx.setLineDash([]); ctx.globalAlpha = 1;
+
+    // Body (divine robes)
+    const bodyScale = 1 + breathe;
+    const rG = ctx.createRadialGradient(-r*0.28, -r*0.20, 2, 0, r*0.12, r * 1.05);
+    rG.addColorStop(0, '#F5E090'); rG.addColorStop(0.40, '#D4A017'); rG.addColorStop(0.78, '#9a6e0a'); rG.addColorStop(1, '#5a3e06');
+    ctx.fillStyle = rG; ctx.shadowColor = '#D4A017'; ctx.shadowBlur = 20 + pulse * 14;
+    ctx.beginPath(); ctx.roundRect(-r*0.82*bodyScale, -r*0.62*bodyScale, r*1.64*bodyScale, r*1.30*bodyScale, [r*0.18, r*0.18, r*0.28, r*0.28]); ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // Cartouche chest medallion
+    ctx.fillStyle = '#4a2a00';
+    ctx.beginPath(); ctx.roundRect(-r*0.32, -r*0.28, r*0.64, r*0.56, r*0.08); ctx.fill();
+    ctx.strokeStyle = '#FFD700'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.roundRect(-r*0.32, -r*0.28, r*0.64, r*0.56, r*0.08); ctx.stroke();
+    ctx.fillStyle = '#FFD700';
+    ctx.beginPath(); ctx.ellipse(0, 0, r*0.18, r*0.10, 0, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#2a1200';
+    ctx.beginPath(); ctx.ellipse(0, 0, r*0.09, r*0.07, 0, 0, Math.PI*2); ctx.fill();
+    ctx.strokeStyle = '#FFD700'; ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.moveTo(-r*0.18, 0); ctx.lineTo(-r*0.28, r*0.06); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(r*0.18, 0); ctx.lineTo(r*0.28, r*0.06); ctx.stroke();
+
+    // Usekh collar
+    const collG = ctx.createLinearGradient(0, -r*0.60, 0, -r*0.30);
+    collG.addColorStop(0, '#FFD700'); collG.addColorStop(0.5, '#E8A800'); collG.addColorStop(1, '#C89000');
+    ctx.fillStyle = collG;
+    ctx.beginPath(); ctx.arc(0, -r*0.55, r*0.72, Math.PI*0.12, Math.PI*0.88); ctx.closePath(); ctx.fill();
+    for (let j = 0; j < 9; j++) {
+      const jAng = Math.PI * (0.14 + j * 0.082);
+      ctx.fillStyle = ['#FF4444','#4488FF','#44FF88'][j % 3];
+      ctx.beginPath(); ctx.arc(Math.cos(jAng)*r*0.70, -r*0.55 + Math.sin(jAng)*r*0.70, r*0.055, 0, Math.PI*2); ctx.fill();
+    }
+
+    // Legs
+    for (const s of [-1, 1]) {
+      ctx.fillStyle = '#c8900e';
+      ctx.beginPath(); ctx.roundRect(s*r*0.30, r*0.56, r*0.38, r*0.60, r*0.10); ctx.fill();
+      ctx.strokeStyle = '#FFD700'; ctx.lineWidth = 1.8;
+      ctx.beginPath(); ctx.moveTo(s*r*0.30, r*1.04); ctx.lineTo(s*r*0.68, r*1.04); ctx.stroke();
+    }
+
+    // Heka crook (left)
+    ctx.save(); ctx.translate(-r*0.78, -r*0.18); ctx.rotate(-0.38);
+    ctx.strokeStyle = '#FFD700'; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.moveTo(0, r*0.52); ctx.lineTo(0, -r*0.68); ctx.stroke();
+    ctx.beginPath(); ctx.arc(-r*0.22, -r*0.68, r*0.22, 0, Math.PI * 0.82); ctx.stroke();
+    ctx.restore();
+
+    // Nekhakha flail (right)
+    ctx.save(); ctx.translate(r*0.78, -r*0.18); ctx.rotate(0.38);
+    ctx.strokeStyle = '#FFD700'; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.moveTo(0, r*0.52); ctx.lineTo(0, -r*0.50); ctx.stroke();
+    for (let fi = 0; fi < 3; fi++) {
+      const fang = -Math.PI*0.42 + fi * 0.30 + Math.sin(sandSwirl * 2.5 + fi) * 0.14;
+      ctx.strokeStyle = '#E8A800'; ctx.lineWidth = 1.8;
+      ctx.beginPath(); ctx.moveTo(0, -r*0.50);
+      ctx.lineTo(Math.cos(fang)*r*0.30, -r*0.50 + Math.sin(fang + Math.PI*0.5)*r*0.26); ctx.stroke();
+      ctx.fillStyle = '#FFD700';
+      ctx.beginPath(); ctx.arc(Math.cos(fang)*r*0.30, -r*0.50 + Math.sin(fang + Math.PI*0.5)*r*0.26, r*0.07, 0, Math.PI*2); ctx.fill();
+    }
+    ctx.restore();
+
+    // Head
+    const headY = -r * 0.78;
+    const hG = ctx.createRadialGradient(-r*0.12, headY - r*0.10, 1, 0, headY, r * 0.44);
+    hG.addColorStop(0, '#F0D070'); hG.addColorStop(0.6, '#c8900e'); hG.addColorStop(1, '#8a5e08');
+    ctx.fillStyle = hG; ctx.shadowColor = '#FFD700'; ctx.shadowBlur = 14 + pulse * 8;
+    ctx.beginPath(); ctx.ellipse(0, headY, r * 0.44, r * 0.42, 0, 0, Math.PI*2); ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // Nemes headdress
+    ctx.fillStyle = '#1a0e00';
+    ctx.beginPath(); ctx.ellipse(-r*0.28, headY + r*0.08, r*0.22, r*0.36, -0.28, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(r*0.28, headY + r*0.08, r*0.22, r*0.36, 0.28, 0, Math.PI*2); ctx.fill();
+    ctx.strokeStyle = '#FFD700'; ctx.lineWidth = 1; ctx.globalAlpha = 0.40;
+    for (let ns = 0; ns < 3; ns++) {
+      ctx.beginPath(); ctx.moveTo(-r*0.44, headY - r*0.05 + ns*r*0.16); ctx.lineTo(-r*0.10, headY - r*0.05 + ns*r*0.16); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(r*0.44, headY - r*0.05 + ns*r*0.16); ctx.lineTo(r*0.10, headY - r*0.05 + ns*r*0.16); ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+
+    // Deshret (red lower crown)
+    ctx.fillStyle = '#CC2200';
+    ctx.beginPath(); ctx.roundRect(-r*0.36, headY - r*0.82, r*0.72, r*0.56, [r*0.06, r*0.06, 0, 0]); ctx.fill();
+    // Hedjet (white upper crown — tall cone)
+    ctx.fillStyle = '#F5F0E0';
+    ctx.beginPath();
+    ctx.moveTo(-r*0.24, headY - r*0.82); ctx.lineTo(r*0.24, headY - r*0.82);
+    ctx.lineTo(r*0.14, headY - r*2.00);  ctx.lineTo(-r*0.14, headY - r*2.00);
+    ctx.closePath(); ctx.fill();
+    // Crown tip gold knob
+    ctx.fillStyle = '#FFD700'; ctx.shadowColor = '#FFD700'; ctx.shadowBlur = 10 + pulse * 6;
+    ctx.beginPath(); ctx.arc(0, headY - r*2.02, r*0.12, 0, Math.PI*2); ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // Uraeus (cobra)
+    ctx.fillStyle = '#22AA44'; ctx.shadowColor = '#00FF88'; ctx.shadowBlur = 8;
+    ctx.beginPath(); ctx.ellipse(0, headY - r*0.85, r*0.10, r*0.16, 0, 0, Math.PI*2); ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = '#FF2200';
+    ctx.beginPath(); ctx.arc(0, headY - r*1.00, r*0.06, 0, Math.PI*2); ctx.fill();
+
+    // Kohl-lined eyes (glowing gold)
+    for (const s of [-1, 1]) {
+      ctx.fillStyle = '#000';
+      ctx.beginPath(); ctx.ellipse(s*r*0.20, headY - r*0.04, r*0.17, r*0.09, 0, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#FFD700'; ctx.shadowColor = '#FFD700'; ctx.shadowBlur = 14 + pulse * 8;
+      ctx.beginPath(); ctx.ellipse(s*r*0.20, headY - r*0.04, r*0.11, r*0.07, 0, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#FF8800'; ctx.shadowBlur = 0;
+      ctx.beginPath(); ctx.ellipse(s*r*0.20, headY - r*0.04, r*0.05, r*0.05, 0, 0, Math.PI*2); ctx.fill();
+      ctx.strokeStyle = '#000'; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(s*r*0.30, headY - r*0.04); ctx.lineTo(s*r*0.40, headY + r*0.06); ctx.stroke();
+    }
+
+    // Divine false beard
+    ctx.fillStyle = '#D4A017'; ctx.strokeStyle = '#FFD700'; ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.roundRect(-r*0.10, headY + r*0.34, r*0.20, r*0.26, [r*0.02, r*0.02, r*0.08, r*0.08]); ctx.fill(); ctx.stroke();
+
+    // Sand particles orbiting (divine aura)
+    ctx.fillStyle = 'rgba(212,160,23,0.30)';
+    for (let i = 0; i < 12; i++) {
+      const ang = (i / 12) * Math.PI * 2 + sandSwirl * 0.8;
+      const orR = r * (1.30 + Math.sin(sandSwirl * 1.5 + i * 1.2) * 0.22);
+      ctx.beginPath(); ctx.arc(Math.cos(ang)*orR, Math.sin(ang)*orR*0.55, r*0.055, 0, Math.PI*2); ctx.fill();
+    }
+
     ctx.restore();
   }
 }
@@ -6505,7 +6800,8 @@ class AmbientCar {
   }
 
   render(ctx) {
-    if (this.isHorse) { this._renderHorse(ctx); return; }
+    if (this.isHorse)  { this._renderHorse(ctx);  return; }
+    if (this.isCamel)  { this._renderCamel(ctx);  return; }
     const w = this.width, h = this.height;
     const bs = this.bodyStyle;
     ctx.save();
@@ -6689,6 +6985,75 @@ class AmbientCar {
     ctx.beginPath(); ctx.arc(0, 18, 10, Math.PI*0.3 + gait*0.3, Math.PI*0.85 + gait*0.3); ctx.stroke();
     ctx.lineWidth = 2.5;
     ctx.beginPath(); ctx.arc(0, 20, 13, Math.PI*0.35 - gait*0.2, Math.PI*0.80 - gait*0.2); ctx.stroke();
+
+    ctx.restore();
+  }
+
+  _renderCamel(ctx) {
+    // Top-down dromedary camel — animated sway walk
+    const sway = Math.sin(this._lightT * 5.5) * 0.14;
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    ctx.rotate(this.angle + Math.PI / 2);
+
+    // Ground shadow
+    ctx.save(); ctx.globalAlpha = 0.20; ctx.fillStyle = '#000';
+    ctx.beginPath(); ctx.ellipse(2, 8, 14, 8, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+
+    // 4 long legs — alternating pairs for walk
+    const legColor = this._acDarken(this.color, 0.68);
+    ctx.fillStyle = legColor;
+    ctx.save(); ctx.translate(-6, -18 + sway * 10); ctx.rotate(sway * 0.22);
+    ctx.beginPath(); ctx.roundRect(-2, 0, 4, 16, 2); ctx.fill(); ctx.restore();
+    ctx.save(); ctx.translate(6, -18 - sway * 10); ctx.rotate(-sway * 0.22);
+    ctx.beginPath(); ctx.roundRect(-2, 0, 4, 16, 2); ctx.fill(); ctx.restore();
+    ctx.save(); ctx.translate(-6, 12 - sway * 10); ctx.rotate(-sway * 0.22);
+    ctx.beginPath(); ctx.roundRect(-2, 0, 4, 14, 2); ctx.fill(); ctx.restore();
+    ctx.save(); ctx.translate(6, 12 + sway * 10); ctx.rotate(sway * 0.22);
+    ctx.beginPath(); ctx.roundRect(-2, 0, 4, 14, 2); ctx.fill(); ctx.restore();
+
+    // Main body
+    ctx.fillStyle = this.color;
+    ctx.beginPath(); ctx.roundRect(-11, -20, 22, 36, 7); ctx.fill();
+    ctx.fillStyle = this._acBrighten(this.color, 1.18);
+    ctx.beginPath(); ctx.ellipse(0, 4, 7, 13, 0, 0, Math.PI * 2); ctx.fill();
+
+    // Hump (dromedary — single large hump)
+    ctx.fillStyle = this._acBrighten(this.color, 1.12);
+    ctx.beginPath(); ctx.ellipse(0, -8, 11, 8, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = this._acBrighten(this.color, 1.30);
+    ctx.beginPath(); ctx.ellipse(-2, -10, 6, 5, -0.2, 0, Math.PI * 2); ctx.fill();
+
+    // Long neck + elongated head
+    ctx.fillStyle = this.color;
+    ctx.save(); ctx.rotate(sway * 0.08);
+    ctx.beginPath(); ctx.roundRect(-4, -30, 8, 14, 3); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(0, -36, 5, 9, 0, 0, Math.PI * 2); ctx.fill();
+    // Camel's flat squared snout
+    ctx.fillStyle = this._acDarken(this.color, 0.80);
+    ctx.beginPath(); ctx.roundRect(-4, -45, 8, 8, [1, 1, 4, 4]); ctx.fill();
+    // Iconic lip split
+    ctx.strokeStyle = '#3a2008'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(0, -43); ctx.lineTo(0, -38); ctx.stroke();
+    // Nostrils
+    ctx.fillStyle = '#3a1a06';
+    ctx.beginPath(); ctx.arc(-2, -42, 1.4, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc( 2, -42, 1.4, 0, Math.PI * 2); ctx.fill();
+    // Eye with long lash
+    ctx.fillStyle = '#1a0a00'; ctx.beginPath(); ctx.arc(3.5, -37, 2.2, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#FF8800'; ctx.beginPath(); ctx.arc(3.5, -37, 1.2, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = '#1a0a00'; ctx.lineWidth = 0.9;
+    ctx.beginPath(); ctx.arc(3.5, -37, 3.2, -Math.PI*0.75, -Math.PI*0.2); ctx.stroke();
+    // Ear
+    ctx.fillStyle = this._acDarken(this.color, 0.82);
+    ctx.beginPath(); ctx.ellipse(-3.5, -44, 2.5, 4, -0.4, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+
+    // Short stubby tail + tuft
+    ctx.strokeStyle = this._acDarken(this.color, 0.70); ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(0, 18); ctx.quadraticCurveTo(5, 23, 2, 26); ctx.stroke();
+    ctx.fillStyle = '#3a2208'; ctx.beginPath(); ctx.arc(2, 26, 3, 0, Math.PI * 2); ctx.fill();
 
     ctx.restore();
   }

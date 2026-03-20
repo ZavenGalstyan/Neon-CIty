@@ -699,6 +699,33 @@ const CONFIG = {
       },
     },
 
+    // ── Desert Sands ───────────────────────────────────────
+    {
+      id: 'desert_sands', name: 'DESERT SANDS',
+      desc: 'Ancient pyramids, mummies, scorpions. Ride camels. Survive the Pharaoh God.',
+      theme: '#D4A017', tags: ['DESERT', 'ANCIENT', 'MUMMIES'],
+      previewGridSize: 14, previewBg: '#180e00', previewRoad: 'rgba(200,158,70,0.50)',
+      mapW: 40, mapH: 40, tileSize: 80, roadEvery: 6,
+      roadColor: '#c8a05a', sidewalkColor: '#a87a3a',
+      buildingPalette: ['#8B6914','#9e7c20','#7a5c10','#A0801e','#8a6818','#b08422','#6c5010','#9c7a1e'],
+      neonColors: ['#D4A017','#FF8800','#E8B020','#FF6600'],
+      windowColors: ['#FFD700','#FFAA44','#FF8800','#FFCC44'],
+      lightColor: '#FFB830', lightGlow: '#FF8800', neonFreq: 14,
+      weather: 'sandstorm',
+      desert: true,
+      botPalettes: {
+        mini:       [{ body:'#5a3d10', accent:'#D4A017' }, { body:'#6B4E1A', accent:'#C89020' }],
+        normal:     [{ body:'#D4C4A0', accent:'#8B6914' }, { body:'#C8B490', accent:'#9e7c20' }, { body:'#E0D0A8', accent:'#7a5c10' }],
+        big:        [{ body:'#8B7A50', accent:'#D4A017' }, { body:'#7a6a40', accent:'#C89020' }],
+        police:     [{ body:'#1a1408', accent:'#D4A017' }, { body:'#141008', accent:'#FFD700' }],
+        swat:       [{ body:'#0e0c06', accent:'#8B6914' }],
+        heavyswat:  [{ body:'#0a0806', accent:'#FF8800' }],
+        sniper:     [{ body:'#c8b87a', accent:'#FFD700' }],
+        bomber:     [{ body:'#1a1000', accent:'#FF6622' }],
+        juggernaut: [{ body:'#8B6914', accent:'#D4A017' }],
+      },
+    },
+
     // ── Jungle Safari ──────────────────────────────────────
     {
       id: 'jungle', name: 'JUNGLE SAFARI',

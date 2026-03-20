@@ -1437,12 +1437,16 @@ class Game {
     const carColors = ['#CC3333','#3366BB','#CC9900','#339944','#AA33AA','#336688','#CC6633','#55AACC'];
     const angle     = angles[Math.floor(Math.random() * angles.length)];
     const isJungle  = !!this.map.config.jungle;
+    const isDesert  = !!this.map.config.desert;
     const color     = isJungle
       ? ['#8B4513','#6B3410','#A0522D','#704214','#5C3317'][Math.floor(Math.random()*5)]
-      : carColors[Math.floor(Math.random() * carColors.length)];
+      : isDesert
+        ? ['#C8A050','#B08828','#D4AA60','#A07830','#C09040'][Math.floor(Math.random()*5)]
+        : carColors[Math.floor(Math.random() * carColors.length)];
     const style     = Math.floor(Math.random() * 5);
     const car = new AmbientCar(pos.x, pos.y, angle, color, style);
     if (isJungle) car.isHorse = true;
+    if (isDesert) car.isCamel = true;
     this._ambientCars.push(car);
   }
 
@@ -3396,6 +3400,13 @@ class Game {
     if (this._jungleMode) {
       ctx.save();
       ctx.fillStyle = 'rgba(10,30,5,0.12)';
+      ctx.fillRect(0, 0, W, H);
+      ctx.restore();
+    }
+    // Desert: warm sandy haze tint
+    if (this._desertMode) {
+      ctx.save();
+      ctx.fillStyle = 'rgba(30,18,4,0.10)';
       ctx.fillRect(0, 0, W, H);
       ctx.restore();
     }
