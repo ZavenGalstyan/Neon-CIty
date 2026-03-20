@@ -698,6 +698,33 @@ const CONFIG = {
         swat:   [{ body:'#0a0a12', accent:'#336699' }],
       },
     },
+
+    // ── Jungle Safari ──────────────────────────────────────
+    {
+      id: 'jungle', name: 'JUNGLE SAFARI',
+      desc: 'Deep in the wild. Animal predators hunt you. Ride horses. Survive nature.',
+      theme: '#44AA22', tags: ['NATURE', 'ANIMALS', 'MELEE'],
+      previewGridSize: 14, previewBg: '#0a1808', previewRoad: 'rgba(139,105,20,0.55)',
+      mapW: 40, mapH: 40, tileSize: 80, roadEvery: 6,
+      roadColor: '#5a3d1e', sidewalkColor: '#2a4a20',
+      buildingPalette: ['#1a3010','#1e3814','#162808','#22380e','#183010','#1c3412','#14280a','#20341a'],
+      neonColors: ['#44CC22','#88FF44','#FFCC44','#FF8822'],
+      windowColors: ['#FFEE44','#FFD700','#FFAA22','#AEFF44'],
+      lightColor: '#FFEE44', lightGlow: '#FFCC00', neonFreq: 10,
+      weather: 'jungle_rain',
+      jungle: true,
+      botPalettes: {
+        mini:    [{ body:'#3a2a08', accent:'#FFCC22' }, { body:'#2e2010', accent:'#FF8822' }],
+        normal:  [{ body:'#c87820', accent:'#1a1a08' }, { body:'#8B4513', accent:'#FFD700' }, { body:'#5c3310', accent:'#FF8800' }],
+        big:     [{ body:'#2a2010', accent:'#FFAA22' }, { body:'#1e1808', accent:'#CC8800' }],
+        police:  [{ body:'#5a3210', accent:'#FF4400' }, { body:'#4a2808', accent:'#FF6622' }],
+        swat:    [{ body:'#3a5a18', accent:'#88FF44' }],
+        heavyswat: [{ body:'#1a0a00', accent:'#FF6600' }],
+        sniper:  [{ body:'#2a3a10', accent:'#AAFFAA' }],
+        bomber:  [{ body:'#6a4a10', accent:'#FF8800' }],
+        juggernaut: [{ body:'#4a3010', accent:'#FFAA00' }],
+      },
+    },
   ],
 
   // ── Weapons ─────────────────────────────────────────────

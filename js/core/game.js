@@ -114,6 +114,7 @@ class Game {
     this._sirenPlaying = false;
     this._desertMode  = !!this.map.config.desert;
     this._robotMode   = !!this.map.config.robot;
+    this._jungleMode  = !!this.map.config.jungle;
 
     // Weather
     this.weather = new Weather(this.map.config.weather || 'clear');
@@ -1435,9 +1436,14 @@ class Game {
     const angles    = [0, Math.PI / 2, Math.PI, -Math.PI / 2];
     const carColors = ['#CC3333','#3366BB','#CC9900','#339944','#AA33AA','#336688','#CC6633','#55AACC'];
     const angle     = angles[Math.floor(Math.random() * angles.length)];
-    const color     = carColors[Math.floor(Math.random() * carColors.length)];
+    const isJungle  = !!this.map.config.jungle;
+    const color     = isJungle
+      ? ['#8B4513','#6B3410','#A0522D','#704214','#5C3317'][Math.floor(Math.random()*5)]
+      : carColors[Math.floor(Math.random() * carColors.length)];
     const style     = Math.floor(Math.random() * 5);
-    this._ambientCars.push(new AmbientCar(pos.x, pos.y, angle, color, style));
+    const car = new AmbientCar(pos.x, pos.y, angle, color, style);
+    if (isJungle) car.isHorse = true;
+    this._ambientCars.push(car);
   }
 
   _explodeGrenade(g) {
@@ -3383,6 +3389,13 @@ class Game {
     if (this._robotMode) {
       ctx.save();
       ctx.fillStyle = 'rgba(0,40,60,0.14)';
+      ctx.fillRect(0, 0, W, H);
+      ctx.restore();
+    }
+    // Jungle: warm green-amber tint
+    if (this._jungleMode) {
+      ctx.save();
+      ctx.fillStyle = 'rgba(10,30,5,0.12)';
       ctx.fillRect(0, 0, W, H);
       ctx.restore();
     }

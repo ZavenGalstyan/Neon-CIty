@@ -759,6 +759,29 @@ class GameMap {
               ctx.fillStyle = 'rgba(200,240,255,0.22)';
               ctx.fillRect(wx + S * 0.25, wy + S * 0.45, 5, 5);
             }
+          } else if (cfg.jungle) {
+            // Jungle: dirt/mud path with organic variation
+            const dseed = (x * 17 + y * 31) % 5;
+            const dirts = ['#5a3d1e','#52381a','#624215','#583a1c','#4e3418'];
+            ctx.fillStyle = dirts[dseed];
+            ctx.fillRect(wx, wy, S, S);
+            // Mud puddles
+            if ((x*7 + y*13) % 9 === 0) {
+              ctx.fillStyle = 'rgba(40,25,10,0.45)';
+              ctx.beginPath(); ctx.ellipse(wx + S*0.38, wy + S*0.52, S*0.22, S*0.14, 0.4, 0, Math.PI*2); ctx.fill();
+            }
+            // Scattered pebbles
+            if ((x*11 + y*7) % 6 === 0) {
+              ctx.fillStyle = 'rgba(80,60,30,0.55)';
+              ctx.beginPath(); ctx.arc(wx + S*0.65, wy + S*0.35, S*0.07, 0, Math.PI*2); ctx.fill();
+              ctx.beginPath(); ctx.arc(wx + S*0.25, wy + S*0.70, S*0.05, 0, Math.PI*2); ctx.fill();
+            }
+            // Grass fringe on edges
+            if (isColR || isRowR) {
+              ctx.fillStyle = 'rgba(40,90,20,0.18)';
+              if (isColR) ctx.fillRect(wx, wy, 6, S);
+              if (isRowR) ctx.fillRect(wx, wy, S, 6);
+            }
           } else {
             ctx.fillStyle = cfg.roadColor;
             ctx.fillRect(wx, wy, S, S);
@@ -774,7 +797,34 @@ class GameMap {
           }
         } else if (tile === TILE.SIDEWALK) {
           const isPark = this._parkTiles && this._parkTiles.has(`${x},${y}`);
-          if (cfg.robot) {
+          if (cfg.jungle) {
+            // Jungle: lush grass undergrowth
+            const gseed = (x * 23 + y * 37) % 5;
+            const grasses = ['#2a4a20','#254518','#2e5222','#20401a','#28481e'];
+            ctx.fillStyle = grasses[gseed];
+            ctx.fillRect(wx, wy, S, S);
+            // Dense undergrowth blades
+            ctx.fillStyle = 'rgba(50,110,30,0.35)';
+            const blades = (x*7+y*11) % 4;
+            for (let bi = 0; bi < blades + 2; bi++) {
+              const bx2 = wx + ((x*17 + bi*29) % (S-12)) + 6;
+              const by2 = wy + ((y*13 + bi*19) % (S-10)) + 5;
+              ctx.fillRect(bx2, by2, 2, 8 + bi*2);
+            }
+            // Fern fronds (ellipses)
+            if ((x*11+y*7) % 5 === 0) {
+              ctx.fillStyle = 'rgba(40,140,40,0.28)';
+              ctx.beginPath(); ctx.ellipse(wx + S*0.35, wy + S*0.55, S*0.18, S*0.09, -0.4, 0, Math.PI*2); ctx.fill();
+              ctx.beginPath(); ctx.ellipse(wx + S*0.65, wy + S*0.40, S*0.16, S*0.08, 0.5, 0, Math.PI*2); ctx.fill();
+            }
+            // Occasional bright tropical flower
+            if ((x*13+y*19) % 12 === 0) {
+              ctx.fillStyle = 'rgba(255,180,30,0.70)';
+              ctx.beginPath(); ctx.arc(wx + S*0.5 + (x%3-1)*12, wy + S*0.45 + (y%3-1)*8, 4, 0, Math.PI*2); ctx.fill();
+              ctx.fillStyle = 'rgba(255,80,80,0.55)';
+              ctx.beginPath(); ctx.arc(wx + S*0.3, wy + S*0.65, 3, 0, Math.PI*2); ctx.fill();
+            }
+          } else if (cfg.robot) {
             // Robot City: circuit board platform / raised metal walkway
             ctx.fillStyle = '#0d1420';
             ctx.fillRect(wx, wy, S, S);
@@ -847,8 +897,47 @@ class GameMap {
             ctx.fillRect(wx, wy, S, S);
           }
         } else {
-          // Building (or Server Block in robot city)
-          if (cfg.robot) {
+          // Building (or Tree in jungle, or Server Block in robot city)
+          if (cfg.jungle) {
+            // Jungle: render dense tree canopy
+            const tseed = (x * 41 + y * 59) % 5;
+            // Ground under tree — dark soil
+            const soils = ['#1a2e0a','#162808','#1e3210','#18280a','#142408'];
+            ctx.fillStyle = soils[tseed];
+            ctx.fillRect(wx, wy, S, S);
+            // Canopy shadow on ground
+            ctx.globalAlpha = 0.30; ctx.fillStyle = '#000';
+            ctx.beginPath(); ctx.ellipse(wx + S/2 + 5, wy + S/2 + 7, S*0.38, S*0.22, 0, 0, Math.PI*2); ctx.fill();
+            ctx.globalAlpha = 1;
+            // Layered canopy — dark outer, brighter inner
+            const treeGreens = [
+              ['#0d3808','#1a5010','#22661a'],
+              ['#08340a','#14520e','#1e6818'],
+              ['#0a3c0c','#185814','#22701e'],
+              ['#0e3a08','#1c5412','#28681c'],
+              ['#0a3206','#164a0c','#205816'],
+            ][tseed];
+            // Outer canopy blob
+            ctx.fillStyle = treeGreens[0];
+            ctx.beginPath(); ctx.arc(wx + S/2, wy + S/2, S*0.46, 0, Math.PI*2); ctx.fill();
+            // Mid canopy
+            ctx.fillStyle = treeGreens[1];
+            ctx.beginPath(); ctx.arc(wx + S/2 - 3, wy + S/2 - 4, S*0.36, 0, Math.PI*2); ctx.fill();
+            // Highlight inner
+            ctx.fillStyle = treeGreens[2];
+            ctx.beginPath(); ctx.arc(wx + S/2 - 5, wy + S/2 - 7, S*0.22, 0, Math.PI*2); ctx.fill();
+            // Sunlit top-left specular
+            ctx.fillStyle = 'rgba(180,255,100,0.12)';
+            ctx.beginPath(); ctx.arc(wx + S/2 - 8, wy + S/2 - 10, S*0.14, 0, Math.PI*2); ctx.fill();
+            // Trunk peek
+            ctx.fillStyle = '#3a2408';
+            ctx.fillRect(wx + S/2 - 4, wy + S*0.62, 8, S*0.38);
+            // Occasional tropical flower on canopy
+            if ((x*7+y*11) % 8 === 0) {
+              ctx.fillStyle = 'rgba(255,100,30,0.80)';
+              ctx.beginPath(); ctx.arc(wx + S*0.60, wy + S*0.35, 5, 0, Math.PI*2); ctx.fill();
+            }
+          } else if (cfg.robot) {
             // Robot City: server tower / tech block
             const rseed = x * 41 + y * 59;
             ctx.fillStyle = this.buildingColors[y][x];
@@ -903,8 +992,8 @@ class GameMap {
             }
           }
 
-          // Windows (not in robot) — no shadowBlur for performance
-          if (!cfg.robot && this.buildingWindows[y][x]) {
+          // Windows (not in robot/jungle) — no shadowBlur for performance
+          if (!cfg.robot && !cfg.jungle && this.buildingWindows[y][x]) {
             const wc = cfg.windowColors[(Math.floor(x/2) + Math.floor(y/2)) % cfg.windowColors.length];
             ctx.fillStyle = wc + 'CC';
             for (let wy2 = 0; wy2 < 2; wy2++) {
@@ -915,8 +1004,8 @@ class GameMap {
               }
             }
           }
-          // Neon sign strips (not in robot — robot has its own LED strips) — no shadowBlur for performance
-          if (!cfg.robot && (x + y) % cfg.neonFreq === 0) {
+          // Neon sign strips (not in robot/jungle) — no shadowBlur for performance
+          if (!cfg.robot && !cfg.jungle && (x + y) % cfg.neonFreq === 0) {
             const nc = cfg.neonColors[(x * 3 + y) % cfg.neonColors.length];
             ctx.globalAlpha = 0.65;
             ctx.strokeStyle = nc; ctx.lineWidth = 2;
