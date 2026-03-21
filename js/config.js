@@ -422,6 +422,33 @@ const CONFIG = {
       },
     },
 
+    // ── The Tower ─────────────────────────────────────────────
+    {
+      id: 'tower', name: 'THE TOWER',
+      desc: '10 floors. One building. Kill every enemy to ride the elevator up. Floor 10: face the penthouse boss.',
+      theme: '#FFD700', tags: ['BUILDING', 'FLOORS', 'INDOOR'],
+      previewGridSize: 16, previewBg: '#1a1210', previewRoad: '#3a2a18',
+      mapW: 22, mapH: 16, tileSize: 80, roadEvery: 1,
+      roadColor: '#d0b888', sidewalkColor: '#b09060',
+      buildingPalette: ['#6a4a2a','#5a3a1a','#7a5a3a','#4a3a2a'],
+      neonColors: ['#FFD700','#FFA500','#FFEE44'],
+      windowColors: ['#FFE88A','#FFCC55'],
+      lightColor: '#FFD700', lightGlow: '#FFA500', neonFreq: 999,
+      weather: 'clear',
+      tower: true,
+      botPalettes: {
+        mini:       [{ body:'#CC4400', accent:'#FF6622' }, { body:'#AA3300', accent:'#FF4400' }],
+        normal:     [{ body:'#882200', accent:'#CC4400' }, { body:'#993300', accent:'#DD5500' }],
+        big:        [{ body:'#663300', accent:'#AA5500' }, { body:'#552200', accent:'#994400' }],
+        police:     [{ body:'#003388', accent:'#4466FF' }, { body:'#002266', accent:'#3355EE' }],
+        swat:       [{ body:'#222244', accent:'#4444BB' }, { body:'#111133', accent:'#3333AA' }],
+        heavyswat:  [{ body:'#1a1a33', accent:'#3333AA' }],
+        sniper:     [{ body:'#334455', accent:'#6699CC' }, { body:'#223344', accent:'#5588BB' }],
+        bomber:     [{ body:'#552200', accent:'#FF4400' }, { body:'#661100', accent:'#FF3300' }],
+        juggernaut: [{ body:'#330000', accent:'#880000' }, { body:'#440000', accent:'#990000' }],
+      },
+    },
+
     // ── Page 2 Maps ─────────────────────────────────────────
     // WASTELAND - Unified map with big buildings and color themes
     {

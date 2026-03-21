@@ -116,6 +116,7 @@ class Game {
     this._robotMode     = !!this.map.config.robot;
     this._jungleMode    = !!this.map.config.jungle;
     this._galacticaMode = !!this.map.config.galactica;
+    this._towerMode     = !!this.map.config.tower;
 
     // Weather
     this.weather = new Weather(this.map.config.weather || 'clear');
@@ -210,6 +211,12 @@ class Game {
     this._hardcoreMode    = !!this.map.config.hardcore;
     this._blitzMode       = !!this.map.config.blitz;
     this._siegeMode       = !!this.map.config.siege;
+    // ── Tower Mode ────────────────────────────────────────────
+    this._towerFloor           = 1;
+    this._towerElevatorActive  = false;
+    this._towerTransitionAlpha = 0;   // 0=clear, 1=black
+    this._towerTransitionState = 0;   // 0=idle, 1=fading-out, 2=fading-in
+    this._towerVictory         = false;
     // ── Campaign Mode ─────────────────────────────────────────
     this._campaignMode    = !!this.map.config.campaign;
     this._campaignLevel   = 1;
@@ -264,9 +271,10 @@ class Game {
       this._siegeWaveCount = 0;
     }
 
-    this._spawnVehicles();
+    if (!this._towerMode) this._spawnVehicles();
     if (this._arenaMode)    this._startArenaWave();
     if (this._zombieMode)   this._startZombieWave();
+    if (this._towerMode)    { this._startTowerFloor(); }
     if (this._lifeMode || this._metropolisMode) this._spawnCityNpcs();
     if (this._campaignMode) this._startCampaignLevel();
     this._spawnAmbientTraffic();
@@ -640,7 +648,7 @@ class Game {
     }
 
     // ── Ambient traffic ────────────────────────────────────
-    if (!this._indoor && !this._arenaMode && !this._zombieMode) {
+    if (!this._indoor && !this._arenaMode && !this._zombieMode && !this._towerMode) {
       this._ambientSpawnT -= dt;
       if (this._ambientSpawnT <= 0) {
         this._respawnAmbientCar();
@@ -737,7 +745,7 @@ class Game {
     }
 
     // ── Police spawn ───────────────────────────────────────
-    if (this._wantedLevel > 0 && !this._zombieMode && !this._lifeMode) {
+    if (this._wantedLevel > 0 && !this._zombieMode && !this._lifeMode && !this._towerMode) {
       const intervals = [0, 9000, 6000, 4000, 2400];
       this._policeTimer -= dt * 1000;
       if (this._policeTimer <= 0) {
@@ -1080,8 +1088,11 @@ class Game {
     this.bullets   = this.bullets.filter(b => !b.dead);
     this.particles = this.particles.filter(p => !p.dead);
 
+    // ── Tower: elevator check ─────────────────────────────────
+    if (this._towerMode) this._updateTower(dt);
+
     // ── Bot spawning (non-arena, non-zombie, non-life only) ──
-    if (!this._arenaMode && !this._zombieMode && !this._lifeMode) {
+    if (!this._arenaMode && !this._zombieMode && !this._lifeMode && !this._towerMode) {
       this.spawnTimer -= dt * 1000;
       const maxBots = this._siegeMode
         ? CONFIG.MAX_BOTS * 2 + this.wave * 4   // siege: bigger cap
@@ -1387,14 +1398,235 @@ class Game {
     _pushBot(rp.x, rp.y);
   }
 
-  _spawnBoss() {
-    const minEdge = 160;
-    const mapW = this.map.W * this.map.S, mapH = this.map.H * this.map.S;
-    let rp, tries = 0;
+  // ── Tower HUD & victory rendering ────────────────────────
+  _renderTowerHUD(ctx, W, H) {
+    ctx.save();
+    const t = Date.now() * 0.001;
+
+    // Floor panel — top-center
+    const panW = 260, panH = 66, panX = W/2 - panW/2, panY = 14;
+    ctx.fillStyle = 'rgba(10,8,6,0.78)';
+    ctx.strokeStyle = '#FFD700';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.roundRect(panX, panY, panW, panH, 8); ctx.fill(); ctx.stroke();
+
+    // Floor label
+    ctx.font = 'bold 11px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#AA8822';
+    ctx.fillText('THE TOWER', W/2, panY + 16);
+
+    // Floor number
+    ctx.font = 'bold 26px monospace';
+    ctx.fillStyle = '#FFD700';
+    ctx.shadowColor = '#FFD700'; ctx.shadowBlur = 10;
+    ctx.fillText(`FLOOR  ${this._towerFloor} / 10`, W/2, panY + 43);
+    ctx.shadowBlur = 0;
+
+    // Enemies remaining (bottom of panel)
+    const alive = this.bots.filter(b => !b.dead && !b.dying).length +
+                  (this.boss && !this.boss.dead && !this.boss.dying ? 1 : 0);
+    ctx.font = '12px monospace';
+    ctx.fillStyle = alive > 0 ? '#FF6644' : '#44FF88';
+    ctx.fillText(alive > 0 ? `${alive} ENEMIES REMAINING` : 'ALL CLEARED!', W/2, panY + 61);
+
+    // Elevator hint (bottom-center, pulsing)
+    if (this._towerElevatorActive) {
+      const pulse = Math.sin(t * 3.5) * 0.25 + 0.75;
+      ctx.globalAlpha = pulse;
+      ctx.font = 'bold 18px monospace';
+      ctx.fillStyle = '#00FF88';
+      ctx.shadowColor = '#00FF88'; ctx.shadowBlur = 14;
+      ctx.fillText('▲  GO TO ELEVATOR  ▲', W/2, H - 38);
+      ctx.shadowBlur = 0;
+      ctx.globalAlpha = 1;
+    }
+
+    ctx.restore();
+  }
+
+  _towerFloorSubtitle(floor) {
+    const subs = ['','LOBBY · SECURITY FLOOR','OFFICES · LEVEL 2','OFFICES · LEVEL 3',
+      'OPERATIONS CENTER','COMMAND DECK','CLASSIFIED WING','RESTRICTED ZONE',
+      'WEAPONS LAB','ELITE GUARD','PENTHOUSE · FINAL STAND'];
+    return subs[Math.min(floor, 10)] || '';
+  }
+
+  _renderTowerVictory(ctx, W, H) {
+    const t = Date.now() * 0.001;
+    // Dark overlay
+    ctx.fillStyle = 'rgba(8,6,0,0.90)';
+    ctx.fillRect(0, 0, W, H);
+    // Gold glow
+    const grd = ctx.createRadialGradient(W/2, H/2, 40, W/2, H/2, 320);
+    grd.addColorStop(0, 'rgba(220,170,0,0.22)');
+    grd.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = grd; ctx.fillRect(0, 0, W, H);
+
+    ctx.save();
+    ctx.textAlign = 'center';
+
+    // Trophy emoji
+    ctx.font = '72px monospace';
+    ctx.fillText('🏆', W/2, H/2 - 80);
+
+    // Title
+    ctx.font = 'bold 48px monospace';
+    ctx.fillStyle = '#FFD700';
+    ctx.shadowColor = '#FFD700'; ctx.shadowBlur = 30 + Math.sin(t*2)*8;
+    ctx.fillText('TOWER CLEARED!', W/2, H/2 - 10);
+    ctx.shadowBlur = 0;
+
+    ctx.font = '22px monospace';
+    ctx.fillStyle = '#CCAA44';
+    ctx.fillText('You reached the penthouse and defeated the boss.', W/2, H/2 + 34);
+
+    ctx.font = '18px monospace';
+    ctx.fillStyle = '#888';
+    ctx.fillText(`Kills: ${this.kills}   ·   Money: $${this.money}`, W/2, H/2 + 66);
+
+    // Click to exit
+    const pulse2 = Math.sin(t * 2.2) * 0.3 + 0.7;
+    ctx.globalAlpha = pulse2;
+    ctx.font = '16px monospace';
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillText('CLICK TO RETURN TO MENU', W/2, H/2 + 110);
+    ctx.globalAlpha = 1;
+    ctx.restore();
+  }
+
+  // ── Tower floor system ────────────────────────────────────
+  _startTowerFloor() {
+    const floor = this._towerFloor;
+    this.bots   = [];
+    this.boss   = null;
+    this._towerElevatorActive = false;
+    this.map._towerFloor = floor;
+
+    // Spawn composition per floor
+    const FLOOR_SPAWNS = [
+      null,                                                                          // 0 unused
+      [['mini',5]],                                                                  // floor  1
+      [['mini',4],['normal',3]],                                                     // floor  2
+      [['normal',6],['big',2]],                                                      // floor  3
+      [['normal',4],['police',3],['big',2]],                                         // floor  4
+      [['big',4],['swat',4]],                                                        // floor  5
+      [['swat',4],['heavyswat',4]],                                                  // floor  6
+      [['heavyswat',3],['sniper',5]],                                                // floor  7
+      [['sniper',3],['bomber',5]],                                                   // floor  8
+      [['bomber',3],['juggernaut',4]],                                               // floor  9
+      [['juggernaut',2]],                                                            // floor 10 — + boss
+    ];
+    const spawns = FLOOR_SPAWNS[Math.min(floor, 10)] || FLOOR_SPAWNS[1];
+
+    for (const [type, num] of spawns) {
+      for (let i = 0; i < num; i++) {
+        const pos = this._towerRandomPos();
+        const bot = new Bot(pos.x, pos.y, floor, type, this.map.config);
+        this.bots.push(bot);
+      }
+    }
+
+    // Floor 10: also spawn the penthouse boss
+    if (floor >= 10) this._spawnBoss();
+
+    // Grant player the floor weapon (progressive unlock)
+    this._grantTowerWeapon(floor);
+
+    // Reset player to left side center
+    const S = this.map.S;
+    this.player.x = 2.5 * S;
+    this.player.y = (this.map.H / 2) * S;
+    this.player.hp = Math.min(this.player.maxHp, this.player.hp + 30); // small heal between floors
+
+    // Camera snap
+    this.camX = this.player.x - this.canvas.width  / 2;
+    this.camY = this.player.y - this.canvas.height / 2;
+  }
+
+  _towerRandomPos() {
+    const S = this.map.S;
+    const elevX = this.map.elevatorX, elevY = this.map.elevatorY;
+    let x, y, tries = 0;
     do {
-      rp = this.map.randomRoadPos();
+      x = rnd(1.5 * S, (this.map.W - 3) * S);
+      y = rnd(1.5 * S, (this.map.H - 3) * S);
       tries++;
-    } while (tries < 20 && (rp.x < minEdge || rp.y < minEdge || rp.x > mapW - minEdge || rp.y > mapH - minEdge));
+    } while (tries < 30 && (
+      this.map.isBlocked(x, y) ||
+      Math.hypot(x - elevX, y - elevY) < 140 ||
+      Math.hypot(x - 2.5 * S, y - (this.map.H / 2) * S) < 100
+    ));
+    return { x, y };
+  }
+
+  _grantTowerWeapon(floor) {
+    const WEAPONS = [null,'pistol','shotgun','smg','burst','sniper','crossbow','rocket','flamethrower','rocket','flamethrower'];
+    const wid = WEAPONS[Math.min(floor, WEAPONS.length - 1)];
+    if (!wid || wid === 'pistol') return;
+    if (!this.player.ownedWeapons.has(wid)) {
+      this.player.ownedWeapons.add(wid);
+    }
+    this.player.equipWeapon(wid);
+  }
+
+  _updateTower(dt) {
+    // Tower transition (fade out → advance floor → fade in)
+    if (this._towerTransitionState > 0) {
+      if (this._towerTransitionState === 1) {
+        // Fade to black
+        this._towerTransitionAlpha = Math.min(1, this._towerTransitionAlpha + dt * 2.5);
+        if (this._towerTransitionAlpha >= 1) {
+          this._towerFloor++;
+          if (this._towerFloor > 10) {
+            this._towerVictory = true;
+            this.state = 'gameover';
+            return;
+          }
+          this._startTowerFloor();
+          this._towerTransitionState = 2;
+        }
+      } else if (this._towerTransitionState === 2) {
+        // Fade from black
+        this._towerTransitionAlpha = Math.max(0, this._towerTransitionAlpha - dt * 2.0);
+        if (this._towerTransitionAlpha <= 0) this._towerTransitionState = 0;
+      }
+      return; // freeze game logic during transition
+    }
+
+    // Check if all enemies dead → activate elevator
+    if (!this._towerElevatorActive) {
+      const alive     = this.bots.filter(b => !b.dead && !b.dying).length;
+      const bossAlive = this.boss && !this.boss.dead && !this.boss.dying;
+      if (alive === 0 && !bossAlive) {
+        this._towerElevatorActive = true;
+        window.audio?.waveUp();
+      }
+    }
+
+    // Elevator proximity check
+    if (this._towerElevatorActive) {
+      const ex = this.map.elevatorX, ey = this.map.elevatorY;
+      if (Math.hypot(this.player.x - ex, this.player.y - ey) < 90) {
+        this._towerTransitionState = 1;
+        window.audio?.pickup();
+      }
+    }
+  }
+
+  _spawnBoss() {
+    let rp;
+    if (this._towerMode) {
+      rp = this._towerRandomPos();
+    } else {
+      const minEdge = 160;
+      const mapW = this.map.W * this.map.S, mapH = this.map.H * this.map.S;
+      let tries = 0;
+      do {
+        rp = this.map.randomRoadPos();
+        tries++;
+      } while (tries < 20 && (rp.x < minEdge || rp.y < minEdge || rp.x > mapW - minEdge || rp.y > mapH - minEdge));
+    }
     this.boss = new BossBot(rp.x, rp.y, this.wave, this.map.config.id);
   }
 
@@ -3429,6 +3661,14 @@ class Game {
       ctx.restore();
     }
 
+    // Tower: elevator in world-space
+    if (this._towerMode) {
+      ctx.save();
+      ctx.translate(-this.camX + shake.x, -this.camY + shake.y);
+      this.map.renderTowerElevator(ctx, this._towerElevatorActive, this._towerFloor);
+      ctx.restore();
+    }
+
     // Street light glows — additive, world-space, after night overlay
     // so the warm halos visibly punch through the darkness
     if (!this._indoor && this._nightAlpha > 0.01) {
@@ -3512,7 +3752,7 @@ class Game {
         const remaining = this.bots.filter(b => !b.dead && !b.dying).length;
         this.hud.renderZombieWave(this.wave, remaining, this._zombieCountdown, this._zombieWaveSize);
         if (this._zombieCountdown > 0) this.hud.renderArenaCountdown(this._zombieCountdown);
-      } else if (!this._lifeMode) {
+      } else if (!this._lifeMode && !this._towerMode) {
         this.hud.renderWave(this.wave, this.bots.length, !!(this.boss && !this.boss.dead));
       }
       if (this._wantedLevel > 0 && !this._zombieMode) {
@@ -3520,12 +3760,13 @@ class Game {
       }
       this.hud.renderWeaponInfo(this.player);
       if (this._grenadeCount > 0) this.hud.renderGrenadeCount(this._grenadeCount);
-      if (!this._arenaMode && !this._zombieMode && !this._lifeMode && !this._survivalMode && !this._blitzMode && !this._siegeMode) this.hud.renderShopButton(this.state === 'shop', this._isMobile);
+      if (!this._arenaMode && !this._zombieMode && !this._lifeMode && !this._survivalMode && !this._blitzMode && !this._siegeMode && !this._towerMode) this.hud.renderShopButton(this.state === 'shop', this._isMobile);
       if (this._survivalMode) this.hud.renderModeBadge('☠ SURVIVAL', '#FF2244');
       if (this._hardcoreMode) this.hud.renderModeBadge('⚡ HARDCORE · 2× DMG · 3× $', '#FF8800');
       if (this._blitzMode)    this.hud.renderModeBadge('⚡ BLITZ · 3× SPEED · 5× $', '#FF4400');
       if (this._siegeMode)    this.hud.renderModeBadge('🛡 SIEGE · DEFEND THE CENTER', '#44AAFF');
       if (this._campaignMode) this.hud.renderCampaignLevel(this._campaignLevel, this._campaignKills, this._campaignTarget, this._levelComplete, this._levelCompleteT);
+      if (this._towerMode) this._renderTowerHUD(ctx, W, H);
       if (this.player.companion && !this.player.companion.dead) this.hud.renderCompanionHP(this.player.companion);
       if (this.player._buffs && this.player._buffs.size > 0) this.hud.renderActiveBuffs(this.player._buffs);
       this.hud.renderAchButton(this._achPanelOpen);
@@ -3574,8 +3815,32 @@ class Game {
       }
     }
     if (this.state === 'gameover') {
-      this.hud.renderGameOver(this.money, this.kills, this._surviveTime);
+      if (this._towerVictory) {
+        this._renderTowerVictory(ctx, W, H);
+      } else {
+        this.hud.renderGameOver(this.money, this.kills, this._surviveTime);
+      }
       if (this.input.mouseJustDown) { this._destroy(); window.location.href = 'index.html'; }
+    }
+
+    // Tower floor transition fade
+    if (this._towerMode && this._towerTransitionAlpha > 0) {
+      ctx.save();
+      ctx.fillStyle = `rgba(0,0,0,${this._towerTransitionAlpha})`;
+      ctx.fillRect(0, 0, W, H);
+      // Floor number during fade-in
+      if (this._towerTransitionState === 2 && this._towerTransitionAlpha > 0.5) {
+        ctx.font = 'bold 48px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#FFD700';
+        ctx.shadowColor = '#FFD700'; ctx.shadowBlur = 24;
+        ctx.fillText(`FLOOR ${this._towerFloor}`, W/2, H/2 - 20);
+        ctx.shadowBlur = 0;
+        ctx.font = '22px monospace';
+        ctx.fillStyle = '#CCCCCC';
+        ctx.fillText(this._towerFloorSubtitle(this._towerFloor), W/2, H/2 + 20);
+      }
+      ctx.restore();
     }
 
     // Shop overlay

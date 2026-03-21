@@ -4499,6 +4499,11 @@ const BOSS_CONFIGS = {
     radius: 54, speed: 58,  hp: 2200, dmg: 36, fr: 860, bspd: 370,
     special: 'burst',   // fires ring of plasma bolts
   },
+  tower: {
+    name: 'THE PENTHOUSE LORD', color: '#FFD700', accent: '#FFF0AA',
+    radius: 46, speed: 74,  hp: 1800, dmg: 34, fr: 780, bspd: 360,
+    special: 'burst',   // fires gold bullet ring
+  },
 };
 
 class BossBot {
@@ -4813,6 +4818,7 @@ class BossBot {
       case 'jungle':        this._renderJungleLord(ctx, x, y, r, pulse); break;
       case 'desert_sands':  this._renderPharaoh(ctx, x, y, r, pulse); break;
       case 'galactica':     this._renderGalacticOverlord(ctx, x, y, r, pulse); break;
+      case 'tower':         this._renderPenthouseLord(ctx, x, y, r, pulse); break;
       default:              this._renderKingpin(ctx, x, y, r, pulse); break;
     }
 
@@ -5806,6 +5812,95 @@ class BossBot {
     }
     ctx.globalAlpha = 1;
 
+    ctx.restore();
+  }
+
+  // ── Penthouse Lord (Tower final boss) ─────────────────────────────────────
+  _renderPenthouseLord(ctx, x, y, r, pulse) {
+    const sw = this._pulseT;
+    ctx.save();
+    ctx.translate(x, y);
+
+    // 1. Outer gold aura — three halo rings
+    for (let hi = 0; hi < 3; hi++) {
+      const hR = r * (1.30 + hi * 0.30 + Math.sin(sw * 0.9 + hi * 1.2) * 0.08);
+      ctx.globalAlpha = (0.18 - hi * 0.05) + pulse * 0.10;
+      ctx.strokeStyle = hi === 0 ? '#FFD700' : hi === 1 ? '#FFF0AA' : '#CC9900';
+      ctx.lineWidth = 3 - hi;
+      ctx.beginPath(); ctx.arc(0, 0, hR, 0, Math.PI * 2); ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+
+    // 2. Rotating golden disc
+    ctx.save();
+    ctx.rotate(sw * 0.35);
+    ctx.globalAlpha = 0.18 + pulse * 0.08;
+    ctx.strokeStyle = '#FFD700'; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.ellipse(0, 0, r * 1.35, r * 0.45, 0, 0, Math.PI * 2); ctx.stroke();
+    ctx.globalAlpha = 1;
+    ctx.restore();
+
+    // 3. Core body — dark suit with gold gradient
+    const bodyGrd = ctx.createRadialGradient(-r*0.25, -r*0.28, r*0.05, 0, 0, r);
+    bodyGrd.addColorStop(0, '#FFFACC'); bodyGrd.addColorStop(0.35, '#FFD700');
+    bodyGrd.addColorStop(0.72, '#CC8800'); bodyGrd.addColorStop(1, '#332200');
+    ctx.fillStyle = bodyGrd;
+    ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.fill();
+
+    // 4. Suit pinstripe lines
+    ctx.globalAlpha = 0.18;
+    ctx.strokeStyle = '#FFFFFF'; ctx.lineWidth = 1;
+    for (let pi = -3; pi <= 3; pi++) {
+      ctx.beginPath(); ctx.moveTo(pi * r * 0.2, -r * 0.9); ctx.lineTo(pi * r * 0.2, r * 0.9); ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+
+    // 5. Crown — 7 gold spikes
+    const crownSpikes = 7;
+    for (let ci = 0; ci < crownSpikes; ci++) {
+      const ca = (ci / crownSpikes) * Math.PI * 2 - Math.PI / 2;
+      const tR = r * (1.15 + Math.sin(sw * 1.5 + ci * 0.9) * 0.06);
+      const tx2 = Math.cos(ca) * tR, ty2 = Math.sin(ca) * tR;
+      ctx.strokeStyle = '#FFD700'; ctx.lineWidth = 2.5;
+      ctx.shadowColor = '#FFD700'; ctx.shadowBlur = 10;
+      ctx.beginPath(); ctx.moveTo(Math.cos(ca) * r * 0.88, Math.sin(ca) * r * 0.88);
+      ctx.lineTo(tx2, ty2); ctx.stroke();
+      // Diamond tip
+      ctx.fillStyle = '#FFFFFF';
+      ctx.beginPath(); ctx.arc(tx2, ty2, r * 0.06, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.shadowBlur = 0;
+
+    // 6. Eye — cold, powerful
+    ctx.fillStyle = '#000000';
+    ctx.beginPath(); ctx.ellipse(0, -r*0.08, r*0.32, r*0.20, 0, 0, Math.PI*2); ctx.fill();
+    // Iris
+    const eyeGrd = ctx.createRadialGradient(0, -r*0.08, 0, 0, -r*0.08, r*0.20);
+    eyeGrd.addColorStop(0, '#FFD700'); eyeGrd.addColorStop(0.5, '#CC8800'); eyeGrd.addColorStop(1, '#220000');
+    ctx.fillStyle = eyeGrd;
+    ctx.beginPath(); ctx.ellipse(0, -r*0.08, r*0.18, r*0.12, 0, 0, Math.PI*2); ctx.fill();
+    // Pupil — dollar sign
+    ctx.font = `bold ${Math.round(r*0.20)}px monospace`;
+    ctx.fillStyle = '#FFD700'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('$', 0, -r*0.08);
+    ctx.textBaseline = 'alphabetic';
+
+    // 7. Orbiting gold coins (6 around the boss)
+    const coinR = r * 0.10;
+    for (let oi = 0; oi < 6; oi++) {
+      const oa = sw * 1.4 + (oi / 6) * Math.PI * 2;
+      const ox2 = Math.cos(oa) * r * 1.55;
+      const oy2 = Math.sin(oa) * r * 0.90;
+      ctx.fillStyle = '#FFD700';
+      ctx.beginPath(); ctx.arc(ox2, oy2, coinR, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#CC8800';
+      ctx.font = `bold ${Math.round(coinR * 1.2)}px monospace`;
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('$', ox2, oy2);
+      ctx.textBaseline = 'alphabetic';
+    }
+
+    ctx.globalAlpha = 1;
     ctx.restore();
   }
 }
