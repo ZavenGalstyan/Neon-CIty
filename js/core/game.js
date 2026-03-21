@@ -1081,6 +1081,12 @@ class Game {
     this.bots      = this.bots.filter(b => !b.dead);
     this.bullets   = this.bullets.filter(b => !b.dead);
     this.particles = this.particles.filter(p => !p.dead);
+    // Sky: open sky means bullets/particles accumulate — hard caps prevent frame drops
+    if (this._skyMode) {
+      if (this.bullets.length > 40)   this.bullets.splice(0, this.bullets.length - 40);
+      if (this.particles.length > 80) this.particles.splice(0, this.particles.length - 80);
+      if (this.decals.length > 30)    this.decals.splice(0, this.decals.length - 30);
+    }
 
     // ── Tower: elevator check ─────────────────────────────────
     if (this._towerMode) this._updateTower(dt);
@@ -1088,7 +1094,8 @@ class Game {
     // ── Bot spawning (non-arena, non-zombie, non-life only) ──
     if (!this._arenaMode && !this._zombieMode && !this._lifeMode && !this._towerMode) {
       this.spawnTimer -= dt * 1000;
-      const maxBots = CONFIG.MAX_BOTS + this.wave * 2;
+      let maxBots = CONFIG.MAX_BOTS + this.wave * 2;
+      if (this._skyMode) maxBots = Math.min(maxBots, 8); // sky: keep bot count low for perf
       const spawnInterval = this._blitzMode
         ? Math.max(300, CONFIG.BOT_SPAWN_INTERVAL / 3 - this.wave * 50)
         : Math.max(700, CONFIG.BOT_SPAWN_INTERVAL - this.wave * 140);
@@ -1660,26 +1667,31 @@ class Game {
 
     // Sky realm: spawn airplanes and bird flocks from map edges
     if (isSky) {
+      const maxSky = 6; // keep low for perf
+      if (this._ambientCars.length >= maxSky) return;
       const mapW = this.map.W * this.map.S;
       const mapH = this.map.H * this.map.S;
       const side  = Math.floor(Math.random() * 4);
       const isBirdFlock = Math.random() < 0.65;
-      const count = isBirdFlock ? (3 + Math.floor(Math.random() * 4)) : 1;
+      const count = isBirdFlock ? (2 + Math.floor(Math.random() * 2)) : 1; // flock 2-3
       // Edge spawn position and direction angle
       let ex, ey, flyAngle;
-      if      (side === 0) { ex = rnd(0, mapW); ey = -80;        flyAngle = Math.PI * 0.5; }   // top → down
-      else if (side === 1) { ex = mapW + 80;    ey = rnd(0,mapH); flyAngle = Math.PI;       }   // right → left
-      else if (side === 2) { ex = rnd(0, mapW); ey = mapH + 80;  flyAngle = -Math.PI * 0.5; }  // bottom → up
-      else                 { ex = -80;          ey = rnd(0,mapH); flyAngle = 0;             }   // left → right
+      if      (side === 0) { ex = rnd(0, mapW); ey = -80;         flyAngle = Math.PI * 0.5;  }  // top → down
+      else if (side === 1) { ex = mapW + 80;    ey = rnd(0, mapH); flyAngle = Math.PI;        }  // right → left
+      else if (side === 2) { ex = rnd(0, mapW); ey = mapH + 80;   flyAngle = -Math.PI * 0.5; }  // bottom → up
+      else                 { ex = -80;          ey = rnd(0, mapH); flyAngle = 0;              }  // left → right
+      // Give planes/birds a realistic traversal speed (map takes ~15-20s to cross)
+      const flySpeed = isBirdFlock ? rnd(180, 240) : rnd(300, 420);
       for (let i = 0; i < count; i++) {
+        if (this._ambientCars.length >= maxSky) break;
         const spread = isBirdFlock ? rnd(-60, 60) : 0;
-        // Offset perpendicular to flight direction for flock spread
-        const px = ex + Math.cos(flyAngle + Math.PI*0.5) * spread;
-        const py = ey + Math.sin(flyAngle + Math.PI*0.5) * spread;
+        const px = ex + Math.cos(flyAngle + Math.PI * 0.5) * spread;
+        const py = ey + Math.sin(flyAngle + Math.PI * 0.5) * spread;
         const col = isBirdFlock
-          ? ['#FFFFFF','#F5F5F5','#E8E8E8','#DDDDFF','#EEEEFF'][Math.floor(Math.random()*5)]
-          : ['#C0C8D8','#D0D8E8','#B8C4D4','#A8B8CC'][Math.floor(Math.random()*4)];
+          ? ['#FFFFFF','#F5F5F5','#E8E8E8','#DDDDFF','#EEEEFF'][Math.floor(Math.random() * 5)]
+          : ['#C0C8D8','#D0D8E8','#B8C4D4','#A8B8CC'][Math.floor(Math.random() * 4)];
         const car = new AmbientCar(px, py, flyAngle, col, 0);
+        car.speed = flySpeed;
         if (isBirdFlock) { car.isBird = true; }
         else             { car.isAirplane = true; }
         this._ambientCars.push(car);
@@ -3508,10 +3520,25 @@ class Game {
       for (const v   of this.vehicles)  v.render(ctx);
       for (const p   of this.particles) p.render(ctx);
       for (const b   of this.bullets)   if (!b.isPlayer) b.render(ctx);
-      for (const bot of this.bots)      bot.render(ctx);
+      for (const bot of this.bots) {
+        try { bot.render(ctx); } catch(e) {
+          console.error('bot render error', bot.type, e);
+          // Fully reset canvas transform so remaining entities render correctly
+          ctx.setTransform(1, 0, 0, 1, 0, 0);
+          ctx.globalAlpha = 1; ctx.shadowBlur = 0;
+          ctx.translate(-this.camX + shake.x, -this.camY + shake.y);
+        }
+      }
       for (const npc of this._cityNpcs) npc.render(ctx);
       for (const c of this._ambientCars) c.render(ctx);
-      if (this.boss && !this.boss.dead)  this.boss.render(ctx);
+      if (this.boss && !this.boss.dead) {
+        try { this.boss.render(ctx); } catch(e) {
+          console.error('boss render error', e);
+          ctx.setTransform(1, 0, 0, 1, 0, 0);
+          ctx.globalAlpha = 1; ctx.shadowBlur = 0;
+          ctx.translate(-this.camX + shake.x, -this.camY + shake.y);
+        }
+      }
       for (const b   of this.bullets)   if (b.isPlayer)  b.render(ctx);
       if (!this.player.dead) this.player.render(ctx);
       if (this.player.companion && !this.player.companion.dead) this.player.companion.render(ctx);
@@ -3746,6 +3773,13 @@ class Game {
         ctx.restore();
       }
     }
+
+    // ── Force screen-space before HUD ──────────────────────
+    // If any entity render threw (unmatched ctx.save), the transform may be
+    // in world-space; setTransform resets it unconditionally so HUD always shows.
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.globalAlpha = 1;
+    ctx.shadowBlur  = 0;
 
     // Weather (screen-space, drawn over world)
     this.weather.render(ctx, W, H);

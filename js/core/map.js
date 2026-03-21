@@ -335,7 +335,7 @@ class GameMap {
 
   // ── Sky Realm: open sky with cloud-cluster obstacles ──────
   _generateSky() {
-    const W = this.W, H = this.H;
+    const W = this.W, H = this.H, S = this.S;
     // All tiles start as open sky (walkable)
     for (let y = 0; y < H; y++) {
       this.tiles[y] = []; this.buildingColors[y] = []; this.buildingWindows[y] = [];
@@ -369,6 +369,23 @@ class GameMap {
     this.portals = []; this.metroEntrance = null;
     this.streetLights = []; this.cacti = [];
     this._blockTypes = {};
+
+    // ── Pre-render cloud tile once → replace 7 ellipses/tile/frame with 1 drawImage ──
+    const cc = document.createElement('canvas');
+    cc.width = S; cc.height = S;
+    const cx2 = cc.getContext('2d');
+    cx2.fillStyle = '#5aa0cc'; cx2.fillRect(0, 0, S, S);
+    cx2.globalAlpha = 0.18; cx2.fillStyle = '#8aaabb';
+    cx2.beginPath(); cx2.ellipse(S*0.52, S*0.88, S*0.42, S*0.10, 0, 0, Math.PI*2); cx2.fill();
+    cx2.globalAlpha = 1; cx2.fillStyle = '#ecf4fc';
+    cx2.beginPath(); cx2.ellipse(S*0.50, S*0.72, S*0.44, S*0.28, 0, 0, Math.PI*2); cx2.fill();
+    cx2.beginPath(); cx2.ellipse(S*0.27, S*0.62, S*0.30, S*0.22, 0, 0, Math.PI*2); cx2.fill();
+    cx2.beginPath(); cx2.ellipse(S*0.73, S*0.60, S*0.28, S*0.20, 0, 0, Math.PI*2); cx2.fill();
+    cx2.beginPath(); cx2.ellipse(S*0.50, S*0.44, S*0.36, S*0.26, 0, 0, Math.PI*2); cx2.fill();
+    cx2.fillStyle = '#FFFFFF';
+    cx2.beginPath(); cx2.ellipse(S*0.38, S*0.36, S*0.22, S*0.15, -0.2, 0, Math.PI*2); cx2.fill();
+    cx2.beginPath(); cx2.ellipse(S*0.55, S*0.28, S*0.16, S*0.12,  0.1, 0, Math.PI*2); cx2.fill();
+    this._skyCloudCanvas = cc;
   }
 
   // ── Metropolis city generation ────────────────────────────
@@ -1060,10 +1077,10 @@ class GameMap {
               ctx.fillRect(wx, wy + S * 0.38, S, 2);
               ctx.fillRect(wx, wy + S * 0.70, S, 1);
             }
-            // Occasional sun sparkle
+            // Occasional sun sparkle — fillRect is much cheaper than arc()
             if ((x * 11 + y * 7) % 17 === 0) {
               ctx.fillStyle = 'rgba(255,248,210,0.10)';
-              ctx.beginPath(); ctx.arc(wx + (x*19)%S, wy + (y*17)%S, 6, 0, Math.PI*2); ctx.fill();
+              ctx.fillRect(wx + (x*19)%S - 5, wy + (y*17)%S - 5, 10, 10);
             }
           } else if (cfg.desert) {
             // Desert: sandy dirt road with ripples
@@ -1391,25 +1408,8 @@ class GameMap {
               ctx.beginPath(); ctx.arc(moonX, moonY, planR * 0.14, 0, Math.PI*2); ctx.fill();
             }
           } else if (cfg.sky) {
-            // Sky Realm: fluffy cumulus cloud obstacle
-            // Sky base underneath
-            ctx.fillStyle = '#5aa0cc';
-            ctx.fillRect(wx, wy, S, S);
-            // Cloud shadow (bottom — slightly darker blue-grey)
-            ctx.globalAlpha = 0.18;
-            ctx.fillStyle = '#8aaabb';
-            ctx.beginPath(); ctx.ellipse(wx + S*0.52, wy + S*0.88, S*0.42, S*0.10, 0, 0, Math.PI*2); ctx.fill();
-            ctx.globalAlpha = 1;
-            // Cloud layers (build up a cumulus shape)
-            ctx.fillStyle = '#ecf4fc';
-            ctx.beginPath(); ctx.ellipse(wx + S*0.50, wy + S*0.72, S*0.44, S*0.28, 0, 0, Math.PI*2); ctx.fill();
-            ctx.beginPath(); ctx.ellipse(wx + S*0.27, wy + S*0.62, S*0.30, S*0.22, 0, 0, Math.PI*2); ctx.fill();
-            ctx.beginPath(); ctx.ellipse(wx + S*0.73, wy + S*0.60, S*0.28, S*0.20, 0, 0, Math.PI*2); ctx.fill();
-            ctx.beginPath(); ctx.ellipse(wx + S*0.50, wy + S*0.44, S*0.36, S*0.26, 0, 0, Math.PI*2); ctx.fill();
-            // Sunlit top highlight
-            ctx.fillStyle = '#FFFFFF';
-            ctx.beginPath(); ctx.ellipse(wx + S*0.38, wy + S*0.36, S*0.22, S*0.15, -0.2, 0, Math.PI*2); ctx.fill();
-            ctx.beginPath(); ctx.ellipse(wx + S*0.55, wy + S*0.28, S*0.16, S*0.12, 0.1, 0, Math.PI*2); ctx.fill();
+            // Sky Realm: blit pre-rendered cloud canvas — single drawImage instead of 7 ellipses
+            ctx.drawImage(this._skyCloudCanvas, wx, wy);
           } else if (cfg.desert) {
             // Desert: pyramid / sandstone block
             const pseed = (x * 41 + y * 59) % 5;
