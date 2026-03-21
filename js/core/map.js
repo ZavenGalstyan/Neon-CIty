@@ -145,7 +145,9 @@ class GameMap {
             ? '#0d2a10' : this.config.sidewalkColor;
         } else {
           // Zone-tinted building colors on metropolis minimap
-          if (this._rxSet) {
+          if (this.config.sky) {
+            mctx.fillStyle = 'rgba(240,250,255,0.88)'; // white clouds on sky minimap
+          } else if (this._rxSet) {
             const zx2 = tx / this.W, zy2 = ty / this.H;
             if      (zy2 < 0.35 && zx2 < 0.45) mctx.fillStyle = '#0c1828'; // commercial: blue-dark
             else if (zy2 < 0.35 && zx2 >= 0.45) mctx.fillStyle = '#1a1008'; // residential: warm-dark
@@ -189,6 +191,7 @@ class GameMap {
   _generate() {
     if (this.config.metropolis) { this._generateMetropolis(); return; }
     if (this.config.tower)      { this._generateTower();      return; }
+    if (this.config.sky)        { this._generateSky();        return; }
 
     const R = this.ROAD_EVERY;
     for (let y = 0; y < this.H; y++) {
@@ -324,6 +327,44 @@ class GameMap {
     this.elevatorX = 19.5 * this.S;
     this.elevatorY =  7.5 * this.S;
     // No doors, portals, metro, street lights, cacti
+    this.doors = []; this._doorMap = new Map();
+    this.portals = []; this.metroEntrance = null;
+    this.streetLights = []; this.cacti = [];
+    this._blockTypes = {};
+  }
+
+  // ── Sky Realm: open sky with cloud-cluster obstacles ──────
+  _generateSky() {
+    const W = this.W, H = this.H;
+    // All tiles start as open sky (walkable)
+    for (let y = 0; y < H; y++) {
+      this.tiles[y] = []; this.buildingColors[y] = []; this.buildingWindows[y] = [];
+      for (let x = 0; x < W; x++) {
+        this.tiles[y][x] = TILE.ROAD;
+        this.buildingColors[y][x] = '#FFFFFF'; this.buildingWindows[y][x] = false;
+      }
+    }
+    // Scatter cloud formations as solid obstacles (2–4 wide, 1–2 tall)
+    for (let c = 0; c < 24; c++) {
+      const cx = 2 + Math.floor(Math.random() * (W - 4));
+      const cy = 2 + Math.floor(Math.random() * (H - 4));
+      const cw = 2 + Math.floor(Math.random() * 3);
+      const ch = 1 + Math.floor(Math.random() * 2);
+      for (let dy = 0; dy < ch; dy++) {
+        for (let dx = 0; dx < cw; dx++) {
+          const tx = cx + dx, ty = cy + dy;
+          if (tx >= 1 && tx < W - 1 && ty >= 1 && ty < H - 1)
+            this.tiles[ty][tx] = TILE.BUILDING;
+        }
+      }
+    }
+    // Clear centre 7×7 so the player always spawns in open air
+    const mx = Math.floor(W / 2), my = Math.floor(H / 2);
+    for (let dy = -3; dy <= 3; dy++)
+      for (let dx = -3; dx <= 3; dx++)
+        if (mx+dx >= 0 && mx+dx < W && my+dy >= 0 && my+dy < H)
+          this.tiles[my+dy][mx+dx] = TILE.ROAD;
+    // No doors, portals, metro, lights, or cacti
     this.doors = []; this._doorMap = new Map();
     this.portals = []; this.metroEntrance = null;
     this.streetLights = []; this.cacti = [];
@@ -814,6 +855,17 @@ class GameMap {
   }
 
   randomRoadPos() {
+    // Sky: pick any non-cloud tile
+    if (this.config.sky) {
+      const S = this.S;
+      let tx, ty, tries = 0;
+      do {
+        tx = 1 + Math.floor(Math.random() * (this.W - 2));
+        ty = 1 + Math.floor(Math.random() * (this.H - 2));
+        tries++;
+      } while (this.tiles[ty] && this.tiles[ty][tx] !== TILE.ROAD && tries < 50);
+      return new Vec2((tx + 0.5) * S, (ty + 0.5) * S);
+    }
     // Tower: pick random walkable floor tile far from walls
     if (this.config.tower) {
       const S = this.S;
@@ -995,6 +1047,23 @@ class GameMap {
             if ((x*11 + y*7) % 7 === 0) {
               ctx.fillStyle = 'rgba(150,220,255,0.35)';
               ctx.beginPath(); ctx.arc(wx + (x*29+12)%S, wy + (y*23+15)%S, 0.8, 0, Math.PI*2); ctx.fill();
+            }
+          } else if (cfg.sky) {
+            // Sky Realm: open azure sky with subtle depth variation
+            const sseed = (x * 17 + y * 11) % 6;
+            const blues = ['#5aa0cc','#5ea4d0','#58a0ca','#5ca2ce','#60a6d2','#56a0ca'];
+            ctx.fillStyle = blues[sseed];
+            ctx.fillRect(wx, wy, S, S);
+            // Faint horizontal haze bands
+            if ((x * 3 + y * 5) % 7 === 0) {
+              ctx.fillStyle = 'rgba(255,255,255,0.05)';
+              ctx.fillRect(wx, wy + S * 0.38, S, 2);
+              ctx.fillRect(wx, wy + S * 0.70, S, 1);
+            }
+            // Occasional sun sparkle
+            if ((x * 11 + y * 7) % 17 === 0) {
+              ctx.fillStyle = 'rgba(255,248,210,0.10)';
+              ctx.beginPath(); ctx.arc(wx + (x*19)%S, wy + (y*17)%S, 6, 0, Math.PI*2); ctx.fill();
             }
           } else if (cfg.desert) {
             // Desert: sandy dirt road with ripples
@@ -1321,6 +1390,26 @@ class GameMap {
               ctx.fillStyle = '#AABBCC';
               ctx.beginPath(); ctx.arc(moonX, moonY, planR * 0.14, 0, Math.PI*2); ctx.fill();
             }
+          } else if (cfg.sky) {
+            // Sky Realm: fluffy cumulus cloud obstacle
+            // Sky base underneath
+            ctx.fillStyle = '#5aa0cc';
+            ctx.fillRect(wx, wy, S, S);
+            // Cloud shadow (bottom — slightly darker blue-grey)
+            ctx.globalAlpha = 0.18;
+            ctx.fillStyle = '#8aaabb';
+            ctx.beginPath(); ctx.ellipse(wx + S*0.52, wy + S*0.88, S*0.42, S*0.10, 0, 0, Math.PI*2); ctx.fill();
+            ctx.globalAlpha = 1;
+            // Cloud layers (build up a cumulus shape)
+            ctx.fillStyle = '#ecf4fc';
+            ctx.beginPath(); ctx.ellipse(wx + S*0.50, wy + S*0.72, S*0.44, S*0.28, 0, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.ellipse(wx + S*0.27, wy + S*0.62, S*0.30, S*0.22, 0, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.ellipse(wx + S*0.73, wy + S*0.60, S*0.28, S*0.20, 0, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.ellipse(wx + S*0.50, wy + S*0.44, S*0.36, S*0.26, 0, 0, Math.PI*2); ctx.fill();
+            // Sunlit top highlight
+            ctx.fillStyle = '#FFFFFF';
+            ctx.beginPath(); ctx.ellipse(wx + S*0.38, wy + S*0.36, S*0.22, S*0.15, -0.2, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.ellipse(wx + S*0.55, wy + S*0.28, S*0.16, S*0.12, 0.1, 0, Math.PI*2); ctx.fill();
           } else if (cfg.desert) {
             // Desert: pyramid / sandstone block
             const pseed = (x * 41 + y * 59) % 5;

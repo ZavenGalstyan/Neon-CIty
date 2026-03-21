@@ -115,6 +115,7 @@ class Game {
     this._robotMode     = !!this.map.config.robot;
     this._jungleMode    = !!this.map.config.jungle;
     this._galacticaMode = !!this.map.config.galactica;
+    this._skyMode       = !!this.map.config.sky;
     this._towerMode     = !!this.map.config.tower;
 
     // Weather
@@ -1655,6 +1656,37 @@ class Game {
     const isJungle    = !!this.map.config.jungle;
     const isDesert    = !!this.map.config.desert;
     const isGalactica = !!this.map.config.galactica;
+    const isSky       = !!this._skyMode;
+
+    // Sky realm: spawn airplanes and bird flocks from map edges
+    if (isSky) {
+      const mapW = this.map.W * this.map.S;
+      const mapH = this.map.H * this.map.S;
+      const side  = Math.floor(Math.random() * 4);
+      const isBirdFlock = Math.random() < 0.65;
+      const count = isBirdFlock ? (3 + Math.floor(Math.random() * 4)) : 1;
+      // Edge spawn position and direction angle
+      let ex, ey, flyAngle;
+      if      (side === 0) { ex = rnd(0, mapW); ey = -80;        flyAngle = Math.PI * 0.5; }   // top → down
+      else if (side === 1) { ex = mapW + 80;    ey = rnd(0,mapH); flyAngle = Math.PI;       }   // right → left
+      else if (side === 2) { ex = rnd(0, mapW); ey = mapH + 80;  flyAngle = -Math.PI * 0.5; }  // bottom → up
+      else                 { ex = -80;          ey = rnd(0,mapH); flyAngle = 0;             }   // left → right
+      for (let i = 0; i < count; i++) {
+        const spread = isBirdFlock ? rnd(-60, 60) : 0;
+        // Offset perpendicular to flight direction for flock spread
+        const px = ex + Math.cos(flyAngle + Math.PI*0.5) * spread;
+        const py = ey + Math.sin(flyAngle + Math.PI*0.5) * spread;
+        const col = isBirdFlock
+          ? ['#FFFFFF','#F5F5F5','#E8E8E8','#DDDDFF','#EEEEFF'][Math.floor(Math.random()*5)]
+          : ['#C0C8D8','#D0D8E8','#B8C4D4','#A8B8CC'][Math.floor(Math.random()*4)];
+        const car = new AmbientCar(px, py, flyAngle, col, 0);
+        if (isBirdFlock) { car.isBird = true; }
+        else             { car.isAirplane = true; }
+        this._ambientCars.push(car);
+      }
+      return;
+    }
+
     const color = isJungle
       ? ['#8B4513','#6B3410','#A0522D','#704214','#5C3317'][Math.floor(Math.random()*5)]
       : isDesert
@@ -3634,6 +3666,13 @@ class Game {
     if (this._galacticaMode) {
       ctx.save();
       ctx.fillStyle = 'rgba(2,0,18,0.14)';
+      ctx.fillRect(0, 0, W, H);
+      ctx.restore();
+    }
+    // Sky Realm: soft aerial haze tint
+    if (this._skyMode) {
+      ctx.save();
+      ctx.fillStyle = 'rgba(135,206,235,0.05)';
       ctx.fillRect(0, 0, W, H);
       ctx.restore();
     }

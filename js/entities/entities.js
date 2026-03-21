@@ -278,6 +278,21 @@ class Weather {
           this._p.push({ type:'streak', x:Math.random()*W, y:Math.random()*H, vx:rnd(200,500), vy:rnd(-80,80), len:rnd(40,110), a:rnd(0.55,0.9), life:Math.random(), maxLife:rnd(0.4,1.1) });
         break;
       }
+      case 'sky_breeze': {
+        // Drifting cloud wisps (large, very translucent)
+        for (let i = 0; i < 10; i++)
+          this._p.push({ type:'cloud_wisp', x:Math.random()*W, y:Math.random()*H*0.65,
+            vx:rnd(10,24), vy:rnd(-2,2), size:rnd(44,110), a:rnd(0.07,0.16), phase:Math.random()*Math.PI*2 });
+        // Wind streaks — fast thin horizontal lines
+        for (let i = 0; i < 18; i++)
+          this._p.push({ type:'wind_streak', x:Math.random()*W, y:Math.random()*H,
+            vx:rnd(70,150), len:rnd(24,72), a:rnd(0.05,0.12) });
+        // Distant birds — tiny V-shapes crossing the screen
+        for (let i = 0; i < 5; i++)
+          this._p.push({ type:'sky_bird', x:Math.random()*W, y:Math.random()*H*0.55,
+            vx:rnd(28,60), vy:rnd(-3,3), size:rnd(2,4), phase:Math.random()*Math.PI*2 });
+        break;
+      }
     }
   }
 
@@ -391,6 +406,21 @@ class Weather {
               p.maxLife = rnd(0.4, 1.1); p.life = p.maxLife;
               p.vx = rnd(200,500); p.vy = rnd(-80,80); p.len = rnd(40,110); p.a = rnd(0.55,0.9);
             }
+          }
+        }
+        break;
+      }
+      case 'sky_breeze': {
+        for (const p of this._p) {
+          p.x += p.vx * dt;
+          if (p.type === 'cloud_wisp') {
+            p.y  += p.vy * dt; p.phase += dt * 0.25;
+            if (p.x > W + 130) { p.x = -130; p.y = Math.random()*H*0.65; }
+          } else if (p.type === 'wind_streak') {
+            if (p.x > W + 80) { p.x = -p.len; p.y = Math.random()*H; }
+          } else if (p.type === 'sky_bird') {
+            p.phase += dt * 2.2; p.y += Math.sin(p.phase) * 5 * dt;
+            if (p.x > W + 50) { p.x = -50; p.y = Math.random()*H*0.55; }
           }
         }
         break;
@@ -603,6 +633,43 @@ class Weather {
         ctx.fillStyle = svg; ctx.fillRect(0, 0, W, H);
         ctx.restore(); break;
       }
+      case 'sky_breeze': {
+        ctx.save();
+        for (const p of this._p) {
+          if (p.type === 'cloud_wisp') {
+            // Multi-puff cloud shape — 3 overlapping ellipses
+            ctx.globalAlpha = p.a * (0.8 + Math.sin(p.phase) * 0.2);
+            ctx.fillStyle = '#FFFFFF';
+            ctx.beginPath(); ctx.ellipse(p.x, p.y, p.size, p.size*0.36, 0, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.ellipse(p.x - p.size*0.40, p.y + p.size*0.08, p.size*0.58, p.size*0.26, 0, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.ellipse(p.x + p.size*0.36, p.y - p.size*0.05, p.size*0.50, p.size*0.22, 0, 0, Math.PI*2); ctx.fill();
+          } else if (p.type === 'wind_streak') {
+            ctx.globalAlpha = p.a;
+            ctx.fillStyle = 'rgba(255,255,255,0.85)';
+            ctx.fillRect(p.x, p.y, p.len, 1);
+            if (p.len > 38) ctx.fillRect(p.x + 8, p.y + 2, p.len * 0.50, 0.5);
+          } else if (p.type === 'sky_bird') {
+            // Tiny V-shaped bird silhouette
+            const sz = p.size;
+            ctx.globalAlpha = 0.55;
+            ctx.fillStyle = '#1a2838';
+            ctx.beginPath();
+            ctx.moveTo(p.x, p.y);
+            ctx.lineTo(p.x - sz*1.6, p.y - sz*0.7); ctx.lineTo(p.x - sz*0.5, p.y + sz*0.2); ctx.closePath(); ctx.fill();
+            ctx.beginPath();
+            ctx.moveTo(p.x, p.y);
+            ctx.lineTo(p.x + sz*1.6, p.y - sz*0.7); ctx.lineTo(p.x + sz*0.5, p.y + sz*0.2); ctx.closePath(); ctx.fill();
+          }
+        }
+        ctx.globalAlpha = 1;
+        // Soft atmospheric haze — brighter at top, slight blue tint
+        const skyHaze = ctx.createLinearGradient(0, 0, 0, H);
+        skyHaze.addColorStop(0,   'rgba(180,220,255,0.07)');
+        skyHaze.addColorStop(0.5, 'rgba(135,195,235,0.04)');
+        skyHaze.addColorStop(1,   'rgba(90,155,200,0.10)');
+        ctx.fillStyle = skyHaze; ctx.fillRect(0, 0, W, H);
+        ctx.restore(); break;
+      }
     }
   }
 }
@@ -742,6 +809,7 @@ class Vehicle {
     this._damageFlash  = 0;
     this._animT        = 0;
     this._isOcean      = !!(mapConfig && mapConfig.ocean);
+    this._isSky        = !!(mapConfig && mapConfig.sky);
     this._isPolice     = false;
     this._isMiniBoat   = false;  // Small boat for ocean maps
     this._sirenPhase   = 0;
@@ -816,6 +884,12 @@ class Vehicle {
     // Ocean map: render ship instead of car
     if (this._isOcean) {
       this._renderShip(ctx);
+      return;
+    }
+
+    // Sky Realm: render driveable airplane instead of car
+    if (this._isSky) {
+      this._renderSkyPlane(ctx);
       return;
     }
 
@@ -1017,6 +1091,126 @@ class Vehicle {
       const pct = this.hp / this.maxHp;
       ctx.fillStyle = '#111'; ctx.fillRect(bx2, by2, bw, bh);
       ctx.fillStyle   = pct > 0.5 ? '#44FF88' : pct > 0.25 ? '#FFCC00' : '#FF4444';
+      ctx.fillRect(bx2, by2, bw * pct, bh);
+      ctx.strokeStyle = 'rgba(255,255,255,0.18)'; ctx.lineWidth = 0.5;
+      ctx.strokeRect(bx2, by2, bw, bh);
+    }
+  }
+
+  _renderSkyPlane(ctx) {
+    // Top-down driveable airplane — matches the ambient AmbientCar airplane aesthetic
+    const t      = this._animT;
+    const flash  = this._damageFlash > 0;
+    const ang    = this.angle;
+    const cx     = this.x, cy = this.y;
+
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(ang);
+
+    // ── Contrail (engine exhaust plume behind fuselage) ─────────────────
+    const pulseA = 0.14 + Math.sin(t * 9) * 0.06;
+    for (let ci = 0; ci < 3; ci++) {
+      ctx.globalAlpha = pulseA * (1 - ci * 0.28);
+      ctx.fillStyle = '#CCE8FF';
+      ctx.beginPath();
+      ctx.ellipse(-38 - ci * 18, 0, 10 + ci * 4, 5 + ci * 2, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
+    // ── Ground shadow ───────────────────────────────────────────────────
+    ctx.save(); ctx.globalAlpha = 0.22; ctx.fillStyle = '#000';
+    ctx.beginPath(); ctx.ellipse(6, 12, 42, 11, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+
+    // ── Swept main wings ────────────────────────────────────────────────
+    const wingColor = flash ? '#CC3322' : (this._isPolice ? '#1a3a6a' : '#C0C8D8');
+    ctx.fillStyle = wingColor;
+    // left wing
+    ctx.beginPath();
+    ctx.moveTo(-4, -5);
+    ctx.lineTo(-26, -30);
+    ctx.lineTo(-34, -22);
+    ctx.lineTo(4, -4);
+    ctx.closePath(); ctx.fill();
+    // right wing
+    ctx.beginPath();
+    ctx.moveTo(-4, 5);
+    ctx.lineTo(-26, 30);
+    ctx.lineTo(-34, 22);
+    ctx.lineTo(4, 4);
+    ctx.closePath(); ctx.fill();
+    // Wing shading
+    ctx.fillStyle = 'rgba(0,0,0,0.18)';
+    ctx.beginPath();
+    ctx.moveTo(-4, -5); ctx.lineTo(-26, -30); ctx.lineTo(-16, -20); ctx.closePath(); ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(-4, 5);  ctx.lineTo(-26, 30);  ctx.lineTo(-16, 20);  ctx.closePath(); ctx.fill();
+
+    // ── Horizontal tail stabilisers ──────────────────────────────────────
+    const tailColor = flash ? '#AA2211' : (this._isPolice ? '#142a52' : '#A8B4C4');
+    ctx.fillStyle = tailColor;
+    ctx.beginPath();
+    ctx.moveTo(-22, -4); ctx.lineTo(-30, -14); ctx.lineTo(-32, -10); ctx.lineTo(-24, -3); ctx.closePath(); ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(-22, 4);  ctx.lineTo(-30, 14);  ctx.lineTo(-32, 10);  ctx.lineTo(-24, 3);  ctx.closePath(); ctx.fill();
+
+    // ── Fuselage (main body) ─────────────────────────────────────────────
+    const bodyG = ctx.createLinearGradient(-30, -6, 30, 6);
+    if (flash) {
+      bodyG.addColorStop(0, '#CC3322'); bodyG.addColorStop(1, '#881111');
+    } else if (this._isPolice) {
+      bodyG.addColorStop(0, '#2a5a9a'); bodyG.addColorStop(0.5, '#1a3a6a'); bodyG.addColorStop(1, '#0e2244');
+    } else {
+      bodyG.addColorStop(0, '#D8E4F0'); bodyG.addColorStop(0.5, '#B0BECE'); bodyG.addColorStop(1, '#8898A8');
+    }
+    ctx.fillStyle = bodyG;
+    ctx.beginPath(); ctx.roundRect(-30, -6, 62, 12, 4); ctx.fill();
+
+    // ── Engine pods on wings ─────────────────────────────────────────────
+    const engineColor = flash ? '#AA2211' : '#8898A8';
+    ctx.fillStyle = engineColor;
+    ctx.beginPath(); ctx.roundRect(-18, -23, 16, 6, 2); ctx.fill();
+    ctx.beginPath(); ctx.roundRect(-18,  17, 16, 6, 2); ctx.fill();
+    // Afterburner glow
+    ctx.globalAlpha = 0.5 + Math.sin(t * 14) * 0.25;
+    ctx.fillStyle = '#88CCFF';
+    ctx.beginPath(); ctx.arc(-18, -20, 3, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(-18,  20, 3, 0, Math.PI * 2); ctx.fill();
+    ctx.globalAlpha = 1;
+
+    // ── Cockpit windows ──────────────────────────────────────────────────
+    ctx.fillStyle = 'rgba(135,210,255,0.65)';
+    ctx.beginPath(); ctx.ellipse(22, -3, 7, 4, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.32)';
+    ctx.beginPath(); ctx.ellipse(20, -3.5, 2.5, 2, 0, 0, Math.PI * 2); ctx.fill();
+
+    // ── Nose cone ────────────────────────────────────────────────────────
+    ctx.fillStyle = flash ? '#CC3322' : (this._isPolice ? '#87CEEB' : '#E8F0F8');
+    ctx.beginPath(); ctx.moveTo(32, 0); ctx.lineTo(24, -4); ctx.lineTo(24, 4); ctx.closePath(); ctx.fill();
+
+    // ── Police markings: sky-blue/white cheatline ────────────────────────
+    if (this._isPolice) {
+      ctx.strokeStyle = '#87CEEB'; ctx.lineWidth = 2.5; ctx.lineCap = 'butt';
+      ctx.beginPath(); ctx.moveTo(-20, -5.5); ctx.lineTo(20, -5.5); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(-20,  5.5); ctx.lineTo(20,  5.5); ctx.stroke();
+      // Flashing siren light on roof
+      const sirenOn = Math.floor(t * 6) % 2 === 0;
+      ctx.fillStyle = sirenOn ? '#0066FF' : '#FF2200';
+      ctx.shadowColor = sirenOn ? '#0044CC' : '#CC0000'; ctx.shadowBlur = 8;
+      ctx.beginPath(); ctx.arc(8, 0, 2.8, 0, Math.PI * 2); ctx.fill();
+      ctx.shadowBlur = 0;
+    }
+
+    ctx.restore();
+
+    // ── HP bar ───────────────────────────────────────────────────────────
+    if (this.hp < this.maxHp) {
+      const bw = 64, bh = 5, bx2 = cx - bw / 2, by2 = cy - this.radius - 18;
+      const pct = this.hp / this.maxHp;
+      ctx.fillStyle = '#111'; ctx.fillRect(bx2, by2, bw, bh);
+      ctx.fillStyle = pct > 0.5 ? '#44FF88' : pct > 0.25 ? '#FFCC00' : '#FF4444';
       ctx.fillRect(bx2, by2, bw * pct, bh);
       ctx.strokeStyle = 'rgba(255,255,255,0.18)'; ctx.lineWidth = 0.5;
       ctx.strokeRect(bx2, by2, bw, bh);
@@ -1976,7 +2170,7 @@ class Bot {
     this._eyeBlinkTimer = rnd(1, 4);
     this._animT         = 0;
     this._sirenT        = 0; // police/swat: drives flashing light phase
-    this._mapTheme = mapConfig ? (mapConfig.snow ? 'snow' : mapConfig.desert ? 'desert' : mapConfig.ocean ? 'ocean' : mapConfig.robot ? 'robot' : mapConfig.jungle ? 'jungle' : mapConfig.galactica ? 'galactica' : null) : null;
+    this._mapTheme = mapConfig ? (mapConfig.snow ? 'snow' : mapConfig.desert ? 'desert' : mapConfig.ocean ? 'ocean' : mapConfig.robot ? 'robot' : mapConfig.jungle ? 'jungle' : mapConfig.galactica ? 'galactica' : mapConfig.sky ? 'sky' : null) : null;
     this._animalType = pal?.animal || null;
   }
 
@@ -2130,6 +2324,7 @@ class Bot {
     else if (this._mapTheme === 'robot')                                            this._renderRobotUnit(ctx, x, y, r);
     else if (this._mapTheme === 'jungle')                                           this._renderAnimalEnemy(ctx, x, y, r);
     else if (this._mapTheme === 'galactica')                                        this._renderGalacticEnemy(ctx, x, y, r);
+    else if (this._mapTheme === 'sky')                                              this._renderSkyEnemy(ctx, x, y, r);
     else if (this.type === 'mini')                                                  this._renderMini(ctx, x, y, r);
     else if (this.type === 'big')                                                   this._renderBig(ctx, x, y, r);
     else if (this.type === 'police' || this.type === 'swat' || this.type === 'heavyswat') this._renderPolice(ctx, x, y, r);
@@ -3969,6 +4164,423 @@ class Bot {
     ctx.restore();
   }
 
+  // ── SKY REALM enemies ─────────────────────────────────────────────────────
+  _renderSkyEnemy(ctx, x, y, r) {
+    const t = this.type;
+    if      (t === 'mini')                       this._renderAngryBird(ctx, x, y, r);
+    else if (t === 'big' || t === 'heavyswat')   this._renderWarHawk(ctx, x, y, r);
+    else if (t === 'juggernaut')                 this._renderStormCondor(ctx, x, y, r);
+    else if (t === 'bomber')                     this._renderBombPelican(ctx, x, y, r);
+    else if (t === 'sniper')                     this._renderFalcon(ctx, x, y, r);
+    else if (t === 'police' || t === 'swat')     this._renderFighterJet(ctx, x, y, r);
+    else                                         this._renderEagle(ctx, x, y, r);
+    this._renderHPBar(ctx, x, y, r, 38, 5);
+  }
+
+  // Angry Bird (mini) — round red bird, furious brow, tiny wings
+  _renderAngryBird(ctx, x, y, r) {
+    const bob = Math.sin(this._animT * 9) * r * 0.07;
+    ctx.save(); ctx.translate(x, y + bob);
+    // Shadow
+    ctx.globalAlpha = 0.20; ctx.fillStyle = '#000';
+    ctx.beginPath(); ctx.ellipse(2, r*0.72, r*0.70, r*0.18, 0, 0, Math.PI*2); ctx.fill();
+    ctx.globalAlpha = 1;
+    // Body — round red sphere
+    const bg = ctx.createRadialGradient(-r*0.22, -r*0.22, 1, 0, 0, r);
+    bg.addColorStop(0, '#FF6655'); bg.addColorStop(0.55, '#DD1100'); bg.addColorStop(1, '#880000');
+    ctx.fillStyle = bg;
+    ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI*2); ctx.fill();
+    // White belly
+    ctx.fillStyle = '#FFEEEE';
+    ctx.beginPath(); ctx.ellipse(r*0.08, r*0.22, r*0.38, r*0.28, 0, 0, Math.PI*2); ctx.fill();
+    // V-shaped angry brow (left)
+    ctx.strokeStyle = '#1A0000'; ctx.lineWidth = r*0.13; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(-r*0.52, -r*0.48); ctx.lineTo(-r*0.18, -r*0.32); ctx.stroke();
+    // V-shaped angry brow (right)
+    ctx.beginPath(); ctx.moveTo(r*0.52, -r*0.48); ctx.lineTo(r*0.18, -r*0.32); ctx.stroke();
+    // Eyes
+    ctx.fillStyle = '#FFFFFF';
+    ctx.beginPath(); ctx.arc(-r*0.24, -r*0.22, r*0.20, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc( r*0.24, -r*0.22, r*0.20, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#111';
+    ctx.beginPath(); ctx.arc(-r*0.20, -r*0.20, r*0.10, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc( r*0.26, -r*0.20, r*0.10, 0, Math.PI*2); ctx.fill();
+    // Beak
+    ctx.fillStyle = '#FFAA00';
+    ctx.beginPath(); ctx.moveTo(-r*0.12, r*0.04); ctx.lineTo(r*0.12, r*0.04);
+    ctx.lineTo(0, r*0.22); ctx.closePath(); ctx.fill();
+    // Tiny wings (flapping)
+    const flap = Math.sin(this._animT * 12) * 0.3;
+    ctx.fillStyle = '#CC1100';
+    ctx.beginPath(); ctx.ellipse(-r*0.90, r*0.05, r*0.28, r*0.12 + flap*r*0.12, -0.3 + flap, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse( r*0.90, r*0.05, r*0.28, r*0.12 + flap*r*0.12, 0.3 - flap, 0, Math.PI*2); ctx.fill();
+    // Head tuft
+    ctx.fillStyle = '#CC0000';
+    for (let i = 0; i < 3; i++) {
+      const ta = -Math.PI*0.5 + (i-1)*0.28;
+      ctx.beginPath(); ctx.ellipse(Math.cos(ta)*r*0.82, Math.sin(ta)*r*0.82, r*0.09, r*0.18, ta, 0, Math.PI*2); ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  // Eagle (normal) — top-down fierce raptor, spread wings
+  _renderEagle(ctx, x, y, r) {
+    const t = this._animT;
+    const flap = Math.sin(t * 5) * 0.18;
+    ctx.save(); ctx.translate(x, y);
+    // Wing shadow
+    ctx.globalAlpha = 0.18; ctx.fillStyle = '#000';
+    ctx.beginPath(); ctx.ellipse(2, r*0.65, r*1.55, r*0.20, 0, 0, Math.PI*2); ctx.fill();
+    ctx.globalAlpha = 1;
+    // Wings (spread, brown with feather bands)
+    const wingSpan = r * 1.55;
+    for (const side of [-1, 1]) {
+      ctx.save();
+      ctx.scale(side, 1);
+      ctx.fillStyle = '#7A4A18';
+      ctx.beginPath();
+      ctx.moveTo(0, -r*0.28); ctx.bezierCurveTo(wingSpan*0.4, -r*(0.60+flap), wingSpan, -r*(0.22+flap), wingSpan*0.92, r*0.15);
+      ctx.bezierCurveTo(wingSpan*0.62, r*0.35, wingSpan*0.28, r*0.28, 0, r*0.28);
+      ctx.closePath(); ctx.fill();
+      // Wing feather bands
+      ctx.strokeStyle = '#4A2800'; ctx.lineWidth = 1.2;
+      for (let fi = 0; fi < 4; fi++) {
+        const fx = wingSpan * (0.22 + fi*0.18);
+        ctx.beginPath(); ctx.moveTo(fx, -r*0.25); ctx.lineTo(fx + r*0.04, r*0.22); ctx.stroke();
+      }
+      // Wing tip primary feathers
+      ctx.strokeStyle = '#3A1800'; ctx.lineWidth = 1;
+      for (let pi = 0; pi < 5; pi++) {
+        const pa = (pi - 2) * 0.18;
+        ctx.beginPath();
+        ctx.moveTo(wingSpan*0.80, r*(-0.1+flap*0.5));
+        ctx.lineTo(wingSpan*0.98 + Math.cos(pa)*r*0.35, r*(-0.1+flap*0.5) + Math.sin(pa)*r*0.35);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+    // Body — dark brown oval
+    const bg = ctx.createRadialGradient(-r*0.15, -r*0.15, 1, 0, 0, r*0.55);
+    bg.addColorStop(0, '#C87840'); bg.addColorStop(0.6, '#7A4A18'); bg.addColorStop(1, '#3A1800');
+    ctx.fillStyle = bg;
+    ctx.beginPath(); ctx.ellipse(0, 0, r*0.44, r*0.62, 0, 0, Math.PI*2); ctx.fill();
+    // White head (bald eagle)
+    ctx.fillStyle = '#F5F5F5';
+    ctx.beginPath(); ctx.arc(0, -r*0.45, r*0.30, 0, Math.PI*2); ctx.fill();
+    // Fierce yellow beak
+    ctx.fillStyle = '#FFB800';
+    ctx.beginPath(); ctx.moveTo(-r*0.08, -r*0.68); ctx.lineTo(r*0.08, -r*0.68);
+    ctx.lineTo(0, -r*0.90); ctx.closePath(); ctx.fill();
+    // Sharp eyes — red sclera for aggression
+    ctx.fillStyle = '#FF4400';
+    ctx.beginPath(); ctx.arc(-r*0.14, -r*0.45, r*0.09, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc( r*0.14, -r*0.45, r*0.09, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#111';
+    ctx.beginPath(); ctx.arc(-r*0.13, -r*0.44, r*0.05, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc( r*0.14, -r*0.44, r*0.05, 0, Math.PI*2); ctx.fill();
+    // Talons visible below
+    ctx.strokeStyle = '#2A1200'; ctx.lineWidth = r*0.08; ctx.lineCap = 'round';
+    for (const [tx2, ang] of [[-r*0.22, -0.4], [r*0.22, 0.4]]) {
+      for (let c = 0; c < 3; c++) {
+        const ca = ang + (c-1)*0.38;
+        ctx.beginPath(); ctx.moveTo(tx2, r*0.48); ctx.lineTo(tx2 + Math.cos(ca+Math.PI*0.5)*r*0.28, r*0.48 + Math.sin(ca+Math.PI*0.5)*r*0.28); ctx.stroke();
+      }
+    }
+    ctx.restore();
+  }
+
+  // War Hawk (big/heavyswat) — armored battle bird, intimidating
+  _renderWarHawk(ctx, x, y, r) {
+    const t = this._animT;
+    const flap = Math.sin(t * 4) * 0.14;
+    ctx.save(); ctx.translate(x, y);
+    // Shadow
+    ctx.globalAlpha = 0.22; ctx.fillStyle = '#000';
+    ctx.beginPath(); ctx.ellipse(4, r*0.7, r*1.7, r*0.22, 0, 0, Math.PI*2); ctx.fill();
+    ctx.globalAlpha = 1;
+    // Wide armored wings
+    for (const side of [-1, 1]) {
+      ctx.save(); ctx.scale(side, 1);
+      ctx.fillStyle = '#2A3A4A';
+      ctx.beginPath();
+      ctx.moveTo(0, -r*0.32); ctx.bezierCurveTo(r*0.55, -r*(0.75+flap), r*1.68, -r*(0.30+flap), r*1.62, r*0.18);
+      ctx.bezierCurveTo(r*1.20, r*0.45, r*0.50, r*0.38, 0, r*0.32);
+      ctx.closePath(); ctx.fill();
+      // Armor plates on wings
+      ctx.strokeStyle = 'rgba(100,130,160,0.55)'; ctx.lineWidth = 1.5;
+      for (let pi = 0; pi < 3; pi++) {
+        const px = r*(0.40 + pi*0.38);
+        ctx.beginPath(); ctx.moveTo(px, -r*0.28); ctx.lineTo(px + r*0.06, r*0.25); ctx.stroke();
+      }
+      // Red battle markings
+      ctx.fillStyle = 'rgba(200,40,0,0.60)';
+      ctx.beginPath(); ctx.ellipse(r*0.88, -r*(0.25+flap*0.5), r*0.12, r*0.06, -0.5, 0, Math.PI*2); ctx.fill();
+      ctx.restore();
+    }
+    // Body — dark armored oval
+    const bg = ctx.createRadialGradient(0, -r*0.1, 2, 0, 0, r*0.55);
+    bg.addColorStop(0, '#445566'); bg.addColorStop(0.6, '#1C2C3C'); bg.addColorStop(1, '#0A1520');
+    ctx.fillStyle = bg;
+    ctx.beginPath(); ctx.ellipse(0, 0, r*0.46, r*0.64, 0, 0, Math.PI*2); ctx.fill();
+    // Chest armor plate
+    ctx.fillStyle = 'rgba(80,110,140,0.45)';
+    ctx.beginPath(); ctx.ellipse(0, r*0.08, r*0.30, r*0.28, 0, 0, Math.PI*2); ctx.fill();
+    // Fierce head
+    ctx.fillStyle = '#1C2C3C';
+    ctx.beginPath(); ctx.arc(0, -r*0.48, r*0.30, 0, Math.PI*2); ctx.fill();
+    // Glowing red eyes
+    ctx.fillStyle = '#FF2200';
+    ctx.shadowColor = '#FF4400'; ctx.shadowBlur = 8;
+    ctx.beginPath(); ctx.arc(-r*0.13, -r*0.50, r*0.09, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc( r*0.13, -r*0.50, r*0.09, 0, Math.PI*2); ctx.fill();
+    ctx.shadowBlur = 0;
+    // Battle-scarred beak
+    ctx.fillStyle = '#888';
+    ctx.beginPath(); ctx.moveTo(-r*0.08, -r*0.68); ctx.lineTo(r*0.08, -r*0.68);
+    ctx.lineTo(0, -r*0.88); ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+
+  // Fighter Jet (police/swat) — top-down military aircraft
+  _renderFighterJet(ctx, x, y, r) {
+    const t = this._animT;
+    const isSwat = this.type === 'swat';
+    ctx.save(); ctx.translate(x, y);
+    // Engine glow + contrail
+    ctx.globalAlpha = 0.28 + Math.sin(t * 8) * 0.08;
+    ctx.fillStyle = '#88DDFF';
+    ctx.beginPath(); ctx.ellipse(0, r*0.80, r*0.12, r*0.38, 0, 0, Math.PI*2); ctx.fill();
+    ctx.globalAlpha = 1;
+    // Main delta wings
+    const bodyColor = isSwat ? '#2A3A5A' : '#3A4A6A';
+    ctx.fillStyle = bodyColor;
+    ctx.beginPath();
+    ctx.moveTo(0, -r*0.88);           // nose
+    ctx.lineTo(-r*1.10, r*0.55);      // left wing tip
+    ctx.lineTo(-r*0.22, r*0.60);      // left trailing edge
+    ctx.lineTo(0, r*0.80);            // tail center
+    ctx.lineTo(r*0.22, r*0.60);       // right trailing edge
+    ctx.lineTo(r*1.10, r*0.55);       // right wing tip
+    ctx.closePath(); ctx.fill();
+    // Wing shading
+    ctx.fillStyle = 'rgba(0,0,0,0.22)';
+    ctx.beginPath();
+    ctx.moveTo(0, -r*0.20); ctx.lineTo(-r*1.10, r*0.55); ctx.lineTo(-r*0.22, r*0.60); ctx.closePath(); ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(0, -r*0.20); ctx.lineTo(r*1.10, r*0.55);  ctx.lineTo(r*0.22, r*0.60);  ctx.closePath(); ctx.fill();
+    // Fuselage highlight
+    ctx.fillStyle = 'rgba(180,210,255,0.18)';
+    ctx.beginPath(); ctx.ellipse(0, -r*0.08, r*0.12, r*0.52, 0, 0, Math.PI*2); ctx.fill();
+    // Cockpit canopy
+    ctx.fillStyle = 'rgba(120,200,255,0.55)';
+    ctx.beginPath(); ctx.ellipse(0, -r*0.30, r*0.12, r*0.24, 0, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.32)';
+    ctx.beginPath(); ctx.ellipse(-r*0.04, -r*0.34, r*0.05, r*0.12, -0.2, 0, Math.PI*2); ctx.fill();
+    // Tail fins
+    ctx.fillStyle = isSwat ? '#223355' : '#2A3A5A';
+    ctx.beginPath(); ctx.moveTo(-r*0.10, r*0.55); ctx.lineTo(-r*0.24, r*0.80); ctx.lineTo(0, r*0.70); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo( r*0.10, r*0.55); ctx.lineTo( r*0.24, r*0.80); ctx.lineTo(0, r*0.70); ctx.closePath(); ctx.fill();
+    // Missiles under wings
+    ctx.fillStyle = '#88AACC';
+    ctx.beginPath(); ctx.roundRect(-r*0.72, r*0.08, r*0.48, r*0.12, 2); ctx.fill();
+    ctx.beginPath(); ctx.roundRect( r*0.26, r*0.08, r*0.48, r*0.12, 2); ctx.fill();
+    // Missile tips
+    ctx.fillStyle = '#FF4444';
+    ctx.beginPath(); ctx.arc(-r*0.72, r*0.14, r*0.06, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc( r*0.74, r*0.14, r*0.06, 0, Math.PI*2); ctx.fill();
+    // Roundel markings
+    ctx.fillStyle = '#FF2200';
+    ctx.beginPath(); ctx.arc(-r*0.52, r*0.24, r*0.07, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#FFFFFF';
+    ctx.beginPath(); ctx.arc(-r*0.52, r*0.24, r*0.04, 0, Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  // Falcon (sniper) — sleek dark hunter, swept narrow wings
+  _renderFalcon(ctx, x, y, r) {
+    const t = this._animT;
+    const glide = Math.sin(t * 3) * r * 0.04;
+    ctx.save(); ctx.translate(x, y + glide);
+    // Shadow
+    ctx.globalAlpha = 0.16; ctx.fillStyle = '#000';
+    ctx.beginPath(); ctx.ellipse(2, r*0.68, r*1.25, r*0.16, 0, 0, Math.PI*2); ctx.fill();
+    ctx.globalAlpha = 1;
+    // Swept-back wings (narrow, fast)
+    for (const side of [-1, 1]) {
+      ctx.save(); ctx.scale(side, 1);
+      ctx.fillStyle = '#1A2A3A';
+      ctx.beginPath();
+      ctx.moveTo(0, -r*0.18);
+      ctx.bezierCurveTo(r*0.35, -r*0.48, r*1.18, r*0.02, r*1.05, r*0.35);
+      ctx.bezierCurveTo(r*0.55, r*0.32, r*0.12, r*0.22, 0, r*0.18);
+      ctx.closePath(); ctx.fill();
+      // White streak accent
+      ctx.fillStyle = 'rgba(200,220,255,0.30)';
+      ctx.beginPath();
+      ctx.moveTo(r*0.08, 0); ctx.bezierCurveTo(r*0.50, -r*0.28, r*0.88, r*0.04, r*0.78, r*0.20);
+      ctx.bezierCurveTo(r*0.55, r*0.24, r*0.18, r*0.15, r*0.08, 0);
+      ctx.fill();
+      ctx.restore();
+    }
+    // Sleek dark body
+    const bg = ctx.createRadialGradient(0, -r*0.12, 1, 0, 0, r*0.42);
+    bg.addColorStop(0, '#3A4A5A'); bg.addColorStop(1, '#08121C');
+    ctx.fillStyle = bg;
+    ctx.beginPath(); ctx.ellipse(0, 0, r*0.28, r*0.60, 0, 0, Math.PI*2); ctx.fill();
+    // Head — dark with white malar stripe
+    ctx.fillStyle = '#0A1828';
+    ctx.beginPath(); ctx.arc(0, -r*0.46, r*0.24, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#DDDDCC';
+    ctx.beginPath(); ctx.arc(r*0.10, -r*0.40, r*0.08, 0, Math.PI*2); ctx.fill(); // white cheek patch
+    // Sharp hooked beak
+    ctx.fillStyle = '#DDAA00';
+    ctx.beginPath(); ctx.moveTo(-r*0.06, -r*0.62); ctx.lineTo(r*0.06, -r*0.62);
+    ctx.lineTo(r*0.04, -r*0.78); ctx.lineTo(-r*0.06, -r*0.70); ctx.closePath(); ctx.fill();
+    // Piercing yellow eye
+    ctx.fillStyle = '#FFCC00';
+    ctx.beginPath(); ctx.arc(0, -r*0.46, r*0.09, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#111';
+    ctx.beginPath(); ctx.arc(0, -r*0.45, r*0.05, 0, Math.PI*2); ctx.fill();
+    // Tail feathers (fan)
+    ctx.strokeStyle = '#0A1828'; ctx.lineWidth = r*0.07; ctx.lineCap = 'round';
+    for (let i = -2; i <= 2; i++) {
+      ctx.beginPath(); ctx.moveTo(i*r*0.07, r*0.52); ctx.lineTo(i*r*0.14, r*0.80); ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  // Bomb Pelican (bomber) — fat bird carrying explosive payload
+  _renderBombPelican(ctx, x, y, r) {
+    const bob = Math.sin(this._animT * 4) * r * 0.05;
+    ctx.save(); ctx.translate(x, y + bob);
+    // Shadow
+    ctx.globalAlpha = 0.20; ctx.fillStyle = '#000';
+    ctx.beginPath(); ctx.ellipse(2, r*0.78, r*0.92, r*0.20, 0, 0, Math.PI*2); ctx.fill();
+    ctx.globalAlpha = 1;
+    // Stubby wings
+    for (const side of [-1, 1]) {
+      ctx.save(); ctx.scale(side, 1);
+      ctx.fillStyle = '#778899';
+      ctx.beginPath();
+      ctx.moveTo(0, -r*0.18);
+      ctx.bezierCurveTo(r*0.55, -r*0.38, r*1.05, r*0.10, r*0.88, r*0.32);
+      ctx.bezierCurveTo(r*0.55, r*0.35, r*0.10, r*0.20, 0, r*0.18);
+      ctx.closePath(); ctx.fill();
+      ctx.restore();
+    }
+    // Fat round body
+    const bg = ctx.createRadialGradient(-r*0.15, -r*0.15, 2, 0, r*0.10, r*0.65);
+    bg.addColorStop(0, '#AABBCC'); bg.addColorStop(0.65, '#667788'); bg.addColorStop(1, '#334455');
+    ctx.fillStyle = bg;
+    ctx.beginPath(); ctx.ellipse(0, r*0.06, r*0.52, r*0.64, 0, 0, Math.PI*2); ctx.fill();
+    // White belly pouch
+    ctx.fillStyle = '#EEF2F5';
+    ctx.beginPath(); ctx.ellipse(0, r*0.28, r*0.32, r*0.38, 0, 0, Math.PI*2); ctx.fill();
+    // Bomb in the pouch (visible through belly)
+    ctx.fillStyle = '#222';
+    ctx.beginPath(); ctx.arc(0, r*0.34, r*0.20, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#FF4400';
+    ctx.beginPath(); ctx.arc(0, r*0.20, r*0.06, 0, Math.PI*2); ctx.fill(); // fuse tip
+    ctx.strokeStyle = '#FF8800'; ctx.lineWidth = r*0.04;
+    ctx.beginPath(); ctx.moveTo(0, r*0.20); ctx.bezierCurveTo(r*0.12, r*0.08, r*0.08, -r*0.05, r*0.04, -r*0.12); ctx.stroke();
+    // Head
+    ctx.fillStyle = '#667788';
+    ctx.beginPath(); ctx.arc(0, -r*0.50, r*0.28, 0, Math.PI*2); ctx.fill();
+    // Long bill
+    ctx.fillStyle = '#FFBB44';
+    ctx.beginPath(); ctx.moveTo(-r*0.10, -r*0.66); ctx.lineTo(r*0.10, -r*0.66);
+    ctx.lineTo(r*0.08, -r*0.96); ctx.lineTo(-r*0.08, -r*0.96); ctx.closePath(); ctx.fill();
+    // Pouch under bill
+    ctx.fillStyle = 'rgba(255,200,100,0.55)';
+    ctx.beginPath(); ctx.ellipse(0, -r*0.76, r*0.09, r*0.14, 0, 0, Math.PI*2); ctx.fill();
+    // Eyes
+    ctx.fillStyle = '#FFCC00';
+    ctx.beginPath(); ctx.arc(-r*0.12, -r*0.52, r*0.09, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc( r*0.12, -r*0.52, r*0.09, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#111';
+    ctx.beginPath(); ctx.arc(-r*0.11, -r*0.51, r*0.05, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc( r*0.12, -r*0.51, r*0.05, 0, Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  // Storm Condor (juggernaut) — massive dark raptor with lightning markings
+  _renderStormCondor(ctx, x, y, r) {
+    const t = this._animT;
+    const slow = Math.sin(t * 2.5) * 0.10;
+    ctx.save(); ctx.translate(x, y);
+    // Shadow
+    ctx.globalAlpha = 0.28; ctx.fillStyle = '#000';
+    ctx.beginPath(); ctx.ellipse(6, r*0.82, r*2.0, r*0.28, 0, 0, Math.PI*2); ctx.fill();
+    ctx.globalAlpha = 1;
+    // Massive wings
+    for (const side of [-1, 1]) {
+      ctx.save(); ctx.scale(side, 1);
+      const wg = ctx.createLinearGradient(0, 0, r*1.9, r*0.3);
+      wg.addColorStop(0, '#1A1A2A'); wg.addColorStop(0.6, '#0E0E1A'); wg.addColorStop(1, '#050508');
+      ctx.fillStyle = wg;
+      ctx.beginPath();
+      ctx.moveTo(0, -r*0.38);
+      ctx.bezierCurveTo(r*0.65, -r*(0.90+slow), r*1.92, -r*(0.35+slow), r*1.85, r*0.22);
+      ctx.bezierCurveTo(r*1.38, r*0.52, r*0.55, r*0.44, 0, r*0.38);
+      ctx.closePath(); ctx.fill();
+      // Gold lightning bolt marking
+      ctx.fillStyle = 'rgba(255,210,0,0.65)';
+      ctx.beginPath();
+      ctx.moveTo(r*0.70, -r*(0.42+slow*0.5));
+      ctx.lineTo(r*0.55, -r*(0.18+slow*0.5));
+      ctx.lineTo(r*0.68, -r*(0.18+slow*0.5));
+      ctx.lineTo(r*0.52, r*(0.10-slow*0.5));
+      ctx.lineTo(r*0.76, -r*(0.26+slow*0.5));
+      ctx.lineTo(r*0.62, -r*(0.26+slow*0.5));
+      ctx.closePath(); ctx.fill();
+      // Primary feathers — serrated edge
+      ctx.strokeStyle = '#050508'; ctx.lineWidth = r*0.10; ctx.lineCap = 'round';
+      for (let fi = 0; fi < 6; fi++) {
+        const fa = (fi - 2.5) * 0.18;
+        const fx = r*1.60 + Math.cos(fa)*r*0.22;
+        const fy = r*(0.05+slow) + Math.sin(fa)*r*0.22;
+        ctx.beginPath(); ctx.moveTo(fx, fy); ctx.lineTo(fx + Math.cos(fa)*r*0.40, fy + Math.sin(fa)*r*0.40); ctx.stroke();
+      }
+      ctx.restore();
+    }
+    // Massive body
+    const bg = ctx.createRadialGradient(0, -r*0.08, 4, 0, 0, r*0.62);
+    bg.addColorStop(0, '#2A2A3A'); bg.addColorStop(0.6, '#0E0E18'); bg.addColorStop(1, '#020204');
+    ctx.fillStyle = bg;
+    ctx.beginPath(); ctx.ellipse(0, 0, r*0.52, r*0.72, 0, 0, Math.PI*2); ctx.fill();
+    // White collar ruff
+    ctx.fillStyle = '#EEEEFF';
+    ctx.beginPath(); ctx.ellipse(0, -r*0.32, r*0.30, r*0.12, 0, 0, Math.PI*2); ctx.fill();
+    // Bald dark head
+    ctx.fillStyle = '#1A1A28';
+    ctx.beginPath(); ctx.arc(0, -r*0.54, r*0.32, 0, Math.PI*2); ctx.fill();
+    // Glowing storm eyes
+    ctx.fillStyle = '#FFE030';
+    ctx.shadowColor = '#FFD700'; ctx.shadowBlur = 12;
+    ctx.beginPath(); ctx.arc(-r*0.14, -r*0.56, r*0.10, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc( r*0.14, -r*0.56, r*0.10, 0, Math.PI*2); ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = '#111';
+    ctx.beginPath(); ctx.arc(-r*0.13, -r*0.55, r*0.05, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc( r*0.14, -r*0.55, r*0.05, 0, Math.PI*2); ctx.fill();
+    // Hooked beak
+    ctx.fillStyle = '#888877';
+    ctx.beginPath(); ctx.moveTo(-r*0.10, -r*0.70); ctx.lineTo(r*0.10, -r*0.70);
+    ctx.lineTo(r*0.06, -r*0.92); ctx.lineTo(-r*0.10, -r*0.78); ctx.closePath(); ctx.fill();
+    // Massive talons
+    ctx.strokeStyle = '#1A1A28'; ctx.lineWidth = r*0.10; ctx.lineCap = 'round';
+    for (const [tx2, side] of [[-r*0.26, -1], [r*0.26, 1]]) {
+      for (let c = 0; c < 4; c++) {
+        const ca = (c - 1.5) * 0.40 * side;
+        ctx.beginPath();
+        ctx.moveTo(tx2, r*0.58);
+        ctx.lineTo(tx2 + Math.cos(ca + Math.PI*0.5)*r*0.36, r*0.58 + Math.sin(ca + Math.PI*0.5)*r*0.36);
+        ctx.stroke();
+      }
+    }
+    ctx.restore();
+  }
+
   // Monkey (mini) — small, fast, brown
   _renderMonkey(ctx, x, y, r) {
     const bob = Math.sin(this._animT * 8) * r * 0.06;
@@ -4504,6 +5116,11 @@ const BOSS_CONFIGS = {
     radius: 46, speed: 74,  hp: 1800, dmg: 34, fr: 780, bspd: 360,
     special: 'burst',   // fires gold bullet ring
   },
+  sky_realm: {
+    name: 'THE STORM EMPEROR', color: '#1c3c58', accent: '#FFD700',
+    radius: 50, speed: 80,  hp: 1600, dmg: 26, fr: 840, bspd: 355,
+    special: 'burst',   // fires ring of lightning bolts
+  },
 };
 
 class BossBot {
@@ -4819,6 +5436,7 @@ class BossBot {
       case 'desert_sands':  this._renderPharaoh(ctx, x, y, r, pulse); break;
       case 'galactica':     this._renderGalacticOverlord(ctx, x, y, r, pulse); break;
       case 'tower':         this._renderPenthouseLord(ctx, x, y, r, pulse); break;
+      case 'sky_realm':     this._renderStormEmperor(ctx, x, y, r, pulse);  break;
       default:              this._renderKingpin(ctx, x, y, r, pulse); break;
     }
 
@@ -6034,6 +6652,110 @@ class Drone {
       ctx.fillRect(bx, by, bw * (this.hp / this.maxHp), bh);
       ctx.restore();
     }
+  }
+
+  // ── Storm Emperor (Sky Realm final boss) ──────────────────────────────────
+  _renderStormEmperor(ctx, x, y, r, pulse) {
+    const t = Date.now() * 0.001;
+    ctx.save();
+    ctx.translate(x, y);
+
+    // 1. Rotating storm-cloud aura
+    for (let i = 0; i < 6; i++) {
+      const a = t * 0.8 + i * (Math.PI / 3);
+      ctx.globalAlpha = 0.24 * pulse;
+      ctx.fillStyle = '#2a3a4a';
+      ctx.beginPath(); ctx.arc(Math.cos(a) * r * 1.55, Math.sin(a) * r * 0.85, r * 0.44, 0, Math.PI*2); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
+    // 2. Pulsing lightning rings
+    ctx.strokeStyle = '#FFD700'; ctx.lineWidth = 1.5;
+    for (let li = 0; li < 3; li++) {
+      const lRad = r * (1.08 + li * 0.30) + Math.sin(t * 4 + li) * 4;
+      ctx.globalAlpha = (0.36 - li * 0.09) * pulse;
+      ctx.beginPath(); ctx.arc(0, 0, lRad, 0, Math.PI*2); ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+
+    // 3. Animated wings
+    const wFlap = Math.sin(t * 2.5) * 0.10;
+    for (const side of [-1, 1]) {
+      ctx.fillStyle = '#18283a';
+      ctx.beginPath(); ctx.moveTo(0, r*0.1); ctx.lineTo(side*r*2.8, -r*0.35+wFlap*r*0.6); ctx.lineTo(side*r*2.5, r*0.55+wFlap*r*0.4); ctx.lineTo(side*r*0.7, r*0.5); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = '#223344';
+      ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(side*r*2.0, -r*0.24+wFlap*r*0.5); ctx.lineTo(side*r*1.8, r*0.36+wFlap*r*0.3); ctx.lineTo(side*r*0.5, r*0.34); ctx.closePath(); ctx.fill();
+    }
+    // Lightning bolt markings on wings
+    ctx.fillStyle = '#FFD700'; ctx.globalAlpha = 0.68;
+    for (const side of [-1, 1]) {
+      const bx = side * r * 1.35;
+      ctx.beginPath();
+      ctx.moveTo(bx, -r*0.17+wFlap*r*0.44); ctx.lineTo(bx+side*10, r*0.03+wFlap*r*0.34);
+      ctx.lineTo(bx+side*2,  r*0.05+wFlap*r*0.34); ctx.lineTo(bx+side*9,  r*0.27+wFlap*r*0.22);
+      ctx.closePath(); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
+    // 4. Body
+    const bg = ctx.createRadialGradient(-r*0.15, -r*0.18, r*0.10, 0, 0, r);
+    bg.addColorStop(0, '#3a4c5e'); bg.addColorStop(0.55, '#1e2e3c'); bg.addColorStop(1, '#0c1820');
+    ctx.fillStyle = bg;
+    ctx.beginPath(); ctx.ellipse(0, 0, r, r*1.10, 0, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = 'rgba(80,115,145,0.28)';
+    ctx.beginPath(); ctx.ellipse(0, r*0.22, r*0.50, r*0.48, 0, 0, Math.PI*2); ctx.fill();
+    // Feather texture
+    ctx.globalAlpha = 0.13; ctx.fillStyle = '#AACCDD';
+    for (let fi = 0; fi < 5; fi++) ctx.fillRect(-r*0.46, -r*0.36+fi*r*0.16, r*0.92, 1);
+    ctx.globalAlpha = 1;
+
+    // 5. Gold crown — 8 lightning-bolt spikes
+    ctx.fillStyle = '#FFD700';
+    for (let ci = 0; ci < 8; ci++) {
+      const ca = -Math.PI*0.75 + ci*(Math.PI*1.5/7);
+      const inner = r*0.88, outer = r*(1.28 + Math.sin(t*5+ci*1.3)*0.06);
+      const norm  = outer - inner;
+      ctx.save();
+      ctx.translate(Math.cos(ca)*inner, Math.sin(ca)*inner);
+      ctx.rotate(ca + Math.PI/2);
+      ctx.beginPath();
+      ctx.moveTo(0,0); ctx.lineTo(-4,norm*0.4); ctx.lineTo(-2,norm*0.62); ctx.lineTo(0,norm); ctx.lineTo(2,norm*0.62); ctx.lineTo(4,norm*0.4);
+      ctx.closePath(); ctx.fill();
+      ctx.restore();
+    }
+
+    // 6. Electric crackling eye
+    const ePulse = (Math.sin(t * 6) + 1) * 0.5;
+    ctx.fillStyle = '#FFD700';
+    ctx.beginPath(); ctx.arc(0, -r*0.06, r*0.22, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#001828';
+    ctx.beginPath(); ctx.arc(0, -r*0.06, r*0.13, 0, Math.PI*2); ctx.fill();
+    ctx.strokeStyle = '#88FFFF'; ctx.lineWidth = 1;
+    for (let ei = 0; ei < 5; ei++) {
+      const ea = t*7 + ei*(Math.PI*2/5);
+      ctx.globalAlpha = 0.50 + ePulse * 0.44;
+      ctx.beginPath();
+      ctx.moveTo(Math.cos(ea)*r*0.13, -r*0.06+Math.sin(ea)*r*0.13);
+      ctx.lineTo(Math.cos(ea)*r*0.25 + (Math.random()-0.5)*5, -r*0.06+Math.sin(ea)*r*0.25 + (Math.random()-0.5)*5);
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+
+    // 7. Gold talons
+    ctx.fillStyle = '#FFD700';
+    for (const tx2 of [-r*0.32, 0, r*0.32]) {
+      const ty2 = r * 0.88;
+      for (let claw = -1; claw <= 1; claw++) {
+        const ca = -Math.PI*0.5 + claw*0.42;
+        ctx.beginPath();
+        ctx.moveTo(tx2, ty2);
+        ctx.lineTo(tx2 + Math.cos(ca)*r*0.26, ty2 + Math.sin(ca)*r*0.26);
+        ctx.lineTo(tx2 + Math.cos(ca)*r*0.24 + claw*2, ty2 + Math.sin(ca)*r*0.24 + 3);
+        ctx.closePath(); ctx.fill();
+      }
+    }
+
+    ctx.restore();
   }
 }
 
@@ -7332,6 +8054,15 @@ class AmbientCar {
   }
 
   update(dt, gameMap) {
+    // Airplanes and birds fly freely — skip road collision and turn logic
+    if (this.isAirplane || this.isBird) {
+      this._lightT += dt;
+      this.x += Math.cos(this.angle) * this.speed * dt;
+      this.y += Math.sin(this.angle) * this.speed * dt;
+      const maxW = gameMap.W * gameMap.S, maxH = gameMap.H * gameMap.S;
+      if (this.x < -350 || this.y < -350 || this.x > maxW + 350 || this.y > maxH + 350) this.dead = true;
+      return;
+    }
     this._lightT    += dt;
     this._turnTimer -= dt;
     const nx = this.x + Math.cos(this.angle) * this.speed * dt;
@@ -7367,9 +8098,11 @@ class AmbientCar {
   }
 
   render(ctx) {
-    if (this.isHorse)  { this._renderHorse(ctx);  return; }
-    if (this.isCamel)  { this._renderCamel(ctx);  return; }
-    if (this.isUFO)    { this._renderUFO(ctx);    return; }
+    if (this.isAirplane) { this._renderAirplane(ctx); return; }
+    if (this.isBird)     { this._renderBird(ctx);     return; }
+    if (this.isHorse)    { this._renderHorse(ctx);    return; }
+    if (this.isCamel)    { this._renderCamel(ctx);    return; }
+    if (this.isUFO)      { this._renderUFO(ctx);      return; }
     const w = this.width, h = this.height;
     const bs = this.bodyStyle;
     ctx.save();
@@ -7667,6 +8400,104 @@ class AmbientCar {
       ctx.beginPath(); ctx.arc(lx, ly, 3, 0, Math.PI*2); ctx.fill();
     }
     ctx.shadowBlur = 0;
+
+    ctx.restore();
+  }
+
+  _renderAirplane(ctx) {
+    const t = this._lightT || 0;
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    ctx.rotate(this.angle + Math.PI / 2);
+
+    // Contrail — 3 fading bands behind the fuselage
+    for (let ci = 0; ci < 3; ci++) {
+      ctx.globalAlpha = 0.07 - ci * 0.018;
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillRect(-2 + ci * 0.4, 14 + ci * 7, 4 - ci, 20 + ci * 10);
+    }
+    ctx.globalAlpha = 1;
+
+    // Ground shadow
+    ctx.save(); ctx.globalAlpha = 0.10; ctx.fillStyle = '#002244';
+    ctx.beginPath(); ctx.ellipse(3, 3, 28, 10, 0, 0, Math.PI*2); ctx.fill(); ctx.restore();
+
+    // Swept-back wings
+    const wingCol = this._acDarken(this.color, 0.86);
+    ctx.fillStyle = wingCol;
+    ctx.beginPath(); ctx.moveTo(0, -4); ctx.lineTo(-34, 9); ctx.lineTo(-30, 13); ctx.lineTo(0, 5); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(0, -4); ctx.lineTo( 34, 9); ctx.lineTo( 30, 13); ctx.lineTo(0, 5); ctx.closePath(); ctx.fill();
+    // Wing highlight strip
+    ctx.fillStyle = 'rgba(255,255,255,0.11)';
+    ctx.beginPath(); ctx.moveTo(0, -3); ctx.lineTo(-30, 8); ctx.lineTo(-28, 9); ctx.lineTo(0, -1); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(0, -3); ctx.lineTo( 30, 8); ctx.lineTo( 28, 9); ctx.lineTo(0, -1); ctx.closePath(); ctx.fill();
+
+    // Fuselage
+    const fg = ctx.createLinearGradient(-6, -22, 6, 22);
+    fg.addColorStop(0, this._acBrighten(this.color, 1.30));
+    fg.addColorStop(0.45, this.color);
+    fg.addColorStop(1, this._acDarken(this.color, 0.72));
+    ctx.fillStyle = fg;
+    ctx.beginPath(); ctx.ellipse(0, 0, 6, 23, 0, 0, Math.PI*2); ctx.fill();
+
+    // Cockpit window
+    ctx.fillStyle = 'rgba(100,185,255,0.80)';
+    ctx.beginPath(); ctx.ellipse(0, -14, 4, 7, 0, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = 'rgba(220,245,255,0.42)';
+    ctx.beginPath(); ctx.ellipse(-1.5, -15, 1.5, 4, -0.2, 0, Math.PI*2); ctx.fill();
+
+    // Tail fins
+    ctx.fillStyle = wingCol;
+    ctx.beginPath(); ctx.moveTo(0, 15); ctx.lineTo(-13, 23); ctx.lineTo(-11, 25); ctx.lineTo(0, 19); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(0, 15); ctx.lineTo( 13, 23); ctx.lineTo( 11, 25); ctx.lineTo(0, 19); ctx.closePath(); ctx.fill();
+
+    // Engine pods with afterburner glow
+    ctx.fillStyle = this._acDarken(this.color, 0.62);
+    ctx.beginPath(); ctx.ellipse(-22, 8, 5, 3, 0, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse( 22, 8, 5, 3, 0, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = 'rgba(255,155,50,0.50)';
+    ctx.beginPath(); ctx.ellipse(-22, 10, 3, 1.5, 0, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse( 22, 10, 3, 1.5, 0, 0, Math.PI*2); ctx.fill();
+
+    ctx.restore();
+  }
+
+  _renderBird(ctx) {
+    const t = this._lightT || 0;
+    const flap = Math.sin(t * 9);
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    ctx.rotate(this.angle + Math.PI / 2);
+
+    // Soft shadow
+    ctx.save(); ctx.globalAlpha = 0.08; ctx.fillStyle = '#002244';
+    ctx.beginPath(); ctx.ellipse(2, 2, 13, 5, 0, 0, Math.PI*2); ctx.fill(); ctx.restore();
+
+    const wSplay = 19 + flap * 7;
+    // Wings — animated flap
+    ctx.fillStyle = '#1a2838';
+    ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(-wSplay, -5+flap*3); ctx.lineTo(-wSplay+4, 3+flap*2); ctx.lineTo(-3, 4); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo( wSplay, -5+flap*3); ctx.lineTo( wSplay-4, 3+flap*2); ctx.lineTo( 3, 4); ctx.closePath(); ctx.fill();
+    // Wing sheen
+    ctx.fillStyle = 'rgba(80,130,170,0.28)';
+    ctx.beginPath(); ctx.moveTo(0, -1); ctx.lineTo(-wSplay+3, -4+flap*3); ctx.lineTo(-3, 0); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(0, -1); ctx.lineTo( wSplay-3, -4+flap*3); ctx.lineTo( 3, 0); ctx.closePath(); ctx.fill();
+
+    // Body
+    ctx.fillStyle = '#243040';
+    ctx.beginPath(); ctx.ellipse(0, 0, 4, 9, 0, 0, Math.PI*2); ctx.fill();
+    // Head
+    ctx.fillStyle = '#1a2838';
+    ctx.beginPath(); ctx.arc(0, -9, 4, 0, Math.PI*2); ctx.fill();
+    // Beak
+    ctx.fillStyle = '#E8B840';
+    ctx.beginPath(); ctx.moveTo(0, -12); ctx.lineTo(-2, -16); ctx.lineTo(2, -16); ctx.closePath(); ctx.fill();
+    // Eye glint
+    ctx.fillStyle = '#AAE0FF';
+    ctx.beginPath(); ctx.arc(1.5, -9.5, 1.2, 0, Math.PI*2); ctx.fill();
+    // Tail feathers
+    ctx.fillStyle = '#1a2838';
+    ctx.beginPath(); ctx.moveTo(-4, 7); ctx.lineTo(0, 14); ctx.lineTo(4, 7); ctx.closePath(); ctx.fill();
 
     ctx.restore();
   }

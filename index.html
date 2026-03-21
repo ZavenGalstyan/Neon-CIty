@@ -579,9 +579,12 @@
         </div>
 
 
+        <!-- GALACTICA · THE TOWER · SKY REALM — one row of three feature cards -->
+        <div class="feature-maps-row">
+
         <!-- GALACTICA -->
-        <div class="map-card map-card--galactica" data-map="galactica" style="grid-column: span 3;">
-          <div class="map-preview" style="position:relative;overflow:hidden;background:#020010;width:200px;flex-shrink:0;min-height:150px;">
+        <div class="map-card map-card--galactica" data-map="galactica">
+          <div class="map-preview" style="position:relative;overflow:hidden;background:#020010;width:100%;height:130px;">
             <!-- Star field dots -->
             <div style="position:absolute;top:12%;left:18%;width:2px;height:2px;border-radius:50%;background:#FFFFFF;box-shadow:0 0 4px #FFFFFF;opacity:0.9"></div>
             <div style="position:absolute;top:28%;left:55%;width:1.5px;height:1.5px;border-radius:50%;background:#AADDFF;box-shadow:0 0 4px #AADDFF;opacity:0.7"></div>
@@ -620,8 +623,8 @@
         </div>
 
         <!-- THE TOWER -->
-        <div class="map-card map-card--tower" data-map="tower" style="grid-column: span 3;">
-          <div class="map-preview" style="position:relative;overflow:hidden;background:#1a1210;width:200px;flex-shrink:0;min-height:150px;">
+        <div class="map-card map-card--tower" data-map="tower">
+          <div class="map-preview" style="position:relative;overflow:hidden;background:#1a1210;width:100%;height:130px;">
             <!-- Floor plan tiles -->
             <div style="position:absolute;inset:0;background:repeating-linear-gradient(0deg,rgba(200,160,60,0.06) 0px,rgba(200,160,60,0.06) 1px,transparent 1px,transparent 14px),repeating-linear-gradient(90deg,rgba(200,160,60,0.06) 0px,rgba(200,160,60,0.06) 1px,transparent 1px,transparent 14px)"></div>
             <!-- Outer walls -->
@@ -652,6 +655,47 @@
             </div>
           </div>
         </div>
+
+        <!-- SKY REALM -->
+        <div class="map-card map-card--sky" data-map="sky_realm">
+          <div class="map-preview" style="position:relative;overflow:hidden;background:linear-gradient(180deg,#1a3a6a 0%,#2a5a9a 40%,#4a8abf 100%);width:100%;height:130px;">
+            <!-- Sun glow -->
+            <div style="position:absolute;top:10%;right:14%;width:30px;height:30px;background:radial-gradient(circle,#FFE87A 30%,rgba(255,220,80,0.3) 70%,transparent 100%);border-radius:50%;box-shadow:0 0 18px rgba(255,230,80,0.7)"></div>
+            <!-- Horizon haze -->
+            <div style="position:absolute;bottom:0;left:0;right:0;height:35%;background:linear-gradient(0deg,rgba(100,170,220,0.5),transparent)"></div>
+            <!-- Cloud 1 -->
+            <div style="position:absolute;top:22%;left:5%;width:52px;height:18px;background:rgba(255,255,255,0.85);border-radius:20px;box-shadow:0 0 12px rgba(255,255,255,0.6)"></div>
+            <div style="position:absolute;top:16%;left:12%;width:30px;height:22px;background:rgba(255,255,255,0.82);border-radius:50%"></div>
+            <!-- Cloud 2 -->
+            <div style="position:absolute;top:48%;left:44%;width:60px;height:16px;background:rgba(240,248,255,0.78);border-radius:20px;box-shadow:0 0 10px rgba(200,230,255,0.5)"></div>
+            <div style="position:absolute;top:42%;left:52%;width:28px;height:20px;background:rgba(240,248,255,0.75);border-radius:50%"></div>
+            <!-- Cloud 3 -->
+            <div style="position:absolute;top:68%;left:16%;width:44px;height:14px;background:rgba(255,255,255,0.65);border-radius:20px"></div>
+            <!-- Airplane -->
+            <div style="position:absolute;top:36%;left:18%;width:36px;height:7px;background:#D0D8E8;border-radius:3px;transform:rotate(-8deg)">
+              <div style="position:absolute;top:-4px;left:8px;width:20px;height:5px;background:#B8C4D4;border-radius:2px;transform:skewX(-10deg)"></div>
+            </div>
+            <!-- Bird silhouettes -->
+            <div style="position:absolute;top:28%;right:18%;font-size:11px;color:rgba(200,230,255,0.9);letter-spacing:3px">〜 〜 〜</div>
+            <!-- Lightning accent -->
+            <div style="position:absolute;bottom:18%;right:10%;font-size:20px;color:rgba(255,235,80,0.9);text-shadow:0 0 10px rgba(255,200,0,0.8)">⚡</div>
+          </div>
+          <div class="map-info">
+            <div class="map-header">
+              <h4 class="map-name" style="color:#87CEEB;text-shadow:0 0 14px #87CEEB,0 0 28px rgba(135,206,235,0.5);font-size:22px;letter-spacing:0.14em">☁ SKY REALM</h4>
+              <span class="map-num" style="color:#87CEEB">07</span>
+            </div>
+            <p class="map-desc" style="font-size:13px;margin:6px 0 10px 0">Battle above the clouds. Airplanes streak past, eagles dive from above. Cloud formations replace buildings. Survive long enough to face the Storm Emperor — ruler of the sky.</p>
+            <div class="map-tags">
+              <span class="map-tag" style="--tc:#87CEEB">SKY</span>
+              <span class="map-tag" style="--tc:#87CEEB">AERIAL</span>
+              <span class="map-tag" style="--tc:#FFD700">BOSS</span>
+              <span class="map-tag" style="--tc:#87CEEB">CLOUDS</span>
+            </div>
+          </div>
+        </div>
+
+        </div><!-- end .feature-maps-row -->
 
       </div><!-- end .maps-grid -->
 

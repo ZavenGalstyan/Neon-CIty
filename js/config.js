@@ -449,6 +449,32 @@ const CONFIG = {
       },
     },
 
+    // ── Sky Realm ─────────────────────────────────────────────
+    {
+      id: 'sky_realm', name: 'SKY REALM',
+      desc: 'Battle above the clouds. Airplanes streak past. Eagles dive. Rule the sky or fall.',
+      theme: '#87CEEB', tags: ['SKY', 'AERIAL', 'CLOUDS'],
+      previewGridSize: 18, previewBg: '#1a4a7a', previewRoad: 'rgba(135,206,235,0.45)',
+      mapW: 36, mapH: 36, tileSize: 80, roadEvery: 1,
+      roadColor: '#5a9ec8', sidewalkColor: '#7ab8d8',
+      buildingPalette: ['#FFFFFF','#F0F8FF','#E8F4FD','#D6EEF8','#F5FBFF','#E5F2FA','#DDEEF8','#EAF5FD'],
+      neonColors: ['#87CEEB','#FFD700','#FFA07A','#98E8FF'],
+      windowColors: ['#B8E0FF','#D0EEFF','#A8D8FF','#C8ECFF'],
+      lightColor: '#87CEEB', lightGlow: '#5BA3C9', neonFreq: 999,
+      weather: 'sky_breeze', sky: true,
+      botPalettes: {
+        mini:      [{ body:'#5588BB', accent:'#87CEEB' }, { body:'#4477AA', accent:'#AAD8FF' }],
+        normal:    [{ body:'#6699CC', accent:'#87CEEB' }, { body:'#5588BB', accent:'#AADDFF' }, { body:'#7799BB', accent:'#99CCFF' }],
+        big:       [{ body:'#4466AA', accent:'#66AADD' }, { body:'#334488', accent:'#5599CC' }],
+        police:    [{ body:'#334477', accent:'#88BBFF' }, { body:'#223366', accent:'#6699EE' }],
+        swat:      [{ body:'#223355', accent:'#4477BB' }, { body:'#1A2244', accent:'#3366AA' }],
+        heavyswat: [{ body:'#112233', accent:'#336699' }],
+        sniper:    [{ body:'#667788', accent:'#AACCDD' }],
+        bomber:    [{ body:'#BB6633', accent:'#FFAA55' }],
+        juggernaut:[{ body:'#334455', accent:'#88AACC' }],
+      },
+    },
+
     // ── Page 2 Maps ─────────────────────────────────────────
     // WASTELAND - Unified map with big buildings and color themes
     {
