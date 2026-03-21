@@ -42,7 +42,7 @@
  *   this._zombieMode  — zombie map
  *   this._campaignMode — 100-level campaign
  *   this._blitzMode   — 3× speed, no shop
- *   this._survivalMode / this._hardcoreMode — modifier flags
+ *   this._hardcoreMode — modifier flag (2× enemy dmg, 3× money)
  */
 class Game {
   constructor(charData, mapData) {
@@ -206,7 +206,6 @@ class Game {
     this._metropolisMode  = !!this.map.config.metropolis;
     this._cityNpcs        = [];
     // ── Special Modes ─────────────────────────────────────────
-    this._survivalMode    = !!this.map.config.survival;
     this._hardcoreMode    = !!this.map.config.hardcore;
     this._blitzMode       = !!this.map.config.blitz;
     // ── Tower Mode ────────────────────────────────────────────
@@ -318,7 +317,7 @@ class Game {
       return;
     }
     if (e.code === 'KeyB') {
-      if (this._arenaMode || this._zombieMode || this._survivalMode || this._blitzMode) return;
+      if (this._arenaMode || this._zombieMode || this._blitzMode) return;
       if      (this.state === 'playing') { this.shop.open();  this.state = 'shop'; }
       else if (this.state === 'shop')    { this.shop.close(); this.state = 'playing'; }
       else if (this.state === 'paused')  { this.shop.open();  this.state = 'shop'; }
@@ -3738,8 +3737,7 @@ class Game {
       }
       this.hud.renderWeaponInfo(this.player);
       if (this._grenadeCount > 0) this.hud.renderGrenadeCount(this._grenadeCount);
-      if (!this._arenaMode && !this._zombieMode && !this._lifeMode && !this._survivalMode && !this._blitzMode && !this._towerMode) this.hud.renderShopButton(this.state === 'shop', this._isMobile);
-      if (this._survivalMode) this.hud.renderModeBadge('☠ SURVIVAL', '#FF2244');
+      if (!this._arenaMode && !this._zombieMode && !this._lifeMode && !this._blitzMode && !this._towerMode) this.hud.renderShopButton(this.state === 'shop', this._isMobile);
       if (this._hardcoreMode) this.hud.renderModeBadge('⚡ HARDCORE · 2× DMG · 3× $', '#FF8800');
       if (this._blitzMode)    this.hud.renderModeBadge('⚡ BLITZ · 3× SPEED · 5× $', '#FF4400');
       if (this._campaignMode) this.hud.renderCampaignLevel(this._campaignLevel, this._campaignKills, this._campaignTarget, this._levelComplete, this._levelCompleteT);

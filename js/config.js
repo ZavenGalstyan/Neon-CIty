@@ -548,30 +548,6 @@ const CONFIG = {
 
     // ── Special Modes (Page 2) ───────────────────────────────
     {
-      id: 'survival',
-      name: 'SURVIVAL MODE',
-      desc: 'No shop. No mercy. Live or die by the gun.',
-      theme: '#FF2244',
-      tags: ['HARDCORE', 'NO SHOP', 'ENDLESS'],
-      previewGridSize: 18,
-      previewBg: '#0a0004',
-      previewRoad: 'rgba(255,34,68,0.45)',
-      mapW: 40, mapH: 40, tileSize: 80, roadEvery: 10,
-      roadColor: '#0d0008',
-      sidewalkColor: '#14000e',
-      buildingPalette: ['#1a0010','#200018','#180010','#1e0014','#160010','#1c0018','#180012','#20001a'],
-      neonColors: ['#FF2244','#FF0044','#CC0033','#FF4466'],
-      windowColors: ['#FF2244','#FF6688','#FF0044','#CC0033'],
-      lightColor: '#FF2244', lightGlow: '#CC0033', neonFreq: 8,
-      weather: 'blood_rain',
-      survival: true,
-      botPalettes: {
-        mini:   [{ body:'#880022', accent:'#FF2244' }, { body:'#660011', accent:'#CC0033' }],
-        normal: [{ body:'#AA0033', accent:'#FF2244' }, { body:'#880022', accent:'#DD2244' }, { body:'#CC1144', accent:'#FF3355' }],
-        big:    [{ body:'#660011', accent:'#AA0033' }, { body:'#770022', accent:'#BB1133' }],
-      },
-    },
-    {
       id: 'hardcore',
       name: 'HARDCORE MODE',
       desc: 'Enemies deal 2× damage. You earn 3× money. Only the best survive.',
