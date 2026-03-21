@@ -436,11 +436,16 @@ class GameMap {
   _buildStreetLights() {
     this.streetLights = [];
     const S = this.S;
-    // Desert: warm oil-lamp amber only. City: amber, cool-white, pink, cyan
+    // Desert: warm oil-lamp amber only. Galactica: purple/cyan alien glows. City: amber, cool-white, pink, cyan
     const PAL = this.config.desert ? [
       [255, 160,  40],
       [255, 145,  30],
       [255, 180,  60],
+    ] : this.config.galactica ? [
+      [170,  68, 255],
+      [255,  68, 170],
+      [ 68, 170, 255],
+      [ 68, 255, 170],
     ] : [
       [255, 210, 110],
       [255, 210, 110],
@@ -810,6 +815,32 @@ class GameMap {
               if (isColR) ctx.fillRect(wx, wy, 6, S);
               if (isRowR) ctx.fillRect(wx, wy, S, 6);
             }
+          } else if (cfg.galactica) {
+            // Galactica: void space lane — deep purple-black with star dust
+            ctx.fillStyle = '#04000e';
+            ctx.fillRect(wx, wy, S, S);
+            // Subtle energy lane strips along road axes
+            if (isColR && !isRowR) {
+              ctx.fillStyle = 'rgba(140,60,255,0.08)';
+              ctx.fillRect(wx + S/2 - 3, wy, 6, S);
+              ctx.fillStyle = 'rgba(160,80,255,0.04)';
+              ctx.fillRect(wx + S/2 - 10, wy, 20, S);
+            }
+            if (isRowR && !isColR) {
+              ctx.fillStyle = 'rgba(140,60,255,0.08)';
+              ctx.fillRect(wx, wy + S/2 - 3, S, 6);
+              ctx.fillStyle = 'rgba(160,80,255,0.04)';
+              ctx.fillRect(wx, wy + S/2 - 10, S, 20);
+            }
+            // Scattered star dust specks
+            if ((x*7 + y*13) % 5 === 0) {
+              ctx.fillStyle = 'rgba(200,180,255,0.40)';
+              ctx.beginPath(); ctx.arc(wx + (x*19)%S, wy + (y*17)%S, 1, 0, Math.PI*2); ctx.fill();
+            }
+            if ((x*11 + y*7) % 7 === 0) {
+              ctx.fillStyle = 'rgba(150,220,255,0.35)';
+              ctx.beginPath(); ctx.arc(wx + (x*29+12)%S, wy + (y*23+15)%S, 0.8, 0, Math.PI*2); ctx.fill();
+            }
           } else if (cfg.desert) {
             // Desert: sandy dirt road with ripples
             const dseed = (x * 17 + y * 31) % 5;
@@ -919,6 +950,38 @@ class GameMap {
             if ((x * 5 + y * 3) % 9 === 0) {
               ctx.fillStyle = '#5a4a3a';
               ctx.fillRect(wx + S/2 - 4, wy + S/2 - 4, 8, 8);
+            }
+          } else if (cfg.galactica) {
+            // Galactica: cosmic platform — dark nebula plates with energy veins
+            const gseed = (x * 23 + y * 37) % 4;
+            const plateCols = ['#0a001a','#0e001e','#080016','#0c0020'];
+            ctx.fillStyle = plateCols[gseed];
+            ctx.fillRect(wx, wy, S, S);
+            // Hex grid seams
+            ctx.fillStyle = 'rgba(120,60,220,0.12)';
+            ctx.fillRect(wx, wy + Math.round(S*0.50), S, 1);
+            ctx.fillRect(wx + Math.round(S*0.50), wy, 1, S);
+            // Glowing energy vein on some tiles
+            if ((x*7+y*11) % 5 === 0) {
+              ctx.fillStyle = 'rgba(140,60,255,0.18)';
+              ctx.fillRect(wx + Math.round(S*0.18), wy + Math.round(S*0.48), Math.round(S*0.64), 2);
+            }
+            // Floating crystal shard
+            if ((x*13+y*17) % 9 === 0) {
+              ctx.globalAlpha = 0.60;
+              ctx.fillStyle = '#AA44FF';
+              ctx.beginPath();
+              ctx.moveTo(wx + Math.round(S*0.50), wy + Math.round(S*0.30));
+              ctx.lineTo(wx + Math.round(S*0.58), wy + Math.round(S*0.50));
+              ctx.lineTo(wx + Math.round(S*0.50), wy + Math.round(S*0.62));
+              ctx.lineTo(wx + Math.round(S*0.42), wy + Math.round(S*0.50));
+              ctx.closePath(); ctx.fill();
+              ctx.globalAlpha = 1;
+            }
+            // Distant star speck
+            if ((x*19+y*29) % 8 === 0) {
+              ctx.fillStyle = 'rgba(220,200,255,0.45)';
+              ctx.beginPath(); ctx.arc(wx + (x*23)%S, wy + (y*19)%S, 0.9, 0, Math.PI*2); ctx.fill();
             }
           } else if (cfg.desert) {
             // Desert: sandstone / ancient paving
@@ -1039,6 +1102,47 @@ class GameMap {
             // LED status strip top
             ctx.fillStyle = rseed % 3 === 0 ? 'rgba(0,255,200,0.18)' : 'rgba(0,200,255,0.12)';
             ctx.fillRect(wx + 6, wy + 4, S - 12, 3);
+          } else if (cfg.galactica) {
+            // Galactica: planet orb / space structure
+            const pseed = (x * 41 + y * 59) % 5;
+            const planetBg = ['#0c0025','#14002e','#0a001e','#180038','#100028'][pseed];
+            ctx.fillStyle = planetBg;
+            ctx.fillRect(wx, wy, S, S);
+            // Planet sphere (top-down, slightly offset)
+            const planR = Math.round(S * 0.34);
+            const planX = wx + Math.round(S * 0.50);
+            const planY = wy + Math.round(S * 0.48);
+            const pCols = [
+              ['#5522AA','#8844CC','#AA66EE'],
+              ['#AA2266','#CC4488','#EE66AA'],
+              ['#224499','#4466BB','#6688DD'],
+              ['#229966','#44BB88','#66DDAA'],
+              ['#884422','#AA6644','#CC8866'],
+            ][pseed];
+            const pg = ctx.createRadialGradient(planX - planR*0.3, planY - planR*0.35, 2, planX, planY, planR);
+            pg.addColorStop(0, pCols[2]); pg.addColorStop(0.55, pCols[1]); pg.addColorStop(1, pCols[0]);
+            ctx.fillStyle = pg;
+            ctx.beginPath(); ctx.arc(planX, planY, planR, 0, Math.PI*2); ctx.fill();
+            // Atmospheric band
+            ctx.globalAlpha = 0.22;
+            ctx.fillStyle = '#FFFFFF';
+            ctx.beginPath(); ctx.ellipse(planX, planY - planR*0.12, planR*0.80, planR*0.22, 0, 0, Math.PI*2); ctx.fill();
+            ctx.globalAlpha = 1;
+            // Ring system on some planets
+            if (pseed === 1 || pseed === 3) {
+              ctx.globalAlpha = 0.38;
+              ctx.strokeStyle = pCols[2]; ctx.lineWidth = 2.5;
+              ctx.beginPath(); ctx.ellipse(planX, planY, planR * 1.45, planR * 0.35, 0, 0, Math.PI*2); ctx.stroke();
+              ctx.globalAlpha = 1;
+            }
+            // Tiny orbiting moon
+            if ((x*7+y*11) % 4 === 0) {
+              const moonA = ((x*17 + y*23) % 100) / 100 * Math.PI * 2;
+              const moonX = planX + Math.cos(moonA) * planR * 1.60;
+              const moonY = planY + Math.sin(moonA) * planR * 0.55;
+              ctx.fillStyle = '#AABBCC';
+              ctx.beginPath(); ctx.arc(moonX, moonY, planR * 0.14, 0, Math.PI*2); ctx.fill();
+            }
           } else if (cfg.desert) {
             // Desert: pyramid / sandstone block
             const pseed = (x * 41 + y * 59) % 5;
@@ -1107,7 +1211,7 @@ class GameMap {
           }
 
           // Windows (not in robot/jungle/desert) — no shadowBlur for performance
-          if (!cfg.robot && !cfg.jungle && !cfg.desert && this.buildingWindows[y][x]) {
+          if (!cfg.robot && !cfg.jungle && !cfg.desert && !cfg.galactica && this.buildingWindows[y][x]) {
             const wc = cfg.windowColors[(Math.floor(x/2) + Math.floor(y/2)) % cfg.windowColors.length];
             ctx.fillStyle = wc + 'CC';
             for (let wy2 = 0; wy2 < 2; wy2++) {
@@ -1119,7 +1223,7 @@ class GameMap {
             }
           }
           // Neon sign strips (not in robot/jungle/desert) — no shadowBlur for performance
-          if (!cfg.robot && !cfg.jungle && !cfg.desert && (x + y) % cfg.neonFreq === 0) {
+          if (!cfg.robot && !cfg.jungle && !cfg.desert && !cfg.galactica && (x + y) % cfg.neonFreq === 0) {
             const nc = cfg.neonColors[(x * 3 + y) % cfg.neonColors.length];
             ctx.globalAlpha = 0.65;
             ctx.strokeStyle = nc; ctx.lineWidth = 2;

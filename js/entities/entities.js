@@ -265,6 +265,19 @@ class Weather {
           this._p.push({ type: 'firefly', x: Math.random()*W, y: Math.random()*H, spd: rnd(12,30), phase: Math.random()*Math.PI*2, dir: Math.random()*Math.PI*2 });
         break;
       }
+      case 'starfield': {
+        // Static distant stars (twinkle in place)
+        for (let i = 0; i < 200; i++)
+          this._p.push({ type:'star', x:Math.random()*W, y:Math.random()*H, r:rnd(0.5,2.0), a:rnd(0.3,0.95), phase:Math.random()*Math.PI*2 });
+        // Nebula wisps — slow drifting colored blobs
+        const nebCols = ['#6622AA','#AA2266','#2244BB','#4488CC'];
+        for (let i = 0; i < 8; i++)
+          this._p.push({ type:'nebula', x:Math.random()*W, y:Math.random()*H, r:rnd(80,200), col:nebCols[i%4], a:rnd(0.025,0.07), dx:rnd(-8,8), dy:rnd(-5,5) });
+        // Shooting stars (respawn on exit)
+        for (let i = 0; i < 4; i++)
+          this._p.push({ type:'streak', x:Math.random()*W, y:Math.random()*H, vx:rnd(200,500), vy:rnd(-80,80), len:rnd(40,110), a:rnd(0.55,0.9), life:Math.random(), maxLife:rnd(0.4,1.1) });
+        break;
+      }
     }
   }
 
@@ -358,6 +371,26 @@ class Weather {
           } else if (p.type === 'scanline') {
             p.y += p.spd * dt;
             if (p.y > H + 2) p.y = -2;
+          }
+        }
+        break;
+      }
+      case 'starfield': {
+        for (const p of this._p) {
+          if (p.type === 'star') {
+            p.phase += dt * rnd(0.4, 1.6);
+          } else if (p.type === 'nebula') {
+            p.x += p.dx * dt; p.y += p.dy * dt;
+            if (p.x < -p.r) p.x = W+p.r; if (p.x > W+p.r) p.x = -p.r;
+            if (p.y < -p.r) p.y = H+p.r; if (p.y > H+p.r) p.y = -p.r;
+          } else if (p.type === 'streak') {
+            p.life -= dt;
+            p.x += p.vx * dt; p.y += p.vy * dt;
+            if (p.life <= 0 || p.x > W + 130 || p.y < -40 || p.y > H + 40) {
+              p.x = -20; p.y = Math.random()*H;
+              p.maxLife = rnd(0.4, 1.1); p.life = p.maxLife;
+              p.vx = rnd(200,500); p.vy = rnd(-80,80); p.len = rnd(40,110); p.a = rnd(0.55,0.9);
+            }
           }
         }
         break;
@@ -529,6 +562,45 @@ class Weather {
         const jvg = ctx.createRadialGradient(W/2, H/2, H*0.28, W/2, H/2, H*0.92);
         jvg.addColorStop(0, 'rgba(0,0,0,0)'); jvg.addColorStop(1, 'rgba(5,18,5,0.32)');
         ctx.fillStyle = jvg; ctx.fillRect(0, 0, W, H);
+        ctx.restore(); break;
+      }
+      case 'starfield': {
+        ctx.save();
+        // Deep space base tint
+        ctx.fillStyle = 'rgba(0,0,14,0.20)'; ctx.fillRect(0, 0, W, H);
+        // Nebula wisps
+        for (const p of this._p) {
+          if (p.type !== 'nebula') continue;
+          ctx.globalAlpha = p.a * 0.38;
+          ctx.fillStyle = p.col;
+          ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fill();
+        }
+        // Stars — twinkle via alpha and size
+        for (const p of this._p) {
+          if (p.type !== 'star') continue;
+          const tw = Math.sin(p.phase) * 0.35 + 0.65;
+          ctx.globalAlpha = p.a * tw;
+          ctx.fillStyle = p.r > 1.5 ? '#AADDFF' : '#FFFFFF';
+          ctx.beginPath(); ctx.arc(p.x, p.y, p.r * tw, 0, Math.PI*2); ctx.fill();
+        }
+        // Shooting stars
+        ctx.lineWidth = 1.8;
+        for (const p of this._p) {
+          if (p.type !== 'streak') continue;
+          const fade = p.maxLife > 0 ? (p.life / p.maxLife) : 1;
+          ctx.globalAlpha = p.a * fade;
+          ctx.strokeStyle = '#EEEEFF';
+          const spd = Math.hypot(p.vx, p.vy) || 1;
+          ctx.beginPath();
+          ctx.moveTo(p.x, p.y);
+          ctx.lineTo(p.x - p.vx/spd*p.len, p.y - p.vy/spd*p.len);
+          ctx.stroke();
+        }
+        ctx.globalAlpha = 1;
+        // Edge vignette — deepen space at corners
+        const svg = ctx.createRadialGradient(W/2, H/2, H*0.20, W/2, H/2, H*0.90);
+        svg.addColorStop(0, 'rgba(0,0,0,0)'); svg.addColorStop(1, 'rgba(2,0,20,0.40)');
+        ctx.fillStyle = svg; ctx.fillRect(0, 0, W, H);
         ctx.restore(); break;
       }
     }
@@ -1904,7 +1976,7 @@ class Bot {
     this._eyeBlinkTimer = rnd(1, 4);
     this._animT         = 0;
     this._sirenT        = 0; // police/swat: drives flashing light phase
-    this._mapTheme = mapConfig ? (mapConfig.snow ? 'snow' : mapConfig.desert ? 'desert' : mapConfig.ocean ? 'ocean' : mapConfig.robot ? 'robot' : mapConfig.jungle ? 'jungle' : null) : null;
+    this._mapTheme = mapConfig ? (mapConfig.snow ? 'snow' : mapConfig.desert ? 'desert' : mapConfig.ocean ? 'ocean' : mapConfig.robot ? 'robot' : mapConfig.jungle ? 'jungle' : mapConfig.galactica ? 'galactica' : null) : null;
     this._animalType = pal?.animal || null;
   }
 
@@ -2057,6 +2129,7 @@ class Bot {
     else if (this._mapTheme === 'ocean')                                            this._renderOceanEnemy(ctx, x, y, r);
     else if (this._mapTheme === 'robot')                                            this._renderRobotUnit(ctx, x, y, r);
     else if (this._mapTheme === 'jungle')                                           this._renderAnimalEnemy(ctx, x, y, r);
+    else if (this._mapTheme === 'galactica')                                        this._renderGalacticEnemy(ctx, x, y, r);
     else if (this.type === 'mini')                                                  this._renderMini(ctx, x, y, r);
     else if (this.type === 'big')                                                   this._renderBig(ctx, x, y, r);
     else if (this.type === 'police' || this.type === 'swat' || this.type === 'heavyswat') this._renderPolice(ctx, x, y, r);
@@ -3667,6 +3740,235 @@ class Bot {
     this._renderHPBar(ctx, x, y, r, 36, 5);
   }
 
+  // ── Galactica alien enemies ─────────────────────────────────────────
+  _renderGalacticEnemy(ctx, x, y, r) {
+    const t = this.type;
+    if      (t === 'mini')                       this._renderSpaceDrone(ctx, x, y, r);
+    else if (t === 'big' || t === 'heavyswat')   this._renderNovaTitan(ctx, x, y, r);
+    else if (t === 'juggernaut')                 this._renderVoidColossus(ctx, x, y, r);
+    else if (t === 'bomber')                     this._renderPlasmaBomber(ctx, x, y, r);
+    else if (t === 'sniper')                     this._renderCosmicPhantom(ctx, x, y, r);
+    else if (t === 'police' || t === 'swat')     this._renderNebulaEnforcer(ctx, x, y, r);
+    else                                         this._renderXenomorph(ctx, x, y, r);
+    this._renderHPBar(ctx, x, y, r, 40, 5);
+  }
+
+  _renderSpaceDrone(ctx, x, y, r) {
+    // Hovering saucer disc — top-down view
+    const t = this._animT;
+    ctx.save();
+    ctx.shadowColor = '#AA44FF'; ctx.shadowBlur = 14;
+    const g = ctx.createRadialGradient(x - r*0.3, y - r*0.3, 1, x, y, r);
+    g.addColorStop(0, '#CC88FF'); g.addColorStop(0.65, '#6622AA'); g.addColorStop(1, '#220033');
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.ellipse(x, y, r, r*0.50, 0, 0, Math.PI*2); ctx.fill();
+    // Dome on top
+    ctx.fillStyle = '#EE88FF';
+    ctx.beginPath(); ctx.ellipse(x, y - r*0.15, r*0.40, r*0.26, 0, Math.PI, Math.PI*2); ctx.fill();
+    // Rotating light ring
+    ctx.shadowBlur = 0;
+    const ringA = t * 2.8;
+    for (let i = 0; i < 6; i++) {
+      const a = ringA + i * Math.PI * 2 / 6;
+      ctx.fillStyle = i % 2 === 0 ? 'rgba(180,80,255,0.90)' : 'rgba(255,80,200,0.75)';
+      ctx.beginPath(); ctx.arc(x + Math.cos(a)*r*0.82, y + Math.sin(a)*r*0.38, r*0.11, 0, Math.PI*2); ctx.fill();
+    }
+    // Tractor beam (pulsing downward)
+    const bp = Math.sin(t * 5) * 0.4 + 0.6;
+    ctx.globalAlpha = 0.18 * bp;
+    ctx.fillStyle = '#AA44FF';
+    ctx.beginPath();
+    ctx.moveTo(x - r*0.28, y + r*0.14); ctx.lineTo(x + r*0.28, y + r*0.14);
+    ctx.lineTo(x + r*0.10, y + r*1.15); ctx.lineTo(x - r*0.10, y + r*1.15);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+    ctx.restore();
+  }
+
+  _renderXenomorph(ctx, x, y, r) {
+    // Tall elongated alien body
+    const t = this._animT;
+    ctx.save();
+    ctx.shadowColor = '#FF44AA'; ctx.shadowBlur = 12;
+    const g = ctx.createRadialGradient(x, y - r*0.2, 2, x, y, r);
+    g.addColorStop(0, '#FF88CC'); g.addColorStop(0.6, '#AA0066'); g.addColorStop(1, '#330022');
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.ellipse(x, y, r*0.62, r, 0, 0, Math.PI*2); ctx.fill();
+    // Elongated alien head
+    ctx.fillStyle = '#CC2288';
+    ctx.beginPath(); ctx.ellipse(x, y - r*0.88, r*0.40, r*0.45, 0, 0, Math.PI*2); ctx.fill();
+    // 4 narrow eye slits
+    ctx.shadowBlur = 0; ctx.fillStyle = '#FF00CC';
+    for (let i = 0; i < 4; i++) {
+      ctx.beginPath(); ctx.ellipse(x + (i-1.5)*r*0.20, y - r*0.95, r*0.065, r*0.035, 0, 0, Math.PI*2); ctx.fill();
+    }
+    // 4 thin spindly arms
+    ctx.lineWidth = 2; ctx.strokeStyle = '#880044'; ctx.shadowBlur = 0;
+    for (let i = 0; i < 4; i++) {
+      const side = i < 2 ? -1 : 1;
+      const hy   = i % 2 === 0 ? -0.08 : 0.22;
+      const armT = t * (1.8 + i*0.3);
+      ctx.beginPath();
+      ctx.moveTo(x + side*r*0.58, y + hy*r);
+      ctx.lineTo(x + side*(r*0.58 + Math.cos(armT)*r*0.6 + r*1.05), y + (hy + Math.sin(armT)*0.32)*r);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  _renderNovaTitan(ctx, x, y, r) {
+    // Giant pulsating energy being
+    const t = this._animT;
+    ctx.save();
+    ctx.shadowColor = '#44AAFF'; ctx.shadowBlur = 20;
+    const g = ctx.createRadialGradient(x, y, 2, x, y, r);
+    g.addColorStop(0, '#88CCFF'); g.addColorStop(0.5, '#2266CC'); g.addColorStop(1, '#001144');
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2); ctx.fill();
+    // Energy rings
+    ctx.lineWidth = 2;
+    for (let ri = 0; ri < 3; ri++) {
+      const phase = t * (1.5 + ri*0.5) + ri * Math.PI * 2 / 3;
+      ctx.globalAlpha = 0.40 + Math.sin(phase) * 0.20;
+      ctx.strokeStyle = ['#44FFFF','#4488FF','#AADDFF'][ri];
+      ctx.beginPath(); ctx.arc(x, y, r * (0.55 + ri*0.20), 0, Math.PI*2); ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+    // Glowing core
+    ctx.shadowBlur = 28; ctx.fillStyle = '#AAEEFF';
+    ctx.beginPath(); ctx.arc(x, y, r * 0.28, 0, Math.PI*2); ctx.fill();
+    // 3 orbiting plasma bolts
+    for (let i = 0; i < 3; i++) {
+      const a = t * 2.2 + i * Math.PI * 2 / 3;
+      ctx.shadowColor = '#44FFFF'; ctx.shadowBlur = 10; ctx.fillStyle = '#88FFFF';
+      ctx.beginPath(); ctx.arc(x + Math.cos(a)*r*0.78, y + Math.sin(a)*r*0.78, r*0.14, 0, Math.PI*2); ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  _renderVoidColossus(ctx, x, y, r) {
+    // Massive dark void entity with gravitational rings
+    const t = this._animT;
+    ctx.save();
+    ctx.shadowColor = '#8800FF'; ctx.shadowBlur = 28;
+    const g = ctx.createRadialGradient(x, y, 4, x, y, r);
+    g.addColorStop(0, '#4400AA'); g.addColorStop(0.55, '#1a0044'); g.addColorStop(1, '#050008');
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2); ctx.fill();
+    // Gravitational distortion rings
+    ctx.lineWidth = 1.5;
+    for (let ri = 0; ri < 5; ri++) {
+      ctx.globalAlpha = (1 - ri/5) * 0.28;
+      ctx.strokeStyle = '#AA44FF';
+      ctx.lineWidth = 1.5 - ri*0.18;
+      ctx.beginPath(); ctx.arc(x, y, r * (1.12 + ri*0.36), 0, Math.PI*2); ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+    // Void eye
+    ctx.shadowBlur = 22; ctx.fillStyle = '#FF00FF';
+    ctx.beginPath(); ctx.arc(x, y, r * 0.22, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#220000';
+    ctx.beginPath(); ctx.arc(x, y, r * 0.10, 0, Math.PI*2); ctx.fill();
+    // 6 rotating void tendrils
+    ctx.lineWidth = 2.5; ctx.shadowBlur = 10;
+    for (let i = 0; i < 6; i++) {
+      const a = t * 0.9 + i * Math.PI * 2 / 6;
+      ctx.strokeStyle = i % 2 === 0 ? '#AA00FF' : '#6600CC';
+      ctx.globalAlpha = 0.65;
+      ctx.beginPath();
+      ctx.moveTo(x + Math.cos(a)*r*0.85, y + Math.sin(a)*r*0.85);
+      ctx.lineTo(x + Math.cos(a + 0.7)*r*1.55, y + Math.sin(a + 0.7)*r*1.55);
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+    ctx.restore();
+  }
+
+  _renderPlasmaBomber(ctx, x, y, r) {
+    // Compact sphere crackling with plasma arcs
+    const t = this._animT;
+    ctx.save();
+    ctx.shadowColor = '#FF8800'; ctx.shadowBlur = 16;
+    const g = ctx.createRadialGradient(x, y, 2, x, y, r);
+    g.addColorStop(0, '#FFCC44'); g.addColorStop(0.5, '#FF6600'); g.addColorStop(1, '#330a00');
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2); ctx.fill();
+    // 8 crackling plasma arcs
+    ctx.lineWidth = 1.5;
+    for (let i = 0; i < 8; i++) {
+      const a   = t*3 + i * Math.PI / 4;
+      const endR = r * (1.5 + Math.sin(t*4+i)*0.3);
+      ctx.strokeStyle = i%3===0 ? '#FFFF44' : '#FFAA00';
+      ctx.globalAlpha = 0.70 + Math.sin(t*5+i)*0.28;
+      const mx = x + Math.cos(a)*r*0.85 + Math.sin(t*6+i)*8;
+      const my = y + Math.sin(a)*r*0.85 + Math.cos(t*6+i)*8;
+      ctx.beginPath();
+      ctx.moveTo(x + Math.cos(a)*r*0.50, y + Math.sin(a)*r*0.50);
+      ctx.lineTo(mx, my);
+      ctx.lineTo(x + Math.cos(a)*endR, y + Math.sin(a)*endR);
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+    ctx.restore();
+  }
+
+  _renderCosmicPhantom(ctx, x, y, r) {
+    // Translucent cloaked sniper — barely visible teal shimmer
+    const t = this._animT;
+    ctx.save();
+    ctx.shadowColor = '#44FFCC'; ctx.shadowBlur = 18;
+    ctx.globalAlpha = 0.76;
+    const g = ctx.createRadialGradient(x, y, 2, x, y, r);
+    g.addColorStop(0, '#AAFFEE'); g.addColorStop(0.6, '#006644'); g.addColorStop(1, '#001a10');
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2); ctx.fill();
+    ctx.globalAlpha = 1;
+    // Scope lens
+    ctx.shadowBlur = 10; ctx.fillStyle = '#88FFDD';
+    ctx.beginPath(); ctx.arc(x, y - r*0.05, r*0.30, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#002a1a';
+    ctx.beginPath(); ctx.arc(x, y - r*0.05, r*0.16, 0, Math.PI*2); ctx.fill();
+    // Crosshair
+    ctx.strokeStyle = '#44FFCC'; ctx.lineWidth = 1; ctx.globalAlpha = 0.78;
+    ctx.beginPath(); ctx.moveTo(x - r*0.28, y - r*0.05); ctx.lineTo(x + r*0.28, y - r*0.05); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x, y - r*0.32); ctx.lineTo(x, y + r*0.22); ctx.stroke();
+    ctx.globalAlpha = 1;
+    // Cloaking shimmer particles
+    for (let i = 0; i < 5; i++) {
+      const a = t * 1.5 + i * Math.PI * 2 / 5;
+      ctx.fillStyle = 'rgba(68,255,200,0.32)';
+      ctx.beginPath(); ctx.arc(x + Math.cos(a)*r*1.1, y + Math.sin(a)*r*1.1, 2, 0, Math.PI*2); ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  _renderNebulaEnforcer(ctx, x, y, r) {
+    // Galactic police — deep blue + gold star badge + siren
+    const t = this._animT;
+    ctx.save();
+    ctx.shadowColor = '#4466FF'; ctx.shadowBlur = 14;
+    const g = ctx.createRadialGradient(x, y, 2, x, y, r);
+    g.addColorStop(0, '#88AAFF'); g.addColorStop(0.5, '#2244CC'); g.addColorStop(1, '#080020');
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2); ctx.fill();
+    // Gold 7-point star badge
+    ctx.shadowBlur = 8; ctx.fillStyle = '#FFCC00';
+    ctx.beginPath();
+    for (let i = 0; i < 7; i++) {
+      const a = i * Math.PI * 2 / 7 - Math.PI/2;
+      const bx = x + Math.cos(a)*r*0.42;
+      const by = y + Math.sin(a)*r*0.42;
+      if (i === 0) ctx.moveTo(bx, by); else ctx.lineTo(bx, by);
+    }
+    ctx.closePath(); ctx.fill();
+    // Alternating police siren
+    const sirenOn = Math.floor(t * 4) % 2 === 0;
+    ctx.fillStyle = sirenOn ? 'rgba(0,80,255,0.70)' : 'rgba(255,30,30,0.70)';
+    ctx.shadowColor = sirenOn ? '#0055FF' : '#FF2200'; ctx.shadowBlur = 14;
+    ctx.beginPath(); ctx.arc(x, y - r*0.72, r*0.18, 0, Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
   // Monkey (mini) — small, fast, brown
   _renderMonkey(ctx, x, y, r) {
     const bob = Math.sin(this._animT * 8) * r * 0.06;
@@ -4192,6 +4494,11 @@ const BOSS_CONFIGS = {
     radius: 54, speed: 58,  hp: 1800, dmg: 32, fr: 900, bspd: 340,
     special: 'burst',   // fires ring of laser bolts
   },
+  galactica: {
+    name: 'GALACTIC OVERLORD', color: '#7722CC', accent: '#FF88FF',
+    radius: 54, speed: 58,  hp: 2200, dmg: 36, fr: 860, bspd: 370,
+    special: 'burst',   // fires ring of plasma bolts
+  },
 };
 
 class BossBot {
@@ -4505,6 +4812,7 @@ class BossBot {
       case 'robot_city':   this._renderSentinel(ctx, x, y, r, pulse); break;
       case 'jungle':        this._renderJungleLord(ctx, x, y, r, pulse); break;
       case 'desert_sands':  this._renderPharaoh(ctx, x, y, r, pulse); break;
+      case 'galactica':     this._renderGalacticOverlord(ctx, x, y, r, pulse); break;
       default:              this._renderKingpin(ctx, x, y, r, pulse); break;
     }
 
@@ -5333,6 +5641,170 @@ class BossBot {
       const orR = r * (1.30 + Math.sin(sandSwirl * 1.5 + i * 1.2) * 0.22);
       ctx.beginPath(); ctx.arc(Math.cos(ang)*orR, Math.sin(ang)*orR*0.55, r*0.055, 0, Math.PI*2); ctx.fill();
     }
+
+    ctx.restore();
+  }
+
+  _renderGalacticOverlord(ctx, x, y, r, pulse) {
+    const sw = this._pulseT;
+    ctx.save();
+    ctx.translate(x, y);
+
+    // ── 1. OUTER COSMIC AURA — 3 expanding neon halos ──────────────────────
+    const haloColors = ['#AA44FF','#FF44AA','#44AAFF'];
+    for (let hi = 0; hi < 3; hi++) {
+      const hR = r * (1.45 + hi * 0.35 + Math.sin(sw * 0.8 + hi * 1.1) * 0.10);
+      ctx.globalAlpha = (0.22 - hi * 0.06) + pulse * 0.10;
+      ctx.strokeStyle = haloColors[hi];
+      ctx.lineWidth   = 3.5 - hi;
+      ctx.shadowColor = haloColors[hi]; ctx.shadowBlur = 22;
+      ctx.beginPath(); ctx.arc(0, 0, hR, 0, Math.PI * 2); ctx.stroke();
+    }
+    ctx.globalAlpha = 1; ctx.shadowBlur = 0;
+
+    // ── 2. GALAXY DISC — flattened ellipse spinning behind body ────────────
+    ctx.save();
+    ctx.rotate(sw * 0.25);
+    // Outer disc glow
+    ctx.globalAlpha = 0.35 + pulse * 0.15;
+    ctx.fillStyle = '#AA44FF';
+    ctx.beginPath(); ctx.ellipse(0, 0, r * 1.55, r * 0.42, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.globalAlpha = 1;
+    // Bright disc core ring
+    ctx.strokeStyle = '#FFAAFF'; ctx.lineWidth = 3;
+    ctx.globalAlpha = 0.55;
+    ctx.beginPath(); ctx.ellipse(0, 0, r * 1.20, r * 0.30, 0, 0, Math.PI * 2); ctx.stroke();
+    ctx.globalAlpha = 1;
+    ctx.restore();
+
+    // ── 3. SPIRAL GALAXY ARMS — 4 arms sweeping outward ───────────────────
+    for (let arm = 0; arm < 4; arm++) {
+      const armBase = sw * 0.55 + arm * Math.PI / 2;
+      const armCol  = ['rgba(200,100,255,0.65)','rgba(255,80,200,0.55)','rgba(80,180,255,0.55)','rgba(100,255,180,0.45)'][arm];
+      ctx.strokeStyle = armCol;
+      ctx.lineWidth   = 3.5;
+      ctx.shadowColor = armCol; ctx.shadowBlur = 12;
+      ctx.beginPath();
+      for (let s = 0; s <= 50; s++) {
+        const t2    = s / 50;
+        const spirA = armBase + t2 * Math.PI * 1.8;
+        const spirR = r * 0.14 + t2 * r * 1.10;
+        if (s === 0) ctx.moveTo(Math.cos(spirA) * spirR, Math.sin(spirA) * spirR * 0.58);
+        else         ctx.lineTo(Math.cos(spirA) * spirR, Math.sin(spirA) * spirR * 0.58);
+      }
+      ctx.stroke();
+    }
+    ctx.shadowBlur = 0;
+
+    // ── 4. CORE NEBULA BODY ─────────────────────────────────────────────────
+    const bg = ctx.createRadialGradient(-r*0.22, -r*0.22, 4, 0, 0, r);
+    bg.addColorStop(0,   '#FFFFFF');
+    bg.addColorStop(0.12,'#EE99FF');
+    bg.addColorStop(0.38,'#AA33EE');
+    bg.addColorStop(0.68,'#5500BB');
+    bg.addColorStop(1,   '#1a003a');
+    ctx.fillStyle = bg;
+    ctx.shadowColor = '#CC66FF'; ctx.shadowBlur = 40 + pulse * 22;
+    ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.fill();
+
+    // ── 5. ENERGY CROWN — 9 blazing spikes ─────────────────────────────────
+    ctx.shadowColor = '#FF88FF'; ctx.shadowBlur = 18;
+    for (let i = 0; i < 9; i++) {
+      const sa    = (i / 9) * Math.PI * 2 + sw * 0.22;
+      const sLen  = r * (0.40 + (i % 3 === 0 ? 0.32 : 0.18) + Math.sin(sw * 2.5 + i) * 0.10) + pulse * 8;
+      const inner = r * 0.92;
+      const outer = r + sLen;
+      // Spike body
+      ctx.lineWidth = 4 - (i % 3) * 0.8;
+      ctx.strokeStyle = i % 3 === 0 ? '#FFCCFF' : (i % 3 === 1 ? '#FF44FF' : '#AA44FF');
+      ctx.beginPath();
+      ctx.moveTo(Math.cos(sa) * inner, Math.sin(sa) * inner);
+      ctx.lineTo(Math.cos(sa) * outer, Math.sin(sa) * outer);
+      ctx.stroke();
+      // Spike tip orb
+      ctx.fillStyle = i % 3 === 0 ? '#FFFFFF' : '#FF88FF';
+      ctx.shadowBlur = 14;
+      ctx.beginPath(); ctx.arc(Math.cos(sa) * outer, Math.sin(sa) * outer, r * 0.07 + (i%3===0 ? r*0.04 : 0), 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.shadowBlur = 0;
+
+    // ── 6. ORBITING PLANETS — 6 colored worlds ─────────────────────────────
+    const planetCols = ['#FF6633','#AAFFAA','#6699FF','#FFEE44','#FF44CC','#44FFDD'];
+    for (let i = 0; i < 6; i++) {
+      const a   = sw * 1.35 + i * Math.PI * 2 / 6;
+      const orR = r * 1.28 + Math.sin(sw * 0.6 + i) * r * 0.08;
+      const px  = Math.cos(a) * orR;
+      const py  = Math.sin(a) * orR * 0.50;  // flattened to galaxy plane
+      const pr  = r * (0.11 + (i % 2) * 0.05);
+      // Planet glow
+      ctx.shadowColor = planetCols[i]; ctx.shadowBlur = 12;
+      const pg = ctx.createRadialGradient(px - pr*0.3, py - pr*0.3, 1, px, py, pr);
+      pg.addColorStop(0, '#FFFFFF'); pg.addColorStop(0.4, planetCols[i]); pg.addColorStop(1, '#000010');
+      ctx.fillStyle = pg;
+      ctx.beginPath(); ctx.arc(px, py, pr, 0, Math.PI * 2); ctx.fill();
+      // Ring on 2 planets
+      if (i === 1 || i === 4) {
+        ctx.shadowBlur = 0; ctx.globalAlpha = 0.55;
+        ctx.strokeStyle = planetCols[i]; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.ellipse(px, py, pr * 1.7, pr * 0.45, a * 0.4, 0, Math.PI * 2); ctx.stroke();
+        ctx.globalAlpha = 1;
+      }
+    }
+    ctx.shadowBlur = 0;
+
+    // ── 7. VOID EYE — central cosmic stare ─────────────────────────────────
+    // Black sclera
+    ctx.fillStyle = '#000000';
+    ctx.beginPath(); ctx.arc(0, 0, r * 0.32, 0, Math.PI * 2); ctx.fill();
+    // Iris — 3 layered rings
+    const irisGrd = ctx.createRadialGradient(0, 0, r * 0.05, 0, 0, r * 0.30);
+    irisGrd.addColorStop(0, '#FF00FF');
+    irisGrd.addColorStop(0.35, '#AA00CC');
+    irisGrd.addColorStop(0.7, '#550088');
+    irisGrd.addColorStop(1, '#000000');
+    ctx.fillStyle = irisGrd;
+    ctx.shadowColor = '#FF00FF'; ctx.shadowBlur = 20;
+    ctx.beginPath(); ctx.arc(0, 0, r * 0.30, 0, Math.PI * 2); ctx.fill();
+    // Spinning star-shaped pupil
+    ctx.shadowBlur = 0;
+    ctx.save(); ctx.rotate(sw * 2.2);
+    ctx.fillStyle = '#FFFFFF';
+    const pts = 6;
+    ctx.beginPath();
+    for (let i = 0; i < pts * 2; i++) {
+      const a  = (i / (pts * 2)) * Math.PI * 2 - Math.PI / 2;
+      const pr = i % 2 === 0 ? r * 0.165 : r * 0.07;
+      if (i === 0) ctx.moveTo(Math.cos(a)*pr, Math.sin(a)*pr);
+      else         ctx.lineTo(Math.cos(a)*pr, Math.sin(a)*pr);
+    }
+    ctx.closePath(); ctx.fill();
+    ctx.restore();
+    // Pupil highlight
+    ctx.fillStyle = 'rgba(255,255,255,0.60)';
+    ctx.beginPath(); ctx.arc(-r*0.07, -r*0.07, r*0.06, 0, Math.PI*2); ctx.fill();
+
+    // ── 8. PLASMA RING BELT — 2 tilted rings ───────────────────────────────
+    const beltColors = ['#FFFF88','#FF88FF'];
+    for (let bi = 0; bi < 2; bi++) {
+      ctx.globalAlpha = 0.60 + pulse * 0.25;
+      ctx.strokeStyle = beltColors[bi];
+      ctx.lineWidth   = 2.5 - bi * 0.5;
+      ctx.shadowColor = beltColors[bi]; ctx.shadowBlur = 10;
+      ctx.beginPath();
+      ctx.ellipse(0, 0, r * (1.08 + bi * 0.12), r * (0.25 + bi * 0.06), sw * (0.35 + bi * 0.2), 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1; ctx.shadowBlur = 0;
+
+    // ── 9. STARDUST PARTICLES — orbiting glitter ───────────────────────────
+    for (let i = 0; i < 18; i++) {
+      const a   = (i / 18) * Math.PI * 2 + sw * (i % 2 === 0 ? 0.9 : -0.7);
+      const orR = r * (0.68 + (i % 3) * 0.22 + Math.sin(sw * 1.2 + i) * 0.08);
+      ctx.fillStyle = i % 3 === 0 ? '#FFCCFF' : (i % 3 === 1 ? '#CCFFFF' : '#FFFFCC');
+      ctx.globalAlpha = 0.55 + Math.sin(sw * 2 + i) * 0.35;
+      ctx.beginPath(); ctx.arc(Math.cos(a) * orR, Math.sin(a) * orR * 0.55, r * 0.038, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
 
     ctx.restore();
   }
@@ -6802,6 +7274,7 @@ class AmbientCar {
   render(ctx) {
     if (this.isHorse)  { this._renderHorse(ctx);  return; }
     if (this.isCamel)  { this._renderCamel(ctx);  return; }
+    if (this.isUFO)    { this._renderUFO(ctx);    return; }
     const w = this.width, h = this.height;
     const bs = this.bodyStyle;
     ctx.save();
@@ -7054,6 +7527,51 @@ class AmbientCar {
     ctx.strokeStyle = this._acDarken(this.color, 0.70); ctx.lineWidth = 3;
     ctx.beginPath(); ctx.moveTo(0, 18); ctx.quadraticCurveTo(5, 23, 2, 26); ctx.stroke();
     ctx.fillStyle = '#3a2208'; ctx.beginPath(); ctx.arc(2, 26, 3, 0, Math.PI * 2); ctx.fill();
+
+    ctx.restore();
+  }
+
+  _renderUFO(ctx) {
+    // Top-down flying saucer — hovers and drifts along road lanes
+    const t = this._lightT || 0;
+    ctx.save();
+    ctx.translate(this.x, this.y);
+
+    // Outer glow halo
+    ctx.shadowColor = this.color; ctx.shadowBlur = 18;
+    ctx.globalAlpha = 0.22;
+    ctx.fillStyle = this.color;
+    ctx.beginPath(); ctx.ellipse(0, 0, 38, 17, 0, 0, Math.PI*2); ctx.fill();
+    ctx.globalAlpha = 1;
+
+    // Main disc body
+    const g = ctx.createRadialGradient(-8, -5, 2, 0, 0, 30);
+    g.addColorStop(0, this._acBrighten(this.color, 1.5));
+    g.addColorStop(0.5, this.color);
+    g.addColorStop(1, this._acDarken(this.color, 0.55));
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.ellipse(0, 0, 30, 13, 0, 0, Math.PI*2); ctx.fill();
+
+    // Dome on top
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = 'rgba(200,180,255,0.80)';
+    ctx.beginPath(); ctx.ellipse(0, -3, 14, 10, 0, Math.PI, Math.PI*2); ctx.fill();
+    // Dome shine
+    ctx.fillStyle = 'rgba(255,255,255,0.35)';
+    ctx.beginPath(); ctx.ellipse(-4, -6, 6, 4, -0.4, 0, Math.PI*2); ctx.fill();
+
+    // Rotating light ring (6 colored lights)
+    const ringA = t * 3.5;
+    const lightCols = ['#FF44AA','#AA44FF','#44FFAA','#FFAA44','#44AAFF','#FF4444'];
+    for (let i = 0; i < 6; i++) {
+      const a   = ringA + i * Math.PI * 2 / 6;
+      const lx  = Math.cos(a) * 22;
+      const ly  = Math.sin(a) * 9;
+      ctx.shadowColor = lightCols[i]; ctx.shadowBlur = 8;
+      ctx.fillStyle = lightCols[i];
+      ctx.beginPath(); ctx.arc(lx, ly, 3, 0, Math.PI*2); ctx.fill();
+    }
+    ctx.shadowBlur = 0;
 
     ctx.restore();
   }

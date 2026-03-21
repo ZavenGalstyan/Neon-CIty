@@ -112,9 +112,10 @@ class Game {
     this._policeTimer = 0;
     this._policeSirenTimer = 0; // throttle siren sound
     this._sirenPlaying = false;
-    this._desertMode  = !!this.map.config.desert;
-    this._robotMode   = !!this.map.config.robot;
-    this._jungleMode  = !!this.map.config.jungle;
+    this._desertMode    = !!this.map.config.desert;
+    this._robotMode     = !!this.map.config.robot;
+    this._jungleMode    = !!this.map.config.jungle;
+    this._galacticaMode = !!this.map.config.galactica;
 
     // Weather
     this.weather = new Weather(this.map.config.weather || 'clear');
@@ -1436,17 +1437,21 @@ class Game {
     const angles    = [0, Math.PI / 2, Math.PI, -Math.PI / 2];
     const carColors = ['#CC3333','#3366BB','#CC9900','#339944','#AA33AA','#336688','#CC6633','#55AACC'];
     const angle     = angles[Math.floor(Math.random() * angles.length)];
-    const isJungle  = !!this.map.config.jungle;
-    const isDesert  = !!this.map.config.desert;
-    const color     = isJungle
+    const isJungle    = !!this.map.config.jungle;
+    const isDesert    = !!this.map.config.desert;
+    const isGalactica = !!this.map.config.galactica;
+    const color = isJungle
       ? ['#8B4513','#6B3410','#A0522D','#704214','#5C3317'][Math.floor(Math.random()*5)]
       : isDesert
         ? ['#C8A050','#B08828','#D4AA60','#A07830','#C09040'][Math.floor(Math.random()*5)]
+      : isGalactica
+        ? ['#AA44FF','#FF44AA','#44AAFF','#44FFAA','#FFAA44'][Math.floor(Math.random()*5)]
         : carColors[Math.floor(Math.random() * carColors.length)];
     const style     = Math.floor(Math.random() * 5);
     const car = new AmbientCar(pos.x, pos.y, angle, color, style);
-    if (isJungle) car.isHorse = true;
-    if (isDesert) car.isCamel = true;
+    if (isJungle)    car.isHorse = true;
+    if (isDesert)    car.isCamel = true;
+    if (isGalactica) car.isUFO   = true;
     this._ambientCars.push(car);
   }
 
@@ -3407,6 +3412,13 @@ class Game {
     if (this._desertMode) {
       ctx.save();
       ctx.fillStyle = 'rgba(30,18,4,0.10)';
+      ctx.fillRect(0, 0, W, H);
+      ctx.restore();
+    }
+    // Galactica: deep space darkness tint
+    if (this._galacticaMode) {
+      ctx.save();
+      ctx.fillStyle = 'rgba(2,0,18,0.14)';
       ctx.fillRect(0, 0, W, H);
       ctx.restore();
     }

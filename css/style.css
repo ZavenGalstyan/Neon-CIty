@@ -606,6 +606,31 @@ body {
   .map-card--desert .map-preview { width: 100%; height: 80px; min-height: 80px; }
 }
 
+.map-card--galactica {
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 20px;
+  padding: 16px 20px;
+  min-height: 180px;
+  height: auto;
+  background: linear-gradient(135deg, rgba(8,0,28,0.97) 0%, rgba(4,0,18,0.99) 100%);
+  border: 1px solid rgba(170,68,255,0.30);
+}
+.map-card--galactica .map-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.map-card[data-map="galactica"]:hover   { border-color: rgba(170,68,255,0.55); box-shadow: 0 8px 30px rgba(0,0,0,0.6), 0 0 22px rgba(170,68,255,0.18); }
+.map-card[data-map="galactica"].selected { transform: translateY(-5px); border-color: #AA44FF; box-shadow: 0 0 28px rgba(170,68,255,0.55), 0 12px 40px rgba(0,0,0,0.6); }
+@media (max-width: 600px) {
+  .map-card--galactica { flex-direction: column; min-height: auto; padding: 12px; }
+  .map-card--galactica .map-preview { width: 100%; height: 80px; min-height: 80px; }
+}
+
 /* Life Mode + Arena + Zombie — 3-per-row grid */
 .special-maps-row {
   grid-column: 1 / -1; margin-top: 6px;

@@ -394,6 +394,34 @@ const CONFIG = {
       zombie: true,
     },
 
+    // ── Galactica ───────────────────────────────────────────
+    {
+      id: 'galactica', name: 'GALACTICA',
+      desc: 'A living galaxy. Alien swarms, plasma storms, planet structures. The Galactic Overlord rules all.',
+      theme: '#AA44FF',
+      tags: ['SPACE', 'ALIENS', 'COSMIC'],
+      previewGridSize: 16, previewBg: '#020010', previewRoad: 'rgba(120,60,255,0.45)',
+      mapW: 40, mapH: 40, tileSize: 80, roadEvery: 7,
+      roadColor: '#04000e', sidewalkColor: '#08001a',
+      buildingPalette: ['#120028','#1a0038','#0e0024','#160030','#10001e','#18002a','#0c001e','#140030'],
+      neonColors: ['#AA44FF','#FF44AA','#44AAFF','#FFAA44','#44FFAA'],
+      windowColors: ['#CC88FF','#FF88CC','#88CCFF','#FFCC88'],
+      lightColor: '#AA44FF', lightGlow: '#7722CC', neonFreq: 6,
+      weather: 'starfield',
+      galactica: true,
+      botPalettes: {
+        mini:       [{ body:'#1a0040', accent:'#AA44FF' }, { body:'#0a0028', accent:'#FF44AA' }],
+        normal:     [{ body:'#220044', accent:'#CC66FF' }, { body:'#1a003a', accent:'#AA44FF' }, { body:'#28004a', accent:'#FF66AA' }],
+        big:        [{ body:'#0e0028', accent:'#7722CC' }, { body:'#0c0020', accent:'#8833DD' }],
+        police:     [{ body:'#001428', accent:'#44AAFF' }, { body:'#000c20', accent:'#2288EE' }],
+        swat:       [{ body:'#0a001e', accent:'#FF4444' }],
+        heavyswat:  [{ body:'#14000a', accent:'#FF8844' }],
+        sniper:     [{ body:'#04001c', accent:'#44FFCC' }],
+        bomber:     [{ body:'#1a0800', accent:'#FF6600' }],
+        juggernaut: [{ body:'#0a0020', accent:'#AA44FF' }],
+      },
+    },
+
     // ── Page 2 Maps ─────────────────────────────────────────
     // WASTELAND - Unified map with big buildings and color themes
     {
