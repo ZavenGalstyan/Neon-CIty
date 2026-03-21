@@ -6424,57 +6424,290 @@ class Drone {
 
   // ── Storm Emperor (Sky Realm final boss) ──────────────────────────────────
   _renderStormEmperor(ctx, x, y, r, pulse) {
-    // Lean render: ~18 draw ops total (was ~55) for sky realm performance
-    const t = Date.now() * 0.001;
-    const wFlap = Math.sin(t * 2.5) * 0.08;
+    const t      = Date.now() * 0.001;
+    const flap   = Math.sin(t * 2.8) * 0.18;          // wing flap
+    const rage   = 0.75 + Math.sin(t * 6.0) * 0.25;  // rage pulse
+    const twitch = Math.sin(t * 11) * 2;               // angry twitch
     ctx.save();
     ctx.translate(x, y);
 
-    // 1. Single outer glow ring
-    ctx.globalAlpha = 0.30 * pulse;
-    ctx.strokeStyle = '#FFD700'; ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.arc(0, 0, r * 1.35 + Math.sin(t * 3) * 4, 0, Math.PI*2); ctx.stroke();
+    // ── 0. Cover the generic cylinder body the BossBot draws first ──
+    // Draw an opaque dark shape so the generic cylinder is hidden
+    ctx.fillStyle = '#1a0800';
+    ctx.beginPath(); ctx.ellipse(0, 0, r*1.05, r*1.15, 0, 0, Math.PI*2); ctx.fill();
+
+    // ── 1. RAGE AURA — pulsing red-orange glow around the whole body ──
+    ctx.globalAlpha = 0.55 * rage;
+    ctx.shadowColor = '#FF3300'; ctx.shadowBlur = 50;
+    ctx.fillStyle = '#FF2200';
+    ctx.beginPath(); ctx.arc(0, 0, r * 2.4, 0, Math.PI*2); ctx.fill();
+    ctx.globalAlpha = 0.35 * rage;
+    ctx.fillStyle = '#FF7700';
+    ctx.beginPath(); ctx.arc(0, 0, r * 1.7, 0, Math.PI*2); ctx.fill();
+    ctx.shadowBlur = 0; ctx.globalAlpha = 1;
+
+    // ── 2. TAIL FEATHERS — ragged spikes pointing down ────────────
+    for (let ti = -3; ti <= 3; ti++) {
+      const ta = Math.PI*0.5 + ti * 0.20 + Math.sin(t*3 + ti)*0.04;
+      const len = r * (ti === 0 ? 1.7 : ti % 2 === 0 ? 1.4 : 1.1);
+      ctx.strokeStyle = ti % 2 === 0 ? '#7a2a00' : '#5a1500';
+      ctx.lineWidth = ti === 0 ? 6 : 4;
+      ctx.globalAlpha = 1;
+      ctx.beginPath();
+      ctx.moveTo(Math.cos(ta)*r*0.6, Math.sin(ta)*r*0.6);
+      ctx.lineTo(Math.cos(ta)*len,   Math.sin(ta)*len);
+      ctx.stroke();
+    }
     ctx.globalAlpha = 1;
 
-    // 2. Wings — two simple quads each side
-    for (const side of [-1, 1]) {
-      ctx.fillStyle = '#18283a';
-      ctx.beginPath();
-      ctx.moveTo(0, r*0.1); ctx.lineTo(side*r*2.6, -r*(0.30+wFlap));
-      ctx.lineTo(side*r*2.3, r*(0.50+wFlap*0.5)); ctx.lineTo(side*r*0.6, r*0.48);
-      ctx.closePath(); ctx.fill();
-      // Gold lightning mark
-      ctx.fillStyle = '#FFD700'; ctx.globalAlpha = 0.70;
-      const bx = side * r * 1.25;
-      ctx.beginPath(); ctx.moveTo(bx, -r*0.15); ctx.lineTo(bx+side*8, r*0.02); ctx.lineTo(bx+side*2, r*0.04); ctx.lineTo(bx+side*7, r*0.22); ctx.closePath(); ctx.fill();
+    // ── 3. WINGS — massive, jagged mutant feathers ────────────────
+    for (const s of [-1, 1]) {
+      // Main wing membrane (black-brown, solid and opaque)
       ctx.globalAlpha = 1;
+      ctx.fillStyle = '#2a0e02';
+      ctx.strokeStyle = '#5a1800'; ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(s*r*0.5,   r*0.4);
+      ctx.lineTo(s*r*1.5,  -r*(0.2+flap));
+      ctx.lineTo(s*r*2.2,  -r*(0.55+flap));
+      ctx.lineTo(s*r*3.2,  -r*(0.3+flap*0.8));
+      ctx.lineTo(s*r*3.0,   r*(0.35+flap*0.3));
+      ctx.lineTo(s*r*2.3,   r*(0.55+flap*0.2));
+      ctx.lineTo(s*r*1.4,   r*0.5);
+      ctx.closePath(); ctx.fill(); ctx.stroke();
+
+      // Dark red inner wing
+      ctx.fillStyle = '#4a1200';
+      ctx.globalAlpha = 0.7;
+      ctx.beginPath();
+      ctx.moveTo(s*r*0.48,  r*0.32);
+      ctx.lineTo(s*r*2.0,  -r*(0.45+flap));
+      ctx.lineTo(s*r*2.5,  -r*(0.20+flap*0.6));
+      ctx.lineTo(s*r*2.2,   r*(0.20+flap*0.2));
+      ctx.lineTo(s*r*1.1,   r*0.42);
+      ctx.closePath(); ctx.fill();
+      ctx.globalAlpha = 1;
+
+      // Jagged feather spikes along trailing edge (6 bright-tipped)
+      for (let fi = 0; fi < 6; fi++) {
+        const ft   = fi / 5;
+        const bx2  = s * (r*0.9 + ft * r*2.1);
+        const by2  = r*0.45 + ft*(r*(0.5+flap*0.25) - r*0.45) - Math.sin(ft*Math.PI)*r*0.45;
+        const spkL = (fi % 2 === 0 ? 26 : 16) + Math.sin(t*4+fi)*4;
+        ctx.fillStyle = '#1a0800';
+        ctx.beginPath();
+        ctx.moveTo(bx2 - s*6, by2);
+        ctx.lineTo(bx2 + s*2, by2 + spkL);
+        ctx.lineTo(bx2 + s*9, by2);
+        ctx.closePath(); ctx.fill();
+        // Bright orange tip
+        ctx.fillStyle = '#FF5500';
+        ctx.globalAlpha = 0.7;
+        ctx.beginPath();
+        ctx.moveTo(bx2 - s*2, by2 + spkL*0.6);
+        ctx.lineTo(bx2 + s*2, by2 + spkL);
+        ctx.lineTo(bx2 + s*5, by2 + spkL*0.6);
+        ctx.closePath(); ctx.fill();
+        ctx.globalAlpha = 1;
+      }
+
+      // BRIGHT glowing red vein along wing bone
+      ctx.strokeStyle = '#FF4400'; ctx.lineWidth = 3;
+      ctx.globalAlpha = 0.85 * rage;
+      ctx.shadowColor = '#FF2200'; ctx.shadowBlur = 14;
+      ctx.beginPath();
+      ctx.moveTo(s*r*0.5,  r*0.35);
+      ctx.quadraticCurveTo(s*r*1.8, -r*(0.4+flap*0.5), s*r*3.0, -r*(0.28+flap*0.7));
+      ctx.stroke();
+      ctx.shadowBlur = 0; ctx.globalAlpha = 1;
+
+      // Bone spur on mid-wing (bright bone color)
+      ctx.fillStyle = '#E8C870';
+      ctx.shadowColor = '#FFD000'; ctx.shadowBlur = 6;
+      ctx.beginPath();
+      ctx.moveTo(s*r*1.5,       -r*(0.18+flap*0.5));
+      ctx.lineTo(s*r*1.5 + s*7,  -r*(0.18+flap*0.5) - 20);
+      ctx.lineTo(s*r*1.5 + s*15, -r*(0.18+flap*0.5));
+      ctx.closePath(); ctx.fill();
+      ctx.shadowBlur = 0;
     }
 
-    // 3. Body oval
-    ctx.fillStyle = '#1c3c58';
-    ctx.beginPath(); ctx.ellipse(0, 0, r, r*1.08, 0, 0, Math.PI*2); ctx.fill();
+    // ── 4. BODY — big hunched mutant bird torso ───────────────────
+    // Dark body (clearly visible, covers cylinder)
+    ctx.shadowColor = '#FF2200'; ctx.shadowBlur = 20;
+    ctx.fillStyle = '#2a0c00';
+    ctx.beginPath(); ctx.ellipse(0, r*0.05, r*0.72, r*0.88, 0, 0, Math.PI*2); ctx.fill();
+    ctx.shadowBlur = 0;
+    // Chest lighter feather patch
+    ctx.fillStyle = '#4a1a06';
+    ctx.beginPath(); ctx.ellipse(0, r*0.12, r*0.42, r*0.52, 0, 0, Math.PI*2); ctx.fill();
+    // Visible feather lines
+    ctx.strokeStyle = '#8a3a10'; ctx.lineWidth = 1.5; ctx.globalAlpha = 0.8;
+    for (let fi = -2; fi <= 2; fi++) {
+      const fx = fi * r * 0.16;
+      ctx.beginPath();
+      ctx.moveTo(fx, -r*0.12);
+      ctx.quadraticCurveTo(fx + fi*5, r*0.2, fx, r*0.48);
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+    // BRIGHT glowing red scar crack on chest
+    ctx.strokeStyle = '#FF3300'; ctx.lineWidth = 3;
+    ctx.globalAlpha = 0.9 * rage;
+    ctx.shadowColor = '#FF0000'; ctx.shadowBlur = 14;
+    ctx.beginPath();
+    ctx.moveTo(-r*0.12, -r*0.05);
+    ctx.lineTo( r*0.06, r*0.14);
+    ctx.lineTo(-r*0.05, r*0.20);
+    ctx.lineTo( r*0.10, r*0.38);
+    ctx.stroke();
+    ctx.shadowBlur = 0; ctx.globalAlpha = 1;
 
-    // 4. Crown — 4 gold spikes at top arc
-    ctx.fillStyle = '#FFD700';
-    for (let ci = 0; ci < 4; ci++) {
-      const ca = -Math.PI*0.65 + ci*(Math.PI*1.30/3);
-      const ix = Math.cos(ca)*r*0.90, iy = Math.sin(ca)*r*0.90;
-      const ox = Math.cos(ca)*r*1.30, oy = Math.sin(ca)*r*1.30;
-      ctx.beginPath(); ctx.moveTo(ix - Math.sin(ca)*4, iy + Math.cos(ca)*4);
-      ctx.lineTo(ox, oy); ctx.lineTo(ix + Math.sin(ca)*4, iy - Math.cos(ca)*4);
+    // ── 5. HEAD — large, round, menacing ─────────────────────────
+    ctx.shadowColor = '#FF2200'; ctx.shadowBlur = 18;
+    ctx.fillStyle = '#2a0c00';
+    ctx.beginPath(); ctx.arc(twitch*0.5, -r*0.80, r*0.60, 0, Math.PI*2); ctx.fill();
+    ctx.shadowBlur = 0;
+    // Feather detail ring
+    ctx.fillStyle = '#3e1608';
+    ctx.beginPath(); ctx.arc(twitch*0.5, -r*0.82, r*0.50, 0, Math.PI*2); ctx.fill();
+
+    // Head crest — 5 jagged spikes on top (mohawk)
+    for (let ci = 0; ci < 5; ci++) {
+      const cx    = twitch*0.5 + (ci - 2) * r * 0.20;
+      const cH    = r * (ci === 2 ? 0.62 : ci % 2 === 0 ? 0.44 : 0.34) + Math.sin(t*5+ci)*4;
+      const baseY = -r * 1.32;
+      // Dark spike base
+      ctx.fillStyle = '#1a0600';
+      ctx.beginPath();
+      ctx.moveTo(cx - 7, baseY);
+      ctx.lineTo(cx,      baseY - cH);
+      ctx.lineTo(cx + 7,  baseY);
+      ctx.closePath(); ctx.fill();
+      // Bright red tip
+      ctx.fillStyle = ci === 2 ? '#FF2200' : '#CC2200';
+      ctx.shadowColor = '#FF0000'; ctx.shadowBlur = ci === 2 ? 14 : 6;
+      ctx.globalAlpha = rage;
+      ctx.beginPath();
+      ctx.moveTo(cx - 4, baseY - cH*0.5);
+      ctx.lineTo(cx,      baseY - cH);
+      ctx.lineTo(cx + 4,  baseY - cH*0.5);
+      ctx.closePath(); ctx.fill();
+      ctx.shadowBlur = 0; ctx.globalAlpha = 1;
+    }
+
+    // ── 6. ANGRY EYES — huge glowing red rage eyes ───────────────
+    const eyeHX = twitch * 0.5;
+    for (const s of [-1, 1]) {
+      const ex = eyeHX + s * r * 0.27;
+      const ey = -r * 0.82;
+      // Outer glow
+      ctx.globalAlpha = 0.5 * rage;
+      ctx.shadowColor = '#FF0000'; ctx.shadowBlur = 22;
+      ctx.fillStyle = '#FF2200';
+      ctx.beginPath(); ctx.arc(ex, ey, r*0.22, 0, Math.PI*2); ctx.fill();
+      ctx.globalAlpha = 1; ctx.shadowBlur = 0;
+      // Iris (bright burning orange)
+      ctx.fillStyle = '#FF5500';
+      ctx.beginPath(); ctx.arc(ex, ey, r*0.17, 0, Math.PI*2); ctx.fill();
+      // Pupil — vertical slit (angry)
+      ctx.fillStyle = '#000000';
+      ctx.beginPath(); ctx.ellipse(ex, ey, r*0.05, r*0.13, 0, 0, Math.PI*2); ctx.fill();
+      // Eye shine
+      ctx.fillStyle = '#FFAA44';
+      ctx.beginPath(); ctx.arc(ex - r*0.05, ey - r*0.06, r*0.05, 0, Math.PI*2); ctx.fill();
+      // ANGRY EYEBROW — thick dark slash angled inward
+      ctx.strokeStyle = '#000000'; ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(ex - s*r*0.20, ey - r*0.20);
+      ctx.lineTo(ex + s*r*0.04, ey - r*0.10);
+      ctx.stroke();
+    }
+
+    // ── 7. BEAK — wide open screaming, showing throat ─────────────
+    const bx = eyeHX;
+    ctx.shadowColor = '#FFA000'; ctx.shadowBlur = 10;
+    // Upper beak
+    ctx.fillStyle = '#D4920A';
+    ctx.beginPath();
+    ctx.moveTo(bx - r*0.24, -r*0.62);
+    ctx.lineTo(bx + r*0.24, -r*0.62);
+    ctx.lineTo(bx + r*0.14, -r*0.38);
+    ctx.lineTo(bx,           -r*0.30);
+    ctx.lineTo(bx - r*0.14, -r*0.38);
+    ctx.closePath(); ctx.fill();
+    // Upper beak ridge
+    ctx.fillStyle = '#D49000';
+    ctx.beginPath();
+    ctx.moveTo(bx - r*0.10, -r*0.62);
+    ctx.lineTo(bx + r*0.10, -r*0.62);
+    ctx.lineTo(bx,           -r*0.33);
+    ctx.closePath(); ctx.fill();
+    // Lower beak (open / dropped down)
+    ctx.fillStyle = '#B87B00';
+    ctx.beginPath();
+    ctx.moveTo(bx - r*0.20, -r*0.38);
+    ctx.lineTo(bx + r*0.20, -r*0.38);
+    ctx.lineTo(bx + r*0.08, -r*0.18);
+    ctx.lineTo(bx - r*0.08, -r*0.18);
+    ctx.closePath(); ctx.fill();
+    // Open throat / mouth interior (dark red)
+    ctx.fillStyle = '#5a0000';
+    ctx.beginPath();
+    ctx.moveTo(bx - r*0.18, -r*0.57);
+    ctx.lineTo(bx + r*0.18, -r*0.57);
+    ctx.lineTo(bx + r*0.09, -r*0.22);
+    ctx.lineTo(bx - r*0.09, -r*0.22);
+    ctx.closePath(); ctx.fill();
+    // Tongue
+    ctx.fillStyle = '#8B0000';
+    ctx.beginPath();
+    ctx.ellipse(bx, -r*0.40, r*0.07, r*0.14, 0, 0, Math.PI*2); ctx.fill();
+    // Teeth — 3 small triangles on upper jaw
+    ctx.fillStyle = '#F0E0A0';
+    for (let ti = -1; ti <= 1; ti++) {
+      const tx = bx + ti * r * 0.12;
+      ctx.beginPath();
+      ctx.moveTo(tx - 4, -r*0.57);
+      ctx.lineTo(tx,      -r*0.48);
+      ctx.lineTo(tx + 4,  -r*0.57);
       ctx.closePath(); ctx.fill();
     }
 
-    // 5. Eye
-    ctx.fillStyle = '#FFD700';
-    ctx.beginPath(); ctx.arc(0, -r*0.06, r*0.20, 0, Math.PI*2); ctx.fill();
-    ctx.fillStyle = '#001828';
-    ctx.beginPath(); ctx.arc(0, -r*0.06, r*0.11, 0, Math.PI*2); ctx.fill();
+    // ── 8. MUTANT EXTRA EYE — center of forehead ─────────────────
+    const mx = eyeHX, my = -r*1.02;
+    ctx.globalAlpha = 0.65 * rage;
+    ctx.shadowColor = '#FF0000'; ctx.shadowBlur = 14;
+    ctx.fillStyle = '#FF0000';
+    ctx.beginPath(); ctx.arc(mx, my, r*0.13, 0, Math.PI*2); ctx.fill();
+    ctx.globalAlpha = 1; ctx.shadowBlur = 0;
+    ctx.fillStyle = '#AA0000';
+    ctx.beginPath(); ctx.arc(mx, my, r*0.08, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#000000';
+    ctx.beginPath(); ctx.arc(mx, my, r*0.04, 0, Math.PI*2); ctx.fill();
 
-    // 6. Talons — two simple ovals
-    ctx.fillStyle = '#FFD700';
-    ctx.beginPath(); ctx.ellipse(-r*0.28, r*0.92, r*0.12, r*0.07, 0, 0, Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.ellipse( r*0.28, r*0.92, r*0.12, r*0.07, 0, 0, Math.PI*2); ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // ── 9. LEGS and MASSIVE TALONS ────────────────────────────────
+    ctx.strokeStyle = '#5a2200'; ctx.lineWidth = 8;
+    ctx.shadowColor = '#FF2200'; ctx.shadowBlur = 6;
+    ctx.beginPath(); ctx.moveTo(-r*0.25, r*0.82); ctx.lineTo(-r*0.30, r*1.10); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo( r*0.25, r*0.82); ctx.lineTo( r*0.30, r*1.10); ctx.stroke();
+    // Claw feet — 3 big talons each foot
+    ctx.strokeStyle = '#E8C060'; ctx.lineWidth = 4;
+    ctx.shadowColor = '#FFD000'; ctx.shadowBlur = 8;
+    for (const s of [-1, 1]) {
+      const fx = s * r * 0.30, fy = r * 1.10;
+      // 3 spreading claws
+      for (let ci = -1; ci <= 1; ci++) {
+        const ca = Math.PI*0.5 + ci * 0.45;
+        ctx.beginPath();
+        ctx.moveTo(fx, fy);
+        ctx.lineTo(fx + Math.cos(ca)*s*20, fy + Math.sin(ca)*16);
+        ctx.stroke();
+      }
+    }
+    ctx.shadowBlur = 0;
 
     ctx.restore();
   }
