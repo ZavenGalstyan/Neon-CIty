@@ -10,7 +10,10 @@
       "Bash(grep:*)",
       "Bash(awk 'NR>=1836 && NR<=2836' \"C:/Users/Zav/Desktop/Z-Gta/js/core/game.js\" | grep -n \"\\\\br\\\\b\" | grep -v \"rr\\\\|\\\\.restore\\\\|restore\\\\|dir\\\\|floor\\\\|color\\\\|for\\\\|var\\\\|or \\\\|ver\\\\|stroke\\\\|enter\\\\|ctx\\\\.r\\\\|ry\\\\|rx\\\\|render\\\\|rp\\\\|round\")",
       "Bash(awk 'NR>=1836 && NR<=2836' \"C:/Users/Zav/Desktop/Z-Gta/js/core/game.js\" | grep -n \" r[^a-zA-Z0-9_]\" | head -30)",
-      "Bash(wc:*)"
+      "Bash(wc:*)",
+      "Bash(awk 'NR>4835' js/entities/entities.js)",
+      "Bash(awk 'NR==6013' js/entities/entities.js)",
+      "Bash(awk 'NR>6507' js/entities/entities.js)"
     ]
   }
 }

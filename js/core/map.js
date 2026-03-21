@@ -436,8 +436,17 @@ class GameMap {
   _buildStreetLights() {
     this.streetLights = [];
     const S = this.S;
-    // Colour palette: amber (×2 weight), cool-white, pink, cyan
-    const PAL = [
+    // Desert: warm oil-lamp amber only. Galactica: purple/cyan alien glows. City: amber, cool-white, pink, cyan
+    const PAL = this.config.desert ? [
+      [255, 160,  40],
+      [255, 145,  30],
+      [255, 180,  60],
+    ] : this.config.galactica ? [
+      [170,  68, 255],
+      [255,  68, 170],
+      [ 68, 170, 255],
+      [ 68, 255, 170],
+    ] : [
       [255, 210, 110],
       [255, 210, 110],
       [220, 240, 255],
@@ -478,7 +487,7 @@ class GameMap {
   // Shows the physical pole + arm + lamp housing in world coords.
   // ctx is already translated to world-space by the caller.
   renderStreetLightPoles(ctx, camX, camY, canvasW, canvasH, nightAlpha) {
-    if (!this.streetLights || !this.streetLights.length || nightAlpha < 0.01) return;
+    if (!this.streetLights || !this.streetLights.length) return;
     const margin = 80;
     const x0 = camX - margin, y0 = camY - margin;
     const x1 = camX + canvasW + margin, y1 = camY + canvasH + margin;
@@ -518,21 +527,34 @@ class GameMap {
       ctx.lineTo(lx, ly);
       ctx.stroke();
 
-      // ── Lamp housing (dark trapezoid / rect) ─────────────────
+      // ── Lamp housing (dome) ───────────────────────────────────
       ctx.fillStyle = '#1e1e2e';
-      ctx.beginPath();
-      ctx.arc(lx, ly, 5.5, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.beginPath(); ctx.arc(lx, ly, 6, 0, Math.PI * 2); ctx.fill();
+      // Bottom rim
+      ctx.fillStyle = 'rgba(80,80,110,0.60)';
+      ctx.fillRect(lx - 6, ly + 3, 12, 2);
 
       // ── Bulb (dim off-state during day, bright at night) ─────
-      const bulbAlpha = lit ? 0.55 + nightAlpha * 0.45 : 0.12;
+      const bulbAlpha = lit ? 0.65 + nightAlpha * 0.35 : 0.18;
+      // Outer glow ring (night only)
+      if (lit && nightAlpha > 0.05) {
+        ctx.globalAlpha = nightAlpha * 0.45;
+        ctx.fillStyle   = `rgba(${lt.r},${lt.g},${lt.b},1)`;
+        ctx.beginPath(); ctx.arc(lx, ly, 14, 0, Math.PI * 2); ctx.fill();
+        ctx.globalAlpha = nightAlpha * 0.70;
+        ctx.beginPath(); ctx.arc(lx, ly, 9, 0, Math.PI * 2); ctx.fill();
+        ctx.globalAlpha = 1;
+      }
+      // Core bulb
       ctx.fillStyle   = `rgba(${lt.r},${lt.g},${lt.b},${bulbAlpha})`;
-      ctx.shadowColor = `rgb(${lt.r},${lt.g},${lt.b})`;
-      ctx.shadowBlur  = lit ? 10 * nightAlpha : 0;
-      ctx.beginPath();
-      ctx.arc(lx, ly, 3.5, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.shadowBlur = 0;
+      ctx.beginPath(); ctx.arc(lx, ly, 4.5, 0, Math.PI * 2); ctx.fill();
+      // Hot white center
+      if (lit) {
+        ctx.globalAlpha = nightAlpha * 0.85;
+        ctx.fillStyle = `rgba(255,255,255,1)`;
+        ctx.beginPath(); ctx.arc(lx, ly, 2, 0, Math.PI * 2); ctx.fill();
+        ctx.globalAlpha = 1;
+      }
     }
     ctx.restore();
   }
@@ -558,28 +580,34 @@ class GameMap {
       const lx = lt.wx + lt.armDx * (S * 0.44);
       const ly = lt.wy + lt.armDy * (S * 0.44);
       const { r, g, b } = lt;
+      // Ground pool direction: arm points toward road, so light pools there
+      const poolX = lx + lt.armDx * 28;
+      const poolY = ly + lt.armDy * 28;
 
-      // Tight halo around the bulb
-      const halo = ctx.createRadialGradient(lx, ly, 0, lx, ly, 24);
-      halo.addColorStop(0,   `rgba(${r},${g},${b},${(a * 0.70).toFixed(3)})`);
-      halo.addColorStop(0.4, `rgba(${r},${g},${b},${(a * 0.30).toFixed(3)})`);
-      halo.addColorStop(1,   `rgba(${r},${g},${b},0)`);
-      ctx.fillStyle = halo;
-      ctx.beginPath();
-      ctx.arc(lx, ly, 24, 0, Math.PI * 2);
-      ctx.fill();
+      // ── Large soft ground pool via radial gradient ───────────
+      const poolR = 110;
+      const grd = ctx.createRadialGradient(poolX, poolY, 4, poolX, poolY, poolR);
+      grd.addColorStop(0,    `rgba(${r},${g},${b},${a * 0.38})`);
+      grd.addColorStop(0.22, `rgba(${r},${g},${b},${a * 0.22})`);
+      grd.addColorStop(0.55, `rgba(${r},${g},${b},${a * 0.08})`);
+      grd.addColorStop(1,    `rgba(${r},${g},${b},0)`);
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = grd;
+      ctx.beginPath(); ctx.ellipse(poolX, poolY, poolR, poolR * 0.72, 0, 0, Math.PI * 2); ctx.fill();
 
-      // Wide soft ground pool (slightly oval, follows arm direction)
-      const poolRx = lt.armDy !== 0 ? 52 : 72; // wider perpendicular to arm
-      const poolRy = lt.armDy !== 0 ? 72 : 52;
-      const pool = ctx.createRadialGradient(lx, ly, 0, lx, ly, Math.max(poolRx, poolRy));
-      pool.addColorStop(0,   `rgba(${r},${g},${b},${(a * 0.22).toFixed(3)})`);
-      pool.addColorStop(0.5, `rgba(${r},${g},${b},${(a * 0.09).toFixed(3)})`);
-      pool.addColorStop(1,   `rgba(${r},${g},${b},0)`);
-      ctx.fillStyle = pool;
-      ctx.beginPath();
-      ctx.ellipse(lx, ly, poolRx, poolRy, 0, 0, Math.PI * 2);
-      ctx.fill();
+      // ── Mid halo ring around the lamp head ────────────────────
+      const haloGrd = ctx.createRadialGradient(lx, ly, 2, lx, ly, 38);
+      haloGrd.addColorStop(0,    `rgba(${r},${g},${b},${a * 0.70})`);
+      haloGrd.addColorStop(0.35, `rgba(${r},${g},${b},${a * 0.28})`);
+      haloGrd.addColorStop(1,    `rgba(${r},${g},${b},0)`);
+      ctx.fillStyle = haloGrd;
+      ctx.beginPath(); ctx.arc(lx, ly, 38, 0, Math.PI * 2); ctx.fill();
+
+      // ── Bright bulb core ──────────────────────────────────────
+      ctx.globalAlpha = a * 0.90;
+      ctx.fillStyle = `rgba(${Math.min(255,r+60)},${Math.min(255,g+60)},${Math.min(255,b+60)},1)`;
+      ctx.beginPath(); ctx.arc(lx, ly, 7, 0, Math.PI * 2); ctx.fill();
+      ctx.globalAlpha = 1;
     }
 
     ctx.restore();
@@ -617,11 +645,8 @@ class GameMap {
   _drawCactus(ctx, x, y, h, style) {
     const w = h * 0.20;
     ctx.save();
-    ctx.shadowColor = '#000'; ctx.shadowBlur = 4;
-
-    const cg = ctx.createLinearGradient(x - w, y, x + w, y);
-    cg.addColorStop(0, '#2a6018'); cg.addColorStop(0.45, '#3a8028'); cg.addColorStop(1, '#2a6018');
-    ctx.fillStyle = cg;
+    // Flat green — no shadowBlur for performance
+    ctx.fillStyle = '#347022';
 
     // Main trunk
     ctx.beginPath();
@@ -642,8 +667,6 @@ class GameMap {
       ctx.beginPath(); ctx.roundRect(x + w * 0.8, ay, w * 2.4, w * 1.5, w * 0.6); ctx.fill();
       ctx.beginPath(); ctx.roundRect(x + w * 0.8 + aw * 0.05, ay - ah, aw * 1.0, ah, w * 0.7); ctx.fill();
     }
-
-    ctx.shadowBlur = 0;
 
     // Spine dots down the trunk
     ctx.fillStyle = 'rgba(255,255,220,0.30)';
@@ -717,6 +740,9 @@ class GameMap {
     const ex  = Math.min(this.W - 1, Math.ceil((camX + canvasW) / S));
     const ey  = Math.min(this.H - 1, Math.ceil((camY + canvasH) / S));
 
+    // Pre-compute time-based wave offset once per frame (not per tile)
+    const _waveNow = cfg.ocean ? Date.now() * 0.001 : 0;
+
     for (let y = sy; y <= ey; y++) {
       for (let x = sx; x <= ex; x++) {
         const wx   = x * S, wy = y * S;
@@ -726,96 +752,123 @@ class GameMap {
         const isRowR = this._rySet ? this._rySet.has(y) : (y % R === 0);
 
         if (tile === TILE.ROAD) {
-          if (cfg.jungle) {
-            // Jungle: dirt path with rocks and sand
-            const pathSeed = x * 17 + y * 31;
-            const pathVariant = pathSeed % 5;
-
-            // Base dirt color
-            const dirtGrad = ctx.createLinearGradient(wx, wy, wx + S, wy + S);
-            if (pathVariant < 2) {
-              // Brown dirt
-              dirtGrad.addColorStop(0, '#5a3d1e');
-              dirtGrad.addColorStop(0.5, '#6a4a28');
-              dirtGrad.addColorStop(1, '#4a3018');
-            } else if (pathVariant < 4) {
-              // Sandy path
-              dirtGrad.addColorStop(0, '#8a7a5a');
-              dirtGrad.addColorStop(0.5, '#9a8a68');
-              dirtGrad.addColorStop(1, '#7a6a4a');
-            } else {
-              // Rocky path
-              dirtGrad.addColorStop(0, '#4a4a48');
-              dirtGrad.addColorStop(0.5, '#5a5a55');
-              dirtGrad.addColorStop(1, '#3a3a38');
-            }
-            ctx.fillStyle = dirtGrad;
+          if (cfg.robot) {
+            // Robot City: dark metal grating floor
+            ctx.fillStyle = '#0a1018';
             ctx.fillRect(wx, wy, S, S);
-
-            // Random rocks on path
-            if ((x * 7 + y * 11) % 8 === 0) {
-              ctx.fillStyle = '#6a6a68';
-              ctx.beginPath();
-              ctx.ellipse(wx + 20 + (pathSeed % 30), wy + 25 + (pathSeed % 25), 8, 6, 0, 0, Math.PI * 2);
-              ctx.fill();
-              ctx.fillStyle = '#5a5a58';
-              ctx.beginPath();
-              ctx.ellipse(wx + 50 + (pathSeed % 20), wy + 55 + (pathSeed % 15), 6, 4, 0, 0, Math.PI * 2);
-              ctx.fill();
+            // Grid lines — thin lighter fill (no stroke)
+            ctx.fillStyle = 'rgba(0,180,220,0.07)';
+            ctx.fillRect(wx, wy, S, 1);
+            ctx.fillRect(wx, wy, 1, S);
+            // Circuit dot at intersections
+            if (isColR && isRowR) {
+              ctx.fillStyle = 'rgba(0,220,255,0.20)';
+              ctx.fillRect(wx + S/2 - 3, wy + S/2 - 3, 6, 6);
             }
-
-            // Path edge grass tufts
-            ctx.fillStyle = 'rgba(60,120,40,0.4)';
-            if ((x + y) % 3 === 0) {
-              ctx.fillRect(wx, wy, 8, 4);
-              ctx.fillRect(wx + S - 8, wy + S - 4, 8, 4);
+            // Lane highlight strip
+            if (isColR && !isRowR) {
+              ctx.fillStyle = 'rgba(0,180,220,0.06)';
+              ctx.fillRect(wx + S/2 - 2, wy, 4, S);
             }
-
-            // Footprint marks occasionally
-            if ((x * 5 + y * 3) % 12 === 0) {
-              ctx.fillStyle = 'rgba(40,30,15,0.3)';
-              ctx.beginPath();
-              ctx.ellipse(wx + S/3, wy + S/2, 5, 8, 0.3, 0, Math.PI * 2);
-              ctx.fill();
-              ctx.beginPath();
-              ctx.ellipse(wx + S/2 + 10, wy + S/2 + 15, 5, 8, -0.2, 0, Math.PI * 2);
-              ctx.fill();
+            if (isRowR && !isColR) {
+              ctx.fillStyle = 'rgba(0,180,220,0.06)';
+              ctx.fillRect(wx, wy + S/2 - 2, S, 4);
             }
           } else if (cfg.ocean) {
-            // Ocean water rendering
-            const wavePhase = (Date.now() * 0.001 + x * 0.3 + y * 0.2) % (Math.PI * 2);
-            const waveIntensity = Math.sin(wavePhase) * 0.15 + 0.85;
-
-            // Deep water base
-            const waterGrad = ctx.createLinearGradient(wx, wy, wx + S, wy + S);
-            waterGrad.addColorStop(0, `rgba(0,40,80,${waveIntensity})`);
-            waterGrad.addColorStop(0.5, `rgba(0,60,100,${waveIntensity})`);
-            waterGrad.addColorStop(1, `rgba(0,50,90,${waveIntensity})`);
-            ctx.fillStyle = waterGrad;
+            // Ocean water — flat base color with tile-seed variation (no per-tile gradient/stroke)
+            const wavePhase = (_waveNow + x * 0.3 + y * 0.2) % (Math.PI * 2);
+            const tint = Math.round(Math.sin(wavePhase) * 8);
+            ctx.fillStyle = `rgb(0,${48 + tint},${82 + tint})`;
             ctx.fillRect(wx, wy, S, S);
-
-            // Wave highlights
-            const waveY = wy + S * 0.3 + Math.sin(wavePhase) * 5;
-            ctx.strokeStyle = 'rgba(100,200,255,0.15)';
-            ctx.lineWidth = 1.5;
-            ctx.beginPath();
-            ctx.moveTo(wx, waveY);
-            ctx.quadraticCurveTo(wx + S/2, waveY - 4, wx + S, waveY);
-            ctx.stroke();
-
-            const waveY2 = wy + S * 0.65 + Math.sin(wavePhase + 1) * 4;
-            ctx.strokeStyle = 'rgba(80,180,255,0.12)';
-            ctx.beginPath();
-            ctx.moveTo(wx, waveY2);
-            ctx.quadraticCurveTo(wx + S/2, waveY2 + 3, wx + S, waveY2);
-            ctx.stroke();
-
-            // Occasional foam/sparkle
+            // Subtle horizontal stripe highlight (no stroke — use fillRect)
+            if ((x + y) % 3 !== 0) {
+              const sw = Math.round(Math.sin(wavePhase) * 3);
+              ctx.fillStyle = 'rgba(100,200,255,0.10)';
+              ctx.fillRect(wx, wy + S * 0.3 + sw, S, 2);
+              ctx.fillRect(wx, wy + S * 0.65 + sw, S, 2);
+            }
+            // Occasional foam dot
             if ((x * 7 + y * 13) % 11 === 0) {
-              ctx.fillStyle = 'rgba(200,240,255,0.25)';
-              ctx.beginPath();
-              ctx.arc(wx + S * 0.3 + Math.sin(wavePhase * 2) * 5, wy + S * 0.5, 3, 0, Math.PI * 2);
-              ctx.fill();
+              ctx.fillStyle = 'rgba(200,240,255,0.22)';
+              ctx.fillRect(wx + S * 0.25, wy + S * 0.45, 5, 5);
+            }
+          } else if (cfg.jungle) {
+            // Jungle: dirt/mud path with organic variation
+            const dseed = (x * 17 + y * 31) % 5;
+            const dirts = ['#5a3d1e','#52381a','#624215','#583a1c','#4e3418'];
+            ctx.fillStyle = dirts[dseed];
+            ctx.fillRect(wx, wy, S, S);
+            // Mud puddles
+            if ((x*7 + y*13) % 9 === 0) {
+              ctx.fillStyle = 'rgba(40,25,10,0.45)';
+              ctx.beginPath(); ctx.ellipse(wx + S*0.38, wy + S*0.52, S*0.22, S*0.14, 0.4, 0, Math.PI*2); ctx.fill();
+            }
+            // Scattered pebbles
+            if ((x*11 + y*7) % 6 === 0) {
+              ctx.fillStyle = 'rgba(80,60,30,0.55)';
+              ctx.beginPath(); ctx.arc(wx + S*0.65, wy + S*0.35, S*0.07, 0, Math.PI*2); ctx.fill();
+              ctx.beginPath(); ctx.arc(wx + S*0.25, wy + S*0.70, S*0.05, 0, Math.PI*2); ctx.fill();
+            }
+            // Grass fringe on edges
+            if (isColR || isRowR) {
+              ctx.fillStyle = 'rgba(40,90,20,0.18)';
+              if (isColR) ctx.fillRect(wx, wy, 6, S);
+              if (isRowR) ctx.fillRect(wx, wy, S, 6);
+            }
+          } else if (cfg.galactica) {
+            // Galactica: void space lane — deep purple-black with star dust
+            ctx.fillStyle = '#04000e';
+            ctx.fillRect(wx, wy, S, S);
+            // Subtle energy lane strips along road axes
+            if (isColR && !isRowR) {
+              ctx.fillStyle = 'rgba(140,60,255,0.08)';
+              ctx.fillRect(wx + S/2 - 3, wy, 6, S);
+              ctx.fillStyle = 'rgba(160,80,255,0.04)';
+              ctx.fillRect(wx + S/2 - 10, wy, 20, S);
+            }
+            if (isRowR && !isColR) {
+              ctx.fillStyle = 'rgba(140,60,255,0.08)';
+              ctx.fillRect(wx, wy + S/2 - 3, S, 6);
+              ctx.fillStyle = 'rgba(160,80,255,0.04)';
+              ctx.fillRect(wx, wy + S/2 - 10, S, 20);
+            }
+            // Scattered star dust specks
+            if ((x*7 + y*13) % 5 === 0) {
+              ctx.fillStyle = 'rgba(200,180,255,0.40)';
+              ctx.beginPath(); ctx.arc(wx + (x*19)%S, wy + (y*17)%S, 1, 0, Math.PI*2); ctx.fill();
+            }
+            if ((x*11 + y*7) % 7 === 0) {
+              ctx.fillStyle = 'rgba(150,220,255,0.35)';
+              ctx.beginPath(); ctx.arc(wx + (x*29+12)%S, wy + (y*23+15)%S, 0.8, 0, Math.PI*2); ctx.fill();
+            }
+          } else if (cfg.desert) {
+            // Desert: sandy dirt road with ripples
+            const dseed = (x * 17 + y * 31) % 5;
+            const sands = ['#c8a05a','#c2985a','#caa862','#be9850','#c4a258'];
+            ctx.fillStyle = sands[dseed];
+            ctx.fillRect(wx, wy, S, S);
+            // Ripple lines (wind-blown sand)
+            if ((x*5 + y*7) % 4 === 0) {
+              ctx.fillStyle = 'rgba(255,220,140,0.20)';
+              ctx.fillRect(wx + 8, wy + Math.round(S*0.32), S - 16, 2);
+              ctx.fillRect(wx + 16, wy + Math.round(S*0.60), S - 32, 1);
+            }
+            // Scattered pebbles
+            if ((x*11 + y*7) % 5 === 0) {
+              ctx.fillStyle = 'rgba(100,65,20,0.42)';
+              ctx.beginPath(); ctx.arc(wx + S*0.28, wy + S*0.40, S*0.055, 0, Math.PI*2); ctx.fill();
+              ctx.beginPath(); ctx.arc(wx + S*0.72, wy + S*0.66, S*0.040, 0, Math.PI*2); ctx.fill();
+            }
+            // Camel hoof-print marks at road center
+            if (isColR && (x*3+y) % 4 === 0) {
+              ctx.fillStyle = 'rgba(90,55,18,0.28)';
+              ctx.beginPath(); ctx.ellipse(wx + S/2 - 9, wy + S*0.34, S*0.065, S*0.045, 0.35, 0, Math.PI*2); ctx.fill();
+              ctx.beginPath(); ctx.ellipse(wx + S/2 + 11, wy + S*0.66, S*0.055, S*0.040, -0.3, 0, Math.PI*2); ctx.fill();
+            }
+            if (isRowR && (x+y*3) % 4 === 0) {
+              ctx.fillStyle = 'rgba(90,55,18,0.28)';
+              ctx.beginPath(); ctx.ellipse(wx + S*0.34, wy + S/2 - 9, S*0.045, S*0.065, 0.35, 0, Math.PI*2); ctx.fill();
+              ctx.beginPath(); ctx.ellipse(wx + S*0.66, wy + S/2 + 11, S*0.040, S*0.055, -0.3, 0, Math.PI*2); ctx.fill();
             }
           } else {
             ctx.fillStyle = cfg.roadColor;
@@ -833,88 +886,127 @@ class GameMap {
         } else if (tile === TILE.SIDEWALK) {
           const isPark = this._parkTiles && this._parkTiles.has(`${x},${y}`);
           if (cfg.jungle) {
-            // Jungle: grass and undergrowth
-            const grassSeed = x * 23 + y * 37;
-
-            // Base grass
-            const grassGrad = ctx.createLinearGradient(wx, wy, wx + S, wy + S);
-            grassGrad.addColorStop(0, '#2a4a20');
-            grassGrad.addColorStop(0.5, '#3a5a28');
-            grassGrad.addColorStop(1, '#1a3a18');
-            ctx.fillStyle = grassGrad;
+            // Jungle: lush grass undergrowth
+            const gseed = (x * 23 + y * 37) % 5;
+            const grasses = ['#2a4a20','#254518','#2e5222','#20401a','#28481e'];
+            ctx.fillStyle = grasses[gseed];
             ctx.fillRect(wx, wy, S, S);
-
-            // Grass texture variation
-            ctx.fillStyle = 'rgba(50,100,40,0.3)';
-            ctx.fillRect(wx + 5 + (grassSeed % 20), wy + 5 + (grassSeed % 20), 25, 18);
-
-            // Tall grass tufts
-            ctx.strokeStyle = '#4a8a38';
-            ctx.lineWidth = 1.5;
-            const tufts = 3 + (grassSeed % 3);
-            for (let t = 0; t < tufts; t++) {
-              const tx = wx + 10 + ((grassSeed + t * 17) % 55);
-              const ty = wy + S - 5;
-              const th = 12 + (grassSeed + t) % 10;
-              ctx.beginPath();
-              ctx.moveTo(tx, ty);
-              ctx.quadraticCurveTo(tx - 3 + (t % 2) * 6, ty - th/2, tx + (t % 2 ? 4 : -4), ty - th);
-              ctx.stroke();
+            // Dense undergrowth blades
+            ctx.fillStyle = 'rgba(50,110,30,0.35)';
+            const blades = (x*7+y*11) % 4;
+            for (let bi = 0; bi < blades + 2; bi++) {
+              const bx2 = wx + ((x*17 + bi*29) % (S-12)) + 6;
+              const by2 = wy + ((y*13 + bi*19) % (S-10)) + 5;
+              ctx.fillRect(bx2, by2, 2, 8 + bi*2);
             }
-
-            // Flowers occasionally
-            if ((x * 3 + y * 7) % 13 === 0) {
-              const flowerColors = ['#FF6688', '#FFEE44', '#FF88FF', '#88DDFF'];
-              ctx.fillStyle = flowerColors[grassSeed % 4];
-              ctx.beginPath();
-              ctx.arc(wx + 25 + (grassSeed % 30), wy + 35 + (grassSeed % 25), 4, 0, Math.PI * 2);
-              ctx.fill();
+            // Fern fronds (ellipses)
+            if ((x*11+y*7) % 5 === 0) {
+              ctx.fillStyle = 'rgba(40,140,40,0.28)';
+              ctx.beginPath(); ctx.ellipse(wx + S*0.35, wy + S*0.55, S*0.18, S*0.09, -0.4, 0, Math.PI*2); ctx.fill();
+              ctx.beginPath(); ctx.ellipse(wx + S*0.65, wy + S*0.40, S*0.16, S*0.08, 0.5, 0, Math.PI*2); ctx.fill();
             }
-
-            // Small ferns
-            if ((x * 5 + y * 3) % 7 === 0) {
-              ctx.fillStyle = '#2a6a28';
-              ctx.beginPath();
-              ctx.ellipse(wx + S/2, wy + S/2 + 10, 12, 6, 0.2, 0, Math.PI * 2);
-              ctx.fill();
+            // Occasional bright tropical flower
+            if ((x*13+y*19) % 12 === 0) {
+              ctx.fillStyle = 'rgba(255,180,30,0.70)';
+              ctx.beginPath(); ctx.arc(wx + S*0.5 + (x%3-1)*12, wy + S*0.45 + (y%3-1)*8, 4, 0, Math.PI*2); ctx.fill();
+              ctx.fillStyle = 'rgba(255,80,80,0.55)';
+              ctx.beginPath(); ctx.arc(wx + S*0.3, wy + S*0.65, 3, 0, Math.PI*2); ctx.fill();
+            }
+          } else if (cfg.robot) {
+            // Robot City: circuit board platform / raised metal walkway
+            ctx.fillStyle = '#0d1420';
+            ctx.fillRect(wx, wy, S, S);
+            // Circuit trace lines
+            const cseed = x * 19 + y * 29;
+            ctx.fillStyle = 'rgba(0,200,220,0.10)';
+            if (cseed % 3 === 0) {
+              ctx.fillRect(wx + 8, wy + S/2 - 1, S - 16, 2);  // horizontal trace
+            } else if (cseed % 3 === 1) {
+              ctx.fillRect(wx + S/2 - 1, wy + 8, 2, S - 16);  // vertical trace
+            }
+            // Corner pads
+            ctx.fillStyle = 'rgba(0,220,255,0.12)';
+            ctx.fillRect(wx + 4, wy + 4, 6, 6);
+            ctx.fillRect(wx + S - 10, wy + S - 10, 6, 6);
+            // Occasional blinking indicator dot
+            if ((x * 7 + y * 11) % 9 === 0) {
+              ctx.fillStyle = 'rgba(0,255,180,0.28)';
+              ctx.fillRect(wx + S/2 - 2, wy + S/2 - 2, 4, 4);
             }
           } else if (cfg.ocean) {
-            // Ocean: floating wooden dock/platform
-            const dockGrad = ctx.createLinearGradient(wx, wy, wx, wy + S);
-            dockGrad.addColorStop(0, '#3a2a1a');
-            dockGrad.addColorStop(0.5, '#4a3a28');
-            dockGrad.addColorStop(1, '#2a1a10');
-            ctx.fillStyle = dockGrad;
+            // Ocean: floating wooden dock — flat colors, no per-tile gradient/stroke
+            ctx.fillStyle = '#3e2e1a';
             ctx.fillRect(wx + 2, wy + 2, S - 4, S - 4);
-
-            // Wooden plank lines
-            ctx.strokeStyle = 'rgba(80,60,40,0.6)';
-            ctx.lineWidth = 1;
-            for (let pl = 0; pl < 4; pl++) {
-              const plY = wy + 8 + pl * (S - 16) / 3;
-              ctx.beginPath();
-              ctx.moveTo(wx + 4, plY);
-              ctx.lineTo(wx + S - 4, plY);
-              ctx.stroke();
+            // Plank lines as thin fillRects (no stroke)
+            ctx.fillStyle = 'rgba(60,40,20,0.55)';
+            for (let pl = 0; pl < 3; pl++) {
+              ctx.fillRect(wx + 4, wy + 9 + pl * Math.round((S - 18) / 2), S - 8, 1);
             }
-
-            // Dock edge highlight
-            ctx.strokeStyle = 'rgba(100,80,60,0.5)';
-            ctx.lineWidth = 2;
-            ctx.strokeRect(wx + 3, wy + 3, S - 6, S - 6);
-
-            // Rope/mooring post occasionally
+            // Edge highlight strip
+            ctx.fillStyle = 'rgba(100,80,55,0.35)';
+            ctx.fillRect(wx + 3, wy + 3, S - 6, 2);
+            ctx.fillRect(wx + 3, wy + 3, 2, S - 6);
+            // Mooring post
             if ((x * 5 + y * 3) % 9 === 0) {
               ctx.fillStyle = '#5a4a3a';
+              ctx.fillRect(wx + S/2 - 4, wy + S/2 - 4, 8, 8);
+            }
+          } else if (cfg.galactica) {
+            // Galactica: cosmic platform — dark nebula plates with energy veins
+            const gseed = (x * 23 + y * 37) % 4;
+            const plateCols = ['#0a001a','#0e001e','#080016','#0c0020'];
+            ctx.fillStyle = plateCols[gseed];
+            ctx.fillRect(wx, wy, S, S);
+            // Hex grid seams
+            ctx.fillStyle = 'rgba(120,60,220,0.12)';
+            ctx.fillRect(wx, wy + Math.round(S*0.50), S, 1);
+            ctx.fillRect(wx + Math.round(S*0.50), wy, 1, S);
+            // Glowing energy vein on some tiles
+            if ((x*7+y*11) % 5 === 0) {
+              ctx.fillStyle = 'rgba(140,60,255,0.18)';
+              ctx.fillRect(wx + Math.round(S*0.18), wy + Math.round(S*0.48), Math.round(S*0.64), 2);
+            }
+            // Floating crystal shard
+            if ((x*13+y*17) % 9 === 0) {
+              ctx.globalAlpha = 0.60;
+              ctx.fillStyle = '#AA44FF';
               ctx.beginPath();
-              ctx.arc(wx + S/2, wy + S/2, 5, 0, Math.PI * 2);
-              ctx.fill();
-              // Rope coil
-              ctx.strokeStyle = '#8a7a5a';
-              ctx.lineWidth = 1.5;
-              ctx.beginPath();
-              ctx.arc(wx + S/2, wy + S/2, 8, 0, Math.PI * 1.5);
-              ctx.stroke();
+              ctx.moveTo(wx + Math.round(S*0.50), wy + Math.round(S*0.30));
+              ctx.lineTo(wx + Math.round(S*0.58), wy + Math.round(S*0.50));
+              ctx.lineTo(wx + Math.round(S*0.50), wy + Math.round(S*0.62));
+              ctx.lineTo(wx + Math.round(S*0.42), wy + Math.round(S*0.50));
+              ctx.closePath(); ctx.fill();
+              ctx.globalAlpha = 1;
+            }
+            // Distant star speck
+            if ((x*19+y*29) % 8 === 0) {
+              ctx.fillStyle = 'rgba(220,200,255,0.45)';
+              ctx.beginPath(); ctx.arc(wx + (x*23)%S, wy + (y*19)%S, 0.9, 0, Math.PI*2); ctx.fill();
+            }
+          } else if (cfg.desert) {
+            // Desert: sandstone / ancient paving
+            const pseed = (x * 23 + y * 37) % 4;
+            const stones = ['#a87a3a','#b08422','#9c7020','#a47830'];
+            ctx.fillStyle = stones[pseed];
+            ctx.fillRect(wx, wy, S, S);
+            // Mortar joints
+            ctx.fillStyle = 'rgba(55,35,8,0.28)';
+            ctx.fillRect(wx, wy + Math.round(S*0.50), S, 2);
+            ctx.fillRect(wx + Math.round(S*0.50), wy, 2, S);
+            // Crack lines
+            if ((x*7+y*11) % 7 === 0) {
+              ctx.fillStyle = 'rgba(70,42,10,0.30)';
+              ctx.fillRect(wx + Math.round(S*0.22), wy + Math.round(S*0.20), Math.round(S*0.52), 1);
+              ctx.fillRect(wx + Math.round(S*0.36), wy + Math.round(S*0.60), Math.round(S*0.28), 1);
+            }
+            // Drifted sand in corners
+            ctx.fillStyle = 'rgba(200,168,80,0.18)';
+            ctx.fillRect(wx, wy, 9, 9);
+            ctx.fillRect(wx + S - 9, wy + S - 9, 9, 9);
+            // Occasional sand pile
+            if ((x*13+y*17) % 9 === 0) {
+              ctx.fillStyle = 'rgba(220,185,90,0.25)';
+              ctx.beginPath(); ctx.ellipse(wx + S*0.65, wy + S*0.72, S*0.18, S*0.10, 0, 0, Math.PI*2); ctx.fill();
             }
           } else if (isPark) {
             // Park: lush green ground
@@ -931,19 +1023,15 @@ class GameMap {
             }
             // Trees at some tiles
             if ((x * 3 + y * 5) % 7 === 0) {
-              ctx.save();
-              // Tree shadow
-              ctx.globalAlpha = 0.25; ctx.fillStyle = '#000';
+              // Tree shadow — no shadowBlur for performance
+              ctx.globalAlpha = 0.22; ctx.fillStyle = '#000';
               ctx.beginPath(); ctx.ellipse(wx + S/2 + 4, wy + S/2 + 6, 14, 7, 0, 0, Math.PI * 2); ctx.fill();
               ctx.globalAlpha = 1;
               // Tree canopy
-              ctx.shadowColor = '#00AA44'; ctx.shadowBlur = 12;
               ctx.fillStyle = '#0a3a12';
               ctx.beginPath(); ctx.arc(wx + S/2, wy + S/2, 14, 0, Math.PI * 2); ctx.fill();
               ctx.fillStyle = '#145520';
               ctx.beginPath(); ctx.arc(wx + S/2 - 3, wy + S/2 - 4, 10, 0, Math.PI * 2); ctx.fill();
-              ctx.shadowBlur = 0;
-              ctx.restore();
             } else if ((x * 5 + y * 3) % 11 === 0) {
               // Bench / lamp
               ctx.fillStyle = '#2a1a08';
@@ -954,108 +1042,138 @@ class GameMap {
             ctx.fillRect(wx, wy, S, S);
           }
         } else {
-          // Building (or Tree in jungle)
+          // Building (or Tree in jungle, or Server Block in robot city)
           if (cfg.jungle) {
-            // Jungle: render trees instead of buildings
-            const treeSeed = x * 41 + y * 59;
-            const treeType = treeSeed % 5;
-
-            // Ground under tree
-            ctx.fillStyle = '#1a3010';
+            // Jungle: render dense tree canopy
+            const tseed = (x * 41 + y * 59) % 5;
+            // Ground under tree — dark soil
+            const soils = ['#1a2e0a','#162808','#1e3210','#18280a','#142408'];
+            ctx.fillStyle = soils[tseed];
             ctx.fillRect(wx, wy, S, S);
-
-            // Tree shadow
-            ctx.save();
-            ctx.globalAlpha = 0.35;
-            ctx.fillStyle = '#000';
-            ctx.beginPath();
-            ctx.ellipse(wx + S/2 + 8, wy + S - 12, 28, 14, 0, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.restore();
-
-            // Tree trunk
-            const trunkWidth = 8 + (treeSeed % 6);
-            const trunkHeight = 25 + (treeSeed % 15);
-            ctx.fillStyle = '#4a3018';
-            ctx.fillRect(wx + S/2 - trunkWidth/2, wy + S - trunkHeight - 8, trunkWidth, trunkHeight);
-            // Trunk texture
-            ctx.strokeStyle = '#3a2010';
-            ctx.lineWidth = 1;
-            for (let tl = 0; tl < 3; tl++) {
-              ctx.beginPath();
-              ctx.moveTo(wx + S/2 - trunkWidth/2 + 2, wy + S - trunkHeight - 5 + tl * 8);
-              ctx.lineTo(wx + S/2 + trunkWidth/2 - 2, wy + S - trunkHeight + tl * 8);
-              ctx.stroke();
+            // Canopy shadow on ground
+            ctx.globalAlpha = 0.30; ctx.fillStyle = '#000';
+            ctx.beginPath(); ctx.ellipse(wx + S/2 + 5, wy + S/2 + 7, S*0.38, S*0.22, 0, 0, Math.PI*2); ctx.fill();
+            ctx.globalAlpha = 1;
+            // Layered canopy — dark outer, brighter inner
+            const treeGreens = [
+              ['#0d3808','#1a5010','#22661a'],
+              ['#08340a','#14520e','#1e6818'],
+              ['#0a3c0c','#185814','#22701e'],
+              ['#0e3a08','#1c5412','#28681c'],
+              ['#0a3206','#164a0c','#205816'],
+            ][tseed];
+            // Outer canopy blob
+            ctx.fillStyle = treeGreens[0];
+            ctx.beginPath(); ctx.arc(wx + S/2, wy + S/2, S*0.46, 0, Math.PI*2); ctx.fill();
+            // Mid canopy
+            ctx.fillStyle = treeGreens[1];
+            ctx.beginPath(); ctx.arc(wx + S/2 - 3, wy + S/2 - 4, S*0.36, 0, Math.PI*2); ctx.fill();
+            // Highlight inner
+            ctx.fillStyle = treeGreens[2];
+            ctx.beginPath(); ctx.arc(wx + S/2 - 5, wy + S/2 - 7, S*0.22, 0, Math.PI*2); ctx.fill();
+            // Sunlit top-left specular
+            ctx.fillStyle = 'rgba(180,255,100,0.12)';
+            ctx.beginPath(); ctx.arc(wx + S/2 - 8, wy + S/2 - 10, S*0.14, 0, Math.PI*2); ctx.fill();
+            // Trunk peek
+            ctx.fillStyle = '#3a2408';
+            ctx.fillRect(wx + S/2 - 4, wy + S*0.62, 8, S*0.38);
+            // Occasional tropical flower on canopy
+            if ((x*7+y*11) % 8 === 0) {
+              ctx.fillStyle = 'rgba(255,100,30,0.80)';
+              ctx.beginPath(); ctx.arc(wx + S*0.60, wy + S*0.35, 5, 0, Math.PI*2); ctx.fill();
             }
-
-            // Tree canopy based on type
-            ctx.save();
-            if (treeType < 2) {
-              // Round tree (like oak)
-              ctx.shadowColor = '#228B22';
-              ctx.shadowBlur = 15;
-              ctx.fillStyle = '#1a5a18';
-              ctx.beginPath();
-              ctx.arc(wx + S/2, wy + S/2 - 10, 30, 0, Math.PI * 2);
-              ctx.fill();
-              ctx.fillStyle = '#2a7a28';
-              ctx.beginPath();
-              ctx.arc(wx + S/2 - 8, wy + S/2 - 18, 20, 0, Math.PI * 2);
-              ctx.fill();
-              ctx.fillStyle = '#3a8a38';
-              ctx.beginPath();
-              ctx.arc(wx + S/2 + 10, wy + S/2 - 5, 18, 0, Math.PI * 2);
-              ctx.fill();
-            } else if (treeType < 4) {
-              // Palm tree style
-              ctx.shadowColor = '#44AA22';
-              ctx.shadowBlur = 12;
-              // Palm fronds
-              const frondCount = 6;
-              for (let f = 0; f < frondCount; f++) {
-                const angle = (f / frondCount) * Math.PI * 2;
-                const fx = wx + S/2 + Math.cos(angle) * 25;
-                const fy = wy + S/2 - 15 + Math.sin(angle) * 12;
-                ctx.fillStyle = '#2a6a20';
-                ctx.beginPath();
-                ctx.ellipse(fx, fy, 18, 6, angle, 0, Math.PI * 2);
-                ctx.fill();
+          } else if (cfg.robot) {
+            // Robot City: server tower / tech block
+            const rseed = x * 41 + y * 59;
+            ctx.fillStyle = this.buildingColors[y][x];
+            ctx.fillRect(wx, wy, S, S);
+            // Metallic panel lines
+            ctx.fillStyle = 'rgba(0,200,255,0.06)';
+            ctx.fillRect(wx, wy, S, 2);
+            ctx.fillRect(wx, wy, 2, S);
+            ctx.fillRect(wx + S - 2, wy, 2, S);
+            // Vent slats on some blocks
+            if (rseed % 4 === 0) {
+              ctx.fillStyle = 'rgba(0,160,200,0.12)';
+              for (let sl = 0; sl < 4; sl++) {
+                ctx.fillRect(wx + 8, wy + 12 + sl * 14, S - 16, 3);
               }
-              // Palm center
-              ctx.fillStyle = '#3a8a30';
-              ctx.beginPath();
-              ctx.arc(wx + S/2, wy + S/2 - 15, 8, 0, Math.PI * 2);
-              ctx.fill();
-            } else {
-              // Bushy tree
-              ctx.shadowColor = '#228B22';
-              ctx.shadowBlur = 10;
-              ctx.fillStyle = '#1a4a15';
-              ctx.beginPath();
-              ctx.arc(wx + S/2, wy + S/2, 28, 0, Math.PI * 2);
-              ctx.fill();
-              ctx.fillStyle = '#2a5a25';
-              ctx.beginPath();
-              ctx.arc(wx + S/2 - 12, wy + S/2 - 8, 15, 0, Math.PI * 2);
-              ctx.fill();
-              ctx.beginPath();
-              ctx.arc(wx + S/2 + 12, wy + S/2 - 5, 16, 0, Math.PI * 2);
-              ctx.fill();
-              ctx.fillStyle = '#3a6a35';
-              ctx.beginPath();
-              ctx.arc(wx + S/2, wy + S/2 - 15, 12, 0, Math.PI * 2);
-              ctx.fill();
             }
-            ctx.restore();
-
-            // Occasional vines
-            if ((x * 3 + y * 7) % 11 === 0) {
-              ctx.strokeStyle = '#3a7a30';
-              ctx.lineWidth = 2;
-              ctx.beginPath();
-              ctx.moveTo(wx + S/2 - 15, wy + S/2 - 20);
-              ctx.quadraticCurveTo(wx + S/2 - 25, wy + S/2 + 10, wx + S/2 - 20, wy + S - 10);
-              ctx.stroke();
+            // LED status strip top
+            ctx.fillStyle = rseed % 3 === 0 ? 'rgba(0,255,200,0.18)' : 'rgba(0,200,255,0.12)';
+            ctx.fillRect(wx + 6, wy + 4, S - 12, 3);
+          } else if (cfg.galactica) {
+            // Galactica: planet orb / space structure
+            const pseed = (x * 41 + y * 59) % 5;
+            const planetBg = ['#0c0025','#14002e','#0a001e','#180038','#100028'][pseed];
+            ctx.fillStyle = planetBg;
+            ctx.fillRect(wx, wy, S, S);
+            // Planet sphere (top-down, slightly offset)
+            const planR = Math.round(S * 0.34);
+            const planX = wx + Math.round(S * 0.50);
+            const planY = wy + Math.round(S * 0.48);
+            const pCols = [
+              ['#5522AA','#8844CC','#AA66EE'],
+              ['#AA2266','#CC4488','#EE66AA'],
+              ['#224499','#4466BB','#6688DD'],
+              ['#229966','#44BB88','#66DDAA'],
+              ['#884422','#AA6644','#CC8866'],
+            ][pseed];
+            const pg = ctx.createRadialGradient(planX - planR*0.3, planY - planR*0.35, 2, planX, planY, planR);
+            pg.addColorStop(0, pCols[2]); pg.addColorStop(0.55, pCols[1]); pg.addColorStop(1, pCols[0]);
+            ctx.fillStyle = pg;
+            ctx.beginPath(); ctx.arc(planX, planY, planR, 0, Math.PI*2); ctx.fill();
+            // Atmospheric band
+            ctx.globalAlpha = 0.22;
+            ctx.fillStyle = '#FFFFFF';
+            ctx.beginPath(); ctx.ellipse(planX, planY - planR*0.12, planR*0.80, planR*0.22, 0, 0, Math.PI*2); ctx.fill();
+            ctx.globalAlpha = 1;
+            // Ring system on some planets
+            if (pseed === 1 || pseed === 3) {
+              ctx.globalAlpha = 0.38;
+              ctx.strokeStyle = pCols[2]; ctx.lineWidth = 2.5;
+              ctx.beginPath(); ctx.ellipse(planX, planY, planR * 1.45, planR * 0.35, 0, 0, Math.PI*2); ctx.stroke();
+              ctx.globalAlpha = 1;
+            }
+            // Tiny orbiting moon
+            if ((x*7+y*11) % 4 === 0) {
+              const moonA = ((x*17 + y*23) % 100) / 100 * Math.PI * 2;
+              const moonX = planX + Math.cos(moonA) * planR * 1.60;
+              const moonY = planY + Math.sin(moonA) * planR * 0.55;
+              ctx.fillStyle = '#AABBCC';
+              ctx.beginPath(); ctx.arc(moonX, moonY, planR * 0.14, 0, Math.PI*2); ctx.fill();
+            }
+          } else if (cfg.desert) {
+            // Desert: pyramid / sandstone block
+            const pseed = (x * 41 + y * 59) % 5;
+            const stoneColors = ['#8B6914','#9e7c20','#7a5c10','#A0801e','#8a6818'];
+            ctx.fillStyle = stoneColors[pseed];
+            ctx.fillRect(wx, wy, S, S);
+            // Horizontal sandstone strata banding
+            ctx.fillStyle = 'rgba(255,200,80,0.09)';
+            for (let band = 0; band < 4; band++) {
+              ctx.fillRect(wx, wy + Math.round(band * S / 4), S, 2);
+            }
+            // Sunlit (left) vs shadow (right) face — pyramid look
+            ctx.fillStyle = 'rgba(255,220,100,0.12)';
+            ctx.fillRect(wx, wy, Math.round(S/2), S);
+            ctx.fillStyle = 'rgba(0,0,0,0.14)';
+            ctx.fillRect(wx + Math.round(S/2), wy, Math.round(S/2), S);
+            // Hieroglyph scratches
+            if ((x*7+y*11) % 6 === 0) {
+              ctx.fillStyle = 'rgba(35,20,4,0.30)';
+              ctx.fillRect(wx + Math.round(S*0.22), wy + Math.round(S*0.15), 2, Math.round(S*0.70));
+              ctx.fillRect(wx + Math.round(S*0.50), wy + Math.round(S*0.20), 2, Math.round(S*0.60));
+              ctx.fillRect(wx + Math.round(S*0.72), wy + Math.round(S*0.25), 2, Math.round(S*0.50));
+            }
+            // Torch glow on some blocks
+            if ((x*13+y*19) % 10 === 0) {
+              ctx.globalAlpha = 0.58;
+              ctx.fillStyle = '#FF9933';
+              ctx.beginPath(); ctx.arc(wx + Math.round(S*0.84), wy + Math.round(S*0.28), 5, 0, Math.PI*2); ctx.fill();
+              ctx.fillStyle = 'rgba(255,200,80,0.40)';
+              ctx.beginPath(); ctx.arc(wx + Math.round(S*0.84), wy + Math.round(S*0.28), 9, 0, Math.PI*2); ctx.fill();
+              ctx.globalAlpha = 1;
             }
           } else {
             ctx.fillStyle = this.buildingColors[y][x];
@@ -1067,7 +1185,7 @@ class GameMap {
           }
 
           // ── Metropolis zone-specific building decoration ────
-          if (this._rxSet && !cfg.jungle) {
+          if (this._rxSet && !cfg.robot) {
             const zx2 = x / this.W, zy2 = y / this.H;
             const isComm = zy2 < 0.35 && zx2 < 0.45;
             const isRes  = zy2 < 0.35 && zx2 >= 0.45;
@@ -1092,11 +1210,10 @@ class GameMap {
             }
           }
 
-          // Windows (not in jungle)
-          if (!cfg.jungle && this.buildingWindows[y][x]) {
+          // Windows (not in robot/jungle/desert) — no shadowBlur for performance
+          if (!cfg.robot && !cfg.jungle && !cfg.desert && !cfg.galactica && this.buildingWindows[y][x]) {
             const wc = cfg.windowColors[(Math.floor(x/2) + Math.floor(y/2)) % cfg.windowColors.length];
-            ctx.save();
-            ctx.shadowColor = wc; ctx.shadowBlur = 8; ctx.fillStyle = wc;
+            ctx.fillStyle = wc + 'CC';
             for (let wy2 = 0; wy2 < 2; wy2++) {
               for (let wx2 = 0; wx2 < 2; wx2++) {
                 if (Math.sin(x * 7.3 + y * 3.1 + wx2 * 5 + wy2 * 11) > -0.3) {
@@ -1104,30 +1221,14 @@ class GameMap {
                 }
               }
             }
-            ctx.restore();
           }
-          // Fireflies in jungle trees
-          if (cfg.jungle && (x * 7 + y * 11) % 9 === 0) {
-            const fireflyPhase = (Date.now() * 0.003 + x + y) % (Math.PI * 2);
-            const fireflyAlpha = Math.sin(fireflyPhase) * 0.5 + 0.5;
-            ctx.save();
-            ctx.globalAlpha = fireflyAlpha * 0.8;
-            ctx.fillStyle = '#FFFF44';
-            ctx.shadowColor = '#FFFF44';
-            ctx.shadowBlur = 8;
-            ctx.beginPath();
-            ctx.arc(wx + 20 + (x * 13) % 40, wy + 25 + (y * 17) % 30, 2, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.restore();
-          }
-          // Neon sign strips (not in jungle)
-          if (!cfg.jungle && (x + y) % cfg.neonFreq === 0) {
+          // Neon sign strips (not in robot/jungle/desert) — no shadowBlur for performance
+          if (!cfg.robot && !cfg.jungle && !cfg.desert && !cfg.galactica && (x + y) % cfg.neonFreq === 0) {
             const nc = cfg.neonColors[(x * 3 + y) % cfg.neonColors.length];
-            ctx.save();
-            ctx.shadowColor = nc; ctx.shadowBlur = 12;
+            ctx.globalAlpha = 0.65;
             ctx.strokeStyle = nc; ctx.lineWidth = 2;
             ctx.strokeRect(wx + 8, wy + 8, S - 16, S - 16);
-            ctx.restore();
+            ctx.globalAlpha = 1;
           }
           // Door on south face of building
           const doorEntry = this._doorMap.get(`${x},${y}`);
@@ -1249,12 +1350,9 @@ class GameMap {
             // Canopy shadow
             ctx.fillStyle = 'rgba(0,0,0,0.28)';
             ctx.beginPath(); ctx.roundRect(awX + 2, awY + 3, awW, awH, 2); ctx.fill();
-            // Canopy body
-            const awG = ctx.createLinearGradient(awX, awY, awX, awY + awH);
-            awG.addColorStop(0, signColor + 'CC'); awG.addColorStop(1, signColor + '55');
-            ctx.fillStyle = awG; ctx.shadowColor = signColor; ctx.shadowBlur = 9;
+            // Canopy body — flat color, no shadowBlur/gradient for perf
+            ctx.fillStyle = signColor + 'BB';
             ctx.beginPath(); ctx.roundRect(awX, awY, awW, awH, 2); ctx.fill();
-            ctx.shadowBlur = 0;
             // Canopy fringe (scalloped)
             ctx.fillStyle = signColor + '99';
             const fCount = 6, fW = awW / fCount;
@@ -1271,13 +1369,12 @@ class GameMap {
             ctx.fillStyle = 'rgba(6,6,14,0.90)';
             ctx.beginPath(); ctx.roundRect(signX, signY, signW, signH, 3); ctx.fill();
             ctx.strokeStyle = signColor; ctx.lineWidth = 1.4;
-            ctx.shadowColor = signColor; ctx.shadowBlur = 14;
             ctx.beginPath(); ctx.roundRect(signX, signY, signW, signH, 3); ctx.stroke();
             ctx.fillStyle = signColor;
             ctx.font = 'bold 7px Orbitron, monospace';
             ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
             ctx.fillText(signText, cx2, signY + signH / 2);
-            ctx.shadowBlur = 0; ctx.textBaseline = 'alphabetic';
+            ctx.textBaseline = 'alphabetic';
             ctx.restore();
           }
         }
@@ -1306,18 +1403,16 @@ class GameMap {
         // Bottom-edge ambient occlusion
         ctx.fillStyle = 'rgba(0,0,0,0.22)';
         ctx.fillRect(wx2, wy2 + S + wallH - 3, S, 3);
-        // Window slots on the wall face
+        // Window slots on the wall face — no shadowBlur for performance
         if (this.buildingWindows[y][x]) {
           const wc = cfg.windowColors[(Math.floor(x/2) + Math.floor(y/2)) % cfg.windowColors.length];
-          ctx.save();
-          ctx.shadowColor = wc; ctx.shadowBlur = 6; ctx.fillStyle = wc + 'AA';
+          ctx.fillStyle = wc + 'AA';
           const wW = 10, wHh = 7;
           for (let wi = 0; wi < 3; wi++) {
             const wx3 = wx2 + 8 + wi * Math.floor((S - 16) / 3);
             if (wx3 + wW < wx2 + S - 6)
               ctx.fillRect(wx3, wy2 + S + 3, wW, wHh);
           }
-          ctx.restore();
         }
       }
     }

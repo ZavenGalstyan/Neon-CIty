@@ -394,6 +394,34 @@ const CONFIG = {
       zombie: true,
     },
 
+    // ── Galactica ───────────────────────────────────────────
+    {
+      id: 'galactica', name: 'GALACTICA',
+      desc: 'A living galaxy. Alien swarms, plasma storms, planet structures. The Galactic Overlord rules all.',
+      theme: '#AA44FF',
+      tags: ['SPACE', 'ALIENS', 'COSMIC'],
+      previewGridSize: 16, previewBg: '#020010', previewRoad: 'rgba(120,60,255,0.45)',
+      mapW: 40, mapH: 40, tileSize: 80, roadEvery: 7,
+      roadColor: '#04000e', sidewalkColor: '#08001a',
+      buildingPalette: ['#120028','#1a0038','#0e0024','#160030','#10001e','#18002a','#0c001e','#140030'],
+      neonColors: ['#AA44FF','#FF44AA','#44AAFF','#FFAA44','#44FFAA'],
+      windowColors: ['#CC88FF','#FF88CC','#88CCFF','#FFCC88'],
+      lightColor: '#AA44FF', lightGlow: '#7722CC', neonFreq: 6,
+      weather: 'starfield',
+      galactica: true,
+      botPalettes: {
+        mini:       [{ body:'#1a0040', accent:'#AA44FF' }, { body:'#0a0028', accent:'#FF44AA' }],
+        normal:     [{ body:'#220044', accent:'#CC66FF' }, { body:'#1a003a', accent:'#AA44FF' }, { body:'#28004a', accent:'#FF66AA' }],
+        big:        [{ body:'#0e0028', accent:'#7722CC' }, { body:'#0c0020', accent:'#8833DD' }],
+        police:     [{ body:'#001428', accent:'#44AAFF' }, { body:'#000c20', accent:'#2288EE' }],
+        swat:       [{ body:'#0a001e', accent:'#FF4444' }],
+        heavyswat:  [{ body:'#14000a', accent:'#FF8844' }],
+        sniper:     [{ body:'#04001c', accent:'#44FFCC' }],
+        bomber:     [{ body:'#1a0800', accent:'#FF6600' }],
+        juggernaut: [{ body:'#0a0020', accent:'#AA44FF' }],
+      },
+    },
+
     // ── Page 2 Maps ─────────────────────────────────────────
     // WASTELAND - Unified map with big buildings and color themes
     {
@@ -428,69 +456,41 @@ const CONFIG = {
       },
     },
 
-    // ── Jungle World ───────────────────────────────────────
+    // ── Robot City ───────────────────────────────────────────
     {
-      id: 'jungle',
-      name: 'JUNGLE SAFARI',
-      desc: 'Deep in the wild. Animal predators hunt you. Ride horses. Survive nature.',
-      theme: '#44AA22',
-      tags: ['NATURE', 'ANIMALS', 'MELEE'],
+      id: 'robot_city',
+      name: 'ROBOT CITY',
+      desc: 'A machine metropolis gone rogue. All enemies are robots. A Titan Mech rules.',
+      theme: '#00DDFF',
+      tags: ['ROBOTS', 'ELECTRIC', 'FUTURISTIC'],
       previewGridSize: 18,
-      previewBg: '#0a1808',
-      previewRoad: 'rgba(139,90,43,0.5)',
+      previewBg: '#050c14',
+      previewRoad: 'rgba(0,180,220,0.4)',
 
-      mapW: 48, mapH: 48, tileSize: 80, roadEvery: 8,
+      mapW: 44, mapH: 44, tileSize: 80, roadEvery: 8,
 
-      // Jungle terrain colors
-      roadColor:      '#5a3d1e',    // Dirt path
-      sidewalkColor:  '#3d5a28',    // Grass/undergrowth
-      buildingPalette: ['#1a3010','#254520','#1e3818','#2a4a25','#223d1c','#2e5028','#1c3515','#305530'],  // Trees
-      neonColors:     ['#44AA22','#66CC44','#88DD66','#22BB44'],  // Jungle greens
-      windowColors:   ['#FFEE44','#FFDD22','#FFCC00','#FFE066'],  // Fireflies/eyes
-      lightColor:     '#88DD44',
-      lightGlow:      '#44AA22',
-      neonFreq:       5,
-      weather:        'jungle_rain',
-      jungle:         true,         // Flag for jungle-specific rendering
+      roadColor:       '#0a1018',   // Dark metal grid floor
+      sidewalkColor:   '#0d1420',   // Circuit board platform
+      buildingPalette: ['#0c1822','#101e2a','#0e1c28','#121e2e','#0a1620','#101c2a','#0c1a24','#0e1e2c'],
+      neonColors:      ['#00DDFF','#00FFCC','#44EEFF','#0099FF'],
+      windowColors:    ['#00DDFF','#44EEFF','#00BBDD','#22CCFF'],
+      lightColor:      '#00DDFF',
+      lightGlow:       '#0099FF',
+      neonFreq:        4,
+      weather:         'electric',
+      robot:           true,
 
-      // Animal enemies (melee only)
       botPalettes: {
-        // Small animals - monkeys
-        mini:   [
-          { body:'#8B4513', accent:'#D2691E', animal:'monkey' },
-          { body:'#654321', accent:'#8B4513', animal:'monkey' },
-        ],
-        // Medium animals - tigers, panthers
-        normal: [
-          { body:'#FF8C00', accent:'#000000', animal:'tiger' },
-          { body:'#1a1a1a', accent:'#333333', animal:'panther' },
-          { body:'#228B22', accent:'#006400', animal:'snake' },
-          { body:'#808080', accent:'#505050', animal:'wolf' },
-        ],
-        // Large animals - gorillas, rhinos
-        big:    [
-          { body:'#2F2F2F', accent:'#1a1a1a', animal:'gorilla' },
-          { body:'#696969', accent:'#404040', animal:'rhino' },
-        ],
-        // Police - crocodiles
-        police: [
-          { body:'#2E8B57', accent:'#006400', animal:'crocodile' },
-          { body:'#3CB371', accent:'#228B22', animal:'crocodile' },
-        ],
-        // SWAT - large crocodiles
-        swat:   [{ body:'#1a4a2e', accent:'#0a2a1a', animal:'crocodile' }],
+        mini:      [{ body:'#1a2a3a', accent:'#00DDFF' }, { body:'#0e1e2e', accent:'#44EEFF' }],
+        normal:    [{ body:'#1c2e40', accent:'#00CCFF' }, { body:'#162438', accent:'#22EEFF' }, { body:'#1a2c3c', accent:'#00AACC' }],
+        big:       [{ body:'#0e1e30', accent:'#FF4400' }, { body:'#101c2c', accent:'#FF6600' }],
+        police:    [{ body:'#0a1a3a', accent:'#4466FF' }, { body:'#0c1c38', accent:'#2244EE' }],
+        swat:      [{ body:'#1a0a0a', accent:'#FF2200' }],
+        heavyswat: [{ body:'#1a1400', accent:'#FFCC00' }],
+        sniper:    [{ body:'#080e16', accent:'#00FF88' }],
+        bomber:    [{ body:'#1a0e00', accent:'#FF8800' }],
+        juggernaut:[{ body:'#101010', accent:'#FF0000' }],
       },
-
-      // Jungle boss config
-      bossConfig: {
-        name: 'KING KONG',
-        type: 'giant_gorilla',
-        color: '#1a1a1a',
-        accent: '#333333'
-      },
-
-      // Background birds
-      birds: true,
     },
 
     // ── Campaign Mode ───────────────────────────────────────
@@ -724,6 +724,60 @@ const CONFIG = {
         big:    [{ body:'#221100', accent:'#994422' }, { body:'#330a00', accent:'#882211' }],
         police: [{ body:'#112233', accent:'#4488CC' }, { body:'#0a1a2a', accent:'#3366AA' }],
         swat:   [{ body:'#0a0a12', accent:'#336699' }],
+      },
+    },
+
+    // ── Desert Sands ───────────────────────────────────────
+    {
+      id: 'desert_sands', name: 'DESERT SANDS',
+      desc: 'Ancient pyramids, mummies, scorpions. Ride camels. Survive the Pharaoh God.',
+      theme: '#D4A017', tags: ['DESERT', 'ANCIENT', 'MUMMIES'],
+      previewGridSize: 14, previewBg: '#180e00', previewRoad: 'rgba(200,158,70,0.50)',
+      mapW: 40, mapH: 40, tileSize: 80, roadEvery: 6,
+      roadColor: '#c8a05a', sidewalkColor: '#a87a3a',
+      buildingPalette: ['#8B6914','#9e7c20','#7a5c10','#A0801e','#8a6818','#b08422','#6c5010','#9c7a1e'],
+      neonColors: ['#D4A017','#FF8800','#E8B020','#FF6600'],
+      windowColors: ['#FFD700','#FFAA44','#FF8800','#FFCC44'],
+      lightColor: '#FFB830', lightGlow: '#FF8800', neonFreq: 14,
+      weather: 'sandstorm',
+      desert: true,
+      botPalettes: {
+        mini:       [{ body:'#5a3d10', accent:'#D4A017' }, { body:'#6B4E1A', accent:'#C89020' }],
+        normal:     [{ body:'#D4C4A0', accent:'#8B6914' }, { body:'#C8B490', accent:'#9e7c20' }, { body:'#E0D0A8', accent:'#7a5c10' }],
+        big:        [{ body:'#8B7A50', accent:'#D4A017' }, { body:'#7a6a40', accent:'#C89020' }],
+        police:     [{ body:'#1a1408', accent:'#D4A017' }, { body:'#141008', accent:'#FFD700' }],
+        swat:       [{ body:'#0e0c06', accent:'#8B6914' }],
+        heavyswat:  [{ body:'#0a0806', accent:'#FF8800' }],
+        sniper:     [{ body:'#c8b87a', accent:'#FFD700' }],
+        bomber:     [{ body:'#1a1000', accent:'#FF6622' }],
+        juggernaut: [{ body:'#8B6914', accent:'#D4A017' }],
+      },
+    },
+
+    // ── Jungle Safari ──────────────────────────────────────
+    {
+      id: 'jungle', name: 'JUNGLE SAFARI',
+      desc: 'Deep in the wild. Animal predators hunt you. Ride horses. Survive nature.',
+      theme: '#44AA22', tags: ['NATURE', 'ANIMALS', 'MELEE'],
+      previewGridSize: 14, previewBg: '#0a1808', previewRoad: 'rgba(139,105,20,0.55)',
+      mapW: 40, mapH: 40, tileSize: 80, roadEvery: 6,
+      roadColor: '#5a3d1e', sidewalkColor: '#2a4a20',
+      buildingPalette: ['#1a3010','#1e3814','#162808','#22380e','#183010','#1c3412','#14280a','#20341a'],
+      neonColors: ['#44CC22','#88FF44','#FFCC44','#FF8822'],
+      windowColors: ['#FFEE44','#FFD700','#FFAA22','#AEFF44'],
+      lightColor: '#FFEE44', lightGlow: '#FFCC00', neonFreq: 10,
+      weather: 'jungle_rain',
+      jungle: true,
+      botPalettes: {
+        mini:    [{ body:'#3a2a08', accent:'#FFCC22' }, { body:'#2e2010', accent:'#FF8822' }],
+        normal:  [{ body:'#c87820', accent:'#1a1a08' }, { body:'#8B4513', accent:'#FFD700' }, { body:'#5c3310', accent:'#FF8800' }],
+        big:     [{ body:'#2a2010', accent:'#FFAA22' }, { body:'#1e1808', accent:'#CC8800' }],
+        police:  [{ body:'#5a3210', accent:'#FF4400' }, { body:'#4a2808', accent:'#FF6622' }],
+        swat:    [{ body:'#3a5a18', accent:'#88FF44' }],
+        heavyswat: [{ body:'#1a0a00', accent:'#FF6600' }],
+        sniper:  [{ body:'#2a3a10', accent:'#AAFFAA' }],
+        bomber:  [{ body:'#6a4a10', accent:'#FF8800' }],
+        juggernaut: [{ body:'#4a3010', accent:'#FFAA00' }],
       },
     },
   ],
