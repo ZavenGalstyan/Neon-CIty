@@ -617,26 +617,6 @@ const CONFIG = {
       },
     },
 
-    // ── Siege Mode ───────────────────────────────────────────
-    {
-      id: 'siege', name: 'SIEGE MODE',
-      desc: 'Hold the center. Endless waves assault from all sides. The city falls — or you do.',
-      theme: '#44AAFF', tags: ['DEFEND', 'ENDLESS WAVES', 'TACTICAL'],
-      previewGridSize: 20, previewBg: '#000810', previewRoad: 'rgba(68,170,255,0.45)',
-      mapW: 46, mapH: 46, tileSize: 80, roadEvery: 11,
-      roadColor: '#04080e', sidewalkColor: '#080e14',
-      buildingPalette: ['#0a1828','#0e2038','#081420','#0c1e30','#0a1c28','#0e2238','#081620','#0c1e34'],
-      neonColors: ['#44AAFF','#2288DD','#66CCFF','#0066CC'],
-      windowColors: ['#44AAFF','#88CCFF','#66AAFF','#2299FF'],
-      lightColor: '#44AAFF', lightGlow: '#2277CC', neonFreq: 9,
-      weather: 'fog',
-      siege: true,
-      botPalettes: {
-        mini:   [{ body:'#002244', accent:'#44AAFF' }],
-        normal: [{ body:'#003366', accent:'#44AAFF' }, { body:'#002255', accent:'#2299FF' }],
-        big:    [{ body:'#001133', accent:'#003366' }],
-      },
-    },
     {
       id: 'frozen_tundra',
       name: 'FROZEN TUNDRA',

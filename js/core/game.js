@@ -42,7 +42,6 @@
  *   this._zombieMode  — zombie map
  *   this._campaignMode — 100-level campaign
  *   this._blitzMode   — 3× speed, no shop
- *   this._siegeMode   — bots from all 4 edges
  *   this._survivalMode / this._hardcoreMode — modifier flags
  */
 class Game {
@@ -210,7 +209,6 @@ class Game {
     this._survivalMode    = !!this.map.config.survival;
     this._hardcoreMode    = !!this.map.config.hardcore;
     this._blitzMode       = !!this.map.config.blitz;
-    this._siegeMode       = !!this.map.config.siege;
     // ── Tower Mode ────────────────────────────────────────────
     this._towerFloor           = 1;
     this._towerElevatorActive  = false;
@@ -265,11 +263,7 @@ class Game {
       this.player.speed = Math.round(this.player.speed * 3);
       this.spawnTimer   = 800;  // faster initial spawn
     }
-    // ── Siege mode: fast spawn, big waves from all sides ─────
-    if (this._siegeMode) {
-      this.spawnTimer  = 600;
-      this._siegeWaveCount = 0;
-    }
+
 
     if (!this._towerMode) this._spawnVehicles();
     if (this._arenaMode)    this._startArenaWave();
@@ -324,7 +318,7 @@ class Game {
       return;
     }
     if (e.code === 'KeyB') {
-      if (this._arenaMode || this._zombieMode || this._survivalMode || this._blitzMode || this._siegeMode) return;
+      if (this._arenaMode || this._zombieMode || this._survivalMode || this._blitzMode) return;
       if      (this.state === 'playing') { this.shop.open();  this.state = 'shop'; }
       else if (this.state === 'shop')    { this.shop.close(); this.state = 'playing'; }
       else if (this.state === 'paused')  { this.shop.open();  this.state = 'shop'; }
@@ -1094,18 +1088,12 @@ class Game {
     // ── Bot spawning (non-arena, non-zombie, non-life only) ──
     if (!this._arenaMode && !this._zombieMode && !this._lifeMode && !this._towerMode) {
       this.spawnTimer -= dt * 1000;
-      const maxBots = this._siegeMode
-        ? CONFIG.MAX_BOTS * 2 + this.wave * 4   // siege: bigger cap
-        : CONFIG.MAX_BOTS + this.wave * 2;
+      const maxBots = CONFIG.MAX_BOTS + this.wave * 2;
       const spawnInterval = this._blitzMode
         ? Math.max(300, CONFIG.BOT_SPAWN_INTERVAL / 3 - this.wave * 50)
-        : this._siegeMode
-          ? Math.max(300, 1800 - this.wave * 80)
-          : Math.max(700, CONFIG.BOT_SPAWN_INTERVAL - this.wave * 140);
+        : Math.max(700, CONFIG.BOT_SPAWN_INTERVAL - this.wave * 140);
       if (this.spawnTimer <= 0 && this.bots.length < maxBots) {
-        // Siege: spawn 3-4 bots per tick (assault from all sides)
-        const count = this._siegeMode ? 3 + Math.floor(this.wave / 4) : 1;
-        for (let _si = 0; _si < count; _si++) this._spawnBot();
+        this._spawnBot();
         this.spawnTimer = spawnInterval;
       }
 
@@ -1367,20 +1355,10 @@ class Game {
     else if (r < 0.84)                     type = 'normal';
     else                                   type = 'big';
 
-    // Siege: spawn from all 4 cardinal edges of the map toward center
-    if (this._siegeMode) {
-      const cx = this.map.W * this.map.S / 2, cy = this.map.H * this.map.S / 2;
-      const side = Math.floor(Math.random() * 4);
-      if      (side === 0) { sx = cx + rnd(-60, 60); sy = 60; }
-      else if (side === 1) { sx = this.map.W * this.map.S - 60; sy = cy + rnd(-60, 60); }
-      else if (side === 2) { sx = cx + rnd(-60, 60); sy = this.map.H * this.map.S - 60; }
-      else                 { sx = 60; sy = cy + rnd(-60, 60); }
-    }
 
     const _pushBot = (bx, by) => {
       const bot = new Bot(bx, by, this.wave, type, this.map.config);
       if (this._blitzMode) { bot.speed = Math.round(bot.speed * 3); }
-      if (this._siegeMode) { bot.hp = Math.round(bot.hp * 1.5); bot.maxHp = bot.hp; }
       if (this._currentDistrict?.id === 'industrial' && this._reputation.industrial <= -50) {
         bot.hp = Math.round(bot.hp * 1.25); bot.maxHp = bot.hp;
       }
@@ -3760,11 +3738,10 @@ class Game {
       }
       this.hud.renderWeaponInfo(this.player);
       if (this._grenadeCount > 0) this.hud.renderGrenadeCount(this._grenadeCount);
-      if (!this._arenaMode && !this._zombieMode && !this._lifeMode && !this._survivalMode && !this._blitzMode && !this._siegeMode && !this._towerMode) this.hud.renderShopButton(this.state === 'shop', this._isMobile);
+      if (!this._arenaMode && !this._zombieMode && !this._lifeMode && !this._survivalMode && !this._blitzMode && !this._towerMode) this.hud.renderShopButton(this.state === 'shop', this._isMobile);
       if (this._survivalMode) this.hud.renderModeBadge('☠ SURVIVAL', '#FF2244');
       if (this._hardcoreMode) this.hud.renderModeBadge('⚡ HARDCORE · 2× DMG · 3× $', '#FF8800');
       if (this._blitzMode)    this.hud.renderModeBadge('⚡ BLITZ · 3× SPEED · 5× $', '#FF4400');
-      if (this._siegeMode)    this.hud.renderModeBadge('🛡 SIEGE · DEFEND THE CENTER', '#44AAFF');
       if (this._campaignMode) this.hud.renderCampaignLevel(this._campaignLevel, this._campaignKills, this._campaignTarget, this._levelComplete, this._levelCompleteT);
       if (this._towerMode) this._renderTowerHUD(ctx, W, H);
       if (this.player.companion && !this.player.companion.dead) this.hud.renderCompanionHP(this.player.companion);
