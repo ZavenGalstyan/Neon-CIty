@@ -1388,7 +1388,13 @@ class Game {
   }
 
   _spawnBoss() {
-    const rp = this.map.randomRoadPos();
+    const minEdge = 160;
+    const mapW = this.map.W * this.map.S, mapH = this.map.H * this.map.S;
+    let rp, tries = 0;
+    do {
+      rp = this.map.randomRoadPos();
+      tries++;
+    } while (tries < 20 && (rp.x < minEdge || rp.y < minEdge || rp.x > mapW - minEdge || rp.y > mapH - minEdge));
     this.boss = new BossBot(rp.x, rp.y, this.wave, this.map.config.id);
   }
 
