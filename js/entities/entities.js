@@ -5258,9 +5258,9 @@ const BOSS_CONFIGS = {
     special: 'burst',   // fires ring of plasma bolts
   },
   tower: {
-    name: 'THE PENTHOUSE LORD', color: '#FFD700', accent: '#FFF0AA',
-    radius: 46, speed: 74,  hp: 1800, dmg: 34, fr: 780, bspd: 360,
-    special: 'burst',   // fires gold bullet ring
+    name: 'THE GOLDEN EMPEROR', color: '#FFD700', accent: '#FFF0AA',
+    radius: 52, speed: 68,  hp: 2200, dmg: 38, fr: 720, bspd: 380,
+    special: 'burst',   // fires devastating gold bullet ring
   },
   sky_realm: {
     name: 'THE STORM EMPEROR', color: '#1c3c58', accent: '#FFD700',
@@ -6585,90 +6585,149 @@ class BossBot {
     ctx.restore();
   }
 
-  // ── Penthouse Lord (Tower final boss) ─────────────────────────────────────
+  // ── Golden Emperor (Tower final boss) — Majestic & Powerful ─────────────────
   _renderPenthouseLord(ctx, x, y, r, pulse) {
     const sw = this._pulseT;
     ctx.save();
     ctx.translate(x, y);
 
-    // 1. Outer gold aura — three halo rings
-    for (let hi = 0; hi < 3; hi++) {
-      const hR = r * (1.30 + hi * 0.30 + Math.sin(sw * 0.9 + hi * 1.2) * 0.08);
-      ctx.globalAlpha = (0.18 - hi * 0.05) + pulse * 0.10;
-      ctx.strokeStyle = hi === 0 ? '#FFD700' : hi === 1 ? '#FFF0AA' : '#CC9900';
-      ctx.lineWidth = 3 - hi;
+    // 1. Grand outer aura — 5 pulsing halo rings with fire effect
+    for (let hi = 0; hi < 5; hi++) {
+      const hR = r * (1.25 + hi * 0.25 + Math.sin(sw * 1.2 + hi * 0.8) * 0.12);
+      ctx.globalAlpha = (0.25 - hi * 0.04) + pulse * 0.12;
+      const hueShift = hi * 15;
+      ctx.strokeStyle = hi === 0 ? '#FFD700' : hi === 1 ? '#FFAA00' : hi === 2 ? '#FF8800' : hi === 3 ? '#FFF0AA' : '#FFCC00';
+      ctx.lineWidth = 4 - hi * 0.6;
+      ctx.shadowColor = '#FFD700'; ctx.shadowBlur = 20;
       ctx.beginPath(); ctx.arc(0, 0, hR, 0, Math.PI * 2); ctx.stroke();
     }
+    ctx.shadowBlur = 0;
     ctx.globalAlpha = 1;
 
-    // 2. Rotating golden disc
+    // 2. Rotating golden sun disc with rays
     ctx.save();
-    ctx.rotate(sw * 0.35);
-    ctx.globalAlpha = 0.18 + pulse * 0.08;
-    ctx.strokeStyle = '#FFD700'; ctx.lineWidth = 2.5;
-    ctx.beginPath(); ctx.ellipse(0, 0, r * 1.35, r * 0.45, 0, 0, Math.PI * 2); ctx.stroke();
+    ctx.rotate(sw * 0.4);
+    ctx.globalAlpha = 0.25 + pulse * 0.12;
+    ctx.strokeStyle = '#FFD700'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.ellipse(0, 0, r * 1.5, r * 0.5, 0, 0, Math.PI * 2); ctx.stroke();
+    // Inner rotating disc
+    ctx.rotate(-sw * 0.8);
+    ctx.strokeStyle = '#FFAA00'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.ellipse(0, 0, r * 1.3, r * 0.4, Math.PI/4, 0, Math.PI * 2); ctx.stroke();
     ctx.globalAlpha = 1;
     ctx.restore();
 
-    // 3. Core body — dark suit with gold gradient
-    const bodyGrd = ctx.createRadialGradient(-r*0.25, -r*0.28, r*0.05, 0, 0, r);
-    bodyGrd.addColorStop(0, '#FFFACC'); bodyGrd.addColorStop(0.35, '#FFD700');
-    bodyGrd.addColorStop(0.72, '#CC8800'); bodyGrd.addColorStop(1, '#332200');
-    ctx.fillStyle = bodyGrd;
-    ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.fill();
+    // 3. Radiating sun rays
+    ctx.save();
+    ctx.globalAlpha = 0.35 + pulse * 0.15;
+    for (let ri = 0; ri < 12; ri++) {
+      const ra = (ri / 12) * Math.PI * 2 + sw * 0.2;
+      const rayLen = r * (0.6 + Math.sin(sw * 2 + ri) * 0.15);
+      ctx.strokeStyle = ri % 2 === 0 ? '#FFD700' : '#FFAA00';
+      ctx.lineWidth = ri % 3 === 0 ? 3 : 2;
+      ctx.beginPath();
+      ctx.moveTo(Math.cos(ra) * r * 1.05, Math.sin(ra) * r * 1.05);
+      ctx.lineTo(Math.cos(ra) * (r + rayLen), Math.sin(ra) * (r + rayLen));
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+    ctx.restore();
 
-    // 4. Suit pinstripe lines
-    ctx.globalAlpha = 0.18;
-    ctx.strokeStyle = '#FFFFFF'; ctx.lineWidth = 1;
-    for (let pi = -3; pi <= 3; pi++) {
-      ctx.beginPath(); ctx.moveTo(pi * r * 0.2, -r * 0.9); ctx.lineTo(pi * r * 0.2, r * 0.9); ctx.stroke();
+    // 4. Core body — luxurious black and gold gradient
+    const bodyGrd = ctx.createRadialGradient(-r*0.3, -r*0.35, r*0.08, 0, 0, r);
+    bodyGrd.addColorStop(0, '#FFFACC'); bodyGrd.addColorStop(0.25, '#FFD700');
+    bodyGrd.addColorStop(0.55, '#CC8800'); bodyGrd.addColorStop(0.8, '#442200');
+    bodyGrd.addColorStop(1, '#1a0a00');
+    ctx.fillStyle = bodyGrd;
+    ctx.shadowColor = '#FFD700'; ctx.shadowBlur = 30;
+    ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // 5. Elegant suit pattern — diamond grid
+    ctx.globalAlpha = 0.22;
+    ctx.strokeStyle = '#FFD700'; ctx.lineWidth = 1;
+    for (let di = -4; di <= 4; di++) {
+      ctx.beginPath();
+      ctx.moveTo(di * r * 0.25 - r, -r);
+      ctx.lineTo(di * r * 0.25 + r, r);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(di * r * 0.25 + r, -r);
+      ctx.lineTo(di * r * 0.25 - r, r);
+      ctx.stroke();
     }
     ctx.globalAlpha = 1;
 
-    // 5. Crown — 7 gold spikes
-    const crownSpikes = 7;
+    // 6. Majestic Crown — 9 golden spikes with jewels
+    const crownSpikes = 9;
     for (let ci = 0; ci < crownSpikes; ci++) {
       const ca = (ci / crownSpikes) * Math.PI * 2 - Math.PI / 2;
-      const tR = r * (1.15 + Math.sin(sw * 1.5 + ci * 0.9) * 0.06);
+      const tR = r * (1.22 + Math.sin(sw * 1.8 + ci * 0.7) * 0.08);
       const tx2 = Math.cos(ca) * tR, ty2 = Math.sin(ca) * tR;
-      ctx.strokeStyle = '#FFD700'; ctx.lineWidth = 2.5;
-      ctx.shadowColor = '#FFD700'; ctx.shadowBlur = 10;
-      ctx.beginPath(); ctx.moveTo(Math.cos(ca) * r * 0.88, Math.sin(ca) * r * 0.88);
+      // Golden spike
+      ctx.strokeStyle = '#FFD700'; ctx.lineWidth = 3;
+      ctx.shadowColor = '#FFD700'; ctx.shadowBlur = 14;
+      ctx.beginPath(); ctx.moveTo(Math.cos(ca) * r * 0.92, Math.sin(ca) * r * 0.92);
       ctx.lineTo(tx2, ty2); ctx.stroke();
-      // Diamond tip
-      ctx.fillStyle = '#FFFFFF';
-      ctx.beginPath(); ctx.arc(tx2, ty2, r * 0.06, 0, Math.PI * 2); ctx.fill();
+      // Diamond jewel tips — alternating colors
+      const jewelColors = ['#FF0066', '#00FFAA', '#FF00FF', '#00AAFF', '#FFFF00', '#FF6600', '#AA00FF', '#00FF66', '#FF4444'];
+      ctx.fillStyle = jewelColors[ci];
+      ctx.shadowColor = jewelColors[ci]; ctx.shadowBlur = 10;
+      ctx.beginPath(); ctx.arc(tx2, ty2, r * 0.08, 0, Math.PI * 2); ctx.fill();
     }
     ctx.shadowBlur = 0;
 
-    // 6. Eye — cold, powerful
+    // 7. Menacing eyes — twin golden eyes
+    // Left eye
     ctx.fillStyle = '#000000';
-    ctx.beginPath(); ctx.ellipse(0, -r*0.08, r*0.32, r*0.20, 0, 0, Math.PI*2); ctx.fill();
-    // Iris
-    const eyeGrd = ctx.createRadialGradient(0, -r*0.08, 0, 0, -r*0.08, r*0.20);
-    eyeGrd.addColorStop(0, '#FFD700'); eyeGrd.addColorStop(0.5, '#CC8800'); eyeGrd.addColorStop(1, '#220000');
-    ctx.fillStyle = eyeGrd;
-    ctx.beginPath(); ctx.ellipse(0, -r*0.08, r*0.18, r*0.12, 0, 0, Math.PI*2); ctx.fill();
-    // Pupil — dollar sign
-    ctx.font = `bold ${Math.round(r*0.20)}px monospace`;
-    ctx.fillStyle = '#FFD700'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText('$', 0, -r*0.08);
-    ctx.textBaseline = 'alphabetic';
+    ctx.beginPath(); ctx.ellipse(-r*0.22, -r*0.12, r*0.18, r*0.12, -0.15, 0, Math.PI*2); ctx.fill();
+    const eyeGrdL = ctx.createRadialGradient(-r*0.22, -r*0.12, 0, -r*0.22, -r*0.12, r*0.12);
+    eyeGrdL.addColorStop(0, '#FF0000'); eyeGrdL.addColorStop(0.5, '#FFD700'); eyeGrdL.addColorStop(1, '#220000');
+    ctx.fillStyle = eyeGrdL;
+    ctx.beginPath(); ctx.ellipse(-r*0.22, -r*0.12, r*0.10, r*0.07, 0, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#000';
+    ctx.beginPath(); ctx.arc(-r*0.22, -r*0.12, r*0.04, 0, Math.PI*2); ctx.fill();
+    // Right eye
+    ctx.fillStyle = '#000000';
+    ctx.beginPath(); ctx.ellipse(r*0.22, -r*0.12, r*0.18, r*0.12, 0.15, 0, Math.PI*2); ctx.fill();
+    const eyeGrdR = ctx.createRadialGradient(r*0.22, -r*0.12, 0, r*0.22, -r*0.12, r*0.12);
+    eyeGrdR.addColorStop(0, '#FF0000'); eyeGrdR.addColorStop(0.5, '#FFD700'); eyeGrdR.addColorStop(1, '#220000');
+    ctx.fillStyle = eyeGrdR;
+    ctx.beginPath(); ctx.ellipse(r*0.22, -r*0.12, r*0.10, r*0.07, 0, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#000';
+    ctx.beginPath(); ctx.arc(r*0.22, -r*0.12, r*0.04, 0, Math.PI*2); ctx.fill();
+    // Eye glow
+    ctx.fillStyle = `rgba(255,0,0,${0.3 + pulse * 0.2})`;
+    ctx.beginPath(); ctx.arc(-r*0.22, -r*0.12, r*0.05, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(r*0.22, -r*0.12, r*0.05, 0, Math.PI*2); ctx.fill();
 
-    // 7. Orbiting gold coins (6 around the boss)
-    const coinR = r * 0.10;
-    for (let oi = 0; oi < 6; oi++) {
-      const oa = sw * 1.4 + (oi / 6) * Math.PI * 2;
-      const ox2 = Math.cos(oa) * r * 1.55;
-      const oy2 = Math.sin(oa) * r * 0.90;
+    // 8. Orbiting treasure — 8 gold coins + gems
+    for (let oi = 0; oi < 8; oi++) {
+      const oa = sw * 1.2 + (oi / 8) * Math.PI * 2;
+      const orbitR = r * 1.65;
+      const ox2 = Math.cos(oa) * orbitR;
+      const oy2 = Math.sin(oa) * orbitR * 0.6;
+      // Coin
       ctx.fillStyle = '#FFD700';
-      ctx.beginPath(); ctx.arc(ox2, oy2, coinR, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = '#CC8800';
-      ctx.font = `bold ${Math.round(coinR * 1.2)}px monospace`;
+      ctx.shadowColor = '#FFD700'; ctx.shadowBlur = 8;
+      ctx.beginPath(); ctx.arc(ox2, oy2, r * 0.12, 0, Math.PI * 2); ctx.fill();
+      ctx.shadowBlur = 0;
+      // Dollar sign on coin
+      ctx.fillStyle = '#885500';
+      ctx.font = `bold ${Math.round(r * 0.14)}px monospace`;
       ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       ctx.fillText('$', ox2, oy2);
-      ctx.textBaseline = 'alphabetic';
     }
+    ctx.textBaseline = 'alphabetic';
+
+    // 9. Central power emblem — glowing $ symbol
+    ctx.font = `bold ${Math.round(r * 0.5)}px monospace`;
+    ctx.fillStyle = '#FFD700';
+    ctx.shadowColor = '#FFD700'; ctx.shadowBlur = 25 + pulse * 15;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('$', 0, r * 0.15);
+    ctx.shadowBlur = 0;
+    ctx.textBaseline = 'alphabetic';
 
     ctx.globalAlpha = 1;
     ctx.restore();

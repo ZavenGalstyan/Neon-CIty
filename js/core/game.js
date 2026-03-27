@@ -216,6 +216,7 @@ class Game {
     this._towerTransitionAlpha = 0;   // 0=clear, 1=black
     this._towerTransitionState = 0;   // 0=idle, 1=fading-out, 2=fading-in
     this._towerVictory         = false;
+    this._towerVictoryBtn      = null; // OK button bounds for victory screen
     // ── Campaign Mode ─────────────────────────────────────────
     this._campaignMode    = !!this.map.config.campaign;
     this._campaignLevel   = 1;
@@ -444,9 +445,11 @@ class Game {
         if (this._bmOpen) { this._bmOpen = false; this.state = 'playing'; }
       }
 
-      // ── Global Events ───────────────────────────────────────
-      this._eventTimer -= dt;
-      if (this._eventTimer <= 0) { this._triggerEvent(false); this._eventTimer = rnd(90, 120); }
+      // ── Global Events (disabled in tower mode) ─────────────────
+      if (!this._towerMode) {
+        this._eventTimer -= dt;
+        if (this._eventTimer <= 0) { this._triggerEvent(false); this._eventTimer = rnd(90, 120); }
+      }
       if (this._eventAnnounceTimer > 0) this._eventAnnounceTimer -= dt;
       if (this._globalEvent) {
         this._globalEvent.timer -= dt;
@@ -1111,8 +1114,8 @@ class Game {
         this.wave++;
         this.waveTimer = 30000;
         window.audio?.waveUp();
-        // Wave-locked global event every 5 waves (major only)
-        if (this.wave % 5 === 0 && !this._globalEvent && !this._eventWave.has(this.wave)) {
+        // Wave-locked global event every 5 waves (major only) — disabled in tower mode
+        if (!this._towerMode && this.wave % 5 === 0 && !this._globalEvent && !this._eventWave.has(this.wave)) {
           this._eventWave.add(this.wave);
           this._triggerEvent(true);
         }
@@ -1440,44 +1443,197 @@ class Game {
 
   _renderTowerVictory(ctx, W, H) {
     const t = Date.now() * 0.001;
-    // Dark overlay
-    ctx.fillStyle = 'rgba(8,6,0,0.90)';
+
+    // Beautiful night sky background with stars
+    const skyGrd = ctx.createLinearGradient(0, 0, 0, H);
+    skyGrd.addColorStop(0, '#0a0a1a');
+    skyGrd.addColorStop(0.4, '#1a1a3a');
+    skyGrd.addColorStop(0.7, '#2a1a2a');
+    skyGrd.addColorStop(1, '#1a0a1a');
+    ctx.fillStyle = skyGrd;
     ctx.fillRect(0, 0, W, H);
-    // Gold glow
-    const grd = ctx.createRadialGradient(W/2, H/2, 40, W/2, H/2, 320);
-    grd.addColorStop(0, 'rgba(220,170,0,0.22)');
+
+    // Animated stars
+    ctx.save();
+    for (let i = 0; i < 80; i++) {
+      const sx = ((i * 137) % W);
+      const sy = ((i * 97) % (H * 0.6));
+      const twinkle = Math.sin(t * 2 + i) * 0.4 + 0.6;
+      ctx.globalAlpha = twinkle * 0.8;
+      ctx.fillStyle = i % 5 === 0 ? '#FFD700' : i % 3 === 0 ? '#AADDFF' : '#FFFFFF';
+      const starSize = i % 7 === 0 ? 3 : i % 4 === 0 ? 2 : 1;
+      ctx.beginPath(); ctx.arc(sx, sy, starSize, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+    ctx.restore();
+
+    // City skyline silhouette at bottom
+    ctx.fillStyle = '#0a0a0a';
+    for (let b = 0; b < 20; b++) {
+      const bx = b * (W / 20);
+      const bh = 40 + ((b * 7) % 80);
+      const bw = W / 20 - 2;
+      ctx.fillRect(bx, H - bh, bw, bh);
+      // Building windows
+      ctx.fillStyle = 'rgba(255,200,100,0.3)';
+      for (let wy = H - bh + 8; wy < H - 10; wy += 12) {
+        for (let wx = bx + 4; wx < bx + bw - 4; wx += 8) {
+          if ((wx + wy) % 3 !== 0) ctx.fillRect(wx, wy, 4, 6);
+        }
+      }
+      ctx.fillStyle = '#0a0a0a';
+    }
+
+    // Grand golden glow from center
+    const grd = ctx.createRadialGradient(W/2, H/2 - 50, 20, W/2, H/2 - 50, 400);
+    grd.addColorStop(0, 'rgba(255,215,0,0.35)');
+    grd.addColorStop(0.3, 'rgba(255,180,0,0.20)');
+    grd.addColorStop(0.6, 'rgba(255,140,0,0.10)');
     grd.addColorStop(1, 'rgba(0,0,0,0)');
     ctx.fillStyle = grd; ctx.fillRect(0, 0, W, H);
+
+    // Floating golden particles
+    ctx.save();
+    for (let p = 0; p < 30; p++) {
+      const px = W/2 + Math.sin(t * 0.8 + p * 0.5) * (150 + p * 5);
+      const py = H/2 - 50 + Math.cos(t * 0.6 + p * 0.7) * (80 + p * 3) - (t * 20 + p * 10) % 200;
+      const pAlpha = 0.3 + Math.sin(t + p) * 0.2;
+      ctx.globalAlpha = pAlpha;
+      ctx.fillStyle = p % 2 === 0 ? '#FFD700' : '#FFAA00';
+      ctx.beginPath(); ctx.arc(px, py, 3, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+    ctx.restore();
 
     ctx.save();
     ctx.textAlign = 'center';
 
-    // Trophy emoji
-    ctx.font = '72px monospace';
-    ctx.fillText('🏆', W/2, H/2 - 80);
+    // Animated crown/trophy area with rays
+    ctx.save();
+    ctx.translate(W/2, H/2 - 100);
+    ctx.rotate(Math.sin(t * 0.5) * 0.05);
+    // Sun rays behind trophy
+    for (let r = 0; r < 12; r++) {
+      const ra = (r / 12) * Math.PI * 2 + t * 0.3;
+      ctx.strokeStyle = `rgba(255,215,0,${0.15 + Math.sin(t + r) * 0.08})`;
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(Math.cos(ra) * 40, Math.sin(ra) * 40);
+      ctx.lineTo(Math.cos(ra) * (90 + Math.sin(t * 2 + r) * 15), Math.sin(ra) * (90 + Math.sin(t * 2 + r) * 15));
+      ctx.stroke();
+    }
+    ctx.restore();
 
-    // Title
-    ctx.font = 'bold 48px monospace';
-    ctx.fillStyle = '#FFD700';
-    ctx.shadowColor = '#FFD700'; ctx.shadowBlur = 30 + Math.sin(t*2)*8;
-    ctx.fillText('TOWER CLEARED!', W/2, H/2 - 10);
+    // Large golden crown icon
+    ctx.font = '80px monospace';
+    ctx.shadowColor = '#FFD700'; ctx.shadowBlur = 40;
+    const crownBob = Math.sin(t * 1.5) * 5;
+    ctx.fillText('\u{1F451}', W/2, H/2 - 90 + crownBob);
     ctx.shadowBlur = 0;
 
-    ctx.font = '22px monospace';
-    ctx.fillStyle = '#CCAA44';
-    ctx.fillText('You reached the penthouse and defeated the boss.', W/2, H/2 + 34);
+    // CONGRATULATIONS title with glow effect
+    ctx.font = 'bold 52px monospace';
+    const titleGlow = 25 + Math.sin(t * 2.5) * 12;
+    ctx.shadowColor = '#FFD700'; ctx.shadowBlur = titleGlow;
+    ctx.fillStyle = '#FFD700';
+    ctx.fillText('CONGRATULATIONS!', W/2, H/2 - 10);
+    ctx.shadowBlur = 0;
 
-    ctx.font = '18px monospace';
-    ctx.fillStyle = '#888';
-    ctx.fillText(`Kills: ${this.kills}   ·   Money: $${this.money}`, W/2, H/2 + 66);
+    // Sub-title
+    ctx.font = 'bold 32px monospace';
+    ctx.fillStyle = '#FFCC44';
+    ctx.shadowColor = '#FFAA00'; ctx.shadowBlur = 15;
+    ctx.fillText('TOWER CONQUERED!', W/2, H/2 + 35);
+    ctx.shadowBlur = 0;
 
-    // Click to exit
-    const pulse2 = Math.sin(t * 2.2) * 0.3 + 0.7;
-    ctx.globalAlpha = pulse2;
-    ctx.font = '16px monospace';
-    ctx.fillStyle = '#FFFFFF';
-    ctx.fillText('CLICK TO RETURN TO MENU', W/2, H/2 + 110);
+    // Victory message
+    ctx.font = '20px monospace';
+    ctx.fillStyle = '#CCAA66';
+    ctx.fillText('You defeated The Golden Emperor and claimed the Penthouse!', W/2, H/2 + 72);
+
+    // Stats with golden styling
+    ctx.font = 'bold 18px monospace';
+    ctx.fillStyle = '#FFD700';
+    ctx.shadowColor = '#FFD700'; ctx.shadowBlur = 8;
+    ctx.fillText(`KILLS: ${this.kills}`, W/2 - 100, H/2 + 110);
+    ctx.fillText(`MONEY: $${this.money}`, W/2 + 100, H/2 + 110);
+    ctx.shadowBlur = 0;
+
+    // Survival time if tracked
+    if (this._surviveTime) {
+      ctx.font = '16px monospace';
+      ctx.fillStyle = '#AA8844';
+      const mins = Math.floor(this._surviveTime / 60);
+      const secs = Math.floor(this._surviveTime % 60);
+      ctx.fillText(`Time: ${mins}:${secs.toString().padStart(2, '0')}`, W/2, H/2 + 135);
+    }
+
+    // OK Button - beautiful golden button
+    const btnW = 180, btnH = 50;
+    const btnX = W/2 - btnW/2, btnY = H/2 + 155;
+    const mx = this.input.mouseScreen.x, my = this.input.mouseScreen.y;
+    const hovered = mx >= btnX && mx <= btnX + btnW && my >= btnY && my <= btnY + btnH;
+
+    // Store button bounds for click detection
+    this._towerVictoryBtn = { x: btnX, y: btnY, w: btnW, h: btnH };
+
+    // Button glow
+    if (hovered) {
+      ctx.shadowColor = '#FFD700'; ctx.shadowBlur = 25;
+    }
+
+    // Button background gradient
+    const btnGrd = ctx.createLinearGradient(btnX, btnY, btnX, btnY + btnH);
+    if (hovered) {
+      btnGrd.addColorStop(0, '#FFE55C');
+      btnGrd.addColorStop(0.5, '#FFD700');
+      btnGrd.addColorStop(1, '#CC9900');
+    } else {
+      btnGrd.addColorStop(0, '#FFD700');
+      btnGrd.addColorStop(0.5, '#CCAA00');
+      btnGrd.addColorStop(1, '#996600');
+    }
+    ctx.fillStyle = btnGrd;
+
+    // Rounded rectangle button
+    ctx.beginPath();
+    ctx.roundRect(btnX, btnY, btnW, btnH, 12);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // Button border
+    ctx.strokeStyle = hovered ? '#FFFFFF' : '#FFE88A';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.roundRect(btnX, btnY, btnW, btnH, 12);
+    ctx.stroke();
+
+    // Button text
+    ctx.font = 'bold 24px monospace';
+    ctx.fillStyle = hovered ? '#000000' : '#1a0a00';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('OK', W/2, btnY + btnH/2);
+    ctx.textBaseline = 'alphabetic';
+
+    // Decorative corner flourishes
+    ctx.strokeStyle = '#FFD700';
+    ctx.lineWidth = 2;
+    ctx.globalAlpha = 0.4;
+    // Top-left
+    ctx.beginPath(); ctx.moveTo(30, 60); ctx.lineTo(30, 30); ctx.lineTo(60, 30); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(40, 70); ctx.lineTo(40, 40); ctx.lineTo(70, 40); ctx.stroke();
+    // Top-right
+    ctx.beginPath(); ctx.moveTo(W-30, 60); ctx.lineTo(W-30, 30); ctx.lineTo(W-60, 30); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(W-40, 70); ctx.lineTo(W-40, 40); ctx.lineTo(W-70, 40); ctx.stroke();
+    // Bottom-left
+    ctx.beginPath(); ctx.moveTo(30, H-60); ctx.lineTo(30, H-30); ctx.lineTo(60, H-30); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(40, H-70); ctx.lineTo(40, H-40); ctx.lineTo(70, H-40); ctx.stroke();
+    // Bottom-right
+    ctx.beginPath(); ctx.moveTo(W-30, H-60); ctx.lineTo(W-30, H-30); ctx.lineTo(W-60, H-30); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(W-40, H-70); ctx.lineTo(W-40, H-40); ctx.lineTo(W-70, H-40); ctx.stroke();
     ctx.globalAlpha = 1;
+
     ctx.restore();
   }
 
@@ -1489,19 +1645,19 @@ class Game {
     this._towerElevatorActive = false;
     this.map._towerFloor = floor;
 
-    // Spawn composition per floor
+    // Spawn composition per floor — EXACTLY 12 enemies each floor (no more, no less)
     const FLOOR_SPAWNS = [
       null,                                                                          // 0 unused
-      [['mini',5]],                                                                  // floor  1
-      [['mini',4],['normal',3]],                                                     // floor  2
-      [['normal',6],['big',2]],                                                      // floor  3
-      [['normal',4],['police',3],['big',2]],                                         // floor  4
-      [['big',4],['swat',4]],                                                        // floor  5
-      [['swat',4],['heavyswat',4]],                                                  // floor  6
-      [['heavyswat',3],['sniper',5]],                                                // floor  7
-      [['sniper',3],['bomber',5]],                                                   // floor  8
-      [['bomber',3],['juggernaut',4]],                                               // floor  9
-      [['juggernaut',2]],                                                            // floor 10 — + boss
+      [['mini',12]],                                                                 // floor  1: 12 mini
+      [['mini',6],['normal',6]],                                                     // floor  2: 12 total
+      [['normal',8],['big',4]],                                                      // floor  3: 12 total
+      [['normal',4],['police',4],['big',4]],                                         // floor  4: 12 total
+      [['police',4],['big',4],['swat',4]],                                           // floor  5: 12 total
+      [['swat',6],['heavyswat',6]],                                                  // floor  6: 12 total
+      [['heavyswat',4],['sniper',8]],                                                // floor  7: 12 total
+      [['sniper',4],['bomber',8]],                                                   // floor  8: 12 total
+      [['bomber',4],['juggernaut',8]],                                               // floor  9: 12 total
+      [['juggernaut',12]],                                                           // floor 10: 12 juggernaut + boss
     ];
     const spawns = FLOOR_SPAWNS[Math.min(floor, 10)] || FLOOR_SPAWNS[1];
 
@@ -1513,8 +1669,8 @@ class Game {
       }
     }
 
-    // Floor 10: also spawn the penthouse boss
-    if (floor >= 10) this._spawnBoss();
+    // Boss ONLY on floor 10 (last floor)
+    if (floor === 10) this._spawnBoss();
 
     // Grant player the floor weapon (progressive unlock)
     this._grantTowerWeapon(floor);
@@ -1566,6 +1722,8 @@ class Game {
           this._towerFloor++;
           if (this._towerFloor > 10) {
             this._towerVictory = true;
+            this._towerTransitionAlpha = 0; // Reset so victory screen is visible
+            this._towerTransitionState = 0;
             this.state = 'gameover';
             return;
           }
@@ -1631,7 +1789,7 @@ class Game {
   }
 
   _spawnAmbientTraffic() {
-    if (this._arenaMode || this._zombieMode) return;
+    if (this._arenaMode || this._zombieMode || this._towerMode) return;
     const base  = this._metropolisMode ? 12 : 6;
     const count = base + Math.floor(Math.random() * 6);
     for (let i = 0; i < count; i++) this._respawnAmbientCar();
@@ -3876,10 +4034,18 @@ class Game {
     if (this.state === 'gameover') {
       if (this._towerVictory) {
         this._renderTowerVictory(ctx, W, H);
+        // Only respond to OK button click
+        if (this.input.mouseJustDown && this._towerVictoryBtn) {
+          const mx = this.input.mouseScreen.x, my = this.input.mouseScreen.y;
+          const btn = this._towerVictoryBtn;
+          if (mx >= btn.x && mx <= btn.x + btn.w && my >= btn.y && my <= btn.y + btn.h) {
+            this._destroy(); window.location.href = 'index.html';
+          }
+        }
       } else {
         this.hud.renderGameOver(this.money, this.kills, this._surviveTime);
+        if (this.input.mouseJustDown) { this._destroy(); window.location.href = 'index.html'; }
       }
-      if (this.input.mouseJustDown) { this._destroy(); window.location.href = 'index.html'; }
     }
 
     // Tower floor transition fade
