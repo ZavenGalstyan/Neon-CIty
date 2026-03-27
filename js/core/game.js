@@ -3651,7 +3651,7 @@ class Game {
     const W   = this.canvas.width, H = this.canvas.height;
     const shake = this.hud.getShakeOffset();
 
-    this.canvas.style.cursor = (this.state === 'shop' || this.state === 'blackmarket' || this.state === 'carshop' || this.state === 'casino' || this.state === 'buildingshop' || this.state === 'bigmap') ? 'default' : 'none';
+    this.canvas.style.cursor = (this.state === 'shop' || this.state === 'blackmarket' || this.state === 'carshop' || this.state === 'casino' || this.state === 'buildingshop' || this.state === 'bigmap' || this.state === 'paused' || this.state === 'gameover') ? 'default' : 'none';
 
     ctx.clearRect(0, 0, W, H);
     ctx.fillStyle = '#08080f';
@@ -4020,14 +4020,25 @@ class Game {
     }
 
     if (this.state === 'paused') {
-      this.hud.renderPause();
-      // Click the MENU button area → go to menu; click anywhere else → resume
-      if (this.input.mouseJustDown) {
-        const btnY = this.canvas.height / 2 + 90;
-        if (this.input.mouseScreen.y >= btnY - 18 && this.input.mouseScreen.y <= btnY + 18) {
-          this._destroy(); window.location.href = 'index.html';
-        } else {
-          this.state = 'playing';
+      const mx = this.input.mouseScreen.x, my = this.input.mouseScreen.y;
+      const pauseButtons = this.hud.renderPause(mx, my);
+
+      // Handle button clicks
+      if (this.input.mouseJustDown && pauseButtons) {
+        // Check Resume button
+        if (pauseButtons.resume) {
+          const btn = pauseButtons.resume;
+          if (mx >= btn.x && mx <= btn.x + btn.w && my >= btn.y && my <= btn.y + btn.h) {
+            this.state = 'playing';
+          }
+        }
+        // Check Back to Maps button
+        if (pauseButtons.maps) {
+          const btn = pauseButtons.maps;
+          if (mx >= btn.x && mx <= btn.x + btn.w && my >= btn.y && my <= btn.y + btn.h) {
+            this._destroy();
+            window.location.href = 'index.html';
+          }
         }
       }
     }

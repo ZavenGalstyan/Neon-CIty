@@ -1048,34 +1048,114 @@ class HUD {
     ctx.restore();
   }
 
-  renderPause() {
+  renderPause(mouseX = 0, mouseY = 0) {
     const ctx = this.ctx;
     const W = this.canvas.width, H = this.canvas.height;
-    ctx.fillStyle = 'rgba(0,0,0,0.62)'; ctx.fillRect(0,0,W,H);
+
+    // Dark overlay with blur effect
+    ctx.fillStyle = 'rgba(0,0,0,0.75)';
+    ctx.fillRect(0, 0, W, H);
+
+    // Decorative border glow
+    ctx.save();
+    ctx.strokeStyle = 'rgba(68,238,255,0.15)';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(W/2 - 200, H/2 - 140, 400, 320);
+    ctx.restore();
+
     ctx.save();
     ctx.textAlign = 'center';
 
-    // Title
-    ctx.shadowColor = '#44EEFF'; ctx.shadowBlur = 30;
-    ctx.font = 'bold 56px Orbitron, monospace'; ctx.fillStyle = '#44EEFF';
-    ctx.fillText('PAUSED', W/2, H/2 - 20);
-
-    // Key hints
+    // Title with glow
+    ctx.shadowColor = '#44EEFF';
+    ctx.shadowBlur = 40;
+    ctx.font = 'bold 52px Orbitron, monospace';
+    ctx.fillStyle = '#44EEFF';
+    ctx.fillText('PAUSED', W/2, H/2 - 80);
     ctx.shadowBlur = 0;
-    ctx.font = '13px Orbitron, monospace'; ctx.fillStyle = 'rgba(255,255,255,0.4)';
-    ctx.fillText('[P]  /  [ESC]  /  CLICK  =  RESUME     [B]  =  SHOP', W/2, H/2 + 38);
 
-    // Clickable MENU button
-    const btnW = 200, btnH = 36, btnX = W/2 - btnW/2, btnY = H/2 + 72;
-    ctx.fillStyle   = 'rgba(255,255,255,0.06)';
-    ctx.strokeStyle = 'rgba(255,255,255,0.18)';
-    ctx.lineWidth   = 1;
-    this._rr(ctx, btnX, btnY, btnW, btnH, 6);
-    ctx.fill(); ctx.stroke();
-    ctx.font = 'bold 11px Orbitron, monospace'; ctx.fillStyle = 'rgba(255,255,255,0.55)';
-    ctx.fillText('[M]  BACK TO MENU', W/2, btnY + btnH/2 + 4);
+    // Subtitle
+    ctx.font = '14px Orbitron, monospace';
+    ctx.fillStyle = 'rgba(255,255,255,0.5)';
+    ctx.fillText('Game is paused', W/2, H/2 - 50);
+
+    // Button dimensions
+    const btnW = 220, btnH = 45;
+    const btnSpacing = 60;
+
+    // Store button bounds for click detection
+    this._pauseButtons = {};
+
+    // ─── RESUME Button ───
+    const resumeBtnX = W/2 - btnW/2;
+    const resumeBtnY = H/2 - 10;
+    const resumeHovered = mouseX >= resumeBtnX && mouseX <= resumeBtnX + btnW &&
+                          mouseY >= resumeBtnY && mouseY <= resumeBtnY + btnH;
+
+    this._pauseButtons.resume = { x: resumeBtnX, y: resumeBtnY, w: btnW, h: btnH };
+
+    // Button background
+    if (resumeHovered) {
+      ctx.fillStyle = 'rgba(68,238,255,0.25)';
+      ctx.shadowColor = '#44EEFF';
+      ctx.shadowBlur = 15;
+    } else {
+      ctx.fillStyle = 'rgba(68,238,255,0.08)';
+    }
+    ctx.strokeStyle = resumeHovered ? '#44EEFF' : 'rgba(68,238,255,0.4)';
+    ctx.lineWidth = resumeHovered ? 2 : 1;
+    this._rr(ctx, resumeBtnX, resumeBtnY, btnW, btnH, 8);
+    ctx.fill();
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    // Button text
+    ctx.font = 'bold 16px Orbitron, monospace';
+    ctx.fillStyle = resumeHovered ? '#FFFFFF' : 'rgba(255,255,255,0.8)';
+    ctx.fillText('RESUME', W/2, resumeBtnY + btnH/2 + 6);
+    ctx.font = '11px Orbitron, monospace';
+    ctx.fillStyle = 'rgba(255,255,255,0.4)';
+    ctx.fillText('[ESC]', W/2, resumeBtnY + btnH + 15);
+
+    // ─── BACK TO MAPS Button ───
+    const mapsBtnX = W/2 - btnW/2;
+    const mapsBtnY = resumeBtnY + btnSpacing + 25;
+    const mapsHovered = mouseX >= mapsBtnX && mouseX <= mapsBtnX + btnW &&
+                        mouseY >= mapsBtnY && mouseY <= mapsBtnY + btnH;
+
+    this._pauseButtons.maps = { x: mapsBtnX, y: mapsBtnY, w: btnW, h: btnH };
+
+    // Button background
+    if (mapsHovered) {
+      ctx.fillStyle = 'rgba(255,100,100,0.25)';
+      ctx.shadowColor = '#FF6666';
+      ctx.shadowBlur = 15;
+    } else {
+      ctx.fillStyle = 'rgba(255,100,100,0.08)';
+    }
+    ctx.strokeStyle = mapsHovered ? '#FF6666' : 'rgba(255,100,100,0.4)';
+    ctx.lineWidth = mapsHovered ? 2 : 1;
+    this._rr(ctx, mapsBtnX, mapsBtnY, btnW, btnH, 8);
+    ctx.fill();
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    // Button text
+    ctx.font = 'bold 16px Orbitron, monospace';
+    ctx.fillStyle = mapsHovered ? '#FFFFFF' : 'rgba(255,255,255,0.8)';
+    ctx.fillText('BACK TO MAPS', W/2, mapsBtnY + btnH/2 + 6);
+    ctx.font = '11px Orbitron, monospace';
+    ctx.fillStyle = 'rgba(255,255,255,0.4)';
+    ctx.fillText('[M]', W/2, mapsBtnY + btnH + 15);
+
+    // Bottom hint
+    ctx.font = '12px Orbitron, monospace';
+    ctx.fillStyle = 'rgba(255,255,255,0.3)';
+    ctx.fillText('[B] Open Shop', W/2, H/2 + 130);
 
     ctx.restore();
+
+    return this._pauseButtons;
   }
 
   // ── Global Event Banner ────────────────────────────────────────────────────
