@@ -789,6 +789,30 @@ const CONFIG = {
         juggernaut: [{ body:'#4a3010', accent:'#FFAA00' }],
       },
     },
+
+    // ── Dino World ─────────────────────────────────────────
+    {
+      id: 'dino_world', name: 'DINO WORLD',
+      desc: 'Primordial earth. Raptors hunt in the ferns, water dinos lurk in rivers. The Rex King rules all.',
+      theme: '#66DD44',
+      tags: ['DINOSAURS', 'PREHISTORIC', 'WATER'],
+      previewGridSize: 14, previewBg: '#060e04', previewRoad: 'rgba(80,180,40,0.55)',
+      mapW: 44, mapH: 44, tileSize: 80, roadEvery: 6,
+      roadColor: '#4a7a28', sidewalkColor: '#2e5c1a',
+      buildingPalette: ['#1a3410','#1e3c14','#162e0c','#223a10','#183214','#1c3812','#14280a','#203616'],
+      neonColors: ['#66DD44','#88FF66','#AAFF44','#44CC22'],
+      windowColors: ['#BBFF88','#CCFF88','#AAEE66','#99FF66'],
+      lightColor: '#88FF66', lightGlow: '#66CC44', neonFreq: 10,
+      weather: 'jungle_rain',
+      dino: true,
+      botPalettes: {
+        mini:       [{ body:'#2a6618', accent:'#88FF44' }, { body:'#1e5510', accent:'#66DD22' }],
+        normal:     [{ body:'#4a7a28', accent:'#AAFF44' }, { body:'#5a4a10', accent:'#FFCC44' }, { body:'#3a2a08', accent:'#DD9922' }],
+        big:        [{ body:'#1a4a10', accent:'#66BB33' }, { body:'#2a5a18', accent:'#88CC44' }],
+        police:     [{ body:'#6b3410', accent:'#FF8822' }, { body:'#5a2808', accent:'#FF6600' }],
+        swat:       [{ body:'#222e08', accent:'#88AA44' }],
+      },
+    },
   ],
 
   // ── Weapons ─────────────────────────────────────────────

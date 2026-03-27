@@ -117,6 +117,7 @@ class Game {
     this._galacticaMode = !!this.map.config.galactica;
     this._skyMode       = !!this.map.config.sky;
     this._towerMode     = !!this.map.config.tower;
+    this._dinoMode      = !!this.map.config.dino;
 
     // Weather
     this.weather = new Weather(this.map.config.weather || 'clear');
@@ -1663,6 +1664,7 @@ class Game {
     const isJungle    = !!this.map.config.jungle;
     const isDesert    = !!this.map.config.desert;
     const isGalactica = !!this.map.config.galactica;
+    const isDino      = !!this.map.config.dino;
     const isSky       = !!this._skyMode;
 
     // Sky realm: spawn airplanes and bird flocks from map edges
@@ -1705,12 +1707,14 @@ class Game {
         ? ['#C8A050','#B08828','#D4AA60','#A07830','#C09040'][Math.floor(Math.random()*5)]
       : isGalactica
         ? ['#AA44FF','#FF44AA','#44AAFF','#44FFAA','#FFAA44'][Math.floor(Math.random()*5)]
+        : isDino ? ['#66AA33','#44AA22','#88CC44','#4a8820','#77BB55'][Math.floor(Math.random()*5)]
         : carColors[Math.floor(Math.random() * carColors.length)];
     const style     = Math.floor(Math.random() * 5);
     const car = new AmbientCar(pos.x, pos.y, angle, color, style);
     if (isJungle)    car.isHorse = true;
     if (isDesert)    car.isCamel = true;
     if (isGalactica) car.isUFO   = true;
+    if (isDino)      car.isDino  = true;
     this._ambientCars.push(car);
   }
 
@@ -3700,6 +3704,13 @@ class Game {
     if (this._skyMode) {
       ctx.save();
       ctx.fillStyle = 'rgba(135,206,235,0.05)';
+      ctx.fillRect(0, 0, W, H);
+      ctx.restore();
+    }
+    // Dino: lush prehistoric green tint
+    if (this._dinoMode) {
+      ctx.save();
+      ctx.fillStyle = 'rgba(5,18,2,0.11)';
       ctx.fillRect(0, 0, W, H);
       ctx.restore();
     }
