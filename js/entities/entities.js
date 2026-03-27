@@ -278,6 +278,22 @@ class Weather {
           this._p.push({ type:'streak', x:Math.random()*W, y:Math.random()*H, vx:rnd(200,500), vy:rnd(-80,80), len:rnd(40,110), a:rnd(0.55,0.9), life:Math.random(), maxLife:rnd(0.4,1.1) });
         break;
       }
+      case 'sky_breeze': {
+        // Drifting cloud wisps — kept small (5 instead of 10) for performance;
+        // each wisp draws 3 ellipses so fewer wisps matters a lot at 60fps
+        for (let i = 0; i < 5; i++)
+          this._p.push({ type:'cloud_wisp', x:Math.random()*W, y:Math.random()*H*0.65,
+            vx:rnd(10,24), vy:rnd(-2,2), size:rnd(44,110), a:rnd(0.07,0.16), phase:Math.random()*Math.PI*2 });
+        // Wind streaks — fast thin horizontal lines (cheap fillRect)
+        for (let i = 0; i < 14; i++)
+          this._p.push({ type:'wind_streak', x:Math.random()*W, y:Math.random()*H,
+            vx:rnd(70,150), len:rnd(24,72), a:rnd(0.05,0.12) });
+        // Distant birds — tiny V-shapes crossing the screen
+        for (let i = 0; i < 5; i++)
+          this._p.push({ type:'sky_bird', x:Math.random()*W, y:Math.random()*H*0.55,
+            vx:rnd(28,60), vy:rnd(-3,3), size:rnd(2,4), phase:Math.random()*Math.PI*2 });
+        break;
+      }
     }
   }
 
@@ -391,6 +407,21 @@ class Weather {
               p.maxLife = rnd(0.4, 1.1); p.life = p.maxLife;
               p.vx = rnd(200,500); p.vy = rnd(-80,80); p.len = rnd(40,110); p.a = rnd(0.55,0.9);
             }
+          }
+        }
+        break;
+      }
+      case 'sky_breeze': {
+        for (const p of this._p) {
+          p.x += p.vx * dt;
+          if (p.type === 'cloud_wisp') {
+            p.y  += p.vy * dt; p.phase += dt * 0.25;
+            if (p.x > W + 130) { p.x = -130; p.y = Math.random()*H*0.65; }
+          } else if (p.type === 'wind_streak') {
+            if (p.x > W + 80) { p.x = -p.len; p.y = Math.random()*H; }
+          } else if (p.type === 'sky_bird') {
+            p.phase += dt * 2.2; p.y += Math.sin(p.phase) * 5 * dt;
+            if (p.x > W + 50) { p.x = -50; p.y = Math.random()*H*0.55; }
           }
         }
         break;
@@ -603,6 +634,41 @@ class Weather {
         ctx.fillStyle = svg; ctx.fillRect(0, 0, W, H);
         ctx.restore(); break;
       }
+      case 'sky_breeze': {
+        ctx.save();
+        for (const p of this._p) {
+          if (p.type === 'cloud_wisp') {
+            // Single oval cloud — 1 op (was 3)
+            ctx.globalAlpha = p.a * (0.7 + Math.sin(p.phase) * 0.2);
+            ctx.fillStyle = '#FFFFFF';
+            ctx.beginPath(); ctx.ellipse(p.x, p.y, p.size, p.size*0.34, 0, 0, Math.PI*2); ctx.fill();
+          } else if (p.type === 'wind_streak') {
+            ctx.globalAlpha = p.a;
+            ctx.fillStyle = 'rgba(255,255,255,0.85)';
+            ctx.fillRect(p.x, p.y, p.len, 1);
+            if (p.len > 38) ctx.fillRect(p.x + 8, p.y + 2, p.len * 0.50, 0.5);
+          } else if (p.type === 'sky_bird') {
+            // Tiny V-shaped bird silhouette
+            const sz = p.size;
+            ctx.globalAlpha = 0.55;
+            ctx.fillStyle = '#1a2838';
+            ctx.beginPath();
+            ctx.moveTo(p.x, p.y);
+            ctx.lineTo(p.x - sz*1.6, p.y - sz*0.7); ctx.lineTo(p.x - sz*0.5, p.y + sz*0.2); ctx.closePath(); ctx.fill();
+            ctx.beginPath();
+            ctx.moveTo(p.x, p.y);
+            ctx.lineTo(p.x + sz*1.6, p.y - sz*0.7); ctx.lineTo(p.x + sz*0.5, p.y + sz*0.2); ctx.closePath(); ctx.fill();
+          }
+        }
+        ctx.globalAlpha = 1;
+        // Soft atmospheric haze — brighter at top, slight blue tint
+        const skyHaze = ctx.createLinearGradient(0, 0, 0, H);
+        skyHaze.addColorStop(0,   'rgba(180,220,255,0.07)');
+        skyHaze.addColorStop(0.5, 'rgba(135,195,235,0.04)');
+        skyHaze.addColorStop(1,   'rgba(90,155,200,0.10)');
+        ctx.fillStyle = skyHaze; ctx.fillRect(0, 0, W, H);
+        ctx.restore(); break;
+      }
     }
   }
 }
@@ -742,6 +808,7 @@ class Vehicle {
     this._damageFlash  = 0;
     this._animT        = 0;
     this._isOcean      = !!(mapConfig && mapConfig.ocean);
+    this._isSky        = !!(mapConfig && mapConfig.sky);
     this._isPolice     = false;
     this._isMiniBoat   = false;  // Small boat for ocean maps
     this._sirenPhase   = 0;
@@ -816,6 +883,12 @@ class Vehicle {
     // Ocean map: render ship instead of car
     if (this._isOcean) {
       this._renderShip(ctx);
+      return;
+    }
+
+    // Sky Realm: render driveable airplane instead of car
+    if (this._isSky) {
+      this._renderSkyPlane(ctx);
       return;
     }
 
@@ -1017,6 +1090,126 @@ class Vehicle {
       const pct = this.hp / this.maxHp;
       ctx.fillStyle = '#111'; ctx.fillRect(bx2, by2, bw, bh);
       ctx.fillStyle   = pct > 0.5 ? '#44FF88' : pct > 0.25 ? '#FFCC00' : '#FF4444';
+      ctx.fillRect(bx2, by2, bw * pct, bh);
+      ctx.strokeStyle = 'rgba(255,255,255,0.18)'; ctx.lineWidth = 0.5;
+      ctx.strokeRect(bx2, by2, bw, bh);
+    }
+  }
+
+  _renderSkyPlane(ctx) {
+    // Top-down driveable airplane — matches the ambient AmbientCar airplane aesthetic
+    const t      = this._animT;
+    const flash  = this._damageFlash > 0;
+    const ang    = this.angle;
+    const cx     = this.x, cy = this.y;
+
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(ang);
+
+    // ── Contrail (engine exhaust plume behind fuselage) ─────────────────
+    const pulseA = 0.14 + Math.sin(t * 9) * 0.06;
+    for (let ci = 0; ci < 3; ci++) {
+      ctx.globalAlpha = pulseA * (1 - ci * 0.28);
+      ctx.fillStyle = '#CCE8FF';
+      ctx.beginPath();
+      ctx.ellipse(-38 - ci * 18, 0, 10 + ci * 4, 5 + ci * 2, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
+    // ── Ground shadow ───────────────────────────────────────────────────
+    ctx.save(); ctx.globalAlpha = 0.22; ctx.fillStyle = '#000';
+    ctx.beginPath(); ctx.ellipse(6, 12, 42, 11, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+
+    // ── Swept main wings ────────────────────────────────────────────────
+    const wingColor = flash ? '#CC3322' : (this._isPolice ? '#1a3a6a' : '#C0C8D8');
+    ctx.fillStyle = wingColor;
+    // left wing
+    ctx.beginPath();
+    ctx.moveTo(-4, -5);
+    ctx.lineTo(-26, -30);
+    ctx.lineTo(-34, -22);
+    ctx.lineTo(4, -4);
+    ctx.closePath(); ctx.fill();
+    // right wing
+    ctx.beginPath();
+    ctx.moveTo(-4, 5);
+    ctx.lineTo(-26, 30);
+    ctx.lineTo(-34, 22);
+    ctx.lineTo(4, 4);
+    ctx.closePath(); ctx.fill();
+    // Wing shading
+    ctx.fillStyle = 'rgba(0,0,0,0.18)';
+    ctx.beginPath();
+    ctx.moveTo(-4, -5); ctx.lineTo(-26, -30); ctx.lineTo(-16, -20); ctx.closePath(); ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(-4, 5);  ctx.lineTo(-26, 30);  ctx.lineTo(-16, 20);  ctx.closePath(); ctx.fill();
+
+    // ── Horizontal tail stabilisers ──────────────────────────────────────
+    const tailColor = flash ? '#AA2211' : (this._isPolice ? '#142a52' : '#A8B4C4');
+    ctx.fillStyle = tailColor;
+    ctx.beginPath();
+    ctx.moveTo(-22, -4); ctx.lineTo(-30, -14); ctx.lineTo(-32, -10); ctx.lineTo(-24, -3); ctx.closePath(); ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(-22, 4);  ctx.lineTo(-30, 14);  ctx.lineTo(-32, 10);  ctx.lineTo(-24, 3);  ctx.closePath(); ctx.fill();
+
+    // ── Fuselage (main body) ─────────────────────────────────────────────
+    const bodyG = ctx.createLinearGradient(-30, -6, 30, 6);
+    if (flash) {
+      bodyG.addColorStop(0, '#CC3322'); bodyG.addColorStop(1, '#881111');
+    } else if (this._isPolice) {
+      bodyG.addColorStop(0, '#2a5a9a'); bodyG.addColorStop(0.5, '#1a3a6a'); bodyG.addColorStop(1, '#0e2244');
+    } else {
+      bodyG.addColorStop(0, '#D8E4F0'); bodyG.addColorStop(0.5, '#B0BECE'); bodyG.addColorStop(1, '#8898A8');
+    }
+    ctx.fillStyle = bodyG;
+    ctx.beginPath(); ctx.roundRect(-30, -6, 62, 12, 4); ctx.fill();
+
+    // ── Engine pods on wings ─────────────────────────────────────────────
+    const engineColor = flash ? '#AA2211' : '#8898A8';
+    ctx.fillStyle = engineColor;
+    ctx.beginPath(); ctx.roundRect(-18, -23, 16, 6, 2); ctx.fill();
+    ctx.beginPath(); ctx.roundRect(-18,  17, 16, 6, 2); ctx.fill();
+    // Afterburner glow
+    ctx.globalAlpha = 0.5 + Math.sin(t * 14) * 0.25;
+    ctx.fillStyle = '#88CCFF';
+    ctx.beginPath(); ctx.arc(-18, -20, 3, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(-18,  20, 3, 0, Math.PI * 2); ctx.fill();
+    ctx.globalAlpha = 1;
+
+    // ── Cockpit windows ──────────────────────────────────────────────────
+    ctx.fillStyle = 'rgba(135,210,255,0.65)';
+    ctx.beginPath(); ctx.ellipse(22, -3, 7, 4, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.32)';
+    ctx.beginPath(); ctx.ellipse(20, -3.5, 2.5, 2, 0, 0, Math.PI * 2); ctx.fill();
+
+    // ── Nose cone ────────────────────────────────────────────────────────
+    ctx.fillStyle = flash ? '#CC3322' : (this._isPolice ? '#87CEEB' : '#E8F0F8');
+    ctx.beginPath(); ctx.moveTo(32, 0); ctx.lineTo(24, -4); ctx.lineTo(24, 4); ctx.closePath(); ctx.fill();
+
+    // ── Police markings: sky-blue/white cheatline ────────────────────────
+    if (this._isPolice) {
+      ctx.strokeStyle = '#87CEEB'; ctx.lineWidth = 2.5; ctx.lineCap = 'butt';
+      ctx.beginPath(); ctx.moveTo(-20, -5.5); ctx.lineTo(20, -5.5); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(-20,  5.5); ctx.lineTo(20,  5.5); ctx.stroke();
+      // Flashing siren light on roof
+      const sirenOn = Math.floor(t * 6) % 2 === 0;
+      ctx.fillStyle = sirenOn ? '#0066FF' : '#FF2200';
+      ctx.shadowColor = sirenOn ? '#0044CC' : '#CC0000'; ctx.shadowBlur = 8;
+      ctx.beginPath(); ctx.arc(8, 0, 2.8, 0, Math.PI * 2); ctx.fill();
+      ctx.shadowBlur = 0;
+    }
+
+    ctx.restore();
+
+    // ── HP bar ───────────────────────────────────────────────────────────
+    if (this.hp < this.maxHp) {
+      const bw = 64, bh = 5, bx2 = cx - bw / 2, by2 = cy - this.radius - 18;
+      const pct = this.hp / this.maxHp;
+      ctx.fillStyle = '#111'; ctx.fillRect(bx2, by2, bw, bh);
+      ctx.fillStyle = pct > 0.5 ? '#44FF88' : pct > 0.25 ? '#FFCC00' : '#FF4444';
       ctx.fillRect(bx2, by2, bw * pct, bh);
       ctx.strokeStyle = 'rgba(255,255,255,0.18)'; ctx.lineWidth = 0.5;
       ctx.strokeRect(bx2, by2, bw, bh);
@@ -1976,7 +2169,7 @@ class Bot {
     this._eyeBlinkTimer = rnd(1, 4);
     this._animT         = 0;
     this._sirenT        = 0; // police/swat: drives flashing light phase
-    this._mapTheme = mapConfig ? (mapConfig.snow ? 'snow' : mapConfig.desert ? 'desert' : mapConfig.ocean ? 'ocean' : mapConfig.robot ? 'robot' : mapConfig.jungle ? 'jungle' : mapConfig.galactica ? 'galactica' : null) : null;
+    this._mapTheme = mapConfig ? (mapConfig.snow ? 'snow' : mapConfig.desert ? 'desert' : mapConfig.ocean ? 'ocean' : mapConfig.robot ? 'robot' : mapConfig.jungle ? 'jungle' : mapConfig.galactica ? 'galactica' : mapConfig.sky ? 'sky' : mapConfig.dino ? 'dino' : null) : null;
     this._animalType = pal?.animal || null;
   }
 
@@ -2130,6 +2323,8 @@ class Bot {
     else if (this._mapTheme === 'robot')                                            this._renderRobotUnit(ctx, x, y, r);
     else if (this._mapTheme === 'jungle')                                           this._renderAnimalEnemy(ctx, x, y, r);
     else if (this._mapTheme === 'galactica')                                        this._renderGalacticEnemy(ctx, x, y, r);
+    else if (this._mapTheme === 'sky')                                              this._renderSkyEnemy(ctx, x, y, r);
+    else if (this._mapTheme === 'dino')                                             this._renderDinoEnemy(ctx, x, y, r);
     else if (this.type === 'mini')                                                  this._renderMini(ctx, x, y, r);
     else if (this.type === 'big')                                                   this._renderBig(ctx, x, y, r);
     else if (this.type === 'police' || this.type === 'swat' || this.type === 'heavyswat') this._renderPolice(ctx, x, y, r);
@@ -3969,6 +4164,192 @@ class Bot {
     ctx.restore();
   }
 
+  // ── SKY REALM enemies ─────────────────────────────────────────────────────
+  _renderSkyEnemy(ctx, x, y, r) {
+    const t = this.type;
+    if      (t === 'mini')                       this._renderAngryBird(ctx, x, y, r);
+    else if (t === 'big' || t === 'heavyswat')   this._renderWarHawk(ctx, x, y, r);
+    else if (t === 'juggernaut')                 this._renderStormCondor(ctx, x, y, r);
+    else if (t === 'bomber')                     this._renderBombPelican(ctx, x, y, r);
+    else if (t === 'sniper')                     this._renderFalcon(ctx, x, y, r);
+    else if (t === 'police' || t === 'swat')     this._renderFighterJet(ctx, x, y, r);
+    else                                         this._renderEagle(ctx, x, y, r);
+    this._renderHPBar(ctx, x, y, r, 38, 5);
+  }
+
+  // Angry Bird (mini) — lean round red bird
+  _renderAngryBird(ctx, x, y, r) {
+    const bob = Math.sin(this._animT * 9) * r * 0.06;
+    ctx.save(); ctx.translate(x, y + bob);
+    // Body
+    ctx.fillStyle = '#DD1100';
+    ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI*2); ctx.fill();
+    // Belly
+    ctx.fillStyle = '#FFEEEE';
+    ctx.beginPath(); ctx.ellipse(r*0.06, r*0.20, r*0.34, r*0.24, 0, 0, Math.PI*2); ctx.fill();
+    // Wings
+    const flap = Math.sin(this._animT * 12) * r * 0.10;
+    ctx.fillStyle = '#AA0800';
+    ctx.beginPath(); ctx.ellipse(-r*0.88, r*0.05-flap, r*0.26, r*0.11, -0.3, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse( r*0.88, r*0.05-flap, r*0.26, r*0.11,  0.3, 0, Math.PI*2); ctx.fill();
+    // Eyes + beak
+    ctx.fillStyle = '#FFF'; ctx.beginPath(); ctx.arc(-r*0.22, -r*0.20, r*0.16, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc( r*0.22, -r*0.20, r*0.16, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#111'; ctx.beginPath(); ctx.arc(-r*0.20, -r*0.19, r*0.08, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc( r*0.23, -r*0.19, r*0.08, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#FFAA00';
+    ctx.beginPath(); ctx.moveTo(-r*0.10, r*0.06); ctx.lineTo(r*0.10, r*0.06); ctx.lineTo(0, r*0.20); ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+
+  // Eagle (normal) — lean top-down raptor
+  _renderEagle(ctx, x, y, r) {
+    const flap = Math.sin(this._animT * 5) * r * 0.12;
+    ctx.save(); ctx.translate(x, y);
+    // Wings
+    ctx.fillStyle = '#7A4A18';
+    ctx.beginPath(); ctx.moveTo(0, -r*0.28); ctx.lineTo(-r*1.55, -r*0.10+flap); ctx.lineTo(-r*1.40, r*0.22); ctx.lineTo(0, r*0.28); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(0, -r*0.28); ctx.lineTo( r*1.55, -r*0.10+flap); ctx.lineTo( r*1.40, r*0.22); ctx.lineTo(0, r*0.28); ctx.closePath(); ctx.fill();
+    // Body
+    ctx.fillStyle = '#6A3A10';
+    ctx.beginPath(); ctx.ellipse(0, 0, r*0.44, r*0.62, 0, 0, Math.PI*2); ctx.fill();
+    // White head
+    ctx.fillStyle = '#F5F5F5';
+    ctx.beginPath(); ctx.arc(0, -r*0.45, r*0.28, 0, Math.PI*2); ctx.fill();
+    // Beak + eye
+    ctx.fillStyle = '#FFB800';
+    ctx.beginPath(); ctx.moveTo(-r*0.07, -r*0.66); ctx.lineTo(r*0.07, -r*0.66); ctx.lineTo(0, -r*0.88); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#FF4400'; ctx.beginPath(); ctx.arc(0, -r*0.44, r*0.08, 0, Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  // War Hawk (big/heavyswat) — lean armored battle bird
+  _renderWarHawk(ctx, x, y, r) {
+    const flap = Math.sin(this._animT * 4) * r * 0.10;
+    ctx.save(); ctx.translate(x, y);
+    // Armored wings
+    ctx.fillStyle = '#2A3A4A';
+    ctx.beginPath(); ctx.moveTo(0, -r*0.32); ctx.lineTo(-r*1.65, -r*0.25+flap); ctx.lineTo(-r*1.55, r*0.22); ctx.lineTo(0, r*0.32); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(0, -r*0.32); ctx.lineTo( r*1.65, -r*0.25+flap); ctx.lineTo( r*1.55, r*0.22); ctx.lineTo(0, r*0.32); ctx.closePath(); ctx.fill();
+    // Body
+    ctx.fillStyle = '#1C2C3C';
+    ctx.beginPath(); ctx.ellipse(0, 0, r*0.46, r*0.64, 0, 0, Math.PI*2); ctx.fill();
+    // Head
+    ctx.fillStyle = '#1C2C3C';
+    ctx.beginPath(); ctx.arc(0, -r*0.48, r*0.28, 0, Math.PI*2); ctx.fill();
+    // Red eyes
+    ctx.fillStyle = '#FF2200';
+    ctx.beginPath(); ctx.arc(-r*0.12, -r*0.50, r*0.08, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc( r*0.12, -r*0.50, r*0.08, 0, Math.PI*2); ctx.fill();
+    // Beak
+    ctx.fillStyle = '#666'; ctx.beginPath(); ctx.moveTo(-r*0.07, -r*0.66); ctx.lineTo(r*0.07, -r*0.66); ctx.lineTo(0, -r*0.86); ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+
+  // Fighter Jet (police/swat) — lean delta-wing jet
+  _renderFighterJet(ctx, x, y, r) {
+    const isSwat = this.type === 'swat';
+    ctx.save(); ctx.translate(x, y);
+    // Contrail
+    ctx.globalAlpha = 0.22; ctx.fillStyle = '#88DDFF';
+    ctx.beginPath(); ctx.ellipse(0, r*0.82, r*0.10, r*0.32, 0, 0, Math.PI*2); ctx.fill();
+    ctx.globalAlpha = 1;
+    // Delta wings + fuselage
+    ctx.fillStyle = isSwat ? '#2A3A5A' : '#3A4A6A';
+    ctx.beginPath();
+    ctx.moveTo(0, -r*0.88); ctx.lineTo(-r*1.10, r*0.55); ctx.lineTo(0, r*0.75); ctx.lineTo(r*1.10, r*0.55);
+    ctx.closePath(); ctx.fill();
+    // Cockpit
+    ctx.fillStyle = 'rgba(120,200,255,0.60)';
+    ctx.beginPath(); ctx.ellipse(0, -r*0.28, r*0.11, r*0.22, 0, 0, Math.PI*2); ctx.fill();
+    // Missile tips
+    ctx.fillStyle = '#FF4444';
+    ctx.beginPath(); ctx.arc(-r*0.58, r*0.14, r*0.06, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc( r*0.58, r*0.14, r*0.06, 0, Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  // Falcon (sniper) — lean swept-wing hunter
+  _renderFalcon(ctx, x, y, r) {
+    const glide = Math.sin(this._animT * 3) * r * 0.03;
+    ctx.save(); ctx.translate(x, y + glide);
+    // Swept wings
+    ctx.fillStyle = '#1A2A3A';
+    ctx.beginPath(); ctx.moveTo(0, -r*0.18); ctx.lineTo(-r*1.10, r*0.30); ctx.lineTo(-r*0.90, r*0.40); ctx.lineTo(0, r*0.18); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(0, -r*0.18); ctx.lineTo( r*1.10, r*0.30); ctx.lineTo( r*0.90, r*0.40); ctx.lineTo(0, r*0.18); ctx.closePath(); ctx.fill();
+    // Sleek dark body
+    const bg = ctx.createRadialGradient(0, -r*0.12, 1, 0, 0, r*0.42);
+    bg.addColorStop(0, '#3A4A5A'); bg.addColorStop(1, '#08121C');
+    ctx.fillStyle = bg;
+    ctx.beginPath(); ctx.ellipse(0, 0, r*0.28, r*0.60, 0, 0, Math.PI*2); ctx.fill();
+    // Head — dark with white malar stripe
+    ctx.fillStyle = '#0A1828';
+    ctx.beginPath(); ctx.arc(0, -r*0.46, r*0.24, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#DDDDCC';
+    ctx.beginPath(); ctx.arc(r*0.10, -r*0.40, r*0.08, 0, Math.PI*2); ctx.fill(); // white cheek patch
+    // Sharp hooked beak
+    ctx.fillStyle = '#DDAA00';
+    ctx.beginPath(); ctx.moveTo(-r*0.06, -r*0.62); ctx.lineTo(r*0.06, -r*0.62);
+    ctx.lineTo(r*0.04, -r*0.78); ctx.lineTo(-r*0.06, -r*0.70); ctx.closePath(); ctx.fill();
+    // Piercing yellow eye
+    ctx.fillStyle = '#FFCC00';
+    ctx.beginPath(); ctx.arc(0, -r*0.46, r*0.09, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#111';
+    ctx.beginPath(); ctx.arc(0, -r*0.45, r*0.05, 0, Math.PI*2); ctx.fill();
+    // Tail fan — single triangle
+    ctx.fillStyle = '#0A1828';
+    ctx.beginPath(); ctx.moveTo(-r*0.18, r*0.52); ctx.lineTo(0, r*0.80); ctx.lineTo(r*0.18, r*0.52); ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+
+  // Bomb Pelican (bomber) — lean fat bird with visible bomb
+  _renderBombPelican(ctx, x, y, r) {
+    const bob = Math.sin(this._animT * 4) * r * 0.04;
+    ctx.save(); ctx.translate(x, y + bob);
+    // Stubby wings
+    ctx.fillStyle = '#778899';
+    ctx.beginPath(); ctx.moveTo(0, -r*0.18); ctx.lineTo(-r*1.0, r*0.08); ctx.lineTo(-r*0.85, r*0.30); ctx.lineTo(0, r*0.18); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(0, -r*0.18); ctx.lineTo( r*1.0, r*0.08); ctx.lineTo( r*0.85, r*0.30); ctx.lineTo(0, r*0.18); ctx.closePath(); ctx.fill();
+    // Fat body
+    ctx.fillStyle = '#667788';
+    ctx.beginPath(); ctx.ellipse(0, r*0.06, r*0.52, r*0.64, 0, 0, Math.PI*2); ctx.fill();
+    // Belly + bomb
+    ctx.fillStyle = '#EEF2F5';
+    ctx.beginPath(); ctx.ellipse(0, r*0.28, r*0.30, r*0.36, 0, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#222'; ctx.beginPath(); ctx.arc(0, r*0.34, r*0.18, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#FF4400'; ctx.beginPath(); ctx.arc(0, r*0.20, r*0.05, 0, Math.PI*2); ctx.fill();
+    // Head + bill + eye
+    ctx.fillStyle = '#667788'; ctx.beginPath(); ctx.arc(0, -r*0.50, r*0.26, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#FFBB44';
+    ctx.beginPath(); ctx.moveTo(-r*0.08, -r*0.64); ctx.lineTo(r*0.08, -r*0.64); ctx.lineTo(r*0.06, -r*0.94); ctx.lineTo(-r*0.06, -r*0.94); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#FFCC00'; ctx.beginPath(); ctx.arc(0, -r*0.50, r*0.08, 0, Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  // Storm Condor (juggernaut) — lean massive dark raptor
+  _renderStormCondor(ctx, x, y, r) {
+    const slow = Math.sin(this._animT * 2.5) * r * 0.08;
+    ctx.save(); ctx.translate(x, y);
+    // Massive wings
+    ctx.fillStyle = '#0E0E1A';
+    ctx.beginPath(); ctx.moveTo(0, -r*0.38); ctx.lineTo(-r*1.90, -r*0.30+slow); ctx.lineTo(-r*1.80, r*0.26); ctx.lineTo(0, r*0.38); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(0, -r*0.38); ctx.lineTo( r*1.90, -r*0.30+slow); ctx.lineTo( r*1.80, r*0.26); ctx.lineTo(0, r*0.38); ctx.closePath(); ctx.fill();
+    // Gold lightning bolt on each wing
+    ctx.fillStyle = 'rgba(255,210,0,0.72)';
+    ctx.beginPath(); ctx.moveTo(-r*0.70, -r*0.38+slow*0.5); ctx.lineTo(-r*0.55, -r*0.18+slow*0.5); ctx.lineTo(-r*0.68, -r*0.18+slow*0.5); ctx.lineTo(-r*0.52, r*0.06-slow*0.5); ctx.lineTo(-r*0.76, -r*0.24+slow*0.5); ctx.lineTo(-r*0.62, -r*0.24+slow*0.5); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo( r*0.70, -r*0.38+slow*0.5); ctx.lineTo( r*0.55, -r*0.18+slow*0.5); ctx.lineTo( r*0.68, -r*0.18+slow*0.5); ctx.lineTo( r*0.52, r*0.06-slow*0.5); ctx.lineTo( r*0.76, -r*0.24+slow*0.5); ctx.lineTo( r*0.62, -r*0.24+slow*0.5); ctx.closePath(); ctx.fill();
+    // Body
+    ctx.fillStyle = '#1A1A28';
+    ctx.beginPath(); ctx.ellipse(0, 0, r*0.52, r*0.72, 0, 0, Math.PI*2); ctx.fill();
+    // Head + yellow eyes + beak
+    ctx.fillStyle = '#1A1A28'; ctx.beginPath(); ctx.arc(0, -r*0.54, r*0.30, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#FFE030';
+    ctx.beginPath(); ctx.arc(-r*0.13, -r*0.56, r*0.09, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc( r*0.13, -r*0.56, r*0.09, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#888'; ctx.beginPath(); ctx.moveTo(-r*0.08, -r*0.70); ctx.lineTo(r*0.08, -r*0.70); ctx.lineTo(r*0.04, -r*0.90); ctx.lineTo(-r*0.08, -r*0.78); ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+
   // Monkey (mini) — small, fast, brown
   _renderMonkey(ctx, x, y, r) {
     const bob = Math.sin(this._animT * 8) * r * 0.06;
@@ -4443,6 +4824,383 @@ class Bot {
     ctx.strokeStyle = 'rgba(255,255,255,0.18)'; ctx.lineWidth = 0.5;
     ctx.strokeRect(bx2, by2, bw, bh);
   }
+
+  // ── DINO ENEMY: prehistoric map — type-specific dinosaur ─────────────────
+  _renderDinoEnemy(ctx, x, y, r) {
+    const t = this.type;
+    if      (t === 'mini')                       this._renderRaptor(ctx, x, y, r);
+    else if (t === 'big' || t === 'heavyswat')   this._renderAnkylosaurus(ctx, x, y, r);
+    else if (t === 'juggernaut')                 this._renderSpinosaurus(ctx, x, y, r);
+    else if (t === 'bomber')                     this._renderPterosaur(ctx, x, y, r);
+    else if (t === 'sniper')                     this._renderPlesiosaur(ctx, x, y, r);
+    else if (t === 'police' || t === 'swat')     this._renderCeratopsian(ctx, x, y, r);
+    else                                         this._renderTRexMini(ctx, x, y, r);
+    this._renderHPBar(ctx, x, y, r, 40, 5);
+  }
+
+  // ── RAPTOR: fast small pack hunter ─────────────────────────────────────────
+  _renderRaptor(ctx, x, y, r) {
+    const t = this._animT;
+    const run = Math.sin(t * 12) * 0.15;
+    ctx.save(); ctx.globalAlpha = 0.18; ctx.fillStyle = '#000';
+    ctx.beginPath(); ctx.ellipse(x+1, y+r*0.3, r*0.9, r*0.2, 0, 0, Math.PI*2); ctx.fill();
+    ctx.restore();
+
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(this._angle - Math.PI / 2);
+
+    // Body — sleek oval
+    const bg = ctx.createRadialGradient(0, 0, 1, 0, 0, r*0.8);
+    bg.addColorStop(0, '#88EE44'); bg.addColorStop(0.6, '#55AA22'); bg.addColorStop(1, '#2a6610');
+    ctx.fillStyle = bg; ctx.shadowColor = '#66FF22'; ctx.shadowBlur = 7;
+    ctx.beginPath(); ctx.ellipse(0, 0, r*0.38, r*0.68, 0, 0, Math.PI*2); ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // Head (front)
+    ctx.fillStyle = '#66CC33';
+    ctx.beginPath(); ctx.ellipse(0, -r*0.56, r*0.28, r*0.26, 0, 0, Math.PI*2); ctx.fill();
+
+    // Snout
+    ctx.fillStyle = '#55AA22';
+    ctx.beginPath(); ctx.moveTo(-r*0.12, -r*0.74); ctx.lineTo(r*0.12, -r*0.74); ctx.lineTo(0, -r*0.90); ctx.closePath(); ctx.fill();
+
+    // Eye
+    ctx.fillStyle = '#FFEE00'; ctx.beginPath(); ctx.arc(-r*0.10, -r*0.60, r*0.07, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#000';    ctx.beginPath(); ctx.arc(-r*0.10, -r*0.60, r*0.04, 0, Math.PI*2); ctx.fill();
+
+    // Stripes
+    ctx.strokeStyle = 'rgba(0,80,0,0.55)'; ctx.lineWidth = r*0.08;
+    for (let i = -1; i <= 1; i++) {
+      ctx.beginPath(); ctx.moveTo(-r*0.32, i * r*0.22); ctx.lineTo(r*0.32, i * r*0.22); ctx.stroke();
+    }
+
+    // Running legs animation
+    const legOff = run * r;
+    ctx.fillStyle = '#44991a';
+    ctx.beginPath(); ctx.ellipse(-r*0.22+legOff, r*0.44, r*0.10, r*0.18, 0.3, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse( r*0.22-legOff, r*0.44, r*0.10, r*0.18, -0.3, 0, Math.PI*2); ctx.fill();
+
+    // Tail
+    ctx.strokeStyle = '#44AA22'; ctx.lineWidth = r*0.14;
+    ctx.beginPath(); ctx.moveTo(0, r*0.55); ctx.quadraticCurveTo(r*0.30, r*0.80+legOff*0.5, r*0.20, r*0.96); ctx.stroke();
+
+    ctx.restore();
+  }
+
+  // ── T-REX MINI: standard bipedal predator ──────────────────────────────────
+  _renderTRexMini(ctx, x, y, r) {
+    const t = this._animT;
+    const stomp = Math.abs(Math.sin(t * 7)) * 0.12;
+    ctx.save(); ctx.globalAlpha = 0.20; ctx.fillStyle = '#000';
+    ctx.beginPath(); ctx.ellipse(x+2, y+r*0.35, r*1.0, r*0.22, 0, 0, Math.PI*2); ctx.fill();
+    ctx.restore();
+
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(this._angle - Math.PI / 2);
+
+    // Large body
+    const bg = ctx.createRadialGradient(0, r*0.1, 2, 0, 0, r*0.9);
+    bg.addColorStop(0, '#BBDD55'); bg.addColorStop(0.55, '#7AAA28'); bg.addColorStop(1, '#3a6010');
+    ctx.fillStyle = bg; ctx.shadowColor = '#AAFF44'; ctx.shadowBlur = 9;
+    ctx.beginPath(); ctx.ellipse(0, r*0.08, r*0.52, r*0.72, 0, 0, Math.PI*2); ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // Head — big, forward
+    ctx.fillStyle = '#99CC44';
+    ctx.beginPath(); ctx.ellipse(0, -r*0.52, r*0.38, r*0.32, 0, 0, Math.PI*2); ctx.fill();
+
+    // Jaw open
+    ctx.fillStyle = '#CC4422';
+    ctx.beginPath(); ctx.moveTo(-r*0.20, -r*0.48); ctx.lineTo(r*0.20, -r*0.48); ctx.lineTo(r*0.18, -r*0.36); ctx.lineTo(-r*0.18, -r*0.36); ctx.closePath(); ctx.fill();
+
+    // Teeth
+    ctx.fillStyle = '#FFFFCC';
+    for (let i = -2; i <= 2; i++) {
+      ctx.beginPath(); ctx.moveTo(i*r*0.08, -r*0.48); ctx.lineTo(i*r*0.08+r*0.04, -r*0.38); ctx.lineTo(i*r*0.08-r*0.04, -r*0.38); ctx.closePath(); ctx.fill();
+    }
+
+    // Eye
+    ctx.fillStyle = '#FF8800'; ctx.beginPath(); ctx.arc(r*0.16, -r*0.56, r*0.08, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#330000'; ctx.beginPath(); ctx.arc(r*0.16, -r*0.56, r*0.04, 0, Math.PI*2); ctx.fill();
+
+    // Tiny arms
+    ctx.strokeStyle = '#88BB33'; ctx.lineWidth = r*0.10;
+    ctx.beginPath(); ctx.moveTo(-r*0.30, -r*0.15); ctx.lineTo(-r*0.50, r*0.05); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo( r*0.30, -r*0.15); ctx.lineTo( r*0.50, r*0.05); ctx.stroke();
+
+    // Stomp legs
+    ctx.fillStyle = '#5a8822';
+    ctx.beginPath(); ctx.ellipse(-r*0.20, r*0.62+stomp*r, r*0.14, r*0.22, 0.2, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse( r*0.20, r*0.62-stomp*r, r*0.14, r*0.22, -0.2, 0, Math.PI*2); ctx.fill();
+
+    // Tail
+    ctx.strokeStyle = '#66AA33'; ctx.lineWidth = r*0.18;
+    ctx.beginPath(); ctx.moveTo(0, r*0.72); ctx.quadraticCurveTo(r*0.38, r*0.92, r*0.28, r*1.08); ctx.stroke();
+
+    ctx.restore();
+  }
+
+  // ── ANKYLOSAURUS: armored tank dino ────────────────────────────────────────
+  _renderAnkylosaurus(ctx, x, y, r) {
+    const t = this._animT;
+    const sway = Math.sin(t * 4) * 0.08;
+    ctx.save(); ctx.globalAlpha = 0.22; ctx.fillStyle = '#000';
+    ctx.beginPath(); ctx.ellipse(x+2, y+r*0.38, r*1.2, r*0.25, 0, 0, Math.PI*2); ctx.fill();
+    ctx.restore();
+
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(this._angle - Math.PI / 2 + sway);
+
+    // Wide armored body
+    const bg = ctx.createRadialGradient(0, 0, 2, 0, 0, r);
+    bg.addColorStop(0, '#AABB66'); bg.addColorStop(0.5, '#778833'); bg.addColorStop(1, '#3d5518');
+    ctx.fillStyle = bg; ctx.shadowColor = '#99CC44'; ctx.shadowBlur = 10;
+    ctx.beginPath(); ctx.ellipse(0, 0, r*0.82, r*0.92, 0, 0, Math.PI*2); ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // Armor plates (dorsal spikes)
+    ctx.fillStyle = '#CCDD77'; ctx.strokeStyle = '#556622'; ctx.lineWidth = 1;
+    const spikeCols = [[-r*0.28,-r*0.50], [0,-r*0.60], [r*0.28,-r*0.50],
+                       [-r*0.42,-r*0.18], [0,-r*0.24], [r*0.42,-r*0.18],
+                       [-r*0.28, r*0.16], [0, r*0.22], [r*0.28, r*0.16]];
+    for (const [sx, sy] of spikeCols) {
+      ctx.beginPath(); ctx.arc(sx, sy, r*0.12, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+    }
+
+    // Head — small, low
+    ctx.fillStyle = '#99AA55';
+    ctx.beginPath(); ctx.ellipse(0, -r*0.72, r*0.26, r*0.20, 0, 0, Math.PI*2); ctx.fill();
+
+    // Eyes
+    ctx.fillStyle = '#FFAA00'; ctx.beginPath(); ctx.arc(-r*0.10, -r*0.74, r*0.06, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#FFAA00'; ctx.beginPath(); ctx.arc( r*0.10, -r*0.74, r*0.06, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#000';    ctx.beginPath(); ctx.arc(-r*0.10, -r*0.74, r*0.03, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#000';    ctx.beginPath(); ctx.arc( r*0.10, -r*0.74, r*0.03, 0, Math.PI*2); ctx.fill();
+
+    // Club tail
+    ctx.strokeStyle = '#667733'; ctx.lineWidth = r*0.16;
+    ctx.beginPath(); ctx.moveTo(0, r*0.72); ctx.lineTo(0, r*0.96); ctx.stroke();
+    ctx.fillStyle = '#88AA44'; ctx.shadowColor = '#AACC44'; ctx.shadowBlur = 6;
+    ctx.beginPath(); ctx.arc(0, r*1.05, r*0.24, 0, Math.PI*2); ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // Short legs
+    ctx.fillStyle = '#6a8830';
+    for (const lx of [-r*0.50, -r*0.24, r*0.24, r*0.50]) {
+      ctx.beginPath(); ctx.ellipse(lx, r*0.46, r*0.11, r*0.18, 0, 0, Math.PI*2); ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  // ── SPINOSAURUS: giant water/land predator (juggernaut) ────────────────────
+  _renderSpinosaurus(ctx, x, y, r) {
+    const t = this._animT;
+    const undulate = Math.sin(t * 3.5) * 0.10;
+    ctx.save(); ctx.globalAlpha = 0.25; ctx.fillStyle = '#000';
+    ctx.beginPath(); ctx.ellipse(x+3, y+r*0.42, r*1.35, r*0.28, 0, 0, Math.PI*2); ctx.fill();
+    ctx.restore();
+
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(this._angle - Math.PI / 2 + undulate);
+
+    // Massive body
+    const bg = ctx.createRadialGradient(0, r*0.12, 3, 0, 0, r*1.1);
+    bg.addColorStop(0, '#55CCEE'); bg.addColorStop(0.45, '#2288AA'); bg.addColorStop(1, '#0a3a55');
+    ctx.fillStyle = bg; ctx.shadowColor = '#44AACC'; ctx.shadowBlur = 14;
+    ctx.beginPath(); ctx.ellipse(0, r*0.08, r*0.72, r*1.0, 0, 0, Math.PI*2); ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // Sail fin (dorsal) — iconic
+    ctx.fillStyle = '#FF8844'; ctx.strokeStyle = '#CC4422'; ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(-r*0.10, -r*0.55);
+    ctx.lineTo(-r*0.40, -r*1.10);
+    ctx.lineTo(-r*0.20, -r*1.30);
+    ctx.lineTo( r*0.20, -r*1.30);
+    ctx.lineTo( r*0.40, -r*1.10);
+    ctx.lineTo( r*0.10, -r*0.55);
+    ctx.closePath(); ctx.fill(); ctx.stroke();
+    // Sail highlights
+    ctx.strokeStyle = 'rgba(255,180,100,0.40)'; ctx.lineWidth = 1;
+    for (let i = -2; i <= 2; i++) {
+      ctx.beginPath(); ctx.moveTo(i*r*0.08, -r*0.62); ctx.lineTo(i*r*0.10, -r*1.20); ctx.stroke();
+    }
+
+    // Head
+    ctx.fillStyle = '#44AACC';
+    ctx.beginPath(); ctx.ellipse(0, -r*0.80, r*0.32, r*0.28, 0, 0, Math.PI*2); ctx.fill();
+    // Long crocodilian snout
+    ctx.fillStyle = '#3388AA';
+    ctx.beginPath(); ctx.moveTo(-r*0.14, -r*0.96); ctx.lineTo(r*0.14, -r*0.96); ctx.lineTo(r*0.10, -r*1.16); ctx.lineTo(-r*0.10, -r*1.16); ctx.closePath(); ctx.fill();
+
+    // Eyes — yellow
+    ctx.fillStyle = '#FFCC00'; ctx.beginPath(); ctx.arc(-r*0.14, -r*0.82, r*0.08, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#330000'; ctx.beginPath(); ctx.arc(-r*0.14, -r*0.82, r*0.04, 0, Math.PI*2); ctx.fill();
+
+    // Powerful legs
+    ctx.fillStyle = '#1a6888';
+    ctx.beginPath(); ctx.ellipse(-r*0.36, r*0.50, r*0.16, r*0.28, 0.3, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse( r*0.36, r*0.50, r*0.16, r*0.28,-0.3, 0, Math.PI*2); ctx.fill();
+
+    // Tail
+    ctx.strokeStyle = '#2288AA'; ctx.lineWidth = r*0.22;
+    ctx.beginPath(); ctx.moveTo(0, r*0.88); ctx.quadraticCurveTo(r*0.50, r*1.08, r*0.38, r*1.26); ctx.stroke();
+    ctx.restore();
+  }
+
+  // ── PTEROSAUR: flying bomber dino ─────────────────────────────────────────
+  _renderPterosaur(ctx, x, y, r) {
+    const t = this._animT;
+    const flap = Math.sin(t * 8) * 0.22;
+    ctx.save(); ctx.globalAlpha = 0.15; ctx.fillStyle = '#000';
+    ctx.beginPath(); ctx.ellipse(x, y+r*0.25, r*1.4, r*0.18, 0, 0, Math.PI*2); ctx.fill();
+    ctx.restore();
+
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(this._angle - Math.PI / 2);
+
+    // Left wing
+    ctx.fillStyle = '#AA6622';
+    ctx.save(); ctx.rotate(-flap);
+    ctx.beginPath(); ctx.moveTo(-r*0.10, 0); ctx.lineTo(-r*1.10, -r*0.28); ctx.lineTo(-r*0.90, r*0.18); ctx.closePath(); ctx.fill();
+    ctx.restore();
+
+    // Right wing
+    ctx.save(); ctx.rotate(flap);
+    ctx.beginPath(); ctx.moveTo(r*0.10, 0); ctx.lineTo(r*1.10, -r*0.28); ctx.lineTo(r*0.90, r*0.18); ctx.closePath(); ctx.fill();
+    ctx.restore();
+
+    // Body
+    const bg = ctx.createRadialGradient(0, 0, 1, 0, 0, r*0.44);
+    bg.addColorStop(0, '#CC8844'); bg.addColorStop(1, '#6a3a18');
+    ctx.fillStyle = bg; ctx.shadowColor = '#FF8844'; ctx.shadowBlur = 7;
+    ctx.beginPath(); ctx.ellipse(0, 0, r*0.28, r*0.50, 0, 0, Math.PI*2); ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // Head + crest
+    ctx.fillStyle = '#BB6622';
+    ctx.beginPath(); ctx.ellipse(0, -r*0.45, r*0.20, r*0.18, 0, 0, Math.PI*2); ctx.fill();
+    // Head crest
+    ctx.fillStyle = '#FF7722';
+    ctx.beginPath(); ctx.moveTo(-r*0.08, -r*0.52); ctx.lineTo(r*0.08, -r*0.52); ctx.lineTo(r*0.14, -r*0.80); ctx.lineTo(-r*0.14, -r*0.80); ctx.closePath(); ctx.fill();
+
+    // Beak
+    ctx.fillStyle = '#FFDD88';
+    ctx.beginPath(); ctx.moveTo(-r*0.06, -r*0.56); ctx.lineTo(r*0.06, -r*0.56); ctx.lineTo(0, -r*0.72); ctx.closePath(); ctx.fill();
+
+    // Eye
+    ctx.fillStyle = '#FF0000'; ctx.beginPath(); ctx.arc(0, -r*0.46, r*0.06, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#000';    ctx.beginPath(); ctx.arc(0, -r*0.46, r*0.03, 0, Math.PI*2); ctx.fill();
+
+    ctx.restore();
+  }
+
+  // ── PLESIOSAUR: long-neck sniper water dino ─────────────────────────────────
+  _renderPlesiosaur(ctx, x, y, r) {
+    const t = this._animT;
+    const neckSway = Math.sin(t * 2.5) * 0.18;
+    ctx.save(); ctx.globalAlpha = 0.20; ctx.fillStyle = '#0044AA';
+    ctx.beginPath(); ctx.ellipse(x, y, r*1.1, r*0.55, 0, 0, Math.PI*2); ctx.fill();
+    ctx.restore();
+
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(this._angle - Math.PI / 2);
+
+    // Water ripples
+    ctx.strokeStyle = 'rgba(80,180,255,0.30)'; ctx.lineWidth = 1.5;
+    for (let ri = 1; ri <= 3; ri++) {
+      ctx.beginPath(); ctx.ellipse(0, 0, r*(0.5+ri*0.28), r*(0.25+ri*0.14), 0, 0, Math.PI*2); ctx.stroke();
+    }
+
+    // Body — wide oval paddle
+    const bg = ctx.createRadialGradient(0, 0, 2, 0, 0, r*0.8);
+    bg.addColorStop(0, '#44AACC'); bg.addColorStop(0.55, '#1a6688'); bg.addColorStop(1, '#0a2a44');
+    ctx.fillStyle = bg; ctx.shadowColor = '#66CCFF'; ctx.shadowBlur = 10;
+    ctx.beginPath(); ctx.ellipse(0, 0, r*0.75, r*0.60, 0, 0, Math.PI*2); ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // Flippers
+    ctx.fillStyle = '#1a5577';
+    ctx.beginPath(); ctx.ellipse(-r*0.68, -r*0.18, r*0.32, r*0.14, 0.6, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse( r*0.68, -r*0.18, r*0.32, r*0.14,-0.6, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(-r*0.68,  r*0.18, r*0.28, r*0.12, 0.4, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse( r*0.68,  r*0.18, r*0.28, r*0.12,-0.4, 0, Math.PI*2); ctx.fill();
+
+    // Long neck
+    ctx.save(); ctx.rotate(neckSway);
+    ctx.strokeStyle = '#2288AA'; ctx.lineWidth = r*0.24;
+    ctx.beginPath(); ctx.moveTo(0, -r*0.48); ctx.quadraticCurveTo(r*0.18, -r*0.90, 0, -r*1.10); ctx.stroke();
+    // Small head
+    ctx.fillStyle = '#33AACC';
+    ctx.beginPath(); ctx.ellipse(0, -r*1.22, r*0.20, r*0.16, 0, 0, Math.PI*2); ctx.fill();
+    // Eye
+    ctx.fillStyle = '#FFCC00'; ctx.beginPath(); ctx.arc(r*0.08, -r*1.24, r*0.06, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#000';    ctx.beginPath(); ctx.arc(r*0.08, -r*1.24, r*0.03, 0, Math.PI*2); ctx.fill();
+    ctx.restore();
+
+    ctx.restore();
+  }
+
+  // ── CERATOPSIAN: horned tank (police/swat dino) ─────────────────────────────
+  _renderCeratopsian(ctx, x, y, r) {
+    const t = this._animT;
+    const stomp = Math.abs(Math.sin(t * 5)) * 0.06;
+    ctx.save(); ctx.globalAlpha = 0.20; ctx.fillStyle = '#000';
+    ctx.beginPath(); ctx.ellipse(x+1, y+r*0.36, r*1.05, r*0.24, 0, 0, Math.PI*2); ctx.fill();
+    ctx.restore();
+
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(this._angle - Math.PI / 2);
+
+    // Body
+    const bg = ctx.createRadialGradient(0, 0, 2, 0, 0, r*0.9);
+    bg.addColorStop(0, '#DDBB44'); bg.addColorStop(0.5, '#AA8822'); bg.addColorStop(1, '#5a4a10');
+    ctx.fillStyle = bg; ctx.shadowColor = '#FFCC44'; ctx.shadowBlur = 8;
+    ctx.beginPath(); ctx.ellipse(0, r*0.08, r*0.58, r*0.78, 0, 0, Math.PI*2); ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // Neck frill — large fan
+    ctx.fillStyle = '#FF6622'; ctx.strokeStyle = '#CC4411'; ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(-r*0.46, -r*0.44);
+    ctx.arc(0, -r*0.44, r*0.46, Math.PI, 0, false);
+    ctx.closePath(); ctx.fill(); ctx.stroke();
+    // Frill spots
+    ctx.fillStyle = 'rgba(255,220,80,0.55)';
+    for (let i = -2; i <= 2; i++) {
+      ctx.beginPath(); ctx.arc(i * r*0.18, -r*0.58, r*0.07, 0, Math.PI*2); ctx.fill();
+    }
+
+    // Head
+    ctx.fillStyle = '#CCAA33';
+    ctx.beginPath(); ctx.ellipse(0, -r*0.58, r*0.30, r*0.24, 0, 0, Math.PI*2); ctx.fill();
+
+    // Three horns
+    ctx.fillStyle = '#FFFFCC'; ctx.strokeStyle = '#AA9922'; ctx.lineWidth = 1;
+    // Nose horn
+    ctx.beginPath(); ctx.moveTo(-r*0.06, -r*0.76); ctx.lineTo(r*0.06, -r*0.76); ctx.lineTo(0, -r*0.96); ctx.closePath(); ctx.fill(); ctx.stroke();
+    // Brow horns
+    ctx.beginPath(); ctx.moveTo(-r*0.22, -r*0.62); ctx.lineTo(-r*0.14, -r*0.62); ctx.lineTo(-r*0.18, -r*0.80); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo( r*0.14, -r*0.62); ctx.lineTo( r*0.22, -r*0.62); ctx.lineTo( r*0.18, -r*0.80); ctx.closePath(); ctx.fill(); ctx.stroke();
+
+    // Eyes
+    ctx.fillStyle = '#880000'; ctx.beginPath(); ctx.arc(-r*0.12, -r*0.60, r*0.07, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#000';    ctx.beginPath(); ctx.arc(-r*0.12, -r*0.60, r*0.04, 0, Math.PI*2); ctx.fill();
+
+    // Legs
+    ctx.fillStyle = '#8a6a18';
+    ctx.beginPath(); ctx.ellipse(-r*0.28, r*0.58+stomp*r, r*0.13, r*0.22, 0.2, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse( r*0.28, r*0.58+stomp*r, r*0.13, r*0.22,-0.2, 0, Math.PI*2); ctx.fill();
+
+    ctx.restore();
+  }
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -4498,6 +5256,21 @@ const BOSS_CONFIGS = {
     name: 'GALACTIC OVERLORD', color: '#7722CC', accent: '#FF88FF',
     radius: 54, speed: 58,  hp: 2200, dmg: 36, fr: 860, bspd: 370,
     special: 'burst',   // fires ring of plasma bolts
+  },
+  tower: {
+    name: 'THE PENTHOUSE LORD', color: '#FFD700', accent: '#FFF0AA',
+    radius: 46, speed: 74,  hp: 1800, dmg: 34, fr: 780, bspd: 360,
+    special: 'burst',   // fires gold bullet ring
+  },
+  sky_realm: {
+    name: 'THE STORM EMPEROR', color: '#1c3c58', accent: '#FFD700',
+    radius: 50, speed: 80,  hp: 1600, dmg: 26, fr: 840, bspd: 355,
+    special: 'burst',   // fires ring of lightning bolts
+  },
+  dino_world: {
+    name: 'REX KING',        color: '#88FF44', accent: '#CCFF88',
+    radius: 56, speed: 62,   hp: 2000, dmg: 40, fr: 1000, bspd: 310,
+    special: 'charge',   // thundering charge attack
   },
 };
 
@@ -4813,6 +5586,9 @@ class BossBot {
       case 'jungle':        this._renderJungleLord(ctx, x, y, r, pulse); break;
       case 'desert_sands':  this._renderPharaoh(ctx, x, y, r, pulse); break;
       case 'galactica':     this._renderGalacticOverlord(ctx, x, y, r, pulse); break;
+      case 'tower':         this._renderPenthouseLord(ctx, x, y, r, pulse); break;
+      case 'sky_realm':     this._renderStormEmperor(ctx, x, y, r, pulse);  break;
+      case 'dino_world':    this._renderRexKing(ctx, x, y, r, pulse); break;
       default:              this._renderKingpin(ctx, x, y, r, pulse); break;
     }
 
@@ -5808,6 +6584,95 @@ class BossBot {
 
     ctx.restore();
   }
+
+  // ── Penthouse Lord (Tower final boss) ─────────────────────────────────────
+  _renderPenthouseLord(ctx, x, y, r, pulse) {
+    const sw = this._pulseT;
+    ctx.save();
+    ctx.translate(x, y);
+
+    // 1. Outer gold aura — three halo rings
+    for (let hi = 0; hi < 3; hi++) {
+      const hR = r * (1.30 + hi * 0.30 + Math.sin(sw * 0.9 + hi * 1.2) * 0.08);
+      ctx.globalAlpha = (0.18 - hi * 0.05) + pulse * 0.10;
+      ctx.strokeStyle = hi === 0 ? '#FFD700' : hi === 1 ? '#FFF0AA' : '#CC9900';
+      ctx.lineWidth = 3 - hi;
+      ctx.beginPath(); ctx.arc(0, 0, hR, 0, Math.PI * 2); ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+
+    // 2. Rotating golden disc
+    ctx.save();
+    ctx.rotate(sw * 0.35);
+    ctx.globalAlpha = 0.18 + pulse * 0.08;
+    ctx.strokeStyle = '#FFD700'; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.ellipse(0, 0, r * 1.35, r * 0.45, 0, 0, Math.PI * 2); ctx.stroke();
+    ctx.globalAlpha = 1;
+    ctx.restore();
+
+    // 3. Core body — dark suit with gold gradient
+    const bodyGrd = ctx.createRadialGradient(-r*0.25, -r*0.28, r*0.05, 0, 0, r);
+    bodyGrd.addColorStop(0, '#FFFACC'); bodyGrd.addColorStop(0.35, '#FFD700');
+    bodyGrd.addColorStop(0.72, '#CC8800'); bodyGrd.addColorStop(1, '#332200');
+    ctx.fillStyle = bodyGrd;
+    ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.fill();
+
+    // 4. Suit pinstripe lines
+    ctx.globalAlpha = 0.18;
+    ctx.strokeStyle = '#FFFFFF'; ctx.lineWidth = 1;
+    for (let pi = -3; pi <= 3; pi++) {
+      ctx.beginPath(); ctx.moveTo(pi * r * 0.2, -r * 0.9); ctx.lineTo(pi * r * 0.2, r * 0.9); ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+
+    // 5. Crown — 7 gold spikes
+    const crownSpikes = 7;
+    for (let ci = 0; ci < crownSpikes; ci++) {
+      const ca = (ci / crownSpikes) * Math.PI * 2 - Math.PI / 2;
+      const tR = r * (1.15 + Math.sin(sw * 1.5 + ci * 0.9) * 0.06);
+      const tx2 = Math.cos(ca) * tR, ty2 = Math.sin(ca) * tR;
+      ctx.strokeStyle = '#FFD700'; ctx.lineWidth = 2.5;
+      ctx.shadowColor = '#FFD700'; ctx.shadowBlur = 10;
+      ctx.beginPath(); ctx.moveTo(Math.cos(ca) * r * 0.88, Math.sin(ca) * r * 0.88);
+      ctx.lineTo(tx2, ty2); ctx.stroke();
+      // Diamond tip
+      ctx.fillStyle = '#FFFFFF';
+      ctx.beginPath(); ctx.arc(tx2, ty2, r * 0.06, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.shadowBlur = 0;
+
+    // 6. Eye — cold, powerful
+    ctx.fillStyle = '#000000';
+    ctx.beginPath(); ctx.ellipse(0, -r*0.08, r*0.32, r*0.20, 0, 0, Math.PI*2); ctx.fill();
+    // Iris
+    const eyeGrd = ctx.createRadialGradient(0, -r*0.08, 0, 0, -r*0.08, r*0.20);
+    eyeGrd.addColorStop(0, '#FFD700'); eyeGrd.addColorStop(0.5, '#CC8800'); eyeGrd.addColorStop(1, '#220000');
+    ctx.fillStyle = eyeGrd;
+    ctx.beginPath(); ctx.ellipse(0, -r*0.08, r*0.18, r*0.12, 0, 0, Math.PI*2); ctx.fill();
+    // Pupil — dollar sign
+    ctx.font = `bold ${Math.round(r*0.20)}px monospace`;
+    ctx.fillStyle = '#FFD700'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('$', 0, -r*0.08);
+    ctx.textBaseline = 'alphabetic';
+
+    // 7. Orbiting gold coins (6 around the boss)
+    const coinR = r * 0.10;
+    for (let oi = 0; oi < 6; oi++) {
+      const oa = sw * 1.4 + (oi / 6) * Math.PI * 2;
+      const ox2 = Math.cos(oa) * r * 1.55;
+      const oy2 = Math.sin(oa) * r * 0.90;
+      ctx.fillStyle = '#FFD700';
+      ctx.beginPath(); ctx.arc(ox2, oy2, coinR, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#CC8800';
+      ctx.font = `bold ${Math.round(coinR * 1.2)}px monospace`;
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('$', ox2, oy2);
+      ctx.textBaseline = 'alphabetic';
+    }
+
+    ctx.globalAlpha = 1;
+    ctx.restore();
+  }
 }
 
 // ── Drone ──────────────────────────────────────────────────────────────────────
@@ -5939,6 +6804,502 @@ class Drone {
       ctx.fillRect(bx, by, bw * (this.hp / this.maxHp), bh);
       ctx.restore();
     }
+  }
+
+  // ── Storm Emperor (Sky Realm final boss) ──────────────────────────────────
+  _renderStormEmperor(ctx, x, y, r, pulse) {
+    const t      = Date.now() * 0.001;
+    const flap   = Math.sin(t * 2.8) * 0.18;          // wing flap
+    const rage   = 0.75 + Math.sin(t * 6.0) * 0.25;  // rage pulse
+    const twitch = Math.sin(t * 11) * 2;               // angry twitch
+    ctx.save();
+    ctx.translate(x, y);
+
+    // ── 0. Cover the generic cylinder body the BossBot draws first ──
+    // Draw an opaque dark shape so the generic cylinder is hidden
+    ctx.fillStyle = '#1a0800';
+    ctx.beginPath(); ctx.ellipse(0, 0, r*1.05, r*1.15, 0, 0, Math.PI*2); ctx.fill();
+
+    // ── 1. RAGE AURA — pulsing red-orange glow around the whole body ──
+    ctx.globalAlpha = 0.55 * rage;
+    ctx.shadowColor = '#FF3300'; ctx.shadowBlur = 50;
+    ctx.fillStyle = '#FF2200';
+    ctx.beginPath(); ctx.arc(0, 0, r * 2.4, 0, Math.PI*2); ctx.fill();
+    ctx.globalAlpha = 0.35 * rage;
+    ctx.fillStyle = '#FF7700';
+    ctx.beginPath(); ctx.arc(0, 0, r * 1.7, 0, Math.PI*2); ctx.fill();
+    ctx.shadowBlur = 0; ctx.globalAlpha = 1;
+
+    // ── 2. TAIL FEATHERS — ragged spikes pointing down ────────────
+    for (let ti = -3; ti <= 3; ti++) {
+      const ta = Math.PI*0.5 + ti * 0.20 + Math.sin(t*3 + ti)*0.04;
+      const len = r * (ti === 0 ? 1.7 : ti % 2 === 0 ? 1.4 : 1.1);
+      ctx.strokeStyle = ti % 2 === 0 ? '#7a2a00' : '#5a1500';
+      ctx.lineWidth = ti === 0 ? 6 : 4;
+      ctx.globalAlpha = 1;
+      ctx.beginPath();
+      ctx.moveTo(Math.cos(ta)*r*0.6, Math.sin(ta)*r*0.6);
+      ctx.lineTo(Math.cos(ta)*len,   Math.sin(ta)*len);
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+
+    // ── 3. WINGS — massive, jagged mutant feathers ────────────────
+    for (const s of [-1, 1]) {
+      // Main wing membrane (black-brown, solid and opaque)
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = '#2a0e02';
+      ctx.strokeStyle = '#5a1800'; ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(s*r*0.5,   r*0.4);
+      ctx.lineTo(s*r*1.5,  -r*(0.2+flap));
+      ctx.lineTo(s*r*2.2,  -r*(0.55+flap));
+      ctx.lineTo(s*r*3.2,  -r*(0.3+flap*0.8));
+      ctx.lineTo(s*r*3.0,   r*(0.35+flap*0.3));
+      ctx.lineTo(s*r*2.3,   r*(0.55+flap*0.2));
+      ctx.lineTo(s*r*1.4,   r*0.5);
+      ctx.closePath(); ctx.fill(); ctx.stroke();
+
+      // Dark red inner wing
+      ctx.fillStyle = '#4a1200';
+      ctx.globalAlpha = 0.7;
+      ctx.beginPath();
+      ctx.moveTo(s*r*0.48,  r*0.32);
+      ctx.lineTo(s*r*2.0,  -r*(0.45+flap));
+      ctx.lineTo(s*r*2.5,  -r*(0.20+flap*0.6));
+      ctx.lineTo(s*r*2.2,   r*(0.20+flap*0.2));
+      ctx.lineTo(s*r*1.1,   r*0.42);
+      ctx.closePath(); ctx.fill();
+      ctx.globalAlpha = 1;
+
+      // Jagged feather spikes along trailing edge (6 bright-tipped)
+      for (let fi = 0; fi < 6; fi++) {
+        const ft   = fi / 5;
+        const bx2  = s * (r*0.9 + ft * r*2.1);
+        const by2  = r*0.45 + ft*(r*(0.5+flap*0.25) - r*0.45) - Math.sin(ft*Math.PI)*r*0.45;
+        const spkL = (fi % 2 === 0 ? 26 : 16) + Math.sin(t*4+fi)*4;
+        ctx.fillStyle = '#1a0800';
+        ctx.beginPath();
+        ctx.moveTo(bx2 - s*6, by2);
+        ctx.lineTo(bx2 + s*2, by2 + spkL);
+        ctx.lineTo(bx2 + s*9, by2);
+        ctx.closePath(); ctx.fill();
+        // Bright orange tip
+        ctx.fillStyle = '#FF5500';
+        ctx.globalAlpha = 0.7;
+        ctx.beginPath();
+        ctx.moveTo(bx2 - s*2, by2 + spkL*0.6);
+        ctx.lineTo(bx2 + s*2, by2 + spkL);
+        ctx.lineTo(bx2 + s*5, by2 + spkL*0.6);
+        ctx.closePath(); ctx.fill();
+        ctx.globalAlpha = 1;
+      }
+
+      // BRIGHT glowing red vein along wing bone
+      ctx.strokeStyle = '#FF4400'; ctx.lineWidth = 3;
+      ctx.globalAlpha = 0.85 * rage;
+      ctx.shadowColor = '#FF2200'; ctx.shadowBlur = 14;
+      ctx.beginPath();
+      ctx.moveTo(s*r*0.5,  r*0.35);
+      ctx.quadraticCurveTo(s*r*1.8, -r*(0.4+flap*0.5), s*r*3.0, -r*(0.28+flap*0.7));
+      ctx.stroke();
+      ctx.shadowBlur = 0; ctx.globalAlpha = 1;
+
+      // Bone spur on mid-wing (bright bone color)
+      ctx.fillStyle = '#E8C870';
+      ctx.shadowColor = '#FFD000'; ctx.shadowBlur = 6;
+      ctx.beginPath();
+      ctx.moveTo(s*r*1.5,       -r*(0.18+flap*0.5));
+      ctx.lineTo(s*r*1.5 + s*7,  -r*(0.18+flap*0.5) - 20);
+      ctx.lineTo(s*r*1.5 + s*15, -r*(0.18+flap*0.5));
+      ctx.closePath(); ctx.fill();
+      ctx.shadowBlur = 0;
+    }
+
+    // ── 4. BODY — big hunched mutant bird torso ───────────────────
+    // Dark body (clearly visible, covers cylinder)
+    ctx.shadowColor = '#FF2200'; ctx.shadowBlur = 20;
+    ctx.fillStyle = '#2a0c00';
+    ctx.beginPath(); ctx.ellipse(0, r*0.05, r*0.72, r*0.88, 0, 0, Math.PI*2); ctx.fill();
+    ctx.shadowBlur = 0;
+    // Chest lighter feather patch
+    ctx.fillStyle = '#4a1a06';
+    ctx.beginPath(); ctx.ellipse(0, r*0.12, r*0.42, r*0.52, 0, 0, Math.PI*2); ctx.fill();
+    // Visible feather lines
+    ctx.strokeStyle = '#8a3a10'; ctx.lineWidth = 1.5; ctx.globalAlpha = 0.8;
+    for (let fi = -2; fi <= 2; fi++) {
+      const fx = fi * r * 0.16;
+      ctx.beginPath();
+      ctx.moveTo(fx, -r*0.12);
+      ctx.quadraticCurveTo(fx + fi*5, r*0.2, fx, r*0.48);
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+    // BRIGHT glowing red scar crack on chest
+    ctx.strokeStyle = '#FF3300'; ctx.lineWidth = 3;
+    ctx.globalAlpha = 0.9 * rage;
+    ctx.shadowColor = '#FF0000'; ctx.shadowBlur = 14;
+    ctx.beginPath();
+    ctx.moveTo(-r*0.12, -r*0.05);
+    ctx.lineTo( r*0.06, r*0.14);
+    ctx.lineTo(-r*0.05, r*0.20);
+    ctx.lineTo( r*0.10, r*0.38);
+    ctx.stroke();
+    ctx.shadowBlur = 0; ctx.globalAlpha = 1;
+
+    // ── 5. HEAD — large, round, menacing ─────────────────────────
+    ctx.shadowColor = '#FF2200'; ctx.shadowBlur = 18;
+    ctx.fillStyle = '#2a0c00';
+    ctx.beginPath(); ctx.arc(twitch*0.5, -r*0.80, r*0.60, 0, Math.PI*2); ctx.fill();
+    ctx.shadowBlur = 0;
+    // Feather detail ring
+    ctx.fillStyle = '#3e1608';
+    ctx.beginPath(); ctx.arc(twitch*0.5, -r*0.82, r*0.50, 0, Math.PI*2); ctx.fill();
+
+    // Head crest — 5 jagged spikes on top (mohawk)
+    for (let ci = 0; ci < 5; ci++) {
+      const cx    = twitch*0.5 + (ci - 2) * r * 0.20;
+      const cH    = r * (ci === 2 ? 0.62 : ci % 2 === 0 ? 0.44 : 0.34) + Math.sin(t*5+ci)*4;
+      const baseY = -r * 1.32;
+      // Dark spike base
+      ctx.fillStyle = '#1a0600';
+      ctx.beginPath();
+      ctx.moveTo(cx - 7, baseY);
+      ctx.lineTo(cx,      baseY - cH);
+      ctx.lineTo(cx + 7,  baseY);
+      ctx.closePath(); ctx.fill();
+      // Bright red tip
+      ctx.fillStyle = ci === 2 ? '#FF2200' : '#CC2200';
+      ctx.shadowColor = '#FF0000'; ctx.shadowBlur = ci === 2 ? 14 : 6;
+      ctx.globalAlpha = rage;
+      ctx.beginPath();
+      ctx.moveTo(cx - 4, baseY - cH*0.5);
+      ctx.lineTo(cx,      baseY - cH);
+      ctx.lineTo(cx + 4,  baseY - cH*0.5);
+      ctx.closePath(); ctx.fill();
+      ctx.shadowBlur = 0; ctx.globalAlpha = 1;
+    }
+
+    // ── 6. ANGRY EYES — huge glowing red rage eyes ───────────────
+    const eyeHX = twitch * 0.5;
+    for (const s of [-1, 1]) {
+      const ex = eyeHX + s * r * 0.27;
+      const ey = -r * 0.82;
+      // Outer glow
+      ctx.globalAlpha = 0.5 * rage;
+      ctx.shadowColor = '#FF0000'; ctx.shadowBlur = 22;
+      ctx.fillStyle = '#FF2200';
+      ctx.beginPath(); ctx.arc(ex, ey, r*0.22, 0, Math.PI*2); ctx.fill();
+      ctx.globalAlpha = 1; ctx.shadowBlur = 0;
+      // Iris (bright burning orange)
+      ctx.fillStyle = '#FF5500';
+      ctx.beginPath(); ctx.arc(ex, ey, r*0.17, 0, Math.PI*2); ctx.fill();
+      // Pupil — vertical slit (angry)
+      ctx.fillStyle = '#000000';
+      ctx.beginPath(); ctx.ellipse(ex, ey, r*0.05, r*0.13, 0, 0, Math.PI*2); ctx.fill();
+      // Eye shine
+      ctx.fillStyle = '#FFAA44';
+      ctx.beginPath(); ctx.arc(ex - r*0.05, ey - r*0.06, r*0.05, 0, Math.PI*2); ctx.fill();
+      // ANGRY EYEBROW — thick dark slash angled inward
+      ctx.strokeStyle = '#000000'; ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(ex - s*r*0.20, ey - r*0.20);
+      ctx.lineTo(ex + s*r*0.04, ey - r*0.10);
+      ctx.stroke();
+    }
+
+    // ── 7. BEAK — wide open screaming, showing throat ─────────────
+    const bx = eyeHX;
+    ctx.shadowColor = '#FFA000'; ctx.shadowBlur = 10;
+    // Upper beak
+    ctx.fillStyle = '#D4920A';
+    ctx.beginPath();
+    ctx.moveTo(bx - r*0.24, -r*0.62);
+    ctx.lineTo(bx + r*0.24, -r*0.62);
+    ctx.lineTo(bx + r*0.14, -r*0.38);
+    ctx.lineTo(bx,           -r*0.30);
+    ctx.lineTo(bx - r*0.14, -r*0.38);
+    ctx.closePath(); ctx.fill();
+    // Upper beak ridge
+    ctx.fillStyle = '#D49000';
+    ctx.beginPath();
+    ctx.moveTo(bx - r*0.10, -r*0.62);
+    ctx.lineTo(bx + r*0.10, -r*0.62);
+    ctx.lineTo(bx,           -r*0.33);
+    ctx.closePath(); ctx.fill();
+    // Lower beak (open / dropped down)
+    ctx.fillStyle = '#B87B00';
+    ctx.beginPath();
+    ctx.moveTo(bx - r*0.20, -r*0.38);
+    ctx.lineTo(bx + r*0.20, -r*0.38);
+    ctx.lineTo(bx + r*0.08, -r*0.18);
+    ctx.lineTo(bx - r*0.08, -r*0.18);
+    ctx.closePath(); ctx.fill();
+    // Open throat / mouth interior (dark red)
+    ctx.fillStyle = '#5a0000';
+    ctx.beginPath();
+    ctx.moveTo(bx - r*0.18, -r*0.57);
+    ctx.lineTo(bx + r*0.18, -r*0.57);
+    ctx.lineTo(bx + r*0.09, -r*0.22);
+    ctx.lineTo(bx - r*0.09, -r*0.22);
+    ctx.closePath(); ctx.fill();
+    // Tongue
+    ctx.fillStyle = '#8B0000';
+    ctx.beginPath();
+    ctx.ellipse(bx, -r*0.40, r*0.07, r*0.14, 0, 0, Math.PI*2); ctx.fill();
+    // Teeth — 3 small triangles on upper jaw
+    ctx.fillStyle = '#F0E0A0';
+    for (let ti = -1; ti <= 1; ti++) {
+      const tx = bx + ti * r * 0.12;
+      ctx.beginPath();
+      ctx.moveTo(tx - 4, -r*0.57);
+      ctx.lineTo(tx,      -r*0.48);
+      ctx.lineTo(tx + 4,  -r*0.57);
+      ctx.closePath(); ctx.fill();
+    }
+
+    // ── 8. MUTANT EXTRA EYE — center of forehead ─────────────────
+    const mx = eyeHX, my = -r*1.02;
+    ctx.globalAlpha = 0.65 * rage;
+    ctx.shadowColor = '#FF0000'; ctx.shadowBlur = 14;
+    ctx.fillStyle = '#FF0000';
+    ctx.beginPath(); ctx.arc(mx, my, r*0.13, 0, Math.PI*2); ctx.fill();
+    ctx.globalAlpha = 1; ctx.shadowBlur = 0;
+    ctx.fillStyle = '#AA0000';
+    ctx.beginPath(); ctx.arc(mx, my, r*0.08, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#000000';
+    ctx.beginPath(); ctx.arc(mx, my, r*0.04, 0, Math.PI*2); ctx.fill();
+
+    ctx.shadowBlur = 0;
+
+    // ── 9. LEGS and MASSIVE TALONS ────────────────────────────────
+    ctx.strokeStyle = '#5a2200'; ctx.lineWidth = 8;
+    ctx.shadowColor = '#FF2200'; ctx.shadowBlur = 6;
+    ctx.beginPath(); ctx.moveTo(-r*0.25, r*0.82); ctx.lineTo(-r*0.30, r*1.10); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo( r*0.25, r*0.82); ctx.lineTo( r*0.30, r*1.10); ctx.stroke();
+    // Claw feet — 3 big talons each foot
+    ctx.strokeStyle = '#E8C060'; ctx.lineWidth = 4;
+    ctx.shadowColor = '#FFD000'; ctx.shadowBlur = 8;
+    for (const s of [-1, 1]) {
+      const fx = s * r * 0.30, fy = r * 1.10;
+      // 3 spreading claws
+      for (let ci = -1; ci <= 1; ci++) {
+        const ca = Math.PI*0.5 + ci * 0.45;
+        ctx.beginPath();
+        ctx.moveTo(fx, fy);
+        ctx.lineTo(fx + Math.cos(ca)*s*20, fy + Math.sin(ca)*16);
+        ctx.stroke();
+      }
+    }
+    ctx.shadowBlur = 0;
+
+    ctx.restore();
+  }
+
+  // ── REX KING — the apex predator, ruler of Dino World ─────────────────────
+  _renderRexKing(ctx, x, y, r, pulse) {
+    const breathe    = Math.sin(this._pulseT * 0.8) * 0.04;
+    const roarOpen   = this._enraged ? Math.abs(Math.sin(this._pulseT * 3.5)) * 0.45 : 0.12;
+    const stomped    = Math.abs(Math.sin(this._pulseT * 2.5));
+    const t          = this._pulseT;
+
+    ctx.save();
+    ctx.translate(x, y);
+
+    // ── 0. Cover generic base ─────────────────────────────────
+    ctx.fillStyle = '#0a1a04';
+    ctx.beginPath(); ctx.ellipse(0, 0, r*1.10, r*1.20, 0, 0, Math.PI*2); ctx.fill();
+
+    // ── 1. Ground shadow ──────────────────────────────────────
+    ctx.save(); ctx.globalAlpha = 0.30; ctx.fillStyle = '#000';
+    ctx.beginPath(); ctx.ellipse(r*0.15, r*0.22, r*(1.4+breathe), r*0.38, 0, 0, Math.PI*2); ctx.fill();
+    ctx.restore();
+
+    // ── 2. Thundering footstep shockwave rings ────────────────
+    if (stomped > 0.7) {
+      for (let ri = 1; ri <= 3; ri++) {
+        ctx.save();
+        ctx.globalAlpha = (1 - ri * 0.28) * (stomped - 0.7) * 2.5;
+        ctx.strokeStyle = '#AAFF44'; ctx.lineWidth = 2.5 - ri * 0.5;
+        ctx.shadowColor = '#66FF00'; ctx.shadowBlur = 12;
+        ctx.beginPath(); ctx.arc(0, r*0.7, r*(0.5 + ri * 0.5), 0, Math.PI*2); ctx.stroke();
+        ctx.restore();
+      }
+    }
+
+    // ── 3. Massive body ───────────────────────────────────────
+    const bodyG = ctx.createRadialGradient(-r*0.12, -r*0.18, r*0.1, 0, 0, r*(1.1+breathe));
+    bodyG.addColorStop(0.0, '#AADDBB');
+    bodyG.addColorStop(0.25, '#66AA44');
+    bodyG.addColorStop(0.55, '#337722');
+    bodyG.addColorStop(0.85, '#1a4a10');
+    bodyG.addColorStop(1.0, '#0a2a08');
+    ctx.fillStyle = bodyG;
+    ctx.shadowColor = '#88FF44'; ctx.shadowBlur = 22 * pulse;
+    ctx.beginPath(); ctx.ellipse(0, r*0.08, r*0.88, r*(1.0+breathe), 0, 0, Math.PI*2); ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // ── 4. Armored back-plates ────────────────────────────────
+    const plateG = ctx.createLinearGradient(0, -r*0.70, 0, r*0.40);
+    plateG.addColorStop(0, '#CCEE88'); plateG.addColorStop(1, '#557733');
+    ctx.fillStyle = plateG; ctx.strokeStyle = 'rgba(180,255,100,0.35)'; ctx.lineWidth = 1.5;
+    const plates = [
+      [0, -r*0.65, r*0.28, r*0.14],
+      [-r*0.22, -r*0.45, r*0.22, r*0.12],
+      [ r*0.22, -r*0.45, r*0.22, r*0.12],
+      [0, -r*0.22, r*0.24, r*0.11],
+      [-r*0.20, r*0.04, r*0.20, r*0.10],
+      [ r*0.20, r*0.04, r*0.20, r*0.10],
+    ];
+    for (const [px, py, pw, ph] of plates) {
+      ctx.beginPath(); ctx.ellipse(px, py, pw, ph, 0, 0, Math.PI*2);
+      ctx.fill(); ctx.stroke();
+    }
+
+    // ── 5. Head ────────────────────────────────────────────────
+    const headY   = -r * 0.88;
+    const headPulse = this._enraged ? Math.sin(t * 4) * r * 0.04 : 0;
+    const headG   = ctx.createRadialGradient(-r*0.08, headY - r*0.08, r*0.05, 0, headY, r*0.50);
+    headG.addColorStop(0, '#CCEE66'); headG.addColorStop(0.5, '#88BB33'); headG.addColorStop(1, '#336611');
+    ctx.fillStyle = headG;
+    ctx.shadowColor = this._enraged ? '#FF4400' : '#88FF44'; ctx.shadowBlur = this._enraged ? 20 : 8;
+    ctx.beginPath(); ctx.ellipse(0, headY + headPulse, r*0.52, r*0.44, 0, 0, Math.PI*2); ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // ── 6. Snout ───────────────────────────────────────────────
+    const snoutLen = r * (0.52 + roarOpen * 0.18);
+    ctx.fillStyle = '#66AA33';
+    ctx.beginPath();
+    ctx.moveTo(-r*0.32, headY - r*0.08);
+    ctx.lineTo(-r*0.28, headY - r*0.08 - snoutLen);
+    ctx.lineTo( r*0.28, headY - r*0.08 - snoutLen);
+    ctx.lineTo( r*0.32, headY - r*0.08);
+    ctx.closePath(); ctx.fill();
+
+    // ── 7. Open jaw ────────────────────────────────────────────
+    ctx.fillStyle = '#CC3311';
+    ctx.beginPath();
+    ctx.moveTo(-r*0.32, headY + r*0.06);
+    ctx.lineTo( r*0.32, headY + r*0.06);
+    ctx.lineTo( r*0.28, headY + r*0.06 + r*roarOpen);
+    ctx.lineTo(-r*0.28, headY + r*0.06 + r*roarOpen);
+    ctx.closePath(); ctx.fill();
+
+    // ── 8. Teeth ───────────────────────────────────────────────
+    ctx.fillStyle = '#FFFFCC'; ctx.strokeStyle = '#CCCC88'; ctx.lineWidth = 0.8;
+    for (let ti = -3; ti <= 3; ti++) {
+      const tx2 = ti * r * 0.085;
+      // Upper teeth
+      ctx.beginPath(); ctx.moveTo(tx2 - r*0.04, headY - r*0.06); ctx.lineTo(tx2, headY - r*0.22); ctx.lineTo(tx2 + r*0.04, headY - r*0.06); ctx.closePath(); ctx.fill(); ctx.stroke();
+      // Lower teeth
+      ctx.beginPath(); ctx.moveTo(tx2 - r*0.04, headY + r*0.08); ctx.lineTo(tx2, headY + r*0.22); ctx.lineTo(tx2 + r*0.04, headY + r*0.08); ctx.closePath(); ctx.fill(); ctx.stroke();
+    }
+
+    // ── 9. Eyes ────────────────────────────────────────────────
+    const eyeCol  = this._enraged ? '#FF2200' : '#FFCC00';
+    const eyeGlow = this._enraged ? '#FF0000' : '#FFAA00';
+    for (const ex of [-r*0.22, r*0.22]) {
+      ctx.shadowColor = eyeGlow; ctx.shadowBlur = this._enraged ? 18 : 8;
+      ctx.fillStyle = eyeCol;
+      ctx.beginPath(); ctx.arc(ex, headY - r*0.10, r*0.12, 0, Math.PI*2); ctx.fill();
+      ctx.shadowBlur = 0;
+      // Slit pupil
+      ctx.fillStyle = '#000';
+      ctx.save(); ctx.translate(ex, headY - r*0.10);
+      ctx.scale(0.35, 1); ctx.beginPath(); ctx.arc(0, 0, r*0.10, 0, Math.PI*2); ctx.fill();
+      ctx.restore();
+      // Eye glint
+      ctx.fillStyle = 'rgba(255,255,255,0.55)';
+      ctx.beginPath(); ctx.arc(ex - r*0.04, headY - r*0.14, r*0.04, 0, Math.PI*2); ctx.fill();
+    }
+
+    // ── 10. Brow ridges ────────────────────────────────────────
+    ctx.strokeStyle = '#224411'; ctx.lineWidth = r*0.08;
+    ctx.beginPath(); ctx.moveTo(-r*0.34, headY - r*0.15); ctx.lineTo(-r*0.12, headY - r*0.20); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo( r*0.34, headY - r*0.15); ctx.lineTo( r*0.12, headY - r*0.20); ctx.stroke();
+
+    // ── 11. Nostrils ───────────────────────────────────────────
+    ctx.fillStyle = '#1a3a08';
+    ctx.beginPath(); ctx.ellipse(-r*0.12, headY - r*0.42, r*0.06, r*0.04, 0.4, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse( r*0.12, headY - r*0.42, r*0.06, r*0.04,-0.4, 0, Math.PI*2); ctx.fill();
+
+    // ── 12. Tiny arms ──────────────────────────────────────────
+    ctx.strokeStyle = '#66AA33'; ctx.lineWidth = r*0.13;
+    ctx.beginPath(); ctx.moveTo(-r*0.62, -r*0.22); ctx.lineTo(-r*0.90, r*0.02); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo( r*0.62, -r*0.22); ctx.lineTo( r*0.90, r*0.02); ctx.stroke();
+    // Claws
+    ctx.strokeStyle = '#CCEE88'; ctx.lineWidth = r*0.055;
+    for (const [cx2, dir] of [[-r*0.90, -1], [r*0.90, 1]]) {
+      ctx.beginPath(); ctx.moveTo(cx2, r*0.02); ctx.lineTo(cx2 + dir*r*0.10, r*0.12); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(cx2, r*0.02); ctx.lineTo(cx2 + dir*r*0.02, r*0.14); ctx.stroke();
+    }
+
+    // ── 13. Stomping legs ──────────────────────────────────────
+    const lStompY = r*(0.82 + stomped * 0.14);
+    const rStompY = r*(0.82 - stomped * 0.14);
+    const legG = ctx.createLinearGradient(0, r*0.5, 0, r*1.2);
+    legG.addColorStop(0, '#559922'); legG.addColorStop(1, '#224410');
+    ctx.fillStyle = legG;
+    ctx.beginPath(); ctx.ellipse(-r*0.34, lStompY, r*0.22, r*0.34, 0.15, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse( r*0.34, rStompY, r*0.22, r*0.34,-0.15, 0, Math.PI*2); ctx.fill();
+
+    // Clawed feet
+    ctx.strokeStyle = '#CCEE66'; ctx.lineWidth = r*0.08;
+    for (const [fx, fy, dir] of [[-r*0.34, lStompY + r*0.30, -1], [r*0.34, rStompY + r*0.30, 1]]) {
+      for (let ci = -1; ci <= 1; ci++) {
+        ctx.beginPath(); ctx.moveTo(fx, fy); ctx.lineTo(fx + dir*ci*r*0.12, fy + r*0.18); ctx.stroke();
+      }
+    }
+
+    // ── 14. Counter-balance tail ───────────────────────────────
+    const tailSway = Math.sin(t * 2.2) * 0.28;
+    ctx.strokeStyle = '#448822'; ctx.lineWidth = r*0.30;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(0, r*0.85);
+    ctx.quadraticCurveTo(r*(0.55 + tailSway), r*1.15, r*(0.72 + tailSway*0.6), r*1.42);
+    ctx.stroke();
+    ctx.lineWidth = r*0.18;
+    ctx.beginPath();
+    ctx.moveTo(r*(0.72 + tailSway*0.6), r*1.42);
+    ctx.quadraticCurveTo(r*(0.90 + tailSway*0.4), r*1.60, r*(0.80 + tailSway*0.3), r*1.76);
+    ctx.stroke();
+    ctx.lineCap = 'butt';
+
+    // ── 15. Enrage: lava glow cracks ──────────────────────────
+    if (this._enraged) {
+      ctx.save();
+      ctx.globalAlpha = 0.55;
+      ctx.strokeStyle = '#FF6600'; ctx.lineWidth = r*0.06;
+      ctx.shadowColor = '#FF4400'; ctx.shadowBlur = 10;
+      const cracks = [
+        [[-r*0.20, r*0.14], [-r*0.44, r*0.36], [-r*0.28, r*0.60]],
+        [[ r*0.14, r*0.06], [ r*0.38, r*0.30], [ r*0.22, r*0.52]],
+        [[-r*0.06, -r*0.32], [-r*0.26, -r*0.50], [-r*0.18, -r*0.66]],
+      ];
+      for (const pts of cracks) {
+        ctx.beginPath(); ctx.moveTo(pts[0][0], pts[0][1]);
+        for (let pi = 1; pi < pts.length; pi++) ctx.lineTo(pts[pi][0], pts[pi][1]);
+        ctx.stroke();
+      }
+      ctx.restore();
+      // Shockwave ring on enrage
+      ctx.save();
+      ctx.globalAlpha = 0.40 * Math.abs(Math.sin(t * 6));
+      ctx.strokeStyle = '#FF2200'; ctx.lineWidth = 3;
+      ctx.shadowColor = '#FF0000'; ctx.shadowBlur = 16;
+      ctx.beginPath(); ctx.arc(0, 0, r*(1.18 + Math.sin(t*5)*0.08), 0, Math.PI*2); ctx.stroke();
+      ctx.restore();
+    }
+
+    // ── 16. Crown: bone horns on head ─────────────────────────
+    ctx.fillStyle = '#FFFFAA'; ctx.strokeStyle = '#AABB66'; ctx.lineWidth = 1.2;
+    const horns = [[-r*0.20, headY - r*0.28], [0, headY - r*0.32], [r*0.20, headY - r*0.28]];
+    for (const [hx, hy] of horns) {
+      ctx.beginPath(); ctx.moveTo(hx - r*0.07, hy + r*0.04); ctx.lineTo(hx, hy - r*0.22); ctx.lineTo(hx + r*0.07, hy + r*0.04); ctx.closePath(); ctx.fill(); ctx.stroke();
+    }
+
+    ctx.restore();
   }
 }
 
@@ -7237,6 +8598,15 @@ class AmbientCar {
   }
 
   update(dt, gameMap) {
+    // Airplanes and birds fly freely — skip road collision and turn logic
+    if (this.isAirplane || this.isBird) {
+      this._lightT += dt;
+      this.x += Math.cos(this.angle) * this.speed * dt;
+      this.y += Math.sin(this.angle) * this.speed * dt;
+      const maxW = gameMap.W * gameMap.S, maxH = gameMap.H * gameMap.S;
+      if (this.x < -350 || this.y < -350 || this.x > maxW + 350 || this.y > maxH + 350) this.dead = true;
+      return;
+    }
     this._lightT    += dt;
     this._turnTimer -= dt;
     const nx = this.x + Math.cos(this.angle) * this.speed * dt;
@@ -7272,9 +8642,12 @@ class AmbientCar {
   }
 
   render(ctx) {
-    if (this.isHorse)  { this._renderHorse(ctx);  return; }
-    if (this.isCamel)  { this._renderCamel(ctx);  return; }
-    if (this.isUFO)    { this._renderUFO(ctx);    return; }
+    if (this.isAirplane) { this._renderAirplane(ctx); return; }
+    if (this.isBird)     { this._renderBird(ctx);     return; }
+    if (this.isHorse)    { this._renderHorse(ctx);    return; }
+    if (this.isCamel)    { this._renderCamel(ctx);    return; }
+    if (this.isUFO)      { this._renderUFO(ctx);      return; }
+    if (this.isDino)     { this._renderDino(ctx);     return; }
     const w = this.width, h = this.height;
     const bs = this.bodyStyle;
     ctx.save();
@@ -7572,6 +8945,153 @@ class AmbientCar {
       ctx.beginPath(); ctx.arc(lx, ly, 3, 0, Math.PI*2); ctx.fill();
     }
     ctx.shadowBlur = 0;
+
+    ctx.restore();
+  }
+
+  _renderAirplane(ctx) {
+    const t = this._lightT || 0;
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    ctx.rotate(this.angle + Math.PI / 2);
+
+    // Contrail — 3 fading bands behind the fuselage
+    for (let ci = 0; ci < 3; ci++) {
+      ctx.globalAlpha = 0.07 - ci * 0.018;
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillRect(-2 + ci * 0.4, 14 + ci * 7, 4 - ci, 20 + ci * 10);
+    }
+    ctx.globalAlpha = 1;
+
+    // Ground shadow
+    ctx.save(); ctx.globalAlpha = 0.10; ctx.fillStyle = '#002244';
+    ctx.beginPath(); ctx.ellipse(3, 3, 28, 10, 0, 0, Math.PI*2); ctx.fill(); ctx.restore();
+
+    // Swept-back wings
+    const wingCol = this._acDarken(this.color, 0.86);
+    ctx.fillStyle = wingCol;
+    ctx.beginPath(); ctx.moveTo(0, -4); ctx.lineTo(-34, 9); ctx.lineTo(-30, 13); ctx.lineTo(0, 5); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(0, -4); ctx.lineTo( 34, 9); ctx.lineTo( 30, 13); ctx.lineTo(0, 5); ctx.closePath(); ctx.fill();
+    // Wing highlight strip
+    ctx.fillStyle = 'rgba(255,255,255,0.11)';
+    ctx.beginPath(); ctx.moveTo(0, -3); ctx.lineTo(-30, 8); ctx.lineTo(-28, 9); ctx.lineTo(0, -1); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(0, -3); ctx.lineTo( 30, 8); ctx.lineTo( 28, 9); ctx.lineTo(0, -1); ctx.closePath(); ctx.fill();
+
+    // Fuselage
+    const fg = ctx.createLinearGradient(-6, -22, 6, 22);
+    fg.addColorStop(0, this._acBrighten(this.color, 1.30));
+    fg.addColorStop(0.45, this.color);
+    fg.addColorStop(1, this._acDarken(this.color, 0.72));
+    ctx.fillStyle = fg;
+    ctx.beginPath(); ctx.ellipse(0, 0, 6, 23, 0, 0, Math.PI*2); ctx.fill();
+
+    // Cockpit window
+    ctx.fillStyle = 'rgba(100,185,255,0.80)';
+    ctx.beginPath(); ctx.ellipse(0, -14, 4, 7, 0, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = 'rgba(220,245,255,0.42)';
+    ctx.beginPath(); ctx.ellipse(-1.5, -15, 1.5, 4, -0.2, 0, Math.PI*2); ctx.fill();
+
+    // Tail fins
+    ctx.fillStyle = wingCol;
+    ctx.beginPath(); ctx.moveTo(0, 15); ctx.lineTo(-13, 23); ctx.lineTo(-11, 25); ctx.lineTo(0, 19); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(0, 15); ctx.lineTo( 13, 23); ctx.lineTo( 11, 25); ctx.lineTo(0, 19); ctx.closePath(); ctx.fill();
+
+    // Engine pods with afterburner glow
+    ctx.fillStyle = this._acDarken(this.color, 0.62);
+    ctx.beginPath(); ctx.ellipse(-22, 8, 5, 3, 0, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse( 22, 8, 5, 3, 0, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = 'rgba(255,155,50,0.50)';
+    ctx.beginPath(); ctx.ellipse(-22, 10, 3, 1.5, 0, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse( 22, 10, 3, 1.5, 0, 0, Math.PI*2); ctx.fill();
+
+    ctx.restore();
+  }
+
+  _renderBird(ctx) {
+    const t = this._lightT || 0;
+    const flap = Math.sin(t * 9);
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    ctx.rotate(this.angle + Math.PI / 2);
+
+    // Soft shadow
+    ctx.save(); ctx.globalAlpha = 0.08; ctx.fillStyle = '#002244';
+    ctx.beginPath(); ctx.ellipse(2, 2, 13, 5, 0, 0, Math.PI*2); ctx.fill(); ctx.restore();
+
+    const wSplay = 19 + flap * 7;
+    // Wings — animated flap
+    ctx.fillStyle = '#1a2838';
+    ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(-wSplay, -5+flap*3); ctx.lineTo(-wSplay+4, 3+flap*2); ctx.lineTo(-3, 4); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo( wSplay, -5+flap*3); ctx.lineTo( wSplay-4, 3+flap*2); ctx.lineTo( 3, 4); ctx.closePath(); ctx.fill();
+    // Wing sheen
+    ctx.fillStyle = 'rgba(80,130,170,0.28)';
+    ctx.beginPath(); ctx.moveTo(0, -1); ctx.lineTo(-wSplay+3, -4+flap*3); ctx.lineTo(-3, 0); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(0, -1); ctx.lineTo( wSplay-3, -4+flap*3); ctx.lineTo( 3, 0); ctx.closePath(); ctx.fill();
+
+    // Body
+    ctx.fillStyle = '#243040';
+    ctx.beginPath(); ctx.ellipse(0, 0, 4, 9, 0, 0, Math.PI*2); ctx.fill();
+    // Head
+    ctx.fillStyle = '#1a2838';
+    ctx.beginPath(); ctx.arc(0, -9, 4, 0, Math.PI*2); ctx.fill();
+    // Beak
+    ctx.fillStyle = '#E8B840';
+    ctx.beginPath(); ctx.moveTo(0, -12); ctx.lineTo(-2, -16); ctx.lineTo(2, -16); ctx.closePath(); ctx.fill();
+    // Eye glint
+    ctx.fillStyle = '#AAE0FF';
+    ctx.beginPath(); ctx.arc(1.5, -9.5, 1.2, 0, Math.PI*2); ctx.fill();
+    // Tail feathers
+    ctx.fillStyle = '#1a2838';
+    ctx.beginPath(); ctx.moveTo(-4, 7); ctx.lineTo(0, 14); ctx.lineTo(4, 7); ctx.closePath(); ctx.fill();
+
+    ctx.restore();
+  }
+
+  _renderDino(ctx) {
+    // Top-down diplodocus/brachiosaurus — ambles along paths
+    const t = this._lightT || 0;
+    const stride = Math.sin(t * 4.0) * 0.16;
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    ctx.rotate(this.angle + Math.PI / 2);
+
+    // Ground shadow
+    ctx.save(); ctx.globalAlpha = 0.14; ctx.fillStyle = '#002200';
+    ctx.beginPath(); ctx.ellipse(2, 4, 28, 12, 0, 0, Math.PI*2); ctx.fill(); ctx.restore();
+
+    // Body — wide oval
+    const bg = ctx.createRadialGradient(-4, -4, 2, 0, 0, 20);
+    bg.addColorStop(0, '#88CC66'); bg.addColorStop(0.55, '#559933'); bg.addColorStop(1, '#2a5518');
+    ctx.fillStyle = bg;
+    ctx.shadowColor = '#66AA44'; ctx.shadowBlur = 6;
+    ctx.beginPath(); ctx.ellipse(0, 2, 14, 20, 0, 0, Math.PI*2); ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // Neck + tiny head (long-neck dino)
+    ctx.strokeStyle = '#66AA44'; ctx.lineWidth = 7;
+    ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(0, -16); ctx.quadraticCurveTo(stride*14, -28, 0, -34); ctx.stroke();
+    ctx.lineCap = 'butt';
+    ctx.fillStyle = '#77BB55';
+    ctx.beginPath(); ctx.ellipse(0, -34, 6, 5, 0, 0, Math.PI*2); ctx.fill();
+
+    // Eye
+    ctx.fillStyle = '#FFCC00'; ctx.beginPath(); ctx.arc(-3, -35, 2.5, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#000';    ctx.beginPath(); ctx.arc(-3, -35, 1.2, 0, Math.PI*2); ctx.fill();
+
+    // 4 walking legs
+    ctx.fillStyle = '#447722';
+    ctx.beginPath(); ctx.ellipse(-8, 8+stride*10,  4, 8,  0.2, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse( 8, 8-stride*10,  4, 8, -0.2, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(-8, 20-stride*8,  4, 8,  0.2, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse( 8, 20+stride*8,  4, 8, -0.2, 0, Math.PI*2); ctx.fill();
+
+    // Tail
+    ctx.strokeStyle = '#558833'; ctx.lineWidth = 8; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(0, 20); ctx.quadraticCurveTo(-stride*10, 32, 0, 40); ctx.stroke();
+    ctx.lineWidth = 4;
+    ctx.beginPath(); ctx.moveTo(0, 40); ctx.lineTo(0, 50); ctx.stroke();
+    ctx.lineCap = 'butt';
 
     ctx.restore();
   }

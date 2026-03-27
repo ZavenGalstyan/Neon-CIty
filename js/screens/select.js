@@ -272,26 +272,34 @@
   // ── Map page switching ────────────────────────────────────
   const pageTab1  = document.getElementById('pageTab1');
   const pageTab2  = document.getElementById('pageTab2');
+  const pageTab3  = document.getElementById('pageTab3');
   const mapPage1  = document.getElementById('mapPage1');
   const mapPage2  = document.getElementById('mapPage2');
+  const mapPage3  = document.getElementById('mapPage3');
 
   function switchPage(page) {
     currentPage = page;
+    mapPage1.style.display = 'none';
+    mapPage2.style.display = 'none';
+    if (mapPage3) mapPage3.style.display = 'none';
+    pageTab1.classList.remove('active');
+    pageTab2.classList.remove('active');
+    if (pageTab3) pageTab3.classList.remove('active');
     if (page === 1) {
       mapPage1.style.display = '';
-      mapPage2.style.display = 'none';
       pageTab1.classList.add('active');
-      pageTab2.classList.remove('active');
-    } else {
-      mapPage1.style.display = 'none';
+    } else if (page === 2) {
       mapPage2.style.display = '';
-      pageTab1.classList.remove('active');
       pageTab2.classList.add('active');
+    } else if (page === 3) {
+      if (mapPage3) mapPage3.style.display = '';
+      if (pageTab3) pageTab3.classList.add('active');
     }
   }
 
   if (pageTab1) pageTab1.addEventListener('click', () => switchPage(1));
   if (pageTab2) pageTab2.addEventListener('click', () => switchPage(2));
+  if (pageTab3) pageTab3.addEventListener('click', () => switchPage(3));
 
   // ── Customization ─────────────────────────────────────────
   document.querySelectorAll('#colorSwatches .color-swatch').forEach(sw => {
@@ -415,11 +423,17 @@
         const page1Cards = document.querySelectorAll('#mapPage1 .map-card');
         if (mapIdx < page1Cards.length) page1Cards[mapIdx].click();
       }
-    } else {
+    } else if (currentPage === 2) {
       const mapIdx = page2Keys.indexOf(e.code);
       if (mapIdx >= 0) {
         const page2Cards = document.querySelectorAll('#mapPage2 .map-card');
         if (mapIdx < page2Cards.length) page2Cards[mapIdx].click();
+      }
+    } else if (currentPage === 3) {
+      const mapIdx = page2Keys.indexOf(e.code);
+      if (mapIdx >= 0) {
+        const page3Cards = document.querySelectorAll('#mapPage3 .map-card');
+        if (mapIdx < page3Cards.length) page3Cards[mapIdx].click();
       }
     }
 
@@ -429,7 +443,7 @@
       if (e.shiftKey) {
         switchCharPage(currentCharPage === 1 ? 2 : 1);
       } else {
-        switchPage(currentPage === 1 ? 2 : 1);
+        switchPage(currentPage === 1 ? 2 : currentPage === 2 ? 3 : 1);
       }
       return;
     }

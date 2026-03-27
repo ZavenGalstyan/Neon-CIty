@@ -422,6 +422,59 @@ const CONFIG = {
       },
     },
 
+    // ── The Tower ─────────────────────────────────────────────
+    {
+      id: 'tower', name: 'THE TOWER',
+      desc: '10 floors. One building. Kill every enemy to ride the elevator up. Floor 10: face the penthouse boss.',
+      theme: '#FFD700', tags: ['BUILDING', 'FLOORS', 'INDOOR'],
+      previewGridSize: 16, previewBg: '#1a1210', previewRoad: '#3a2a18',
+      mapW: 22, mapH: 16, tileSize: 80, roadEvery: 1,
+      roadColor: '#d0b888', sidewalkColor: '#b09060',
+      buildingPalette: ['#6a4a2a','#5a3a1a','#7a5a3a','#4a3a2a'],
+      neonColors: ['#FFD700','#FFA500','#FFEE44'],
+      windowColors: ['#FFE88A','#FFCC55'],
+      lightColor: '#FFD700', lightGlow: '#FFA500', neonFreq: 999,
+      weather: 'clear',
+      tower: true,
+      botPalettes: {
+        mini:       [{ body:'#CC4400', accent:'#FF6622' }, { body:'#AA3300', accent:'#FF4400' }],
+        normal:     [{ body:'#882200', accent:'#CC4400' }, { body:'#993300', accent:'#DD5500' }],
+        big:        [{ body:'#663300', accent:'#AA5500' }, { body:'#552200', accent:'#994400' }],
+        police:     [{ body:'#003388', accent:'#4466FF' }, { body:'#002266', accent:'#3355EE' }],
+        swat:       [{ body:'#222244', accent:'#4444BB' }, { body:'#111133', accent:'#3333AA' }],
+        heavyswat:  [{ body:'#1a1a33', accent:'#3333AA' }],
+        sniper:     [{ body:'#334455', accent:'#6699CC' }, { body:'#223344', accent:'#5588BB' }],
+        bomber:     [{ body:'#552200', accent:'#FF4400' }, { body:'#661100', accent:'#FF3300' }],
+        juggernaut: [{ body:'#330000', accent:'#880000' }, { body:'#440000', accent:'#990000' }],
+      },
+    },
+
+    // ── Sky Realm ─────────────────────────────────────────────
+    {
+      id: 'sky_realm', name: 'SKY REALM',
+      desc: 'Battle above the clouds. Airplanes streak past. Eagles dive. Rule the sky or fall.',
+      theme: '#87CEEB', tags: ['SKY', 'AERIAL', 'CLOUDS'],
+      previewGridSize: 18, previewBg: '#1a4a7a', previewRoad: 'rgba(135,206,235,0.45)',
+      mapW: 36, mapH: 36, tileSize: 80, roadEvery: 1,
+      roadColor: '#5a9ec8', sidewalkColor: '#7ab8d8',
+      buildingPalette: ['#FFFFFF','#F0F8FF','#E8F4FD','#D6EEF8','#F5FBFF','#E5F2FA','#DDEEF8','#EAF5FD'],
+      neonColors: ['#87CEEB','#FFD700','#FFA07A','#98E8FF'],
+      windowColors: ['#B8E0FF','#D0EEFF','#A8D8FF','#C8ECFF'],
+      lightColor: '#87CEEB', lightGlow: '#5BA3C9', neonFreq: 999,
+      weather: 'sky_breeze', sky: true,
+      botPalettes: {
+        mini:      [{ body:'#5588BB', accent:'#87CEEB' }, { body:'#4477AA', accent:'#AAD8FF' }],
+        normal:    [{ body:'#6699CC', accent:'#87CEEB' }, { body:'#5588BB', accent:'#AADDFF' }, { body:'#7799BB', accent:'#99CCFF' }],
+        big:       [{ body:'#4466AA', accent:'#66AADD' }, { body:'#334488', accent:'#5599CC' }],
+        police:    [{ body:'#334477', accent:'#88BBFF' }, { body:'#223366', accent:'#6699EE' }],
+        swat:      [{ body:'#223355', accent:'#4477BB' }, { body:'#1A2244', accent:'#3366AA' }],
+        heavyswat: [{ body:'#112233', accent:'#336699' }],
+        sniper:    [{ body:'#667788', accent:'#AACCDD' }],
+        bomber:    [{ body:'#BB6633', accent:'#FFAA55' }],
+        juggernaut:[{ body:'#334455', accent:'#88AACC' }],
+      },
+    },
+
     // ── Page 2 Maps ─────────────────────────────────────────
     // WASTELAND - Unified map with big buildings and color themes
     {
@@ -521,30 +574,6 @@ const CONFIG = {
 
     // ── Special Modes (Page 2) ───────────────────────────────
     {
-      id: 'survival',
-      name: 'SURVIVAL MODE',
-      desc: 'No shop. No mercy. Live or die by the gun.',
-      theme: '#FF2244',
-      tags: ['HARDCORE', 'NO SHOP', 'ENDLESS'],
-      previewGridSize: 18,
-      previewBg: '#0a0004',
-      previewRoad: 'rgba(255,34,68,0.45)',
-      mapW: 40, mapH: 40, tileSize: 80, roadEvery: 10,
-      roadColor: '#0d0008',
-      sidewalkColor: '#14000e',
-      buildingPalette: ['#1a0010','#200018','#180010','#1e0014','#160010','#1c0018','#180012','#20001a'],
-      neonColors: ['#FF2244','#FF0044','#CC0033','#FF4466'],
-      windowColors: ['#FF2244','#FF6688','#FF0044','#CC0033'],
-      lightColor: '#FF2244', lightGlow: '#CC0033', neonFreq: 8,
-      weather: 'blood_rain',
-      survival: true,
-      botPalettes: {
-        mini:   [{ body:'#880022', accent:'#FF2244' }, { body:'#660011', accent:'#CC0033' }],
-        normal: [{ body:'#AA0033', accent:'#FF2244' }, { body:'#880022', accent:'#DD2244' }, { body:'#CC1144', accent:'#FF3355' }],
-        big:    [{ body:'#660011', accent:'#AA0033' }, { body:'#770022', accent:'#BB1133' }],
-      },
-    },
-    {
       id: 'hardcore',
       name: 'HARDCORE MODE',
       desc: 'Enemies deal 2× damage. You earn 3× money. Only the best survive.',
@@ -590,26 +619,6 @@ const CONFIG = {
       },
     },
 
-    // ── Siege Mode ───────────────────────────────────────────
-    {
-      id: 'siege', name: 'SIEGE MODE',
-      desc: 'Hold the center. Endless waves assault from all sides. The city falls — or you do.',
-      theme: '#44AAFF', tags: ['DEFEND', 'ENDLESS WAVES', 'TACTICAL'],
-      previewGridSize: 20, previewBg: '#000810', previewRoad: 'rgba(68,170,255,0.45)',
-      mapW: 46, mapH: 46, tileSize: 80, roadEvery: 11,
-      roadColor: '#04080e', sidewalkColor: '#080e14',
-      buildingPalette: ['#0a1828','#0e2038','#081420','#0c1e30','#0a1c28','#0e2238','#081620','#0c1e34'],
-      neonColors: ['#44AAFF','#2288DD','#66CCFF','#0066CC'],
-      windowColors: ['#44AAFF','#88CCFF','#66AAFF','#2299FF'],
-      lightColor: '#44AAFF', lightGlow: '#2277CC', neonFreq: 9,
-      weather: 'fog',
-      siege: true,
-      botPalettes: {
-        mini:   [{ body:'#002244', accent:'#44AAFF' }],
-        normal: [{ body:'#003366', accent:'#44AAFF' }, { body:'#002255', accent:'#2299FF' }],
-        big:    [{ body:'#001133', accent:'#003366' }],
-      },
-    },
     {
       id: 'frozen_tundra',
       name: 'FROZEN TUNDRA',
@@ -778,6 +787,30 @@ const CONFIG = {
         sniper:  [{ body:'#2a3a10', accent:'#AAFFAA' }],
         bomber:  [{ body:'#6a4a10', accent:'#FF8800' }],
         juggernaut: [{ body:'#4a3010', accent:'#FFAA00' }],
+      },
+    },
+
+    // ── Dino World ─────────────────────────────────────────
+    {
+      id: 'dino_world', name: 'DINO WORLD',
+      desc: 'Primordial earth. Raptors hunt in the ferns, water dinos lurk in rivers. The Rex King rules all.',
+      theme: '#66DD44',
+      tags: ['DINOSAURS', 'PREHISTORIC', 'WATER'],
+      previewGridSize: 14, previewBg: '#060e04', previewRoad: 'rgba(80,180,40,0.55)',
+      mapW: 44, mapH: 44, tileSize: 80, roadEvery: 6,
+      roadColor: '#4a7a28', sidewalkColor: '#2e5c1a',
+      buildingPalette: ['#1a3410','#1e3c14','#162e0c','#223a10','#183214','#1c3812','#14280a','#203616'],
+      neonColors: ['#66DD44','#88FF66','#AAFF44','#44CC22'],
+      windowColors: ['#BBFF88','#CCFF88','#AAEE66','#99FF66'],
+      lightColor: '#88FF66', lightGlow: '#66CC44', neonFreq: 10,
+      weather: 'jungle_rain',
+      dino: true,
+      botPalettes: {
+        mini:       [{ body:'#2a6618', accent:'#88FF44' }, { body:'#1e5510', accent:'#66DD22' }],
+        normal:     [{ body:'#4a7a28', accent:'#AAFF44' }, { body:'#5a4a10', accent:'#FFCC44' }, { body:'#3a2a08', accent:'#DD9922' }],
+        big:        [{ body:'#1a4a10', accent:'#66BB33' }, { body:'#2a5a18', accent:'#88CC44' }],
+        police:     [{ body:'#6b3410', accent:'#FF8822' }, { body:'#5a2808', accent:'#FF6600' }],
+        swat:       [{ body:'#222e08', accent:'#88AA44' }],
       },
     },
   ],

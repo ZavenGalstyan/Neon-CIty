@@ -606,30 +606,65 @@ body {
   .map-card--desert .map-preview { width: 100%; height: 80px; min-height: 80px; }
 }
 
+/* ── Feature Row: Galactica · Tower · Sky Realm — 3 cards on one line ── */
+.feature-maps-row {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+.feature-maps-row .map-card            { min-width: 0; height: auto; }
+.feature-maps-row .map-name            { font-size: 15px !important; letter-spacing: 0.08em !important; }
+.feature-maps-row .map-desc            { font-size: 11px !important; margin: 4px 0 7px !important; }
+.feature-maps-row .map-tags            { gap: 4px; flex-wrap: wrap; }
+
 .map-card--galactica {
   position: relative;
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   align-items: stretch;
-  gap: 20px;
-  padding: 16px 20px;
-  min-height: 180px;
+  min-width: 0;
   height: auto;
   background: linear-gradient(135deg, rgba(8,0,28,0.97) 0%, rgba(4,0,18,0.99) 100%);
   border: 1px solid rgba(170,68,255,0.30);
 }
-.map-card--galactica .map-info {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
+.map-card--galactica .map-info { flex: 1; }
 .map-card[data-map="galactica"]:hover   { border-color: rgba(170,68,255,0.55); box-shadow: 0 8px 30px rgba(0,0,0,0.6), 0 0 22px rgba(170,68,255,0.18); }
 .map-card[data-map="galactica"].selected { transform: translateY(-5px); border-color: #AA44FF; box-shadow: 0 0 28px rgba(170,68,255,0.55), 0 12px 40px rgba(0,0,0,0.6); }
-@media (max-width: 600px) {
-  .map-card--galactica { flex-direction: column; min-height: auto; padding: 12px; }
-  .map-card--galactica .map-preview { width: 100%; height: 80px; min-height: 80px; }
+
+/* The Tower map card */
+.map-card--tower {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  min-width: 0;
+  height: auto;
+  background: linear-gradient(135deg, rgba(26,18,8,0.97) 0%, rgba(14,10,4,0.99) 100%);
+  border: 1px solid rgba(200,150,0,0.30);
 }
+.map-card--tower .map-info { flex: 1; }
+.map-card[data-map="tower"]:hover   { border-color: rgba(255,200,0,0.55); box-shadow: 0 8px 30px rgba(0,0,0,0.6), 0 0 22px rgba(200,150,0,0.18); }
+.map-card[data-map="tower"].selected { transform: translateY(-5px); border-color: #FFD700; box-shadow: 0 0 28px rgba(255,200,0,0.55), 0 12px 40px rgba(0,0,0,0.6); }
+
+@media (max-width: 768px) {
+  .feature-maps-row { grid-template-columns: 1fr; }
+}
+
+/* Sky Realm map card */
+.map-card--sky {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  min-width: 0;
+  height: auto;
+  background: linear-gradient(135deg, rgba(10,22,50,0.97) 0%, rgba(16,34,72,0.99) 100%);
+  border: 1px solid rgba(135,206,235,0.30);
+}
+.map-card--sky .map-info { flex: 1; }
+.map-card[data-map="sky_realm"]:hover   { border-color: rgba(135,206,235,0.55); box-shadow: 0 8px 30px rgba(0,0,0,0.6), 0 0 22px rgba(135,206,235,0.18); }
+.map-card[data-map="sky_realm"].selected { transform: translateY(-5px); border-color: #87CEEB; box-shadow: 0 0 28px rgba(135,206,235,0.55), 0 12px 40px rgba(0,0,0,0.6); }
 
 /* Life Mode + Arena + Zombie — 3-per-row grid */
 .special-maps-row {

@@ -69,6 +69,28 @@ const ROOM_LAYOUT_METRO = [
   [1,1,1,1,1,1,1,1,0,0,0,1,1,1,1,1,1,1,1,1],
 ]; // 20×11 tiles, 48px each → 960×528 px
 
+// ── Tower floor layout ──────────────────────────────────────────────────────
+// 22 wide × 16 tall  (0 = walkable floor, 1 = wall/pillar)
+// Elevator zone visually at right-center (cols 18-20, rows 5-10) — all walkable
+const TOWER_FLOOR_LAYOUT = [
+  [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1], // row  0 — top wall
+  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1], // row  1
+  [1,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,1], // row  2 — pillars
+  [1,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,1], // row  3
+  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1], // row  4
+  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1], // row  5
+  [1,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,1], // row  6 — center pillars
+  [1,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,1], // row  7
+  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1], // row  8
+  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1], // row  9
+  [1,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,1], // row 10 — center pillars
+  [1,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,1], // row 11
+  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1], // row 12
+  [1,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,1], // row 13 — pillars
+  [1,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,1], // row 14
+  [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1], // row 15 — bottom wall
+];
+
 class GameMap {
   constructor(mapConfig) {
     // Accept a map config object; fall back to first map in CONFIG.MAPS
@@ -123,7 +145,9 @@ class GameMap {
             ? '#0d2a10' : this.config.sidewalkColor;
         } else {
           // Zone-tinted building colors on metropolis minimap
-          if (this._rxSet) {
+          if (this.config.sky) {
+            mctx.fillStyle = 'rgba(240,250,255,0.88)'; // white clouds on sky minimap
+          } else if (this._rxSet) {
             const zx2 = tx / this.W, zy2 = ty / this.H;
             if      (zy2 < 0.35 && zx2 < 0.45) mctx.fillStyle = '#0c1828'; // commercial: blue-dark
             else if (zy2 < 0.35 && zx2 >= 0.45) mctx.fillStyle = '#1a1008'; // residential: warm-dark
@@ -166,6 +190,8 @@ class GameMap {
   // ── Map generation ────────────────────────────────────────
   _generate() {
     if (this.config.metropolis) { this._generateMetropolis(); return; }
+    if (this.config.tower)      { this._generateTower();      return; }
+    if (this.config.sky)        { this._generateSky();        return; }
 
     const R = this.ROAD_EVERY;
     for (let y = 0; y < this.H; y++) {
@@ -282,6 +308,84 @@ class GameMap {
       this.portals.push({ x: (pos2.tx + 0.5) * S, y: (pos2.ty + 0.5) * S, paired: 0, _animT: 1.5 });
     }
     this._buildStreetLights(); this._buildCacti();
+  }
+
+  // ── Tower: 10-floor building generation ──────────────────
+  _generateTower() {
+    this._towerFloor = 1;
+    for (let y = 0; y < this.H; y++) {
+      this.tiles[y]           = [];
+      this.buildingColors[y]  = [];
+      this.buildingWindows[y] = [];
+      for (let x = 0; x < this.W; x++) {
+        this.tiles[y][x]          = TOWER_FLOOR_LAYOUT[y][x] === 1 ? TILE.BUILDING : TILE.ROAD;
+        this.buildingColors[y][x]  = '#6a4a2a';
+        this.buildingWindows[y][x] = false;
+      }
+    }
+    // Elevator world-space center (cols 19-20, rows 7-8 center)
+    this.elevatorX = 19.5 * this.S;
+    this.elevatorY =  7.5 * this.S;
+    // No doors, portals, metro, street lights, cacti
+    this.doors = []; this._doorMap = new Map();
+    this.portals = []; this.metroEntrance = null;
+    this.streetLights = []; this.cacti = [];
+    this._blockTypes = {};
+  }
+
+  // ── Sky Realm: open sky with cloud-cluster obstacles ──────
+  _generateSky() {
+    const W = this.W, H = this.H, S = this.S;
+    // All tiles start as open sky (walkable)
+    for (let y = 0; y < H; y++) {
+      this.tiles[y] = []; this.buildingColors[y] = []; this.buildingWindows[y] = [];
+      for (let x = 0; x < W; x++) {
+        this.tiles[y][x] = TILE.ROAD;
+        this.buildingColors[y][x] = '#FFFFFF'; this.buildingWindows[y][x] = false;
+      }
+    }
+    // Scatter cloud formations as solid obstacles (2–4 wide, 1–2 tall)
+    for (let c = 0; c < 24; c++) {
+      const cx = 2 + Math.floor(Math.random() * (W - 4));
+      const cy = 2 + Math.floor(Math.random() * (H - 4));
+      const cw = 2 + Math.floor(Math.random() * 3);
+      const ch = 1 + Math.floor(Math.random() * 2);
+      for (let dy = 0; dy < ch; dy++) {
+        for (let dx = 0; dx < cw; dx++) {
+          const tx = cx + dx, ty = cy + dy;
+          if (tx >= 1 && tx < W - 1 && ty >= 1 && ty < H - 1)
+            this.tiles[ty][tx] = TILE.BUILDING;
+        }
+      }
+    }
+    // Clear centre 7×7 so the player always spawns in open air
+    const mx = Math.floor(W / 2), my = Math.floor(H / 2);
+    for (let dy = -3; dy <= 3; dy++)
+      for (let dx = -3; dx <= 3; dx++)
+        if (mx+dx >= 0 && mx+dx < W && my+dy >= 0 && my+dy < H)
+          this.tiles[my+dy][mx+dx] = TILE.ROAD;
+    // No doors, portals, metro, lights, or cacti
+    this.doors = []; this._doorMap = new Map();
+    this.portals = []; this.metroEntrance = null;
+    this.streetLights = []; this.cacti = [];
+    this._blockTypes = {};
+
+    // ── Pre-render cloud tile once → replace 7 ellipses/tile/frame with 1 drawImage ──
+    const cc = document.createElement('canvas');
+    cc.width = S; cc.height = S;
+    const cx2 = cc.getContext('2d');
+    cx2.fillStyle = '#5aa0cc'; cx2.fillRect(0, 0, S, S);
+    cx2.globalAlpha = 0.18; cx2.fillStyle = '#8aaabb';
+    cx2.beginPath(); cx2.ellipse(S*0.52, S*0.88, S*0.42, S*0.10, 0, 0, Math.PI*2); cx2.fill();
+    cx2.globalAlpha = 1; cx2.fillStyle = '#ecf4fc';
+    cx2.beginPath(); cx2.ellipse(S*0.50, S*0.72, S*0.44, S*0.28, 0, 0, Math.PI*2); cx2.fill();
+    cx2.beginPath(); cx2.ellipse(S*0.27, S*0.62, S*0.30, S*0.22, 0, 0, Math.PI*2); cx2.fill();
+    cx2.beginPath(); cx2.ellipse(S*0.73, S*0.60, S*0.28, S*0.20, 0, 0, Math.PI*2); cx2.fill();
+    cx2.beginPath(); cx2.ellipse(S*0.50, S*0.44, S*0.36, S*0.26, 0, 0, Math.PI*2); cx2.fill();
+    cx2.fillStyle = '#FFFFFF';
+    cx2.beginPath(); cx2.ellipse(S*0.38, S*0.36, S*0.22, S*0.15, -0.2, 0, Math.PI*2); cx2.fill();
+    cx2.beginPath(); cx2.ellipse(S*0.55, S*0.28, S*0.16, S*0.12,  0.1, 0, Math.PI*2); cx2.fill();
+    this._skyCloudCanvas = cc;
   }
 
   // ── Metropolis city generation ────────────────────────────
@@ -632,6 +736,68 @@ class GameMap {
     }
   }
 
+  // ── Tower elevator rendering ──────────────────────────────
+  // Called from game.js render loop in world-space (already translated)
+  renderTowerElevator(ctx, active, floor) {
+    if (!this.config.tower) return;
+    const ex = this.elevatorX, ey = this.elevatorY;
+    const w = this.S * 1.6, h = this.S * 2.0;
+    const t = Date.now() * 0.001;
+
+    ctx.save();
+
+    // Floor-based elevator colour
+    const doorCol = floor >= 10 ? '#FFD700' : floor >= 7 ? '#4466FF' : floor >= 4 ? '#888888' : '#C0A060';
+    const glowCol = floor >= 10 ? '#FFD700' : floor >= 7 ? '#0044FF' : '#B08040';
+
+    // Outer glow when active
+    if (active) {
+      const pulse = Math.sin(t * 3.5) * 0.3 + 0.7;
+      ctx.globalAlpha = pulse * 0.55;
+      ctx.fillStyle = glowCol;
+      ctx.beginPath();
+      ctx.ellipse(ex, ey, w * 1.0, h * 0.55, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+
+    // Elevator shaft frame
+    ctx.fillStyle = '#2a2420';
+    ctx.fillRect(ex - w/2 - 4, ey - h/2 - 4, w + 8, h + 8);
+
+    // Door panels (split open when active)
+    const openAmt = active ? Math.min(1, ((Math.sin(t * 2) + 1) / 2) * 0.6 + 0.4) : 0;
+    const panelW  = (w / 2) * (1 - openAmt * 0.8);
+
+    // Left door
+    ctx.fillStyle = doorCol;
+    ctx.fillRect(ex - w/2, ey - h/2, panelW, h);
+    // Right door
+    ctx.fillRect(ex + w/2 - panelW, ey - h/2, panelW, h);
+
+    // Door centre seam shine
+    ctx.fillStyle = 'rgba(255,255,255,0.15)';
+    ctx.fillRect(ex - 1, ey - h/2, 2, h);
+
+    // Floor number above elevator
+    ctx.font = 'bold 18px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = active ? glowCol : '#888';
+    if (active) { ctx.shadowColor = glowCol; ctx.shadowBlur = 12; }
+    ctx.fillText(active ? '▲ UP' : `▲`, ex, ey - h/2 - 8);
+    ctx.shadowBlur = 0;
+
+    // Panel buttons (small dots on frame)
+    for (let i = 0; i < 3; i++) {
+      ctx.fillStyle = i === 0 && active ? '#00FF88' : '#333';
+      ctx.beginPath();
+      ctx.arc(ex + w/2 + 10, ey - h/4 + i * 14, 4, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    ctx.restore();
+  }
+
   renderCacti(ctx, camX, camY, canvasW, canvasH) {
     if (!this.cacti || !this.cacti.length) return;
     for (const c of this.cacti) {
@@ -706,6 +872,28 @@ class GameMap {
   }
 
   randomRoadPos() {
+    // Sky: pick any non-cloud tile
+    if (this.config.sky) {
+      const S = this.S;
+      let tx, ty, tries = 0;
+      do {
+        tx = 1 + Math.floor(Math.random() * (this.W - 2));
+        ty = 1 + Math.floor(Math.random() * (this.H - 2));
+        tries++;
+      } while (this.tiles[ty] && this.tiles[ty][tx] !== TILE.ROAD && tries < 50);
+      return new Vec2((tx + 0.5) * S, (ty + 0.5) * S);
+    }
+    // Tower: pick random walkable floor tile far from walls
+    if (this.config.tower) {
+      const S = this.S;
+      let tx, ty, tries = 0;
+      do {
+        tx = 1 + Math.floor(Math.random() * (this.W - 2));
+        ty = 1 + Math.floor(Math.random() * (this.H - 2));
+        tries++;
+      } while (this.tiles[ty] && this.tiles[ty][tx] !== TILE.ROAD && tries < 40);
+      return new Vec2((tx + 0.5) * S, (ty + 0.5) * S);
+    }
     const S = this.S;
     // Metropolis: use stored road arrays for guaranteed road-intersection spawns
     if (this._rxArr && this._rxArr.length && this._ryArr && this._ryArr.length) {
@@ -752,7 +940,43 @@ class GameMap {
         const isRowR = this._rySet ? this._rySet.has(y) : (y % R === 0);
 
         if (tile === TILE.ROAD) {
-          if (cfg.robot) {
+          if (cfg.tower) {
+            // Tower: interior floor — theme changes per floor
+            const fl = this._towerFloor || 1;
+            let flA, flB, lineCol;
+            if (fl <= 1) {
+              // Lobby: white marble checkerboard
+              flA = '#e8e2d4'; flB = '#d4cfc0'; lineCol = 'rgba(0,0,0,0.08)';
+            } else if (fl <= 3) {
+              // Wood parquet
+              flA = (x + y) % 2 === 0 ? '#8b6010' : '#7a5208'; flB = flA; lineCol = 'rgba(0,0,0,0.18)';
+            } else if (fl <= 5) {
+              // Industrial concrete
+              flA = (x * 3 + y) % 3 === 0 ? '#48484a' : '#3c3c3e'; flB = flA; lineCol = 'rgba(0,0,0,0.25)';
+            } else if (fl <= 7) {
+              // Security: dark steel
+              flA = (x + y) % 2 === 0 ? '#1e1e2a' : '#18182e'; flB = flA; lineCol = 'rgba(60,80,180,0.12)';
+            } else if (fl <= 9) {
+              // Research lab: light grey
+              flA = (x + y) % 2 === 0 ? '#ccd8cc' : '#beccbe'; flB = flA; lineCol = 'rgba(0,60,0,0.10)';
+            } else {
+              // Penthouse: black marble with gold veins
+              flA = (x + y) % 3 === 0 ? '#181010' : '#100c0c'; flB = flA; lineCol = 'rgba(180,140,0,0.22)';
+            }
+            // Checkerboard only for lobby
+            const col = (fl <= 1 && (x + y) % 2 === 0) ? flA : flB;
+            ctx.fillStyle = col;
+            ctx.fillRect(wx, wy, S, S);
+            // Grid seam lines
+            ctx.fillStyle = lineCol;
+            ctx.fillRect(wx, wy, S, 1);
+            ctx.fillRect(wx, wy, 1, S);
+            // Penthouse gold vein accent
+            if (fl >= 10 && (x * 7 + y * 11) % 9 === 0) {
+              ctx.fillStyle = 'rgba(210,160,0,0.18)';
+              ctx.fillRect(wx + S*0.2, wy + S*0.45, S*0.6, 1);
+            }
+          } else if (cfg.robot) {
             // Robot City: dark metal grating floor
             ctx.fillStyle = '#0a1018';
             ctx.fillRect(wx, wy, S, S);
@@ -840,6 +1064,23 @@ class GameMap {
             if ((x*11 + y*7) % 7 === 0) {
               ctx.fillStyle = 'rgba(150,220,255,0.35)';
               ctx.beginPath(); ctx.arc(wx + (x*29+12)%S, wy + (y*23+15)%S, 0.8, 0, Math.PI*2); ctx.fill();
+            }
+          } else if (cfg.sky) {
+            // Sky Realm: open azure sky with subtle depth variation
+            const sseed = (x * 17 + y * 11) % 6;
+            const blues = ['#5aa0cc','#5ea4d0','#58a0ca','#5ca2ce','#60a6d2','#56a0ca'];
+            ctx.fillStyle = blues[sseed];
+            ctx.fillRect(wx, wy, S, S);
+            // Faint horizontal haze bands
+            if ((x * 3 + y * 5) % 7 === 0) {
+              ctx.fillStyle = 'rgba(255,255,255,0.05)';
+              ctx.fillRect(wx, wy + S * 0.38, S, 2);
+              ctx.fillRect(wx, wy + S * 0.70, S, 1);
+            }
+            // Occasional sun sparkle — fillRect is much cheaper than arc()
+            if ((x * 11 + y * 7) % 17 === 0) {
+              ctx.fillStyle = 'rgba(255,248,210,0.10)';
+              ctx.fillRect(wx + (x*19)%S - 5, wy + (y*17)%S - 5, 10, 10);
             }
           } else if (cfg.desert) {
             // Desert: sandy dirt road with ripples
@@ -1082,6 +1323,29 @@ class GameMap {
               ctx.fillStyle = 'rgba(255,100,30,0.80)';
               ctx.beginPath(); ctx.arc(wx + S*0.60, wy + S*0.35, 5, 0, Math.PI*2); ctx.fill();
             }
+          } else if (cfg.tower) {
+            // Tower: interior wall — concrete + frame, colour shifts per floor
+            const fl = this._towerFloor || 1;
+            const wallBase = fl >= 10 ? '#1a0808' : fl >= 7 ? '#14142a' : fl >= 4 ? '#2a2a2a' : '#4a3820';
+            ctx.fillStyle = wallBase;
+            ctx.fillRect(wx, wy, S, S);
+            // Concrete panel bevel
+            ctx.fillStyle = 'rgba(255,255,255,0.05)';
+            ctx.fillRect(wx, wy, S, 2);
+            ctx.fillRect(wx, wy, 2, S);
+            ctx.fillStyle = 'rgba(0,0,0,0.25)';
+            ctx.fillRect(wx + S - 2, wy, 2, S);
+            ctx.fillRect(wx, wy + S - 2, S, 2);
+            // Floor-specific accent
+            if (fl >= 10) {
+              // Penthouse: gold trim on top
+              ctx.fillStyle = 'rgba(200,150,0,0.30)';
+              ctx.fillRect(wx, wy, S, 3);
+            } else if (fl >= 7) {
+              // Security: blue LED strip
+              ctx.fillStyle = 'rgba(40,80,220,0.20)';
+              ctx.fillRect(wx, wy + S - 4, S, 3);
+            }
           } else if (cfg.robot) {
             // Robot City: server tower / tech block
             const rseed = x * 41 + y * 59;
@@ -1143,6 +1407,9 @@ class GameMap {
               ctx.fillStyle = '#AABBCC';
               ctx.beginPath(); ctx.arc(moonX, moonY, planR * 0.14, 0, Math.PI*2); ctx.fill();
             }
+          } else if (cfg.sky) {
+            // Sky Realm: blit pre-rendered cloud canvas — single drawImage instead of 7 ellipses
+            ctx.drawImage(this._skyCloudCanvas, wx, wy);
           } else if (cfg.desert) {
             // Desert: pyramid / sandstone block
             const pseed = (x * 41 + y * 59) % 5;
