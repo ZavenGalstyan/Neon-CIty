@@ -187,11 +187,11 @@ class ShopManager {
     // ── Balance ─────────────────────────────────────────────
     ctx.save();
     ctx.font = 'bold 18px Orbitron, monospace';
-    ctx.fillStyle = '#FFD700';
-    ctx.shadowColor = '#FFD700';
+    ctx.fillStyle = '#00FFCC';
+    ctx.shadowColor = '#00FFCC';
     ctx.shadowBlur = 14;
     ctx.textAlign = 'left';
-    ctx.fillText(`BALANCE:  $ ${money.toLocaleString()}`, px + 22, py + PH - 14);
+    ctx.fillText(`BALANCE:  ⬢ ${money.toLocaleString()} NEX`, px + 22, py + PH - 14);
     ctx.restore();
 
     // Close hint
@@ -318,10 +318,10 @@ class ShopManager {
         if (cardVisible && hover) this._pushArea(cx, cy, cardW, cardH, (p) => { p.equipWeapon(w.id); this._msg(`${w.name} EQUIPPED`, w.color); });
       } else {
         ctx.font = `bold 12px Orbitron, monospace`;
-        ctx.fillStyle  = canBuy ? (hover ? '#fff' : '#FFD700') : '#444';
-        ctx.shadowColor = canBuy && hover ? '#FFD700' : 'transparent';
+        ctx.fillStyle  = canBuy ? (hover ? '#fff' : '#00FFCC') : '#444';
+        ctx.shadowColor = canBuy && hover ? '#00FFCC' : 'transparent';
         ctx.shadowBlur  = canBuy && hover ? 14 : 0;
-        ctx.fillText(w.price > 0 ? `$ ${w.price.toLocaleString()}` : 'FREE', cx + cardW / 2, cy + cardH - 12);
+        ctx.fillText(w.price > 0 ? `⬢ ${w.price.toLocaleString()}` : 'FREE', cx + cardW / 2, cy + cardH - 12);
         const cardVisible2 = cy >= y - 10 && cy + cardH <= y + PH + 10;
         if (canBuy && cardVisible2) {
           this._pushArea(cx, cy, cardW, cardH, (p, g) => {
@@ -461,7 +461,7 @@ class ShopManager {
         ctx.fillStyle  = canBuy ? (bHov ? '#fff' : u.color) : '#3a3a3a';
         ctx.textAlign  = 'center';
         ctx.shadowBlur = 0;
-        ctx.fillText(`UPGRADE  $ ${cost.toLocaleString()}`, bx + btnW / 2, by + btnH / 2 + 4);
+        ctx.fillText(`UPGRADE  ⬢ ${cost.toLocaleString()}`, bx + btnW / 2, by + btnH / 2 + 4);
 
         if (canBuy) {
           this._pushArea(bx, by, btnW, btnH, (p, g) => {
@@ -588,7 +588,7 @@ class ShopManager {
       this._rr(ctx, btnX, btnY, btnW, 26, 5); ctx.fill(); ctx.stroke();
       ctx.font = 'bold 11px Orbitron, monospace'; ctx.textAlign = 'center';
       ctx.fillStyle = canBuy ? g.color : '#555'; ctx.shadowColor = canBuy ? g.color : 'transparent'; ctx.shadowBlur = canBuy ? 8 : 0;
-      ctx.fillText(`$ ${g.price.toLocaleString()}  HIRE`, btnX + btnW / 2, btnY + 18);
+      ctx.fillText(`⬢ ${g.price.toLocaleString()}  HIRE`, btnX + btnW / 2, btnY + 18);
       ctx.shadowBlur = 0; ctx.restore();
 
       const tier = g.tier, price = g.price, color = g.color;
@@ -651,6 +651,113 @@ class ShopManager {
     ctx.lineTo(x + r, y + h); ctx.quadraticCurveTo(x, y + h, x, y + h - r);
     ctx.lineTo(x, y + r); ctx.quadraticCurveTo(x, y, x + r, y);
     ctx.closePath();
+  }
+
+  // ═══ NEX CURRENCY ICON HELPERS ═══════════════════════════════════════════════
+  _drawHexagon(ctx, cx, cy, r) {
+    ctx.beginPath();
+    for (let i = 0; i < 6; i++) {
+      const angle = (Math.PI / 3) * i - Math.PI / 2;
+      const x = cx + r * Math.cos(angle);
+      const y = cy + r * Math.sin(angle);
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+  }
+
+  _drawN(ctx, x, y, w, h) {
+    ctx.beginPath();
+    ctx.moveTo(x, y + h);
+    ctx.lineTo(x, y);
+    ctx.lineTo(x + w, y + h);
+    ctx.lineTo(x + w, y);
+  }
+
+  _renderNexIcon(ctx, x, y, size, opts = {}) {
+    const animated = opts.animated !== false;
+    const t = animated ? performance.now() / 1000 : 0;
+    const r = size / 2;
+
+    ctx.save();
+    const pulse = animated ? Math.sin(t * 2.5) * 0.3 + 0.7 : 1;
+    const energyPulse = animated ? Math.sin(t * 4) * 0.5 + 0.5 : 0.5;
+
+    // Outer rotating ring
+    if (animated) {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(t * 0.3);
+      ctx.strokeStyle = `rgba(0,229,255,${0.25 + pulse * 0.15})`;
+      ctx.lineWidth = Math.max(1, size / 20);
+      ctx.setLineDash([size / 8, size / 5]);
+      ctx.beginPath();
+      ctx.arc(0, 0, r + size / 10, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.restore();
+    }
+
+    // Hexagon frame
+    ctx.shadowColor = '#00E5FF';
+    ctx.shadowBlur = 12 * pulse * (size / 32);
+    ctx.strokeStyle = '#00E5FF';
+    ctx.lineWidth = Math.max(1.5, size / 16);
+    ctx.fillStyle = 'rgba(0,10,20,0.85)';
+    this._drawHexagon(ctx, x, y, r);
+    ctx.fill();
+    ctx.stroke();
+
+    // Inner hexagon
+    ctx.shadowBlur = 4 * (size / 32);
+    ctx.strokeStyle = 'rgba(0,229,255,0.4)';
+    ctx.lineWidth = Math.max(0.8, size / 32);
+    this._drawHexagon(ctx, x, y, r * 0.75);
+    ctx.stroke();
+
+    // The N letter
+    const nW = r * 0.7, nH = r * 0.9;
+    const nX = x - nW / 2, nY = y - nH / 2;
+    const strokeW = Math.max(2, size / 12);
+
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+
+    // N glow
+    ctx.shadowBlur = (10 + energyPulse * 4) * (size / 32);
+    ctx.strokeStyle = '#00E5FF';
+    ctx.lineWidth = strokeW;
+    this._drawN(ctx, nX, nY, nW, nH);
+    ctx.stroke();
+
+    // N bright core
+    ctx.shadowBlur = 4 * (size / 32);
+    ctx.strokeStyle = `rgba(180,255,255,${0.6 + energyPulse * 0.4})`;
+    ctx.lineWidth = strokeW * 0.4;
+    this._drawN(ctx, nX, nY, nW, nH);
+    ctx.stroke();
+
+    // Energy nodes
+    ctx.shadowBlur = 6 * (size / 32);
+    ctx.fillStyle = `rgba(0,229,255,${0.7 + energyPulse * 0.3})`;
+    const nodeR = Math.max(1.2, size / 18);
+    [[nX, nY], [nX, nY + nH], [nX + nW, nY], [nX + nW, nY + nH]].forEach(([nx, ny]) => {
+      ctx.beginPath();
+      ctx.arc(nx, ny, nodeR, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    // Pulse ring
+    if (animated) {
+      const ringPhase = (t * 1.2) % 1;
+      ctx.strokeStyle = `rgba(0,229,255,${(1 - ringPhase) * 0.3})`;
+      ctx.lineWidth = Math.max(0.8, size / 32);
+      ctx.shadowBlur = 3;
+      this._drawHexagon(ctx, x, y, r * 0.5 + ringPhase * r * 0.6);
+      ctx.stroke();
+    }
+
+    ctx.restore();
   }
 
   // ── Render unique guard preview icons for shop ──────────────────────────────
@@ -996,9 +1103,9 @@ class DealershipManager {
 
     // Balance
     ctx.save();
-    ctx.font = 'bold 18px Orbitron, monospace'; ctx.fillStyle = '#FFD700';
-    ctx.shadowColor = '#FFD700'; ctx.shadowBlur = 14; ctx.textAlign = 'left';
-    ctx.fillText(`BALANCE:  $ ${money.toLocaleString()}`, px + 22, py + PH - 14);
+    ctx.font = 'bold 18px Orbitron, monospace'; ctx.fillStyle = '#00FFCC';
+    ctx.shadowColor = '#00FFCC'; ctx.shadowBlur = 14; ctx.textAlign = 'left';
+    ctx.fillText(`BALANCE:  ⬢ ${money.toLocaleString()} NEX`, px + 22, py + PH - 14);
     ctx.restore();
 
     // Close hint
@@ -1184,10 +1291,10 @@ class DealershipManager {
 
       // Price / buy
       ctx.font = 'bold 13px Orbitron, monospace';
-      ctx.fillStyle  = canBuy ? (hover ? '#fff' : '#FFD700') : '#444';
-      ctx.shadowColor = canBuy && hover ? '#FFD700' : 'transparent';
+      ctx.fillStyle  = canBuy ? (hover ? '#fff' : '#00FFCC') : '#444';
+      ctx.shadowColor = canBuy && hover ? '#00FFCC' : 'transparent';
       ctx.shadowBlur  = canBuy && hover ? 14 : 0;
-      ctx.fillText(`$ ${car.price.toLocaleString()}`, cx + cardW / 2, cy + cardH - 12);
+      ctx.fillText(`⬢ ${car.price.toLocaleString()}`, cx + cardW / 2, cy + cardH - 12);
 
       if (canBuy) {
         this._pushArea(cx, cy, cardW, cardH, (p, g) => {
@@ -1268,10 +1375,10 @@ class DealershipManager {
         if (hover) this._pushArea(cx, cy, cardW, cardH, (p) => { p.equipWeapon(w.id); this._msg(`${w.name} EQUIPPED`, w.color); });
       } else {
         ctx.font = 'bold 12px Orbitron, monospace';
-        ctx.fillStyle   = canBuy ? (hover ? '#fff' : '#FFD700') : '#444';
-        ctx.shadowColor = canBuy && hover ? '#FFD700' : 'transparent';
+        ctx.fillStyle   = canBuy ? (hover ? '#fff' : '#00FFCC') : '#444';
+        ctx.shadowColor = canBuy && hover ? '#00FFCC' : 'transparent';
         ctx.shadowBlur  = canBuy && hover ? 14 : 0;
-        ctx.fillText(w.price > 0 ? `$ ${w.price.toLocaleString()}` : 'FREE', cx + cardW / 2, cy + cardH - 12);
+        ctx.fillText(w.price > 0 ? `⬢ ${w.price.toLocaleString()}` : 'FREE', cx + cardW / 2, cy + cardH - 12);
         if (canBuy) {
           this._pushArea(cx, cy, cardW, cardH, (p, g) => {
             const effectivePrice = Math.round(w.price * (1 - (g._shopDiscount || 0)));
@@ -1323,8 +1430,8 @@ class DealershipManager {
 
     // Buy buttons
     const btnDefs = [
-      { qty: 1, price: gc.price, label: `1 GRENADE   $ ${gc.price.toLocaleString()}` },
-      { qty: 5, price: gc.price * 4, label: `5 GRENADES  $ ${(gc.price * 4).toLocaleString()}  (DEAL)` },
+      { qty: 1, price: gc.price, label: `1 GRENADE   ⬢ ${gc.price.toLocaleString()}` },
+      { qty: 5, price: gc.price * 4, label: `5 GRENADES  ⬢ ${(gc.price * 4).toLocaleString()}  (DEAL)` },
     ];
     btnDefs.forEach((btn, bi) => {
       const bw = 280, bh = 42;
@@ -1446,15 +1553,15 @@ class CasinoManager {
     // Balance
     ctx.save();
     ctx.font = 'bold 15px Orbitron, monospace'; ctx.textAlign = 'center';
-    ctx.fillStyle = '#FFD700'; ctx.shadowColor = '#FFD700'; ctx.shadowBlur = 10;
-    ctx.fillText(`BALANCE: $${money.toLocaleString()}`, cx, py + 72);
+    ctx.fillStyle = '#00FFCC'; ctx.shadowColor = '#00FFCC'; ctx.shadowBlur = 10;
+    ctx.fillText(`BALANCE: ⬢${money.toLocaleString()} NEX`, cx, py + 72);
     ctx.restore();
 
     // ── Slot machine ─────────────────────────────────────────
     const slotY = py + 88;
     const slotW = 260, slotH = 82;
     const slotX = cx - slotW / 2;
-    const symbols = ['7','♦','♣','★','♥','$','🍀'];
+    const symbols = ['7','♦','♣','★','♥','⬢','🍀'];
 
     ctx.save();
     ctx.fillStyle = '#0a0014'; ctx.strokeStyle = '#FF44AA'; ctx.lineWidth = 2;
@@ -1511,7 +1618,7 @@ class CasinoManager {
       ctx.font = `bold ${sel ? 11 : 10}px Orbitron, monospace`;
       ctx.fillStyle = sel ? '#FF44AA' : hov ? '#fff' : '#777';
       ctx.textAlign = 'center';
-      ctx.fillText(`$${bet.toLocaleString()}`, bx2 + bw / 2, by2 + bh2 / 2 + 4);
+      ctx.fillText(`⬢${bet.toLocaleString()}`, bx2 + bw / 2, by2 + bh2 / 2 + 4);
       ctx.restore();
       this._pushArea(bx2, by2, bw, bh2, () => { this._bet = bet; });
     });
@@ -1550,10 +1657,10 @@ class CasinoManager {
       const isWin = this._spinResult === 'WIN';
       ctx.save();
       ctx.font = 'bold 20px Orbitron, monospace'; ctx.textAlign = 'center';
-      ctx.fillStyle = isWin ? '#FFD700' : '#FF4466';
-      ctx.shadowColor = isWin ? '#FFD700' : '#FF4466'; ctx.shadowBlur = 16;
+      ctx.fillStyle = isWin ? '#00FFCC' : '#FF4466';
+      ctx.shadowColor = isWin ? '#00FFCC' : '#FF4466'; ctx.shadowBlur = 16;
       ctx.fillText(
-        isWin ? `JACKPOT! +$${(this._lastBet * 2).toLocaleString()}` : `NO LUCK — LOST $${this._lastBet.toLocaleString()}`,
+        isWin ? `JACKPOT! +⬢${(this._lastBet * 2).toLocaleString()}` : `NO LUCK — LOST ⬢${this._lastBet.toLocaleString()}`,
         cx, spinY + spinH + 32
       );
       ctx.restore();
@@ -1650,18 +1757,18 @@ class BuildingShopManager {
       }
       case 'money':
         gameRef.money += eff.amount || 0;
-        this._msg(`+$${eff.amount}!`, '#FFDD00');
+        this._msg(`+⬢${eff.amount}!`, '#00FFCC');
         break;
       case 'moneyHack': {
         const gain = (gameRef.wave || 1) * 120;
         gameRef.money += gain;
-        this._msg(`HACK: +$${gain}!`, '#00FF88');
+        this._msg(`HACK: +⬢${gain}!`, '#00FF88');
         break;
       }
       case 'loan':
         gameRef.money += eff.give || 0;
         gameRef._loanDebt = (gameRef._loanDebt || 0) + (eff.debt || 0);
-        this._msg(`BORROWED $${eff.give}! Owes $${eff.debt}`, '#FFCC00');
+        this._msg(`BORROWED ⬢${eff.give}! Owes ⬢${eff.debt}`, '#FFCC00');
         break;
       case 'grenades':
         gameRef._grenadeCount = Math.min(9, (gameRef._grenadeCount || 0) + (eff.amount || 1));
@@ -1819,8 +1926,8 @@ class BuildingShopManager {
     // Money display
     ctx.save();
     ctx.font = 'bold 12px Orbitron, monospace'; ctx.textAlign = 'right';
-    ctx.fillStyle = '#FFDD44'; ctx.shadowColor = '#FFDD44'; ctx.shadowBlur = 8;
-    ctx.fillText(`$${money.toLocaleString()}`, px + PW - 16, py + 56);
+    ctx.fillStyle = '#00FFCC'; ctx.shadowColor = '#00FFCC'; ctx.shadowBlur = 8;
+    ctx.fillText(`⬢${money.toLocaleString()}`, px + PW - 16, py + 56);
     ctx.restore();
 
     // Items
@@ -1856,7 +1963,7 @@ class BuildingShopManager {
       ctx.restore();
 
       // Price badge
-      const priceStr = item.price === 0 ? 'FREE' : `$${item.price}`;
+      const priceStr = item.price === 0 ? 'FREE' : `⬢${item.price}`;
       const pw2 = 70, ph2 = 26, px2 = ITEM_X + ITEM_W - 82, py2 = iy + 24;
       ctx.save();
       ctx.fillStyle   = canAf ? nc : '#333333';

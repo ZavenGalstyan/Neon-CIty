@@ -577,15 +577,399 @@ class HUD {
   renderMoney(money) {
     const ctx = this.ctx;
     const W   = this.canvas.width;
+    const t   = performance.now() / 1000;
     ctx.save();
+
+    // Layout
+    const iconSize = 32;
+    const moneyTxt = money.toLocaleString();
     ctx.font = 'bold 28px Orbitron, monospace';
-    const txt = `$ ${money.toLocaleString()}`;
-    this._lastMoneyW = ctx.measureText(txt).width; // used by renderSurviveTimer
+    const textW = ctx.measureText(moneyTxt).width;
+    this._lastMoneyW = textW + iconSize + 16;
+
+    const iconX = W - 16 - textW - iconSize / 2 - 12;
+    const iconY = 40;
+    const r = iconSize / 2;
+
+    // Animation phases
+    const pulse = Math.sin(t * 2.5) * 0.3 + 0.7;
+    const energyPulse = Math.sin(t * 4) * 0.5 + 0.5;
+    const rotateAngle = t * 0.3;
+
+    // ═══ OUTER RING - Rotating dashed energy ring ═══
+    ctx.save();
+    ctx.translate(iconX, iconY);
+    ctx.rotate(rotateAngle);
+    ctx.strokeStyle = `rgba(0,229,255,${0.25 + pulse * 0.15})`;
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([4, 6]);
+    ctx.beginPath();
+    ctx.arc(0, 0, r + 3, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.restore();
+
+    // ═══ HEXAGON FRAME - Main container ═══
+    ctx.shadowColor = '#00E5FF';
+    ctx.shadowBlur = 16 * pulse;
+
+    // Outer hexagon glow
+    ctx.strokeStyle = '#00E5FF';
+    ctx.lineWidth = 2;
+    ctx.fillStyle = 'rgba(0,10,20,0.85)';
+    this._drawHexagon(ctx, iconX, iconY, r);
+    ctx.fill();
+    ctx.stroke();
+
+    // Inner hexagon border
+    ctx.shadowBlur = 6;
+    ctx.strokeStyle = 'rgba(0,229,255,0.4)';
+    ctx.lineWidth = 1;
+    this._drawHexagon(ctx, iconX, iconY, r * 0.75);
+    ctx.stroke();
+
+    // ═══ CIRCUIT LINES - Tech details at corners ═══
+    ctx.shadowBlur = 0;
+    ctx.strokeStyle = 'rgba(0,229,255,0.3)';
+    ctx.lineWidth = 1;
+    // Top-left circuit
+    ctx.beginPath();
+    ctx.moveTo(iconX - r * 0.5, iconY - r * 0.65);
+    ctx.lineTo(iconX - r * 0.85, iconY - r * 0.45);
+    ctx.lineTo(iconX - r * 0.85, iconY - r * 0.15);
+    ctx.stroke();
+    // Top-right circuit
+    ctx.beginPath();
+    ctx.moveTo(iconX + r * 0.5, iconY - r * 0.65);
+    ctx.lineTo(iconX + r * 0.85, iconY - r * 0.45);
+    ctx.lineTo(iconX + r * 0.85, iconY - r * 0.15);
+    ctx.stroke();
+    // Bottom circuits
+    ctx.beginPath();
+    ctx.moveTo(iconX - r * 0.5, iconY + r * 0.65);
+    ctx.lineTo(iconX - r * 0.85, iconY + r * 0.45);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(iconX + r * 0.5, iconY + r * 0.65);
+    ctx.lineTo(iconX + r * 0.85, iconY + r * 0.45);
+    ctx.stroke();
+
+    // ═══ THE "N" LETTER - Stylized neon N ═══
+    const nW = r * 0.7;  // N width
+    const nH = r * 0.9;  // N height
+    const nX = iconX - nW / 2;
+    const nY = iconY - nH / 2;
+    const strokeW = 2.5;
+
+    // N glow layers
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+
+    // Outer glow
+    ctx.shadowColor = '#00E5FF';
+    ctx.shadowBlur = 12 + energyPulse * 6;
+    ctx.strokeStyle = '#00E5FF';
+    ctx.lineWidth = strokeW + 2;
+    ctx.globalAlpha = 0.3;
+    this._drawN(ctx, nX, nY, nW, nH);
+    ctx.stroke();
+
+    // Main N stroke
+    ctx.globalAlpha = 1;
+    ctx.shadowBlur = 8;
+    ctx.strokeStyle = '#00E5FF';
+    ctx.lineWidth = strokeW;
+    this._drawN(ctx, nX, nY, nW, nH);
+    ctx.stroke();
+
+    // Inner bright core
+    ctx.shadowBlur = 4;
+    ctx.strokeStyle = `rgba(180,255,255,${0.6 + energyPulse * 0.4})`;
+    ctx.lineWidth = strokeW * 0.4;
+    this._drawN(ctx, nX, nY, nW, nH);
+    ctx.stroke();
+
+    // ═══ ENERGY NODES - Glowing dots at N vertices ═══
+    const nodePositions = [
+      { x: nX, y: nY },                    // Top-left
+      { x: nX, y: nY + nH },               // Bottom-left
+      { x: nX + nW, y: nY },               // Top-right
+      { x: nX + nW, y: nY + nH }           // Bottom-right
+    ];
+    ctx.shadowColor = '#00E5FF';
+    ctx.shadowBlur = 6 + energyPulse * 4;
+    ctx.fillStyle = `rgba(0,229,255,${0.7 + energyPulse * 0.3})`;
+    for (const node of nodePositions) {
+      ctx.beginPath();
+      ctx.arc(node.x, node.y, 2 + energyPulse * 0.8, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // ═══ DATA STREAM - Flowing particles along N ═══
+    const particlePhase = (t * 1.5) % 1;
+    ctx.shadowBlur = 8;
+    ctx.fillStyle = '#FFFFFF';
+    // Particle going up left stroke
+    const p1y = nY + nH - particlePhase * nH;
+    ctx.beginPath();
+    ctx.arc(nX, p1y, 1.5, 0, Math.PI * 2);
+    ctx.fill();
+    // Particle going down diagonal
+    const p2x = nX + particlePhase * nW;
+    const p2y = nY + particlePhase * nH;
+    ctx.beginPath();
+    ctx.arc(p2x, p2y, 1.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    // ═══ CORNER BRACKETS - Tech frame accents ═══
+    ctx.shadowBlur = 0;
+    ctx.strokeStyle = 'rgba(0,229,255,0.5)';
+    ctx.lineWidth = 1.5;
+    const br = 4; // bracket size
+    // Top-left bracket
+    ctx.beginPath();
+    ctx.moveTo(iconX - r + 2, iconY - r * 0.4);
+    ctx.lineTo(iconX - r + 2, iconY - r * 0.55);
+    ctx.lineTo(iconX - r * 0.7, iconY - r * 0.75);
+    ctx.stroke();
+    // Top-right bracket
+    ctx.beginPath();
+    ctx.moveTo(iconX + r - 2, iconY - r * 0.4);
+    ctx.lineTo(iconX + r - 2, iconY - r * 0.55);
+    ctx.lineTo(iconX + r * 0.7, iconY - r * 0.75);
+    ctx.stroke();
+
+    // ═══ PULSE RING - Expanding energy wave ═══
+    const ringPhase = (t * 1.2) % 1;
+    ctx.strokeStyle = `rgba(0,229,255,${(1 - ringPhase) * 0.35})`;
+    ctx.lineWidth = 1 + (1 - ringPhase) * 1;
+    ctx.shadowBlur = 4;
+    this._drawHexagon(ctx, iconX, iconY, r * 0.5 + ringPhase * r * 0.7);
+    ctx.stroke();
+
+    // ═══ MONEY TEXT ═══
     ctx.textAlign = 'right';
-    ctx.shadowColor = '#FFD700'; ctx.shadowBlur = 20; ctx.fillStyle = '#FFD700';
-    ctx.fillText(txt, W - 16, 48);
-    ctx.font = '9px Orbitron, monospace'; ctx.fillStyle = 'rgba(255,215,0,0.45)';
-    ctx.fillText('MONEY', W - 16, 62);
+    ctx.shadowColor = '#00E5FF';
+    ctx.shadowBlur = 22;
+    ctx.fillStyle = '#00E5FF';
+    ctx.font = 'bold 28px Orbitron, monospace';
+    ctx.fillText(moneyTxt, W - 16, 48);
+
+    // NEX label with subtle glow
+    ctx.shadowBlur = 6;
+    ctx.font = 'bold 9px Orbitron, monospace';
+    ctx.fillStyle = 'rgba(0,229,255,0.5)';
+    ctx.fillText('NEX', W - 16, 62);
+
+    ctx.restore();
+  }
+
+  // Helper: Draw hexagon centered at (cx, cy) with radius r
+  _drawHexagon(ctx, cx, cy, r) {
+    ctx.beginPath();
+    for (let i = 0; i < 6; i++) {
+      const angle = (Math.PI / 3) * i - Math.PI / 2;
+      const x = cx + r * Math.cos(angle);
+      const y = cy + r * Math.sin(angle);
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+  }
+
+  // Helper: Draw stylized "N" letter path
+  _drawN(ctx, x, y, w, h) {
+    ctx.beginPath();
+    // Left vertical stroke (bottom to top)
+    ctx.moveTo(x, y + h);
+    ctx.lineTo(x, y);
+    // Diagonal stroke (top-left to bottom-right)
+    ctx.lineTo(x + w, y + h);
+    // Right vertical stroke (bottom to top)
+    ctx.lineTo(x + w, y);
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // REUSABLE NEX CURRENCY ICON - Can be called from anywhere
+  // ═══════════════════════════════════════════════════════════════════════════
+  /**
+   * Renders the animated NEX currency icon at specified position
+   * @param {CanvasRenderingContext2D} ctx - Canvas context
+   * @param {number} x - Center X position
+   * @param {number} y - Center Y position
+   * @param {number} size - Icon size (diameter)
+   * @param {object} opts - Options { animated: true, glowIntensity: 1.0 }
+   */
+  renderNexIcon(ctx, x, y, size, opts = {}) {
+    const animated = opts.animated !== false;
+    const glowMult = opts.glowIntensity || 1.0;
+    const t = animated ? performance.now() / 1000 : 0;
+    const r = size / 2;
+
+    ctx.save();
+
+    // Animation phases
+    const pulse = animated ? Math.sin(t * 2.5) * 0.3 + 0.7 : 1;
+    const energyPulse = animated ? Math.sin(t * 4) * 0.5 + 0.5 : 0.5;
+    const rotateAngle = animated ? t * 0.3 : 0;
+
+    // ═══ OUTER RING - Rotating dashed energy ring ═══
+    if (animated) {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(rotateAngle);
+      ctx.strokeStyle = `rgba(0,229,255,${0.25 + pulse * 0.15})`;
+      ctx.lineWidth = Math.max(1, size / 20);
+      ctx.setLineDash([size / 8, size / 5]);
+      ctx.beginPath();
+      ctx.arc(0, 0, r + size / 10, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.restore();
+    }
+
+    // ═══ HEXAGON FRAME - Main container ═══
+    ctx.shadowColor = '#00E5FF';
+    ctx.shadowBlur = (16 * pulse * glowMult) * (size / 32);
+
+    // Outer hexagon glow
+    ctx.strokeStyle = '#00E5FF';
+    ctx.lineWidth = Math.max(1.5, size / 16);
+    ctx.fillStyle = 'rgba(0,10,20,0.85)';
+    this._drawHexagon(ctx, x, y, r);
+    ctx.fill();
+    ctx.stroke();
+
+    // Inner hexagon border
+    ctx.shadowBlur = 6 * (size / 32);
+    ctx.strokeStyle = 'rgba(0,229,255,0.4)';
+    ctx.lineWidth = Math.max(0.8, size / 32);
+    this._drawHexagon(ctx, x, y, r * 0.75);
+    ctx.stroke();
+
+    // ═══ CIRCUIT LINES - Tech details at corners ═══
+    ctx.shadowBlur = 0;
+    ctx.strokeStyle = 'rgba(0,229,255,0.3)';
+    ctx.lineWidth = Math.max(0.8, size / 32);
+    // Top-left circuit
+    ctx.beginPath();
+    ctx.moveTo(x - r * 0.5, y - r * 0.65);
+    ctx.lineTo(x - r * 0.85, y - r * 0.45);
+    ctx.lineTo(x - r * 0.85, y - r * 0.15);
+    ctx.stroke();
+    // Top-right circuit
+    ctx.beginPath();
+    ctx.moveTo(x + r * 0.5, y - r * 0.65);
+    ctx.lineTo(x + r * 0.85, y - r * 0.45);
+    ctx.lineTo(x + r * 0.85, y - r * 0.15);
+    ctx.stroke();
+    // Bottom circuits
+    ctx.beginPath();
+    ctx.moveTo(x - r * 0.5, y + r * 0.65);
+    ctx.lineTo(x - r * 0.85, y + r * 0.45);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(x + r * 0.5, y + r * 0.65);
+    ctx.lineTo(x + r * 0.85, y + r * 0.45);
+    ctx.stroke();
+
+    // ═══ THE "N" LETTER - Stylized neon N ═══
+    const nW = r * 0.7;
+    const nH = r * 0.9;
+    const nX = x - nW / 2;
+    const nY = y - nH / 2;
+    const strokeW = Math.max(2, size / 12);
+
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+
+    // Outer glow
+    ctx.shadowColor = '#00E5FF';
+    ctx.shadowBlur = (12 + energyPulse * 6) * (size / 32);
+    ctx.strokeStyle = '#00E5FF';
+    ctx.lineWidth = strokeW + Math.max(1.5, size / 20);
+    ctx.globalAlpha = 0.3;
+    this._drawN(ctx, nX, nY, nW, nH);
+    ctx.stroke();
+
+    // Main N stroke
+    ctx.globalAlpha = 1;
+    ctx.shadowBlur = 8 * (size / 32);
+    ctx.strokeStyle = '#00E5FF';
+    ctx.lineWidth = strokeW;
+    this._drawN(ctx, nX, nY, nW, nH);
+    ctx.stroke();
+
+    // Inner bright core
+    ctx.shadowBlur = 4 * (size / 32);
+    ctx.strokeStyle = `rgba(180,255,255,${0.6 + energyPulse * 0.4})`;
+    ctx.lineWidth = strokeW * 0.4;
+    this._drawN(ctx, nX, nY, nW, nH);
+    ctx.stroke();
+
+    // ═══ ENERGY NODES - Glowing dots at N vertices ═══
+    const nodePositions = [
+      { x: nX, y: nY },
+      { x: nX, y: nY + nH },
+      { x: nX + nW, y: nY },
+      { x: nX + nW, y: nY + nH }
+    ];
+    ctx.shadowColor = '#00E5FF';
+    ctx.shadowBlur = (6 + energyPulse * 4) * (size / 32);
+    ctx.fillStyle = `rgba(0,229,255,${0.7 + energyPulse * 0.3})`;
+    const nodeR = Math.max(1.5, size / 16) + energyPulse * (size / 40);
+    for (const node of nodePositions) {
+      ctx.beginPath();
+      ctx.arc(node.x, node.y, nodeR, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // ═══ DATA STREAM - Flowing particles along N ═══
+    if (animated) {
+      const particlePhase = (t * 1.5) % 1;
+      ctx.shadowBlur = 8 * (size / 32);
+      ctx.fillStyle = '#FFFFFF';
+      const particleR = Math.max(1, size / 22);
+      // Particle going up left stroke
+      const p1y = nY + nH - particlePhase * nH;
+      ctx.beginPath();
+      ctx.arc(nX, p1y, particleR, 0, Math.PI * 2);
+      ctx.fill();
+      // Particle going down diagonal
+      const p2x = nX + particlePhase * nW;
+      const p2y = nY + particlePhase * nH;
+      ctx.beginPath();
+      ctx.arc(p2x, p2y, particleR, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // ═══ CORNER BRACKETS - Tech frame accents ═══
+    ctx.shadowBlur = 0;
+    ctx.strokeStyle = 'rgba(0,229,255,0.5)';
+    ctx.lineWidth = Math.max(1, size / 22);
+    // Top-left bracket
+    ctx.beginPath();
+    ctx.moveTo(x - r + 2, y - r * 0.4);
+    ctx.lineTo(x - r + 2, y - r * 0.55);
+    ctx.lineTo(x - r * 0.7, y - r * 0.75);
+    ctx.stroke();
+    // Top-right bracket
+    ctx.beginPath();
+    ctx.moveTo(x + r - 2, y - r * 0.4);
+    ctx.lineTo(x + r - 2, y - r * 0.55);
+    ctx.lineTo(x + r * 0.7, y - r * 0.75);
+    ctx.stroke();
+
+    // ═══ PULSE RING - Expanding energy wave ═══
+    if (animated) {
+      const ringPhase = (t * 1.2) % 1;
+      ctx.strokeStyle = `rgba(0,229,255,${(1 - ringPhase) * 0.35})`;
+      ctx.lineWidth = Math.max(0.8, size / 32) + (1 - ringPhase) * (size / 32);
+      ctx.shadowBlur = 4 * (size / 32);
+      this._drawHexagon(ctx, x, y, r * 0.5 + ringPhase * r * 0.7);
+      ctx.stroke();
+    }
+
     ctx.restore();
   }
 
@@ -752,11 +1136,16 @@ class HUD {
     ctx.font = '11px Orbitron, monospace'; ctx.fillStyle = 'rgba(255,170,0,0.4)';
     ctx.fillText('ONLY AVAILABLE AT NIGHT  ·  PRESS [N] TO CLOSE', W / 2, 78);
 
-    // Money
+    // Money with NEX icon
+    const moneyTxt = `${money.toLocaleString()} NEX`;
     ctx.font = 'bold 16px Orbitron, monospace';
-    ctx.fillStyle = '#FFD700'; ctx.shadowColor = '#FFD700'; ctx.shadowBlur = 14;
+    const moneyW = ctx.measureText(moneyTxt).width;
+    const iconSize = 22;
+    const iconX = W - 24 - moneyW - iconSize - 6;
+    this.renderNexIcon(ctx, iconX, 50, iconSize, { animated: true });
+    ctx.fillStyle = '#00E5FF'; ctx.shadowColor = '#00E5FF'; ctx.shadowBlur = 14;
     ctx.textAlign = 'right';
-    ctx.fillText(`$ ${money.toLocaleString()}`, W - 24, 56);
+    ctx.fillText(moneyTxt, W - 24, 56);
     ctx.shadowBlur = 0;
 
     // Items — 2 columns x 3 rows
@@ -804,8 +1193,8 @@ class HUD {
       // Price
       ctx.textAlign = 'right';
       ctx.font = 'bold 12px Orbitron, monospace';
-      ctx.fillStyle = owned ? '#666' : money >= item.price ? '#FFD700' : '#FF4444';
-      ctx.fillText(owned ? 'OWNED' : `$ ${item.price.toLocaleString()}`, ix + itemW - 10, iy + 34);
+      ctx.fillStyle = owned ? '#666' : money >= item.price ? '#00FFCC' : '#FF4444';
+      ctx.fillText(owned ? 'OWNED' : `⬢ ${item.price.toLocaleString()}`, ix + itemW - 10, iy + 34);
 
       ctx.restore();
       clickAreas.push({ ix, iy, itemW, itemH, item });
@@ -1036,9 +1425,25 @@ class HUD {
     ctx.shadowColor = '#44FFAA'; ctx.shadowBlur = 16;
     ctx.font = 'bold 16px Orbitron, monospace'; ctx.fillStyle = '#AAFFCC';
     ctx.fillText(`SURVIVED  ${timeTxt}`, W/2, H/2-42);
-    ctx.shadowColor = '#FFD700'; ctx.shadowBlur = 20;
-    ctx.font = 'bold 28px Orbitron, monospace'; ctx.fillStyle = '#FFD700';
-    ctx.fillText(`$ ${money.toLocaleString()}  EARNED`, W/2, H/2+4);
+
+    // NEX earned with animated icon
+    const moneyTxt = `${money.toLocaleString()} NEX  EARNED`;
+    ctx.font = 'bold 28px Orbitron, monospace';
+    const moneyW = ctx.measureText(moneyTxt).width;
+    const iconSize = 36;
+    const totalW = iconSize + 12 + moneyW;
+    const startX = W/2 - totalW/2;
+
+    // Draw the NEX icon
+    this.renderNexIcon(ctx, startX + iconSize/2, H/2 + 4 - 6, iconSize, { glowIntensity: 1.2 });
+
+    // Draw the money text
+    ctx.shadowColor = '#00E5FF'; ctx.shadowBlur = 20;
+    ctx.fillStyle = '#00E5FF';
+    ctx.textAlign = 'left';
+    ctx.fillText(moneyTxt, startX + iconSize + 12, H/2+4);
+
+    ctx.textAlign = 'center';
     ctx.shadowColor = '#FF4444';
     ctx.font = '22px Orbitron, monospace'; ctx.fillStyle = '#FF6666';
     ctx.fillText(`${kills} ENEMIES DOWN`, W/2, H/2+48);

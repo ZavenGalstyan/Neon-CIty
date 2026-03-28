@@ -84,7 +84,7 @@
         if (charData && charData.locked) {
           // Show locked message
           const price = charData.price || 0;
-          alert(`🔒 This character is locked!\n\nPrice: $${price.toLocaleString()}\n\nEarn money in-game to unlock this character.`);
+          alert(`🔒 This character is locked!\n\nPrice: ⬢${price.toLocaleString()} NEX\n\nEarn money in-game to unlock this character.`);
           return;
         }
       }
