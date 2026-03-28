@@ -6732,138 +6732,6 @@ class BossBot {
     ctx.globalAlpha = 1;
     ctx.restore();
   }
-}
-
-// ── Drone ──────────────────────────────────────────────────────────────────────
-class Drone {
-  constructor(x, y, type) {
-    this.x    = x;
-    this.y    = y;
-    this.type = type;  // 'police' | 'combat' | 'player'
-    this._cfg = CONFIG.DRONE_CONFIGS[type];
-    this.hp   = this._cfg.hp;
-    this.maxHp = this._cfg.hp;
-    this.radius = this._cfg.radius;
-    this.speed  = this._cfg.speed;
-    this.angle  = 0;
-    this.dead   = false;
-    this.dying  = false;
-
-    // Orbit AI
-    this._orbitAngle  = Math.random() * Math.PI * 2;
-    this._orbitRadius = 90 + Math.random() * 50;
-    this._fireTimer   = (Math.random() * (this._cfg.fireRate || 1500));
-
-    // Visual bob
-    this._altTimer  = Math.random() * Math.PI * 2;
-    this._altitude  = 0;
-  }
-
-  update(dt, target, map, bullets, particles) {
-    if (this.dead || this.type === 'player') return;
-
-    // Orbit target
-    this._orbitAngle += dt * 0.9;
-    const ox = target.x + Math.cos(this._orbitAngle) * this._orbitRadius;
-    const oy = target.y + Math.sin(this._orbitAngle) * this._orbitRadius;
-    const dx = ox - this.x, dy = oy - this.y;
-    const dist = Math.hypot(dx, dy);
-    if (dist > 5) {
-      const spd = Math.min(this.speed * dt, dist);
-      this.x += (dx / dist) * spd;
-      this.y += (dy / dist) * spd;
-    }
-
-    // Face target
-    this.angle = Math.atan2(target.y - this.y, target.x - this.x);
-
-    // Visual bob
-    this._altTimer += dt * 3;
-    this._altitude  = Math.sin(this._altTimer) * 5;
-
-    // Shoot at target
-    this._fireTimer -= dt * 1000;
-    if (this._fireTimer <= 0) {
-      this._fireTimer = this._cfg.fireRate;
-      const spd = 400;
-      const blt = new Bullet(this.x, this.y, this.angle, this._cfg.damage, false, spd);
-      bullets.push(blt);
-    }
-  }
-
-  takeDamage(amount, particles) {
-    if (this.dead) return;
-    this.hp -= amount;
-    if (particles) {
-      for (let i = 0; i < 5; i++) {
-        const a = Math.random() * Math.PI * 2;
-        particles.push(new Particle(this.x, this.y, Math.cos(a)*120, Math.sin(a)*120, this._cfg.color, 0.4));
-      }
-    }
-    if (this.hp <= 0) {
-      this.dead = true;
-      if (particles) {
-        for (let i = 0; i < 10; i++) {
-          const a = Math.random() * Math.PI * 2;
-          particles.push(new Particle(this.x, this.y, Math.cos(a)*200, Math.sin(a)*200, '#FF8800', 0.7));
-        }
-      }
-    }
-  }
-
-  render(ctx) {
-    if (this.dead) return;
-    const x = this.x;
-    const y = this.y + this._altitude;
-    const col = this._cfg.color;
-    const r   = this.radius;
-
-    // Ground shadow
-    ctx.save();
-    ctx.globalAlpha = 0.22;
-    ctx.fillStyle = '#000';
-    ctx.beginPath(); ctx.ellipse(this.x, this.y + r + 8, r * 1.1, r * 0.4, 0, 0, Math.PI * 2); ctx.fill();
-    ctx.globalAlpha = 1;
-    ctx.restore();
-
-    // Body — cross arms at 45° orientation
-    ctx.save();
-    ctx.translate(x, y);
-    ctx.rotate(this.angle + Math.PI / 4);
-
-    // Arms
-    ctx.strokeStyle = col;
-    ctx.shadowColor = col;
-    ctx.shadowBlur  = 10;
-    ctx.lineWidth   = 3;
-    ctx.beginPath();
-    ctx.moveTo(-r, 0); ctx.lineTo(r, 0);
-    ctx.moveTo(0, -r); ctx.lineTo(0, r);
-    ctx.stroke();
-
-    // Center hub
-    ctx.fillStyle = col;
-    ctx.beginPath(); ctx.arc(0, 0, r * 0.38, 0, Math.PI * 2); ctx.fill();
-
-    // Rotor tips
-    const tips = [[r, 0], [-r, 0], [0, r], [0, -r]];
-    ctx.shadowBlur = 14;
-    for (const [tx, ty] of tips) {
-      ctx.beginPath(); ctx.arc(tx, ty, 4.5, 0, Math.PI * 2); ctx.fill();
-    }
-    ctx.restore();
-
-    // HP bar when damaged
-    if (this.hp < this.maxHp) {
-      const bw = r * 2 + 8, bh = 3;
-      const bx = x - bw / 2, by = y - r - 10;
-      ctx.save();
-      ctx.fillStyle = '#111'; ctx.fillRect(bx, by, bw, bh);
-      ctx.fillStyle = col;
-      ctx.fillRect(bx, by, bw * (this.hp / this.maxHp), bh);
-      ctx.restore();
-    }
-  }
 
   // ── Storm Emperor (Sky Realm final boss) ──────────────────────────────────
   _renderStormEmperor(ctx, x, y, r, pulse) {
@@ -7359,6 +7227,138 @@ class Drone {
     }
 
     ctx.restore();
+  }
+}
+
+// ── Drone ──────────────────────────────────────────────────────────────────────
+class Drone {
+  constructor(x, y, type) {
+    this.x    = x;
+    this.y    = y;
+    this.type = type;  // 'police' | 'combat' | 'player'
+    this._cfg = CONFIG.DRONE_CONFIGS[type];
+    this.hp   = this._cfg.hp;
+    this.maxHp = this._cfg.hp;
+    this.radius = this._cfg.radius;
+    this.speed  = this._cfg.speed;
+    this.angle  = 0;
+    this.dead   = false;
+    this.dying  = false;
+
+    // Orbit AI
+    this._orbitAngle  = Math.random() * Math.PI * 2;
+    this._orbitRadius = 90 + Math.random() * 50;
+    this._fireTimer   = (Math.random() * (this._cfg.fireRate || 1500));
+
+    // Visual bob
+    this._altTimer  = Math.random() * Math.PI * 2;
+    this._altitude  = 0;
+  }
+
+  update(dt, target, map, bullets, particles) {
+    if (this.dead || this.type === 'player') return;
+
+    // Orbit target
+    this._orbitAngle += dt * 0.9;
+    const ox = target.x + Math.cos(this._orbitAngle) * this._orbitRadius;
+    const oy = target.y + Math.sin(this._orbitAngle) * this._orbitRadius;
+    const dx = ox - this.x, dy = oy - this.y;
+    const dist = Math.hypot(dx, dy);
+    if (dist > 5) {
+      const spd = Math.min(this.speed * dt, dist);
+      this.x += (dx / dist) * spd;
+      this.y += (dy / dist) * spd;
+    }
+
+    // Face target
+    this.angle = Math.atan2(target.y - this.y, target.x - this.x);
+
+    // Visual bob
+    this._altTimer += dt * 3;
+    this._altitude  = Math.sin(this._altTimer) * 5;
+
+    // Shoot at target
+    this._fireTimer -= dt * 1000;
+    if (this._fireTimer <= 0) {
+      this._fireTimer = this._cfg.fireRate;
+      const spd = 400;
+      const blt = new Bullet(this.x, this.y, this.angle, this._cfg.damage, false, spd);
+      bullets.push(blt);
+    }
+  }
+
+  takeDamage(amount, particles) {
+    if (this.dead) return;
+    this.hp -= amount;
+    if (particles) {
+      for (let i = 0; i < 5; i++) {
+        const a = Math.random() * Math.PI * 2;
+        particles.push(new Particle(this.x, this.y, Math.cos(a)*120, Math.sin(a)*120, this._cfg.color, 0.4));
+      }
+    }
+    if (this.hp <= 0) {
+      this.dead = true;
+      if (particles) {
+        for (let i = 0; i < 10; i++) {
+          const a = Math.random() * Math.PI * 2;
+          particles.push(new Particle(this.x, this.y, Math.cos(a)*200, Math.sin(a)*200, '#FF8800', 0.7));
+        }
+      }
+    }
+  }
+
+  render(ctx) {
+    if (this.dead) return;
+    const x = this.x;
+    const y = this.y + this._altitude;
+    const col = this._cfg.color;
+    const r   = this.radius;
+
+    // Ground shadow
+    ctx.save();
+    ctx.globalAlpha = 0.22;
+    ctx.fillStyle = '#000';
+    ctx.beginPath(); ctx.ellipse(this.x, this.y + r + 8, r * 1.1, r * 0.4, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.globalAlpha = 1;
+    ctx.restore();
+
+    // Body — cross arms at 45° orientation
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(this.angle + Math.PI / 4);
+
+    // Arms
+    ctx.strokeStyle = col;
+    ctx.shadowColor = col;
+    ctx.shadowBlur  = 10;
+    ctx.lineWidth   = 3;
+    ctx.beginPath();
+    ctx.moveTo(-r, 0); ctx.lineTo(r, 0);
+    ctx.moveTo(0, -r); ctx.lineTo(0, r);
+    ctx.stroke();
+
+    // Center hub
+    ctx.fillStyle = col;
+    ctx.beginPath(); ctx.arc(0, 0, r * 0.38, 0, Math.PI * 2); ctx.fill();
+
+    // Rotor tips
+    const tips = [[r, 0], [-r, 0], [0, r], [0, -r]];
+    ctx.shadowBlur = 14;
+    for (const [tx, ty] of tips) {
+      ctx.beginPath(); ctx.arc(tx, ty, 4.5, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.restore();
+
+    // HP bar when damaged
+    if (this.hp < this.maxHp) {
+      const bw = r * 2 + 8, bh = 3;
+      const bx = x - bw / 2, by = y - r - 10;
+      ctx.save();
+      ctx.fillStyle = '#111'; ctx.fillRect(bx, by, bw, bh);
+      ctx.fillStyle = col;
+      ctx.fillRect(bx, by, bw * (this.hp / this.maxHp), bh);
+      ctx.restore();
+    }
   }
 }
 
