@@ -7178,22 +7178,7 @@ class BossBot {
       }
     }
 
-    // ── 14. Counter-balance tail ───────────────────────────────
-    const tailSway = Math.sin(t * 2.2) * 0.28;
-    ctx.strokeStyle = '#448822'; ctx.lineWidth = r*0.30;
-    ctx.lineCap = 'round';
-    ctx.beginPath();
-    ctx.moveTo(0, r*0.85);
-    ctx.quadraticCurveTo(r*(0.55 + tailSway), r*1.15, r*(0.72 + tailSway*0.6), r*1.42);
-    ctx.stroke();
-    ctx.lineWidth = r*0.18;
-    ctx.beginPath();
-    ctx.moveTo(r*(0.72 + tailSway*0.6), r*1.42);
-    ctx.quadraticCurveTo(r*(0.90 + tailSway*0.4), r*1.60, r*(0.80 + tailSway*0.3), r*1.76);
-    ctx.stroke();
-    ctx.lineCap = 'butt';
-
-    // ── 15. Enrage: lava glow cracks ──────────────────────────
+    // ── 14. Enrage: lava glow cracks ──────────────────────────
     if (this._enraged) {
       ctx.save();
       ctx.globalAlpha = 0.55;
@@ -7219,7 +7204,7 @@ class BossBot {
       ctx.restore();
     }
 
-    // ── 16. Crown: bone horns on head ─────────────────────────
+    // ── 15. Crown: bone horns on head ─────────────────────────
     ctx.fillStyle = '#FFFFAA'; ctx.strokeStyle = '#AABB66'; ctx.lineWidth = 1.2;
     const horns = [[-r*0.20, headY - r*0.28], [0, headY - r*0.32], [r*0.20, headY - r*0.28]];
     for (const [hx, hy] of horns) {
