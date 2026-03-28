@@ -551,31 +551,26 @@ class ShopManager {
       const cx2 = px + gap + col * (cardW + gap);
       const ry  = startY + 40 + row * (cardH + 14);
       const hover = mx >= cx2 && mx <= cx2 + cardW && my >= ry && my <= ry + cardH;
+      const t = Date.now() * 0.001;
+      const pulse = (Math.sin(t * 3 + i) + 1) * 0.5;
 
       // Card
       ctx.save();
-      ctx.shadowColor = hover ? g.color : 'transparent'; ctx.shadowBlur = hover ? 16 : 0;
-      ctx.fillStyle   = hover ? `rgba(${this._rgb(g.color)},0.10)` : 'rgba(255,255,255,0.03)';
-      ctx.strokeStyle = hover ? g.color : 'rgba(255,255,255,0.1)'; ctx.lineWidth = hover ? 1.5 : 1;
+      ctx.shadowColor = hover ? g.color : 'transparent'; ctx.shadowBlur = hover ? 18 : 0;
+      ctx.fillStyle   = hover ? `rgba(${this._rgb(g.color)},0.12)` : 'rgba(255,255,255,0.03)';
+      ctx.strokeStyle = hover ? g.color : 'rgba(255,255,255,0.1)'; ctx.lineWidth = hover ? 2 : 1;
       this._rr(ctx, cx2, ry, cardW, cardH, 8); ctx.fill(); ctx.stroke();
 
-      // Guard silhouette
+      // Render unique guard preview based on tier
       const mx2 = cx2 + cardW / 2, my2 = ry + 52;
-      ctx.fillStyle = g.color + '99';
-      ctx.beginPath(); ctx.arc(mx2, my2, 20, 0, Math.PI * 2); ctx.fill();
-      ctx.strokeStyle = g.color; ctx.lineWidth = 2; ctx.shadowColor = g.color; ctx.shadowBlur = 12;
-      ctx.beginPath(); ctx.arc(mx2, my2, 20, 0, Math.PI * 2); ctx.stroke();
-      // Head
-      ctx.fillStyle = g.color;
-      ctx.beginPath(); ctx.arc(mx2, my2 - 25, 9, 0, Math.PI * 2); ctx.fill();
-      // Gun
-      ctx.strokeStyle = '#CCC'; ctx.lineWidth = 3; ctx.lineCap = 'round';
-      ctx.beginPath(); ctx.moveTo(mx2 + 16, my2 - 4); ctx.lineTo(mx2 + 33, my2 - 4); ctx.stroke();
+      this._renderGuardPreview(ctx, mx2, my2, g.tier, g.color, hover, pulse);
 
       // Name
       ctx.shadowBlur = 0;
       ctx.font = 'bold 11px Orbitron, monospace'; ctx.textAlign = 'center'; ctx.fillStyle = g.color;
+      ctx.shadowColor = g.color; ctx.shadowBlur = hover ? 10 : 0;
       ctx.fillText(g.name, mx2, ry + 90);
+      ctx.shadowBlur = 0;
 
       // HP + DMG
       ctx.font = '9px Orbitron, monospace'; ctx.fillStyle = 'rgba(255,255,255,0.55)';
@@ -656,6 +651,181 @@ class ShopManager {
     ctx.lineTo(x + r, y + h); ctx.quadraticCurveTo(x, y + h, x, y + h - r);
     ctx.lineTo(x, y + r); ctx.quadraticCurveTo(x, y, x + r, y);
     ctx.closePath();
+  }
+
+  // ── Render unique guard preview icons for shop ──────────────────────────────
+  _renderGuardPreview(ctx, x, y, tier, color, hover, pulse) {
+    const r = 20;
+    ctx.save();
+
+    switch (tier) {
+      case 'light': {
+        // Scout — sleek blue with speed lines
+        ctx.shadowColor = color; ctx.shadowBlur = hover ? 18 : 10;
+        const grd = ctx.createRadialGradient(x - 5, y - 5, 0, x, y, r);
+        grd.addColorStop(0, '#88DDFF'); grd.addColorStop(0.5, '#44CCFF'); grd.addColorStop(1, '#1188AA');
+        ctx.fillStyle = grd;
+        ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+        // Visor
+        ctx.fillStyle = '#001522';
+        ctx.beginPath(); ctx.ellipse(x, y - 3, r * 0.55, r * 0.28, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = `rgba(68,238,255,${0.7 + pulse * 0.3})`;
+        ctx.beginPath(); ctx.ellipse(x, y - 3, r * 0.38, r * 0.14, 0, 0, Math.PI * 2); ctx.fill();
+        // Speed lines
+        if (hover) {
+          ctx.strokeStyle = `rgba(68,204,255,${0.3 + pulse * 0.2})`;
+          ctx.lineWidth = 2;
+          ctx.beginPath(); ctx.moveTo(x - r - 15, y - 5); ctx.lineTo(x - r - 5, y - 5); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(x - r - 12, y + 5); ctx.lineTo(x - r - 5, y + 5); ctx.stroke();
+        }
+        break;
+      }
+      case 'heavy': {
+        // Tank — bulky orange with armor plates
+        ctx.shadowColor = color; ctx.shadowBlur = hover ? 18 : 10;
+        const grd = ctx.createRadialGradient(x - 5, y - 5, 0, x, y, r + 3);
+        grd.addColorStop(0, '#FFCC88'); grd.addColorStop(0.4, '#FF9944'); grd.addColorStop(1, '#773311');
+        ctx.fillStyle = grd;
+        ctx.beginPath(); ctx.arc(x, y, r + 3, 0, Math.PI * 2); ctx.fill();
+        // Shoulder pads
+        ctx.fillStyle = '#AA5522';
+        ctx.beginPath(); ctx.ellipse(x - r * 0.8, y, r * 0.35, r * 0.45, -0.3, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(x + r * 0.8, y, r * 0.35, r * 0.45, 0.3, 0, Math.PI * 2); ctx.fill();
+        // Angry visor
+        ctx.fillStyle = '#220000';
+        ctx.fillRect(x - r * 0.6, y - r * 0.3, r * 1.2, r * 0.28);
+        ctx.fillStyle = `rgba(255,100,0,${0.7 + pulse * 0.3})`;
+        ctx.fillRect(x - r * 0.5, y - r * 0.22, r * 1.0, r * 0.12);
+        break;
+      }
+      case 'elite': {
+        // Elite — green tactical with NVG
+        ctx.shadowColor = color; ctx.shadowBlur = hover ? 20 : 12;
+        const grd = ctx.createRadialGradient(x - 5, y - 5, 0, x, y, r);
+        grd.addColorStop(0, '#CCFFCC'); grd.addColorStop(0.4, '#66CC66'); grd.addColorStop(1, '#226622');
+        ctx.fillStyle = grd;
+        ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+        // NVG goggles
+        ctx.fillStyle = '#112211';
+        ctx.beginPath(); ctx.ellipse(x - r * 0.3, y - r * 0.15, r * 0.22, r * 0.18, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(x + r * 0.3, y - r * 0.15, r * 0.22, r * 0.18, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = `rgba(0,255,100,${0.7 + pulse * 0.3})`;
+        ctx.beginPath(); ctx.ellipse(x - r * 0.3, y - r * 0.15, r * 0.14, r * 0.10, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(x + r * 0.3, y - r * 0.15, r * 0.14, r * 0.10, 0, 0, Math.PI * 2); ctx.fill();
+        // Star emblem
+        if (hover) {
+          ctx.fillStyle = '#FFFF44';
+          this._drawStarPreview(ctx, x, y + r * 0.4, 5, r * 0.18, r * 0.08);
+        }
+        break;
+      }
+      case 'sniper': {
+        // Sniper — purple with targeting reticle
+        ctx.shadowColor = color; ctx.shadowBlur = hover ? 18 : 10;
+        const grd = ctx.createRadialGradient(x - 5, y - 5, 0, x, y, r);
+        grd.addColorStop(0, '#FFAAFF'); grd.addColorStop(0.5, '#CC55CC'); grd.addColorStop(1, '#552255');
+        ctx.fillStyle = grd;
+        ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+        // Scope visor
+        ctx.fillStyle = '#220022';
+        ctx.beginPath(); ctx.ellipse(x, y - r * 0.1, r * 0.5, r * 0.25, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = `rgba(255,0,255,${0.6 + pulse * 0.4})`;
+        ctx.beginPath(); ctx.ellipse(x, y - r * 0.1, r * 0.28, r * 0.12, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#FF0000';
+        ctx.beginPath(); ctx.arc(x, y - r * 0.1, 2, 0, Math.PI * 2); ctx.fill();
+        // Crosshair
+        if (hover) {
+          ctx.strokeStyle = `rgba(255,68,255,${0.4 + pulse * 0.3})`;
+          ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.moveTo(x - r - 8, y); ctx.lineTo(x - r - 2, y); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(x + r + 2, y); ctx.lineTo(x + r + 8, y); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(x, y - r - 8); ctx.lineTo(x, y - r - 2); ctx.stroke();
+        }
+        break;
+      }
+      case 'medic': {
+        // Medic — white/cyan with red cross
+        ctx.shadowColor = color; ctx.shadowBlur = hover ? 18 : 10;
+        const grd = ctx.createRadialGradient(x - 5, y - 5, 0, x, y, r);
+        grd.addColorStop(0, '#FFFFFF'); grd.addColorStop(0.4, '#88FFEE'); grd.addColorStop(1, '#228877');
+        ctx.fillStyle = grd;
+        ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+        // Red cross
+        ctx.fillStyle = '#FF4444';
+        ctx.fillRect(x - r * 0.12, y - r * 0.45, r * 0.24, r * 0.9);
+        ctx.fillRect(x - r * 0.45, y - r * 0.12, r * 0.9, r * 0.24);
+        // Friendly eyes
+        ctx.fillStyle = `rgba(68,255,238,${0.8 + pulse * 0.2})`;
+        ctx.beginPath(); ctx.arc(x - r * 0.3, y - r * 0.3, r * 0.1, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(x + r * 0.3, y - r * 0.3, r * 0.1, 0, Math.PI * 2); ctx.fill();
+        // Heal particles
+        if (hover) {
+          ctx.fillStyle = `rgba(68,255,238,${0.5 + pulse * 0.4})`;
+          ctx.font = 'bold 10px monospace';
+          ctx.fillText('+', x - r - 8, y - 5);
+          ctx.fillText('+', x + r + 5, y + 8);
+        }
+        break;
+      }
+      case 'ghost': {
+        // Ghost — translucent purple with glowing eyes
+        ctx.shadowColor = color; ctx.shadowBlur = hover ? 22 : 12;
+        // Ghost trail
+        ctx.globalAlpha = 0.2;
+        ctx.fillStyle = '#CC88FF';
+        ctx.beginPath(); ctx.arc(x - 6, y + 2, r * 0.85, 0, Math.PI * 2); ctx.fill();
+        ctx.globalAlpha = 1;
+        // Main body (semi-transparent)
+        const grd = ctx.createRadialGradient(x - 5, y - 5, 0, x, y, r);
+        grd.addColorStop(0, 'rgba(238,200,255,0.9)');
+        grd.addColorStop(0.5, 'rgba(200,136,255,0.7)');
+        grd.addColorStop(1, 'rgba(100,60,150,0.5)');
+        ctx.fillStyle = grd;
+        ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+        // Wavy bottom
+        ctx.fillStyle = 'rgba(200,136,255,0.5)';
+        ctx.beginPath();
+        ctx.moveTo(x - r, y + r * 0.3);
+        const t = Date.now() * 0.004;
+        for (let i = 0; i <= 5; i++) {
+          ctx.lineTo(x - r + (i / 5) * r * 2, y + r * 0.5 + Math.sin(t + i) * r * 0.2);
+        }
+        ctx.lineTo(x + r, y + r * 0.3);
+        ctx.closePath();
+        ctx.fill();
+        // Glowing eyes
+        ctx.fillStyle = '#FFFFFF';
+        ctx.shadowColor = '#FFFFFF'; ctx.shadowBlur = 10;
+        ctx.beginPath(); ctx.ellipse(x - r * 0.3, y - r * 0.1, r * 0.14, r * 0.18, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(x + r * 0.3, y - r * 0.1, r * 0.14, r * 0.18, 0, 0, Math.PI * 2); ctx.fill();
+        break;
+      }
+      default: {
+        // Default simple circle
+        ctx.fillStyle = color + '99';
+        ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = color; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.stroke();
+      }
+    }
+
+    ctx.restore();
+  }
+
+  _drawStarPreview(ctx, cx, cy, spikes, outerR, innerR) {
+    let rot = Math.PI / 2 * 3;
+    const step = Math.PI / spikes;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy - outerR);
+    for (let i = 0; i < spikes; i++) {
+      ctx.lineTo(cx + Math.cos(rot) * outerR, cy + Math.sin(rot) * outerR);
+      rot += step;
+      ctx.lineTo(cx + Math.cos(rot) * innerR, cy + Math.sin(rot) * innerR);
+      rot += step;
+    }
+    ctx.lineTo(cx, cy - outerR);
+    ctx.closePath();
+    ctx.fill();
   }
 
   _rgb(hex) {

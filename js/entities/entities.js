@@ -8125,34 +8125,382 @@ class Bodyguard {
   render(ctx) {
     if (this.dead) return;
     const x = this.x, y = this.y, r = this.radius;
+    const pulse = (Math.sin(this._t * 3) + 1) * 0.5;
+
     ctx.save();
     if (this.dying) ctx.globalAlpha = Math.max(0, 1 - this._dyingT / 0.6);
-    // Shadow
-    ctx.fillStyle = 'rgba(0,0,0,0.28)';
-    ctx.beginPath(); ctx.ellipse(x + 2, y + 4, r * 0.85, r * 0.45, 0, 0, Math.PI * 2); ctx.fill();
-    // Body
-    ctx.shadowColor = this.color; ctx.shadowBlur = 14;
-    ctx.fillStyle   = this.color + '88';
-    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
-    ctx.strokeStyle = this.color; ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.stroke();
-    // Gun arm
-    const gx = x + Math.cos(this._angle) * (r + 10);
-    const gy = y + Math.sin(this._angle) * (r + 10);
-    ctx.strokeStyle = this.color; ctx.lineWidth = 3; ctx.lineCap = 'round';
+
+    // Render based on tier
+    switch (this._tier) {
+      case 'light':  this._renderLight(ctx, x, y, r, pulse); break;
+      case 'heavy':  this._renderHeavy(ctx, x, y, r, pulse); break;
+      case 'elite':  this._renderElite(ctx, x, y, r, pulse); break;
+      case 'sniper': this._renderSniper(ctx, x, y, r, pulse); break;
+      case 'medic':  this._renderMedic(ctx, x, y, r, pulse); break;
+      case 'ghost':  this._renderGhost(ctx, x, y, r, pulse); break;
+      default:       this._renderLight(ctx, x, y, r, pulse); break;
+    }
+
+    // Gun arm (all guards)
+    this._renderGunArm(ctx, x, y, r);
+
+    // HP bar
+    const bw = r * 2.8, bh = 5;
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = 'rgba(0,0,0,0.7)';
+    ctx.beginPath();
+    ctx.roundRect(x - bw/2, y - r - 12, bw, bh, 2);
+    ctx.fill();
+    const hpPct = this.hp / this.maxHp;
+    const hpColor = hpPct > 0.6 ? '#44FF88' : hpPct > 0.3 ? '#FFAA44' : '#FF4444';
+    ctx.fillStyle = hpColor;
+    ctx.beginPath();
+    ctx.roundRect(x - bw/2, y - r - 12, bw * hpPct, bh, 2);
+    ctx.fill();
+
+    // Tier label
+    const labels = { light: 'SCOUT', heavy: 'TANK', elite: 'ELITE', sniper: 'SNIPER', medic: 'MEDIC', ghost: 'GHOST' };
+    ctx.fillStyle = this.color;
+    ctx.shadowColor = this.color; ctx.shadowBlur = 8;
+    ctx.font = 'bold 7px Orbitron, monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(labels[this._tier] || 'GUARD', x, y - r - 17);
+    ctx.shadowBlur = 0;
+
+    ctx.restore();
+  }
+
+  _renderGunArm(ctx, x, y, r) {
+    const gx = x + Math.cos(this._angle) * (r + 12);
+    const gy = y + Math.sin(this._angle) * (r + 12);
+
+    // Arm
+    ctx.strokeStyle = this.color;
+    ctx.lineWidth = 4;
+    ctx.lineCap = 'round';
+    ctx.shadowColor = this.color;
+    ctx.shadowBlur = 6;
     ctx.beginPath();
     ctx.moveTo(x + Math.cos(this._angle) * (r - 2), y + Math.sin(this._angle) * (r - 2));
-    ctx.lineTo(gx, gy); ctx.stroke();
-    // HP bar
-    const bw = r * 2.5, bh = 4;
-    ctx.shadowBlur = 0; ctx.fillStyle = 'rgba(0,0,0,0.6)';
-    ctx.fillRect(x - bw / 2, y - r - 10, bw, bh);
-    ctx.fillStyle = this.hp / this.maxHp > 0.45 ? '#44FF88' : '#FF4444';
-    ctx.fillRect(x - bw / 2, y - r - 10, bw * (this.hp / this.maxHp), bh);
-    // Label
-    ctx.fillStyle = this.color; ctx.font = 'bold 6px Orbitron, monospace'; ctx.textAlign = 'center';
-    ctx.fillText('GUARD', x, y - r - 14);
-    ctx.restore();
+    ctx.lineTo(gx, gy);
+    ctx.stroke();
+
+    // Gun muzzle
+    ctx.fillStyle = '#333';
+    ctx.beginPath();
+    ctx.arc(gx, gy, 4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+  }
+
+  // ── Light Guard — Fast Scout ──────────────────────────────────────────────
+  _renderLight(ctx, x, y, r, pulse) {
+    // Ground shadow
+    ctx.fillStyle = 'rgba(0,0,0,0.3)';
+    ctx.beginPath(); ctx.ellipse(x + 2, y + r * 0.8, r * 0.9, r * 0.35, 0, 0, Math.PI * 2); ctx.fill();
+
+    // Outer glow ring
+    ctx.strokeStyle = `rgba(68,204,255,${0.2 + pulse * 0.15})`;
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(x, y, r + 4 + pulse * 2, 0, Math.PI * 2); ctx.stroke();
+
+    // Body gradient — sleek blue armor
+    const bodyGrd = ctx.createRadialGradient(x - r * 0.3, y - r * 0.3, 0, x, y, r);
+    bodyGrd.addColorStop(0, '#88DDFF');
+    bodyGrd.addColorStop(0.4, '#44CCFF');
+    bodyGrd.addColorStop(0.8, '#2288CC');
+    bodyGrd.addColorStop(1, '#115588');
+    ctx.fillStyle = bodyGrd;
+    ctx.shadowColor = '#44CCFF'; ctx.shadowBlur = 18;
+    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+
+    // Armor plates
+    ctx.strokeStyle = '#88EEFF';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.arc(x, y, r * 0.7, -0.8, 0.8); ctx.stroke();
+    ctx.beginPath(); ctx.arc(x, y, r * 0.7, Math.PI - 0.5, Math.PI + 0.5); ctx.stroke();
+
+    // Visor
+    ctx.fillStyle = '#001122';
+    ctx.beginPath(); ctx.ellipse(x, y - r * 0.15, r * 0.5, r * 0.25, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = `rgba(68,238,255,${0.6 + pulse * 0.3})`;
+    ctx.beginPath(); ctx.ellipse(x, y - r * 0.15, r * 0.35, r * 0.12, 0, 0, Math.PI * 2); ctx.fill();
+
+    // Speed lines
+    ctx.strokeStyle = `rgba(68,204,255,${0.15 + pulse * 0.1})`;
+    ctx.lineWidth = 1;
+    for (let i = 0; i < 3; i++) {
+      const ly = y - r * 0.4 + i * r * 0.4;
+      ctx.beginPath(); ctx.moveTo(x - r * 1.5, ly); ctx.lineTo(x - r * 0.8, ly); ctx.stroke();
+    }
+    ctx.shadowBlur = 0;
+  }
+
+  // ── Heavy Guard — Tank ────────────────────────────────────────────────────
+  _renderHeavy(ctx, x, y, r, pulse) {
+    // Ground shadow (larger)
+    ctx.fillStyle = 'rgba(0,0,0,0.4)';
+    ctx.beginPath(); ctx.ellipse(x + 3, y + r * 0.7, r * 1.1, r * 0.4, 0, 0, Math.PI * 2); ctx.fill();
+
+    // Outer armor plating glow
+    ctx.strokeStyle = `rgba(255,136,68,${0.25 + pulse * 0.15})`;
+    ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.arc(x, y, r + 5, 0, Math.PI * 2); ctx.stroke();
+
+    // Heavy body — orange/bronze armor
+    const bodyGrd = ctx.createRadialGradient(x - r * 0.25, y - r * 0.25, 0, x, y, r);
+    bodyGrd.addColorStop(0, '#FFCC88');
+    bodyGrd.addColorStop(0.3, '#FF9944');
+    bodyGrd.addColorStop(0.7, '#CC6622');
+    bodyGrd.addColorStop(1, '#663311');
+    ctx.fillStyle = bodyGrd;
+    ctx.shadowColor = '#FF8844'; ctx.shadowBlur = 20;
+    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+
+    // Thick armor plates
+    ctx.fillStyle = '#884422';
+    ctx.beginPath();
+    ctx.moveTo(x - r * 0.8, y - r * 0.3);
+    ctx.lineTo(x - r * 0.5, y - r * 0.7);
+    ctx.lineTo(x + r * 0.5, y - r * 0.7);
+    ctx.lineTo(x + r * 0.8, y - r * 0.3);
+    ctx.closePath();
+    ctx.fill();
+
+    // Shoulder pads
+    ctx.fillStyle = '#AA5522';
+    ctx.beginPath(); ctx.ellipse(x - r * 0.7, y, r * 0.4, r * 0.5, -0.3, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(x + r * 0.7, y, r * 0.4, r * 0.5, 0.3, 0, Math.PI * 2); ctx.fill();
+
+    // Visor — narrow angry slit
+    ctx.fillStyle = '#220000';
+    ctx.fillRect(x - r * 0.6, y - r * 0.3, r * 1.2, r * 0.25);
+    ctx.fillStyle = `rgba(255,100,0,${0.7 + pulse * 0.3})`;
+    ctx.fillRect(x - r * 0.5, y - r * 0.25, r * 1.0, r * 0.12);
+
+    // Chest emblem
+    ctx.fillStyle = '#FFAA44';
+    ctx.beginPath();
+    ctx.moveTo(x, y + r * 0.1);
+    ctx.lineTo(x - r * 0.2, y + r * 0.4);
+    ctx.lineTo(x + r * 0.2, y + r * 0.4);
+    ctx.closePath();
+    ctx.fill();
+    ctx.shadowBlur = 0;
+  }
+
+  // ── Elite Guard — Special Forces ──────────────────────────────────────────
+  _renderElite(ctx, x, y, r, pulse) {
+    // Ground shadow
+    ctx.fillStyle = 'rgba(0,0,0,0.35)';
+    ctx.beginPath(); ctx.ellipse(x + 2, y + r * 0.75, r * 0.95, r * 0.38, 0, 0, Math.PI * 2); ctx.fill();
+
+    // Pulsing elite aura
+    ctx.strokeStyle = `rgba(170,255,170,${0.3 + pulse * 0.2})`;
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(x, y, r + 6 + pulse * 3, 0, Math.PI * 2); ctx.stroke();
+    ctx.strokeStyle = `rgba(170,255,170,${0.15 + pulse * 0.1})`;
+    ctx.beginPath(); ctx.arc(x, y, r + 10 + pulse * 4, 0, Math.PI * 2); ctx.stroke();
+
+    // Body — green tactical armor
+    const bodyGrd = ctx.createRadialGradient(x - r * 0.3, y - r * 0.3, 0, x, y, r);
+    bodyGrd.addColorStop(0, '#CCFFCC');
+    bodyGrd.addColorStop(0.35, '#88DD88');
+    bodyGrd.addColorStop(0.7, '#44AA44');
+    bodyGrd.addColorStop(1, '#226622');
+    ctx.fillStyle = bodyGrd;
+    ctx.shadowColor = '#88FF88'; ctx.shadowBlur = 22;
+    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+
+    // Tactical vest pattern
+    ctx.strokeStyle = '#44CC44';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(x - r * 0.4, y - r * 0.6); ctx.lineTo(x - r * 0.4, y + r * 0.6); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x + r * 0.4, y - r * 0.6); ctx.lineTo(x + r * 0.4, y + r * 0.6); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x - r * 0.6, y); ctx.lineTo(x + r * 0.6, y); ctx.stroke();
+
+    // Night vision goggles
+    ctx.fillStyle = '#112211';
+    ctx.beginPath(); ctx.ellipse(x - r * 0.25, y - r * 0.2, r * 0.22, r * 0.18, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(x + r * 0.25, y - r * 0.2, r * 0.22, r * 0.18, 0, 0, Math.PI * 2); ctx.fill();
+    // Glowing lenses
+    ctx.fillStyle = `rgba(0,255,100,${0.7 + pulse * 0.3})`;
+    ctx.beginPath(); ctx.ellipse(x - r * 0.25, y - r * 0.2, r * 0.14, r * 0.10, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(x + r * 0.25, y - r * 0.2, r * 0.14, r * 0.10, 0, 0, Math.PI * 2); ctx.fill();
+
+    // Star emblem
+    ctx.fillStyle = '#FFFF44';
+    this._drawStar(ctx, x, y + r * 0.35, 5, r * 0.18, r * 0.08);
+    ctx.shadowBlur = 0;
+  }
+
+  // ── Sniper Guard — Long Range ─────────────────────────────────────────────
+  _renderSniper(ctx, x, y, r, pulse) {
+    // Ground shadow
+    ctx.fillStyle = 'rgba(0,0,0,0.3)';
+    ctx.beginPath(); ctx.ellipse(x + 2, y + r * 0.8, r * 0.85, r * 0.35, 0, 0, Math.PI * 2); ctx.fill();
+
+    // Targeting reticle aura
+    ctx.strokeStyle = `rgba(255,68,255,${0.2 + pulse * 0.15})`;
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.arc(x, y, r + 8, 0, Math.PI * 2); ctx.stroke();
+    // Crosshair lines
+    ctx.beginPath(); ctx.moveTo(x - r - 12, y); ctx.lineTo(x - r - 5, y); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x + r + 5, y); ctx.lineTo(x + r + 12, y); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x, y - r - 12); ctx.lineTo(x, y - r - 5); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x, y + r + 5); ctx.lineTo(x, y + r + 12); ctx.stroke();
+
+    // Body — purple/magenta stealth suit
+    const bodyGrd = ctx.createRadialGradient(x - r * 0.3, y - r * 0.3, 0, x, y, r);
+    bodyGrd.addColorStop(0, '#FFAAFF');
+    bodyGrd.addColorStop(0.4, '#DD66DD');
+    bodyGrd.addColorStop(0.75, '#AA44AA');
+    bodyGrd.addColorStop(1, '#552255');
+    ctx.fillStyle = bodyGrd;
+    ctx.shadowColor = '#FF44FF'; ctx.shadowBlur = 16;
+    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+
+    // Hood/cloak outline
+    ctx.strokeStyle = '#CC88CC';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(x, y - r * 0.1, r * 0.85, -2.5, -0.6);
+    ctx.stroke();
+
+    // Scope eye piece
+    ctx.fillStyle = '#220022';
+    ctx.beginPath(); ctx.ellipse(x, y - r * 0.15, r * 0.45, r * 0.22, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = `rgba(255,0,255,${0.6 + pulse * 0.4})`;
+    ctx.beginPath(); ctx.ellipse(x, y - r * 0.15, r * 0.25, r * 0.10, 0, 0, Math.PI * 2); ctx.fill();
+    // Targeting dot
+    ctx.fillStyle = '#FF0000';
+    ctx.beginPath(); ctx.arc(x, y - r * 0.15, 2, 0, Math.PI * 2); ctx.fill();
+    ctx.shadowBlur = 0;
+  }
+
+  // ── Medic Guard — Healer ──────────────────────────────────────────────────
+  _renderMedic(ctx, x, y, r, pulse) {
+    // Ground shadow
+    ctx.fillStyle = 'rgba(0,0,0,0.3)';
+    ctx.beginPath(); ctx.ellipse(x + 2, y + r * 0.8, r * 0.9, r * 0.38, 0, 0, Math.PI * 2); ctx.fill();
+
+    // Healing aura — soft cyan rings
+    ctx.strokeStyle = `rgba(68,255,238,${0.15 + pulse * 0.15})`;
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(x, y, r + 5 + pulse * 4, 0, Math.PI * 2); ctx.stroke();
+    ctx.strokeStyle = `rgba(68,255,238,${0.08 + pulse * 0.08})`;
+    ctx.beginPath(); ctx.arc(x, y, r + 12 + pulse * 6, 0, Math.PI * 2); ctx.stroke();
+
+    // Body — white/cyan medical suit
+    const bodyGrd = ctx.createRadialGradient(x - r * 0.25, y - r * 0.25, 0, x, y, r);
+    bodyGrd.addColorStop(0, '#FFFFFF');
+    bodyGrd.addColorStop(0.3, '#AAFFEE');
+    bodyGrd.addColorStop(0.65, '#55DDCC');
+    bodyGrd.addColorStop(1, '#228877');
+    ctx.fillStyle = bodyGrd;
+    ctx.shadowColor = '#44FFEE'; ctx.shadowBlur = 18;
+    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+
+    // Medical cross
+    ctx.fillStyle = '#FF4444';
+    ctx.fillRect(x - r * 0.12, y - r * 0.4, r * 0.24, r * 0.8);
+    ctx.fillRect(x - r * 0.4, y - r * 0.12, r * 0.8, r * 0.24);
+    // Cross outline
+    ctx.strokeStyle = '#FFFFFF';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(x - r * 0.12, y - r * 0.4, r * 0.24, r * 0.8);
+    ctx.strokeRect(x - r * 0.4, y - r * 0.12, r * 0.8, r * 0.24);
+
+    // Friendly eyes
+    ctx.fillStyle = '#003333';
+    ctx.beginPath(); ctx.ellipse(x - r * 0.25, y - r * 0.25, r * 0.15, r * 0.12, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(x + r * 0.25, y - r * 0.25, r * 0.15, r * 0.12, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = `rgba(68,255,238,${0.8 + pulse * 0.2})`;
+    ctx.beginPath(); ctx.arc(x - r * 0.25, y - r * 0.25, r * 0.08, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(x + r * 0.25, y - r * 0.25, r * 0.08, 0, Math.PI * 2); ctx.fill();
+
+    // Floating heal particles
+    for (let i = 0; i < 4; i++) {
+      const pa = this._t * 2 + i * Math.PI / 2;
+      const px = x + Math.cos(pa) * (r + 8);
+      const py = y + Math.sin(pa) * (r + 8) - pulse * 5;
+      ctx.fillStyle = `rgba(68,255,238,${0.4 + pulse * 0.3})`;
+      ctx.font = 'bold 8px monospace';
+      ctx.fillText('+', px - 3, py + 3);
+    }
+    ctx.shadowBlur = 0;
+  }
+
+  // ── Ghost Guard — Stealth ─────────────────────────────────────────────────
+  _renderGhost(ctx, x, y, r, pulse) {
+    // Ethereal shadow
+    ctx.fillStyle = 'rgba(100,50,150,0.25)';
+    ctx.beginPath(); ctx.ellipse(x + 3, y + r * 0.6, r * 1.0, r * 0.4, 0, 0, Math.PI * 2); ctx.fill();
+
+    // Ghost trails
+    ctx.globalAlpha = 0.15;
+    ctx.fillStyle = '#CC88FF';
+    ctx.beginPath(); ctx.arc(x - 8, y + 2, r * 0.9, 0, Math.PI * 2); ctx.fill();
+    ctx.globalAlpha = 0.08;
+    ctx.beginPath(); ctx.arc(x - 14, y + 4, r * 0.8, 0, Math.PI * 2); ctx.fill();
+    ctx.globalAlpha = 1;
+
+    // Spectral aura
+    ctx.strokeStyle = `rgba(200,136,255,${0.25 + pulse * 0.2})`;
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(x, y, r + 6 + pulse * 4, 0, Math.PI * 2); ctx.stroke();
+
+    // Body — semi-transparent purple ghost
+    const bodyGrd = ctx.createRadialGradient(x - r * 0.2, y - r * 0.3, 0, x, y, r);
+    bodyGrd.addColorStop(0, 'rgba(238,200,255,0.9)');
+    bodyGrd.addColorStop(0.4, 'rgba(200,136,255,0.75)');
+    bodyGrd.addColorStop(0.75, 'rgba(150,80,200,0.6)');
+    bodyGrd.addColorStop(1, 'rgba(80,40,120,0.4)');
+    ctx.fillStyle = bodyGrd;
+    ctx.shadowColor = '#CC88FF'; ctx.shadowBlur = 25;
+    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+
+    // Wavy ghost bottom
+    ctx.fillStyle = 'rgba(200,136,255,0.5)';
+    ctx.beginPath();
+    ctx.moveTo(x - r, y + r * 0.3);
+    for (let i = 0; i <= 6; i++) {
+      const wx = x - r + (i / 6) * r * 2;
+      const wy = y + r * 0.5 + Math.sin(this._t * 4 + i) * r * 0.2;
+      ctx.lineTo(wx, wy);
+    }
+    ctx.lineTo(x + r, y + r * 0.3);
+    ctx.closePath();
+    ctx.fill();
+
+    // Glowing eyes
+    ctx.fillStyle = '#FFFFFF';
+    ctx.shadowColor = '#FFFFFF'; ctx.shadowBlur = 12;
+    ctx.beginPath(); ctx.ellipse(x - r * 0.25, y - r * 0.15, r * 0.15, r * 0.20, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(x + r * 0.25, y - r * 0.15, r * 0.15, r * 0.20, 0, 0, Math.PI * 2); ctx.fill();
+    // Eye pupils
+    ctx.fillStyle = '#8844CC';
+    ctx.shadowBlur = 0;
+    ctx.beginPath(); ctx.arc(x - r * 0.25, y - r * 0.1, r * 0.06, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(x + r * 0.25, y - r * 0.1, r * 0.06, 0, Math.PI * 2); ctx.fill();
+    ctx.shadowBlur = 0;
+  }
+
+  // Helper: Draw a star shape
+  _drawStar(ctx, cx, cy, spikes, outerR, innerR) {
+    let rot = Math.PI / 2 * 3;
+    const step = Math.PI / spikes;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy - outerR);
+    for (let i = 0; i < spikes; i++) {
+      ctx.lineTo(cx + Math.cos(rot) * outerR, cy + Math.sin(rot) * outerR);
+      rot += step;
+      ctx.lineTo(cx + Math.cos(rot) * innerR, cy + Math.sin(rot) * innerR);
+      rot += step;
+    }
+    ctx.lineTo(cx, cy - outerR);
+    ctx.closePath();
+    ctx.fill();
   }
 }
 
