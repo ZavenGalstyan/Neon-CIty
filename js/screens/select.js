@@ -5,7 +5,7 @@
  * Character and map selection screen logic (index.html).
  *
  * Responsibilities:
- *   - Character card click selection (8 chars across 2 pages)
+ *   - Character card click selection (32 chars across 2 pages, 16 per page)
  *   - Map card click selection (18 maps across 2 pages)
  *   - Page tab switching for both grids (charTab1/2, pageTab1/2)
  *   - Customization panel: neon color swatches, mask, effect options
@@ -78,6 +78,16 @@
   // ── Character selection ──────────────────────────────────
   charCards.forEach(card => {
     card.addEventListener('click', () => {
+      // Check if character is locked
+      if (card.classList.contains('char-card-locked')) {
+        const charData = CONFIG.CHARACTERS.find(c => c.id === card.dataset.char);
+        if (charData && charData.locked) {
+          // Show locked message
+          const price = charData.price || 0;
+          alert(`🔒 This character is locked!\n\nPrice: $${price.toLocaleString()}\n\nEarn money in-game to unlock this character.`);
+          return;
+        }
+      }
       charCards.forEach(c => c.classList.remove('selected'));
       card.classList.add('selected');
       selectedCharId = card.dataset.char;

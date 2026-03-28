@@ -41,55 +41,240 @@ const CONFIG = {
   HIT_PARTICLES: 5,
 
   // ── Characters ──────────────────────────────────────────
+  // Page 1: Characters 1-16 (last 4 locked)
+  // Page 2: Characters 17-32 (last 4 locked)
   CHARACTERS: [
+    // ═══════════════════════════════════════════════════════════
+    // PAGE 1 · STREET CREW (Characters 1-16)
+    // ═══════════════════════════════════════════════════════════
     {
       id: 'gangster', name: 'THE GANGSTER', lore: 'Street boss with no mercy.',
       color: '#FF4466', accent: '#FF0033', gunColor: '#888',
       speed: 185, health: 120, damage: 35, fireRate: 280, radius: 18,
-      stats: { speed: 55, health: 72, damage: 88 }, companion: 'dog'
+      stats: { speed: 55, health: 72, damage: 88 }, companion: 'dog',
+      renderType: 'humanoid', bodyScale: 1.0
     },
     {
       id: 'hacker', name: 'THE HACKER', lore: 'Digital ghost. Faster than light.',
       color: '#44EEFF', accent: '#00BBFF', gunColor: '#00FFCC',
-      speed: 250, health: 80, damage: 18, fireRate: 110, radius: 16,
-      stats: { speed: 95, health: 45, damage: 45 }, companion: 'cat'
+      speed: 250, health: 80, damage: 18, fireRate: 110, radius: 14,
+      stats: { speed: 95, health: 45, damage: 45 }, companion: 'cat',
+      renderType: 'humanoid_slim', bodyScale: 0.85
     },
     {
       id: 'mercenary', name: 'THE MERCENARY', lore: 'War machine. Built to survive.',
       color: '#44FF88', accent: '#00CC44', gunColor: '#AAFFAA',
-      speed: 148, health: 200, damage: 28, fireRate: 380, radius: 20,
-      stats: { speed: 38, health: 100, damage: 65 }, companion: 'wolf'
+      speed: 148, health: 200, damage: 28, fireRate: 380, radius: 22,
+      stats: { speed: 38, health: 100, damage: 65 }, companion: 'wolf',
+      renderType: 'humanoid_heavy', bodyScale: 1.3
     },
     {
       id: 'ghost', name: 'THE GHOST', lore: 'One shot. One kill. No trace.',
       color: '#CC88FF', accent: '#9922FF', gunColor: '#DDAAFF',
-      speed: 212, health: 90, damage: 60, fireRate: 700, radius: 17,
-      stats: { speed: 72, health: 55, damage: 100 }, companion: 'raven'
+      speed: 212, health: 90, damage: 60, fireRate: 700, radius: 16,
+      stats: { speed: 72, health: 55, damage: 100 }, companion: 'raven',
+      renderType: 'cloaked', bodyScale: 0.95
     },
+    {
+      id: 'engineer', name: 'THE ENGINEER', lore: 'Builds shield turrets. Tech is power.',
+      color: '#FFAA00', accent: '#CC7700', gunColor: '#FFCC66',
+      speed: 165, health: 130, damage: 25, fireRate: 340, radius: 19,
+      stats: { speed: 48, health: 78, damage: 58 }, companion: 'drone_mini',
+      renderType: 'humanoid', bodyScale: 1.05, _shieldDevice: true
+    },
+    {
+      id: 'sniper_elite', name: 'SNIPER ELITE', lore: 'One bullet. Maximum precision.',
+      color: '#2288FF', accent: '#0055CC', gunColor: '#88BBFF',
+      speed: 155, health: 85, damage: 95, fireRate: 1200, radius: 15,
+      stats: { speed: 42, health: 48, damage: 100 }, companion: 'eagle',
+      renderType: 'humanoid_slim', bodyScale: 0.9, starterWeapon: 'sniper', _critChance: 0.35
+    },
+    {
+      id: 'drone_pilot', name: 'DRONE PILOT', lore: 'Eyes in the sky. Death from above.',
+      color: '#77DDFF', accent: '#44AACC', gunColor: '#AAEEFF',
+      speed: 175, health: 95, damage: 30, fireRate: 300, radius: 17,
+      stats: { speed: 52, health: 55, damage: 68 }, companion: 'combat_drone',
+      renderType: 'humanoid', bodyScale: 1.0, _droneAttack: true
+    },
+    {
+      id: 'chemist', name: 'THE CHEMIST', lore: 'Toxic clouds. Corrosive death.',
+      color: '#88FF44', accent: '#55CC11', gunColor: '#AAFF77',
+      speed: 168, health: 110, damage: 28, fireRate: 420, radius: 18,
+      stats: { speed: 50, health: 65, damage: 72 }, companion: 'toxic_slug',
+      renderType: 'humanoid', bodyScale: 1.0, _poisonDamage: true
+    },
+    {
+      id: 'cyber_ninja', name: 'CYBER NINJA', lore: 'Dash through shadows. Strike unseen.',
+      color: '#FF00AA', accent: '#CC0088', gunColor: '#FF66CC',
+      speed: 265, health: 75, damage: 48, fireRate: 350, radius: 14,
+      stats: { speed: 98, health: 40, damage: 85 }, companion: 'shadow_cat',
+      renderType: 'ninja', bodyScale: 0.8, starterWeapon: 'knife', _dashAbility: true, _invisibility: true
+    },
+    {
+      id: 'cyber_wolf', name: 'CYBER WOLF', lore: 'Metallic fangs. Hunt in packs.',
+      color: '#8899AA', accent: '#556677', gunColor: '#AABBCC',
+      speed: 240, health: 95, damage: 42, fireRate: 280, radius: 20,
+      stats: { speed: 88, health: 55, damage: 82 }, companion: 'wolf_pack',
+      renderType: 'wolf', bodyScale: 1.1, _meleeBoost: true
+    },
+    {
+      id: 'neon_panther', name: 'NEON PANTHER', lore: 'Silent predator. Neon claws.',
+      color: '#FF44FF', accent: '#CC00CC', gunColor: '#FF88FF',
+      speed: 255, health: 82, damage: 55, fireRate: 380, radius: 18,
+      stats: { speed: 92, health: 45, damage: 92 }, companion: 'panther_spirit',
+      renderType: 'panther', bodyScale: 1.0, _stealthAttack: true
+    },
+    {
+      id: 'mecha_bulldog', name: 'MECHA BULLDOG', lore: 'Heavy armor. Unstoppable charge.',
+      color: '#AA8866', accent: '#775533', gunColor: '#CCAA88',
+      speed: 125, health: 250, damage: 35, fireRate: 450, radius: 22,
+      stats: { speed: 25, health: 100, damage: 75 }, companion: 'bulldog_drone',
+      renderType: 'bulldog', bodyScale: 1.25, _armorPlating: true
+    },
+    // Page 1 Locked Characters (13-16)
+    {
+      id: 'timebreaker', name: 'TIMEBREAKER', lore: 'Bend time. Break reality.',
+      color: '#FFDD00', accent: '#CCAA00', gunColor: '#FFEE66',
+      speed: 200, health: 100, damage: 45, fireRate: 340, radius: 17,
+      stats: { speed: 70, health: 58, damage: 85 }, companion: 'chrono_orb',
+      renderType: 'humanoid', bodyScale: 1.0, _slowTime: true, locked: true, price: 15000
+    },
+    {
+      id: 'ai_avatar', name: 'AI AVATAR', lore: 'Adaptive intelligence. Learns your pain.',
+      color: '#00FFAA', accent: '#00CC88', gunColor: '#66FFCC',
+      speed: 190, health: 115, damage: 35, fireRate: 300, radius: 18,
+      stats: { speed: 65, health: 68, damage: 75 }, companion: 'ai_core',
+      renderType: 'humanoid', bodyScale: 0.95, _adaptiveDamage: true, locked: true, price: 18000
+    },
+    {
+      id: 'overlord', name: 'THE OVERLORD', lore: 'Command the swarm. Rule the field.',
+      color: '#7744FF', accent: '#5522CC', gunColor: '#AA88FF',
+      speed: 145, health: 140, damage: 22, fireRate: 380, radius: 19,
+      stats: { speed: 38, health: 82, damage: 55 }, companion: 'drone_swarm',
+      renderType: 'humanoid_heavy', bodyScale: 1.2, _summonDrones: true, locked: true, price: 20000
+    },
+    {
+      id: 'electric_eel', name: 'ELECTRIC EEL', lore: 'High voltage. Chain lightning.',
+      color: '#44DDFF', accent: '#00AACC', gunColor: '#88EEFF',
+      speed: 195, health: 88, damage: 40, fireRate: 320, radius: 16,
+      stats: { speed: 68, health: 50, damage: 80 }, companion: 'eel_bot',
+      renderType: 'eel', bodyScale: 0.9, _stunAbility: true, locked: true, price: 16000
+    },
+    // ═══════════════════════════════════════════════════════════
+    // PAGE 2 · SPECIALISTS (Characters 17-32)
+    // ═══════════════════════════════════════════════════════════
     {
       id: 'medic', name: 'THE MEDIC', lore: 'Combat surgeon. Heals in the field.',
       color: '#44FFAA', accent: '#00CC77', gunColor: '#88FFCC',
       speed: 162, health: 160, damage: 22, fireRate: 320, radius: 18,
-      stats: { speed: 44, health: 90, damage: 50 }, companion: 'bear'
+      stats: { speed: 44, health: 90, damage: 50 }, companion: 'bear',
+      renderType: 'humanoid', bodyScale: 1.0
     },
     {
       id: 'ronin', name: 'THE RONIN', lore: 'Ancient blade. Perfect discipline.',
       color: '#FFCC44', accent: '#FF9900', gunColor: '#FFEEAA',
       speed: 225, health: 100, damage: 55, fireRate: 500, radius: 17,
-      stats: { speed: 75, health: 58, damage: 96 }, companion: 'fox', starterWeapon: 'knife'
+      stats: { speed: 75, health: 58, damage: 96 }, companion: 'fox',
+      renderType: 'humanoid_slim', bodyScale: 0.9, starterWeapon: 'knife'
     },
     {
       id: 'pyro', name: 'THE PYRO', lore: 'Fire is the only language left to speak.',
       color: '#FF5500', accent: '#FF2200', gunColor: '#FF8833',
       speed: 148, health: 155, damage: 55, fireRate: 260, radius: 19,
-      stats: { speed: 32, health: 88, damage: 98 }, companion: 'salamander', starterWeapon: 'flamethrower'
+      stats: { speed: 32, health: 88, damage: 98 }, companion: 'salamander',
+      renderType: 'humanoid_heavy', bodyScale: 1.15, starterWeapon: 'flamethrower'
     },
     {
       id: 'phantom', name: 'THE PHANTOM', lore: 'Shadow given a gun. Death without a face.',
       color: '#AA44FF', accent: '#7711CC', gunColor: '#CC88FF',
       speed: 248, health: 72, damage: 52, fireRate: 390, radius: 15,
-      stats: { speed: 95, health: 38, damage: 88 }, companion: 'spirit', starterWeapon: 'crossbow',
-      _dodgeChance: 0.22
+      stats: { speed: 95, health: 38, damage: 88 }, companion: 'spirit',
+      renderType: 'cloaked', bodyScale: 0.85, starterWeapon: 'crossbow', _dodgeChance: 0.22
+    },
+    {
+      id: 'spider_drone', name: 'SPIDER DRONE', lore: 'Eight legs. Infinite traps.',
+      color: '#AA4444', accent: '#772222', gunColor: '#CC6666',
+      speed: 178, health: 90, damage: 32, fireRate: 350, radius: 14,
+      stats: { speed: 55, health: 52, damage: 70 }, companion: 'spider_bots',
+      renderType: 'spider', bodyScale: 0.8, _trapAbility: true
+    },
+    {
+      id: 'robo_hawk', name: 'ROBO HAWK', lore: 'Air superiority. Dive bomb attacks.',
+      color: '#DDAA44', accent: '#AA7722', gunColor: '#FFCC77',
+      speed: 235, health: 78, damage: 48, fireRate: 400, radius: 16,
+      stats: { speed: 85, health: 42, damage: 85 }, companion: 'hawk_drone',
+      renderType: 'hawk', bodyScale: 0.9, _airStrike: true
+    },
+    {
+      id: 'nano_rat', name: 'NANO RAT', lore: 'Tiny but deadly. Sabotage expert.',
+      color: '#888888', accent: '#555555', gunColor: '#AAAAAA',
+      speed: 280, health: 55, damage: 25, fireRate: 180, radius: 12,
+      stats: { speed: 100, health: 28, damage: 58 }, companion: 'rat_swarm',
+      renderType: 'rat', bodyScale: 0.6, _sabotage: true
+    },
+    {
+      id: 'mini_bee', name: 'MINI DRONE BEE', lore: 'Swarm protocol. Death by a thousand stings.',
+      color: '#FFCC00', accent: '#CC9900', gunColor: '#FFDD44',
+      speed: 220, health: 60, damage: 18, fireRate: 120, radius: 13,
+      stats: { speed: 82, health: 32, damage: 45 }, companion: 'bee_swarm',
+      renderType: 'bee', bodyScale: 0.5, _swarmDamage: true
+    },
+    {
+      id: 'tank_commander', name: 'TANK COMMANDER', lore: 'Heavy metal. Explosive ordinance.',
+      color: '#556644', accent: '#334422', gunColor: '#88AA66',
+      speed: 115, health: 280, damage: 45, fireRate: 600, radius: 23,
+      stats: { speed: 18, health: 100, damage: 88 }, companion: 'mini_tank',
+      renderType: 'titan', bodyScale: 1.4, _explosiveRounds: true
+    },
+    {
+      id: 'blade_dancer', name: 'BLADE DANCER', lore: 'Spinning death. Graceful carnage.',
+      color: '#FF6688', accent: '#CC4466', gunColor: '#FF99AA',
+      speed: 242, health: 85, damage: 58, fireRate: 420, radius: 16,
+      stats: { speed: 90, health: 48, damage: 95 }, companion: 'blade_spirit',
+      renderType: 'humanoid_slim', bodyScale: 0.85, starterWeapon: 'knife', _spinAttack: true
+    },
+    {
+      id: 'frost_walker', name: 'FROST WALKER', lore: 'Sub-zero. Freeze your enemies.',
+      color: '#88DDFF', accent: '#55AACC', gunColor: '#AAEEFF',
+      speed: 172, health: 105, damage: 35, fireRate: 360, radius: 18,
+      stats: { speed: 52, health: 62, damage: 72 }, companion: 'ice_sprite',
+      renderType: 'humanoid', bodyScale: 1.0, _freezeAbility: true
+    },
+    {
+      id: 'volt_runner', name: 'VOLT RUNNER', lore: 'Electric speed. Lightning reflexes.',
+      color: '#FFFF44', accent: '#CCCC00', gunColor: '#FFFF88',
+      speed: 270, health: 70, damage: 38, fireRate: 240, radius: 15,
+      stats: { speed: 98, health: 35, damage: 75 }, companion: 'spark_bot',
+      renderType: 'humanoid_slim', bodyScale: 0.85, _electricTrail: true
+    },
+    // Page 2 Locked Characters (29-32)
+    {
+      id: 'shadow_lord', name: 'SHADOW LORD', lore: 'Darkness incarnate. Fear given form.',
+      color: '#442266', accent: '#221144', gunColor: '#664488',
+      speed: 205, health: 110, damage: 52, fireRate: 380, radius: 18,
+      stats: { speed: 72, health: 65, damage: 90 }, companion: 'shadow_wraith',
+      renderType: 'cloaked', bodyScale: 1.1, _darkAbility: true, locked: true, price: 22000
+    },
+    {
+      id: 'plasma_titan', name: 'PLASMA TITAN', lore: 'Pure energy. Devastating power.',
+      color: '#FF88FF', accent: '#CC55CC', gunColor: '#FFAAFF',
+      speed: 138, health: 200, damage: 65, fireRate: 550, radius: 21,
+      stats: { speed: 32, health: 95, damage: 100 }, companion: 'plasma_orb',
+      renderType: 'titan', bodyScale: 1.35, _plasmaBlast: true, locked: true, price: 25000
+    },
+    {
+      id: 'quantum_ghost', name: 'QUANTUM GHOST', lore: 'Phase through walls. Strike from nowhere.',
+      color: '#AAFFFF', accent: '#77CCCC', gunColor: '#CCFFFF',
+      speed: 230, health: 68, damage: 48, fireRate: 340, radius: 15,
+      stats: { speed: 85, health: 35, damage: 85 }, companion: 'quantum_echo',
+      renderType: 'cloaked', bodyScale: 0.9, _phaseAbility: true, _dodgeChance: 0.30, locked: true, price: 28000
+    },
+    {
+      id: 'omega_prime', name: 'OMEGA PRIME', lore: 'Ultimate warrior. Final evolution.',
+      color: '#FFD700', accent: '#DAA520', gunColor: '#FFE55C',
+      speed: 210, health: 150, damage: 55, fireRate: 320, radius: 19,
+      stats: { speed: 75, health: 85, damage: 95 }, companion: 'omega_drone',
+      renderType: 'humanoid_heavy', bodyScale: 1.25, _ultimateForm: true, locked: true, price: 50000
     },
   ],
 
