@@ -746,9 +746,35 @@ class GameMap {
 
     ctx.save();
 
-    // Floor-based elevator colour
-    const doorCol = floor >= 10 ? '#FFD700' : floor >= 7 ? '#4466FF' : floor >= 4 ? '#888888' : '#C0A060';
-    const glowCol = floor >= 10 ? '#FFD700' : floor >= 7 ? '#0044FF' : '#B08040';
+    // 10 UNIQUE elevator colors — one for each floor
+    const DOOR_COLORS = [
+      '#C0A060', // floor 0 (unused)
+      '#E8D8B8', // floor 1: Lobby — cream gold
+      '#505050', // floor 2: Parking — grey (NIGHT)
+      '#8B6520', // floor 3: Office — wood brown
+      '#00CCFF', // floor 4: Server — cyan (NIGHT)
+      '#AA3030', // floor 5: Lounge — deep red
+      '#3344AA', // floor 6: Security — blue (NIGHT)
+      '#50C080', // floor 7: Lab — green
+      '#FF6030', // floor 8: Armory — orange (NIGHT)
+      '#8844CC', // floor 9: Executive — purple
+      '#FFD700', // floor 10: Penthouse — gold (Boss)
+    ];
+    const GLOW_COLORS = [
+      '#B08040', // floor 0 (unused)
+      '#D0C090', // floor 1
+      '#404040', // floor 2
+      '#705010', // floor 3
+      '#00AADD', // floor 4
+      '#882020', // floor 5
+      '#2233AA', // floor 6
+      '#40A060', // floor 7
+      '#DD4020', // floor 8
+      '#6633AA', // floor 9
+      '#FFD700', // floor 10
+    ];
+    const doorCol = DOOR_COLORS[Math.min(floor, 10)] || DOOR_COLORS[1];
+    const glowCol = GLOW_COLORS[Math.min(floor, 10)] || GLOW_COLORS[1];
 
     // Outer glow when active
     if (active) {
@@ -941,40 +967,113 @@ class GameMap {
 
         if (tile === TILE.ROAD) {
           if (cfg.tower) {
-            // Tower: interior floor — theme changes per floor
+            // Tower: 10 UNIQUE floor designs — each floor is completely different
             const fl = this._towerFloor || 1;
-            let flA, flB, lineCol;
-            if (fl <= 1) {
-              // Lobby: white marble checkerboard
-              flA = '#e8e2d4'; flB = '#d4cfc0'; lineCol = 'rgba(0,0,0,0.08)';
-            } else if (fl <= 3) {
-              // Wood parquet
-              flA = (x + y) % 2 === 0 ? '#8b6010' : '#7a5208'; flB = flA; lineCol = 'rgba(0,0,0,0.18)';
-            } else if (fl <= 5) {
-              // Industrial concrete
-              flA = (x * 3 + y) % 3 === 0 ? '#48484a' : '#3c3c3e'; flB = flA; lineCol = 'rgba(0,0,0,0.25)';
-            } else if (fl <= 7) {
-              // Security: dark steel
-              flA = (x + y) % 2 === 0 ? '#1e1e2a' : '#18182e'; flB = flA; lineCol = 'rgba(60,80,180,0.12)';
-            } else if (fl <= 9) {
-              // Research lab: light grey
-              flA = (x + y) % 2 === 0 ? '#ccd8cc' : '#beccbe'; flB = flA; lineCol = 'rgba(0,60,0,0.10)';
+            // Night floors: 2, 4, 6, 8 | Day floors: 1, 3, 5, 7, 9, 10
+            const isNightFloor = (fl === 2 || fl === 4 || fl === 6 || fl === 8);
+            let flA, flB, lineCol, accentCol;
+
+            if (fl === 1) {
+              // Floor 1: Grand Lobby — white marble checkerboard (DAY)
+              flA = '#f0ebe0'; flB = '#e0d8c8'; lineCol = 'rgba(0,0,0,0.06)';
+              accentCol = 'rgba(200,180,120,0.15)';
+            } else if (fl === 2) {
+              // Floor 2: Parking Garage — dark concrete (NIGHT)
+              flA = (x + y) % 2 === 0 ? '#2a2a2a' : '#222222'; flB = flA; lineCol = 'rgba(255,255,255,0.04)';
+              accentCol = 'rgba(255,200,0,0.12)';
+            } else if (fl === 3) {
+              // Floor 3: Office Space — warm wood parquet (DAY)
+              flA = (x + y) % 2 === 0 ? '#a87830' : '#906820'; flB = flA; lineCol = 'rgba(0,0,0,0.12)';
+              accentCol = 'rgba(255,240,200,0.08)';
+            } else if (fl === 4) {
+              // Floor 4: Server Room — dark tech grid (NIGHT)
+              flA = (x * 3 + y) % 3 === 0 ? '#0a1520' : '#081218'; flB = flA; lineCol = 'rgba(0,200,255,0.15)';
+              accentCol = 'rgba(0,255,200,0.12)';
+            } else if (fl === 5) {
+              // Floor 5: Lounge — rich red carpet (DAY)
+              flA = (x + y) % 2 === 0 ? '#6a2020' : '#5a1818'; flB = flA; lineCol = 'rgba(255,200,150,0.08)';
+              accentCol = 'rgba(255,215,0,0.10)';
+            } else if (fl === 6) {
+              // Floor 6: Security Level — dark steel blue (NIGHT)
+              flA = (x + y) % 2 === 0 ? '#1a1a30' : '#141428'; flB = flA; lineCol = 'rgba(60,100,200,0.18)';
+              accentCol = 'rgba(255,0,0,0.08)';
+            } else if (fl === 7) {
+              // Floor 7: Research Lab — clean white tiles (DAY)
+              flA = (x + y) % 2 === 0 ? '#e8f0e8' : '#d8e8d8'; flB = flA; lineCol = 'rgba(0,100,50,0.08)';
+              accentCol = 'rgba(0,255,100,0.06)';
+            } else if (fl === 8) {
+              // Floor 8: Armory — industrial gunmetal (NIGHT)
+              flA = (x * 2 + y) % 3 === 0 ? '#3a3a40' : '#2a2a30'; flB = flA; lineCol = 'rgba(255,100,0,0.12)';
+              accentCol = 'rgba(255,50,0,0.10)';
+            } else if (fl === 9) {
+              // Floor 9: Executive Suite — luxury purple velvet (DAY)
+              flA = (x + y) % 2 === 0 ? '#4a2060' : '#3a1850'; flB = flA; lineCol = 'rgba(200,150,255,0.10)';
+              accentCol = 'rgba(255,200,255,0.08)';
             } else {
-              // Penthouse: black marble with gold veins
-              flA = (x + y) % 3 === 0 ? '#181010' : '#100c0c'; flB = flA; lineCol = 'rgba(180,140,0,0.22)';
+              // Floor 10: Penthouse — black marble with gold veins (DAY - Boss floor)
+              flA = (x + y) % 3 === 0 ? '#181010' : '#100808'; flB = flA; lineCol = 'rgba(255,200,0,0.25)';
+              accentCol = 'rgba(255,215,0,0.20)';
             }
-            // Checkerboard only for lobby
-            const col = (fl <= 1 && (x + y) % 2 === 0) ? flA : flB;
+
+            // Draw base floor
+            const col = (fl === 1 && (x + y) % 2 === 0) ? flA : flB;
             ctx.fillStyle = col;
             ctx.fillRect(wx, wy, S, S);
+
             // Grid seam lines
             ctx.fillStyle = lineCol;
             ctx.fillRect(wx, wy, S, 1);
             ctx.fillRect(wx, wy, 1, S);
-            // Penthouse gold vein accent
-            if (fl >= 10 && (x * 7 + y * 11) % 9 === 0) {
-              ctx.fillStyle = 'rgba(210,160,0,0.18)';
-              ctx.fillRect(wx + S*0.2, wy + S*0.45, S*0.6, 1);
+
+            // Floor-specific decorative accents
+            if (fl === 1 && (x * 5 + y * 7) % 11 === 0) {
+              // Lobby: golden inlay pattern
+              ctx.fillStyle = accentCol;
+              ctx.fillRect(wx + S*0.3, wy + S*0.3, S*0.4, S*0.4);
+            } else if (fl === 2 && (x * 3 + y * 5) % 7 === 0) {
+              // Parking: yellow line markings
+              ctx.fillStyle = accentCol;
+              ctx.fillRect(wx + S*0.1, wy + S*0.45, S*0.8, S*0.1);
+            } else if (fl === 3 && (x + y) % 4 === 0) {
+              // Office: subtle wood grain
+              ctx.fillStyle = 'rgba(60,40,20,0.08)';
+              ctx.fillRect(wx, wy + S*0.2, S, 2);
+              ctx.fillRect(wx, wy + S*0.6, S, 2);
+            } else if (fl === 4 && (x * 7 + y * 11) % 5 === 0) {
+              // Server: LED status lights
+              ctx.fillStyle = accentCol;
+              ctx.beginPath(); ctx.arc(wx + S*0.5, wy + S*0.5, 4, 0, Math.PI*2); ctx.fill();
+            } else if (fl === 5 && (x * 9 + y * 13) % 8 === 0) {
+              // Lounge: carpet pattern
+              ctx.fillStyle = accentCol;
+              ctx.fillRect(wx + S*0.2, wy + S*0.2, S*0.15, S*0.15);
+              ctx.fillRect(wx + S*0.65, wy + S*0.65, S*0.15, S*0.15);
+            } else if (fl === 6 && (x * 11 + y * 17) % 9 === 0) {
+              // Security: warning stripes
+              ctx.fillStyle = accentCol;
+              ctx.fillRect(wx, wy, S*0.2, S);
+            } else if (fl === 7 && (x + y) % 6 === 0) {
+              // Lab: biohazard markings
+              ctx.fillStyle = accentCol;
+              ctx.beginPath(); ctx.arc(wx + S*0.5, wy + S*0.5, S*0.15, 0, Math.PI*2); ctx.fill();
+            } else if (fl === 8 && (x * 13 + y * 19) % 7 === 0) {
+              // Armory: shell casings / metal plates
+              ctx.fillStyle = accentCol;
+              ctx.fillRect(wx + S*0.35, wy + S*0.35, S*0.3, S*0.3);
+            } else if (fl === 9 && (x * 17 + y * 23) % 10 === 0) {
+              // Executive: crystal chandelier reflection
+              ctx.fillStyle = accentCol;
+              ctx.beginPath(); ctx.arc(wx + S*0.5, wy + S*0.5, S*0.2, 0, Math.PI*2); ctx.fill();
+            } else if (fl === 10 && (x * 7 + y * 11) % 9 === 0) {
+              // Penthouse: gold vein accent
+              ctx.fillStyle = accentCol;
+              ctx.fillRect(wx + S*0.1, wy + S*0.45, S*0.8, 2);
+            }
+
+            // Night floor ambient darkness overlay
+            if (isNightFloor) {
+              ctx.fillStyle = 'rgba(0,0,20,0.25)';
+              ctx.fillRect(wx, wy, S, S);
             }
           } else if (cfg.robot) {
             // Robot City: dark metal grating floor
@@ -1324,27 +1423,111 @@ class GameMap {
               ctx.beginPath(); ctx.arc(wx + S*0.60, wy + S*0.35, 5, 0, Math.PI*2); ctx.fill();
             }
           } else if (cfg.tower) {
-            // Tower: interior wall — concrete + frame, colour shifts per floor
+            // Tower: 10 UNIQUE wall designs — each floor completely different
             const fl = this._towerFloor || 1;
-            const wallBase = fl >= 10 ? '#1a0808' : fl >= 7 ? '#14142a' : fl >= 4 ? '#2a2a2a' : '#4a3820';
+            const isNightFloor = (fl === 2 || fl === 4 || fl === 6 || fl === 8);
+            let wallBase, accentCol, accentPos;
+
+            if (fl === 1) {
+              // Floor 1: Grand Lobby — cream marble pillars
+              wallBase = '#c8b898';
+              accentCol = 'rgba(180,160,120,0.40)';
+              accentPos = 'vertical';
+            } else if (fl === 2) {
+              // Floor 2: Parking Garage — raw concrete (NIGHT)
+              wallBase = '#3a3a3a';
+              accentCol = 'rgba(255,200,0,0.25)';
+              accentPos = 'stripe';
+            } else if (fl === 3) {
+              // Floor 3: Office Space — warm wood panels
+              wallBase = '#5a4020';
+              accentCol = 'rgba(255,240,200,0.15)';
+              accentPos = 'horizontal';
+            } else if (fl === 4) {
+              // Floor 4: Server Room — dark tech walls (NIGHT)
+              wallBase = '#0a1018';
+              accentCol = 'rgba(0,200,255,0.30)';
+              accentPos = 'led';
+            } else if (fl === 5) {
+              // Floor 5: Lounge — velvet red walls
+              wallBase = '#4a1515';
+              accentCol = 'rgba(255,215,0,0.20)';
+              accentPos = 'frame';
+            } else if (fl === 6) {
+              // Floor 6: Security Level — steel blue (NIGHT)
+              wallBase = '#14142a';
+              accentCol = 'rgba(255,0,0,0.25)';
+              accentPos = 'warning';
+            } else if (fl === 7) {
+              // Floor 7: Research Lab — sterile white
+              wallBase = '#d0e0d0';
+              accentCol = 'rgba(0,200,100,0.20)';
+              accentPos = 'horizontal';
+            } else if (fl === 8) {
+              // Floor 8: Armory — gunmetal grey (NIGHT)
+              wallBase = '#2a2a30';
+              accentCol = 'rgba(255,100,0,0.25)';
+              accentPos = 'rivets';
+            } else if (fl === 9) {
+              // Floor 9: Executive Suite — royal purple
+              wallBase = '#2a1040';
+              accentCol = 'rgba(200,150,255,0.25)';
+              accentPos = 'frame';
+            } else {
+              // Floor 10: Penthouse — black with gold trim (Boss)
+              wallBase = '#1a0808';
+              accentCol = 'rgba(255,200,0,0.40)';
+              accentPos = 'gold';
+            }
+
             ctx.fillStyle = wallBase;
             ctx.fillRect(wx, wy, S, S);
-            // Concrete panel bevel
-            ctx.fillStyle = 'rgba(255,255,255,0.05)';
+
+            // Panel bevel effect
+            ctx.fillStyle = 'rgba(255,255,255,0.06)';
             ctx.fillRect(wx, wy, S, 2);
             ctx.fillRect(wx, wy, 2, S);
-            ctx.fillStyle = 'rgba(0,0,0,0.25)';
+            ctx.fillStyle = 'rgba(0,0,0,0.20)';
             ctx.fillRect(wx + S - 2, wy, 2, S);
             ctx.fillRect(wx, wy + S - 2, S, 2);
-            // Floor-specific accent
-            if (fl >= 10) {
-              // Penthouse: gold trim on top
-              ctx.fillStyle = 'rgba(200,150,0,0.30)';
-              ctx.fillRect(wx, wy, S, 3);
-            } else if (fl >= 7) {
-              // Security: blue LED strip
-              ctx.fillStyle = 'rgba(40,80,220,0.20)';
-              ctx.fillRect(wx, wy + S - 4, S, 3);
+
+            // Floor-specific wall accents
+            ctx.fillStyle = accentCol;
+            if (accentPos === 'vertical') {
+              ctx.fillRect(wx + S*0.45, wy, S*0.1, S);
+            } else if (accentPos === 'horizontal') {
+              ctx.fillRect(wx, wy + S*0.4, S, S*0.2);
+            } else if (accentPos === 'stripe') {
+              ctx.fillRect(wx, wy + S*0.3, S, 4);
+              ctx.fillRect(wx, wy + S*0.7, S, 4);
+            } else if (accentPos === 'led') {
+              ctx.fillRect(wx + 4, wy + S - 6, S - 8, 3);
+              if ((x * 7 + y * 11) % 3 === 0) {
+                ctx.fillStyle = 'rgba(0,255,100,0.40)';
+                ctx.beginPath(); ctx.arc(wx + S*0.5, wy + S*0.3, 3, 0, Math.PI*2); ctx.fill();
+              }
+            } else if (accentPos === 'frame') {
+              ctx.fillRect(wx + 4, wy + 4, S - 8, 3);
+              ctx.fillRect(wx + 4, wy + S - 7, S - 8, 3);
+              ctx.fillRect(wx + 4, wy + 4, 3, S - 8);
+              ctx.fillRect(wx + S - 7, wy + 4, 3, S - 8);
+            } else if (accentPos === 'warning') {
+              ctx.fillRect(wx, wy, S*0.15, S);
+              ctx.fillRect(wx + S*0.85, wy, S*0.15, S);
+            } else if (accentPos === 'rivets') {
+              ctx.beginPath(); ctx.arc(wx + S*0.2, wy + S*0.2, 4, 0, Math.PI*2); ctx.fill();
+              ctx.beginPath(); ctx.arc(wx + S*0.8, wy + S*0.2, 4, 0, Math.PI*2); ctx.fill();
+              ctx.beginPath(); ctx.arc(wx + S*0.2, wy + S*0.8, 4, 0, Math.PI*2); ctx.fill();
+              ctx.beginPath(); ctx.arc(wx + S*0.8, wy + S*0.8, 4, 0, Math.PI*2); ctx.fill();
+            } else if (accentPos === 'gold') {
+              ctx.fillRect(wx, wy, S, 4);
+              ctx.fillRect(wx, wy + S - 4, S, 4);
+            }
+
+            // Night floor ambient darkness overlay
+            if (isNightFloor) {
+              ctx.fillStyle = 'rgba(0,0,20,0.20)';
+              ctx.fillRect(wx, wy, S, S);
             }
           } else if (cfg.robot) {
             // Robot City: server tower / tech block
