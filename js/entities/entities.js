@@ -758,7 +758,7 @@ class Pickup {
     const cfg   = {
       health: { color: '#FF4488', glow: '#FF0066', icon: '♥' },
       ammo:   { color: '#FFCC00', glow: '#FF8800', icon: '◉' },
-      cash:   { color: '#FFD700', glow: '#FFAA00', icon: '$' },
+      cash:   { color: '#00FFCC', glow: '#00CCAA', icon: '⬢' },
     }[this.type] || { color: '#FFFFFF', glow: '#AAAAAA', icon: '?' };
 
     // Outer glow ring via globalAlpha instead of shadowBlur
@@ -8219,20 +8219,20 @@ class BossBot {
       ctx.shadowColor = '#FFD700'; ctx.shadowBlur = 8;
       ctx.beginPath(); ctx.arc(ox2, oy2, r * 0.12, 0, Math.PI * 2); ctx.fill();
       ctx.shadowBlur = 0;
-      // Dollar sign on coin
-      ctx.fillStyle = '#885500';
+      // NEX sign on coin
+      ctx.fillStyle = '#006655';
       ctx.font = `bold ${Math.round(r * 0.14)}px monospace`;
       ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.fillText('$', ox2, oy2);
+      ctx.fillText('⬢', ox2, oy2);
     }
     ctx.textBaseline = 'alphabetic';
 
-    // 9. Central power emblem — glowing $ symbol
+    // 9. Central power emblem — glowing NEX symbol
     ctx.font = `bold ${Math.round(r * 0.5)}px monospace`;
-    ctx.fillStyle = '#FFD700';
-    ctx.shadowColor = '#FFD700'; ctx.shadowBlur = 25 + pulse * 15;
+    ctx.fillStyle = '#00FFCC';
+    ctx.shadowColor = '#00FFCC'; ctx.shadowBlur = 25 + pulse * 15;
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText('$', 0, r * 0.15);
+    ctx.fillText('⬢', 0, r * 0.15);
     ctx.shadowBlur = 0;
     ctx.textBaseline = 'alphabetic';
 

@@ -407,9 +407,9 @@ class Game {
           this.money += this._casino._pendingPayout;
           this._casino._msg(
             this._casino._pendingPayout > 0
-              ? `JACKPOT! +$${this._casino._pendingPayout.toLocaleString()}`
+              ? `JACKPOT! +⬢${this._casino._pendingPayout.toLocaleString()}`
               : 'BETTER LUCK NEXT TIME!',
-            this._casino._pendingPayout > 0 ? '#FFD700' : '#FF4466'
+            this._casino._pendingPayout > 0 ? '#00FFCC' : '#FF4466'
           );
           this._casino._pendingPayout = null;
         }
@@ -1551,12 +1551,12 @@ class Game {
     ctx.fillStyle = '#CCAA66';
     ctx.fillText('You defeated The Golden Emperor and claimed the Penthouse!', W/2, H/2 + 72);
 
-    // Stats with golden styling
+    // Stats with NEX styling
     ctx.font = 'bold 18px monospace';
-    ctx.fillStyle = '#FFD700';
-    ctx.shadowColor = '#FFD700'; ctx.shadowBlur = 8;
+    ctx.fillStyle = '#00FFCC';
+    ctx.shadowColor = '#00FFCC'; ctx.shadowBlur = 8;
     ctx.fillText(`KILLS: ${this.kills}`, W/2 - 100, H/2 + 110);
-    ctx.fillText(`MONEY: $${this.money}`, W/2 + 100, H/2 + 110);
+    ctx.fillText(`NEX: ⬢${this.money}`, W/2 + 100, H/2 + 110);
     ctx.shadowBlur = 0;
 
     // Survival time if tracked
@@ -3755,11 +3755,11 @@ class Game {
       // Black market vendor NPC
       if (this._bmVendor && this._nightAlpha > 0.1) {
         ctx.save();
-        ctx.shadowColor = '#FFAA00'; ctx.shadowBlur = 30;
-        ctx.fillStyle = '#FFAA00'; ctx.strokeStyle = '#FF8800'; ctx.lineWidth = 2;
+        ctx.shadowColor = '#00FFCC'; ctx.shadowBlur = 30;
+        ctx.fillStyle = '#00FFCC'; ctx.strokeStyle = '#00CCAA'; ctx.lineWidth = 2;
         ctx.beginPath(); ctx.arc(this._bmVendor.x, this._bmVendor.y, 16, 0, Math.PI*2); ctx.fill(); ctx.stroke();
         ctx.fillStyle = '#111'; ctx.font = 'bold 9px Orbitron, monospace'; ctx.textAlign = 'center';
-        ctx.fillText('$', this._bmVendor.x, this._bmVendor.y + 4);
+        ctx.fillText('⬢', this._bmVendor.x, this._bmVendor.y + 4);
         if (Math.hypot(this._bmVendor.x - this.player.x, this._bmVendor.y - this.player.y) < 70) {
           ctx.fillStyle = '#FFAA00'; ctx.font = 'bold 11px Orbitron, monospace';
           ctx.shadowColor = '#FF8800'; ctx.shadowBlur = 10;
