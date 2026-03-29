@@ -1567,3 +1567,272 @@ body {
   .nav-btn { padding: 6px 12px; font-size: 10px; }
   .nav-account-name { max-width: 90px; }
 }
+
+/* ════════════════════════════════════════════════════════════
+   PROFILE PAGE
+   ════════════════════════════════════════════════════════════ */
+
+.profile-page {
+  align-items: stretch;   /* full-width layout */
+  padding-top: 70px;
+}
+
+.profile-layout {
+  position: relative; z-index: 1;
+  width: 100%; max-width: 1180px;
+  margin: 0 auto;
+  padding: 24px 24px 60px;
+  display: flex; flex-direction: column; gap: 20px;
+}
+
+/* ── Hero card ────────────────────────────────────────────── */
+.profile-hero-card {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 20px; flex-wrap: wrap;
+  background: rgba(13,13,26,0.85);
+  border: 1px solid rgba(68,238,255,0.12);
+  border-radius: 16px;
+  padding: 24px 28px;
+  box-shadow: 0 4px 40px rgba(0,0,0,0.45), 0 0 60px rgba(68,238,255,0.03);
+  backdrop-filter: blur(10px);
+}
+
+.profile-hero-left {
+  display: flex; align-items: center; gap: 20px;
+}
+
+/* Avatar */
+.profile-avatar-wrap {
+  position: relative; width: 72px; height: 72px; flex-shrink: 0;
+}
+.profile-avatar-ring {
+  position: absolute; inset: -3px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  background: linear-gradient(135deg, var(--cyan), var(--purple)) border-box;
+  -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: destination-out;
+  mask-composite: exclude;
+  animation: spin 8s linear infinite;
+}
+.profile-avatar-inner {
+  width: 72px; height: 72px; border-radius: 50%;
+  background: rgba(68,238,255,0.07);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 32px; color: var(--cyan);
+  text-shadow: 0 0 18px rgba(68,238,255,0.6);
+  border: 1px solid rgba(68,238,255,0.2);
+}
+
+/* Hero info */
+.profile-hero-info { display: flex; flex-direction: column; gap: 8px; }
+.profile-username {
+  font-family: 'Orbitron', sans-serif;
+  font-size: clamp(18px, 2.8vw, 26px);
+  font-weight: 900; color: #fff; letter-spacing: 0.06em;
+  text-shadow: 0 0 12px rgba(255,255,255,0.15);
+}
+.profile-hero-meta { display: flex; align-items: center; gap: 8px; }
+
+.profile-badge {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 10px; font-weight: 700; letter-spacing: 0.14em;
+  padding: 4px 10px; border-radius: 20px;
+  border: 1px solid rgba(68,238,255,0.3);
+  color: var(--cyan); background: rgba(68,238,255,0.08);
+}
+.profile-badge--tier {
+  background: transparent;
+  transition: color 0.3s, border-color 0.3s;
+}
+
+/* Logout in hero */
+.profile-logout-btn {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 11px; font-weight: 700; letter-spacing: 0.12em;
+  padding: 9px 20px; border-radius: 8px;
+  border: 1px solid rgba(255,68,102,0.3);
+  color: var(--pink); background: transparent;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+.profile-logout-btn:hover {
+  background: rgba(255,68,102,0.10);
+  border-color: var(--pink);
+  box-shadow: 0 0 14px rgba(255,68,102,0.2);
+}
+
+/* ════════════════════════════════════════════════════════════
+   BATTLE PASS
+   ════════════════════════════════════════════════════════════ */
+
+.bp-section {
+  background: rgba(13,13,26,0.85);
+  border: 1px solid rgba(68,238,255,0.10);
+  border-radius: 16px;
+  padding: 28px 28px 32px;
+  box-shadow: 0 4px 40px rgba(0,0,0,0.4);
+  backdrop-filter: blur(10px);
+}
+
+/* ── BP header ────────────────────────────────────────────── */
+.bp-header {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  flex-wrap: wrap; gap: 14px;
+  margin-bottom: 22px;
+}
+.bp-header-left { display: flex; align-items: baseline; gap: 14px; }
+
+.bp-title {
+  font-family: 'Orbitron', sans-serif;
+  font-size: clamp(16px, 2.2vw, 20px);
+  font-weight: 900; color: #fff;
+  letter-spacing: 0.1em;
+  text-shadow: 0 0 10px rgba(255,255,255,0.1);
+}
+.bp-season {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 10px; font-weight: 700; letter-spacing: 0.2em;
+  color: var(--muted);
+  padding: 3px 10px; border-radius: 20px;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+.bp-level-badge {
+  display: flex; align-items: center; gap: 8px;
+  background: rgba(68,238,255,0.06);
+  border: 1px solid rgba(68,238,255,0.18);
+  border-radius: 10px;
+  padding: 8px 18px;
+}
+.bp-lv-label {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 9px; letter-spacing: 0.18em; color: var(--muted);
+}
+.bp-lv-num {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 22px; font-weight: 900; color: var(--cyan);
+  line-height: 1;
+  text-shadow: 0 0 14px rgba(68,238,255,0.5);
+}
+.bp-lv-tier {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 10px; font-weight: 700; letter-spacing: 0.14em;
+  color: var(--muted);
+  padding: 2px 0;
+}
+
+/* ── XP bar ───────────────────────────────────────────────── */
+.bp-xp-wrap { margin-bottom: 26px; }
+.bp-xp-labels {
+  display: flex; justify-content: space-between;
+  font-size: 11px; font-weight: 600; letter-spacing: 0.08em;
+  color: var(--muted); margin-bottom: 7px;
+}
+.bp-xp-track {
+  height: 8px; border-radius: 99px;
+  background: rgba(255,255,255,0.06);
+  overflow: hidden;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.4);
+}
+.bp-xp-fill {
+  height: 100%; border-radius: 99px;
+  background: linear-gradient(90deg, var(--cyan) 0%, var(--purple) 100%);
+  box-shadow: 0 0 8px rgba(68,238,255,0.5);
+  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+.bp-xp-fill::after {
+  content: '';
+  position: absolute; right: 0; top: 0; bottom: 0;
+  width: 20px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.35));
+  border-radius: 0 99px 99px 0;
+}
+
+/* ── Level grid ───────────────────────────────────────────── */
+.bp-grid {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 8px;
+}
+
+/* ── Level card ───────────────────────────────────────────── */
+.bp-level {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  border-radius: 10px;
+  padding: 10px 4px 8px;
+  border: 1px solid transparent;
+  cursor: default;
+  transition: transform 0.15s, box-shadow 0.15s;
+  position: relative;
+}
+.bp-level:hover { transform: translateY(-2px); }
+
+/* Completed */
+.bp-level--completed {
+  background: rgba(255,255,255,0.03);
+  border-color: rgba(255,255,255,0.08);
+}
+.bp-level--completed:hover {
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4), 0 0 10px var(--tier-glow, rgba(68,238,255,0.25));
+}
+
+/* Current level — glowing pulse */
+.bp-level--current {
+  background: rgba(68,238,255,0.05);
+  border-color: var(--tier-color, var(--cyan));
+  box-shadow: 0 0 0 1px var(--tier-color, var(--cyan)),
+              0 0 18px var(--tier-glow, rgba(68,238,255,0.4));
+  animation: bpCurrentPulse 2.2s ease-in-out infinite;
+}
+@keyframes bpCurrentPulse {
+  0%,100% { box-shadow: 0 0 0 1px var(--tier-color), 0 0 14px var(--tier-glow); }
+  50%     { box-shadow: 0 0 0 2px var(--tier-color), 0 0 28px var(--tier-glow); }
+}
+.bp-level--current::after {
+  content: '▲';
+  position: absolute; bottom: -14px; left: 50%; transform: translateX(-50%);
+  font-size: 8px; color: var(--tier-color, var(--cyan));
+  opacity: 0.7;
+}
+
+/* Locked */
+.bp-level--locked {
+  background: rgba(255,255,255,0.02);
+  border-color: rgba(255,255,255,0.05);
+  opacity: 0.45;
+}
+
+/* Medal SVG */
+.bp-medal {
+  width: 100%; aspect-ratio: 78/58;
+  display: flex; align-items: center; justify-content: center;
+}
+.bp-medal svg { width: 100%; height: 100%; }
+
+/* Tier label */
+.bp-tier-label {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 7px; font-weight: 700; letter-spacing: 0.1em;
+  color: var(--tier-color, var(--muted));
+  opacity: 0.75;
+  white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis;
+  max-width: 100%;
+  text-align: center;
+}
+.bp-level--locked .bp-tier-label { color: var(--muted); }
+
+/* ── Responsive ───────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .bp-grid { grid-template-columns: repeat(5, 1fr); gap: 6px; }
+}
+@media (max-width: 560px) {
+  .profile-layout { padding: 16px 14px 48px; }
+  .bp-section { padding: 20px 16px 24px; }
+  .bp-grid { grid-template-columns: repeat(5, 1fr); gap: 5px; }
+  .profile-hero-card { padding: 18px 16px; }
+  .bp-level { padding: 7px 3px 6px; }
+  .bp-tier-label { font-size: 6px; }
+}

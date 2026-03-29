@@ -6,7 +6,7 @@
   <title>NEON CITY — Profile</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
-<body class="select-screen auth-screen">
+<body class="select-screen profile-page">
   <div class="bg-grid"></div>
   <div class="scanlines"></div>
 
@@ -16,36 +16,52 @@
     <div id="siteNav" class="site-nav__controls"></div>
   </nav>
 
-  <!-- ── Profile Card ──────────────────────────────────────── -->
-  <div class="auth-wrap">
-    <div class="auth-card profile-card">
+  <!-- ── Profile Layout ────────────────────────────────────── -->
+  <div class="profile-layout">
 
-      <div class="auth-card__header">
-        <div class="auth-card__icon profile-avatar" id="profileAvatar">◈</div>
-        <h2 class="auth-card__title" id="profileName">—</h2>
-        <p class="auth-card__sub">YOUR IDENTITY</p>
+    <!-- Hero header -->
+    <div class="profile-hero-card">
+      <div class="profile-hero-left">
+        <div class="profile-avatar-wrap">
+          <div class="profile-avatar-ring"></div>
+          <div class="profile-avatar-inner">◈</div>
+        </div>
+        <div class="profile-hero-info">
+          <h1 class="profile-username" id="profileName">—</h1>
+          <div class="profile-hero-meta">
+            <span class="profile-badge" id="heroLevel">LV 1</span>
+            <span class="profile-badge profile-badge--tier" id="heroTier">IRON</span>
+          </div>
+        </div>
       </div>
-
-      <div class="profile-body" id="profileBody">
-        <!-- Populated by JS -->
-      </div>
-
-      <button class="auth-submit auth-submit--danger" id="profileLogout">LOGOUT</button>
-
+      <button class="profile-logout-btn" id="profileLogout">LOGOUT</button>
     </div>
+
+    <!-- Battle pass root -->
+    <div id="bpRoot"></div>
+
   </div>
 
   <script src="js/auth.js"></script>
+  <script src="js/battlepass.js"></script>
   <script>
-    /* Guard — must be logged in */
-    if (!Auth.isLoggedIn()) {
-      window.location.href = 'login.html';
-    }
+    if (!Auth.isLoggedIn()) window.location.href = 'login.html';
 
     Auth.mountNavbar();
 
     const session = Auth.getSession();
     document.getElementById('profileName').textContent = session.name;
+
+    /* Mount battle pass */
+    BattlePass.mount(document.getElementById('bpRoot'));
+
+    /* Sync hero badges with BP data */
+    const bp   = BattlePass.loadBP();
+    const tier = BattlePass.getTier(bp.level);
+    document.getElementById('heroLevel').textContent = `LV ${bp.level}`;
+    document.getElementById('heroTier').textContent  = tier.name;
+    document.getElementById('heroTier').style.color  = tier.color;
+    document.getElementById('heroTier').style.borderColor = `${tier.color}55`;
 
     document.getElementById('profileLogout').addEventListener('click', Auth.logout);
   </script>
