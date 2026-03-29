@@ -368,6 +368,41 @@ body {
 }
 .char-card-locked::after { display: none; } /* no checkmark for locked */
 
+/* Coming Soon overlay — replaces price badge */
+.char-coming-soon-overlay {
+  position: absolute; inset: 0; z-index: 10;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 4px;
+  background: rgba(0, 0, 0, 0.68);
+  pointer-events: none;
+}
+.char-coming-soon-overlay .cs-badge {
+  font-family: 'Orbitron', sans-serif; font-size: 11px; font-weight: 700;
+  letter-spacing: 0.18em; color: var(--cyan);
+  text-shadow: 0 0 12px rgba(68,238,255,0.8), 0 0 24px rgba(68,238,255,0.4);
+  border: 1px solid rgba(68,238,255,0.4);
+  padding: 3px 8px; border-radius: 3px;
+  background: rgba(68,238,255,0.08);
+  animation: cs-pulse 2.4s ease-in-out infinite;
+}
+@keyframes cs-pulse {
+  0%,100% { opacity: 1; text-shadow: 0 0 12px rgba(68,238,255,0.8), 0 0 24px rgba(68,238,255,0.4); }
+  50%      { opacity: 0.6; text-shadow: 0 0 4px rgba(68,238,255,0.4); }
+}
+/* Toast shown on click */
+.char-cs-toast {
+  position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
+  background: rgba(10,10,30,0.92); border: 1px solid rgba(68,238,255,0.5);
+  color: var(--cyan); font-family: 'Orbitron', sans-serif; font-size: 13px;
+  font-weight: 700; letter-spacing: 0.12em;
+  padding: 10px 24px; border-radius: 6px; z-index: 9999;
+  box-shadow: 0 0 20px rgba(68,238,255,0.3);
+  animation: cs-toast-in 0.2s ease, cs-toast-out 0.3s ease 1.6s forwards;
+  pointer-events: none;
+}
+@keyframes cs-toast-in  { from { opacity:0; transform:translateX(-50%) translateY(10px); } to { opacity:1; transform:translateX(-50%) translateY(0); } }
+@keyframes cs-toast-out { from { opacity:1; } to { opacity:0; } }
+
 /* Additional character selected colors */
 .char-card[data-char="engineer"].selected    { border-color: #FFAA00; box-shadow: 0 0 22px rgba(255,170,0,0.45), 0 12px 40px rgba(0,0,0,0.5); }
 .char-card[data-char="sniper_elite"].selected { border-color: #2288FF; box-shadow: 0 0 22px rgba(34,136,255,0.45), 0 12px 40px rgba(0,0,0,0.5); }
@@ -1566,4 +1601,529 @@ body {
   .site-nav { padding: 0 14px; }
   .nav-btn { padding: 6px 12px; font-size: 10px; }
   .nav-account-name { max-width: 90px; }
+}
+
+/* ════════════════════════════════════════════════════════════
+   PROFILE PAGE
+   ════════════════════════════════════════════════════════════ */
+
+.profile-page {
+  align-items: stretch;   /* full-width layout */
+  padding-top: 70px;
+}
+
+.profile-layout {
+  position: relative; z-index: 1;
+  width: 100%; max-width: 1180px;
+  margin: 0 auto;
+  padding: 24px 24px 60px;
+  display: flex; flex-direction: column; gap: 20px;
+}
+
+/* ── Hero card ────────────────────────────────────────────── */
+.profile-hero-card {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 20px; flex-wrap: wrap;
+  background: rgba(13,13,26,0.85);
+  border: 1px solid rgba(68,238,255,0.12);
+  border-radius: 16px;
+  padding: 24px 28px;
+  box-shadow: 0 4px 40px rgba(0,0,0,0.45), 0 0 60px rgba(68,238,255,0.03);
+  backdrop-filter: blur(10px);
+}
+
+.profile-hero-left {
+  display: flex; align-items: center; gap: 20px;
+}
+
+/* Avatar */
+.profile-avatar-wrap {
+  position: relative; width: 72px; height: 72px; flex-shrink: 0;
+}
+.profile-avatar-ring {
+  position: absolute; inset: -3px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  background: linear-gradient(135deg, var(--cyan), var(--purple)) border-box;
+  -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: destination-out;
+  mask-composite: exclude;
+  animation: spin 8s linear infinite;
+}
+.profile-avatar-inner {
+  width: 72px; height: 72px; border-radius: 50%;
+  background: rgba(68,238,255,0.07);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 32px; color: var(--cyan);
+  text-shadow: 0 0 18px rgba(68,238,255,0.6);
+  border: 1px solid rgba(68,238,255,0.2);
+}
+
+/* Hero info */
+.profile-hero-info { display: flex; flex-direction: column; gap: 8px; }
+.profile-username {
+  font-family: 'Orbitron', sans-serif;
+  font-size: clamp(18px, 2.8vw, 26px);
+  font-weight: 900; color: #fff; letter-spacing: 0.06em;
+  text-shadow: 0 0 12px rgba(255,255,255,0.15);
+}
+.profile-hero-meta { display: flex; align-items: center; gap: 8px; }
+
+.profile-badge {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 10px; font-weight: 700; letter-spacing: 0.14em;
+  padding: 4px 10px; border-radius: 20px;
+  border: 1px solid rgba(68,238,255,0.3);
+  color: var(--cyan); background: rgba(68,238,255,0.08);
+}
+.profile-badge--tier {
+  background: transparent;
+  transition: color 0.3s, border-color 0.3s;
+}
+
+/* Logout in hero */
+.profile-logout-btn {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 11px; font-weight: 700; letter-spacing: 0.12em;
+  padding: 9px 20px; border-radius: 8px;
+  border: 1px solid rgba(255,68,102,0.3);
+  color: var(--pink); background: transparent;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+.profile-logout-btn:hover {
+  background: rgba(255,68,102,0.10);
+  border-color: var(--pink);
+  box-shadow: 0 0 14px rgba(255,68,102,0.2);
+}
+
+/* ════════════════════════════════════════════════════════════
+   BATTLE PASS
+   ════════════════════════════════════════════════════════════ */
+
+.bp-section {
+  background: rgba(13,13,26,0.85);
+  border: 1px solid rgba(68,238,255,0.10);
+  border-radius: 16px;
+  padding: 28px 28px 32px;
+  box-shadow: 0 4px 40px rgba(0,0,0,0.4);
+  backdrop-filter: blur(10px);
+}
+
+/* ── BP header ────────────────────────────────────────────── */
+.bp-header {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  flex-wrap: wrap; gap: 14px;
+  margin-bottom: 22px;
+}
+.bp-header-left { display: flex; align-items: baseline; gap: 14px; }
+
+.bp-title {
+  font-family: 'Orbitron', sans-serif;
+  font-size: clamp(16px, 2.2vw, 20px);
+  font-weight: 900; color: #fff;
+  letter-spacing: 0.1em;
+  text-shadow: 0 0 10px rgba(255,255,255,0.1);
+}
+.bp-season {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 10px; font-weight: 700; letter-spacing: 0.2em;
+  color: var(--muted);
+  padding: 3px 10px; border-radius: 20px;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+.bp-level-badge {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 0;
+  background: rgba(68,238,255,0.06);
+  border: 1px solid rgba(68,238,255,0.18);
+  border-radius: 10px;
+  padding: 8px 18px;
+}
+.bp-lv-label {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 9px; letter-spacing: 0.18em; color: var(--muted);
+}
+.bp-lv-num {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 22px; font-weight: 900; color: var(--cyan);
+  line-height: 1;
+  text-shadow: 0 0 14px rgba(68,238,255,0.5);
+}
+.bp-lv-tier {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 10px; font-weight: 700; letter-spacing: 0.14em;
+  color: var(--muted);
+  padding: 2px 0;
+}
+
+/* Row that holds LEVEL · number · tier name */
+.bp-lv-main {
+  display: flex; align-items: center; gap: 8px;
+}
+
+/* xpForNextLevel shown below the main row */
+.bp-lv-xpcap {
+  display: block; margin-top: 5px;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 9px; font-weight: 700; letter-spacing: 0.14em;
+  color: var(--purple);
+  white-space: nowrap;
+}
+
+/* ── XP bar ───────────────────────────────────────────────── */
+.bp-xp-wrap { margin-bottom: 26px; }
+.bp-xp-labels {
+  display: flex; justify-content: space-between;
+  font-size: 11px; font-weight: 600; letter-spacing: 0.08em;
+  color: var(--muted); margin-bottom: 7px;
+}
+.bp-xp-track {
+  height: 8px; border-radius: 99px;
+  background: rgba(255,255,255,0.06);
+  overflow: hidden;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.4);
+}
+.bp-xp-fill {
+  height: 100%; border-radius: 99px;
+  background: linear-gradient(90deg, var(--cyan) 0%, var(--purple) 100%);
+  box-shadow: 0 0 8px rgba(68,238,255,0.5);
+  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+.bp-xp-fill::after {
+  content: '';
+  position: absolute; right: 0; top: 0; bottom: 0;
+  width: 20px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.35));
+  border-radius: 0 99px 99px 0;
+}
+
+/* ── Level grid ───────────────────────────────────────────── */
+.bp-grid {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 8px;
+}
+
+/* ── Level card ───────────────────────────────────────────── */
+.bp-level {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  border-radius: 10px;
+  padding: 10px 4px 8px;
+  border: 1px solid transparent;
+  cursor: default;
+  transition: transform 0.15s, box-shadow 0.15s;
+  position: relative;
+}
+.bp-level:hover { transform: translateY(-2px); }
+
+/* Completed */
+.bp-level--completed {
+  background: rgba(255,255,255,0.03);
+  border-color: rgba(255,255,255,0.08);
+}
+.bp-level--completed:hover {
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4), 0 0 10px var(--tier-glow, rgba(68,238,255,0.25));
+}
+
+/* Current level — glowing pulse */
+.bp-level--current {
+  background: rgba(68,238,255,0.05);
+  border-color: var(--tier-color, var(--cyan));
+  box-shadow: 0 0 0 1px var(--tier-color, var(--cyan)),
+              0 0 18px var(--tier-glow, rgba(68,238,255,0.4));
+  animation: bpCurrentPulse 2.2s ease-in-out infinite;
+}
+@keyframes bpCurrentPulse {
+  0%,100% { box-shadow: 0 0 0 1px var(--tier-color), 0 0 14px var(--tier-glow); }
+  50%     { box-shadow: 0 0 0 2px var(--tier-color), 0 0 28px var(--tier-glow); }
+}
+.bp-level--current::after {
+  content: '▲';
+  position: absolute; bottom: -14px; left: 50%; transform: translateX(-50%);
+  font-size: 8px; color: var(--tier-color, var(--cyan));
+  opacity: 0.7;
+}
+
+/* Locked */
+.bp-level--locked {
+  background: rgba(255,255,255,0.02);
+  border-color: rgba(255,255,255,0.05);
+  opacity: 0.45;
+}
+
+/* Medal SVG */
+.bp-medal {
+  width: 100%; aspect-ratio: 78/58;
+  display: flex; align-items: center; justify-content: center;
+}
+.bp-medal svg { width: 100%; height: 100%; }
+
+/* Tier label */
+.bp-tier-label {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 7px; font-weight: 700; letter-spacing: 0.1em;
+  color: var(--tier-color, var(--muted));
+  opacity: 0.75;
+  white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis;
+  max-width: 100%;
+  text-align: center;
+}
+.bp-level--locked .bp-tier-label { color: var(--muted); }
+
+/* ── Responsive ───────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .bp-grid { grid-template-columns: repeat(5, 1fr); gap: 6px; }
+}
+@media (max-width: 560px) {
+  .profile-layout { padding: 16px 14px 48px; }
+  .bp-section { padding: 20px 16px 24px; }
+  .bp-grid { grid-template-columns: repeat(5, 1fr); gap: 5px; }
+  .profile-hero-card { padding: 18px 16px; }
+  .bp-level { padding: 7px 3px 6px; }
+  .bp-tier-label { font-size: 6px; }
+}
+
+/* ════════════════════════════════════════════════════════════
+   PROFILE — Stats row (NEX + XP bar inside hero card)
+   ════════════════════════════════════════════════════════════ */
+
+.profile-stats-row {
+  display: flex; align-items: center; gap: 16px;
+  margin-top: 14px;
+  padding: 12px 16px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 10px;
+  flex-wrap: wrap;
+}
+
+/* NEX chip */
+.profile-stat-chip {
+  display: flex; align-items: center; gap: 10px;
+  flex-shrink: 0;
+}
+.profile-stat-icon {
+  font-size: 20px;
+  color: var(--cyan);
+  text-shadow: 0 0 10px rgba(68,238,255,0.6);
+  line-height: 1;
+}
+.profile-stat-body {
+  display: flex; flex-direction: column; gap: 2px;
+}
+.profile-stat-label {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 9px; font-weight: 700; letter-spacing: 0.18em;
+  color: var(--muted);
+}
+.profile-stat-value {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 18px; font-weight: 900; letter-spacing: 0.04em;
+  color: var(--cyan);
+  text-shadow: 0 0 10px rgba(68,238,255,0.4);
+  line-height: 1;
+}
+
+/* Vertical divider */
+.profile-stat-divider {
+  width: 1px; align-self: stretch; min-height: 32px;
+  background: rgba(255,255,255,0.1);
+  flex-shrink: 0;
+}
+
+/* XP section */
+.profile-stat-xp {
+  flex: 1; min-width: 180px;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.profile-stat-xp-labels {
+  display: flex; justify-content: space-between; align-items: baseline;
+  gap: 8px; flex-wrap: wrap;
+}
+.profile-stat-xp-nums {
+  font-size: 11px; font-weight: 600; color: var(--muted);
+  letter-spacing: 0.04em;
+}
+
+/* Hero card XP bar (thicker, more prominent than BP bar) */
+.profile-xp-track {
+  height: 10px; border-radius: 99px;
+  background: rgba(255,255,255,0.06);
+  overflow: hidden;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.5);
+}
+.profile-xp-fill {
+  height: 100%; border-radius: 99px;
+  background: linear-gradient(90deg, var(--cyan) 0%, var(--purple) 100%);
+  box-shadow: 0 0 10px rgba(68,238,255,0.5);
+  transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+.profile-xp-fill::after {
+  content: '';
+  position: absolute; right: 0; top: 0; bottom: 0; width: 24px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3));
+  border-radius: 0 99px 99px 0;
+}
+
+/* ── Skeleton shimmer (loading placeholders) ──────────────── */
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.skeleton-inline,
+.skeleton-text {
+  display: inline-block;
+  background: linear-gradient(
+    90deg,
+    rgba(255,255,255,0.04) 25%,
+    rgba(255,255,255,0.12) 50%,
+    rgba(255,255,255,0.04) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.6s ease-in-out infinite;
+  border-radius: 4px;
+  color: transparent !important;  /* hide text while shimmering */
+  pointer-events: none;
+  min-width: 60px;
+}
+
+/* ── Battle pass loading spinner ──────────────────────────── */
+.bp-loading {
+  display: flex; align-items: center; justify-content: center;
+  gap: 14px; padding: 48px 0;
+  background: rgba(13,13,26,0.85);
+  border: 1px solid rgba(68,238,255,0.10);
+  border-radius: 16px;
+}
+.bp-loading-text {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 12px; font-weight: 700; letter-spacing: 0.18em;
+  color: var(--muted);
+}
+
+/* ── Error banner ─────────────────────────────────────────── */
+.profile-error-banner {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px; flex-wrap: wrap;
+  padding: 14px 20px;
+  background: rgba(255,68,102,0.08);
+  border: 1px solid rgba(255,68,102,0.25);
+  border-radius: 10px;
+  font-size: 13px; font-weight: 600; color: #FF8899;
+  letter-spacing: 0.03em;
+}
+.profile-retry-btn {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 10px; font-weight: 700; letter-spacing: 0.14em;
+  padding: 7px 16px; border-radius: 6px;
+  border: 1px solid rgba(255,68,102,0.4);
+  color: var(--pink); background: transparent; cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+  flex-shrink: 0;
+}
+.profile-retry-btn:hover {
+  background: rgba(255,68,102,0.12);
+  border-color: var(--pink);
+}
+
+@media (max-width: 560px) {
+  .profile-stats-row { gap: 12px; padding: 10px 12px; }
+  .profile-stat-value { font-size: 15px; }
+  .profile-stat-divider { display: none; }
+  .profile-stat-xp { min-width: 100%; }
+}
+
+/* ════════════════════════════════════════════════════════════
+   PROFILE — XP chip (second stat chip next to NEX)
+   ════════════════════════════════════════════════════════════ */
+
+/* Make both chips equal width and sit side by side */
+.profile-stats-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+/* XP chip stretches to fill its column */
+.profile-stat-chip--xp { align-items: flex-start; }
+
+/* Body inside XP chip is full-width */
+.profile-stat-body--xp { flex: 1; min-width: 0; }
+
+/* Top row: label left, numbers right */
+.profile-stat-xp-top {
+  display: flex; justify-content: space-between; align-items: baseline;
+  gap: 6px; margin-bottom: 6px;
+}
+.profile-stat-xp-nums {
+  font-size: 11px; font-weight: 700; color: var(--cyan);
+  letter-spacing: 0.04em; white-space: nowrap;
+  font-family: 'Orbitron', sans-serif;
+}
+
+/* "X XP to next level" subtitle */
+.profile-stat-xp-sub {
+  display: block; margin-top: 5px;
+  font-size: 11px; font-weight: 600; letter-spacing: 0.06em;
+  color: var(--purple);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* ════════════════════════════════════════════════════════════
+   BATTLE PASS — redesigned XP row (current lv → bar → next lv)
+   ════════════════════════════════════════════════════════════ */
+
+/* Remove old label-only layout */
+.bp-xp-labels { display: none; }
+
+.bp-xp-row {
+  display: flex; align-items: center; gap: 14px;
+  margin-bottom: 26px;
+}
+
+/* Level pills (current / next) */
+.bp-xp-lv-pill {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 3px; flex-shrink: 0;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px;
+  padding: 8px 14px;
+  min-width: 58px;
+}
+.bp-xp-lv-pill--next {
+  opacity: 0.7;
+}
+.bp-xp-lv-num {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 20px; font-weight: 900; line-height: 1;
+}
+.bp-xp-lv-label {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 7px; font-weight: 700; letter-spacing: 0.16em;
+  color: var(--muted);
+}
+
+/* Center section: numbers + bar */
+.bp-xp-center { flex: 1; min-width: 0; }
+
+.bp-xp-nums {
+  display: flex; justify-content: space-between; align-items: baseline;
+  font-size: 11px; font-weight: 600; letter-spacing: 0.06em;
+  color: var(--muted); margin-bottom: 8px;
+}
+.bp-xp-togo {
+  color: var(--purple); font-weight: 700;
+}
+
+@media (max-width: 560px) {
+  .profile-stats-row { grid-template-columns: 1fr; }
+  .bp-xp-row { gap: 8px; }
+  .bp-xp-lv-pill { padding: 6px 10px; min-width: 48px; }
+  .bp-xp-lv-num { font-size: 16px; }
 }
