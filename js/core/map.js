@@ -592,6 +592,8 @@ class GameMap {
   // ctx is already translated to world-space by the caller.
   renderStreetLightPoles(ctx, camX, camY, canvasW, canvasH, nightAlpha) {
     if (!this.streetLights || !this.streetLights.length) return;
+    // Only render light poles during dark/night on neon city
+    if (this.config.id === 'neon_city' && nightAlpha < 0.01) return;
     const margin = 80;
     const x0 = camX - margin, y0 = camY - margin;
     const x1 = camX + canvasW + margin, y1 = camY + canvasH + margin;
@@ -639,24 +641,25 @@ class GameMap {
       ctx.fillRect(lx - 6, ly + 3, 12, 2);
 
       // ── Bulb (dim off-state during day, bright at night) ─────
+      const isNeonCity = this.config.id === 'neon_city';
       const bulbAlpha = lit ? 0.65 + nightAlpha * 0.35 : 0.18;
-      // Outer glow ring (night only)
+      // Outer glow ring (night only) - smaller for neon city
       if (lit && nightAlpha > 0.05) {
         ctx.globalAlpha = nightAlpha * 0.45;
         ctx.fillStyle   = `rgba(${lt.r},${lt.g},${lt.b},1)`;
-        ctx.beginPath(); ctx.arc(lx, ly, 14, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(lx, ly, isNeonCity ? 8 : 14, 0, Math.PI * 2); ctx.fill();
         ctx.globalAlpha = nightAlpha * 0.70;
-        ctx.beginPath(); ctx.arc(lx, ly, 9, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(lx, ly, isNeonCity ? 5 : 9, 0, Math.PI * 2); ctx.fill();
         ctx.globalAlpha = 1;
       }
-      // Core bulb
+      // Core bulb - smaller for neon city
       ctx.fillStyle   = `rgba(${lt.r},${lt.g},${lt.b},${bulbAlpha})`;
-      ctx.beginPath(); ctx.arc(lx, ly, 4.5, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(lx, ly, isNeonCity ? 2.5 : 4.5, 0, Math.PI * 2); ctx.fill();
       // Hot white center
       if (lit) {
         ctx.globalAlpha = nightAlpha * 0.85;
         ctx.fillStyle = `rgba(255,255,255,1)`;
-        ctx.beginPath(); ctx.arc(lx, ly, 2, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(lx, ly, isNeonCity ? 1.2 : 2, 0, Math.PI * 2); ctx.fill();
         ctx.globalAlpha = 1;
       }
     }
@@ -674,6 +677,7 @@ class GameMap {
     const x1 = camX + canvasW + margin, y1 = camY + canvasH + margin;
     const S  = this.S;
     const a  = nightAlpha; // 0 → 1
+    const isNeonCity = this.config.id === 'neon_city';
 
     ctx.save();
     ctx.globalCompositeOperation = 'lighter'; // additive blending
@@ -685,14 +689,16 @@ class GameMap {
       const ly = lt.wy + lt.armDy * (S * 0.44);
       const { r, g, b } = lt;
       // Ground pool direction: arm points toward road, so light pools there
-      const poolX = lx + lt.armDx * 28;
-      const poolY = ly + lt.armDy * 28;
+      const poolDist = isNeonCity ? 18 : 28;
+      const poolX = lx + lt.armDx * poolDist;
+      const poolY = ly + lt.armDy * poolDist;
 
       // ── Large soft ground pool via radial gradient ───────────
-      const poolR = 110;
-      const grd = ctx.createRadialGradient(poolX, poolY, 4, poolX, poolY, poolR);
-      grd.addColorStop(0,    `rgba(${r},${g},${b},${a * 0.38})`);
-      grd.addColorStop(0.22, `rgba(${r},${g},${b},${a * 0.22})`);
+      // Neon City: smaller, more focused lights
+      const poolR = isNeonCity ? 55 : 110;
+      const grd = ctx.createRadialGradient(poolX, poolY, 2, poolX, poolY, poolR);
+      grd.addColorStop(0,    `rgba(${r},${g},${b},${a * (isNeonCity ? 0.50 : 0.38)})`);
+      grd.addColorStop(0.22, `rgba(${r},${g},${b},${a * (isNeonCity ? 0.30 : 0.22)})`);
       grd.addColorStop(0.55, `rgba(${r},${g},${b},${a * 0.08})`);
       grd.addColorStop(1,    `rgba(${r},${g},${b},0)`);
       ctx.globalAlpha = 1;
@@ -700,17 +706,19 @@ class GameMap {
       ctx.beginPath(); ctx.ellipse(poolX, poolY, poolR, poolR * 0.72, 0, 0, Math.PI * 2); ctx.fill();
 
       // ── Mid halo ring around the lamp head ────────────────────
-      const haloGrd = ctx.createRadialGradient(lx, ly, 2, lx, ly, 38);
+      const haloR = isNeonCity ? 20 : 38;
+      const haloGrd = ctx.createRadialGradient(lx, ly, 1, lx, ly, haloR);
       haloGrd.addColorStop(0,    `rgba(${r},${g},${b},${a * 0.70})`);
       haloGrd.addColorStop(0.35, `rgba(${r},${g},${b},${a * 0.28})`);
       haloGrd.addColorStop(1,    `rgba(${r},${g},${b},0)`);
       ctx.fillStyle = haloGrd;
-      ctx.beginPath(); ctx.arc(lx, ly, 38, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(lx, ly, haloR, 0, Math.PI * 2); ctx.fill();
 
       // ── Bright bulb core ──────────────────────────────────────
       ctx.globalAlpha = a * 0.90;
       ctx.fillStyle = `rgba(${Math.min(255,r+60)},${Math.min(255,g+60)},${Math.min(255,b+60)},1)`;
-      ctx.beginPath(); ctx.arc(lx, ly, 7, 0, Math.PI * 2); ctx.fill();
+      const coreR = isNeonCity ? 4 : 7;
+      ctx.beginPath(); ctx.arc(lx, ly, coreR, 0, Math.PI * 2); ctx.fill();
       ctx.globalAlpha = 1;
     }
 
@@ -1625,6 +1633,81 @@ class GameMap {
               ctx.beginPath(); ctx.arc(wx + Math.round(S*0.84), wy + Math.round(S*0.28), 9, 0, Math.PI*2); ctx.fill();
               ctx.globalAlpha = 1;
             }
+          } else if (cfg.id === 'neon_city') {
+            // Neon City: Varied 2D building shapes with cyberpunk style
+            const bseed = (x * 41 + y * 59) % 8;
+            const baseCol = this.buildingColors[y][x];
+            ctx.fillStyle = baseCol;
+
+            // Different building shapes based on seed
+            if (bseed === 0) {
+              // Tall narrow skyscraper
+              ctx.fillRect(wx + S*0.2, wy, S*0.6, S);
+              ctx.fillStyle = 'rgba(0,0,0,0.3)';
+              ctx.fillRect(wx + S*0.2, wy, S*0.6, S*0.1);
+            } else if (bseed === 1) {
+              // L-shaped building
+              ctx.fillRect(wx, wy, S*0.5, S);
+              ctx.fillRect(wx, wy + S*0.5, S, S*0.5);
+            } else if (bseed === 2) {
+              // Stepped pyramid
+              ctx.fillRect(wx + S*0.1, wy + S*0.6, S*0.8, S*0.4);
+              ctx.fillRect(wx + S*0.2, wy + S*0.3, S*0.6, S*0.7);
+              ctx.fillRect(wx + S*0.3, wy, S*0.4, S);
+            } else if (bseed === 3) {
+              // Twin towers
+              ctx.fillRect(wx + S*0.05, wy, S*0.35, S);
+              ctx.fillRect(wx + S*0.6, wy, S*0.35, S);
+              ctx.fillRect(wx + S*0.2, wy + S*0.7, S*0.6, S*0.3);
+            } else if (bseed === 4) {
+              // Rounded top building
+              ctx.fillRect(wx + S*0.15, wy + S*0.3, S*0.7, S*0.7);
+              ctx.beginPath();
+              ctx.arc(wx + S*0.5, wy + S*0.35, S*0.35, Math.PI, 0);
+              ctx.fill();
+            } else if (bseed === 5) {
+              // Hexagonal tower
+              ctx.beginPath();
+              const hcx = wx + S*0.5, hcy = wy + S*0.5;
+              for (let i = 0; i < 6; i++) {
+                const angle = (Math.PI / 3) * i - Math.PI / 2;
+                const hx = hcx + Math.cos(angle) * S*0.42;
+                const hy = hcy + Math.sin(angle) * S*0.42;
+                if (i === 0) ctx.moveTo(hx, hy);
+                else ctx.lineTo(hx, hy);
+              }
+              ctx.closePath();
+              ctx.fill();
+            } else if (bseed === 6) {
+              // Slanted/parallelogram
+              ctx.beginPath();
+              ctx.moveTo(wx + S*0.2, wy);
+              ctx.lineTo(wx + S*0.9, wy);
+              ctx.lineTo(wx + S*0.8, wy + S);
+              ctx.lineTo(wx + S*0.1, wy + S);
+              ctx.closePath();
+              ctx.fill();
+            } else {
+              // Standard with setback
+              ctx.fillRect(wx + S*0.05, wy + S*0.4, S*0.9, S*0.6);
+              ctx.fillRect(wx + S*0.15, wy, S*0.7, S);
+            }
+
+            // Neon edge glow
+            ctx.strokeStyle = cfg.neonColors[(x + y) % cfg.neonColors.length] + '66';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(wx + 2, wy + 2, S - 4, S - 4);
+
+            // Cyber windows - small glowing dots
+            const winCol = cfg.windowColors[(x * 3 + y * 7) % cfg.windowColors.length];
+            ctx.fillStyle = winCol;
+            for (let wy2 = 0; wy2 < 3; wy2++) {
+              for (let wx2 = 0; wx2 < 3; wx2++) {
+                if (Math.sin(x * 5.7 + y * 3.3 + wx2 * 7 + wy2 * 11) > 0.1) {
+                  ctx.fillRect(wx + 12 + wx2 * 22, wy + 12 + wy2 * 22, 8, 6);
+                }
+              }
+            }
           } else {
             ctx.fillStyle = this.buildingColors[y][x];
             ctx.fillRect(wx, wy, S, S);
@@ -1660,8 +1743,9 @@ class GameMap {
             }
           }
 
-          // Windows (not in robot/jungle/desert) — no shadowBlur for performance
-          if (!cfg.robot && !cfg.jungle && !cfg.desert && !cfg.galactica && this.buildingWindows[y][x]) {
+          // Windows (not in robot/jungle/desert/neon_city) — no shadowBlur for performance
+          // Neon City has custom windows in the building shapes above
+          if (!cfg.robot && !cfg.jungle && !cfg.desert && !cfg.galactica && cfg.id !== 'neon_city' && this.buildingWindows[y][x]) {
             const wc = cfg.windowColors[(Math.floor(x/2) + Math.floor(y/2)) % cfg.windowColors.length];
             ctx.fillStyle = wc + 'CC';
             for (let wy2 = 0; wy2 < 2; wy2++) {
@@ -1672,8 +1756,9 @@ class GameMap {
               }
             }
           }
-          // Neon sign strips (not in robot/jungle/desert) — no shadowBlur for performance
-          if (!cfg.robot && !cfg.jungle && !cfg.desert && !cfg.galactica && (x + y) % cfg.neonFreq === 0) {
+          // Neon sign strips (not in robot/jungle/desert/neon_city) — no shadowBlur for performance
+          // Neon City has custom neon effects in building shapes
+          if (!cfg.robot && !cfg.jungle && !cfg.desert && !cfg.galactica && cfg.id !== 'neon_city' && (x + y) % cfg.neonFreq === 0) {
             const nc = cfg.neonColors[(x * 3 + y) % cfg.neonColors.length];
             ctx.globalAlpha = 0.65;
             ctx.strokeStyle = nc; ctx.lineWidth = 2;

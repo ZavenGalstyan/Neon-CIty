@@ -1706,6 +1706,16 @@ class Player {
       this.invincible   -= dt;
       this._muzzleFlash -= dt;
       if (this._ammoBoost > 0) this._ammoBoost -= dt;
+
+      // Neon City: allow shooting while driving
+      if (gameMap.config.id === 'neon_city') {
+        this.angle = Math.atan2(input.mouseWorld.y - this.y, input.mouseWorld.x - this.x);
+        this.fireCooldown -= dt * 1000;
+        if (input.mouseDown && this.fireCooldown <= 0) {
+          this._shoot(bullets, particles);
+          this.fireCooldown = this._activeFireRate();
+        }
+      }
       return;
     }
 

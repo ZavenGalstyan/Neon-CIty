@@ -386,6 +386,7 @@ class Game {
   }
 
   _destroy() {
+    this._destroyed = true;
     window.removeEventListener('keydown', this._keyHandler);
     this.canvas.removeEventListener('wheel', this._wheelHandler);
     if (this._raf) cancelAnimationFrame(this._raf);
@@ -393,6 +394,7 @@ class Game {
 
   // ── Game loop ──────────────────────────────────────────────
   _loop(timestamp) {
+    if (this._destroyed) return; // Stop if game was destroyed
     if (this._lastTime === null) this._lastTime = timestamp;
     const dt = Math.min((timestamp - this._lastTime) / 1000, 0.05);
     this._lastTime = timestamp;
@@ -417,6 +419,7 @@ class Game {
     } catch(e) { console.error('update error:', e); }
 
     try { this._render(); } catch(e) { console.error('render error:', e); }
+    if (this._destroyed) return; // Don't continue if destroyed during render
     this.input.flush();
     this._raf = requestAnimationFrame((t) => this._loop(t));
   }
@@ -1152,6 +1155,25 @@ class Game {
     const colors = ['#CC3333', '#3366BB', '#CC9900', '#339944', '#AA33AA', '#336688'];
     const oceanColors = ['#0077AA', '#005588', '#006699', '#008899', '#004466'];
     const isOcean = !!this.map.config.ocean;
+    const isNeonCity = this.map.config.id === 'neon_city';
+
+    // Neon City: spawn 3 orange vehicles for the player (no other traffic)
+    if (isNeonCity) {
+      for (let i = 0; i < 3; i++) {
+        let rp;
+        // Try to find a road position not too far from player (but not too close)
+        for (let t = 0; t < 15; t++) {
+          rp = this.map.randomRoadPos();
+          const dist = Math.hypot(rp.x - this.player.x, rp.y - this.player.y);
+          // Between 150-600 pixels from player for easier finding
+          if (dist > 150 && dist < 600) break;
+        }
+        const v = new Vehicle(rp.x, rp.y, '#FF8800', this.map.config); // Orange vehicle
+        this.vehicles.push(v);
+      }
+      return;
+    }
+
     const count  = 3 + Math.floor(Math.random() * 2);
     for (let i = 0; i < count; i++) {
       let rp;
@@ -1790,12 +1812,16 @@ class Game {
 
   _spawnAmbientTraffic() {
     if (this._arenaMode || this._zombieMode || this._towerMode) return;
+    // No ambient traffic on neon city map
+    if (this.map.config.id === 'neon_city') return;
     const base  = this._metropolisMode ? 12 : 6;
     const count = base + Math.floor(Math.random() * 6);
     for (let i = 0; i < count; i++) this._respawnAmbientCar();
   }
 
   _respawnAmbientCar() {
+    // No ambient traffic on neon city map
+    if (this.map.config.id === 'neon_city') return;
     const maxCars = this._metropolisMode ? 22 : 14;
     if (this._ambientCars.length >= maxCars) return;
     // Spawn off-camera on a road tile
@@ -3733,21 +3759,100 @@ class Game {
       for (const p of this._portals) {
         const pulse = Math.sin(p._animT * 3.5) * 0.35 + 0.65;
         const near  = Math.hypot(p.x - this.player.x, p.y - this.player.y) < 55;
+        const isNeonCity = this.map.config.id === 'neon_city';
         ctx.save(); ctx.translate(p.x, p.y);
-        ctx.shadowColor = '#44EEFF'; ctx.shadowBlur = 28 * pulse;
-        ctx.fillStyle   = `rgba(0,120,200,${pulse * 0.25})`;
-        ctx.beginPath(); ctx.ellipse(0, 0, 22, 34, 0, 0, Math.PI * 2); ctx.fill();
-        ctx.strokeStyle = `rgba(68,238,255,${pulse})`; ctx.lineWidth = 2.5;
-        ctx.beginPath(); ctx.ellipse(0, 0, 22, 34, 0, 0, Math.PI * 2); ctx.stroke();
-        ctx.strokeStyle = `rgba(255,255,255,${pulse * 0.5})`; ctx.lineWidth = 1;
-        ctx.beginPath(); ctx.ellipse(0, 0, 13, 20, 0, 0, Math.PI * 2); ctx.stroke();
-        ctx.shadowBlur = 0;
-        ctx.fillStyle  = near ? '#FFFFAA' : '#88FFFF';
-        ctx.font       = `bold 8px Orbitron, monospace`; ctx.textAlign = 'center';
-        ctx.fillText('PORTAL', 0, -40);
-        if (near) {
-          ctx.fillStyle = '#FFFFAA'; ctx.shadowColor = '#FFFF00'; ctx.shadowBlur = 8;
-          ctx.fillText('[E] TELEPORT', 0, -52);
+
+        if (isNeonCity) {
+          // Neon City: Beautiful cyber portal with rotating rings and energy effects
+          const t = p._animT;
+          const pulse2 = Math.sin(t * 2) * 0.3 + 0.7;
+          const pulse3 = Math.sin(t * 4) * 0.2 + 0.8;
+
+          // Outer rotating ring
+          ctx.save();
+          ctx.rotate(t * 0.5);
+          ctx.strokeStyle = `rgba(0,255,255,${pulse * 0.6})`;
+          ctx.lineWidth = 2;
+          ctx.setLineDash([8, 12]);
+          ctx.beginPath(); ctx.arc(0, 0, 38, 0, Math.PI * 2); ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.restore();
+
+          // Middle counter-rotating ring
+          ctx.save();
+          ctx.rotate(-t * 0.8);
+          ctx.strokeStyle = `rgba(255,0,255,${pulse2 * 0.5})`;
+          ctx.lineWidth = 1.5;
+          ctx.setLineDash([5, 8]);
+          ctx.beginPath(); ctx.arc(0, 0, 30, 0, Math.PI * 2); ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.restore();
+
+          // Inner glow core
+          const coreGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, 24);
+          coreGrad.addColorStop(0, `rgba(0,255,255,${pulse3 * 0.8})`);
+          coreGrad.addColorStop(0.3, `rgba(100,0,255,${pulse2 * 0.5})`);
+          coreGrad.addColorStop(0.7, `rgba(255,0,150,${pulse * 0.3})`);
+          coreGrad.addColorStop(1, 'rgba(0,0,0,0)');
+          ctx.fillStyle = coreGrad;
+          ctx.beginPath(); ctx.arc(0, 0, 24, 0, Math.PI * 2); ctx.fill();
+
+          // Energy particles orbiting
+          for (let i = 0; i < 6; i++) {
+            const angle = t * 2 + (i * Math.PI / 3);
+            const dist = 20 + Math.sin(t * 3 + i) * 5;
+            const px = Math.cos(angle) * dist;
+            const py = Math.sin(angle) * dist;
+            ctx.fillStyle = i % 2 === 0 ? `rgba(0,255,255,${pulse})` : `rgba(255,0,255,${pulse})`;
+            ctx.beginPath(); ctx.arc(px, py, 2, 0, Math.PI * 2); ctx.fill();
+          }
+
+          // Central bright core
+          ctx.shadowColor = '#00FFFF'; ctx.shadowBlur = 20 * pulse;
+          ctx.fillStyle = `rgba(255,255,255,${pulse3})`;
+          ctx.beginPath(); ctx.arc(0, 0, 6, 0, Math.PI * 2); ctx.fill();
+
+          // Hexagon frame
+          ctx.shadowBlur = 15 * pulse;
+          ctx.strokeStyle = `rgba(0,255,255,${pulse})`;
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          for (let i = 0; i < 6; i++) {
+            const angle = (Math.PI / 3) * i - Math.PI / 2;
+            const hx = Math.cos(angle) * 26;
+            const hy = Math.sin(angle) * 26;
+            if (i === 0) ctx.moveTo(hx, hy);
+            else ctx.lineTo(hx, hy);
+          }
+          ctx.closePath();
+          ctx.stroke();
+
+          ctx.shadowBlur = 0;
+          ctx.fillStyle = near ? '#FFFFAA' : '#00FFFF';
+          ctx.font = 'bold 9px Orbitron, monospace'; ctx.textAlign = 'center';
+          ctx.shadowColor = '#00FFFF'; ctx.shadowBlur = 10;
+          ctx.fillText('◈ PORTAL ◈', 0, -48);
+          if (near) {
+            ctx.fillStyle = '#FFFFAA'; ctx.shadowColor = '#FFFF00'; ctx.shadowBlur = 12;
+            ctx.fillText('[E] TELEPORT', 0, -62);
+          }
+        } else {
+          // Default portal style
+          ctx.shadowColor = '#44EEFF'; ctx.shadowBlur = 28 * pulse;
+          ctx.fillStyle   = `rgba(0,120,200,${pulse * 0.25})`;
+          ctx.beginPath(); ctx.ellipse(0, 0, 22, 34, 0, 0, Math.PI * 2); ctx.fill();
+          ctx.strokeStyle = `rgba(68,238,255,${pulse})`; ctx.lineWidth = 2.5;
+          ctx.beginPath(); ctx.ellipse(0, 0, 22, 34, 0, 0, Math.PI * 2); ctx.stroke();
+          ctx.strokeStyle = `rgba(255,255,255,${pulse * 0.5})`; ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.ellipse(0, 0, 13, 20, 0, 0, Math.PI * 2); ctx.stroke();
+          ctx.shadowBlur = 0;
+          ctx.fillStyle  = near ? '#FFFFAA' : '#88FFFF';
+          ctx.font       = `bold 8px Orbitron, monospace`; ctx.textAlign = 'center';
+          ctx.fillText('PORTAL', 0, -40);
+          if (near) {
+            ctx.fillStyle = '#FFFFAA'; ctx.shadowColor = '#FFFF00'; ctx.shadowBlur = 8;
+            ctx.fillText('[E] TELEPORT', 0, -52);
+          }
         }
         ctx.restore();
       }
@@ -3956,7 +4061,7 @@ class Game {
     // HUD
     const playing = this.state !== 'gameover';
     if (playing) {
-      this.hud.renderMinimap(this.map, this.player, this.bots, this.camX, this.camY, this.boss, this._districtLayout);
+      this.hud.renderMinimap(this.map, this.player, this.bots, this.camX, this.camY, this.boss, this._districtLayout, this.vehicles);
       if (this._waypointDoor) this.hud.renderWaypointNav(this.player, this._waypointDoor, this.map);
       this.hud.renderHealthBar(this.player);
       this.hud.renderControls(this._arenaMode, this._isMobile);
@@ -4054,8 +4159,28 @@ class Game {
           }
         }
       } else {
-        this.hud.renderGameOver(this.money, this.kills, this._surviveTime);
-        if (this.input.mouseJustDown) { this._destroy(); window.location.href = 'index.html'; }
+        const mx = this.input.mouseScreen.x, my = this.input.mouseScreen.y;
+        const gameOverButtons = this.hud.renderGameOver(this.money, this.kills, this._surviveTime, mx, my);
+
+        // Handle button clicks (same pattern as keyboard R handler)
+        if (this.input.mouseJustDown && gameOverButtons) {
+          // Check Restart button
+          const restartBtn = gameOverButtons.restart;
+          if (restartBtn && mx >= restartBtn.x && mx <= restartBtn.x + restartBtn.w &&
+              my >= restartBtn.y && my <= restartBtn.y + restartBtn.h) {
+            this._destroy();
+            window.startGame(this.charData, this.map.config);
+            return;
+          }
+          // Check Main Menu button
+          const menuBtn = gameOverButtons.menu;
+          if (menuBtn && mx >= menuBtn.x && mx <= menuBtn.x + menuBtn.w &&
+              my >= menuBtn.y && my <= menuBtn.y + menuBtn.h) {
+            this._destroy();
+            window.location.href = 'index.html';
+            return;
+          }
+        }
       }
     }
 
