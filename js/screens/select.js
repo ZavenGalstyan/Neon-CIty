@@ -45,6 +45,16 @@
   const nextBtn      = document.getElementById('nextBtn');
 
   // ── Step navigation ──────────────────────────────────────
+  let _csToastTimer = null;
+  function _showComingSoonToast() {
+    if (_csToastTimer) { clearTimeout(_csToastTimer); document.querySelector('.char-cs-toast')?.remove(); }
+    const toast = document.createElement('div');
+    toast.className = 'char-cs-toast';
+    toast.textContent = 'COMING SOON';
+    document.body.appendChild(toast);
+    _csToastTimer = setTimeout(() => { toast.remove(); _csToastTimer = null; }, 1900);
+  }
+
   function goToStep(n) {
     const oldEl = document.getElementById(`step${currentStep}`);
     const newEl = document.getElementById(`step${n}`);
@@ -78,6 +88,11 @@
   // ── Character selection ──────────────────────────────────
   charCards.forEach(card => {
     card.addEventListener('click', () => {
+      // Coming soon characters — show toast, do nothing else
+      if (card.dataset.comingSoon === 'true') {
+        _showComingSoonToast();
+        return;
+      }
       // Check if character is locked
       if (card.classList.contains('char-card-locked')) {
         const charData = CONFIG.CHARACTERS.find(c => c.id === card.dataset.char);

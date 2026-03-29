@@ -368,6 +368,41 @@ body {
 }
 .char-card-locked::after { display: none; } /* no checkmark for locked */
 
+/* Coming Soon overlay — replaces price badge */
+.char-coming-soon-overlay {
+  position: absolute; inset: 0; z-index: 10;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 4px;
+  background: rgba(0, 0, 0, 0.68);
+  pointer-events: none;
+}
+.char-coming-soon-overlay .cs-badge {
+  font-family: 'Orbitron', sans-serif; font-size: 11px; font-weight: 700;
+  letter-spacing: 0.18em; color: var(--cyan);
+  text-shadow: 0 0 12px rgba(68,238,255,0.8), 0 0 24px rgba(68,238,255,0.4);
+  border: 1px solid rgba(68,238,255,0.4);
+  padding: 3px 8px; border-radius: 3px;
+  background: rgba(68,238,255,0.08);
+  animation: cs-pulse 2.4s ease-in-out infinite;
+}
+@keyframes cs-pulse {
+  0%,100% { opacity: 1; text-shadow: 0 0 12px rgba(68,238,255,0.8), 0 0 24px rgba(68,238,255,0.4); }
+  50%      { opacity: 0.6; text-shadow: 0 0 4px rgba(68,238,255,0.4); }
+}
+/* Toast shown on click */
+.char-cs-toast {
+  position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
+  background: rgba(10,10,30,0.92); border: 1px solid rgba(68,238,255,0.5);
+  color: var(--cyan); font-family: 'Orbitron', sans-serif; font-size: 13px;
+  font-weight: 700; letter-spacing: 0.12em;
+  padding: 10px 24px; border-radius: 6px; z-index: 9999;
+  box-shadow: 0 0 20px rgba(68,238,255,0.3);
+  animation: cs-toast-in 0.2s ease, cs-toast-out 0.3s ease 1.6s forwards;
+  pointer-events: none;
+}
+@keyframes cs-toast-in  { from { opacity:0; transform:translateX(-50%) translateY(10px); } to { opacity:1; transform:translateX(-50%) translateY(0); } }
+@keyframes cs-toast-out { from { opacity:1; } to { opacity:0; } }
+
 /* Additional character selected colors */
 .char-card[data-char="engineer"].selected    { border-color: #FFAA00; box-shadow: 0 0 22px rgba(255,170,0,0.45), 0 12px 40px rgba(0,0,0,0.5); }
 .char-card[data-char="sniper_elite"].selected { border-color: #2288FF; box-shadow: 0 0 22px rgba(34,136,255,0.45), 0 12px 40px rgba(0,0,0,0.5); }
