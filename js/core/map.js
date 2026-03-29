@@ -54,6 +54,22 @@ const ROOM_LAYOUT_2 = [
   [1,1,1,1,1,1,0,0,0,1,1,1,1,1,1],  // door gap cols 6-8
 ]; // 15×10 tiles, 60px each → 900×600 px
 
+// Larger showroom for Neon City dealership (0=floor, 1=wall)
+const ROOM_LAYOUT_DEALER_NEON = [
+  [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+  [1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1],  // door gap cols 7-10
+]; // 18×12 tiles, 60px each → 1080×720 px
+
 // 0=floor  1=wall  2=bench  3=tracks(blocked)
 const ROOM_LAYOUT_METRO = [
   [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
@@ -1978,16 +1994,20 @@ class GameMap {
   // ── Indoor room factory ───────────────────────────────────
   getRoom(door) {
     const RS     = 60;  // indoor tile size (px)
-    const layout = door.type === 2 ? ROOM_LAYOUT_2 : ROOM_LAYOUT_1;
+    const isNeonDealer = this.config.id === 'neon_city' && door.specialType === 'dealership';
+    const layout = isNeonDealer ? ROOM_LAYOUT_DEALER_NEON
+                 : door.type === 2 ? ROOM_LAYOUT_2 : ROOM_LAYOUT_1;
     const RH     = layout.length;
     const RW     = layout[0].length;
     const RW_px  = RW * RS;
     const RH_px  = RH * RS;
 
     // Entry X = door gap center of the bottom row
-    const entryX = door.type === 2
-      ? ((6 + 7) / 2 + 0.5) * RS   // gap cols 6-8 center
-      : ((4 + 5) / 2 + 0.5) * RS;  // gap cols 4-5 center
+    const entryX = isNeonDealer
+      ? ((7 + 10) / 2 + 0.5) * RS   // Neon dealer: gap cols 7-10 center
+      : door.type === 2
+        ? ((6 + 7) / 2 + 0.5) * RS   // gap cols 6-8 center
+        : ((4 + 5) / 2 + 0.5) * RS;  // gap cols 4-5 center
     const entryY = RH_px - RS - 12;
 
     // Collect walkable floor positions for spawning

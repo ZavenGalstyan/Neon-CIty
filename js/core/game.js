@@ -1976,6 +1976,7 @@ class Game {
   }
 
   _buildDistrictLayout() {
+    // No districts for arena, zombie, life modes
     if (this._arenaMode || this._zombieMode || this._lifeMode) return null;
     const types = ['dangerous', 'rich', 'industrial'];
     for (let i = types.length - 1; i > 0; i--) {
@@ -2093,10 +2094,21 @@ class Game {
         this.player.y = room.entryY;
 
         if (room.isDealership) {
-          this._salespersons = [
-            new Salesperson(room.entryX + 55,  room.entryY - 90,  '#FFAA55', 'DEALER'),
-            new Salesperson(room.entryX - 55,  room.entryY - 130, '#55AAFF', 'DEALER'),
-          ];
+          const isNeonCity = this.map.config.id === 'neon_city';
+          if (isNeonCity) {
+            // Neon City: One professional cyber salesperson behind the counter
+            // Counter is at S * 1.8 + 35 height, salesperson stands in front of counter (facing customers)
+            const spX = room.roomW / 2;
+            const spY = room.S * 2.2 + 40 + 55; // In front of counter, facing the showroom
+            this._salespersons = [
+              new Salesperson(spX, spY, '#00FFFF', 'SALES REP', true),
+            ];
+          } else {
+            this._salespersons = [
+              new Salesperson(room.entryX + 55,  room.entryY - 90,  '#FFAA55', 'DEALER'),
+              new Salesperson(room.entryX - 55,  room.entryY - 130, '#55AAFF', 'DEALER'),
+            ];
+          }
         } else if (room.isCasino) {
           this._casinoHosts = [
             new Salesperson(room.entryX + 60,  room.entryY - 85,  '#FF44AA', 'HOST'),
@@ -3577,45 +3589,351 @@ class Game {
     const room = this._indoor;
     const offX = (W - room.roomW) / 2, offY = (H - room.roomH) / 2;
     const S = room.S;
-    ctx.fillStyle = '#06060a'; ctx.fillRect(0, 0, W, H);
-    ctx.save(); ctx.translate(offX + shake.x, offY + shake.y);
-    // Glossy showroom floor (checkerboard)
-    for (let ty = 0; ty < room.H; ty++) {
-      for (let tx = 0; tx < room.W; tx++) {
-        const px = tx * S, py = ty * S, t = room.layout[ty][tx];
-        if (t === 1) {
-          ctx.fillStyle = '#111120'; ctx.fillRect(px, py, S, S);
-        } else {
-          ctx.fillStyle = (tx + ty) % 2 === 0 ? '#12121e' : '#0e0e18';
-          ctx.fillRect(px, py, S, S);
-          ctx.fillStyle = 'rgba(68,238,255,0.018)';
-          ctx.fillRect(px, py, S, S);
+    const isNeonCity = this.map.config.id === 'neon_city';
+    const t = performance.now() / 1000;
+
+    // Background
+    ctx.fillStyle = isNeonCity ? '#020208' : '#06060a';
+    ctx.fillRect(0, 0, W, H);
+
+    ctx.save();
+    ctx.translate(offX + shake.x, offY + shake.y);
+
+    if (isNeonCity) {
+      // ═══ NEON CITY CYBERPUNK SHOWROOM ═══
+
+      // Dark reflective floor base
+      for (let ty = 0; ty < room.H; ty++) {
+        for (let tx = 0; tx < room.W; tx++) {
+          const px = tx * S, py = ty * S, tile = room.layout[ty][tx];
+          if (tile === 1) {
+            // Walls - dark cyber panels
+            ctx.fillStyle = '#0a0a14';
+            ctx.fillRect(px, py, S, S);
+            // Vertical neon strips on walls
+            if ((tx + ty) % 3 === 0) {
+              ctx.fillStyle = 'rgba(0,255,255,0.15)';
+              ctx.fillRect(px + S/2 - 1, py, 2, S);
+            }
+          } else {
+            // Floor - dark with subtle grid
+            ctx.fillStyle = '#08080e';
+            ctx.fillRect(px, py, S, S);
+
+            // Neon grid lines
+            ctx.strokeStyle = 'rgba(0,255,255,0.08)';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(px, py, S, S);
+
+            // Glowing floor tiles at intervals
+            if ((tx + ty) % 4 === 0) {
+              const pulse = Math.sin(t * 2 + tx + ty) * 0.5 + 0.5;
+              ctx.fillStyle = `rgba(0,255,255,${0.03 + pulse * 0.02})`;
+              ctx.fillRect(px + 4, py + 4, S - 8, S - 8);
+            }
+          }
         }
       }
+
+      // Neon border around room
+      ctx.strokeStyle = '#00FFFF';
+      ctx.lineWidth = 2;
+      ctx.shadowColor = '#00FFFF';
+      ctx.shadowBlur = 15;
+      ctx.strokeRect(S + 2, S + 2, room.roomW - S * 2 - 4, room.roomH - S * 2 - 4);
+      ctx.shadowBlur = 0;
+
+      // Top accent bar with animated gradient
+      const topGrad = ctx.createLinearGradient(0, S, room.roomW, S);
+      topGrad.addColorStop(0, 'rgba(255,0,255,0.3)');
+      topGrad.addColorStop(0.5, 'rgba(0,255,255,0.5)');
+      topGrad.addColorStop(1, 'rgba(255,0,255,0.3)');
+      ctx.fillStyle = topGrad;
+      ctx.fillRect(S, S, room.roomW - S * 2, 4);
+
+      // Showroom title
+      ctx.save();
+      ctx.font = 'bold 18px Orbitron, monospace';
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#00FFFF';
+      ctx.shadowColor = '#00FFFF';
+      ctx.shadowBlur = 25;
+      ctx.fillText('◈ CYBER MOTORS ◈', room.roomW / 2, S + 32);
+      ctx.shadowBlur = 0;
+      ctx.restore();
+
+      // ═══ CASHIER COUNTER AREA ═══
+      const counterX = room.roomW / 2 - 75;
+      const counterY = S * 2.2;
+      const counterW = 150;
+      const counterH = 40;
+
+      // Counter shadow
+      ctx.fillStyle = 'rgba(0,0,0,0.4)';
+      ctx.fillRect(counterX + 4, counterY + counterH + 2, counterW, 6);
+
+      // Counter base (dark cyber desk)
+      const counterGrad = ctx.createLinearGradient(counterX, counterY, counterX, counterY + counterH);
+      counterGrad.addColorStop(0, '#1a1a2e');
+      counterGrad.addColorStop(0.5, '#12121e');
+      counterGrad.addColorStop(1, '#0a0a14');
+      ctx.fillStyle = counterGrad;
+      ctx.fillRect(counterX, counterY, counterW, counterH);
+
+      // Counter top surface
+      ctx.fillStyle = '#2a2a3e';
+      ctx.fillRect(counterX - 5, counterY, counterW + 10, 6);
+
+      // Neon edge on counter
+      ctx.strokeStyle = '#00FFFF';
+      ctx.lineWidth = 2;
+      ctx.shadowColor = '#00FFFF';
+      ctx.shadowBlur = 10;
+      ctx.beginPath();
+      ctx.moveTo(counterX - 5, counterY + 3);
+      ctx.lineTo(counterX + counterW + 5, counterY + 3);
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+
+      // "SALES" sign on counter front
+      ctx.fillStyle = '#00FFFF';
+      ctx.shadowColor = '#00FFFF';
+      ctx.shadowBlur = 10;
+      ctx.font = 'bold 12px Orbitron, monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText('SALES DESK', counterX + counterW / 2, counterY + 26);
+      ctx.shadowBlur = 0;
+
+      // ═══ DISPLAY CARS ON PLATFORMS ═══
+      const carDisplays = [
+        { x: room.roomW * 0.22, y: room.roomH * 0.55, color: '#FF3333', name: 'SPORT' },
+        { x: room.roomW * 0.5, y: room.roomH * 0.50, color: '#3366FF', name: 'SEDAN' },
+        { x: room.roomW * 0.78, y: room.roomH * 0.55, color: '#FFAA00', name: 'MUSCLE' }
+      ];
+
+      for (const car of carDisplays) {
+        const pulse = Math.sin(t * 1.5 + car.x * 0.01) * 0.3 + 0.7;
+        ctx.save();
+        ctx.translate(car.x, car.y);
+
+        // Platform base (circular with glow)
+        ctx.beginPath();
+        ctx.arc(0, 15, 45, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(0,255,255,0.06)';
+        ctx.fill();
+        ctx.strokeStyle = `rgba(0,255,255,${0.5 * pulse})`;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Inner platform ring
+        ctx.beginPath();
+        ctx.arc(0, 15, 35, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(255,0,255,${0.3 * pulse})`;
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        // Rotating light effect under car
+        ctx.save();
+        ctx.translate(0, 15);
+        ctx.rotate(t * 0.5);
+        for (let i = 0; i < 4; i++) {
+          ctx.fillStyle = `rgba(0,255,255,${0.15 * pulse})`;
+          ctx.beginPath();
+          ctx.moveTo(0, 0);
+          ctx.arc(0, 0, 40, (i * Math.PI / 2), (i * Math.PI / 2) + 0.4);
+          ctx.closePath();
+          ctx.fill();
+        }
+        ctx.restore();
+
+        // ═══ DISPLAY CAR (top-down view) ═══
+        ctx.save();
+        // Car shadow
+        ctx.fillStyle = 'rgba(0,0,0,0.4)';
+        ctx.beginPath();
+        ctx.ellipse(3, 18, 28, 12, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Car body
+        const carGrad = ctx.createLinearGradient(-25, -15, 25, 15);
+        carGrad.addColorStop(0, car.color);
+        carGrad.addColorStop(0.5, car.color + 'CC');
+        carGrad.addColorStop(1, car.color + '88');
+        ctx.fillStyle = carGrad;
+
+        // Main body shape
+        ctx.beginPath();
+        ctx.moveTo(-22, -8);
+        ctx.lineTo(-25, 0);
+        ctx.lineTo(-22, 10);
+        ctx.lineTo(22, 10);
+        ctx.lineTo(25, 0);
+        ctx.lineTo(22, -8);
+        ctx.closePath();
+        ctx.fill();
+
+        // Roof/cabin
+        ctx.fillStyle = '#111122';
+        ctx.beginPath();
+        ctx.roundRect(-12, -5, 24, 12, 3);
+        ctx.fill();
+
+        // Windshield
+        ctx.fillStyle = 'rgba(100,200,255,0.4)';
+        ctx.beginPath();
+        ctx.moveTo(-12, -4);
+        ctx.lineTo(-8, -8);
+        ctx.lineTo(8, -8);
+        ctx.lineTo(12, -4);
+        ctx.closePath();
+        ctx.fill();
+
+        // Rear window
+        ctx.beginPath();
+        ctx.moveTo(-10, 6);
+        ctx.lineTo(-6, 10);
+        ctx.lineTo(6, 10);
+        ctx.lineTo(10, 6);
+        ctx.closePath();
+        ctx.fill();
+
+        // Headlights
+        ctx.fillStyle = '#FFFFFF';
+        ctx.shadowColor = '#FFFFFF';
+        ctx.shadowBlur = 6;
+        ctx.fillRect(-20, -6, 4, 3);
+        ctx.fillRect(16, -6, 4, 3);
+        ctx.shadowBlur = 0;
+
+        // Taillights
+        ctx.fillStyle = '#FF0000';
+        ctx.shadowColor = '#FF0000';
+        ctx.shadowBlur = 4;
+        ctx.fillRect(-20, 6, 4, 2);
+        ctx.fillRect(16, 6, 4, 2);
+        ctx.shadowBlur = 0;
+
+        // Wheels
+        ctx.fillStyle = '#1a1a1a';
+        ctx.beginPath();
+        ctx.arc(-16, -10, 5, 0, Math.PI * 2);
+        ctx.arc(16, -10, 5, 0, Math.PI * 2);
+        ctx.arc(-16, 12, 5, 0, Math.PI * 2);
+        ctx.arc(16, 12, 5, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Wheel rims
+        ctx.fillStyle = '#444455';
+        ctx.beginPath();
+        ctx.arc(-16, -10, 3, 0, Math.PI * 2);
+        ctx.arc(16, -10, 3, 0, Math.PI * 2);
+        ctx.arc(-16, 12, 3, 0, Math.PI * 2);
+        ctx.arc(16, 12, 3, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.restore();
+
+        // Car name label
+        ctx.fillStyle = '#FFFFFF';
+        ctx.shadowColor = car.color;
+        ctx.shadowBlur = 8;
+        ctx.font = 'bold 8px Orbitron, monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(car.name, 0, 45);
+        ctx.shadowBlur = 0;
+
+        // Price tag
+        ctx.fillStyle = '#00FF88';
+        ctx.font = '7px Orbitron, monospace';
+        ctx.fillText('ON DISPLAY', 0, 54);
+
+        ctx.restore();
+      }
+
+      // Ambient particles
+      for (let i = 0; i < 8; i++) {
+        const px = ((t * 30 + i * 100) % room.roomW);
+        const py = S * 1.5 + Math.sin(t + i * 2) * 20 + i * (room.roomH - S * 3) / 8;
+        const alpha = Math.sin(t * 2 + i) * 0.3 + 0.4;
+        ctx.fillStyle = i % 2 === 0 ? `rgba(0,255,255,${alpha})` : `rgba(255,0,255,${alpha})`;
+        ctx.beginPath();
+        ctx.arc(px, py, 1.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Side neon strips
+      ctx.fillStyle = 'rgba(255,0,255,0.2)';
+      ctx.fillRect(S, S * 1.5, 3, room.roomH - S * 3);
+      ctx.fillRect(room.roomW - S - 3, S * 1.5, 3, room.roomH - S * 3);
+
+    } else {
+      // ═══ DEFAULT SHOWROOM (other maps) ═══
+      for (let ty = 0; ty < room.H; ty++) {
+        for (let tx = 0; tx < room.W; tx++) {
+          const px = tx * S, py = ty * S, tile = room.layout[ty][tx];
+          if (tile === 1) {
+            ctx.fillStyle = '#111120';
+            ctx.fillRect(px, py, S, S);
+          } else {
+            ctx.fillStyle = (tx + ty) % 2 === 0 ? '#12121e' : '#0e0e18';
+            ctx.fillRect(px, py, S, S);
+            ctx.fillStyle = 'rgba(68,238,255,0.018)';
+            ctx.fillRect(px, py, S, S);
+          }
+        }
+      }
+      // Neon accent stripe
+      ctx.fillStyle = 'rgba(68,238,255,0.20)';
+      ctx.fillRect(0, S, room.roomW, 3);
+      ctx.fillStyle = 'rgba(68,238,255,0.08)';
+      ctx.fillRect(0, S, room.roomW, S * 0.3);
     }
-    // Neon accent stripe
-    ctx.fillStyle = 'rgba(68,238,255,0.20)'; ctx.fillRect(0, S, room.roomW, 3);
-    ctx.fillStyle = 'rgba(68,238,255,0.08)'; ctx.fillRect(0, S, room.roomW, S * 0.3);
+
     // Salespersons + bullets + player
     for (const sp of this._salespersons) sp.render(ctx);
     for (const b of this._indoorBullets) b.render(ctx);
     if (!this.player.dead) this.player.render(ctx);
+
     // [T] hint near salesperson
     if (this._nearSalesperson) {
       const nearSp = this._salespersons.find(sp => Math.hypot(sp.x - this.player.x, sp.y - this.player.y) < 60);
       if (nearSp) {
         ctx.save();
-        ctx.font = 'bold 11px Orbitron, monospace'; ctx.textAlign = 'center';
-        ctx.fillStyle = '#FFFFAA'; ctx.shadowColor = '#FFFF00'; ctx.shadowBlur = 10;
-        ctx.fillText('[T] OPEN SHOP', nearSp.x, nearSp.y - 62);
+        ctx.font = 'bold 11px Orbitron, monospace';
+        ctx.textAlign = 'center';
+        if (isNeonCity) {
+          ctx.fillStyle = '#00FFFF';
+          ctx.shadowColor = '#00FFFF';
+          ctx.shadowBlur = 12;
+          ctx.fillText('[T] OPEN SHOP', nearSp.x, nearSp.y - 62);
+        } else {
+          ctx.fillStyle = '#FFFFAA';
+          ctx.shadowColor = '#FFFF00';
+          ctx.shadowBlur = 10;
+          ctx.fillText('[T] OPEN SHOP', nearSp.x, nearSp.y - 62);
+        }
         ctx.restore();
       }
     }
+
     // [E] EXIT hint
-    ctx.save(); ctx.font = 'bold 11px Orbitron, monospace'; ctx.textAlign = 'center';
-    ctx.fillStyle = '#FFFFAA'; ctx.shadowColor = '#FFFF00'; ctx.shadowBlur = 10;
-    ctx.fillText('[E] EXIT', room.entryX, room.roomH - 8);
-    ctx.restore(); ctx.restore();
+    ctx.save();
+    ctx.font = 'bold 11px Orbitron, monospace';
+    ctx.textAlign = 'center';
+    if (isNeonCity) {
+      ctx.fillStyle = '#FF00FF';
+      ctx.shadowColor = '#FF00FF';
+      ctx.shadowBlur = 10;
+      ctx.fillText('[E] EXIT', room.entryX, room.roomH - 8);
+    } else {
+      ctx.fillStyle = '#FFFFAA';
+      ctx.shadowColor = '#FFFF00';
+      ctx.shadowBlur = 10;
+      ctx.fillText('[E] EXIT', room.entryX, room.roomH - 8);
+    }
+    ctx.restore();
+
+    ctx.restore();
   }
 
   _renderCasinoIndoor(ctx, W, H, shake) {
@@ -4099,7 +4417,10 @@ class Game {
       this.hud.renderSurviveTimer(ctx, W, this._surviveTime);
       if (this._districtLayout && this._currentDistrict) {
         this.hud.renderDistrictHUD(this._districtLayout, this._reputation, this._currentDistrict, this._shopDiscount);
-        if (this._districtTimer > 0) this.hud.renderDistrictEntry(this._currentDistrict, this._districtTimer);
+        // Neon City: skip the center screen district entry notification
+        if (this._districtTimer > 0 && this.map.config.id !== 'neon_city') {
+          this.hud.renderDistrictEntry(this._currentDistrict, this._districtTimer);
+        }
       }
       if (this.boss && !this.boss.dead && !this.boss.dying) {
         this.hud.renderBossBar(this.boss);
