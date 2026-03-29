@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NEON CITY — Login</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="select-screen auth-screen">
+  <div class="bg-grid"></div>
+  <div class="scanlines"></div>
+
+  <!-- ── Site Navbar ───────────────────────────────────────── -->
+  <nav class="site-nav">
+    <a href="index.html" class="site-nav__logo">NEON CITY</a>
+    <div id="siteNav" class="site-nav__controls"></div>
+  </nav>
+
+  <!-- ── Auth Card ─────────────────────────────────────────── -->
+  <div class="auth-wrap">
+    <div class="auth-card">
+
+      <div class="auth-card__header">
+        <div class="auth-card__icon">⬡</div>
+        <h2 class="auth-card__title">WELCOME BACK</h2>
+        <p class="auth-card__sub">Enter the neon grid.</p>
+      </div>
+
+      <!-- Success / error banner -->
+      <div id="authBanner" class="auth-banner" aria-live="polite" hidden></div>
+
+      <form id="loginForm" class="auth-form" novalidate>
+
+        <div class="auth-field">
+          <label class="auth-label" for="loginName">USERNAME</label>
+          <input class="auth-input" type="text" id="loginName" name="name"
+                 placeholder="PlayerOne" autocomplete="username" required>
+          <span class="auth-field-err" id="errName"></span>
+        </div>
+
+        <div class="auth-field">
+          <label class="auth-label" for="loginPassword">PASSWORD</label>
+          <div class="auth-input-wrap">
+            <input class="auth-input" type="password" id="loginPassword" name="password"
+                   placeholder="••••••••" autocomplete="current-password" required>
+            <button type="button" class="auth-toggle-pw" aria-label="Toggle password" data-target="loginPassword">◉</button>
+          </div>
+          <span class="auth-field-err" id="errPassword"></span>
+        </div>
+
+        <button type="submit" class="auth-submit" id="loginSubmit">
+          <span id="loginBtnText">LOGIN</span>
+          <span id="loginBtnSpinner" class="auth-spinner" hidden></span>
+        </button>
+
+      </form>
+
+      <p class="auth-switch">
+        New to NEON CITY? <a href="register.html" class="auth-link">REGISTER</a>
+      </p>
+
+    </div>
+  </div>
+
+  <script src="js/auth.js"></script>
+  <script>
+    Auth.mountNavbar();
+
+    /* Redirect if already logged in */
+    if (Auth.isLoggedIn()) window.location.href = 'index.html';
+
+    /* Show "registered successfully" banner from register redirect */
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('registered') === '1') {
+      const b = document.getElementById('authBanner');
+      b.textContent = 'Account created! You can now log in.';
+      b.className = 'auth-banner auth-banner--success';
+      b.hidden = false;
+    }
+
+    /* ── Password visibility toggle ──────────────────────── */
+    document.querySelectorAll('.auth-toggle-pw').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const input = document.getElementById(btn.dataset.target);
+        input.type = input.type === 'password' ? 'text' : 'password';
+        btn.textContent = input.type === 'password' ? '◉' : '◎';
+      });
+    });
+
+    /* ── Helpers ─────────────────────────────────────────── */
+    function setFieldError(id, msg) {
+      const el = document.getElementById(id);
+      if (el) el.textContent = msg;
+    }
+    function clearFieldErrors() {
+      ['errName', 'errPassword'].forEach(id => setFieldError(id, ''));
+    }
+    function showBanner(msg, isError = true) {
+      const b = document.getElementById('authBanner');
+      b.textContent = msg;
+      b.className = `auth-banner ${isError ? 'auth-banner--error' : 'auth-banner--success'}`;
+      b.hidden = false;
+    }
+
+    /* ── Submit ──────────────────────────────────────────── */
+    document.getElementById('loginForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      clearFieldErrors();
+
+      const name     = document.getElementById('loginName').value.trim();
+      const password = document.getElementById('loginPassword').value;
+
+      let valid = true;
+      if (!name)     { setFieldError('errName',     'Username is required.'); valid = false; }
+      if (!password) { setFieldError('errPassword', 'Password is required.'); valid = false; }
+      if (!valid) return;
+
+      const btn     = document.getElementById('loginSubmit');
+      const btnText = document.getElementById('loginBtnText');
+      const spinner = document.getElementById('loginBtnSpinner');
+
+      btn.disabled   = true;
+      btnText.hidden   = true;
+      spinner.hidden   = false;
+
+      try {
+        await Auth.login({ name, password });
+        // Show success, then navigate home after a short delay
+        spinner.hidden = true;
+        btnText.hidden = false;
+        btnText.textContent = '✓ WELCOME BACK';
+        btn.style.background = 'var(--green)';
+        showBanner('Login successful! Entering the city…', false);
+        setTimeout(() => { window.location.href = 'index.html'; }, 1400);
+      } catch (err) {
+        showBanner(err.message || 'Login failed. Check your credentials.');
+        btn.disabled   = false;
+        btnText.hidden   = false;
+        spinner.hidden   = true;
+      }
+    });
+  </script>
+</body>
+</html>

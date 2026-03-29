@@ -6,6 +6,9 @@
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+/* Ensure the HTML `hidden` attribute always wins even when CSS sets display */
+[hidden] { display: none !important; }
+
 :root {
   --bg:     #06060e;
   --panel:  #0d0d1a;
@@ -1276,3 +1279,291 @@ body {
 .touch-btn.btn-gren   { border-color: rgba(255,136,0,0.5);   color: #FF8800; }
 .touch-btn.btn-shop   { border-color: rgba(100,200,255,0.5); color: #44DDFF; }
 .touch-btn.btn-car    { border-color: rgba(255,220,44,0.5);  color: #FFDD44; }
+
+/* ════════════════════════════════════════════════════════════
+   SITE NAVBAR  (index.html · login.html · register.html · profile.html)
+   ════════════════════════════════════════════════════════════ */
+
+.site-nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  height: 54px;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 24px;
+  background: rgba(6,6,14,0.82);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(68,238,255,0.10);
+  box-shadow: 0 2px 24px rgba(0,0,0,0.45);
+}
+
+.site-nav__logo {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 15px; font-weight: 900;
+  letter-spacing: 0.18em; color: #fff;
+  text-decoration: none;
+  text-shadow: 0 0 12px var(--cyan), 0 0 30px rgba(68,238,255,0.3);
+  transition: text-shadow 0.25s;
+}
+.site-nav__logo:hover {
+  text-shadow: 0 0 18px var(--cyan), 0 0 50px rgba(68,238,255,0.55);
+}
+
+.site-nav__controls {
+  display: flex; align-items: center; gap: 10px;
+}
+
+/* -- Left: account chip ------------------------------------ */
+.nav-account { display: flex; align-items: center; }
+
+.nav-account-btn {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 14px;
+  border: 1px solid rgba(68,238,255,0.25);
+  border-radius: 6px;
+  background: rgba(68,238,255,0.07);
+  color: var(--cyan); text-decoration: none;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 12px; font-weight: 700; letter-spacing: 0.08em;
+  transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+.nav-account-btn:hover {
+  background: rgba(68,238,255,0.14);
+  border-color: rgba(68,238,255,0.55);
+  box-shadow: 0 0 12px rgba(68,238,255,0.2);
+}
+.nav-account-icon { font-size: 16px; opacity: 0.85; }
+.nav-account-name { max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* -- Right: auth buttons ----------------------------------- */
+.nav-auth { display: flex; align-items: center; gap: 10px; }
+
+.nav-btn {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 11px; font-weight: 700; letter-spacing: 0.12em;
+  padding: 7px 18px; border-radius: 6px;
+  border: 1px solid transparent;
+  cursor: pointer; text-decoration: none;
+  transition: background 0.2s, border-color 0.2s, box-shadow 0.2s, color 0.2s;
+  white-space: nowrap;
+}
+
+.nav-btn--ghost {
+  color: var(--muted);
+  border-color: rgba(255,255,255,0.14);
+  background: transparent;
+}
+.nav-btn--ghost:hover {
+  color: #fff;
+  border-color: rgba(255,255,255,0.35);
+  background: rgba(255,255,255,0.05);
+}
+
+.nav-btn--primary {
+  color: var(--bg);
+  background: var(--cyan);
+  border-color: var(--cyan);
+  box-shadow: 0 0 14px rgba(68,238,255,0.35);
+}
+.nav-btn--primary:hover {
+  background: #77F5FF;
+  border-color: #77F5FF;
+  box-shadow: 0 0 22px rgba(68,238,255,0.6);
+}
+
+/* Push select-screen content down so navbar doesn't overlap */
+.select-screen { padding-top: 70px; }
+
+/* ════════════════════════════════════════════════════════════
+   AUTH SCREEN  (login.html · register.html · profile.html)
+   ════════════════════════════════════════════════════════════ */
+
+.auth-screen {
+  /* Override select-screen justify so the card stays centred vertically */
+  justify-content: center;
+  min-height: 100dvh;
+}
+
+.auth-wrap {
+  width: 100%; max-width: 460px;
+  margin: 0 auto;
+  padding: 0 20px 40px;
+  position: relative; z-index: 1;
+}
+
+/* ── Card ─────────────────────────────────────────────────── */
+.auth-card {
+  background: rgba(13,13,26,0.90);
+  border: 1px solid rgba(68,238,255,0.13);
+  border-radius: 16px;
+  padding: 40px 36px 32px;
+  box-shadow:
+    0 0 0 1px rgba(68,238,255,0.04),
+    0 8px 48px rgba(0,0,0,0.55),
+    0 0 80px rgba(68,238,255,0.04);
+  backdrop-filter: blur(10px);
+}
+
+.auth-card__header { text-align: center; margin-bottom: 28px; }
+
+.auth-card__icon {
+  font-size: 36px;
+  color: var(--cyan);
+  text-shadow: 0 0 18px rgba(68,238,255,0.6);
+  display: block; margin-bottom: 10px;
+  animation: logoPulse 3.5s ease-in-out infinite;
+}
+
+.auth-card__title {
+  font-family: 'Orbitron', sans-serif;
+  font-size: clamp(18px, 3vw, 22px);
+  font-weight: 900; letter-spacing: 0.1em;
+  color: #fff;
+  text-shadow: 0 0 10px rgba(68,238,255,0.25);
+  margin-bottom: 6px;
+}
+
+.auth-card__sub {
+  font-size: 12px; letter-spacing: 0.18em;
+  color: var(--muted); text-transform: uppercase;
+}
+
+/* ── Banner ───────────────────────────────────────────────── */
+.auth-banner {
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13px; font-weight: 600; letter-spacing: 0.04em;
+  margin-bottom: 18px; line-height: 1.4;
+}
+.auth-banner--error {
+  background: rgba(255,68,102,0.12);
+  border: 1px solid rgba(255,68,102,0.3);
+  color: #FF8899;
+}
+.auth-banner--success {
+  background: rgba(68,255,136,0.10);
+  border: 1px solid rgba(68,255,136,0.28);
+  color: #44FF88;
+}
+
+/* ── Form ─────────────────────────────────────────────────── */
+.auth-form { display: flex; flex-direction: column; gap: 18px; }
+
+.auth-field { display: flex; flex-direction: column; gap: 6px; }
+
+.auth-label {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 10px; font-weight: 700; letter-spacing: 0.18em;
+  color: var(--muted);
+}
+
+.auth-input-wrap { position: relative; display: flex; }
+
+.auth-input {
+  width: 100%; padding: 11px 14px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 8px;
+  color: #fff; font-family: 'Rajdhani', sans-serif;
+  font-size: 15px; font-weight: 500;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+}
+.auth-input::placeholder { color: rgba(255,255,255,0.2); }
+.auth-input:focus {
+  border-color: rgba(68,238,255,0.5);
+  background: rgba(68,238,255,0.04);
+  box-shadow: 0 0 0 3px rgba(68,238,255,0.08);
+}
+
+/* Input inside .auth-input-wrap gets right padding for the eye button */
+.auth-input-wrap .auth-input { padding-right: 44px; }
+
+.auth-toggle-pw {
+  position: absolute; right: 0; top: 0; bottom: 0;
+  width: 42px;
+  background: transparent; border: none; border-left: 1px solid rgba(255,255,255,0.08);
+  color: var(--muted); font-size: 16px; cursor: pointer;
+  border-radius: 0 8px 8px 0;
+  transition: color 0.2s, background 0.2s;
+}
+.auth-toggle-pw:hover { color: var(--cyan); background: rgba(68,238,255,0.06); }
+
+.auth-field-err {
+  font-size: 12px; color: var(--pink); min-height: 16px;
+  letter-spacing: 0.03em;
+}
+
+/* ── Submit button ────────────────────────────────────────── */
+.auth-submit {
+  margin-top: 6px;
+  width: 100%; padding: 13px;
+  background: var(--cyan); color: var(--bg);
+  border: none; border-radius: 8px;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 13px; font-weight: 700; letter-spacing: 0.14em;
+  cursor: pointer;
+  box-shadow: 0 0 18px rgba(68,238,255,0.35);
+  transition: background 0.2s, box-shadow 0.2s, opacity 0.2s;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 46px;
+}
+.auth-submit:hover { background: #77F5FF; box-shadow: 0 0 28px rgba(68,238,255,0.55); }
+.auth-submit:disabled { opacity: 0.55; cursor: not-allowed; }
+
+.auth-submit--danger {
+  background: transparent;
+  border: 1px solid rgba(255,68,102,0.4);
+  color: var(--pink);
+  box-shadow: none;
+  margin-top: 18px;
+}
+.auth-submit--danger:hover {
+  background: rgba(255,68,102,0.10);
+  border-color: var(--pink);
+  box-shadow: 0 0 14px rgba(255,68,102,0.2);
+}
+
+/* ── Spinner ──────────────────────────────────────────────── */
+.auth-spinner {
+  display: inline-block;
+  width: 18px; height: 18px;
+  border: 2px solid rgba(6,6,14,0.35);
+  border-top-color: var(--bg);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Switch link ──────────────────────────────────────────── */
+.auth-switch {
+  text-align: center; margin-top: 22px;
+  font-size: 13px; color: var(--muted); letter-spacing: 0.04em;
+}
+.auth-link {
+  color: var(--cyan); font-weight: 700; text-decoration: none;
+  transition: color 0.2s;
+}
+.auth-link:hover { color: #fff; }
+
+/* ── Profile card extras ──────────────────────────────────── */
+.profile-card .auth-card__icon {
+  font-size: 48px;
+  width: 80px; height: 80px;
+  border: 2px solid rgba(68,238,255,0.25);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 14px;
+  background: rgba(68,238,255,0.06);
+  box-shadow: 0 0 24px rgba(68,238,255,0.15);
+}
+.profile-body {
+  margin-top: 8px;
+  display: flex; flex-direction: column; gap: 10px;
+}
+
+/* ── Responsive ───────────────────────────────────────────── */
+@media (max-width: 500px) {
+  .auth-card { padding: 28px 20px 24px; }
+  .site-nav { padding: 0 14px; }
+  .nav-btn { padding: 6px 12px; font-size: 10px; }
+  .nav-account-name { max-width: 90px; }
+}
