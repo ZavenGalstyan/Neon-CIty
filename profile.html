@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NEON CITY — Profile</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="select-screen auth-screen">
+  <div class="bg-grid"></div>
+  <div class="scanlines"></div>
+
+  <!-- ── Site Navbar ───────────────────────────────────────── -->
+  <nav class="site-nav">
+    <a href="index.html" class="site-nav__logo">NEON CITY</a>
+    <div id="siteNav" class="site-nav__controls"></div>
+  </nav>
+
+  <!-- ── Profile Card ──────────────────────────────────────── -->
+  <div class="auth-wrap">
+    <div class="auth-card profile-card">
+
+      <div class="auth-card__header">
+        <div class="auth-card__icon profile-avatar" id="profileAvatar">◈</div>
+        <h2 class="auth-card__title" id="profileName">—</h2>
+        <p class="auth-card__sub">YOUR IDENTITY</p>
+      </div>
+
+      <div class="profile-body" id="profileBody">
+        <!-- Populated by JS -->
+      </div>
+
+      <button class="auth-submit auth-submit--danger" id="profileLogout">LOGOUT</button>
+
+    </div>
+  </div>
+
+  <script src="js/auth.js"></script>
+  <script>
+    /* Guard — must be logged in */
+    if (!Auth.isLoggedIn()) {
+      window.location.href = 'login.html';
+    }
+
+    Auth.mountNavbar();
+
+    const session = Auth.getSession();
+    document.getElementById('profileName').textContent = session.name;
+
+    document.getElementById('profileLogout').addEventListener('click', Auth.logout);
+  </script>
+</body>
+</html>
