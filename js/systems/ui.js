@@ -139,7 +139,7 @@ class HUD {
   }
 
   // ── Minimap ────────────────────────────────────────────────────────────────
-  renderMinimap(gameMap, player, bots, camX, camY, boss = null, districtLayout = null) {
+  renderMinimap(gameMap, player, bots, camX, camY, boss = null, districtLayout = null, vehicles = []) {
     const ctx  = this.ctx;
     const H    = this.canvas.height;
     const W    = this.canvas.width;
@@ -210,6 +210,34 @@ class HUD {
       ctx.beginPath();
       ctx.arc(mmX + boss.x * sx, mmY + boss.y * sy, 5, 0, Math.PI * 2);
       ctx.fill();
+      ctx.restore();
+    }
+
+    // Vehicle markers (orange car icons)
+    for (const v of vehicles) {
+      if (v.dead || v._exploding) continue;
+      const vx = mmX + v.x * sx;
+      const vy = mmY + v.y * sy;
+      ctx.save();
+      // Pulsing glow effect
+      const pulse = Math.sin(performance.now() / 300) * 0.3 + 0.7;
+      ctx.fillStyle = v.color || '#FF8800';
+      ctx.shadowColor = '#FF8800';
+      ctx.shadowBlur = 6 * pulse;
+      // Draw car-shaped marker (small rectangle)
+      ctx.translate(vx, vy);
+      ctx.rotate(v.angle || 0);
+      ctx.fillRect(-4, -2.5, 8, 5);
+      ctx.restore();
+      // Draw a ring around it to make it more visible
+      ctx.save();
+      ctx.strokeStyle = '#FF8800';
+      ctx.lineWidth = 1.5;
+      ctx.shadowColor = '#FF8800';
+      ctx.shadowBlur = 4;
+      ctx.beginPath();
+      ctx.arc(vx, vy, 8, 0, Math.PI * 2);
+      ctx.stroke();
       ctx.restore();
     }
 
@@ -1405,7 +1433,7 @@ class HUD {
   }
 
   // ── Overlay screens ────────────────────────────────────────────────────────
-  renderGameOver(money, kills, surviveSeconds = 0) {
+  renderGameOver(money, kills, surviveSeconds = 0, mouseX = 0, mouseY = 0) {
     const ctx = this.ctx;
     const W = this.canvas.width, H = this.canvas.height;
     ctx.fillStyle = 'rgba(0,0,0,0.84)'; ctx.fillRect(0,0,W,H);
@@ -1421,10 +1449,10 @@ class HUD {
     ctx.textAlign = 'center';
     ctx.shadowColor = '#FF0033'; ctx.shadowBlur = 40;
     ctx.font = 'bold 72px Orbitron, monospace'; ctx.fillStyle = '#FF0033';
-    ctx.fillText('GAME OVER', W/2, H/2-90);
+    ctx.fillText('GAME OVER', W/2, H/2-110);
     ctx.shadowColor = '#44FFAA'; ctx.shadowBlur = 16;
     ctx.font = 'bold 16px Orbitron, monospace'; ctx.fillStyle = '#AAFFCC';
-    ctx.fillText(`SURVIVED  ${timeTxt}`, W/2, H/2-42);
+    ctx.fillText(`SURVIVED  ${timeTxt}`, W/2, H/2-62);
 
     // NEX earned with animated icon
     const moneyTxt = `${money.toLocaleString()} NEX  EARNED`;
@@ -1435,22 +1463,92 @@ class HUD {
     const startX = W/2 - totalW/2;
 
     // Draw the NEX icon
-    this.renderNexIcon(ctx, startX + iconSize/2, H/2 + 4 - 6, iconSize, { glowIntensity: 1.2 });
+    this.renderNexIcon(ctx, startX + iconSize/2, H/2 - 20, iconSize, { glowIntensity: 1.2 });
 
     // Draw the money text
     ctx.shadowColor = '#00E5FF'; ctx.shadowBlur = 20;
     ctx.fillStyle = '#00E5FF';
     ctx.textAlign = 'left';
-    ctx.fillText(moneyTxt, startX + iconSize + 12, H/2+4);
+    ctx.fillText(moneyTxt, startX + iconSize + 12, H/2 - 12);
 
     ctx.textAlign = 'center';
     ctx.shadowColor = '#FF4444';
     ctx.font = '22px Orbitron, monospace'; ctx.fillStyle = '#FF6666';
-    ctx.fillText(`${kills} ENEMIES DOWN`, W/2, H/2+48);
-    ctx.font = '14px Orbitron, monospace'; ctx.fillStyle = 'rgba(255,255,255,0.5)';
+    ctx.fillText(`${kills} ENEMIES DOWN`, W/2, H/2 + 28);
     ctx.shadowBlur = 0;
-    ctx.fillText('[R] RESTART   ·   [ESC] / CLICK = MENU', W/2, H/2+100);
+
+    // Button dimensions
+    const btnW = 200, btnH = 45;
+    const btnGap = 20;
+
+    // Store button bounds for click detection
+    this._gameOverButtons = {};
+
+    // ─── RESTART Button ───
+    const restartBtnX = W/2 - btnW - btnGap/2;
+    const restartBtnY = H/2 + 60;
+    const restartHovered = mouseX >= restartBtnX && mouseX <= restartBtnX + btnW &&
+                           mouseY >= restartBtnY && mouseY <= restartBtnY + btnH;
+
+    this._gameOverButtons.restart = { x: restartBtnX, y: restartBtnY, w: btnW, h: btnH };
+
+    // Button background
+    if (restartHovered) {
+      ctx.fillStyle = 'rgba(68,238,255,0.25)';
+      ctx.shadowColor = '#44EEFF';
+      ctx.shadowBlur = 15;
+    } else {
+      ctx.fillStyle = 'rgba(68,238,255,0.08)';
+    }
+    ctx.strokeStyle = restartHovered ? '#44EEFF' : 'rgba(68,238,255,0.4)';
+    ctx.lineWidth = restartHovered ? 2 : 1;
+    this._rr(ctx, restartBtnX, restartBtnY, btnW, btnH, 8);
+    ctx.fill();
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    // Button text
+    ctx.font = 'bold 16px Orbitron, monospace';
+    ctx.fillStyle = restartHovered ? '#FFFFFF' : 'rgba(255,255,255,0.8)';
+    ctx.fillText('RESTART', restartBtnX + btnW/2, restartBtnY + btnH/2 + 6);
+    ctx.font = '11px Orbitron, monospace';
+    ctx.fillStyle = 'rgba(255,255,255,0.4)';
+    ctx.fillText('[R]', restartBtnX + btnW/2, restartBtnY + btnH + 15);
+
+    // ─── MAIN MENU Button ───
+    const menuBtnX = W/2 + btnGap/2;
+    const menuBtnY = H/2 + 60;
+    const menuHovered = mouseX >= menuBtnX && mouseX <= menuBtnX + btnW &&
+                        mouseY >= menuBtnY && mouseY <= menuBtnY + btnH;
+
+    this._gameOverButtons.menu = { x: menuBtnX, y: menuBtnY, w: btnW, h: btnH };
+
+    // Button background
+    if (menuHovered) {
+      ctx.fillStyle = 'rgba(255,100,100,0.25)';
+      ctx.shadowColor = '#FF6666';
+      ctx.shadowBlur = 15;
+    } else {
+      ctx.fillStyle = 'rgba(255,100,100,0.08)';
+    }
+    ctx.strokeStyle = menuHovered ? '#FF6666' : 'rgba(255,100,100,0.4)';
+    ctx.lineWidth = menuHovered ? 2 : 1;
+    this._rr(ctx, menuBtnX, menuBtnY, btnW, btnH, 8);
+    ctx.fill();
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    // Button text
+    ctx.font = 'bold 16px Orbitron, monospace';
+    ctx.fillStyle = menuHovered ? '#FFFFFF' : 'rgba(255,255,255,0.8)';
+    ctx.fillText('MAIN MENU', menuBtnX + btnW/2, menuBtnY + btnH/2 + 6);
+    ctx.font = '11px Orbitron, monospace';
+    ctx.fillStyle = 'rgba(255,255,255,0.4)';
+    ctx.fillText('[ESC]', menuBtnX + btnW/2, menuBtnY + btnH + 15);
+
     ctx.restore();
+
+    return this._gameOverButtons;
   }
 
   renderPause(mouseX = 0, mouseY = 0) {
