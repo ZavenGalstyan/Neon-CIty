@@ -408,10 +408,24 @@ const BattlePass = (() => {
   }
 
   /* ── Mount — call once on profile page ─────────────────── */
-  function mount(rootEl) {
-    const bp   = loadBP();
-    const tier = getTier(bp.level);
-    const pct  = bp.level >= MAX_LEVEL ? 100 : Math.min(100, (bp.xp / XP_PER_LEVEL) * 100);
+  /*
+   * bpData: the battlePass object from the API:
+   *   { level, xp, xpInCurrentLevel, xpNeededForNextLevel, progressPercent }
+   * Falls back to localStorage when omitted.
+   */
+  function mount(rootEl, bpData) {
+    const hasLive = bpData && typeof bpData.level === 'number' && bpData.level >= 1;
+    const bp = hasLive ? bpData : loadBP();
+
+    const level      = bp.level;
+    const xpDone     = bp.xpInCurrentLevel  ?? bp.xp ?? 0;
+    const xpNeeded   = bp.xpNeededForNextLevel ?? XP_PER_LEVEL;
+    const xpLeft     = Math.max(0, xpNeeded - xpDone);
+    const pct        = level >= MAX_LEVEL
+                         ? 100
+                         : (bp.progressPercent ?? Math.min(100, (xpDone / xpNeeded) * 100));
+    const tier       = getTier(level);
+    const nextTier   = getTier(level + 1);
 
     rootEl.innerHTML = `
       <section class="bp-section">
@@ -422,21 +436,46 @@ const BattlePass = (() => {
             <span class="bp-season">SEASON 1</span>
           </div>
           <div class="bp-level-badge">
-            <span class="bp-lv-label">LEVEL</span>
-            <span class="bp-lv-num">${bp.level}</span>
-            <span class="bp-lv-tier" style="color:${tier.c2}">${tier.name}</span>
+            <div class="bp-lv-main">
+              <span class="bp-lv-label">LEVEL</span>
+              <span class="bp-lv-num">${level}</span>
+              <span class="bp-lv-tier" style="color:${tier.c2}">${tier.name}</span>
+            </div>
+            ${level < MAX_LEVEL
+              ? `<span class="bp-lv-xpcap">${xpNeeded.toLocaleString()} XP for next level</span>`
+              : `<span class="bp-lv-xpcap" style="color:var(--gold)">MAX LEVEL</span>`}
           </div>
         </div>
 
         <div class="bp-xp-wrap">
-          <div class="bp-xp-labels">
-            <span>${bp.xp.toLocaleString()} XP</span>
-            ${bp.level < MAX_LEVEL
-              ? `<span>NEXT LEVEL · ${(XP_PER_LEVEL - bp.xp).toLocaleString()} XP to go</span>`
-              : `<span style="color:var(--gold)">MAX LEVEL REACHED</span>`}
-          </div>
-          <div class="bp-xp-track">
-            <div class="bp-xp-fill" style="width:${pct}%"></div>
+          <div class="bp-xp-row">
+
+            <!-- Current level pill -->
+            <div class="bp-xp-lv-pill">
+              <span class="bp-xp-lv-num" style="color:${tier.c2}">${level}</span>
+              <span class="bp-xp-lv-label">${tier.name}</span>
+            </div>
+
+            <!-- Bar + numbers -->
+            <div class="bp-xp-center">
+              <div class="bp-xp-nums">
+                <span>${xpDone.toLocaleString()} / ${xpNeeded.toLocaleString()} XP</span>
+                ${level < MAX_LEVEL
+                  ? `<span class="bp-xp-togo">${xpLeft.toLocaleString()} XP to go</span>`
+                  : `<span style="color:var(--gold)">MAX LEVEL</span>`}
+              </div>
+              <div class="bp-xp-track">
+                <div class="bp-xp-fill" style="width:${pct}%"></div>
+              </div>
+            </div>
+
+            <!-- Next level pill -->
+            ${level < MAX_LEVEL ? `
+            <div class="bp-xp-lv-pill bp-xp-lv-pill--next">
+              <span class="bp-xp-lv-num" style="color:${nextTier.c2}">${level + 1}</span>
+              <span class="bp-xp-lv-label">${nextTier.name}</span>
+            </div>` : ''}
+
           </div>
         </div>
 

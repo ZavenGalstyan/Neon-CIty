@@ -19,51 +19,166 @@
   <!-- ── Profile Layout ────────────────────────────────────── -->
   <div class="profile-layout">
 
-    <!-- Hero header -->
+    <!-- ── Hero card (renders immediately, values filled after fetch) ── -->
     <div class="profile-hero-card">
+
       <div class="profile-hero-left">
         <div class="profile-avatar-wrap">
           <div class="profile-avatar-ring"></div>
           <div class="profile-avatar-inner">◈</div>
         </div>
+
         <div class="profile-hero-info">
+          <!-- Name -->
           <h1 class="profile-username" id="profileName">—</h1>
+
+          <!-- Level + tier badges -->
           <div class="profile-hero-meta">
-            <span class="profile-badge" id="heroLevel">LV 1</span>
-            <span class="profile-badge profile-badge--tier" id="heroTier">IRON</span>
+            <span class="profile-badge skeleton-inline" id="heroLevel">LV —</span>
+            <span class="profile-badge profile-badge--tier skeleton-inline" id="heroTier">———</span>
+          </div>
+
+          <!-- Stats row: NEX chip + XP chip -->
+          <div class="profile-stats-row">
+
+            <!-- NEX currency -->
+            <div class="profile-stat-chip">
+              <span class="profile-stat-icon">◆</span>
+              <div class="profile-stat-body">
+                <span class="profile-stat-label">NEX</span>
+                <span class="profile-stat-value skeleton-text" id="statNex">—</span>
+              </div>
+            </div>
+
+            <!-- XP progress chip -->
+            <div class="profile-stat-chip profile-stat-chip--xp">
+              <span class="profile-stat-icon" style="color:var(--purple);text-shadow:0 0 10px rgba(204,136,255,0.6)">⬡</span>
+              <div class="profile-stat-body profile-stat-body--xp">
+                <div class="profile-stat-xp-top">
+                  <span class="profile-stat-label">XP PROGRESS</span>
+                  <span class="profile-stat-xp-nums skeleton-text" id="statXp">— / —</span>
+                </div>
+                <div class="profile-xp-track">
+                  <div class="profile-xp-fill" id="statXpFill" style="width:0%"></div>
+                </div>
+                <span class="profile-stat-xp-sub skeleton-text" id="statXpSub">— XP to next level</span>
+              </div>
+            </div>
+
           </div>
         </div>
       </div>
+
       <button class="profile-logout-btn" id="profileLogout">LOGOUT</button>
     </div>
 
-    <!-- Battle pass root -->
-    <div id="bpRoot"></div>
+    <!-- ── Error banner (hidden until a fetch error) ─────────── -->
+    <div id="profileError" class="profile-error-banner" hidden>
+      <span id="profileErrorMsg"></span>
+      <button id="profileRetry" class="profile-retry-btn">RETRY</button>
+    </div>
+
+    <!-- ── Battle pass (shows spinner until data arrives) ─────── -->
+    <div id="bpRoot">
+      <div class="bp-loading">
+        <span class="auth-spinner" style="width:28px;height:28px;border-width:3px;border-color:rgba(68,238,255,0.15);border-top-color:var(--cyan)"></span>
+        <span class="bp-loading-text">LOADING BATTLE PASS…</span>
+      </div>
+    </div>
 
   </div>
 
   <script src="js/auth.js"></script>
   <script src="js/battlepass.js"></script>
   <script>
+    /* ── Guard ─────────────────────────────────────────────── */
     if (!Auth.isLoggedIn()) window.location.href = 'login.html';
 
     Auth.mountNavbar();
 
     const session = Auth.getSession();
+
+    /* Show name immediately from session while API loads */
     document.getElementById('profileName').textContent = session.name;
-
-    /* Mount battle pass */
-    BattlePass.mount(document.getElementById('bpRoot'));
-
-    /* Sync hero badges with BP data */
-    const bp   = BattlePass.loadBP();
-    const tier = BattlePass.getTier(bp.level);
-    document.getElementById('heroLevel').textContent = `LV ${bp.level}`;
-    document.getElementById('heroTier').textContent  = tier.name;
-    document.getElementById('heroTier').style.color  = tier.color;
-    document.getElementById('heroTier').style.borderColor = `${tier.color}55`;
-
     document.getElementById('profileLogout').addEventListener('click', Auth.logout);
+
+    /* ── Load profile from API ─────────────────────────────── */
+    async function loadProfile() {
+      // Reset error state
+      document.getElementById('profileError').hidden = true;
+
+      try {
+        const data = await Auth.fetchProfile(session.name);
+        renderProfile(data);
+      } catch (err) {
+        showError(err.message || 'Could not load profile. Is the server running?');
+      }
+    }
+
+    /* ── Render all profile data ───────────────────────────── */
+    function renderProfile(data) {
+      const acct = data.account    || {};
+      const bp   = data.battlePass || {};
+
+      const tier    = BattlePass.getTier(acct.level ?? 1);
+      const xpDone  = acct.xpInCurrentLevel      ?? 0;
+      const xpNeeded= acct.xpNeededForNextLevel   ?? BattlePass.XP_PER_LEVEL;
+      const xpLeft  = Math.max(0, xpNeeded - xpDone);
+      const xpPct   = acct.level >= BattlePass.MAX_LEVEL
+                        ? 100
+                        : (acct.progressPercent ?? Math.min(100, (xpDone / xpNeeded) * 100));
+
+      /* Hero badges */
+      const lvlEl  = document.getElementById('heroLevel');
+      const tierEl = document.getElementById('heroTier');
+      lvlEl.classList.remove('skeleton-inline');
+      lvlEl.textContent = `LV ${acct.level ?? '—'}`;
+      tierEl.classList.remove('skeleton-inline');
+      tierEl.textContent       = tier.name;
+      tierEl.style.color       = tier.c2;
+      tierEl.style.borderColor = `${tier.c2}44`;
+
+      /* NEX */
+      const nexEl = document.getElementById('statNex');
+      nexEl.classList.remove('skeleton-text');
+      nexEl.textContent = (data.nex ?? 0).toLocaleString();
+
+      /* Account XP bar */
+      const xpEl  = document.getElementById('statXp');
+      const subEl = document.getElementById('statXpSub');
+      xpEl.classList.remove('skeleton-text');
+      subEl.classList.remove('skeleton-text');
+
+      if ((acct.level ?? 0) >= BattlePass.MAX_LEVEL) {
+        xpEl.textContent  = 'MAX LEVEL';
+        subEl.textContent = 'You have reached the top!';
+      } else {
+        xpEl.textContent  = `${xpDone.toLocaleString()} / ${xpNeeded.toLocaleString()} XP`;
+        subEl.textContent = `${xpLeft.toLocaleString()} XP to reach Level ${(acct.level ?? 0) + 1}`;
+      }
+
+      requestAnimationFrame(() => {
+        document.getElementById('statXpFill').style.width = `${xpPct}%`;
+      });
+
+      /* Battle pass — pass the battlePass object directly */
+      BattlePass.mount(document.getElementById('bpRoot'), bp);
+    }
+
+    /* ── Error state ───────────────────────────────────────── */
+    function showError(msg) {
+      /* Fallback: render battle pass from localStorage so page isn't blank */
+      BattlePass.mount(document.getElementById('bpRoot'));
+
+      const banner = document.getElementById('profileError');
+      document.getElementById('profileErrorMsg').textContent = msg;
+      banner.hidden = false;
+    }
+
+    document.getElementById('profileRetry').addEventListener('click', loadProfile);
+
+    /* ── Kick off ──────────────────────────────────────────── */
+    loadProfile();
   </script>
 </body>
 </html>

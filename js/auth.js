@@ -48,6 +48,38 @@ const Auth = (() => {
     return data;
   }
 
+  /* ── API GET helper ───────────────────────────────────── */
+  async function get(endpoint) {
+    const session = getSession();
+    const res = await fetch(`${API_BASE}${endpoint}`, {
+      headers: {
+        'Content-Type': 'application/json',
+        ...(session?.token ? { Authorization: `Bearer ${session.token}` } : {}),
+      },
+    });
+
+    const data = await res.json().catch(() => ({}));
+
+    if (!res.ok) {
+      throw new Error(data.message || data.error || `HTTP ${res.status}`);
+    }
+
+    return data;
+  }
+
+  /* ── Profile ───────────────────────────────────────────── */
+  /*
+   * Returns the raw profile object as-is:
+   * {
+   *   id, name, nex,
+   *   account:   { level, xp, xpInCurrentLevel, xpNeededForNextLevel, progressPercent },
+   *   battlePass:{ level, xp, xpInCurrentLevel, xpNeededForNextLevel, progressPercent }
+   * }
+   */
+  async function fetchProfile(name) {
+    return get(`/profile/${encodeURIComponent(name)}`);
+  }
+
   /* ── Auth actions ──────────────────────────────────────── */
   async function register({ name, email, password }) {
     await post('/auth/register', { name, email, password });
@@ -108,5 +140,5 @@ const Auth = (() => {
       .replace(/"/g, '&quot;');
   }
 
-  return { register, login, logout, isLoggedIn, getSession, mountNavbar };
+  return { register, login, logout, isLoggedIn, getSession, mountNavbar, fetchProfile };
 })();
