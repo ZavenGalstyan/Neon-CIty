@@ -3133,9 +3133,9 @@ class Game {
           const bType =
             typeof room._buildingType === "number" ? room._buildingType : 0;
           const isNeonCity = this.map?.config?.id === "neon_city";
-          // Pawnshop (type 12) - position vendor behind counter, closer to items
-          const npcX = bType === 12 ? room.entryX : room.entryX + 60;
-          const npcY = bType === 12 ? room.entryY - 75 : room.entryY - 110;
+          // Pawnshop (type 12) - position vendor above counter line
+          const npcX = bType === 12 ? room.roomW / 2 : room.entryX + 60;
+          const npcY = bType === 12 ? room.roomH * 0.48 : room.entryY - 110;
           this._buildingNpcs = [new BuildingNPC(npcX, npcY, bType, isNeonCity)];
         }
         return;
@@ -4707,6 +4707,9 @@ class Game {
       const GREEN = "#44FF88";
       const PURPLE = "#CC88FF";
 
+      // ── Vertical offset to ensure visibility ──
+      const vOffset = 35;
+
       // ── Shop title with glow ──
       ctx.save();
       ctx.font = "bold 12px Orbitron, monospace";
@@ -4714,7 +4717,7 @@ class Game {
       ctx.fillStyle = "#fff";
       ctx.shadowColor = CYAN;
       ctx.shadowBlur = 18;
-      ctx.fillText("◈ CYBER PAWN ◈", cx, topY + -12);
+      ctx.fillText("◈ CYBER PAWN ◈", cx, topY + vOffset - 12);
       ctx.shadowBlur = 0;
       ctx.restore();
 
@@ -4732,8 +4735,8 @@ class Game {
       ctx.strokeStyle = divGrad;
       ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.moveTo(cx - W * 0.35, topY + 12);
-      ctx.lineTo(cx + W * 0.35, topY + 12);
+      ctx.moveTo(cx - W * 0.35, topY + vOffset);
+      ctx.lineTo(cx + W * 0.35, topY + vOffset);
       ctx.stroke();
       ctx.restore();
 
@@ -4746,7 +4749,7 @@ class Game {
 
       for (let i = 0; i < 3; i++) {
         const dx = cx - W * 0.3 + i * (W * 0.3);
-        const dy = topY + 42;
+        const dy = topY + vOffset + 30;
         const item = topDisplays[i];
         const pulse = Math.sin(t * 2 + i * 1.5) * 0.3 + 0.7;
         const floatY = Math.sin(t * 1.5 + i * 2) * 3;
@@ -4809,7 +4812,7 @@ class Game {
 
       // ═══ MIDDLE ROW: CYBER COUNTER ═══
       const counterX = cx - 55;
-      const counterY = midY + 8;
+      const counterY = midY + 55;
       const counterW = 110;
       const counterH = 30;
 
@@ -4851,7 +4854,7 @@ class Game {
 
       for (let i = 0; i < 4; i++) {
         const bx = cx - W * 0.32 + i * (W * 0.22);
-        const by = midY - 22;
+        const by = midY + 25;
         const item = bottomItems[i];
         const pulse = Math.sin(t * 2.5 + i) * 0.3 + 0.7;
         const floatY = Math.sin(t * 1.8 + i * 1.5) * 3;
@@ -4892,20 +4895,6 @@ class Game {
         ctx.arc(px, py, 1.5, 0, Math.PI * 2);
         ctx.fill();
       }
-      ctx.restore();
-
-      // ═══ FLOOR ACCENT LINE ═══
-      ctx.save();
-      const floorPulse = Math.sin(t * 2.5) * 0.3 + 0.7;
-      ctx.strokeStyle = `rgba(68,238,255,${0.4 * floorPulse})`;
-      ctx.lineWidth = 2;
-      ctx.shadowColor = CYAN;
-      ctx.shadowBlur = 8;
-      ctx.beginPath();
-      ctx.moveTo(cx - W * 0.3, midY + counterH + 20);
-      ctx.lineTo(cx + W * 0.3, midY + counterH + 20);
-      ctx.stroke();
-      ctx.shadowBlur = 0;
       ctx.restore();
     } else if (type === 13) {
       // TECH LAB
