@@ -3141,9 +3141,13 @@ class Game {
             npcX = room.roomW / 2;
             npcY = room.roomH * 0.38;
           } else if (isNeonCity && bType === 4) {
-            // Arcade - position attendant between slot machines and arcade cabinets
+            // Arcade - position attendant above prize counter
             npcX = room.roomW / 2;
-            npcY = room.roomH * 0.26;
+            npcY = room.roomH * 0.30;
+          } else if (isNeonCity && bType === 11) {
+            // Bar - position bartender above service counter
+            npcX = room.roomW / 2;
+            npcY = room.roomH * 0.22;
           }
           this._buildingNpcs = [new BuildingNPC(npcX, npcY, bType, isNeonCity)];
         }
@@ -4940,102 +4944,583 @@ class Game {
       }
     } else if (type === 11) {
       // BAR
-      // ── Long bar counter (top) ───────────────────
-      ctx.fillStyle = "#2a1508";
-      ctx.strokeStyle = "#7a4520";
-      ctx.lineWidth = 2;
-      rr(cx - W * 0.44, topY + 4, W * 0.88, 28, 3);
-      ctx.fill();
-      ctx.stroke();
-      ctx.fillStyle = "rgba(255,160,80,0.15)";
-      ctx.fillRect(cx - W * 0.42, topY + 6, W * 0.84, 10);
-      // Bar stools
-      for (let si = 0; si < 5; si++) {
-        const sx = cx - W * 0.36 + si * ((W * 0.72) / 4);
-        ctx.fillStyle = "#8B4513";
-        ctx.strokeStyle = "#A0522D";
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.arc(sx, topY + 44, 10, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.stroke();
-        ctx.strokeStyle = "#6B3410";
+      const isNeonCityBar = this.map?.config?.id === "neon_city";
+
+      if (isNeonCityBar) {
+        // ═══ NEON CITY CYBER LOUNGE ═══
+        const t = performance.now() / 1000;
+
+        // Neon City colors
+        const CYAN = "#44EEFF";
+        const PINK = "#FF4466";
+        const GREEN = "#44FF88";
+        const PURPLE = "#CC88FF";
+        const GOLD = "#FFDD44";
+        const ORANGE = "#FF8844";
+
+        // ── Title Header ──
+        ctx.save();
+        ctx.font = "bold 16px Orbitron, monospace";
+        ctx.textAlign = "center";
+        ctx.fillStyle = "#fff";
+        ctx.shadowColor = PURPLE;
+        ctx.shadowBlur = 22;
+        ctx.fillText("🍸 NEON LOUNGE 🍸", cx, topY - 5);
+        ctx.shadowBlur = 0;
+        ctx.restore();
+
+        // ── Divider line ──
+        ctx.save();
+        const divGrad = ctx.createLinearGradient(cx - W * 0.42, 0, cx + W * 0.42, 0);
+        divGrad.addColorStop(0, "rgba(204,136,255,0)");
+        divGrad.addColorStop(0.5, "rgba(204,136,255,0.9)");
+        divGrad.addColorStop(1, "rgba(204,136,255,0)");
+        ctx.strokeStyle = divGrad;
         ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.moveTo(sx, topY + 44);
-        ctx.lineTo(sx, topY + 38);
+        ctx.moveTo(cx - W * 0.42, topY + 8);
+        ctx.lineTo(cx + W * 0.42, topY + 8);
         ctx.stroke();
-      }
-      // Bottles behind bar
-      const btColors = ["#884422", "#225588", "#226622", "#AA8822", "#882244"];
-      for (let bi = 0; bi < 7; bi++) {
-        const bx3 = cx - W * 0.38 + bi * ((W * 0.76) / 6);
-        ctx.fillStyle = btColors[bi % btColors.length];
-        ctx.strokeStyle = "#CCAA55";
-        ctx.lineWidth = 0.5;
-        ctx.beginPath();
-        ctx.roundRect(bx3 - 4, topY - 18, 8, 20, [2, 2, 0, 0]);
+        ctx.restore();
+
+        // ═══ BACK BAR SHELF (with bottles) ═══
+        ctx.save();
+        // Shelf
+        ctx.fillStyle = "#1a1218";
+        ctx.strokeStyle = PURPLE;
+        ctx.lineWidth = 2;
+        rr(cx - W * 0.38, topY + 12, W * 0.76, 8, 2);
         ctx.fill();
         ctx.stroke();
-        ctx.fillStyle = "#CCAA55BB";
-        ctx.beginPath();
-        ctx.roundRect(bx3 - 2, topY - 6, 4, 4, 1);
+        ctx.restore();
+
+        // ═══ DRINK BOTTLES (Natural shapes) ═══
+        const drinks = [
+          { type: "wine", color: "#8B0030", label: "🍷" },
+          { type: "whiskey", color: "#CD853F", label: "🥃" },
+          { type: "vodka", color: "#E0E8FF", label: "🍸" },
+          { type: "cocktail", color: CYAN, label: "🍹" },
+          { type: "beer", color: "#DAA520", label: "🍺" },
+          { type: "champagne", color: "#F5F5DC", label: "🍾" },
+        ];
+
+        for (let di = 0; di < drinks.length; di++) {
+          const dx = cx - W * 0.32 + di * (W * 0.13);
+          const dy = topY + 8;
+          const drink = drinks[di];
+
+          ctx.save();
+          ctx.font = "22px serif";
+          ctx.textAlign = "center";
+          ctx.shadowColor = PURPLE;
+          ctx.shadowBlur = 8;
+          ctx.fillText(drink.label, dx, dy);
+          ctx.shadowBlur = 0;
+          ctx.restore();
+        }
+
+        // ═══ MAIN BAR COUNTER ═══
+        ctx.save();
+        const barPulse = Math.sin(t * 2) * 0.3 + 0.7;
+
+        // Bar counter body (wooden look with neon trim)
+        const barGrad = ctx.createLinearGradient(0, topY + 22, 0, topY + 55);
+        barGrad.addColorStop(0, "#2a1a12");
+        barGrad.addColorStop(0.5, "#1a100a");
+        barGrad.addColorStop(1, "#0a0805");
+        ctx.fillStyle = barGrad;
+        rr(cx - W * 0.42, topY + 22, W * 0.84, 35, 6);
         ctx.fill();
-      }
-      // ── Pool table (center) ───────────────────────
-      ctx.fillStyle = "#1a5522";
-      ctx.strokeStyle = "#3a7744";
-      ctx.lineWidth = 2;
-      rr(cx - W * 0.22, midY - 10, W * 0.44, W * 0.28, 4);
-      ctx.fill();
-      ctx.stroke();
-      // Felt detail
-      ctx.fillStyle = "#225533";
-      ctx.fillRect(cx - W * 0.2, midY - 8, W * 0.4, W * 0.24);
-      // Pockets
-      for (const [px2, py2] of [
-        [cx - W * 0.22, midY - 10],
-        [cx, midY - 10],
-        [cx + W * 0.22, midY - 10],
-        [cx - W * 0.22, midY - 10 + W * 0.28],
-        [cx, midY - 10 + W * 0.28],
-        [cx + W * 0.22, midY - 10 + W * 0.28],
-      ]) {
-        ctx.fillStyle = "#111";
-        ctx.beginPath();
-        ctx.arc(px2, py2, 5, 0, Math.PI * 2);
+
+        // Bar neon edge
+        ctx.strokeStyle = CYAN;
+        ctx.lineWidth = 3;
+        ctx.shadowColor = CYAN;
+        ctx.shadowBlur = 15 * barPulse;
+        rr(cx - W * 0.42, topY + 22, W * 0.84, 35, 6);
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+
+        // Bar top surface highlight
+        ctx.fillStyle = "rgba(68,238,255,0.1)";
+        ctx.fillRect(cx - W * 0.40, topY + 24, W * 0.80, 6);
+        ctx.restore();
+
+        // ═══ BAR STOOLS (Realistic) ═══
+        for (let si = 0; si < 5; si++) {
+          const sx = cx - W * 0.34 + si * ((W * 0.68) / 4);
+          const sy = topY + 72;
+
+          ctx.save();
+          // Stool legs (4 legs)
+          ctx.strokeStyle = "#333";
+          ctx.lineWidth = 2;
+          for (let leg = 0; leg < 4; leg++) {
+            const legAngle = (leg * Math.PI / 2) + Math.PI / 4;
+            const legX = sx + Math.cos(legAngle) * 8;
+            const legY = sy + 8 + Math.sin(legAngle) * 4;
+            ctx.beginPath();
+            ctx.moveTo(sx, sy + 5);
+            ctx.lineTo(legX, legY + 12);
+            ctx.stroke();
+          }
+
+          // Foot rest ring
+          ctx.strokeStyle = GOLD;
+          ctx.lineWidth = 2;
+          ctx.shadowColor = GOLD;
+          ctx.shadowBlur = 4;
+          ctx.beginPath();
+          ctx.ellipse(sx, sy + 12, 10, 4, 0, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.shadowBlur = 0;
+
+          // Seat cushion
+          const cushionGrad = ctx.createRadialGradient(sx, sy, 0, sx, sy, 14);
+          cushionGrad.addColorStop(0, "#3a2020");
+          cushionGrad.addColorStop(0.7, "#2a1515");
+          cushionGrad.addColorStop(1, "#1a0a0a");
+          ctx.fillStyle = cushionGrad;
+          ctx.beginPath();
+          ctx.ellipse(sx, sy, 14, 8, 0, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Cushion highlight
+          ctx.fillStyle = "rgba(255,100,100,0.2)";
+          ctx.beginPath();
+          ctx.ellipse(sx - 3, sy - 2, 6, 3, -0.3, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Cushion border
+          ctx.strokeStyle = PINK;
+          ctx.lineWidth = 2;
+          ctx.shadowColor = PINK;
+          ctx.shadowBlur = 6;
+          ctx.beginPath();
+          ctx.ellipse(sx, sy, 14, 8, 0, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.shadowBlur = 0;
+          ctx.restore();
+        }
+
+        // ═══ PATRONS SITTING AT BAR ═══
+        // Patron 1 (on stool 1)
+        ctx.save();
+        const p1x = cx - W * 0.34 + 1 * ((W * 0.68) / 4);
+        const p1y = topY + 58;
+
+        // Body
+        ctx.fillStyle = "#2244AA";
+        rr(p1x - 8, p1y - 18, 16, 20, 4);
         ctx.fill();
-      }
-      // Balls
-      const bColors2 = ["#FFDD00", "#FF3300", "#0033FF", "#FF6600", "#880088"];
-      for (let bi = 0; bi < 5; bi++) {
-        ctx.fillStyle = bColors2[bi];
-        ctx.shadowColor = bColors2[bi];
-        ctx.shadowBlur = 4;
+
+        // Head
+        ctx.fillStyle = "#DDBB99";
         ctx.beginPath();
-        ctx.arc(cx - W * 0.12 + bi * W * 0.06, midY, 5, 0, Math.PI * 2);
+        ctx.arc(p1x, p1y - 26, 8, 0, Math.PI * 2);
         ctx.fill();
+
+        // Hair
+        ctx.fillStyle = "#332211";
+        ctx.beginPath();
+        ctx.arc(p1x, p1y - 30, 7, Math.PI, 0);
+        ctx.fill();
+
+        // Arm holding drink
+        ctx.fillStyle = "#2244AA";
+        ctx.fillRect(p1x + 6, p1y - 14, 12, 5);
+        ctx.fillStyle = "#DDBB99";
+        ctx.beginPath();
+        ctx.arc(p1x + 18, p1y - 12, 4, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Drink in hand
+        ctx.font = "14px serif";
+        ctx.fillText("🍺", p1x + 22, p1y - 6);
+        ctx.restore();
+
+        // Patron 2 (on stool 3)
+        ctx.save();
+        const p2x = cx - W * 0.34 + 3 * ((W * 0.68) / 4);
+        const p2y = topY + 58;
+
+        // Body
+        ctx.fillStyle = "#AA2266";
+        rr(p2x - 8, p2y - 18, 16, 20, 4);
+        ctx.fill();
+
+        // Head
+        ctx.fillStyle = "#CCAA88";
+        ctx.beginPath();
+        ctx.arc(p2x, p2y - 26, 8, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Hair (longer)
+        ctx.fillStyle = "#884422";
+        ctx.beginPath();
+        ctx.ellipse(p2x, p2y - 28, 9, 10, 0, Math.PI * 0.8, Math.PI * 0.2, true);
+        ctx.fill();
+
+        // Arm holding drink
+        ctx.fillStyle = "#AA2266";
+        ctx.fillRect(p2x - 18, p2y - 14, 12, 5);
+        ctx.fillStyle = "#CCAA88";
+        ctx.beginPath();
+        ctx.arc(p2x - 18, p2y - 12, 4, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Drink in hand
+        ctx.font = "14px serif";
+        ctx.fillText("🍹", p2x - 26, p2y - 6);
+        ctx.restore();
+
+        // ═══ SERVICE COUNTER (for bartender) ═══
+        ctx.save();
+        const counterPulse = Math.sin(t * 2.5) * 0.3 + 0.7;
+        const svcX = cx - 60;
+        const svcY = topY + 100;
+        const svcW = 120;
+        const svcH = 32;
+
+        // Counter shadow
+        ctx.fillStyle = "rgba(0,0,0,0.4)";
+        ctx.fillRect(svcX + 4, svcY + svcH + 2, svcW, 5);
+
+        // Counter body
+        const svcGrad = ctx.createLinearGradient(svcX, svcY, svcX, svcY + svcH);
+        svcGrad.addColorStop(0, "#1a1a2e");
+        svcGrad.addColorStop(1, "#0a0a14");
+        ctx.fillStyle = svcGrad;
+        rr(svcX, svcY, svcW, svcH, 6);
+        ctx.fill();
+
+        // Counter border
+        ctx.strokeStyle = PURPLE;
+        ctx.lineWidth = 3;
+        ctx.shadowColor = PURPLE;
+        ctx.shadowBlur = 12 * counterPulse;
+        rr(svcX, svcY, svcW, svcH, 6);
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+
+        // Counter top edge
+        ctx.strokeStyle = CYAN;
+        ctx.lineWidth = 2;
+        ctx.shadowColor = CYAN;
+        ctx.shadowBlur = 10;
+        ctx.beginPath();
+        ctx.moveTo(svcX + 8, svcY + 3);
+        ctx.lineTo(svcX + svcW - 8, svcY + 3);
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+
+        // Drinks on counter
+        ctx.font = "18px serif";
+        ctx.textAlign = "center";
+        ctx.shadowColor = CYAN;
+        ctx.shadowBlur = 6;
+        ctx.fillText("🍸", svcX + 25, svcY + 22);
+        ctx.fillText("🍹", svcX + 60, svcY + 22);
+        ctx.fillText("🥃", svcX + 95, svcY + 22);
+        ctx.shadowBlur = 0;
+
+        // "SERVICE" text
+        ctx.font = "bold 8px Orbitron, monospace";
+        ctx.fillStyle = GOLD;
+        ctx.shadowColor = GOLD;
+        ctx.shadowBlur = 6;
+        ctx.fillText("★ SERVICE ★", cx, svcY + svcH + 14);
+        ctx.shadowBlur = 0;
+        ctx.restore();
+
+        // ═══ POOL TABLE (Improved) ═══
+        ctx.save();
+        const tableX = cx - W * 0.26;
+        const tableY = midY + 55;
+        const tableW = W * 0.52;
+        const tableH = H * 0.26;
+
+        // Table wooden frame
+        ctx.fillStyle = "#2a1a0a";
+        ctx.strokeStyle = "#4a3020";
+        ctx.lineWidth = 6;
+        rr(tableX - 8, tableY - 8, tableW + 16, tableH + 16, 10);
+        ctx.fill();
+        ctx.stroke();
+
+        // Table inner frame
+        ctx.fillStyle = "#1a3318";
+        ctx.strokeStyle = GREEN;
+        ctx.lineWidth = 3;
+        ctx.shadowColor = GREEN;
+        ctx.shadowBlur = 12;
+        rr(tableX, tableY, tableW, tableH, 6);
+        ctx.fill();
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+
+        // Felt surface
+        const feltGrad = ctx.createLinearGradient(tableX, tableY, tableX + tableW, tableY + tableH);
+        feltGrad.addColorStop(0, "#0d4422");
+        feltGrad.addColorStop(0.5, "#0f5528");
+        feltGrad.addColorStop(1, "#0d4422");
+        ctx.fillStyle = feltGrad;
+        rr(tableX + 4, tableY + 4, tableW - 8, tableH - 8, 4);
+        ctx.fill();
+
+        // Pockets (6 pockets)
+        const pocketPositions = [
+          [tableX, tableY],
+          [tableX + tableW / 2, tableY - 4],
+          [tableX + tableW, tableY],
+          [tableX, tableY + tableH],
+          [tableX + tableW / 2, tableY + tableH + 4],
+          [tableX + tableW, tableY + tableH],
+        ];
+        for (const [px, py] of pocketPositions) {
+          ctx.fillStyle = "#000";
+          ctx.beginPath();
+          ctx.arc(px, py, 10, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.strokeStyle = "#3a2a1a";
+          ctx.lineWidth = 3;
+          ctx.stroke();
+        }
+
+        // ═══ POOL BALLS IN TRIANGLE ═══
+        const ballRadius = 7;
+        const triangleX = tableX + tableW * 0.7;
+        const triangleY = tableY + tableH / 2;
+        const ballSpacing = ballRadius * 2 + 2;
+
+        // Triangle formation (5 rows: 1-2-3-4-5 = 15 balls)
+        const ballColors2 = [
+          GOLD,           // Row 1: 1 ball
+          PINK, CYAN,     // Row 2: 2 balls
+          GREEN, "#111", ORANGE,  // Row 3: 3 balls (black 8 in center)
+          PURPLE, "#FF6666", "#6666FF", GOLD, // Row 4: 4 balls
+          PINK, CYAN, GREEN, ORANGE, PURPLE   // Row 5: 5 balls
+        ];
+
+        let ballIndex = 0;
+        for (let row = 0; row < 5; row++) {
+          const ballsInRow = row + 1;
+          const rowX = triangleX + row * ballSpacing * 0.9;
+          const rowStartY = triangleY - (ballsInRow - 1) * ballSpacing / 2;
+
+          for (let b = 0; b < ballsInRow; b++) {
+            const bx = rowX;
+            const by = rowStartY + b * ballSpacing;
+
+            // Ball shadow
+            ctx.fillStyle = "rgba(0,0,0,0.3)";
+            ctx.beginPath();
+            ctx.arc(bx + 2, by + 2, ballRadius, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Ball
+            const ballCol = ballColors2[ballIndex] || GOLD;
+            const ballGrad = ctx.createRadialGradient(bx - 2, by - 2, 0, bx, by, ballRadius);
+            ballGrad.addColorStop(0, "#fff");
+            ballGrad.addColorStop(0.3, ballCol);
+            ballGrad.addColorStop(1, ballCol === "#111" ? "#000" : ballCol);
+            ctx.fillStyle = ballGrad;
+            ctx.beginPath();
+            ctx.arc(bx, by, ballRadius, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Ball shine
+            ctx.fillStyle = "rgba(255,255,255,0.5)";
+            ctx.beginPath();
+            ctx.arc(bx - 2, by - 2, 2, 0, Math.PI * 2);
+            ctx.fill();
+
+            ballIndex++;
+          }
+        }
+
+        // Cue ball
+        const cueBallX = tableX + tableW * 0.25;
+        const cueBallY = tableY + tableH / 2;
+        ctx.fillStyle = "rgba(0,0,0,0.3)";
+        ctx.beginPath();
+        ctx.arc(cueBallX + 2, cueBallY + 2, ballRadius, 0, Math.PI * 2);
+        ctx.fill();
+        const cueGrad = ctx.createRadialGradient(cueBallX - 2, cueBallY - 2, 0, cueBallX, cueBallY, ballRadius);
+        cueGrad.addColorStop(0, "#fff");
+        cueGrad.addColorStop(0.5, "#f8f8ff");
+        cueGrad.addColorStop(1, "#e0e0e8");
+        ctx.fillStyle = cueGrad;
+        ctx.beginPath();
+        ctx.arc(cueBallX, cueBallY, ballRadius, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.restore();
+
+        // ═══ CYBER JUKEBOX ═══
+        ctx.save();
+
+        // Jukebox body
+        ctx.fillStyle = "#0a0812";
+        ctx.strokeStyle = PINK;
+        ctx.lineWidth = 3;
+        ctx.shadowColor = PINK;
+        ctx.shadowBlur = 15;
+        rr(cx + W * 0.32, topY + 20, 50, 75, 8);
+        ctx.fill();
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+
+        // Jukebox screen
+        ctx.fillStyle = "#050508";
+        rr(cx + W * 0.32 + 6, topY + 28, 38, 28, 4);
+        ctx.fill();
+
+        // Animated music bars
+        for (let mb = 0; mb < 5; mb++) {
+          const mbHeight = 8 + Math.sin(t * 8 + mb * 1.5) * 8;
+          const mbColor = [CYAN, PINK, GREEN, GOLD, PURPLE][mb];
+          ctx.fillStyle = mbColor;
+          ctx.shadowColor = mbColor;
+          ctx.shadowBlur = 6;
+          ctx.fillRect(cx + W * 0.32 + 10 + mb * 7, topY + 48 - mbHeight, 5, mbHeight);
+        }
+        ctx.shadowBlur = 0;
+
+        // Speaker grille
+        ctx.fillStyle = "#1a1a25";
+        rr(cx + W * 0.32 + 8, topY + 58, 34, 30, 3);
+        ctx.fill();
+        for (let sg = 0; sg < 4; sg++) {
+          ctx.strokeStyle = `rgba(204,136,255,${0.3 + jukePulse * 0.3})`;
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.arc(cx + W * 0.32 + 25, topY + 73, 4 + sg * 4, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+
+        // "JUKEBOX" label
+        ctx.font = "bold 7px Orbitron, monospace";
+        ctx.fillStyle = PINK;
+        ctx.shadowColor = PINK;
+        ctx.shadowBlur = 8;
+        ctx.textAlign = "center";
+        ctx.fillText("♫ JUKEBOX", cx + W * 0.32 + 25, topY + 100);
+        ctx.shadowBlur = 0;
+        ctx.restore();
+
+        // ═══ AMBIENT PARTICLES ═══
+        ctx.save();
+        for (let pi = 0; pi < 12; pi++) {
+          const px = cx - W * 0.4 + ((t * 10 + pi * 70) % (W * 0.8));
+          const py = topY + 30 + Math.sin(t * 0.6 + pi * 0.7) * 50 + (pi * 20) % 80;
+          const alpha = Math.sin(t * 2 + pi) * 0.3 + 0.4;
+          const colors = [CYAN, PINK, PURPLE, GOLD];
+          ctx.fillStyle = colors[pi % 4].slice(0, 7) + Math.floor(alpha * 255).toString(16).padStart(2, '0');
+          ctx.beginPath();
+          ctx.arc(px, py, 2, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
+
+      } else {
+        // ── Default Bar (other maps) ───────────────────
+        ctx.fillStyle = "#2a1508";
+        ctx.strokeStyle = "#7a4520";
+        ctx.lineWidth = 2;
+        rr(cx - W * 0.44, topY + 4, W * 0.88, 28, 3);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = "rgba(255,160,80,0.15)";
+        ctx.fillRect(cx - W * 0.42, topY + 6, W * 0.84, 10);
+        // Bar stools
+        for (let si = 0; si < 5; si++) {
+          const sx = cx - W * 0.36 + si * ((W * 0.72) / 4);
+          ctx.fillStyle = "#8B4513";
+          ctx.strokeStyle = "#A0522D";
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.arc(sx, topY + 44, 10, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+          ctx.strokeStyle = "#6B3410";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(sx, topY + 44);
+          ctx.lineTo(sx, topY + 38);
+          ctx.stroke();
+        }
+        // Bottles behind bar
+        const btColors = ["#884422", "#225588", "#226622", "#AA8822", "#882244"];
+        for (let bi = 0; bi < 7; bi++) {
+          const bx3 = cx - W * 0.38 + bi * ((W * 0.76) / 6);
+          ctx.fillStyle = btColors[bi % btColors.length];
+          ctx.strokeStyle = "#CCAA55";
+          ctx.lineWidth = 0.5;
+          ctx.beginPath();
+          ctx.roundRect(bx3 - 4, topY - 18, 8, 20, [2, 2, 0, 0]);
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#CCAA55BB";
+          ctx.beginPath();
+          ctx.roundRect(bx3 - 2, topY - 6, 4, 4, 1);
+          ctx.fill();
+        }
+        // ── Pool table (center) ───────────────────────
+        ctx.fillStyle = "#1a5522";
+        ctx.strokeStyle = "#3a7744";
+        ctx.lineWidth = 2;
+        rr(cx - W * 0.22, midY - 10, W * 0.44, W * 0.28, 4);
+        ctx.fill();
+        ctx.stroke();
+        // Felt detail
+        ctx.fillStyle = "#225533";
+        ctx.fillRect(cx - W * 0.2, midY - 8, W * 0.4, W * 0.24);
+        // Pockets
+        for (const [px2, py2] of [
+          [cx - W * 0.22, midY - 10],
+          [cx, midY - 10],
+          [cx + W * 0.22, midY - 10],
+          [cx - W * 0.22, midY - 10 + W * 0.28],
+          [cx, midY - 10 + W * 0.28],
+          [cx + W * 0.22, midY - 10 + W * 0.28],
+        ]) {
+          ctx.fillStyle = "#111";
+          ctx.beginPath();
+          ctx.arc(px2, py2, 5, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        // Balls
+        const bColors2 = ["#FFDD00", "#FF3300", "#0033FF", "#FF6600", "#880088"];
+        for (let bi = 0; bi < 5; bi++) {
+          ctx.fillStyle = bColors2[bi];
+          ctx.shadowColor = bColors2[bi];
+          ctx.shadowBlur = 4;
+          ctx.beginPath();
+          ctx.arc(cx - W * 0.12 + bi * W * 0.06, midY, 5, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.shadowBlur = 0;
+        // Jukebox (right wall)
+        ctx.fillStyle = "#220a10";
+        ctx.strokeStyle = "#FF4466";
+        ctx.lineWidth = 1.5;
+        rr(cx + W * 0.3, topY + 8, 36, 62, 5);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = "#440a18";
+        rr(cx + W * 0.3 + 4, topY + 12, 28, 20, 2);
+        ctx.fill();
+        ctx.fillStyle = "#FF4466";
+        ctx.shadowColor = "#FF2244";
+        ctx.shadowBlur = 8;
+        ctx.fillRect(cx + W * 0.3 + 8, topY + 14, 20, 6);
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = "#FFAACC";
+        ctx.font = "bold 5px monospace";
+        ctx.textAlign = "center";
+        ctx.fillText("JUKEBOX", cx + W * 0.3 + 18, topY + 44);
       }
-      ctx.shadowBlur = 0;
-      // Jukebox (right wall)
-      ctx.fillStyle = "#220a10";
-      ctx.strokeStyle = "#FF4466";
-      ctx.lineWidth = 1.5;
-      rr(cx + W * 0.3, topY + 8, 36, 62, 5);
-      ctx.fill();
-      ctx.stroke();
-      ctx.fillStyle = "#440a18";
-      rr(cx + W * 0.3 + 4, topY + 12, 28, 20, 2);
-      ctx.fill();
-      ctx.fillStyle = "#FF4466";
-      ctx.shadowColor = "#FF2244";
-      ctx.shadowBlur = 8;
-      ctx.fillRect(cx + W * 0.3 + 8, topY + 14, 20, 6);
-      ctx.shadowBlur = 0;
-      ctx.fillStyle = "#FFAACC";
-      ctx.font = "bold 5px monospace";
-      ctx.textAlign = "center";
-      ctx.fillText("JUKEBOX", cx + W * 0.3 + 18, topY + 44);
     } else if (type === 12) {
       // ═══ CYBER PAWNSHOP - NEON CITY STYLE ═══
       const t = performance.now() / 1000;
