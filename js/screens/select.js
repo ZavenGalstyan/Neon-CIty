@@ -97,9 +97,8 @@
       if (card.classList.contains('char-card-locked')) {
         const charData = CONFIG.CHARACTERS.find(c => c.id === card.dataset.char);
         if (charData && charData.locked) {
-          // Show locked message
           const price = charData.price || 0;
-          alert(`🔒 This character is locked!\n\nPrice: ⬢${price.toLocaleString()} NEX\n\nEarn money in-game to unlock this character.`);
+          _showUnlockPrompt(card, charData, price);
           return;
         }
       }
@@ -483,4 +482,103 @@
       else if (!nextBtn.disabled) nextBtn.click();
     }
   });
+
+  /* ── Unlock character prompt (replaces alert) ──────────── */
+  function _showUnlockPrompt(card, charData, price) {
+    // Remove existing modal if open
+    document.getElementById('_unlockModal')?.remove();
+
+    const modal = document.createElement('div');
+    modal.id = '_unlockModal';
+    modal.style.cssText = `
+      position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+      background:rgba(0,0,0,0.82);z-index:9999;`;
+    modal.innerHTML = `
+      <div style="background:#0a0a1a;border:1px solid #44EEFF44;border-radius:12px;
+                  padding:32px 40px;max-width:340px;width:90%;text-align:center;
+                  font-family:monospace;color:#EEF;">
+        <div style="font-size:28px;margin-bottom:8px;">🔒</div>
+        <h3 style="color:#44EEFF;margin:0 0 6px;font-size:15px;letter-spacing:2px;">
+          ${charData.name}
+        </h3>
+        <p style="color:#888;font-size:12px;margin:0 0 20px;">${charData.lore || ''}</p>
+        <div style="color:#FFD700;font-size:18px;font-weight:bold;margin-bottom:20px;">
+          ⬢ ${price.toLocaleString()} NEX
+        </div>
+        <div id="_unlockMsg" style="font-size:12px;min-height:18px;margin-bottom:16px;color:#FF4466;"></div>
+        <div style="display:flex;gap:10px;justify-content:center;">
+          <button id="_unlockCancel"
+            style="padding:10px 24px;border:1px solid #444;border-radius:6px;
+                   background:transparent;color:#888;cursor:pointer;font-family:monospace;font-size:12px;">
+            CANCEL
+          </button>
+          <button id="_unlockBuy"
+            style="padding:10px 24px;border:none;border-radius:6px;
+                   background:#44EEFF;color:#000;cursor:pointer;font-family:monospace;
+                   font-size:12px;font-weight:bold;">
+            UNLOCK
+          </button>
+        </div>
+      </div>`;
+    document.body.appendChild(modal);
+
+    modal.querySelector('#_unlockCancel').addEventListener('click', () => modal.remove());
+    modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+
+    modal.querySelector('#_unlockBuy').addEventListener('click', async () => {
+      const btn = modal.querySelector('#_unlockBuy');
+      const msg = modal.querySelector('#_unlockMsg');
+
+      // Must be logged in
+      if (typeof Auth === 'undefined' || !Auth.isLoggedIn()) {
+        msg.textContent = 'Login to unlock characters.';
+        msg.style.color = '#FF4466';
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'UNLOCKING…';
+      msg.textContent = '';
+
+      try {
+        await API.unlockCharacter(charData.id);
+        // Success — remove locked class so card is now selectable
+        card.classList.remove('char-card-locked');
+        msg.style.color = '#44FF88';
+        msg.textContent = 'Unlocked! Selecting…';
+        setTimeout(() => {
+          modal.remove();
+          card.click(); // auto-select the newly unlocked char
+        }, 800);
+      } catch (err) {
+        msg.style.color = '#FF4466';
+        msg.textContent = err.message || 'Unlock failed.';
+        btn.disabled = false;
+        btn.textContent = 'UNLOCK';
+      }
+    });
+  }
+
+  /* ── Load unlocked characters from backend ─────────────── */
+  async function _loadUnlockedChars() {
+    if (typeof Auth === 'undefined' || !Auth.isLoggedIn()) return;
+    if (typeof API === 'undefined') return;
+    try {
+      const data = await API.getUnlockedCharacters();
+      const unlocked = new Set(data.unlocked || []);
+      charCards.forEach(card => {
+        const id = card.dataset.char;
+        // If backend says this char is unlocked, remove the locked class
+        if (id && unlocked.has(id)) {
+          card.classList.remove('char-card-locked');
+        }
+      });
+    } catch (_) {
+      // Silently fail — locked state stays as-is from HTML
+    }
+  }
+
+  // Run on page load
+  _loadUnlockedChars();
+
 })();
