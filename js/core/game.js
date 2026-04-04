@@ -3132,8 +3132,12 @@ class Game {
         ) {
           const bType =
             typeof room._buildingType === "number" ? room._buildingType : 0;
+          const isNeonCity = this.map?.config?.id === "neon_city";
+          // Pawnshop (type 12) - position vendor behind counter, closer to items
+          const npcX = bType === 12 ? room.entryX : room.entryX + 60;
+          const npcY = bType === 12 ? room.entryY - 75 : room.entryY - 110;
           this._buildingNpcs = [
-            new BuildingNPC(room.entryX + 60, room.entryY - 110, bType),
+            new BuildingNPC(npcX, npcY, bType, isNeonCity),
           ];
         }
         return;
@@ -4696,63 +4700,226 @@ class Game {
       ctx.textAlign = "center";
       ctx.fillText("JUKEBOX", cx + W * 0.3 + 18, topY + 44);
     } else if (type === 12) {
-      // PAWNSHOP
-      // ── Glass display cases (top) ─────────────────
-      for (let ci = 0; ci < 3; ci++) {
-        const cx2 = cx - W * 0.38 + ci * ((W * 0.76) / 2);
-        ctx.fillStyle = "rgba(180,220,255,0.12)";
-        ctx.strokeStyle = "#6688AA";
-        ctx.lineWidth = 1.5;
-        rr(cx2 - 26, topY + 4, 52, 44, 3);
+      // ═══ CYBER PAWNSHOP - NEON CITY STYLE ═══
+      const t = performance.now() / 1000;
+
+      // Neon City theme colors (matching the map)
+      const CYAN = "#44EEFF";
+      const PINK = "#FF4466";
+      const GREEN = "#44FF88";
+      const PURPLE = "#CC88FF";
+
+      // ── Shop title with glow ──
+      ctx.save();
+      ctx.font = "bold 12px Orbitron, monospace";
+      ctx.textAlign = "center";
+      ctx.fillStyle = "#fff";
+      ctx.shadowColor = CYAN;
+      ctx.shadowBlur = 18;
+      ctx.fillText("◈ CYBER PAWN ◈", cx, topY + 2);
+      ctx.shadowBlur = 0;
+      ctx.restore();
+
+      // ── Divider line under title ──
+      ctx.save();
+      const divGrad = ctx.createLinearGradient(cx - W * 0.35, 0, cx + W * 0.35, 0);
+      divGrad.addColorStop(0, "rgba(68,238,255,0)");
+      divGrad.addColorStop(0.5, "rgba(68,238,255,0.8)");
+      divGrad.addColorStop(1, "rgba(68,238,255,0)");
+      ctx.strokeStyle = divGrad;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(cx - W * 0.35, topY + 12);
+      ctx.lineTo(cx + W * 0.35, topY + 12);
+      ctx.stroke();
+      ctx.restore();
+
+      // ═══ TOP ROW: 3 LARGE DISPLAY CASES (HIGH VISIBILITY) ═══
+      const topDisplays = [
+        { emoji: "🔫", label: "WEAPONS", color: PINK },
+        { emoji: "💣", label: "GRENADES", color: "#FF8844" },
+        { emoji: "💎", label: "VALUABLES", color: CYAN },
+      ];
+
+      for (let i = 0; i < 3; i++) {
+        const dx = cx - W * 0.30 + i * (W * 0.30);
+        const dy = topY + 42;
+        const item = topDisplays[i];
+        const pulse = Math.sin(t * 2 + i * 1.5) * 0.3 + 0.7;
+        const floatY = Math.sin(t * 1.5 + i * 2) * 3;
+
+        // Display case background - BRIGHTER for visibility
+        ctx.save();
+        ctx.fillStyle = "rgba(20,25,40,0.98)";
+        ctx.strokeStyle = item.color;
+        ctx.lineWidth = 3;
+        ctx.shadowColor = item.color;
+        ctx.shadowBlur = 20 * pulse;
+        rr(dx - 38, dy - 24, 76, 58, 10);
         ctx.fill();
         ctx.stroke();
-        // Items in case
-        const items = [
-          ["💎", "#44EEFF"],
-          ["🔫", "#AAAAAA"],
-          ["⌚", "#FFDD44"],
-        ];
-        ctx.font = "16px serif";
+        ctx.shadowBlur = 0;
+
+        // Inner bright glow background for contrast
+        const innerGlow = ctx.createRadialGradient(dx, dy + 8, 0, dx, dy + 8, 35);
+        innerGlow.addColorStop(0, `rgba(${item.color === CYAN ? "68,238,255" : item.color === PINK ? "255,68,102" : "255,136,68"},0.25)`);
+        innerGlow.addColorStop(0.6, `rgba(${item.color === CYAN ? "68,238,255" : item.color === PINK ? "255,68,102" : "255,136,68"},0.08)`);
+        innerGlow.addColorStop(1, "rgba(0,0,0,0)");
+        ctx.fillStyle = innerGlow;
+        ctx.beginPath();
+        ctx.arc(dx, dy + 8, 35, 0, Math.PI * 2);
+        ctx.fill();
+
+        // LARGER emoji with stronger glow
+        ctx.font = "42px serif";
         ctx.textAlign = "center";
-        ctx.fillText(items[ci][0], cx2, topY + 30);
-        ctx.fillStyle = items[ci][1] + "88";
-        ctx.fillRect(cx2 - 24, topY + 36, 48, 6);
+        ctx.shadowColor = "#fff";
+        ctx.shadowBlur = 8;
+        ctx.fillText(item.emoji, dx, dy + 18 + floatY);
+        ctx.shadowColor = item.color;
+        ctx.shadowBlur = 25;
+        ctx.fillText(item.emoji, dx, dy + 18 + floatY);
+        ctx.shadowBlur = 0;
+
+        // Label with better visibility
+        ctx.font = "bold 8px Orbitron, monospace";
+        ctx.fillStyle = "#fff";
+        ctx.shadowColor = item.color;
+        ctx.shadowBlur = 10;
+        ctx.fillText(item.label, dx, dy + 30);
+        ctx.shadowBlur = 0;
+        ctx.restore();
       }
-      // ── Counter + cash register ───────────────────
-      ctx.fillStyle = "#2a1a10";
-      ctx.strokeStyle = "#6a4a28";
-      ctx.lineWidth = 1.5;
-      rr(cx - 48, midY + 2, 96, 28, 3);
+
+      // ═══ MIDDLE ROW: CYBER COUNTER ═══
+      const counterX = cx - 55;
+      const counterY = midY + 8;
+      const counterW = 110;
+      const counterH = 30;
+
+      // Counter shadow
+      ctx.fillStyle = "rgba(0,0,0,0.4)";
+      ctx.fillRect(counterX + 4, counterY + counterH + 2, counterW, 5);
+
+      // Counter base
+      const counterGrad = ctx.createLinearGradient(counterX, counterY, counterX, counterY + counterH);
+      counterGrad.addColorStop(0, "#1a1a2e");
+      counterGrad.addColorStop(1, "#0a0a14");
+      ctx.fillStyle = counterGrad;
+      rr(counterX, counterY, counterW, counterH, 6);
       ctx.fill();
-      ctx.stroke();
-      ctx.fillStyle = "#111118";
-      ctx.strokeStyle = "#44EEFF";
-      ctx.lineWidth = 1;
-      rr(cx + 10, midY + 4, 32, 22, 2);
-      ctx.fill();
-      ctx.stroke();
-      ctx.fillStyle = "#002244";
-      ctx.fillRect(cx + 12, midY + 6, 28, 18);
-      ctx.fillStyle = "#FFCC44";
-      ctx.shadowColor = "#FFAA00";
-      ctx.shadowBlur = 5;
+
+      // Counter top edge with cyan glow
+      ctx.strokeStyle = CYAN;
+      ctx.lineWidth = 2;
+      ctx.shadowColor = CYAN;
+      ctx.shadowBlur = 12;
       ctx.beginPath();
-      ctx.arc(cx + 8, midY + 15, 7, 0, Math.PI * 2);
+      ctx.moveTo(counterX, counterY + 2);
+      ctx.lineTo(counterX + counterW, counterY + 2);
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+
+      // Register screen
+      ctx.fillStyle = "#050810";
+      ctx.strokeStyle = CYAN;
+      ctx.lineWidth = 1;
+      rr(counterX + counterW - 40, counterY + 8, 32, 18, 3);
+      ctx.fill();
+      ctx.stroke();
+
+      // Screen content with scanline
+      ctx.fillStyle = "#001825";
+      ctx.fillRect(counterX + counterW - 38, counterY + 10, 28, 14);
+      const scanline = (t * 25) % 14;
+      ctx.fillStyle = "rgba(68,238,255,0.3)";
+      ctx.fillRect(counterX + counterW - 38, counterY + 10 + scanline, 28, 2);
+
+      // Cash circle
+      ctx.fillStyle = CYAN;
+      ctx.shadowColor = CYAN;
+      ctx.shadowBlur = 8;
+      ctx.beginPath();
+      ctx.arc(counterX + 18, counterY + 16, 8, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#0a0a14";
+      ctx.beginPath();
+      ctx.arc(counterX + 18, counterY + 16, 5, 0, Math.PI * 2);
       ctx.fill();
       ctx.shadowBlur = 0;
-      // ── Hanging items (walls) ─────────────────────
-      const hangItems = ["🔫", "🗡", "🪖", "🎸", "📻"];
-      ctx.font = "15px serif";
-      for (let hi = 0; hi < 5; hi++) {
-        const hx2 = cx - W * 0.4 + hi * ((W * 0.8) / 4);
-        ctx.fillText(hangItems[hi], hx2, midY - 6);
-        ctx.strokeStyle = "#664422";
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.moveTo(hx2, midY - 10);
-        ctx.lineTo(hx2, topY + 52);
+
+      // "PAWN" text on counter
+      ctx.fillStyle = "#fff";
+      ctx.shadowColor = CYAN;
+      ctx.shadowBlur = 8;
+      ctx.font = "bold 6px Orbitron, monospace";
+      ctx.textAlign = "center";
+      ctx.fillText("PAWN", counterX + counterW / 2, counterY + counterH - 6);
+      ctx.shadowBlur = 0;
+
+      // ═══ BOTTOM ROW: 4 SMALLER ITEM DISPLAYS ═══
+      const bottomItems = [
+        { emoji: "⌚", color: PURPLE },
+        { emoji: "💍", color: PINK },
+        { emoji: "📱", color: CYAN },
+        { emoji: "🎮", color: GREEN },
+      ];
+
+      for (let i = 0; i < 4; i++) {
+        const bx = cx - W * 0.32 + i * (W * 0.22);
+        const by = midY - 22;
+        const item = bottomItems[i];
+        const pulse = Math.sin(t * 2.5 + i) * 0.3 + 0.7;
+        const floatY = Math.sin(t * 1.8 + i * 1.5) * 3;
+
+        // Small display case
+        ctx.save();
+        ctx.fillStyle = "rgba(8,12,20,0.9)";
+        ctx.strokeStyle = `rgba(${item.color === CYAN ? "68,238,255" : item.color === PINK ? "255,68,102" : item.color === GREEN ? "68,255,136" : "204,136,255"},${0.5 + pulse * 0.3})`;
+        ctx.lineWidth = 1.5;
+        ctx.shadowColor = item.color;
+        ctx.shadowBlur = 8 * pulse;
+        rr(bx - 18, by - 14, 36, 32, 5);
+        ctx.fill();
         ctx.stroke();
+        ctx.shadowBlur = 0;
+
+        // Item emoji
+        ctx.font = "20px serif";
+        ctx.textAlign = "center";
+        ctx.shadowColor = item.color;
+        ctx.shadowBlur = 10;
+        ctx.fillText(item.emoji, bx, by + 8 + floatY);
+        ctx.shadowBlur = 0;
+        ctx.restore();
       }
+
+      // ═══ AMBIENT PARTICLES (subtle) ═══
+      ctx.save();
+      for (let pi = 0; pi < 6; pi++) {
+        const px = cx - W * 0.35 + ((t * 10 + pi * 90) % (W * 0.7));
+        const py = topY + 25 + Math.sin(t * 0.8 + pi) * 25 + (pi * 18) % 50;
+        const alpha = Math.sin(t * 2 + pi) * 0.25 + 0.35;
+        ctx.fillStyle = pi % 2 === 0 ? `rgba(68,238,255,${alpha})` : `rgba(255,68,102,${alpha})`;
+        ctx.beginPath();
+        ctx.arc(px, py, 1.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+
+      // ═══ FLOOR ACCENT LINE ═══
+      ctx.save();
+      const floorPulse = Math.sin(t * 2.5) * 0.3 + 0.7;
+      ctx.strokeStyle = `rgba(68,238,255,${0.4 * floorPulse})`;
+      ctx.lineWidth = 2;
+      ctx.shadowColor = CYAN;
+      ctx.shadowBlur = 8;
+      ctx.beginPath();
+      ctx.moveTo(cx - W * 0.30, midY + counterH + 20);
+      ctx.lineTo(cx + W * 0.30, midY + counterH + 20);
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+      ctx.restore();
     } else if (type === 13) {
       // TECH LAB
       // ── Main server bank (top) ───────────────────
@@ -6244,7 +6411,7 @@ class Game {
       );
       if (nearSp) {
         ctx.save();
-        ctx.font = "bold 11px Orbitron, monospace";
+        ctx.font = "bold 14px Orbitron, monospace";
         ctx.textAlign = "center";
         if (isNeonCity) {
           ctx.fillStyle = "#00FFFF";
