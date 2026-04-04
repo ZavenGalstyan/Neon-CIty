@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NEON CITY — Leaderboards</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+  /* ══════════════════════════════════════════════════════
+     LEADERBOARD — self-contained styles
+  ══════════════════════════════════════════════════════ */
+
+  /* Page wrapper */
+  .lb-page {
+    min-height: 100vh;
+    padding: 0 0 80px;
+  }
+
+  /* ── Hero header ─────────────────────────────────────── */
+  .lb-hero {
+    position: relative;
+    text-align: center;
+    padding: 52px 24px 36px;
+    overflow: hidden;
+  }
+  .lb-hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(255,68,102,0.09) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .lb-hero-eyebrow {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 10px;
+    letter-spacing: 0.35em;
+    color: var(--pink);
+    text-shadow: 0 0 12px rgba(255,68,102,0.55);
+    margin-bottom: 10px;
+  }
+  .lb-hero-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: clamp(28px, 5vw, 52px);
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    line-height: 1;
+    background: linear-gradient(135deg, #fff 0%, #FF4466 40%, #FFD700 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 10px;
+  }
+  .lb-hero-sub {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 13px;
+    letter-spacing: 0.2em;
+    color: var(--muted);
+  }
+
+  /* ── Player tag ──────────────────────────────────────── */
+  .lb-player-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 18px;
+    background: rgba(68,238,255,0.07);
+    border: 1px solid rgba(68,238,255,0.25);
+    border-radius: 999px;
+    margin-top: 18px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--cyan);
+    letter-spacing: 0.1em;
+    box-shadow: 0 0 18px rgba(68,238,255,0.12);
+  }
+  .lb-player-tag__dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--cyan);
+    box-shadow: 0 0 8px var(--cyan);
+    animation: lb-pulse 2s ease-in-out infinite;
+  }
+  @keyframes lb-pulse {
+    0%,100% { opacity: 1; transform: scale(1); }
+    50%      { opacity: 0.5; transform: scale(0.7); }
+  }
+
+  /* ── Error banner ────────────────────────────────────── */
+  .lb-error {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 0 auto 20px;
+    max-width: 960px;
+    padding: 14px 20px;
+    background: rgba(255,68,102,0.08);
+    border: 1px solid rgba(255,68,102,0.25);
+    border-radius: 10px;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 14px;
+    color: var(--pink);
+  }
+  .lb-error__retry {
+    margin-left: auto;
+    padding: 6px 16px;
+    background: rgba(255,68,102,0.15);
+    border: 1px solid rgba(255,68,102,0.35);
+    border-radius: 6px;
+    color: var(--pink);
+    font-family: 'Orbitron', sans-serif;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .lb-error__retry:hover { background: rgba(255,68,102,0.25); }
+
+  /* ── Tab bar ─────────────────────────────────────────── */
+  .lb-tabs {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    padding: 0 24px 28px;
+    flex-wrap: wrap;
+  }
+  .lb-tab {
+    position: relative;
+    padding: 9px 22px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 8px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .lb-tab:hover {
+    background: rgba(255,255,255,0.07);
+    color: var(--text);
+    border-color: rgba(255,255,255,0.2);
+  }
+  .lb-tab.active {
+    background: rgba(255,68,102,0.12);
+    border-color: rgba(255,68,102,0.5);
+    color: #fff;
+    box-shadow: 0 0 18px rgba(255,68,102,0.2), inset 0 0 12px rgba(255,68,102,0.06);
+    text-shadow: 0 0 10px rgba(255,68,102,0.5);
+  }
+  .lb-tab__icon {
+    display: inline-block;
+    margin-right: 5px;
+    font-size: 12px;
+  }
+
+  /* ── Map row ─────────────────────────────────────────── */
+  .lb-map-row {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    padding: 0 24px 24px;
+  }
+  .lb-map-label {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    color: var(--muted);
+  }
+  .lb-map-select {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: 'Orbitron', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    padding: 9px 16px;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    min-width: 200px;
+  }
+  .lb-map-select:focus, .lb-map-select:hover {
+    outline: none;
+    border-color: rgba(255,68,102,0.45);
+    background: rgba(255,68,102,0.06);
+  }
+  .lb-map-select option { background: #0d0d1a; }
+
+  /* ── Content area ────────────────────────────────────── */
+  .lb-content {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 0 20px;
+    animation: lb-fade-in 0.35s ease;
+  }
+  @keyframes lb-fade-in {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── Loading ─────────────────────────────────────────── */
+  .lb-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    padding: 80px 0;
+  }
+  .lb-loading-text {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    color: var(--muted);
+  }
+  .lb-spinner {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    border: 3px solid rgba(255,68,102,0.12);
+    border-top-color: var(--pink);
+    animation: lb-spin 0.8s linear infinite;
+  }
+  @keyframes lb-spin { to { transform: rotate(360deg); } }
+
+  /* ── Podium (top 3) ──────────────────────────────────── */
+  .lb-podium {
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    gap: 12px;
+    margin-bottom: 36px;
+    padding: 0 8px;
+  }
+
+  .lb-podium-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border-radius: 16px;
+    padding: 22px 16px 18px;
+    border: 1px solid;
+    overflow: hidden;
+    transition: transform 0.25s;
+    flex: 1;
+    max-width: 260px;
+    min-width: 160px;
+    cursor: default;
+  }
+  .lb-podium-card:hover { transform: translateY(-4px); }
+
+  /* Shimmer line at top */
+  .lb-podium-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+  }
+  /* Subtle glow bg */
+  .lb-podium-card::after {
+    content: '';
+    position: absolute;
+    top: -40%; left: -20%;
+    width: 140%; height: 80%;
+    border-radius: 50%;
+    opacity: 0.08;
+  }
+
+  /* Gold — 1st place */
+  .lb-podium-card--gold {
+    background: linear-gradient(160deg, rgba(255,215,0,0.1) 0%, rgba(255,215,0,0.03) 100%);
+    border-color: rgba(255,215,0,0.35);
+    box-shadow: 0 0 40px rgba(255,215,0,0.12), 0 8px 32px rgba(0,0,0,0.4);
+    order: 2;
+    transform: translateY(-18px);
+    padding-top: 30px;
+  }
+  .lb-podium-card--gold::before  { background: linear-gradient(90deg, transparent, #FFD700, transparent); }
+  .lb-podium-card--gold::after   { background: #FFD700; }
+  .lb-podium-card--gold:hover    { transform: translateY(-22px); }
+
+  /* Silver — 2nd place */
+  .lb-podium-card--silver {
+    background: linear-gradient(160deg, rgba(192,192,192,0.08) 0%, rgba(192,192,192,0.02) 100%);
+    border-color: rgba(192,192,192,0.25);
+    box-shadow: 0 0 24px rgba(192,192,192,0.08), 0 6px 24px rgba(0,0,0,0.35);
+    order: 1;
+  }
+  .lb-podium-card--silver::before { background: linear-gradient(90deg, transparent, #C0C0C0, transparent); }
+  .lb-podium-card--silver::after  { background: #C0C0C0; }
+
+  /* Bronze — 3rd place */
+  .lb-podium-card--bronze {
+    background: linear-gradient(160deg, rgba(205,127,50,0.08) 0%, rgba(205,127,50,0.02) 100%);
+    border-color: rgba(205,127,50,0.25);
+    box-shadow: 0 0 24px rgba(205,127,50,0.08), 0 6px 24px rgba(0,0,0,0.35);
+    order: 3;
+  }
+  .lb-podium-card--bronze::before { background: linear-gradient(90deg, transparent, #CD7F32, transparent); }
+  .lb-podium-card--bronze::after  { background: #CD7F32; }
+
+  .lb-podium-medal {
+    font-size: 32px;
+    margin-bottom: 10px;
+    filter: drop-shadow(0 0 8px currentColor);
+  }
+  .lb-podium-avatar {
+    width: 52px; height: 52px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 18px;
+    font-weight: 900;
+    border: 2px solid;
+    margin-bottom: 10px;
+    flex-shrink: 0;
+  }
+  .lb-podium-avatar--gold   { border-color: rgba(255,215,0,0.6);   background: rgba(255,215,0,0.1);   color: #FFD700; }
+  .lb-podium-avatar--silver { border-color: rgba(192,192,192,0.5); background: rgba(192,192,192,0.08); color: #C0C0C0; }
+  .lb-podium-avatar--bronze { border-color: rgba(205,127,50,0.5);  background: rgba(205,127,50,0.08);  color: #CD7F32; }
+
+  .lb-podium-name {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-align: center;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    margin-bottom: 4px;
+  }
+  .lb-podium-name--gold   { color: #FFD700; text-shadow: 0 0 14px rgba(255,215,0,0.5); }
+  .lb-podium-name--silver { color: #C0C0C0; text-shadow: 0 0 10px rgba(192,192,192,0.4); }
+  .lb-podium-name--bronze { color: #CD7F32; text-shadow: 0 0 10px rgba(205,127,50,0.4); }
+
+  .lb-podium-char {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--muted);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .lb-podium-char-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .lb-podium-value {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 17px;
+    font-weight: 900;
+    letter-spacing: 0.04em;
+    text-align: center;
+  }
+  .lb-podium-value--gold   { color: #FFD700; }
+  .lb-podium-value--silver { color: #C0C0C0; }
+  .lb-podium-value--bronze { color: #CD7F32; }
+
+  .lb-podium-you {
+    position: absolute;
+    top: 10px; right: 10px;
+    padding: 2px 8px;
+    background: rgba(68,238,255,0.15);
+    border: 1px solid rgba(68,238,255,0.4);
+    border-radius: 4px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 7px;
+    font-weight: 700;
+    color: var(--cyan);
+    letter-spacing: 0.12em;
+  }
+
+  /* ── Rows list (rank 4–50) ───────────────────────────── */
+  .lb-list {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    margin-bottom: 24px;
+  }
+
+  .lb-row {
+    display: grid;
+    grid-template-columns: 52px 1fr 160px 160px;
+    align-items: center;
+    padding: 13px 18px;
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.05);
+    background: rgba(255,255,255,0.025);
+    transition: background 0.15s, border-color 0.15s, transform 0.15s;
+    animation: lb-row-in 0.3s ease both;
+  }
+  @keyframes lb-row-in {
+    from { opacity: 0; transform: translateX(-10px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+  .lb-row:hover {
+    background: rgba(255,255,255,0.045);
+    border-color: rgba(255,255,255,0.1);
+    transform: translateX(3px);
+  }
+  .lb-row--top10 {
+    background: rgba(68,238,255,0.03);
+    border-color: rgba(68,238,255,0.08);
+  }
+  .lb-row--top10:hover {
+    background: rgba(68,238,255,0.06);
+    border-color: rgba(68,238,255,0.15);
+  }
+  .lb-row--me {
+    background: rgba(68,238,255,0.07) !important;
+    border-color: rgba(68,238,255,0.3) !important;
+    box-shadow: inset 2px 0 0 rgba(68,238,255,0.6);
+  }
+  .lb-row--me:hover {
+    background: rgba(68,238,255,0.1) !important;
+    transform: translateX(3px);
+  }
+
+  /* Rank number */
+  .lb-row__rank {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+  }
+  .lb-row--top10 .lb-row__rank { color: var(--cyan); }
+  .lb-row--me .lb-row__rank    { color: var(--cyan); }
+
+  /* Player name */
+  .lb-row__name {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    overflow: hidden;
+  }
+  .lb-row--me .lb-row__name { color: var(--cyan); }
+
+  .lb-you-tag {
+    padding: 2px 7px;
+    background: rgba(68,238,255,0.12);
+    border: 1px solid rgba(68,238,255,0.3);
+    border-radius: 4px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 7px;
+    font-weight: 700;
+    color: var(--cyan);
+    letter-spacing: 0.1em;
+    flex-shrink: 0;
+  }
+
+  /* Character */
+  .lb-row__char {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--muted);
+    overflow: hidden;
+  }
+  .lb-char-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* Value */
+  .lb-row__val {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--cyan);
+    text-align: right;
+    white-space: nowrap;
+    letter-spacing: 0.03em;
+  }
+  .lb-row--me .lb-row__val { color: var(--cyan); text-shadow: 0 0 10px rgba(68,238,255,0.4); }
+
+  /* Divider between podium and list */
+  .lb-divider {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 16px;
+  }
+  .lb-divider__line {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
+  }
+  .lb-divider__label {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  /* Not ranked banner */
+  .lb-not-ranked {
+    margin-top: 20px;
+    padding: 16px 24px;
+    border: 1px dashed rgba(68,238,255,0.18);
+    border-radius: 10px;
+    text-align: center;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 14px;
+    color: var(--muted);
+    background: rgba(68,238,255,0.03);
+  }
+
+  /* Empty state */
+  .lb-empty {
+    text-align: center;
+    padding: 80px 24px;
+    color: var(--muted);
+  }
+  .lb-empty__glyph {
+    font-size: 52px;
+    display: block;
+    opacity: 0.18;
+    margin-bottom: 18px;
+    animation: lb-pulse 3s ease-in-out infinite;
+  }
+  .lb-empty__title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: 0.1em;
+    margin-bottom: 8px;
+  }
+  .lb-empty__sub {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 14px;
+    color: var(--muted);
+  }
+
+  /* ── Table header ────────────────────────────────────── */
+  .lb-list-header {
+    display: grid;
+    grid-template-columns: 52px 1fr 160px 160px;
+    padding: 6px 18px 10px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 8px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    color: rgba(255,255,255,0.22);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    margin-bottom: 8px;
+  }
+  .lb-list-header span:last-child { text-align: right; }
+
+  /* ── Mobile ──────────────────────────────────────────── */
+  @media (max-width: 680px) {
+    .lb-hero { padding: 40px 20px 28px; }
+    .lb-tabs { gap: 4px; }
+    .lb-tab  { padding: 8px 14px; font-size: 9px; }
+    .lb-podium { gap: 8px; }
+    .lb-podium-card { padding: 16px 12px 14px; min-width: 100px; }
+    .lb-podium-avatar { width: 40px; height: 40px; font-size: 14px; }
+    .lb-podium-value { font-size: 13px; }
+    .lb-podium-name  { font-size: 9px; }
+    .lb-row { grid-template-columns: 44px 1fr 120px; }
+    .lb-row__char { display: none; }
+    .lb-list-header span:nth-child(3) { display: none; }
+    .lb-list-header { grid-template-columns: 44px 1fr 120px; }
+    .lb-row__val { font-size: 11px; }
+  }
+  @media (max-width: 440px) {
+    .lb-podium { flex-direction: column; align-items: center; }
+    .lb-podium-card { max-width: 100%; width: 100%; transform: none !important; order: unset !important; }
+    .lb-podium-card--gold { transform: none !important; }
+  }
+  </style>
+</head>
+<body class="select-screen">
+  <div class="bg-grid"></div>
+  <div class="scanlines"></div>
+
+  <!-- ── Navbar ───────────────────────────────────────── -->
+  <nav class="site-nav">
+    <a href="index.html" class="site-nav__logo">NEON CITY</a>
+    <div id="siteNav" class="site-nav__controls"></div>
+  </nav>
+
+  <div class="lb-page">
+
+    <!-- ── Hero ─────────────────────────────────────────── -->
+    <header class="lb-hero">
+      <div class="lb-hero-eyebrow">◈ HALL OF FAME</div>
+      <h1 class="lb-hero-title">LEADERBOARDS</h1>
+      <p class="lb-hero-sub">TOP 50 PLAYERS &nbsp;·&nbsp; GLOBAL RANKINGS &nbsp;·&nbsp; UPDATED LIVE</p>
+      <div class="lb-player-tag" id="lbPlayerTag" hidden>
+        <span class="lb-player-tag__dot"></span>
+        <span id="lbPlayerName"></span>
+        <span style="color:var(--muted);font-size:9px;letter-spacing:0.12em">SIGNED IN</span>
+      </div>
+    </header>
+
+    <!-- ── Error ─────────────────────────────────────────── -->
+    <div class="lb-error" id="lbErrorEl" hidden>
+      <span id="lbErrorMsg"></span>
+      <button class="lb-error__retry" id="lbRetryBtn">RETRY</button>
+    </div>
+
+    <!-- ── Tabs ─────────────────────────────────────────── -->
+    <nav class="lb-tabs" role="tablist">
+      <button class="lb-tab active" data-board="kills">    <span class="lb-tab__icon">☠</span>KILLS</button>
+      <button class="lb-tab"        data-board="waves">    <span class="lb-tab__icon">◎</span>WAVES</button>
+      <button class="lb-tab"        data-board="level">    <span class="lb-tab__icon">◈</span>LEVEL</button>
+      <button class="lb-tab"        data-board="nex">      <span class="lb-tab__icon">⬢</span>NEX</button>
+      <button class="lb-tab"        data-board="campaign"> <span class="lb-tab__icon">◆</span>CAMPAIGN</button>
+      <button class="lb-tab"        data-board="map">      <span class="lb-tab__icon">⬡</span>MAP</button>
+    </nav>
+
+    <!-- ── Map selector ─────────────────────────────────── -->
+    <div class="lb-map-row" id="lbMapRow" hidden>
+      <span class="lb-map-label">SELECT MAP</span>
+      <select class="lb-map-select" id="lbMapSelect">
+        <option value="neon_city">Neon City</option>
+        <option value="galactica">Galactica</option>
+        <option value="lifemode">Life Mode</option>
+        <option value="arena">Arena</option>
+        <option value="zombie">Zombie</option>
+        <option value="wasteland">Wasteland</option>
+        <option value="robot_city">Robot City</option>
+        <option value="campaign">Campaign</option>
+        <option value="survival">Survival</option>
+        <option value="hardcore">Hardcore</option>
+        <option value="blitz">Blitz</option>
+        <option value="siege">Siege</option>
+        <option value="frozen_tundra">Frozen Tundra</option>
+        <option value="ocean_depths">Ocean Depths</option>
+        <option value="metropolis">Metropolis</option>
+        <option value="desert_sands">Desert Sands</option>
+        <option value="jungle">Jungle</option>
+      </select>
+    </div>
+
+    <!-- ── Main content ──────────────────────────────────── -->
+    <div class="lb-content" id="lbContent"></div>
+
+  </div><!-- /.lb-page -->
+
+  <script src="js/config.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/api.js"></script>
+  <script>
+  'use strict';
+
+  Auth.mountNavbar();
+
+  /* ── Current player ─────────────────────────────────── */
+  const _session = Auth.getSession();
+  const _myName  = (_session?.name || '').toLowerCase();
+  if (_myName) {
+    document.getElementById('lbPlayerTag').hidden = false;
+    document.getElementById('lbPlayerName').textContent = _session.name.toUpperCase();
+  }
+
+  /* ── Board config ────────────────────────────────────── */
+  const BOARDS = {
+    kills:    { col: 'TOTAL KILLS',    fmt: v => v.toLocaleString()                 },
+    waves:    { col: 'HIGHEST WAVE',   fmt: v => `Wave ${v}`                        },
+    level:    { col: 'ACCOUNT LEVEL',  fmt: v => `Level ${v}`                       },
+    nex:      { col: 'LIFETIME NEX',   fmt: v => `${(+v).toLocaleString()} ⬢`       },
+    campaign: { col: 'CAMPAIGN LEVEL', fmt: v => `Level ${v}`                       },
+    map:      { col: 'MAP KILLS',      fmt: v => v.toLocaleString()                 },
+  };
+
+  /* ── Character lookups ───────────────────────────────── */
+  const CHAR_COLOR = {}, CHAR_NAME = {};
+  CONFIG.CHARACTERS.forEach(c => {
+    CHAR_COLOR[c.id] = c.color;
+    CHAR_NAME[c.id]  = c.name.replace(/^THE /, '');
+  });
+  const EXTRA = {
+    engineer:'Engineer', sniper_elite:'Sniper Elite', drone_pilot:'Drone Pilot',
+    chemist:'Chemist', cyber_ninja:'Cyber Ninja', cyber_wolf:'Cyber Wolf',
+    neon_panther:'Neon Panther', mecha_bulldog:'Mecha Bulldog',
+    spider_drone:'Spider Drone', robo_hawk:'Robo Hawk', nano_rat:'Nano Rat',
+    mini_bee:'Mini Bee', tank_commander:'Tank Cmdr', blade_dancer:'Blade Dancer',
+    frost_walker:'Frost Walker', volt_runner:'Volt Runner', timebreaker:'Timebreaker',
+    ai_avatar:'AI Avatar', overlord:'Overlord', electric_eel:'Elec. Eel',
+    shadow_lord:'Shadow Lord', plasma_titan:'Plasma Titan',
+    quantum_ghost:'Quantum Ghost', omega_prime:'Omega Prime',
+  };
+  function charLabel(id) {
+    if (!id) return '—';
+    return CHAR_NAME[id] || EXTRA[id] || id.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
+  }
+  function charColor(id) { return CHAR_COLOR[id] || 'rgba(255,255,255,0.3)'; }
+  function charInitial(id) {
+    const n = charLabel(id);
+    return n === '—' ? '?' : n[0].toUpperCase();
+  }
+
+  /* ── State ───────────────────────────────────────────── */
+  const cache = {};
+  let activeBoard = 'kills';
+
+  /* ── DOM ─────────────────────────────────────────────── */
+  const content  = document.getElementById('lbContent');
+  const errorEl  = document.getElementById('lbErrorEl');
+  const errorMsg = document.getElementById('lbErrorMsg');
+  const retryBtn = document.getElementById('lbRetryBtn');
+  const mapRow   = document.getElementById('lbMapRow');
+  const mapSel   = document.getElementById('lbMapSelect');
+
+  /* ── Tabs ────────────────────────────────────────────── */
+  document.querySelectorAll('.lb-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.lb-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      activeBoard = tab.dataset.board;
+      mapRow.hidden = activeBoard !== 'map';
+      errorEl.hidden = true;
+      switchBoard(activeBoard);
+    });
+  });
+
+  mapSel.addEventListener('change', () => {
+    cache[`map_${mapSel.value}`] = null;
+    switchBoard('map');
+  });
+
+  /* ── Switch board ────────────────────────────────────── */
+  async function switchBoard(board) {
+    const key = board === 'map' ? `map_${mapSel.value}` : board;
+    if (cache[key]) { renderBoard(cache[key], board); return; }
+
+    renderLoading();
+    try {
+      const data = board === 'map'
+        ? await API.getMapLeaderboard(mapSel.value)
+        : await API.getLeaderboard(board);
+      cache[key] = data.leaderboard || [];
+      renderBoard(cache[key], board);
+    } catch (err) {
+      showError(err.message || 'Could not load leaderboard.');
+    }
+  }
+
+  /* ── Loading ─────────────────────────────────────────── */
+  function renderLoading() {
+    content.innerHTML = '';
+    content.innerHTML = `
+      <div class="lb-loading">
+        <div class="lb-spinner"></div>
+        <span class="lb-loading-text">LOADING RANKINGS…</span>
+      </div>`;
+  }
+
+  /* ── Render board ────────────────────────────────────── */
+  function renderBoard(rows, board) {
+    content.innerHTML = '';
+
+    if (!rows || rows.length === 0) {
+      content.innerHTML = `
+        <div class="lb-empty">
+          <span class="lb-empty__glyph">◎</span>
+          <div class="lb-empty__title">NO PLAYERS YET</div>
+          <div class="lb-empty__sub">Be the first to make it onto this board!</div>
+        </div>`;
+      return;
+    }
+
+    const cfg   = BOARDS[board] || BOARDS.kills;
+    const top3  = rows.slice(0, 3);
+    const rest  = rows.slice(3);
+    let myRank  = null;
+
+    /* Check if current player appears anywhere */
+    rows.forEach(r => { if (_myName && r.name?.toLowerCase() === _myName) myRank = r.rank; });
+
+    const wrap = document.createElement('div');
+    wrap.style.animation = 'lb-fade-in 0.35s ease';
+
+    /* ── Podium ── */
+    if (top3.length > 0) {
+      const podium = document.createElement('div');
+      podium.className = 'lb-podium';
+
+      /* Order: silver(2nd) · gold(1st) · bronze(3rd) via CSS order property */
+      const medals = ['gold','silver','bronze'];
+      top3.forEach((entry, i) => {
+        const tier  = medals[i];
+        const isMe  = _myName && entry.name?.toLowerCase() === _myName;
+        const c     = charColor(entry.characterId);
+        const card  = document.createElement('div');
+        card.className = `lb-podium-card lb-podium-card--${tier}`;
+
+        if (isMe) {
+          const you = document.createElement('div');
+          you.className = 'lb-podium-you';
+          you.textContent = 'YOU';
+          card.appendChild(you);
+        }
+
+        card.innerHTML += `
+          <div class="lb-podium-medal">${i===0?'🥇':i===1?'🥈':'🥉'}</div>
+          <div class="lb-podium-avatar lb-podium-avatar--${tier}"
+               style="color:${c};border-color:${c}80;background:${c}15;box-shadow:0 0 16px ${c}30">
+            ${charInitial(entry.characterId)}
+          </div>
+          <div class="lb-podium-name lb-podium-name--${tier}">${_esc(entry.name || '?')}</div>
+          <div class="lb-podium-char">
+            <span class="lb-podium-char-dot" style="background:${c};box-shadow:0 0 6px ${c}"></span>
+            ${_esc(charLabel(entry.characterId))}
+          </div>
+          <div class="lb-podium-value lb-podium-value--${tier}">${cfg.fmt(entry.value ?? 0)}</div>`;
+
+        podium.appendChild(card);
+      });
+      wrap.appendChild(podium);
+    }
+
+    /* ── Rest of list ── */
+    if (rest.length > 0) {
+      const divider = document.createElement('div');
+      divider.className = 'lb-divider';
+      divider.innerHTML = `<div class="lb-divider__line"></div>
+        <span class="lb-divider__label">RANKS 4 – ${rows.length}</span>
+        <div class="lb-divider__line"></div>`;
+      wrap.appendChild(divider);
+
+      const header = document.createElement('div');
+      header.className = 'lb-list-header';
+      header.innerHTML = `<span>RANK</span><span>PLAYER</span><span>CHARACTER</span><span style="text-align:right">${cfg.col}</span>`;
+      wrap.appendChild(header);
+
+      const list = document.createElement('div');
+      list.className = 'lb-list';
+
+      rest.forEach((entry, i) => {
+        const rank  = entry.rank;
+        const isMe  = _myName && entry.name?.toLowerCase() === _myName;
+        const c     = charColor(entry.characterId);
+
+        const row = document.createElement('div');
+        row.className = 'lb-row' +
+          (rank <= 10 ? ' lb-row--top10' : '') +
+          (isMe       ? ' lb-row--me'    : '');
+        row.style.animationDelay = `${Math.min(i * 18, 400)}ms`;
+
+        const rankEl = document.createElement('div');
+        rankEl.className = 'lb-row__rank';
+        rankEl.textContent = `#${rank}`;
+
+        const nameEl = document.createElement('div');
+        nameEl.className = 'lb-row__name';
+        nameEl.innerHTML = `${_esc(entry.name || '?')}${isMe ? '<span class="lb-you-tag">YOU</span>' : ''}`;
+
+        const charEl = document.createElement('div');
+        charEl.className = 'lb-row__char';
+        charEl.innerHTML = `<span class="lb-char-dot" style="background:${c};box-shadow:0 0 5px ${c}80"></span>${_esc(charLabel(entry.characterId))}`;
+
+        const valEl = document.createElement('div');
+        valEl.className = 'lb-row__val';
+        valEl.textContent = cfg.fmt(entry.value ?? 0);
+
+        row.appendChild(rankEl);
+        row.appendChild(nameEl);
+        row.appendChild(charEl);
+        row.appendChild(valEl);
+        list.appendChild(row);
+      });
+      wrap.appendChild(list);
+    }
+
+    /* ── Not ranked ── */
+    if (_myName && !myRank) {
+      const banner = document.createElement('div');
+      banner.className = 'lb-not-ranked';
+      banner.textContent = 'You are not in the top 50 yet. Keep playing to claim your rank!';
+      wrap.appendChild(banner);
+    }
+
+    content.appendChild(wrap);
+  }
+
+  /* ── Error ───────────────────────────────────────────── */
+  function showError(msg) {
+    content.innerHTML = '';
+    errorMsg.textContent = msg;
+    errorEl.hidden = false;
+  }
+  retryBtn.addEventListener('click', () => {
+    errorEl.hidden = true;
+    const key = activeBoard === 'map' ? `map_${mapSel.value}` : activeBoard;
+    cache[key] = null;
+    switchBoard(activeBoard);
+  });
+
+  /* ── Escape ──────────────────────────────────────────── */
+  function _esc(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  /* ── Prefetch all boards in background ──────────────── */
+  ['kills','waves','level','nex','campaign'].forEach(async type => {
+    try {
+      const data = await API.getLeaderboard(type);
+      cache[type] = data.leaderboard || [];
+      if (activeBoard === type) renderBoard(cache[type], type);
+    } catch { /* silent */ }
+  });
+
+  /* ── Init ────────────────────────────────────────────── */
+  switchBoard('kills');
+  </script>
+</body>
+</html>

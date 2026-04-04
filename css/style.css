@@ -2593,3 +2593,18 @@ body {
   .bp-xp-lv-pill { padding: 6px 10px; min-width: 48px; }
   .bp-xp-lv-num { font-size: 16px; }
 }
+
+/* ════════════════════════════════════════════════════════════
+   LEADERBOARD PAGE  (leaderboard.html)
+   ════════════════════════════════════════════════════════════ */
+
+/* Leaderboard nav button — pink/magenta accent */
+.nav-lb-btn {
+  color: var(--pink);
+  border-color: rgba(255,68,102,0.28);
+}
+.nav-lb-btn:hover {
+  background: rgba(255,68,102,0.10);
+  border-color: rgba(255,68,102,0.6);
+  box-shadow: 0 0 14px rgba(255,68,102,0.22);
+}

@@ -127,6 +127,10 @@ const Auth = (() => {
       // Logged-in state
       nav.innerHTML = `
         <div class="nav-links">
+          <a href="leaderboard.html" class="nav-shop-btn nav-lb-btn" title="Leaderboards">
+            <span class="nav-shop-icon">▲</span>
+            <span class="nav-shop-label">RANKS</span>
+          </a>
           <a href="inventory.html" class="nav-shop-btn nav-inv-btn" title="Inventory">
             <span class="nav-shop-icon">▦</span>
             <span class="nav-shop-label">INVENTORY</span>
@@ -151,6 +155,10 @@ const Auth = (() => {
       // Guest state
       nav.innerHTML = `
         <div class="nav-links">
+          <a href="leaderboard.html" class="nav-shop-btn nav-lb-btn" title="Leaderboards">
+            <span class="nav-shop-icon">▲</span>
+            <span class="nav-shop-label">RANKS</span>
+          </a>
           <a href="inventory.html" class="nav-shop-btn nav-inv-btn" title="Inventory">
             <span class="nav-shop-icon">▦</span>
             <span class="nav-shop-label">INVENTORY</span>
