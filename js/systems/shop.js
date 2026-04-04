@@ -977,6 +977,113 @@ class DealershipManager {
 
   _msg(text, color = '#44FF88') { this._feedback = { msg: text, color, t: 1.8 }; }
 
+  // ═══ NEX CURRENCY ICON HELPERS ═══════════════════════════════════════════════
+  _drawHexagon(ctx, cx, cy, r) {
+    ctx.beginPath();
+    for (let i = 0; i < 6; i++) {
+      const angle = (Math.PI / 3) * i - Math.PI / 2;
+      const x = cx + r * Math.cos(angle);
+      const y = cy + r * Math.sin(angle);
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+  }
+
+  _drawN(ctx, x, y, w, h) {
+    ctx.beginPath();
+    ctx.moveTo(x, y + h);
+    ctx.lineTo(x, y);
+    ctx.lineTo(x + w, y + h);
+    ctx.lineTo(x + w, y);
+  }
+
+  _renderNexIcon(ctx, x, y, size, opts = {}) {
+    const animated = opts.animated !== false;
+    const t = animated ? performance.now() / 1000 : 0;
+    const r = size / 2;
+
+    ctx.save();
+    const pulse = animated ? Math.sin(t * 2.5) * 0.3 + 0.7 : 1;
+    const energyPulse = animated ? Math.sin(t * 4) * 0.5 + 0.5 : 0.5;
+
+    // Outer rotating ring
+    if (animated) {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(t * 0.3);
+      ctx.strokeStyle = `rgba(0,229,255,${0.25 + pulse * 0.15})`;
+      ctx.lineWidth = Math.max(1, size / 20);
+      ctx.setLineDash([size / 8, size / 5]);
+      ctx.beginPath();
+      ctx.arc(0, 0, r + size / 10, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.restore();
+    }
+
+    // Hexagon frame
+    ctx.shadowColor = '#00E5FF';
+    ctx.shadowBlur = 12 * pulse * (size / 32);
+    ctx.strokeStyle = '#00E5FF';
+    ctx.lineWidth = Math.max(1.5, size / 16);
+    ctx.fillStyle = 'rgba(0,10,20,0.85)';
+    this._drawHexagon(ctx, x, y, r);
+    ctx.fill();
+    ctx.stroke();
+
+    // Inner hexagon
+    ctx.shadowBlur = 4 * (size / 32);
+    ctx.strokeStyle = 'rgba(0,229,255,0.4)';
+    ctx.lineWidth = Math.max(0.8, size / 32);
+    this._drawHexagon(ctx, x, y, r * 0.75);
+    ctx.stroke();
+
+    // The N letter
+    const nW = r * 0.7, nH = r * 0.9;
+    const nX = x - nW / 2, nY = y - nH / 2;
+    const strokeW = Math.max(2, size / 12);
+
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+
+    // N glow
+    ctx.shadowBlur = (10 + energyPulse * 4) * (size / 32);
+    ctx.strokeStyle = '#00E5FF';
+    ctx.lineWidth = strokeW;
+    this._drawN(ctx, nX, nY, nW, nH);
+    ctx.stroke();
+
+    // N bright core
+    ctx.shadowBlur = 4 * (size / 32);
+    ctx.strokeStyle = `rgba(180,255,255,${0.6 + energyPulse * 0.4})`;
+    ctx.lineWidth = strokeW * 0.4;
+    this._drawN(ctx, nX, nY, nW, nH);
+    ctx.stroke();
+
+    // Energy nodes
+    ctx.shadowBlur = 6 * (size / 32);
+    ctx.fillStyle = `rgba(0,229,255,${0.7 + energyPulse * 0.3})`;
+    const nodeR = Math.max(1.2, size / 18);
+    [[nX, nY], [nX, nY + nH], [nX + nW, nY], [nX + nW, nY + nH]].forEach(([nx, ny]) => {
+      ctx.beginPath();
+      ctx.arc(nx, ny, nodeR, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    // Pulse ring
+    if (animated) {
+      const ringPhase = (t * 1.2) % 1;
+      ctx.strokeStyle = `rgba(0,229,255,${(1 - ringPhase) * 0.3})`;
+      ctx.lineWidth = Math.max(0.8, size / 32);
+      ctx.shadowBlur = 3;
+      this._drawHexagon(ctx, x, y, r * 0.5 + ringPhase * r * 0.6);
+      ctx.stroke();
+    }
+
+    ctx.restore();
+  }
+
   // ── Helpers (shared with ShopManager) ──────────────────────────────────────
   _rr(ctx, x, y, w, h, r) {
     r = Math.min(r, w / 2, h / 2);
@@ -1020,80 +1127,149 @@ class DealershipManager {
     const px = (W - PW) / 2;
     const py = (H - PH) / 2;
 
-    // Dim backdrop
-    ctx.fillStyle = 'rgba(0,0,0,0.82)';
-    ctx.fillRect(0, 0, W, H);
+    // Neon City primary colors
+    const PRIMARY = '#44EEFF';      // Cyan
+    const SECONDARY = '#FF4466';    // Pink
+    const ACCENT = '#44FF88';       // Green
+    const PURPLE = '#CC88FF';       // Purple accent
 
-    // Panel
+    // Dim backdrop with subtle gradient
     ctx.save();
-    ctx.shadowColor = '#FFDD44'; ctx.shadowBlur = 40;
-    ctx.fillStyle   = '#06060a';
-    ctx.strokeStyle = 'rgba(255,221,68,0.55)';
-    ctx.lineWidth   = 1.5;
-    this._rr(ctx, px, py, PW, PH, 12);
+    const bgGrad = ctx.createRadialGradient(W/2, H/2, 0, W/2, H/2, Math.max(W, H) * 0.7);
+    bgGrad.addColorStop(0, 'rgba(10,20,40,0.92)');
+    bgGrad.addColorStop(1, 'rgba(0,0,0,0.95)');
+    ctx.fillStyle = bgGrad;
+    ctx.fillRect(0, 0, W, H);
+    ctx.restore();
+
+    // Animated scanlines
+    ctx.save();
+    const t = performance.now() / 1000;
+    ctx.globalAlpha = 0.03;
+    for (let i = 0; i < H; i += 4) {
+      const offset = Math.sin(t * 0.5 + i * 0.01) * 2;
+      ctx.fillStyle = i % 8 === 0 ? PRIMARY : '#000';
+      ctx.fillRect(0, i + offset, W, 1);
+    }
+    ctx.restore();
+
+    // Panel with cyan glow
+    ctx.save();
+    ctx.shadowColor = PRIMARY; ctx.shadowBlur = 50;
+    ctx.fillStyle = '#06060e';
+    ctx.strokeStyle = `rgba(68,238,255,0.6)`;
+    ctx.lineWidth = 2;
+    this._rr(ctx, px, py, PW, PH, 14);
     ctx.fill(); ctx.stroke();
     ctx.restore();
 
-    // Top gradient stripe
+    // Inner panel border glow
     ctx.save();
-    const grd = ctx.createLinearGradient(px, py, px, py + 60);
-    grd.addColorStop(0, 'rgba(255,221,68,0.08)');
-    grd.addColorStop(1, 'rgba(255,221,68,0)');
+    ctx.strokeStyle = `rgba(68,238,255,0.15)`;
+    ctx.lineWidth = 1;
+    this._rr(ctx, px + 4, py + 4, PW - 8, PH - 8, 10);
+    ctx.stroke();
+    ctx.restore();
+
+    // Top gradient stripe with cyan
+    ctx.save();
+    const grd = ctx.createLinearGradient(px, py, px, py + 70);
+    grd.addColorStop(0, 'rgba(68,238,255,0.12)');
+    grd.addColorStop(0.5, 'rgba(68,238,255,0.04)');
+    grd.addColorStop(1, 'rgba(68,238,255,0)');
     ctx.fillStyle = grd;
-    this._rr(ctx, px, py, PW, 60, 12);
+    this._rr(ctx, px, py, PW, 70, 14);
     ctx.fill();
     ctx.restore();
 
-    this._corners(ctx, px, py, PW, PH, '#FFDD44');
+    // Corner accents with cyan
+    this._corners(ctx, px, py, PW, PH, PRIMARY);
 
-    // Title
+    // NEX icon on the left of title
+    this._renderNexIcon(ctx, px + 50, py + 30, 40, { animated: true });
+
+    // Title with glow
     ctx.save();
-    ctx.font = 'bold 26px Orbitron, monospace'; ctx.textAlign = 'center';
-    ctx.shadowColor = '#FFDD44'; ctx.shadowBlur = 18; ctx.fillStyle = '#fff';
-    ctx.fillText('CAR DEALERSHIP', px + PW / 2, py + 38);
+    ctx.font = 'bold 28px Orbitron, monospace'; ctx.textAlign = 'center';
+    ctx.shadowColor = PRIMARY; ctx.shadowBlur = 25; ctx.fillStyle = '#fff';
+    ctx.fillText('DEALERSHIP', px + PW / 2, py + 40);
+    // Subtitle
+    ctx.font = '10px Orbitron, monospace';
+    ctx.shadowBlur = 8;
+    ctx.fillStyle = 'rgba(68,238,255,0.6)';
+    ctx.fillText('VEHICLES • WEAPONS • EQUIPMENT', px + PW / 2, py + 54);
     ctx.restore();
 
-    // Divider
-    ctx.strokeStyle = 'rgba(255,221,68,0.15)'; ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.moveTo(px + 24, py + 52); ctx.lineTo(px + PW - 24, py + 52); ctx.stroke();
+    // Decorative line accents
+    ctx.save();
+    ctx.strokeStyle = `rgba(68,238,255,0.25)`; ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(px + 90, py + 35); ctx.lineTo(px + 170, py + 35);
+    ctx.moveTo(px + PW - 90, py + 35); ctx.lineTo(px + PW - 170, py + 35);
+    ctx.stroke();
+    ctx.restore();
 
-    // Close button
-    const clx = px + PW - 22, cly = py + 22, clr = 15;
+    // Divider with gradient
+    ctx.save();
+    const divGrad = ctx.createLinearGradient(px + 24, 0, px + PW - 24, 0);
+    divGrad.addColorStop(0, 'rgba(68,238,255,0)');
+    divGrad.addColorStop(0.2, 'rgba(68,238,255,0.3)');
+    divGrad.addColorStop(0.5, 'rgba(68,238,255,0.5)');
+    divGrad.addColorStop(0.8, 'rgba(68,238,255,0.3)');
+    divGrad.addColorStop(1, 'rgba(68,238,255,0)');
+    ctx.strokeStyle = divGrad; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(px + 24, py + 64); ctx.lineTo(px + PW - 24, py + 64); ctx.stroke();
+    ctx.restore();
+
+    // Close button with pink
+    const clx = px + PW - 24, cly = py + 24, clr = 16;
     const clHov = Math.hypot(mx - clx, my - cly) < clr + 4;
     ctx.save();
-    ctx.shadowColor = clHov ? '#FF4466' : 'rgba(255,68,102,0.4)'; ctx.shadowBlur = clHov ? 20 : 6;
-    ctx.strokeStyle = clHov ? '#FF4466' : 'rgba(255,68,102,0.55)'; ctx.lineWidth = 1.5;
+    ctx.shadowColor = clHov ? SECONDARY : 'rgba(255,68,102,0.3)'; ctx.shadowBlur = clHov ? 25 : 8;
+    ctx.strokeStyle = clHov ? SECONDARY : 'rgba(255,68,102,0.5)'; ctx.lineWidth = 2;
     ctx.beginPath(); ctx.arc(clx, cly, clr, 0, Math.PI * 2); ctx.stroke();
-    ctx.fillStyle = clHov ? '#FF4466' : 'rgba(255,68,102,0.7)';
-    ctx.font = 'bold 18px Orbitron, monospace'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    if (clHov) {
+      ctx.fillStyle = 'rgba(255,68,102,0.15)';
+      ctx.fill();
+    }
+    ctx.fillStyle = clHov ? SECONDARY : 'rgba(255,68,102,0.7)';
+    ctx.font = 'bold 20px Orbitron, monospace'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillText('×', clx, cly);
     ctx.textBaseline = 'alphabetic'; ctx.restore();
     this._pushArea(clx - clr - 4, cly - clr - 4, (clr + 4) * 2, (clr + 4) * 2, () => this.close());
 
-    // Tabs
-    const tabY = py + 60, tabH = 38;
+    // Tabs with Neon City colors
+    const tabY = py + 72, tabH = 40;
     const tabW = (PW - 80) / 3;
     [['vehicles','VEHICLES'],['weapons','WEAPONS'],['grenades','GRENADES']].forEach(([id, label], i) => {
       const tx = px + 20 + i * (tabW + 20);
       const active = this.tab === id;
       const hover  = mx >= tx && mx <= tx + tabW && my >= tabY && my <= tabY + tabH;
-      const color  = id === 'grenades' ? '#FF8800' : id === 'vehicles' ? '#FFDD44' : '#44EEFF';
+      const color  = id === 'grenades' ? '#FF8800' : id === 'vehicles' ? PRIMARY : PURPLE;
       ctx.save();
-      ctx.shadowColor = active ? color : 'transparent'; ctx.shadowBlur = active ? 10 : 0;
-      ctx.fillStyle   = active ? `rgba(${this._rgb(color)},0.14)` : hover ? 'rgba(255,255,255,0.04)' : 'transparent';
-      ctx.strokeStyle = active ? color : 'rgba(255,255,255,0.1)'; ctx.lineWidth = active ? 1.5 : 1;
-      this._rr(ctx, tx, tabY, tabW, tabH, 7);
+      ctx.shadowColor = active ? color : 'transparent'; ctx.shadowBlur = active ? 14 : 0;
+      ctx.fillStyle   = active ? `rgba(${this._rgb(color)},0.18)` : hover ? 'rgba(255,255,255,0.05)' : 'transparent';
+      ctx.strokeStyle = active ? color : hover ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.08)';
+      ctx.lineWidth = active ? 2 : 1;
+      this._rr(ctx, tx, tabY, tabW, tabH, 8);
       ctx.fill(); ctx.stroke();
-      ctx.font = `bold ${active ? 12 : 11}px Orbitron, monospace`;
-      ctx.fillStyle = active ? color : 'rgba(255,255,255,0.35)'; ctx.textAlign = 'center';
-      ctx.fillText(label, tx + tabW / 2, tabY + 24);
+      // Tab icon indicators
+      if (active) {
+        ctx.fillStyle = color;
+        ctx.fillRect(tx + 8, tabY + tabH - 3, tabW - 16, 2);
+      }
+      ctx.font = `bold ${active ? 13 : 11}px Orbitron, monospace`;
+      ctx.fillStyle = active ? '#fff' : hover ? 'rgba(255,255,255,0.6)' : 'rgba(255,255,255,0.35)';
+      ctx.textAlign = 'center';
+      ctx.shadowColor = active ? color : 'transparent'; ctx.shadowBlur = active ? 8 : 0;
+      ctx.fillText(label, tx + tabW / 2, tabY + 25);
       ctx.restore();
       if (!active) this._pushArea(tx, tabY, tabW, tabH, () => { this.tab = id; });
     });
 
     // Content area
-    const contentY = tabY + tabH + 10;
-    const contentH = PH - (contentY - py) - 46;
+    const contentY = tabY + tabH + 12;
+    const contentH = PH - (contentY - py) - 50;
     ctx.save();
     ctx.beginPath(); ctx.rect(px + 12, contentY, PW - 24, contentH); ctx.clip();
     if      (this.tab === 'vehicles') this._drawVehicles(ctx, px, contentY, PW, contentH, player, money, mx, my);
@@ -1101,18 +1277,28 @@ class DealershipManager {
     else                              this._drawGrenades(ctx, px, contentY, PW, contentH, grenadeCount, money, mx, my);
     ctx.restore();
 
-    // Balance
+    // Balance area with NEX icon
     ctx.save();
-    ctx.font = 'bold 18px Orbitron, monospace'; ctx.fillStyle = '#00FFCC';
+    // Balance background
+    const balGrad = ctx.createLinearGradient(px, py + PH - 38, px, py + PH);
+    balGrad.addColorStop(0, 'rgba(0,229,255,0)');
+    balGrad.addColorStop(1, 'rgba(0,229,255,0.05)');
+    ctx.fillStyle = balGrad;
+    ctx.fillRect(px, py + PH - 38, PW, 38);
+
+    // NEX mini icon
+    this._renderNexIcon(ctx, px + 32, py + PH - 19, 24, { animated: true });
+
+    ctx.font = 'bold 16px Orbitron, monospace'; ctx.fillStyle = '#00FFCC';
     ctx.shadowColor = '#00FFCC'; ctx.shadowBlur = 14; ctx.textAlign = 'left';
-    ctx.fillText(`BALANCE:  ⬢ ${money.toLocaleString()} NEX`, px + 22, py + PH - 14);
+    ctx.fillText(`${money.toLocaleString()} NEX`, px + 52, py + PH - 14);
     ctx.restore();
 
-    // Close hint
+    // Close hint with better styling
     ctx.save();
-    ctx.font = '10px Orbitron, monospace'; ctx.fillStyle = 'rgba(255,255,255,0.22)';
+    ctx.font = '10px Orbitron, monospace'; ctx.fillStyle = 'rgba(68,238,255,0.4)';
     ctx.textAlign = 'right';
-    ctx.fillText('[T] or [ESC] CLOSE', px + PW - 22, py + PH - 14);
+    ctx.fillText('[ T ] or [ ESC ] TO CLOSE', px + PW - 22, py + PH - 14);
     ctx.restore();
 
     // Feedback
@@ -1120,8 +1306,8 @@ class DealershipManager {
       const a = Math.min(1, this._feedback.t / 0.6);
       ctx.save(); ctx.globalAlpha = a;
       ctx.font = 'bold 17px Orbitron, monospace'; ctx.fillStyle = this._feedback.color;
-      ctx.shadowColor = this._feedback.color; ctx.shadowBlur = 20; ctx.textAlign = 'center';
-      ctx.fillText(this._feedback.msg, W / 2, py + PH - 14);
+      ctx.shadowColor = this._feedback.color; ctx.shadowBlur = 25; ctx.textAlign = 'center';
+      ctx.fillText(this._feedback.msg, W / 2, py + PH + 30);
       ctx.restore();
     }
   }
@@ -1129,9 +1315,9 @@ class DealershipManager {
   // ── Vehicles tab ────────────────────────────────────────────────────────────
   _drawVehicles(ctx, px, y, PW, PH, player, money, mx, my) {
     const cars = CONFIG.CAR_DEALERSHIP;
-    const cols = 2, gap = 16;
+    const cols = 2, gap = 18;
     const cardW = Math.floor((PW - gap * (cols + 1)) / cols);
-    const cardH = Math.min(160, Math.floor((PH - gap * 3) / 2));
+    const cardH = Math.min(165, Math.floor((PH - gap * 3) / 2));
 
     cars.forEach((car, i) => {
       const col = i % cols, row = Math.floor(i / cols);
@@ -1140,18 +1326,30 @@ class DealershipManager {
       const canBuy = money >= car.price;
       const hover  = mx >= cx && mx <= cx + cardW && my >= cy && my <= cy + cardH;
 
+      // Card background with gradient
       ctx.save();
-      ctx.fillStyle   = hover && canBuy ? `rgba(${this._rgb(car.color)},0.10)` : 'rgba(0,0,0,0.35)';
-      ctx.strokeStyle = hover && canBuy ? car.color : 'rgba(255,255,255,0.08)';
+      const cardGrad = ctx.createLinearGradient(cx, cy, cx, cy + cardH);
+      if (hover && canBuy) {
+        cardGrad.addColorStop(0, `rgba(${this._rgb(car.color)},0.15)`);
+        cardGrad.addColorStop(1, `rgba(${this._rgb(car.color)},0.05)`);
+      } else {
+        cardGrad.addColorStop(0, 'rgba(10,15,25,0.7)');
+        cardGrad.addColorStop(1, 'rgba(5,8,15,0.8)');
+      }
+      ctx.fillStyle = cardGrad;
+      ctx.strokeStyle = hover && canBuy ? car.color : canBuy ? 'rgba(68,238,255,0.15)' : 'rgba(255,255,255,0.06)';
       ctx.shadowColor = hover && canBuy ? car.color : 'transparent';
-      ctx.shadowBlur  = hover && canBuy ? 14 : 0;
-      ctx.lineWidth   = hover && canBuy ? 1.5 : 1;
-      this._rr(ctx, cx, cy, cardW, cardH, 9);
+      ctx.shadowBlur  = hover && canBuy ? 20 : 0;
+      ctx.lineWidth   = hover && canBuy ? 2 : 1;
+      this._rr(ctx, cx, cy, cardW, cardH, 10);
       ctx.fill(); ctx.stroke();
 
-      // Top color bar
-      ctx.fillStyle = car.color + (canBuy ? '88' : '2a');
-      ctx.fillRect(cx + 9, cy, cardW - 18, 3);
+      // Top color bar with glow effect
+      ctx.save();
+      ctx.shadowColor = car.color; ctx.shadowBlur = canBuy ? 8 : 0;
+      ctx.fillStyle = car.color + (canBuy ? 'cc' : '2a');
+      ctx.fillRect(cx + 12, cy + 2, cardW - 24, 3);
+      ctx.restore();
 
       // Car name
       ctx.font = 'bold 13px Orbitron, monospace'; ctx.textAlign = 'center';
@@ -1280,21 +1478,54 @@ class DealershipManager {
       }
       ctx.restore();
 
-      // Stats
-      ctx.font = '9px Orbitron, monospace'; ctx.fillStyle = 'rgba(255,255,255,0.45)';
-      ctx.textAlign = 'center'; ctx.shadowBlur = 0;
-      ctx.fillText(`SPD ${car.speed}   HP ${car.hp}${car.bulletproof ? '   ⬡ BULLETPROOF' : ''}`, cx + cardW / 2, cy + cardH - 30);
+      // Desc - moved higher for better spacing
+      ctx.font = '10px Rajdhani, monospace'; ctx.fillStyle = canBuy ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.25)';
+      ctx.textAlign = 'center';
+      ctx.fillText(car.desc, cx + cardW / 2, cy + cardH - 58);
 
-      // Desc
-      ctx.font = '9px Rajdhani, monospace'; ctx.fillStyle = 'rgba(255,255,255,0.28)';
-      ctx.fillText(car.desc, cx + cardW / 2, cy + cardH - 42);
+      // Stats with color coding - better spacing
+      ctx.font = '10px Orbitron, monospace'; ctx.textAlign = 'center'; ctx.shadowBlur = 0;
+      const statY = cy + cardH - 40;
+      // Speed stat
+      ctx.fillStyle = canBuy ? '#44EEFF' : 'rgba(68,238,255,0.3)';
+      ctx.fillText(`SPD`, cx + cardW / 2 - 60, statY);
+      ctx.fillStyle = canBuy ? '#fff' : 'rgba(255,255,255,0.3)';
+      ctx.fillText(`${car.speed}`, cx + cardW / 2 - 30, statY);
+      // HP stat
+      ctx.fillStyle = canBuy ? '#44FF88' : 'rgba(68,255,136,0.3)';
+      ctx.fillText(`HP`, cx + cardW / 2 + 15, statY);
+      ctx.fillStyle = canBuy ? '#fff' : 'rgba(255,255,255,0.3)';
+      ctx.fillText(`${car.hp}`, cx + cardW / 2 + 45, statY);
+      // Bulletproof badge
+      if (car.bulletproof) {
+        ctx.save();
+        ctx.fillStyle = canBuy ? '#CC88FF' : 'rgba(204,136,255,0.3)';
+        ctx.shadowColor = canBuy ? '#CC88FF' : 'transparent'; ctx.shadowBlur = canBuy ? 6 : 0;
+        ctx.fillText('⬡ ARMORED', cx + cardW / 2 + 95, statY);
+        ctx.restore();
+      }
 
-      // Price / buy
-      ctx.font = 'bold 13px Orbitron, monospace';
-      ctx.fillStyle  = canBuy ? (hover ? '#fff' : '#00FFCC') : '#444';
+      // Price area with full NEX icon - more space from stats
+      ctx.save();
+      const priceX = cx + cardW / 2;
+      const priceY = cy + cardH - 14;
+      // Draw full NEX icon (with N inside)
+      if (canBuy) {
+        this._renderNexIcon(ctx, priceX - 55, priceY - 4, 18, { animated: hover });
+      } else {
+        // Dimmed version for unaffordable
+        ctx.globalAlpha = 0.3;
+        this._renderNexIcon(ctx, priceX - 55, priceY - 4, 18, { animated: false });
+        ctx.globalAlpha = 1;
+      }
+      // Price text
+      ctx.font = 'bold 14px Orbitron, monospace';
+      ctx.fillStyle = canBuy ? (hover ? '#fff' : '#00FFCC') : '#444';
       ctx.shadowColor = canBuy && hover ? '#00FFCC' : 'transparent';
-      ctx.shadowBlur  = canBuy && hover ? 14 : 0;
-      ctx.fillText(`⬢ ${car.price.toLocaleString()}`, cx + cardW / 2, cy + cardH - 12);
+      ctx.shadowBlur = canBuy && hover ? 16 : 0;
+      ctx.textAlign = 'center';
+      ctx.fillText(`${car.price.toLocaleString()} NEX`, priceX + 10, priceY);
+      ctx.restore();
 
       if (canBuy) {
         this._pushArea(cx, cy, cardW, cardH, (p, g) => {
@@ -1336,49 +1567,110 @@ class DealershipManager {
       const hover    = mx >= cx && mx <= cx + cardW && my >= cy && my <= cy + cardH;
 
       ctx.save();
-      let bg  = 'rgba(0,0,0,0.35)', bdr = 'rgba(255,255,255,0.07)';
-      if (equipped)              { bg = `rgba(${this._rgb(w.color)},0.14)`;  bdr = w.color; }
-      else if (owned && hover)   { bg = 'rgba(255,255,255,0.07)';             bdr = 'rgba(255,255,255,0.3)'; }
-      else if (canBuy && hover)  { bg = `rgba(${this._rgb(w.color)},0.08)`;  bdr = w.color; }
-      else if (!owned && !canBuy){ bg = 'rgba(0,0,0,0.5)'; }
+      // Card background with gradient
+      const cardGrad = ctx.createLinearGradient(cx, cy, cx, cy + cardH);
+      if (equipped) {
+        cardGrad.addColorStop(0, `rgba(${this._rgb(w.color)},0.2)`);
+        cardGrad.addColorStop(1, `rgba(${this._rgb(w.color)},0.08)`);
+      } else if (owned && hover) {
+        cardGrad.addColorStop(0, 'rgba(255,255,255,0.1)');
+        cardGrad.addColorStop(1, 'rgba(255,255,255,0.04)');
+      } else if (canBuy && hover) {
+        cardGrad.addColorStop(0, `rgba(${this._rgb(w.color)},0.12)`);
+        cardGrad.addColorStop(1, `rgba(${this._rgb(w.color)},0.04)`);
+      } else if (!owned && !canBuy) {
+        cardGrad.addColorStop(0, 'rgba(5,5,10,0.7)');
+        cardGrad.addColorStop(1, 'rgba(0,0,0,0.8)');
+      } else {
+        cardGrad.addColorStop(0, 'rgba(10,15,25,0.6)');
+        cardGrad.addColorStop(1, 'rgba(5,8,15,0.7)');
+      }
+
+      let bdr = equipped ? w.color : owned ? 'rgba(204,136,255,0.25)' : canBuy ? 'rgba(68,238,255,0.2)' : 'rgba(255,255,255,0.05)';
+      if (hover && (owned || canBuy)) bdr = w.color;
 
       ctx.shadowColor = (equipped || (hover && (owned || canBuy))) ? w.color : 'transparent';
-      ctx.shadowBlur  = equipped ? 18 : hover ? 10 : 0;
-      ctx.fillStyle   = bg; ctx.strokeStyle = bdr; ctx.lineWidth = equipped ? 1.8 : 1;
-      this._rr(ctx, cx, cy, cardW, cardH, 9);
+      ctx.shadowBlur  = equipped ? 20 : hover ? 12 : 0;
+      ctx.fillStyle   = cardGrad; ctx.strokeStyle = bdr; ctx.lineWidth = equipped ? 2 : 1;
+      this._rr(ctx, cx, cy, cardW, cardH, 10);
       ctx.fill(); ctx.stroke();
 
-      ctx.fillStyle = w.color + (equipped ? 'dd' : owned ? '55' : canBuy ? '44' : '1a');
-      ctx.fillRect(cx + 9, cy, cardW - 18, 3);
+      // Top color bar with glow
+      ctx.save();
+      ctx.shadowColor = w.color; ctx.shadowBlur = equipped ? 10 : canBuy ? 6 : 0;
+      ctx.fillStyle = w.color + (equipped ? 'ee' : owned ? '66' : canBuy ? '55' : '1a');
+      ctx.fillRect(cx + 8, cy + 2, cardW - 16, 3);
+      ctx.restore();
 
       ctx.font = `bold ${cardW > 200 ? 12 : 10}px Orbitron, monospace`;
-      ctx.fillStyle = equipped ? '#fff' : owned ? '#ccc' : canBuy ? '#aaa' : '#444';
-      ctx.shadowColor = equipped ? w.color : 'transparent'; ctx.shadowBlur = equipped ? 8 : 0;
+      ctx.fillStyle = equipped ? '#fff' : owned ? '#ddd' : canBuy ? '#bbb' : '#444';
+      ctx.shadowColor = equipped ? w.color : 'transparent'; ctx.shadowBlur = equipped ? 10 : 0;
       ctx.textAlign = 'center';
       ctx.fillText(w.name, cx + cardW / 2, cy + 22);
 
+      // Desc - moved higher for better spacing
+      const statActive = equipped || owned || canBuy;
+      ctx.font = '10px Rajdhani, monospace'; ctx.fillStyle = statActive ? 'rgba(255,255,255,0.45)' : 'rgba(255,255,255,0.2)';
+      ctx.fillText(w.desc, cx + cardW / 2, cy + cardH - 56);
+
+      // Stats with color coding - better spacing
       const eff = w.damage > 0 ? w.damage : '—';
       const rpm = w.fireRate > 0 ? Math.round(60000 / w.fireRate) : '—';
-      ctx.font = '9px Orbitron, monospace'; ctx.fillStyle = 'rgba(255,255,255,0.35)'; ctx.shadowBlur = 0;
-      ctx.fillText(`DMG ${eff}   RPM ${rpm}${w.bullets > 1 ? `   ×${w.bullets}` : ''}`, cx + cardW / 2, cy + cardH - 30);
-      ctx.font = '9px Rajdhani, monospace'; ctx.fillStyle = 'rgba(255,255,255,0.25)';
-      ctx.fillText(w.desc, cx + cardW / 2, cy + cardH - 42);
+      ctx.font = '9px Orbitron, monospace'; ctx.shadowBlur = 0;
+      const statY = cy + cardH - 38;
+      ctx.fillStyle = statActive ? '#FF4466' : 'rgba(255,68,102,0.3)';
+      ctx.fillText(`DMG`, cx + cardW / 2 - 45, statY);
+      ctx.fillStyle = statActive ? '#fff' : 'rgba(255,255,255,0.25)';
+      ctx.fillText(`${eff}`, cx + cardW / 2 - 20, statY);
+      ctx.fillStyle = statActive ? '#44EEFF' : 'rgba(68,238,255,0.3)';
+      ctx.fillText(`RPM`, cx + cardW / 2 + 15, statY);
+      ctx.fillStyle = statActive ? '#fff' : 'rgba(255,255,255,0.25)';
+      ctx.fillText(`${rpm}`, cx + cardW / 2 + 45, statY);
+      if (w.bullets > 1) {
+        ctx.fillStyle = statActive ? '#44FF88' : 'rgba(68,255,136,0.3)';
+        ctx.fillText(`×${w.bullets}`, cx + cardW / 2 + 72, statY);
+      }
 
       if (equipped) {
-        ctx.shadowColor = w.color; ctx.shadowBlur = 10;
+        ctx.shadowColor = w.color; ctx.shadowBlur = 12;
         ctx.font = 'bold 10px Orbitron, monospace'; ctx.fillStyle = w.color;
-        ctx.fillText('● EQUIPPED', cx + cardW / 2, cy + cardH - 12);
+        ctx.fillText('● EQUIPPED', cx + cardW / 2, cy + cardH - 14);
       } else if (owned) {
         ctx.shadowBlur = 0; ctx.font = '10px Orbitron, monospace';
-        ctx.fillStyle = hover ? '#fff' : '#aaa';
-        ctx.fillText('CLICK TO EQUIP', cx + cardW / 2, cy + cardH - 12);
+        ctx.fillStyle = hover ? '#44EEFF' : '#CC88FF';
+        ctx.shadowColor = hover ? '#44EEFF' : 'transparent'; ctx.shadowBlur = hover ? 8 : 0;
+        ctx.fillText('CLICK TO EQUIP', cx + cardW / 2, cy + cardH - 14);
         if (hover) this._pushArea(cx, cy, cardW, cardH, (p) => { p.equipWeapon(w.id); this._msg(`${w.name} EQUIPPED`, w.color); });
       } else {
-        ctx.font = 'bold 12px Orbitron, monospace';
-        ctx.fillStyle   = canBuy ? (hover ? '#fff' : '#00FFCC') : '#444';
-        ctx.shadowColor = canBuy && hover ? '#00FFCC' : 'transparent';
-        ctx.shadowBlur  = canBuy && hover ? 14 : 0;
-        ctx.fillText(w.price > 0 ? `⬢ ${w.price.toLocaleString()}` : 'FREE', cx + cardW / 2, cy + cardH - 12);
+        // Price with full NEX icon - better spacing
+        ctx.save();
+        const priceX = cx + cardW / 2;
+        const priceY = cy + cardH - 14;
+        if (w.price > 0) {
+          // Full NEX icon (with N inside)
+          if (canBuy) {
+            this._renderNexIcon(ctx, priceX - 45, priceY - 4, 16, { animated: hover });
+          } else {
+            ctx.globalAlpha = 0.3;
+            this._renderNexIcon(ctx, priceX - 45, priceY - 4, 16, { animated: false });
+            ctx.globalAlpha = 1;
+          }
+          ctx.font = 'bold 12px Orbitron, monospace';
+          ctx.fillStyle = canBuy ? (hover ? '#fff' : '#00FFCC') : '#444';
+          ctx.shadowColor = canBuy && hover ? '#00FFCC' : 'transparent';
+          ctx.shadowBlur = canBuy && hover ? 14 : 0;
+          ctx.textAlign = 'center';
+          ctx.fillText(`${w.price.toLocaleString()} NEX`, priceX + 8, priceY);
+        } else {
+          // Free item with NEX icon
+          this._renderNexIcon(ctx, priceX - 35, priceY - 4, 16, { animated: true });
+          ctx.font = 'bold 12px Orbitron, monospace';
+          ctx.fillStyle = '#44FF88';
+          ctx.shadowColor = '#44FF88'; ctx.shadowBlur = 10;
+          ctx.textAlign = 'center';
+          ctx.fillText('FREE', priceX + 10, priceY);
+        }
+        ctx.restore();
         if (canBuy) {
           this._pushArea(cx, cy, cardW, cardH, (p, g) => {
             const effectivePrice = Math.round(w.price * (1 - (g._shopDiscount || 0)));
@@ -1399,66 +1691,175 @@ class DealershipManager {
   _drawGrenades(ctx, px, y, PW, PH, grenadeCount, money, mx, my) {
     const gc = CONFIG.GRENADE;
     const cx = px + PW / 2;
+    const t = performance.now() / 1000;
 
-    // Grenade art
+    // Background panel for grenade display
     ctx.save();
-    ctx.translate(cx, y + 90);
-    ctx.fillStyle = '#3a5c3a'; ctx.strokeStyle = '#88CC88'; ctx.lineWidth = 2;
-    ctx.shadowColor = '#44FF44'; ctx.shadowBlur = 20;
-    ctx.beginPath(); ctx.ellipse(0, 0, 32, 24, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    const panelGrad = ctx.createLinearGradient(cx - 150, y + 20, cx + 150, y + 140);
+    panelGrad.addColorStop(0, 'rgba(255,136,0,0.05)');
+    panelGrad.addColorStop(0.5, 'rgba(255,136,0,0.08)');
+    panelGrad.addColorStop(1, 'rgba(255,136,0,0.05)');
+    ctx.fillStyle = panelGrad;
+    this._rr(ctx, cx - 150, y + 20, 300, 130, 12);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255,136,0,0.2)'; ctx.lineWidth = 1;
+    this._rr(ctx, cx - 150, y + 20, 300, 130, 12);
+    ctx.stroke();
+    ctx.restore();
+
+    // Animated grenade art
+    ctx.save();
+    const bounce = Math.sin(t * 2) * 3;
+    ctx.translate(cx, y + 75 + bounce);
+
+    // Outer glow ring
+    ctx.save();
+    ctx.globalAlpha = 0.3 + Math.sin(t * 3) * 0.15;
+    ctx.strokeStyle = '#FF8800'; ctx.lineWidth = 2;
+    ctx.shadowColor = '#FF8800'; ctx.shadowBlur = 25;
+    ctx.beginPath(); ctx.ellipse(0, 0, 45, 35, 0, 0, Math.PI * 2); ctx.stroke();
+    ctx.restore();
+
+    // Grenade body with gradient
+    const grenadeGrad = ctx.createRadialGradient(-8, -8, 0, 0, 0, 35);
+    grenadeGrad.addColorStop(0, '#5a8c5a');
+    grenadeGrad.addColorStop(0.5, '#3a5c3a');
+    grenadeGrad.addColorStop(1, '#2a3c2a');
+    ctx.fillStyle = grenadeGrad;
+    ctx.strokeStyle = '#88CC88'; ctx.lineWidth = 2.5;
+    ctx.shadowColor = '#44FF88'; ctx.shadowBlur = 25;
+    ctx.beginPath(); ctx.ellipse(0, 0, 36, 28, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+
+    // Grid pattern on grenade
+    ctx.strokeStyle = 'rgba(136,204,136,0.3)'; ctx.lineWidth = 1;
+    for (let i = -2; i <= 2; i++) {
+      ctx.beginPath(); ctx.moveTo(i * 10, -25); ctx.lineTo(i * 10, 25); ctx.stroke();
+    }
+    for (let i = -2; i <= 2; i++) {
+      ctx.beginPath(); ctx.moveTo(-30, i * 8); ctx.lineTo(30, i * 8); ctx.stroke();
+    }
+
+    // Pin/trigger with glow
     ctx.shadowBlur = 0;
-    ctx.fillStyle = '#FF4400';
-    ctx.beginPath(); ctx.arc(0, -28, 8, 0, Math.PI * 2); ctx.fill();
-    ctx.font = 'bold 14px Orbitron, monospace'; ctx.fillStyle = '#fff'; ctx.textAlign = 'center';
-    ctx.fillText('GRENADE', 0, 6);
+    const pinGrad = ctx.createRadialGradient(0, -32, 0, 0, -32, 10);
+    pinGrad.addColorStop(0, '#FF6600');
+    pinGrad.addColorStop(1, '#CC3300');
+    ctx.fillStyle = pinGrad;
+    ctx.shadowColor = '#FF4400'; ctx.shadowBlur = 15;
+    ctx.beginPath(); ctx.arc(0, -32, 9, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = '#FF8800'; ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // Label
+    ctx.font = 'bold 13px Orbitron, monospace'; ctx.fillStyle = '#fff'; ctx.textAlign = 'center';
+    ctx.shadowColor = '#44FF88'; ctx.shadowBlur = 8;
+    ctx.fillText('FRAG', 0, 5);
     ctx.restore();
 
-    // Stats
+    // Stats with color coding - better spacing, moved down from FRAG image
     ctx.save();
-    ctx.font = '11px Orbitron, monospace'; ctx.fillStyle = 'rgba(255,255,255,0.55)'; ctx.textAlign = 'center';
-    ctx.fillText(`DMG ${gc.damage}   BLAST RADIUS ${gc.blastRadius}px   FUSE ${gc.fuseTime}s`, cx, y + 150);
-    ctx.font = '10px Rajdhani, monospace'; ctx.fillStyle = 'rgba(255,136,0,0.7)';
-    ctx.fillText('Press [G] to throw toward mouse cursor', cx, y + 170);
+    ctx.font = '11px Orbitron, monospace'; ctx.textAlign = 'center';
+    const statY = y + 175;
+    ctx.fillStyle = '#FF4466';
+    ctx.fillText('DMG', cx - 100, statY);
+    ctx.fillStyle = '#fff';
+    ctx.fillText(`${gc.damage}`, cx - 65, statY);
+    ctx.fillStyle = '#44EEFF';
+    ctx.fillText('RADIUS', cx - 5, statY);
+    ctx.fillStyle = '#fff';
+    ctx.fillText(`${gc.blastRadius}px`, cx + 55, statY);
+    ctx.fillStyle = '#FF8800';
+    ctx.fillText('FUSE', cx + 110, statY);
+    ctx.fillStyle = '#fff';
+    ctx.fillText(`${gc.fuseTime}s`, cx + 145, statY);
     ctx.restore();
 
-    // Current count
+    // Instructions - adjusted for new stats position
+    ctx.save();
+    ctx.font = '11px Rajdhani, monospace'; ctx.fillStyle = 'rgba(255,136,0,0.8)';
+    ctx.textAlign = 'center';
+    ctx.fillText('Press [ G ] to throw toward mouse cursor', cx, y + 200);
+    ctx.restore();
+
+    // Current count display - adjusted position
     ctx.save();
     ctx.font = 'bold 22px Orbitron, monospace'; ctx.fillStyle = '#FF8800';
-    ctx.shadowColor = '#FF8800'; ctx.shadowBlur = 14; ctx.textAlign = 'center';
-    ctx.fillText(`\u{1F4A3}  ×  ${grenadeCount}`, cx, y + 210);
+    ctx.shadowColor = '#FF8800'; ctx.shadowBlur = 20; ctx.textAlign = 'center';
+    ctx.fillText(`INVENTORY:  ${grenadeCount}`, cx, y + 235);
     ctx.shadowBlur = 0; ctx.restore();
 
-    // Buy buttons
+    // Buy buttons with improved styling - adjusted position
     const btnDefs = [
-      { qty: 1, price: gc.price, label: `1 GRENADE   ⬢ ${gc.price.toLocaleString()}` },
-      { qty: 5, price: gc.price * 4, label: `5 GRENADES  ⬢ ${(gc.price * 4).toLocaleString()}  (DEAL)` },
+      { qty: 1, price: gc.price },
+      { qty: 5, price: gc.price * 4, deal: true },
     ];
     btnDefs.forEach((btn, bi) => {
-      const bw = 280, bh = 42;
+      const bw = 300, bh = 50;
       const bx = cx - bw / 2;
-      const by2 = y + 235 + bi * (bh + 14);
+      const by2 = y + 265 + bi * (bh + 18);
       const canBuy = money >= btn.price;
       const hover  = mx >= bx && mx <= bx + bw && my >= by2 && my <= by2 + bh;
+
       ctx.save();
-      ctx.fillStyle   = canBuy ? (hover ? 'rgba(255,136,0,0.25)' : 'rgba(255,136,0,0.10)') : 'rgba(40,40,40,0.6)';
-      ctx.strokeStyle = canBuy ? (hover ? '#FF8800' : 'rgba(255,136,0,0.5)') : 'rgba(80,80,80,0.3)';
+      // Button gradient background
+      const btnGrad = ctx.createLinearGradient(bx, by2, bx, by2 + bh);
+      if (canBuy && hover) {
+        btnGrad.addColorStop(0, 'rgba(255,136,0,0.35)');
+        btnGrad.addColorStop(1, 'rgba(255,136,0,0.15)');
+      } else if (canBuy) {
+        btnGrad.addColorStop(0, 'rgba(255,136,0,0.15)');
+        btnGrad.addColorStop(1, 'rgba(255,136,0,0.05)');
+      } else {
+        btnGrad.addColorStop(0, 'rgba(40,40,40,0.5)');
+        btnGrad.addColorStop(1, 'rgba(20,20,20,0.6)');
+      }
+      ctx.fillStyle = btnGrad;
+      ctx.strokeStyle = canBuy ? (hover ? '#FF8800' : 'rgba(255,136,0,0.5)') : 'rgba(80,80,80,0.25)';
       ctx.shadowColor = canBuy && hover ? '#FF8800' : 'transparent';
-      ctx.shadowBlur  = canBuy && hover ? 16 : 0;
-      ctx.lineWidth   = canBuy ? 1.2 : 0.8;
-      this._rr(ctx, bx, by2, bw, bh, 7);
+      ctx.shadowBlur  = canBuy && hover ? 20 : 0;
+      ctx.lineWidth   = canBuy ? 1.5 : 1;
+      this._rr(ctx, bx, by2, bw, bh, 10);
       ctx.fill(); ctx.stroke();
-      ctx.font = 'bold 12px Orbitron, monospace'; ctx.textAlign = 'center';
-      ctx.fillStyle = canBuy ? (hover ? '#fff' : '#FF8800') : '#333';
+
+      // Quantity text
+      ctx.font = 'bold 13px Orbitron, monospace'; ctx.textAlign = 'left';
+      ctx.fillStyle = canBuy ? (hover ? '#fff' : '#FF8800') : '#444';
       ctx.shadowBlur = 0;
-      ctx.fillText(btn.label, cx, by2 + bh / 2 + 4);
+      ctx.fillText(`${btn.qty} GRENADE${btn.qty > 1 ? 'S' : ''}`, bx + 20, by2 + bh / 2 + 5);
+
+      // Deal badge
+      if (btn.deal) {
+        ctx.save();
+        ctx.fillStyle = canBuy ? '#44FF88' : '#333';
+        ctx.shadowColor = canBuy ? '#44FF88' : 'transparent'; ctx.shadowBlur = canBuy ? 8 : 0;
+        ctx.font = 'bold 9px Orbitron, monospace';
+        ctx.fillText('SAVE 20%', bx + 135, by2 + bh / 2 + 4);
+        ctx.restore();
+      }
+
+      // Price with full NEX icon
+      if (canBuy) {
+        this._renderNexIcon(ctx, bx + bw - 100, by2 + bh / 2, 18, { animated: hover });
+      } else {
+        ctx.globalAlpha = 0.3;
+        this._renderNexIcon(ctx, bx + bw - 100, by2 + bh / 2, 18, { animated: false });
+        ctx.globalAlpha = 1;
+      }
+      ctx.font = 'bold 13px Orbitron, monospace';
+      ctx.textAlign = 'right';
+      ctx.fillStyle = canBuy ? (hover ? '#fff' : '#00FFCC') : '#444';
+      ctx.shadowColor = canBuy && hover ? '#00FFCC' : 'transparent';
+      ctx.shadowBlur = canBuy && hover ? 12 : 0;
+      ctx.fillText(`${btn.price.toLocaleString()} NEX`, bx + bw - 20, by2 + bh / 2 + 5);
       ctx.restore();
+
       if (canBuy) {
         this._pushArea(bx, by2, bw, bh, (p, g) => {
           if (g.money >= btn.price) {
             g.money -= btn.price;
             g._grenadeCount += btn.qty;
             window.audio?.buy();
-            this._msg(`+${btn.qty} GRENADE${btn.qty > 1 ? 'S' : ''}!`, '#FF8800');
+            this._msg(`+${btn.qty} GRENADE${btn.qty > 1 ? 'S' : ''}!`, '#44FF88');
           } else { this._msg('NOT ENOUGH MONEY', '#FF4466'); }
         });
       }
@@ -1735,6 +2136,113 @@ class BuildingShopManager {
 
   _msg(text, color = '#44FF88') { this._feedback = { msg: text, color, t: 2.0 }; }
 
+  // ═══ NEX CURRENCY ICON HELPERS ═══════════════════════════════════════════════
+  _drawHexagon(ctx, cx, cy, r) {
+    ctx.beginPath();
+    for (let i = 0; i < 6; i++) {
+      const angle = (Math.PI / 3) * i - Math.PI / 2;
+      const x = cx + r * Math.cos(angle);
+      const y = cy + r * Math.sin(angle);
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+  }
+
+  _drawN(ctx, x, y, w, h) {
+    ctx.beginPath();
+    ctx.moveTo(x, y + h);
+    ctx.lineTo(x, y);
+    ctx.lineTo(x + w, y + h);
+    ctx.lineTo(x + w, y);
+  }
+
+  _renderNexIcon(ctx, x, y, size, opts = {}) {
+    const animated = opts.animated !== false;
+    const t = animated ? performance.now() / 1000 : 0;
+    const r = size / 2;
+
+    ctx.save();
+    const pulse = animated ? Math.sin(t * 2.5) * 0.3 + 0.7 : 1;
+    const energyPulse = animated ? Math.sin(t * 4) * 0.5 + 0.5 : 0.5;
+
+    // Outer rotating ring
+    if (animated) {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(t * 0.3);
+      ctx.strokeStyle = `rgba(0,229,255,${0.25 + pulse * 0.15})`;
+      ctx.lineWidth = Math.max(1, size / 20);
+      ctx.setLineDash([size / 8, size / 5]);
+      ctx.beginPath();
+      ctx.arc(0, 0, r + size / 10, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.restore();
+    }
+
+    // Hexagon frame
+    ctx.shadowColor = '#00E5FF';
+    ctx.shadowBlur = 12 * pulse * (size / 32);
+    ctx.strokeStyle = '#00E5FF';
+    ctx.lineWidth = Math.max(1.5, size / 16);
+    ctx.fillStyle = 'rgba(0,10,20,0.85)';
+    this._drawHexagon(ctx, x, y, r);
+    ctx.fill();
+    ctx.stroke();
+
+    // Inner hexagon
+    ctx.shadowBlur = 4 * (size / 32);
+    ctx.strokeStyle = 'rgba(0,229,255,0.4)';
+    ctx.lineWidth = Math.max(0.8, size / 32);
+    this._drawHexagon(ctx, x, y, r * 0.75);
+    ctx.stroke();
+
+    // The N letter
+    const nW = r * 0.7, nH = r * 0.9;
+    const nX = x - nW / 2, nY = y - nH / 2;
+    const strokeW = Math.max(2, size / 12);
+
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+
+    // N glow
+    ctx.shadowBlur = (10 + energyPulse * 4) * (size / 32);
+    ctx.strokeStyle = '#00E5FF';
+    ctx.lineWidth = strokeW;
+    this._drawN(ctx, nX, nY, nW, nH);
+    ctx.stroke();
+
+    // N bright core
+    ctx.shadowBlur = 4 * (size / 32);
+    ctx.strokeStyle = `rgba(180,255,255,${0.6 + energyPulse * 0.4})`;
+    ctx.lineWidth = strokeW * 0.4;
+    this._drawN(ctx, nX, nY, nW, nH);
+    ctx.stroke();
+
+    // Energy nodes
+    ctx.shadowBlur = 6 * (size / 32);
+    ctx.fillStyle = `rgba(0,229,255,${0.7 + energyPulse * 0.3})`;
+    const nodeR = Math.max(1.2, size / 18);
+    [[nX, nY], [nX, nY + nH], [nX + nW, nY], [nX + nW, nY + nH]].forEach(([nx, ny]) => {
+      ctx.beginPath();
+      ctx.arc(nx, ny, nodeR, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    // Pulse ring
+    if (animated) {
+      const ringPhase = (t * 1.2) % 1;
+      ctx.strokeStyle = `rgba(0,229,255,${(1 - ringPhase) * 0.3})`;
+      ctx.lineWidth = Math.max(0.8, size / 32);
+      ctx.shadowBlur = 3;
+      this._drawHexagon(ctx, x, y, r * 0.5 + ringPhase * r * 0.6);
+      ctx.stroke();
+    }
+
+    ctx.restore();
+  }
+
   // ── Apply a single effect object to the player/game ──────────────────────
   _applyEffect(eff, player, gameRef) {
     if (!eff) return;
@@ -1757,18 +2265,18 @@ class BuildingShopManager {
       }
       case 'money':
         gameRef.money += eff.amount || 0;
-        this._msg(`+⬢${eff.amount}!`, '#00FFCC');
+        this._msg(`+${eff.amount} NEX!`, '#00FFCC');
         break;
       case 'moneyHack': {
         const gain = (gameRef.wave || 1) * 120;
         gameRef.money += gain;
-        this._msg(`HACK: +⬢${gain}!`, '#00FF88');
+        this._msg(`HACK: +${gain} NEX!`, '#00FF88');
         break;
       }
       case 'loan':
         gameRef.money += eff.give || 0;
         gameRef._loanDebt = (gameRef._loanDebt || 0) + (eff.debt || 0);
-        this._msg(`BORROWED ⬢${eff.give}! Owes ⬢${eff.debt}`, '#FFCC00');
+        this._msg(`BORROWED ${eff.give} NEX! Owes ${eff.debt}`, '#FFCC00');
         break;
       case 'grenades':
         gameRef._grenadeCount = Math.min(9, (gameRef._grenadeCount || 0) + (eff.amount || 1));
@@ -1872,115 +2380,208 @@ class BuildingShopManager {
     if (!this.isOpen) return;
     this._areas = [];
     const cfg = CONFIG.BUILDING_INTERACTIONS[this._bType] || CONFIG.BUILDING_INTERACTIONS[0];
-    const PW  = Math.min(620, W - 40);
-    const PH  = Math.min(460, H - 50);
+    const PW  = Math.min(640, W - 40);
+    const PH  = Math.min(480, H - 50);
     const px  = (W - PW) / 2;
     const py  = (H - PH) / 2;
     const nc  = cfg.npcColor;
+    const t   = performance.now() / 1000;
 
-    // Dim
-    ctx.fillStyle = 'rgba(0,0,0,0.82)';
-    ctx.fillRect(0, 0, W, H);
+    // Neon City primary colors
+    const PRIMARY = '#44EEFF';      // Cyan
+    const SECONDARY = '#FF4466';    // Pink
+    const ACCENT = '#44FF88';       // Green
 
-    // Panel
+    // Dim backdrop with subtle gradient
     ctx.save();
-    ctx.shadowColor = nc; ctx.shadowBlur = 36;
-    ctx.fillStyle   = '#06060f';
-    ctx.strokeStyle = nc + 'AA';
-    ctx.lineWidth   = 1.5;
-    this._rr(ctx, px, py, PW, PH, 12); ctx.fill(); ctx.stroke();
+    const bgGrad = ctx.createRadialGradient(W/2, H/2, 0, W/2, H/2, Math.max(W, H) * 0.7);
+    bgGrad.addColorStop(0, 'rgba(10,15,30,0.92)');
+    bgGrad.addColorStop(1, 'rgba(0,0,0,0.95)');
+    ctx.fillStyle = bgGrad;
+    ctx.fillRect(0, 0, W, H);
     ctx.restore();
 
-    // Top glow stripe
+    // Animated scanlines
     ctx.save();
-    const tg = ctx.createLinearGradient(px, py, px, py + 58);
-    tg.addColorStop(0, nc + '18'); tg.addColorStop(1, nc + '00');
-    ctx.fillStyle = tg; this._rr(ctx, px, py, PW, 58, 12); ctx.fill();
+    ctx.globalAlpha = 0.025;
+    for (let i = 0; i < H; i += 4) {
+      const offset = Math.sin(t * 0.5 + i * 0.01) * 2;
+      ctx.fillStyle = i % 8 === 0 ? PRIMARY : '#000';
+      ctx.fillRect(0, i + offset, W, 1);
+    }
+    ctx.restore();
+
+    // Panel with neon glow
+    ctx.save();
+    ctx.shadowColor = nc; ctx.shadowBlur = 45;
+    ctx.fillStyle = '#06060e';
+    ctx.strokeStyle = `rgba(${this._hexToRgb(nc)},0.7)`;
+    ctx.lineWidth = 2;
+    this._rr(ctx, px, py, PW, PH, 14); ctx.fill(); ctx.stroke();
+    ctx.restore();
+
+    // Inner panel border
+    ctx.save();
+    ctx.strokeStyle = `rgba(${this._hexToRgb(nc)},0.15)`;
+    ctx.lineWidth = 1;
+    this._rr(ctx, px + 4, py + 4, PW - 8, PH - 8, 10);
+    ctx.stroke();
+    ctx.restore();
+
+    // Top gradient stripe
+    ctx.save();
+    const tg = ctx.createLinearGradient(px, py, px, py + 70);
+    tg.addColorStop(0, `rgba(${this._hexToRgb(nc)},0.15)`);
+    tg.addColorStop(0.5, `rgba(${this._hexToRgb(nc)},0.05)`);
+    tg.addColorStop(1, `rgba(${this._hexToRgb(nc)},0)`);
+    ctx.fillStyle = tg; this._rr(ctx, px, py, PW, 70, 14); ctx.fill();
     ctx.restore();
 
     // Corner accents
     this._corners(ctx, px, py, PW, PH, nc);
 
-    // NPC icon circle
+    // NEX icon on left
+    this._renderNexIcon(ctx, px + 38, py + 38, 36, { animated: true });
+
+    // NPC avatar with glow
     ctx.save();
-    ctx.shadowColor = nc; ctx.shadowBlur = 18;
+    ctx.shadowColor = nc; ctx.shadowBlur = 25;
+    ctx.strokeStyle = nc; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(px + 90, py + 38, 22, 0, Math.PI * 2); ctx.stroke();
+    // Face
+    const faceGrad = ctx.createRadialGradient(px + 88, py + 32, 0, px + 90, py + 38, 22);
+    faceGrad.addColorStop(0, '#FFE4C4');
+    faceGrad.addColorStop(1, '#D4A574');
+    ctx.fillStyle = faceGrad;
+    ctx.beginPath(); ctx.arc(px + 90, py + 32, 13, 0, Math.PI * 2); ctx.fill();
+    // Body
     ctx.fillStyle = nc;
-    ctx.beginPath(); ctx.arc(px + 42, py + 36, 20, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = '#FFDDBB'; ctx.beginPath(); ctx.arc(px + 42, py + 29, 12, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = '#0a0a0a'; ctx.beginPath(); ctx.arc(px + 42, py + 41, 11, Math.PI, 0); ctx.fill();
+    ctx.beginPath(); ctx.arc(px + 90, py + 48, 12, Math.PI, 0); ctx.fill();
     ctx.restore();
 
-    // Title
+    // Title with glow
     ctx.save();
-    ctx.font = 'bold 15px Orbitron, monospace'; ctx.textAlign = 'left';
-    ctx.fillStyle = nc; ctx.shadowColor = nc; ctx.shadowBlur = 12;
-    ctx.fillText(cfg.npcName, px + 72, py + 30);
-    ctx.font = '11px Orbitron, monospace'; ctx.fillStyle = 'rgba(255,255,255,0.55)'; ctx.shadowBlur = 0;
-    ctx.fillText(cfg.dialogue, px + 72, py + 48);
+    ctx.font = 'bold 18px Orbitron, monospace'; ctx.textAlign = 'left';
+    ctx.fillStyle = '#fff'; ctx.shadowColor = nc; ctx.shadowBlur = 18;
+    ctx.fillText(cfg.npcName, px + 125, py + 32);
+    ctx.font = '11px Rajdhani, monospace'; ctx.fillStyle = 'rgba(255,255,255,0.6)'; ctx.shadowBlur = 0;
+    ctx.fillText(cfg.dialogue, px + 125, py + 52);
     ctx.restore();
 
-    // Divider
-    ctx.strokeStyle = nc + '30'; ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.moveTo(px + 16, py + 65); ctx.lineTo(px + PW - 16, py + 65); ctx.stroke();
-
-    // Money display
+    // Divider with gradient
     ctx.save();
-    ctx.font = 'bold 12px Orbitron, monospace'; ctx.textAlign = 'right';
-    ctx.fillStyle = '#00FFCC'; ctx.shadowColor = '#00FFCC'; ctx.shadowBlur = 8;
-    ctx.fillText(`⬢${money.toLocaleString()}`, px + PW - 16, py + 56);
+    const divGrad = ctx.createLinearGradient(px + 16, 0, px + PW - 16, 0);
+    divGrad.addColorStop(0, `rgba(${this._hexToRgb(nc)},0)`);
+    divGrad.addColorStop(0.2, `rgba(${this._hexToRgb(nc)},0.4)`);
+    divGrad.addColorStop(0.5, `rgba(${this._hexToRgb(nc)},0.6)`);
+    divGrad.addColorStop(0.8, `rgba(${this._hexToRgb(nc)},0.4)`);
+    divGrad.addColorStop(1, `rgba(${this._hexToRgb(nc)},0)`);
+    ctx.strokeStyle = divGrad; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(px + 16, py + 72); ctx.lineTo(px + PW - 16, py + 72); ctx.stroke();
+    ctx.restore();
+
+    // Balance display with NEX icon
+    ctx.save();
+    this._renderNexIcon(ctx, px + PW - 100, py + 45, 20, { animated: true });
+    ctx.font = 'bold 14px Orbitron, monospace'; ctx.textAlign = 'right';
+    ctx.fillStyle = '#00FFCC'; ctx.shadowColor = '#00FFCC'; ctx.shadowBlur = 12;
+    ctx.fillText(`${money.toLocaleString()} NEX`, px + PW - 20, py + 50);
     ctx.restore();
 
     // Items
-    const ITEM_H = 90, ITEM_W = PW - 32, ITEM_X = px + 16;
-    let iy = py + 78;
+    const ITEM_H = 95, ITEM_W = PW - 40, ITEM_X = px + 20;
+    let iy = py + 88;
     for (const item of cfg.items) {
-      const hov   = mx >= ITEM_X && mx <= ITEM_X + ITEM_W && my >= iy && my <= iy + ITEM_H - 6;
+      const hov   = mx >= ITEM_X && mx <= ITEM_X + ITEM_W && my >= iy && my <= iy + ITEM_H - 10;
       const canAf = money >= item.price || item.price === 0;
 
-      // Item box
+      // Item box with gradient
       ctx.save();
-      ctx.fillStyle = hov ? nc + '20' : 'rgba(255,255,255,0.04)';
-      ctx.strokeStyle = hov ? nc + '88' : 'rgba(255,255,255,0.10)';
-      ctx.shadowColor = hov ? nc : 'transparent'; ctx.shadowBlur = hov ? 12 : 0;
-      ctx.lineWidth = 1;
-      this._rr(ctx, ITEM_X, iy, ITEM_W, ITEM_H - 8, 7); ctx.fill(); ctx.stroke();
+      const itemGrad = ctx.createLinearGradient(ITEM_X, iy, ITEM_X, iy + ITEM_H - 10);
+      if (hov && canAf) {
+        itemGrad.addColorStop(0, `rgba(${this._hexToRgb(nc)},0.2)`);
+        itemGrad.addColorStop(1, `rgba(${this._hexToRgb(nc)},0.08)`);
+      } else {
+        itemGrad.addColorStop(0, 'rgba(15,20,35,0.6)');
+        itemGrad.addColorStop(1, 'rgba(10,15,25,0.7)');
+      }
+      ctx.fillStyle = itemGrad;
+      ctx.strokeStyle = hov && canAf ? nc : canAf ? `rgba(${this._hexToRgb(PRIMARY)},0.2)` : 'rgba(255,255,255,0.06)';
+      ctx.shadowColor = hov && canAf ? nc : 'transparent'; ctx.shadowBlur = hov && canAf ? 15 : 0;
+      ctx.lineWidth = hov && canAf ? 1.5 : 1;
+      this._rr(ctx, ITEM_X, iy, ITEM_W, ITEM_H - 10, 10); ctx.fill(); ctx.stroke();
+
+      // Left accent bar
+      ctx.fillStyle = nc + (canAf ? 'cc' : '33');
+      ctx.shadowColor = nc; ctx.shadowBlur = canAf ? 8 : 0;
+      ctx.fillRect(ITEM_X + 3, iy + 8, 3, ITEM_H - 26);
       ctx.restore();
 
-      // Icon
+      // Icon with glow
       ctx.save();
-      ctx.font = '28px serif'; ctx.textAlign = 'center';
-      ctx.fillText(item.icon, ITEM_X + 30, iy + 50);
+      ctx.font = '32px serif'; ctx.textAlign = 'center';
+      ctx.shadowColor = nc; ctx.shadowBlur = canAf ? 10 : 0;
+      ctx.fillText(item.icon, ITEM_X + 40, iy + 55);
       ctx.restore();
 
-      // Item name + desc
+      // Item name + desc with better spacing
       ctx.save();
       ctx.textAlign = 'left';
-      ctx.font = 'bold 12px Orbitron, monospace';
-      ctx.fillStyle = canAf ? '#ffffff' : '#666666'; ctx.shadowBlur = 0;
-      ctx.fillText(item.name, ITEM_X + 60, iy + 28);
-      ctx.font = '10px Orbitron, monospace'; ctx.fillStyle = canAf ? 'rgba(255,255,255,0.65)' : 'rgba(120,120,120,0.65)';
-      ctx.fillText(item.desc, ITEM_X + 60, iy + 46);
+      ctx.font = 'bold 13px Orbitron, monospace';
+      ctx.fillStyle = canAf ? '#ffffff' : '#555555';
+      ctx.shadowColor = canAf ? nc : 'transparent'; ctx.shadowBlur = canAf ? 4 : 0;
+      ctx.fillText(item.name, ITEM_X + 75, iy + 32);
+
+      ctx.font = '11px Rajdhani, monospace';
+      ctx.fillStyle = canAf ? 'rgba(255,255,255,0.6)' : 'rgba(120,120,120,0.5)';
+      ctx.shadowBlur = 0;
+      ctx.fillText(item.desc, ITEM_X + 75, iy + 52);
       ctx.restore();
 
-      // Price badge
-      const priceStr = item.price === 0 ? 'FREE' : `⬢${item.price}`;
-      const pw2 = 70, ph2 = 26, px2 = ITEM_X + ITEM_W - 82, py2 = iy + 24;
+      // Price badge with NEX icon
+      const pw2 = 95, ph2 = 32, px2 = ITEM_X + ITEM_W - pw2 - 12, py2 = iy + 22;
       ctx.save();
-      ctx.fillStyle   = canAf ? nc : '#333333';
-      ctx.strokeStyle = canAf ? nc + 'AA' : '#555555';
-      ctx.shadowColor = canAf ? nc : 'transparent'; ctx.shadowBlur = canAf ? 8 : 0;
-      ctx.lineWidth   = 1;
-      this._rr(ctx, px2, py2, pw2, ph2, 5); ctx.fill(); ctx.stroke();
-      ctx.font = 'bold 11px Orbitron, monospace'; ctx.textAlign = 'center';
-      ctx.fillStyle = canAf ? '#000000' : '#555555'; ctx.shadowBlur = 0;
-      ctx.fillText(priceStr, px2 + pw2 / 2, py2 + 17);
+      const priceGrad = ctx.createLinearGradient(px2, py2, px2, py2 + ph2);
+      if (canAf) {
+        priceGrad.addColorStop(0, `rgba(${this._hexToRgb(nc)},0.3)`);
+        priceGrad.addColorStop(1, `rgba(${this._hexToRgb(nc)},0.15)`);
+      } else {
+        priceGrad.addColorStop(0, 'rgba(40,40,40,0.5)');
+        priceGrad.addColorStop(1, 'rgba(30,30,30,0.6)');
+      }
+      ctx.fillStyle = priceGrad;
+      ctx.strokeStyle = canAf ? `rgba(${this._hexToRgb(nc)},0.6)` : 'rgba(80,80,80,0.3)';
+      ctx.shadowColor = canAf && hov ? nc : 'transparent'; ctx.shadowBlur = canAf && hov ? 12 : 0;
+      ctx.lineWidth = 1.5;
+      this._rr(ctx, px2, py2, pw2, ph2, 8); ctx.fill(); ctx.stroke();
+
+      // NEX icon and price text
+      if (item.price === 0) {
+        ctx.font = 'bold 13px Orbitron, monospace'; ctx.textAlign = 'center';
+        ctx.fillStyle = ACCENT;
+        ctx.shadowColor = ACCENT; ctx.shadowBlur = 10;
+        ctx.fillText('FREE', px2 + pw2 / 2, py2 + 21);
+      } else {
+        if (canAf) {
+          this._renderNexIcon(ctx, px2 + 18, py2 + 16, 16, { animated: hov });
+        } else {
+          ctx.globalAlpha = 0.3;
+          this._renderNexIcon(ctx, px2 + 18, py2 + 16, 16, { animated: false });
+          ctx.globalAlpha = 1;
+        }
+        ctx.font = 'bold 12px Orbitron, monospace'; ctx.textAlign = 'center';
+        ctx.fillStyle = canAf ? '#00FFCC' : '#444';
+        ctx.shadowColor = canAf && hov ? '#00FFCC' : 'transparent';
+        ctx.shadowBlur = canAf && hov ? 10 : 0;
+        ctx.fillText(`${item.price.toLocaleString()}`, px2 + pw2 / 2 + 12, py2 + 21);
+      }
       ctx.restore();
 
       // Click area
       const capturedItem = item;
-      this._areas.push({ x: ITEM_X, y: iy, w: ITEM_W, h: ITEM_H - 8,
+      this._areas.push({ x: ITEM_X, y: iy, w: ITEM_W, h: ITEM_H - 10,
         action: (pl, gr) => {
-          if (gr.money < capturedItem.price) { this._msg('NOT ENOUGH CASH!', '#FF4444'); return; }
+          if (gr.money < capturedItem.price) { this._msg('NOT ENOUGH NEX!', '#FF4466'); return; }
           gr.money -= capturedItem.price;
           const ok = this._applyEffect(capturedItem.effect, pl, gr);
           window.audio?.buy();
@@ -1994,17 +2595,24 @@ class BuildingShopManager {
     if (this._feedback) {
       const alpha = Math.min(1, this._feedback.t / 0.6);
       ctx.save(); ctx.globalAlpha = alpha;
-      ctx.font = 'bold 14px Orbitron, monospace'; ctx.textAlign = 'center';
-      ctx.fillStyle = this._feedback.color; ctx.shadowColor = this._feedback.color; ctx.shadowBlur = 16;
-      ctx.fillText(this._feedback.msg, W / 2, py + PH - 16);
+      ctx.font = 'bold 16px Orbitron, monospace'; ctx.textAlign = 'center';
+      ctx.fillStyle = this._feedback.color; ctx.shadowColor = this._feedback.color; ctx.shadowBlur = 20;
+      ctx.fillText(this._feedback.msg, W / 2, py + PH + 25);
       ctx.restore();
     }
 
-    // Close hint
+    // Close hint with styling
     ctx.save();
-    ctx.font = '10px Orbitron, monospace'; ctx.fillStyle = 'rgba(255,255,255,0.22)'; ctx.textAlign = 'center';
-    ctx.fillText('[T] or [ESC] CLOSE', W / 2, py + PH - 4);
+    ctx.font = '10px Orbitron, monospace'; ctx.fillStyle = `rgba(${this._hexToRgb(PRIMARY)},0.5)`; ctx.textAlign = 'center';
+    ctx.fillText('[ T ] or [ ESC ] TO CLOSE', W / 2, py + PH - 8);
     ctx.restore();
+  }
+
+  _hexToRgb(hex) {
+    const r = parseInt(hex.slice(1,3),16);
+    const g = parseInt(hex.slice(3,5),16);
+    const b = parseInt(hex.slice(5,7),16);
+    return `${r},${g},${b}`;
   }
 
   _rr(ctx, x, y, w, h, r) { ctx.beginPath(); ctx.roundRect(x, y, w, h, r); }

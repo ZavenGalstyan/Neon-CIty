@@ -10244,7 +10244,7 @@ class Salesperson {
 // ─── BuildingNPC ─────────────────────────────────────────────────────────────
 // Interactive NPC that appears inside buildings. Unique per building type.
 class BuildingNPC {
-  constructor(x, y, buildingType) {
+  constructor(x, y, buildingType, isNeonCity = false) {
     const cfg        = CONFIG.BUILDING_INTERACTIONS[buildingType] || CONFIG.BUILDING_INTERACTIONS[0];
     this.x = x; this.y = y;
     this.radius      = 18;
@@ -10253,11 +10253,208 @@ class BuildingNPC {
     this.dialogue    = cfg.dialogue;
     this._waveT      = 0;
     this._interactR  = 65; // interaction radius
+    this._isNeonCity = isNeonCity;
+    this._buildingType = buildingType;
   }
 
   update(dt) { this._waveT += dt * 1.2; }
 
   render(ctx) {
+    if (this._isNeonCity) {
+      this._renderNeonCity(ctx);
+    } else {
+      this._renderDefault(ctx);
+    }
+  }
+
+  _renderNeonCity(ctx) {
+    const t = performance.now() / 1000;
+    const breathe = Math.sin(t * 1.8) * 1.5;
+    const sway = Math.sin(this._waveT) * 1.5;
+
+    ctx.save();
+    ctx.translate(this.x + sway, this.y);
+
+    // ═══ CYBERPUNK NPC RENDERING ═══
+
+    // Shadow with neon tint
+    ctx.save();
+    ctx.globalAlpha = 0.35;
+    ctx.fillStyle = this.color + '44';
+    ctx.beginPath();
+    ctx.ellipse(4, 28, 14, 5, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    // Legs
+    ctx.fillStyle = '#1a1a2e';
+    ctx.fillRect(-8, 12, 6, 16);
+    ctx.fillRect(2, 12, 6, 16);
+
+    // Shoes with neon accent
+    ctx.fillStyle = '#0a0a14';
+    ctx.fillRect(-9, 26, 8, 4);
+    ctx.fillRect(1, 26, 8, 4);
+    ctx.fillStyle = this.color + '88';
+    ctx.fillRect(-9, 29, 8, 1);
+    ctx.fillRect(1, 29, 8, 1);
+
+    // Body/Torso with cyber suit gradient
+    const bodyGrad = ctx.createLinearGradient(-12, -8, 12, 14);
+    bodyGrad.addColorStop(0, '#2a2a3e');
+    bodyGrad.addColorStop(0.5, '#1a1a2e');
+    bodyGrad.addColorStop(1, '#14141e');
+    ctx.fillStyle = bodyGrad;
+    ctx.beginPath();
+    ctx.roundRect(-12, -8 + breathe * 0.3, 24, 22, 4);
+    ctx.fill();
+
+    // Suit lapels with neon trim
+    ctx.strokeStyle = this.color;
+    ctx.lineWidth = 1.5;
+    ctx.shadowColor = this.color;
+    ctx.shadowBlur = 6;
+    ctx.beginPath();
+    ctx.moveTo(-10, -6 + breathe * 0.3);
+    ctx.lineTo(-4, 6 + breathe * 0.3);
+    ctx.moveTo(10, -6 + breathe * 0.3);
+    ctx.lineTo(4, 6 + breathe * 0.3);
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    // Collar/shirt
+    ctx.fillStyle = '#ddd';
+    ctx.beginPath();
+    ctx.moveTo(-4, -6 + breathe * 0.3);
+    ctx.lineTo(0, -2 + breathe * 0.3);
+    ctx.lineTo(4, -6 + breathe * 0.3);
+    ctx.closePath();
+    ctx.fill();
+
+    // Neon tie
+    ctx.fillStyle = this.color;
+    ctx.shadowColor = this.color;
+    ctx.shadowBlur = 8;
+    ctx.beginPath();
+    ctx.moveTo(-2, -2 + breathe * 0.3);
+    ctx.lineTo(0, 10 + breathe * 0.3);
+    ctx.lineTo(2, -2 + breathe * 0.3);
+    ctx.closePath();
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // Arms
+    ctx.fillStyle = '#2a2a3e';
+    ctx.fillRect(-16, -4 + breathe * 0.3, 5, 14);
+    ctx.fillRect(11, -4 + breathe * 0.3, 5, 14);
+
+    // Hands
+    ctx.fillStyle = '#DDBB99';
+    ctx.beginPath();
+    ctx.arc(-13.5, 12 + breathe * 0.3, 3, 0, Math.PI * 2);
+    ctx.arc(13.5, 12 + breathe * 0.3, 3, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Neck
+    ctx.fillStyle = '#DDBB99';
+    ctx.fillRect(-3, -12, 6, 6);
+
+    // Head
+    const headGrad = ctx.createRadialGradient(-3, -20, 2, 0, -18, 12);
+    headGrad.addColorStop(0, '#FFE4C4');
+    headGrad.addColorStop(1, '#D4A574');
+    ctx.fillStyle = headGrad;
+    ctx.beginPath();
+    ctx.arc(0, -18, 10, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Hair with style
+    ctx.fillStyle = '#1a1a2e';
+    ctx.beginPath();
+    ctx.arc(0, -22, 9, Math.PI, 0);
+    ctx.fill();
+    ctx.fillRect(-8, -24, 16, 4);
+
+    // Eyes
+    ctx.fillStyle = '#222';
+    ctx.beginPath();
+    ctx.arc(-4, -19, 1.5, 0, Math.PI * 2);
+    ctx.arc(4, -19, 1.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Cyber eye glow (optional accent)
+    ctx.fillStyle = this.color + '44';
+    ctx.beginPath();
+    ctx.arc(-4, -19, 2.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Mouth
+    ctx.strokeStyle = '#886655';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.arc(0, -14, 3, 0.2, Math.PI - 0.2);
+    ctx.stroke();
+
+    // Name badge on chest
+    ctx.fillStyle = 'rgba(0,0,0,0.7)';
+    ctx.beginPath();
+    ctx.roundRect(-10, 2, 20, 8, 2);
+    ctx.fill();
+    ctx.fillStyle = this.color;
+    ctx.font = 'bold 4px Orbitron, monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('STAFF', 0, 8);
+
+    ctx.restore();
+
+    // ═══ FLOATING UI ELEMENTS ═══
+    ctx.save();
+    const pulse = Math.sin(t * 3) * 0.2 + 0.8;
+
+    // Name badge above head with glow
+    ctx.fillStyle = 'rgba(0,0,0,0.85)';
+    ctx.shadowColor = this.color;
+    ctx.shadowBlur = 10;
+    ctx.beginPath();
+    ctx.roundRect(this.x + sway - 36, this.y - 52, 72, 16, 4);
+    ctx.fill();
+
+    // Neon border on badge
+    ctx.strokeStyle = this.color + 'AA';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.roundRect(this.x + sway - 36, this.y - 52, 72, 16, 4);
+    ctx.stroke();
+
+    ctx.fillStyle = this.color;
+    ctx.shadowColor = this.color;
+    ctx.shadowBlur = 12;
+    ctx.font = 'bold 8px Orbitron, monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(this.name, this.x + sway, this.y - 40);
+
+    // [T] TALK prompt with animation - LARGER AND MORE VISIBLE
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = `rgba(0,0,0,${0.85 + pulse * 0.1})`;
+    ctx.beginPath();
+    ctx.roundRect(this.x + sway - 32, this.y - 75, 64, 20, 6);
+    ctx.fill();
+
+    ctx.strokeStyle = `rgba(68,238,255,${0.6 + pulse * 0.3})`;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.roundRect(this.x + sway - 32, this.y - 75, 64, 20, 6);
+    ctx.stroke();
+
+    ctx.fillStyle = '#FFDD44';
+    ctx.shadowColor = '#FFAA00';
+    ctx.shadowBlur = 10 * pulse;
+    ctx.font = 'bold 11px Orbitron, monospace';
+    ctx.fillText('[T] TALK', this.x + sway, this.y - 61);
+    ctx.restore();
+  }
+
+  _renderDefault(ctx) {
     const sway = Math.sin(this._waveT) * 2.5;
     const H3D  = 8;
 
@@ -10288,7 +10485,6 @@ class BuildingNPC {
     ctx.restore();
 
     // [E] interact prompt + dialogue bubble
-    const dist = 0; // rendered regardless; game shows/hides by proximity
     ctx.save();
     ctx.font = 'bold 7px Orbitron, monospace';
     ctx.textAlign = 'center';
@@ -10297,11 +10493,14 @@ class BuildingNPC {
     ctx.beginPath(); ctx.roundRect(this.x + sway - 32, this.y - this.radius - 28, 64, 14, 3); ctx.fill();
     ctx.fillStyle = this.color; ctx.shadowColor = this.color; ctx.shadowBlur = 8;
     ctx.fillText(this.name, this.x + sway, this.y - this.radius - 17);
-    // [T] hint
-    ctx.shadowBlur = 0; ctx.fillStyle = 'rgba(0,0,0,0.70)';
-    ctx.beginPath(); ctx.roundRect(this.x + sway - 18, this.y - this.radius - 44, 36, 13, 3); ctx.fill();
-    ctx.fillStyle = '#FFDD44'; ctx.font = 'bold 6.5px Orbitron, monospace';
-    ctx.fillText('[T] TALK', this.x + sway, this.y - this.radius - 34);
+    // [T] hint - LARGER AND MORE VISIBLE
+    ctx.shadowBlur = 0; ctx.fillStyle = 'rgba(0,0,0,0.85)';
+    ctx.beginPath(); ctx.roundRect(this.x + sway - 28, this.y - this.radius - 48, 56, 18, 5); ctx.fill();
+    ctx.strokeStyle = 'rgba(68,238,255,0.5)'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.roundRect(this.x + sway - 28, this.y - this.radius - 48, 56, 18, 5); ctx.stroke();
+    ctx.fillStyle = '#FFDD44'; ctx.shadowColor = '#FFAA00'; ctx.shadowBlur = 8;
+    ctx.font = 'bold 10px Orbitron, monospace';
+    ctx.fillText('[T] TALK', this.x + sway, this.y - this.radius - 35);
     ctx.restore();
   }
 }
