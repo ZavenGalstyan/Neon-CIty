@@ -65,6 +65,35 @@ class Game {
     const spawnY = (cy + 0.5) * this.map.S;
     this.player = new Player(charData, spawnX, spawnY);
 
+    /* ── Apply shop-purchased weapons & upgrades from inventory ── */
+    try {
+      const _ncInv = JSON.parse(localStorage.getItem('nc_inventory') || '{}');
+
+      /* Add all owned weapons so player can cycle through them */
+      (_ncInv.weapons || []).forEach(w => {
+        const wid = typeof w === 'string' ? w : w.id;
+        if (wid && CONFIG.WEAPONS.find(cfg => cfg.id === wid)) {
+          this.player.ownedWeapons.add(wid);
+        }
+      });
+
+      /* Equip the player's chosen starting weapon (set in inventory.html) */
+      const _equippedWep = localStorage.getItem('equippedWeapon');
+      if (_equippedWep && this.player.ownedWeapons.has(_equippedWep)) {
+        this.player.equipWeapon(_equippedWep);
+      }
+
+      /* Apply permanent upgrades purchased from the shop */
+      const _upgradeMap = {};
+      (_ncInv.upgrades || []).forEach(u => {
+        const uid = typeof u === 'string' ? u : u.id;
+        if (uid) _upgradeMap[uid] = (_upgradeMap[uid] || 0) + 1;
+      });
+      Object.entries(_upgradeMap).forEach(([uid, levels]) => {
+        for (let i = 0; i < levels; i++) this.player.applyUpgrade(uid);
+      });
+    } catch (_e) { /* malformed localStorage — skip silently */ }
+
     this.bots = [];
     this.bullets = [];
     this.particles = [];

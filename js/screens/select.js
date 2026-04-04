@@ -541,7 +541,16 @@
       msg.textContent = '';
 
       try {
-        await API.unlockCharacter(charData.id);
+        // Prefer unified /shop/buy; fall back to /characters/unlock
+        try {
+          await API.shopBuy(charData.id, 'characters');
+        } catch (shopErr) {
+          if (shopErr.message?.includes('404') || shopErr.message === 'NOT_FOUND') {
+            await API.unlockCharacter(charData.id);
+          } else {
+            throw shopErr;
+          }
+        }
         // Success — remove locked class so card is now selectable
         card.classList.remove('char-card-locked');
         msg.style.color = '#44FF88';
