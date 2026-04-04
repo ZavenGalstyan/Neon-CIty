@@ -70,6 +70,24 @@ const ROOM_LAYOUT_DEALER_NEON = [
   [1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1],  // door gap cols 7-10
 ]; // 18×12 tiles, 60px each → 1080×720 px
 
+// Larger room for Neon City Arcade (0=floor, 1=wall)
+const ROOM_LAYOUT_ARCADE_NEON = [
+  [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+  [1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1],  // door gap cols 7-10
+]; // 18×14 tiles, 60px each → 1080×840 px
+
 // 0=floor  1=wall  2=bench  3=tracks(blocked)
 const ROOM_LAYOUT_METRO = [
   [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
@@ -1995,7 +2013,9 @@ class GameMap {
   getRoom(door) {
     const RS     = 60;  // indoor tile size (px)
     const isNeonDealer = this.config.id === 'neon_city' && door.specialType === 'dealership';
+    const isNeonArcade = this.config.id === 'neon_city' && door.bTypeIdx === 4;
     const layout = isNeonDealer ? ROOM_LAYOUT_DEALER_NEON
+                 : isNeonArcade ? ROOM_LAYOUT_ARCADE_NEON
                  : door.type === 2 ? ROOM_LAYOUT_2 : ROOM_LAYOUT_1;
     const RH     = layout.length;
     const RW     = layout[0].length;
@@ -2003,8 +2023,8 @@ class GameMap {
     const RH_px  = RH * RS;
 
     // Entry X = door gap center of the bottom row
-    const entryX = isNeonDealer
-      ? ((7 + 10) / 2 + 0.5) * RS   // Neon dealer: gap cols 7-10 center
+    const entryX = (isNeonDealer || isNeonArcade)
+      ? ((7 + 10) / 2 + 0.5) * RS   // Neon dealer/arcade: gap cols 7-10 center
       : door.type === 2
         ? ((6 + 7) / 2 + 0.5) * RS   // gap cols 6-8 center
         : ((4 + 5) / 2 + 0.5) * RS;  // gap cols 4-5 center
