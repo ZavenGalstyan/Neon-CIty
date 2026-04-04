@@ -5628,7 +5628,7 @@ class Game {
         // ═══ CYBER JUKEBOX (top right corner) ═══
         ctx.save();
         const jukeX = cx + W * 0.38;
-        const jukeY = topY + 15;
+        const jukeY = topY - 35;
 
         // Jukebox body
         ctx.fillStyle = "#0a0812";
