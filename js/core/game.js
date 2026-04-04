@@ -67,32 +67,34 @@ class Game {
 
     /* ── Apply shop-purchased weapons & upgrades from inventory ── */
     try {
-      const _ncInv = JSON.parse(localStorage.getItem('nc_inventory') || '{}');
+      const _ncInv = JSON.parse(localStorage.getItem("nc_inventory") || "{}");
 
       /* Add all owned weapons so player can cycle through them */
-      (_ncInv.weapons || []).forEach(w => {
-        const wid = typeof w === 'string' ? w : w.id;
-        if (wid && CONFIG.WEAPONS.find(cfg => cfg.id === wid)) {
+      (_ncInv.weapons || []).forEach((w) => {
+        const wid = typeof w === "string" ? w : w.id;
+        if (wid && CONFIG.WEAPONS.find((cfg) => cfg.id === wid)) {
           this.player.ownedWeapons.add(wid);
         }
       });
 
       /* Equip the player's chosen starting weapon (set in inventory.html) */
-      const _equippedWep = localStorage.getItem('equippedWeapon');
+      const _equippedWep = localStorage.getItem("equippedWeapon");
       if (_equippedWep && this.player.ownedWeapons.has(_equippedWep)) {
         this.player.equipWeapon(_equippedWep);
       }
 
       /* Apply permanent upgrades purchased from the shop */
       const _upgradeMap = {};
-      (_ncInv.upgrades || []).forEach(u => {
-        const uid = typeof u === 'string' ? u : u.id;
+      (_ncInv.upgrades || []).forEach((u) => {
+        const uid = typeof u === "string" ? u : u.id;
         if (uid) _upgradeMap[uid] = (_upgradeMap[uid] || 0) + 1;
       });
       Object.entries(_upgradeMap).forEach(([uid, levels]) => {
         for (let i = 0; i < levels; i++) this.player.applyUpgrade(uid);
       });
-    } catch (_e) { /* malformed localStorage — skip silently */ }
+    } catch (_e) {
+      /* malformed localStorage — skip silently */
+    }
 
     this.bots = [];
     this.bullets = [];
@@ -275,9 +277,11 @@ class Game {
     this.player._displayName = this._playerName;
     // ── Session tracking (for backend save) ───────────────────
     this._grenadesThrown = 0;
-    this._weaponsUsed    = new Set([this.charData.starterWeapon || this.player.equippedWeaponId || 'pistol']);
-    this._vehiclesUsed   = new Set();
-    this._sessionSaved   = false;
+    this._weaponsUsed = new Set([
+      this.charData.starterWeapon || this.player.equippedWeaponId || "pistol",
+    ]);
+    this._vehiclesUsed = new Set();
+    this._sessionSaved = false;
     // ── Ambient Traffic ────────────────────────────────────────
     this._ambientCars = [];
     this._ambientSpawnT = 0;
@@ -590,7 +594,8 @@ class Game {
     // Survival timer
     this._surviveTime += dt;
     // Track current weapon for session save
-    if (this.player.equippedWeaponId) this._weaponsUsed.add(this.player.equippedWeaponId);
+    if (this.player.equippedWeaponId)
+      this._weaponsUsed.add(this.player.equippedWeaponId);
     // Achievement popup decay
     if (this._achPopup) {
       this._achPopup.timer -= dt;
@@ -1803,7 +1808,7 @@ class Game {
           v.occupied = true;
           this._playerVehicle = v;
           this.player.inVehicle = true;
-          this._vehiclesUsed.add(v.id || v._type || 'car');
+          this._vehiclesUsed.add(v.id || v._type || "car");
           window.audio?.vehicle();
           break;
         }
@@ -1817,39 +1822,41 @@ class Game {
     this._sessionSaved = true;
 
     // Only save if player is logged in
-    if (typeof Auth === 'undefined' || !Auth.isLoggedIn()) return;
-    if (typeof API === 'undefined') return;
+    if (typeof Auth === "undefined" || !Auth.isLoggedIn()) return;
+    if (typeof API === "undefined") return;
 
     const payload = {
-      mapId:           this.map.config.id   || 'unknown',
-      characterId:     this.charData.id     || 'gangster',
-      waveReached:     this.wave            || 1,
-      kills:           this.kills           || 0,
-      deaths:          this.player.dead     ? 1 : 0,
-      moneyEarned:     this.money           || 0,
-      playtimeSec:     Math.round(this._surviveTime),
-      campaignLevel:   this._campaignMode   ? (this._campaignLevel || 1) : null,
-      bossKills:       this._achStats?.bossesKilled || 0,
+      mapId: this.map.config.id || "unknown",
+      characterId: this.charData.id || "gangster",
+      waveReached: this.wave || 1,
+      kills: this.kills || 0,
+      deaths: this.player.dead ? 1 : 0,
+      moneyEarned: this.money || 0,
+      playtimeSec: Math.round(this._surviveTime),
+      campaignLevel: this._campaignMode ? this._campaignLevel || 1 : null,
+      bossKills: this._achStats?.bossesKilled || 0,
       mode: {
         survival: !!this.map.config.survival,
         hardcore: !!this._hardcoreMode,
-        blitz:    !!this._blitzMode,
-        siege:    !!this.map.config.siege,
-        zombie:   !!this._zombieMode,
-        arena:    !!this._arenaMode,
+        blitz: !!this._blitzMode,
+        siege: !!this.map.config.siege,
+        zombie: !!this._zombieMode,
+        arena: !!this._arenaMode,
         campaign: !!this._campaignMode,
       },
-      weaponsUsed:      Array.from(this._weaponsUsed),
-      vehiclesUsed:     Array.from(this._vehiclesUsed),
-      grenadesThrown:   this._grenadesThrown,
+      weaponsUsed: Array.from(this._weaponsUsed),
+      vehiclesUsed: Array.from(this._vehiclesUsed),
+      grenadesThrown: this._grenadesThrown,
     };
 
-    API.saveSession(payload).then(result => {
-      // Store result so game-over screen can show XP/level info
-      this._sessionResult = result;
-    }).catch(() => {
-      // Silently fail — game still works offline
-    });
+    API.saveSession(payload)
+      .then((result) => {
+        // Store result so game-over screen can show XP/level info
+        this._sessionResult = result;
+      })
+      .catch(() => {
+        // Silently fail — game still works offline
+      });
   }
 
   _streakMultiplier() {
@@ -3222,11 +3229,11 @@ class Game {
           } else if (isNeonCity && bType === 4) {
             // Arcade - position attendant above prize counter
             npcX = room.roomW / 2;
-            npcY = room.roomH * 0.30;
+            npcY = room.roomH * 0.3;
           } else if (isNeonCity && bType === 11) {
             // Bar - position bartender above service counter
             npcX = room.roomW / 2;
-            npcY = room.roomH * 0.22;
+            npcY = room.roomH * 0.34;
           }
           this._buildingNpcs = [new BuildingNPC(npcX, npcY, bType, isNeonCity)];
         }
@@ -4147,7 +4154,12 @@ class Game {
 
         // ── Divider line ──
         ctx.save();
-        const divGrad = ctx.createLinearGradient(cx - W * 0.45, 0, cx + W * 0.45, 0);
+        const divGrad = ctx.createLinearGradient(
+          cx - W * 0.45,
+          0,
+          cx + W * 0.45,
+          0,
+        );
         divGrad.addColorStop(0, "rgba(255,68,102,0)");
         divGrad.addColorStop(0.5, "rgba(255,68,102,0.9)");
         divGrad.addColorStop(1, "rgba(255,68,102,0)");
@@ -4259,8 +4271,21 @@ class Game {
           ctx.fill();
 
           // Screen glow
-          const screenGlow = ctx.createRadialGradient(gx, gy + 23, 0, gx, gy + 23, 26);
-          screenGlow.addColorStop(0, game.color + Math.floor(70 * screenFlicker).toString(16).padStart(2, '0'));
+          const screenGlow = ctx.createRadialGradient(
+            gx,
+            gy + 23,
+            0,
+            gx,
+            gy + 23,
+            26,
+          );
+          screenGlow.addColorStop(
+            0,
+            game.color +
+              Math.floor(70 * screenFlicker)
+                .toString(16)
+                .padStart(2, "0"),
+          );
           screenGlow.addColorStop(1, "rgba(0,0,0,0)");
           ctx.fillStyle = screenGlow;
           ctx.fillRect(gx - 22, gy + 6, 44, 34);
@@ -4340,7 +4365,14 @@ class Game {
           ctx.shadowBlur = 0;
 
           // Inner glow (LARGER)
-          const innerGlow = ctx.createRadialGradient(px, py + 30, 0, px, py + 30, 35);
+          const innerGlow = ctx.createRadialGradient(
+            px,
+            py + 30,
+            0,
+            px,
+            py + 30,
+            35,
+          );
           innerGlow.addColorStop(0, item.color + "35");
           innerGlow.addColorStop(1, "rgba(0,0,0,0)");
           ctx.fillStyle = innerGlow;
@@ -4372,10 +4404,15 @@ class Game {
         // Floating particles (MORE)
         for (let pi = 0; pi < 15; pi++) {
           const px = cx - W * 0.45 + ((t * 12 + pi * 65) % (W * 0.9));
-          const py = topY + 25 + Math.sin(t * 0.6 + pi * 0.7) * 50 + (pi * 22) % 100;
+          const py =
+            topY + 25 + Math.sin(t * 0.6 + pi * 0.7) * 50 + ((pi * 22) % 100);
           const alpha = Math.sin(t * 2 + pi) * 0.35 + 0.45;
           const colors = [CYAN, PINK, GOLD, GREEN];
-          ctx.fillStyle = colors[pi % 4].slice(0, 7) + Math.floor(alpha * 255).toString(16).padStart(2, '0');
+          ctx.fillStyle =
+            colors[pi % 4].slice(0, 7) +
+            Math.floor(alpha * 255)
+              .toString(16)
+              .padStart(2, "0");
           ctx.beginPath();
           ctx.arc(px, py, 2, 0, Math.PI * 2);
           ctx.fill();
@@ -4397,7 +4434,12 @@ class Game {
         ctx.fillRect(standX + 5, standY + standH + 3, standW, 6);
 
         // Counter body
-        const counterGrad = ctx.createLinearGradient(standX, standY, standX, standY + standH);
+        const counterGrad = ctx.createLinearGradient(
+          standX,
+          standY,
+          standX,
+          standY + standH,
+        );
         counterGrad.addColorStop(0, "#1a1a2e");
         counterGrad.addColorStop(1, "#0a0a14");
         ctx.fillStyle = counterGrad;
@@ -4447,7 +4489,6 @@ class Game {
         ctx.shadowBlur = 0;
 
         ctx.restore();
-
       } else {
         // ── Default Arcade (other maps) ────────────────────────
         const aColors = [
@@ -5044,71 +5085,79 @@ class Game {
         ctx.fillStyle = "#fff";
         ctx.shadowColor = PURPLE;
         ctx.shadowBlur = 22;
-        ctx.fillText("🍸 NEON LOUNGE 🍸", cx, topY - 5);
+        ctx.fillText("🍸 NEON LOUNGE 🍸", cx, topY - 50);
         ctx.shadowBlur = 0;
         ctx.restore();
 
         // ── Divider line ──
-        ctx.save();
-        const divGrad = ctx.createLinearGradient(cx - W * 0.42, 0, cx + W * 0.42, 0);
-        divGrad.addColorStop(0, "rgba(204,136,255,0)");
-        divGrad.addColorStop(0.5, "rgba(204,136,255,0.9)");
-        divGrad.addColorStop(1, "rgba(204,136,255,0)");
-        ctx.strokeStyle = divGrad;
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(cx - W * 0.42, topY + 8);
-        ctx.lineTo(cx + W * 0.42, topY + 8);
-        ctx.stroke();
-        ctx.restore();
+        // ctx.save();
+        // const divGrad = ctx.createLinearGradient(cx - W * 0.42, 0, cx + W * 0.42, 0);
+        // divGrad.addColorStop(0, "rgba(204,136,255,0)");
+        // divGrad.addColorStop(0.5, "rgba(204,136,255,0.9)");
+        // divGrad.addColorStop(1, "rgba(204,136,255,0)");
+        // ctx.strokeStyle = divGrad;
+        // ctx.lineWidth = 2;
+        // ctx.beginPath();
+        // ctx.moveTo(cx - W * 0.42, topY + 8);
+        // ctx.lineTo(cx + W * 0.42, topY + 8);
+        // ctx.stroke();
+        // ctx.restore();
 
         // ═══ BACK BAR SHELF (with bottles) ═══
-        ctx.save();
-        // Shelf
-        ctx.fillStyle = "#1a1218";
-        ctx.strokeStyle = PURPLE;
-        ctx.lineWidth = 2;
-        rr(cx - W * 0.38, topY + 12, W * 0.76, 8, 2);
-        ctx.fill();
-        ctx.stroke();
-        ctx.restore();
+        // ctx.save();
+        // // Shelf
+        // ctx.fillStyle = "#1a1218";
+        // ctx.strokeStyle = PURPLE;
+        // ctx.lineWidth = 2;
+        // rr(cx - W * 0.38, topY + 12, W * 0.76, 8, 2);
+        // ctx.fill();
+        // ctx.stroke();
+        // ctx.restore();
 
-        // ═══ DRINK BOTTLES (Natural shapes) ═══
+        // ═══ DRINK BOTTLES (Vibrant & Colorful) ═══
         const drinks = [
-          { type: "wine", color: "#8B0030", label: "🍷" },
-          { type: "whiskey", color: "#CD853F", label: "🥃" },
-          { type: "vodka", color: "#E0E8FF", label: "🍸" },
-          { type: "cocktail", color: CYAN, label: "🍹" },
-          { type: "beer", color: "#DAA520", label: "🍺" },
-          { type: "champagne", color: "#F5F5DC", label: "🍾" },
+          { label: "🍷", glow: "#FF2266" },
+          { label: "🥃", glow: "#FFAA44" },
+          { label: "🍸", glow: CYAN },
+          { label: "🍹", glow: "#FF66AA" },
+          { label: "🍺", glow: GOLD },
+          { label: "🍾", glow: "#88FF88" },
         ];
 
         for (let di = 0; di < drinks.length; di++) {
           const dx = cx - W * 0.32 + di * (W * 0.13);
-          const dy = topY + 8;
+          const dy = topY + 12;
           const drink = drinks[di];
+          const pulse = Math.sin(t * 3 + di) * 0.3 + 0.7;
 
           ctx.save();
-          ctx.font = "22px serif";
+          // Glow background
+          ctx.fillStyle = drink.glow + "40";
+          ctx.beginPath();
+          ctx.arc(dx, dy - 8, 18, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Drink emoji (larger)
+          ctx.font = "28px serif";
           ctx.textAlign = "center";
-          ctx.shadowColor = PURPLE;
-          ctx.shadowBlur = 8;
+          ctx.shadowColor = drink.glow;
+          ctx.shadowBlur = 15 * pulse;
           ctx.fillText(drink.label, dx, dy);
           ctx.shadowBlur = 0;
           ctx.restore();
         }
 
-        // ═══ MAIN BAR COUNTER ═══
+        // ═══ MAIN BAR COUNTER (lowered further) ═══
         ctx.save();
         const barPulse = Math.sin(t * 2) * 0.3 + 0.7;
 
         // Bar counter body (wooden look with neon trim)
-        const barGrad = ctx.createLinearGradient(0, topY + 22, 0, topY + 55);
+        const barGrad = ctx.createLinearGradient(0, topY + 60, 0, topY + 95);
         barGrad.addColorStop(0, "#2a1a12");
         barGrad.addColorStop(0.5, "#1a100a");
         barGrad.addColorStop(1, "#0a0805");
         ctx.fillStyle = barGrad;
-        rr(cx - W * 0.42, topY + 22, W * 0.84, 35, 6);
+        rr(cx - W * 0.42, topY + 60, W * 0.84, 35, 6);
         ctx.fill();
 
         // Bar neon edge
@@ -5116,26 +5165,26 @@ class Game {
         ctx.lineWidth = 3;
         ctx.shadowColor = CYAN;
         ctx.shadowBlur = 15 * barPulse;
-        rr(cx - W * 0.42, topY + 22, W * 0.84, 35, 6);
+        rr(cx - W * 0.42, topY + 60, W * 0.84, 35, 6);
         ctx.stroke();
         ctx.shadowBlur = 0;
 
         // Bar top surface highlight
         ctx.fillStyle = "rgba(68,238,255,0.1)";
-        ctx.fillRect(cx - W * 0.40, topY + 24, W * 0.80, 6);
+        ctx.fillRect(cx - W * 0.4, topY + 62, W * 0.8, 6);
         ctx.restore();
 
-        // ═══ BAR STOOLS (Realistic) ═══
+        // ═══ BAR STOOLS (Realistic - lowered further) ═══
         for (let si = 0; si < 5; si++) {
           const sx = cx - W * 0.34 + si * ((W * 0.68) / 4);
-          const sy = topY + 72;
+          const sy = topY + 120;
 
           ctx.save();
           // Stool legs (4 legs)
           ctx.strokeStyle = "#333";
           ctx.lineWidth = 2;
           for (let leg = 0; leg < 4; leg++) {
-            const legAngle = (leg * Math.PI / 2) + Math.PI / 4;
+            const legAngle = (leg * Math.PI) / 2 + Math.PI / 4;
             const legX = sx + Math.cos(legAngle) * 8;
             const legY = sy + 8 + Math.sin(legAngle) * 4;
             ctx.beginPath();
@@ -5182,82 +5231,193 @@ class Game {
           ctx.restore();
         }
 
-        // ═══ PATRONS SITTING AT BAR ═══
-        // Patron 1 (on stool 1)
+        // ═══ PATRONS SITTING AT BAR (with facial features) ═══
+        // Patron 1 (on stool 1) - Male
         ctx.save();
         const p1x = cx - W * 0.34 + 1 * ((W * 0.68) / 4);
-        const p1y = topY + 58;
+        const p1y = topY + 103;
 
         // Body
-        ctx.fillStyle = "#2244AA";
-        rr(p1x - 8, p1y - 18, 16, 20, 4);
+        ctx.fillStyle = "#2255BB";
+        rr(p1x - 10, p1y - 20, 20, 24, 5);
+        ctx.fill();
+        // Shirt collar
+        ctx.fillStyle = "#1144AA";
+        ctx.beginPath();
+        ctx.moveTo(p1x - 5, p1y - 20);
+        ctx.lineTo(p1x, p1y - 15);
+        ctx.lineTo(p1x + 5, p1y - 20);
         ctx.fill();
 
-        // Head
+        // Neck
         ctx.fillStyle = "#DDBB99";
+        ctx.fillRect(p1x - 3, p1y - 24, 6, 6);
+
+        // Head
+        ctx.fillStyle = "#EECCA8";
         ctx.beginPath();
-        ctx.arc(p1x, p1y - 26, 8, 0, Math.PI * 2);
+        ctx.arc(p1x, p1y - 32, 10, 0, Math.PI * 2);
         ctx.fill();
 
         // Hair
         ctx.fillStyle = "#332211";
         ctx.beginPath();
-        ctx.arc(p1x, p1y - 30, 7, Math.PI, 0);
+        ctx.ellipse(p1x, p1y - 38, 9, 6, 0, 0, Math.PI * 2);
         ctx.fill();
+        ctx.fillRect(p1x - 9, p1y - 36, 18, 4);
+
+        // Eyes
+        ctx.fillStyle = "#fff";
+        ctx.beginPath();
+        ctx.ellipse(p1x - 4, p1y - 33, 3, 2, 0, 0, Math.PI * 2);
+        ctx.ellipse(p1x + 4, p1y - 33, 3, 2, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#2244AA";
+        ctx.beginPath();
+        ctx.arc(p1x - 4, p1y - 33, 1.5, 0, Math.PI * 2);
+        ctx.arc(p1x + 4, p1y - 33, 1.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Eyebrows
+        ctx.strokeStyle = "#332211";
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(p1x - 6, p1y - 36);
+        ctx.lineTo(p1x - 2, p1y - 37);
+        ctx.moveTo(p1x + 2, p1y - 37);
+        ctx.lineTo(p1x + 6, p1y - 36);
+        ctx.stroke();
+
+        // Nose
+        ctx.fillStyle = "#DDAA88";
+        ctx.beginPath();
+        ctx.moveTo(p1x, p1y - 32);
+        ctx.lineTo(p1x - 2, p1y - 28);
+        ctx.lineTo(p1x + 2, p1y - 28);
+        ctx.fill();
+
+        // Smile
+        ctx.strokeStyle = "#AA6644";
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(p1x, p1y - 26, 4, 0.2, Math.PI - 0.2);
+        ctx.stroke();
 
         // Arm holding drink
-        ctx.fillStyle = "#2244AA";
-        ctx.fillRect(p1x + 6, p1y - 14, 12, 5);
-        ctx.fillStyle = "#DDBB99";
+        ctx.fillStyle = "#2255BB";
+        ctx.fillRect(p1x + 8, p1y - 16, 14, 6);
+        ctx.fillStyle = "#EECCA8";
         ctx.beginPath();
-        ctx.arc(p1x + 18, p1y - 12, 4, 0, Math.PI * 2);
+        ctx.arc(p1x + 22, p1y - 13, 5, 0, Math.PI * 2);
         ctx.fill();
 
-        // Drink in hand
-        ctx.font = "14px serif";
-        ctx.fillText("🍺", p1x + 22, p1y - 6);
+        // Drink in hand (with glow)
+        ctx.font = "18px serif";
+        ctx.shadowColor = GOLD;
+        ctx.shadowBlur = 10;
+        ctx.fillText("🍺", p1x + 28, p1y - 6);
+        ctx.shadowBlur = 0;
         ctx.restore();
 
-        // Patron 2 (on stool 3)
+        // Patron 2 (on stool 3) - Female
         ctx.save();
         const p2x = cx - W * 0.34 + 3 * ((W * 0.68) / 4);
-        const p2y = topY + 58;
+        const p2y = topY + 103;
 
-        // Body
-        ctx.fillStyle = "#AA2266";
-        rr(p2x - 8, p2y - 18, 16, 20, 4);
+        // Body (dress)
+        ctx.fillStyle = "#CC2266";
+        rr(p2x - 10, p2y - 20, 20, 24, 5);
         ctx.fill();
+        // Dress neckline
+        ctx.fillStyle = "#EECCA8";
+        ctx.beginPath();
+        ctx.ellipse(p2x, p2y - 20, 6, 3, 0, 0, Math.PI);
+        ctx.fill();
+
+        // Neck
+        ctx.fillStyle = "#EECCA8";
+        ctx.fillRect(p2x - 3, p2y - 24, 6, 5);
 
         // Head
-        ctx.fillStyle = "#CCAA88";
+        ctx.fillStyle = "#FFDDBB";
         ctx.beginPath();
-        ctx.arc(p2x, p2y - 26, 8, 0, Math.PI * 2);
+        ctx.arc(p2x, p2y - 32, 10, 0, Math.PI * 2);
         ctx.fill();
 
-        // Hair (longer)
-        ctx.fillStyle = "#884422";
+        // Hair (long flowing)
+        ctx.fillStyle = "#AA5522";
         ctx.beginPath();
-        ctx.ellipse(p2x, p2y - 28, 9, 10, 0, Math.PI * 0.8, Math.PI * 0.2, true);
+        ctx.ellipse(p2x, p2y - 36, 12, 8, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillRect(p2x - 11, p2y - 34, 6, 20);
+        ctx.fillRect(p2x + 5, p2y - 34, 6, 20);
+
+        // Eyes (with eyelashes)
+        ctx.fillStyle = "#fff";
+        ctx.beginPath();
+        ctx.ellipse(p2x - 4, p2y - 33, 3, 2.5, 0, 0, Math.PI * 2);
+        ctx.ellipse(p2x + 4, p2y - 33, 3, 2.5, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#228844";
+        ctx.beginPath();
+        ctx.arc(p2x - 4, p2y - 33, 1.5, 0, Math.PI * 2);
+        ctx.arc(p2x + 4, p2y - 33, 1.5, 0, Math.PI * 2);
+        ctx.fill();
+        // Eyelashes
+        ctx.strokeStyle = "#000";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(p2x - 6, p2y - 35);
+        ctx.lineTo(p2x - 7, p2y - 37);
+        ctx.moveTo(p2x + 6, p2y - 35);
+        ctx.lineTo(p2x + 7, p2y - 37);
+        ctx.stroke();
+
+        // Eyebrows (thin)
+        ctx.strokeStyle = "#AA5522";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.arc(p2x - 4, p2y - 38, 4, Math.PI * 1.2, Math.PI * 1.8);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(p2x + 4, p2y - 38, 4, Math.PI * 1.2, Math.PI * 1.8);
+        ctx.stroke();
+
+        // Nose
+        ctx.fillStyle = "#EEBB99";
+        ctx.beginPath();
+        ctx.moveTo(p2x, p2y - 32);
+        ctx.lineTo(p2x - 1.5, p2y - 28);
+        ctx.lineTo(p2x + 1.5, p2y - 28);
+        ctx.fill();
+
+        // Lips (with lipstick)
+        ctx.fillStyle = "#EE4466";
+        ctx.beginPath();
+        ctx.ellipse(p2x, p2y - 25, 4, 2, 0, 0, Math.PI * 2);
         ctx.fill();
 
         // Arm holding drink
-        ctx.fillStyle = "#AA2266";
-        ctx.fillRect(p2x - 18, p2y - 14, 12, 5);
-        ctx.fillStyle = "#CCAA88";
+        ctx.fillStyle = "#CC2266";
+        ctx.fillRect(p2x - 22, p2y - 16, 14, 6);
+        ctx.fillStyle = "#FFDDBB";
         ctx.beginPath();
-        ctx.arc(p2x - 18, p2y - 12, 4, 0, Math.PI * 2);
+        ctx.arc(p2x - 22, p2y - 13, 5, 0, Math.PI * 2);
         ctx.fill();
 
-        // Drink in hand
-        ctx.font = "14px serif";
-        ctx.fillText("🍹", p2x - 26, p2y - 6);
+        // Drink in hand (with glow)
+        ctx.font = "18px serif";
+        ctx.shadowColor = PINK;
+        ctx.shadowBlur = 10;
+        ctx.fillText("🍹", p2x - 32, p2y - 6);
+        ctx.shadowBlur = 0;
         ctx.restore();
 
-        // ═══ SERVICE COUNTER (for bartender) ═══
+        // ═══ SERVICE COUNTER (for bartender - lowered further) ═══
         ctx.save();
         const counterPulse = Math.sin(t * 2.5) * 0.3 + 0.7;
         const svcX = cx - 60;
-        const svcY = topY + 100;
+        const svcY = topY + 165;
         const svcW = 120;
         const svcH = 32;
 
@@ -5339,7 +5499,12 @@ class Game {
         ctx.shadowBlur = 0;
 
         // Felt surface
-        const feltGrad = ctx.createLinearGradient(tableX, tableY, tableX + tableW, tableY + tableH);
+        const feltGrad = ctx.createLinearGradient(
+          tableX,
+          tableY,
+          tableX + tableW,
+          tableY + tableH,
+        );
         feltGrad.addColorStop(0, "#0d4422");
         feltGrad.addColorStop(0.5, "#0f5528");
         feltGrad.addColorStop(1, "#0d4422");
@@ -5374,18 +5539,28 @@ class Game {
 
         // Triangle formation (5 rows: 1-2-3-4-5 = 15 balls)
         const ballColors2 = [
-          GOLD,           // Row 1: 1 ball
-          PINK, CYAN,     // Row 2: 2 balls
-          GREEN, "#111", ORANGE,  // Row 3: 3 balls (black 8 in center)
-          PURPLE, "#FF6666", "#6666FF", GOLD, // Row 4: 4 balls
-          PINK, CYAN, GREEN, ORANGE, PURPLE   // Row 5: 5 balls
+          GOLD, // Row 1: 1 ball
+          PINK,
+          CYAN, // Row 2: 2 balls
+          GREEN,
+          "#111",
+          ORANGE, // Row 3: 3 balls (black 8 in center)
+          PURPLE,
+          "#FF6666",
+          "#6666FF",
+          GOLD, // Row 4: 4 balls
+          PINK,
+          CYAN,
+          GREEN,
+          ORANGE,
+          PURPLE, // Row 5: 5 balls
         ];
 
         let ballIndex = 0;
         for (let row = 0; row < 5; row++) {
           const ballsInRow = row + 1;
           const rowX = triangleX + row * ballSpacing * 0.9;
-          const rowStartY = triangleY - (ballsInRow - 1) * ballSpacing / 2;
+          const rowStartY = triangleY - ((ballsInRow - 1) * ballSpacing) / 2;
 
           for (let b = 0; b < ballsInRow; b++) {
             const bx = rowX;
@@ -5399,7 +5574,14 @@ class Game {
 
             // Ball
             const ballCol = ballColors2[ballIndex] || GOLD;
-            const ballGrad = ctx.createRadialGradient(bx - 2, by - 2, 0, bx, by, ballRadius);
+            const ballGrad = ctx.createRadialGradient(
+              bx - 2,
+              by - 2,
+              0,
+              bx,
+              by,
+              ballRadius,
+            );
             ballGrad.addColorStop(0, "#fff");
             ballGrad.addColorStop(0.3, ballCol);
             ballGrad.addColorStop(1, ballCol === "#111" ? "#000" : ballCol);
@@ -5425,7 +5607,14 @@ class Game {
         ctx.beginPath();
         ctx.arc(cueBallX + 2, cueBallY + 2, ballRadius, 0, Math.PI * 2);
         ctx.fill();
-        const cueGrad = ctx.createRadialGradient(cueBallX - 2, cueBallY - 2, 0, cueBallX, cueBallY, ballRadius);
+        const cueGrad = ctx.createRadialGradient(
+          cueBallX - 2,
+          cueBallY - 2,
+          0,
+          cueBallX,
+          cueBallY,
+          ballRadius,
+        );
         cueGrad.addColorStop(0, "#fff");
         cueGrad.addColorStop(0.5, "#f8f8ff");
         cueGrad.addColorStop(1, "#e0e0e8");
@@ -5436,8 +5625,10 @@ class Game {
 
         ctx.restore();
 
-        // ═══ CYBER JUKEBOX ═══
+        // ═══ CYBER JUKEBOX (top right corner) ═══
         ctx.save();
+        const jukeX = cx + W * 0.38;
+        const jukeY = topY - 35;
 
         // Jukebox body
         ctx.fillStyle = "#0a0812";
@@ -5445,14 +5636,14 @@ class Game {
         ctx.lineWidth = 3;
         ctx.shadowColor = PINK;
         ctx.shadowBlur = 15;
-        rr(cx + W * 0.32, topY + 20, 50, 75, 8);
+        rr(jukeX, jukeY, 50, 75, 8);
         ctx.fill();
         ctx.stroke();
         ctx.shadowBlur = 0;
 
         // Jukebox screen
         ctx.fillStyle = "#050508";
-        rr(cx + W * 0.32 + 6, topY + 28, 38, 28, 4);
+        rr(jukeX + 6, jukeY + 8, 38, 28, 4);
         ctx.fill();
 
         // Animated music bars
@@ -5462,19 +5653,19 @@ class Game {
           ctx.fillStyle = mbColor;
           ctx.shadowColor = mbColor;
           ctx.shadowBlur = 6;
-          ctx.fillRect(cx + W * 0.32 + 10 + mb * 7, topY + 48 - mbHeight, 5, mbHeight);
+          ctx.fillRect(jukeX + 10 + mb * 7, jukeY + 28 - mbHeight, 5, mbHeight);
         }
         ctx.shadowBlur = 0;
 
         // Speaker grille
         ctx.fillStyle = "#1a1a25";
-        rr(cx + W * 0.32 + 8, topY + 58, 34, 30, 3);
+        rr(jukeX + 8, jukeY + 38, 34, 30, 3);
         ctx.fill();
         for (let sg = 0; sg < 4; sg++) {
-          ctx.strokeStyle = `rgba(204,136,255,${0.3 + jukePulse * 0.3})`;
+          ctx.strokeStyle = `rgba(204,136,255,${0.3 + Math.sin(t * 4) * 0.3})`;
           ctx.lineWidth = 1;
           ctx.beginPath();
-          ctx.arc(cx + W * 0.32 + 25, topY + 73, 4 + sg * 4, 0, Math.PI * 2);
+          ctx.arc(jukeX + 25, jukeY + 53, 4 + sg * 4, 0, Math.PI * 2);
           ctx.stroke();
         }
 
@@ -5484,7 +5675,7 @@ class Game {
         ctx.shadowColor = PINK;
         ctx.shadowBlur = 8;
         ctx.textAlign = "center";
-        ctx.fillText("♫ JUKEBOX", cx + W * 0.32 + 25, topY + 100);
+        ctx.fillText("♫ JUKEBOX", jukeX + 25, jukeY + 80);
         ctx.shadowBlur = 0;
         ctx.restore();
 
@@ -5492,16 +5683,20 @@ class Game {
         ctx.save();
         for (let pi = 0; pi < 12; pi++) {
           const px = cx - W * 0.4 + ((t * 10 + pi * 70) % (W * 0.8));
-          const py = topY + 30 + Math.sin(t * 0.6 + pi * 0.7) * 50 + (pi * 20) % 80;
+          const py =
+            topY + 30 + Math.sin(t * 0.6 + pi * 0.7) * 50 + ((pi * 20) % 80);
           const alpha = Math.sin(t * 2 + pi) * 0.3 + 0.4;
           const colors = [CYAN, PINK, PURPLE, GOLD];
-          ctx.fillStyle = colors[pi % 4].slice(0, 7) + Math.floor(alpha * 255).toString(16).padStart(2, '0');
+          ctx.fillStyle =
+            colors[pi % 4].slice(0, 7) +
+            Math.floor(alpha * 255)
+              .toString(16)
+              .padStart(2, "0");
           ctx.beginPath();
           ctx.arc(px, py, 2, 0, Math.PI * 2);
           ctx.fill();
         }
         ctx.restore();
-
       } else {
         // ── Default Bar (other maps) ───────────────────
         ctx.fillStyle = "#2a1508";
@@ -5530,7 +5725,13 @@ class Game {
           ctx.stroke();
         }
         // Bottles behind bar
-        const btColors = ["#884422", "#225588", "#226622", "#AA8822", "#882244"];
+        const btColors = [
+          "#884422",
+          "#225588",
+          "#226622",
+          "#AA8822",
+          "#882244",
+        ];
         for (let bi = 0; bi < 7; bi++) {
           const bx3 = cx - W * 0.38 + bi * ((W * 0.76) / 6);
           ctx.fillStyle = btColors[bi % btColors.length];
@@ -5570,7 +5771,13 @@ class Game {
           ctx.fill();
         }
         // Balls
-        const bColors2 = ["#FFDD00", "#FF3300", "#0033FF", "#FF6600", "#880088"];
+        const bColors2 = [
+          "#FFDD00",
+          "#FF3300",
+          "#0033FF",
+          "#FF6600",
+          "#880088",
+        ];
         for (let bi = 0; bi < 5; bi++) {
           ctx.fillStyle = bColors2[bi];
           ctx.shadowColor = bColors2[bi];
