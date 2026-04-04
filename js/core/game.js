@@ -3133,9 +3133,18 @@ class Game {
           const bType =
             typeof room._buildingType === "number" ? room._buildingType : 0;
           const isNeonCity = this.map?.config?.id === "neon_city";
-          // Pawnshop (type 12) - position vendor above counter line
-          const npcX = bType === 12 ? room.roomW / 2 : room.entryX + 60;
-          const npcY = bType === 12 ? room.roomH * 0.48 : room.entryY - 110;
+          // Special positioning for Neon City buildings
+          let npcX = room.entryX + 60;
+          let npcY = room.entryY - 110;
+          if (isNeonCity && bType === 12) {
+            // Pawnshop - position vendor above counter
+            npcX = room.roomW / 2;
+            npcY = room.roomH * 0.38;
+          } else if (isNeonCity && bType === 4) {
+            // Arcade - position attendant between slot machines and arcade cabinets
+            npcX = room.roomW / 2;
+            npcY = room.roomH * 0.26;
+          }
           this._buildingNpcs = [new BuildingNPC(npcX, npcY, bType, isNeonCity)];
         }
         return;
@@ -4028,70 +4037,400 @@ class Game {
       ctx.fillText("CHECKOUT", cx, midY + 54);
     } else if (type === 4) {
       // ARCADE
-      // ── 6 arcade cabinets ────────────────────────
-      const aColors = [
-        "#FF0044",
-        "#00AAFF",
-        "#00FF88",
-        "#FFAA00",
-        "#AA00FF",
-        "#FF6600",
-      ];
-      const aPos = [
-        [cx - W * 0.36, topY + 6],
-        [cx - W * 0.14, topY + 6],
-        [cx + W * 0.1, topY + 6],
-        [cx - W * 0.28, midY - 4],
-        [cx - W * 0.02, midY - 4],
-        [cx + W * 0.24, midY - 4],
-      ];
-      for (let i = 0; i < aPos.length; i++) {
-        const [ax, ay] = aPos[i],
-          ac = aColors[i];
-        ctx.fillStyle = "#1a1a2a";
-        ctx.strokeStyle = ac;
-        ctx.lineWidth = 1.5;
-        rr(ax - 17, ay, 34, 46, 3);
-        ctx.fill();
-        ctx.stroke();
-        ctx.fillStyle = "#000820";
-        ctx.fillRect(ax - 13, ay + 4, 26, 20);
-        ctx.fillStyle = ac + "44";
-        ctx.fillRect(ax - 13, ay + 4, 26, 20);
-        ctx.shadowColor = ac;
-        ctx.shadowBlur = 8;
-        ctx.fillStyle = ac;
-        ctx.fillRect(ax - 5, ay + 8, 10, 7);
-        ctx.fillRect(ax - 7, ay + 10, 14, 4);
+      const isNeonCityArcade = this.map?.config?.id === "neon_city";
+
+      if (isNeonCityArcade) {
+        // ═══ NEON CITY CYBER ARCADE (ENLARGED) ═══
+        const t = performance.now() / 1000;
+
+        // Neon City colors
+        const CYAN = "#44EEFF";
+        const PINK = "#FF4466";
+        const GREEN = "#44FF88";
+        const PURPLE = "#CC88FF";
+        const GOLD = "#FFDD44";
+        const ORANGE = "#FF8844";
+
+        // ── Title Header (LARGER) ──
+        ctx.save();
+        ctx.font = "bold 18px Orbitron, monospace";
+        ctx.textAlign = "center";
+        ctx.fillStyle = "#fff";
+        ctx.shadowColor = PINK;
+        ctx.shadowBlur = 25;
+        ctx.fillText("🎮 CYBER ARCADE 🎮", cx, topY - 2);
         ctx.shadowBlur = 0;
-        ctx.fillStyle = "#2a2a3a";
-        ctx.fillRect(ax - 15, ay + 26, 30, 11);
-        ctx.fillStyle = "#888";
+        ctx.restore();
+
+        // ── Divider line ──
+        ctx.save();
+        const divGrad = ctx.createLinearGradient(cx - W * 0.45, 0, cx + W * 0.45, 0);
+        divGrad.addColorStop(0, "rgba(255,68,102,0)");
+        divGrad.addColorStop(0.5, "rgba(255,68,102,0.9)");
+        divGrad.addColorStop(1, "rgba(255,68,102,0)");
+        ctx.strokeStyle = divGrad;
+        ctx.lineWidth = 3;
         ctx.beginPath();
-        ctx.arc(ax - 4, ay + 31, 4, 0, Math.PI * 2);
-        ctx.fill();
-        const bC = ["#FF3333", "#33FF33", "#3333FF"];
-        for (let bi = 0; bi < 3; bi++) {
-          ctx.fillStyle = bC[bi];
-          ctx.shadowColor = bC[bi];
-          ctx.shadowBlur = 3;
+        ctx.moveTo(cx - W * 0.45, topY + 12);
+        ctx.lineTo(cx + W * 0.45, topY + 12);
+        ctx.stroke();
+        ctx.restore();
+
+        // ═══ ROW 1: SLOT MACHINES (Top) - ENLARGED ═══
+        const slotColors = [PINK, CYAN, GOLD, GREEN];
+        for (let i = 0; i < 4; i++) {
+          const sx = cx - W * 0.36 + i * (W * 0.24);
+          const sy = topY + 28;
+          const col = slotColors[i];
+          const pulse = Math.sin(t * 3 + i) * 0.3 + 0.7;
+
+          // Slot machine body (LARGER)
+          ctx.save();
+          ctx.fillStyle = "rgba(15,18,30,0.95)";
+          ctx.strokeStyle = col;
+          ctx.lineWidth = 3;
+          ctx.shadowColor = col;
+          ctx.shadowBlur = 18 * pulse;
+          rr(sx - 30, sy, 60, 72, 8);
+          ctx.fill();
+          ctx.stroke();
+          ctx.shadowBlur = 0;
+
+          // Top light bar (LARGER)
+          ctx.fillStyle = col;
+          ctx.shadowColor = col;
+          ctx.shadowBlur = 14;
+          rr(sx - 24, sy + 4, 48, 10, 3);
+          ctx.fill();
+          ctx.shadowBlur = 0;
+
+          // Screen area (LARGER)
+          ctx.fillStyle = "#050a15";
+          rr(sx - 22, sy + 18, 44, 30, 4);
+          ctx.fill();
+
+          // 3 spinning reels (LARGER)
+          for (let r = 0; r < 3; r++) {
+            const rx = sx - 16 + r * 15;
+            const reelOffset = (t * 5 + i * 2 + r) % 3;
+            const symbols = ["7️⃣", "🍒", "💎"];
+            ctx.font = "16px serif";
+            ctx.textAlign = "center";
+            ctx.fillText(symbols[Math.floor(reelOffset)], rx + 5, sy + 38);
+          }
+
+          // Jackpot display (LARGER)
+          const jackpot = Math.floor(1000 + Math.sin(t + i) * 500);
+          ctx.font = "bold 9px Orbitron, monospace";
+          ctx.fillStyle = GOLD;
+          ctx.shadowColor = GOLD;
+          ctx.shadowBlur = 8;
+          ctx.fillText(jackpot.toString(), sx, sy + 56);
+          ctx.shadowBlur = 0;
+
+          // Lever (LARGER)
+          ctx.fillStyle = "#444";
+          ctx.fillRect(sx + 24, sy + 20, 6, 35);
+          ctx.fillStyle = col;
+          ctx.shadowColor = col;
+          ctx.shadowBlur = 8;
           ctx.beginPath();
-          ctx.arc(ax + 5 + bi * 4, ay + 31, 2.5, 0, Math.PI * 2);
+          ctx.arc(sx + 27, sy + 18, 7, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.shadowBlur = 0;
+
+          ctx.restore();
+        }
+
+        // ═══ ROW 2: ARCADE CABINETS (Middle) - ENLARGED ═══
+        const cabinetGames = [
+          { emoji: "👾", name: "INVADERS", color: GREEN },
+          { emoji: "🏎️", name: "RACER", color: ORANGE },
+          { emoji: "🥊", name: "FIGHTER", color: PINK },
+          { emoji: "🔫", name: "SHOOTER", color: CYAN },
+        ];
+
+        for (let i = 0; i < 4; i++) {
+          const gx = cx - W * 0.36 + i * (W * 0.24);
+          const gy = midY + 5;
+          const game = cabinetGames[i];
+          const pulse = Math.sin(t * 2.5 + i * 1.2) * 0.3 + 0.7;
+          const screenFlicker = Math.sin(t * 8 + i * 3) * 0.1 + 0.9;
+
+          ctx.save();
+
+          // Cabinet body (LARGER)
+          ctx.fillStyle = "rgba(20,15,35,0.95)";
+          ctx.strokeStyle = game.color;
+          ctx.lineWidth = 3;
+          ctx.shadowColor = game.color;
+          ctx.shadowBlur = 20 * pulse;
+          rr(gx - 28, gy, 56, 68, 7);
+          ctx.fill();
+          ctx.stroke();
+          ctx.shadowBlur = 0;
+
+          // Screen (LARGER)
+          ctx.fillStyle = "#000";
+          rr(gx - 22, gy + 6, 44, 34, 4);
+          ctx.fill();
+
+          // Screen glow
+          const screenGlow = ctx.createRadialGradient(gx, gy + 23, 0, gx, gy + 23, 26);
+          screenGlow.addColorStop(0, game.color + Math.floor(70 * screenFlicker).toString(16).padStart(2, '0'));
+          screenGlow.addColorStop(1, "rgba(0,0,0,0)");
+          ctx.fillStyle = screenGlow;
+          ctx.fillRect(gx - 22, gy + 6, 44, 34);
+
+          // Game icon (LARGER)
+          ctx.font = "28px serif";
+          ctx.textAlign = "center";
+          ctx.shadowColor = game.color;
+          ctx.shadowBlur = 15;
+          ctx.fillText(game.emoji, gx, gy + 32);
+          ctx.shadowBlur = 0;
+
+          // Control panel (LARGER)
+          ctx.fillStyle = "#1a1a25";
+          rr(gx - 22, gy + 44, 44, 18, 3);
+          ctx.fill();
+
+          // Joystick (LARGER)
+          ctx.fillStyle = "#333";
+          ctx.beginPath();
+          ctx.arc(gx - 8, gy + 53, 6, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#666";
+          ctx.beginPath();
+          ctx.arc(gx - 8, gy + 52, 3, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Buttons (LARGER)
+          const btnColors = [PINK, CYAN, GREEN];
+          for (let b = 0; b < 3; b++) {
+            ctx.fillStyle = btnColors[b];
+            ctx.shadowColor = btnColors[b];
+            ctx.shadowBlur = 6;
+            ctx.beginPath();
+            ctx.arc(gx + 6 + b * 9, gy + 53, 4, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          ctx.shadowBlur = 0;
+
+          // Game name (LARGER)
+          ctx.font = "bold 7px Orbitron, monospace";
+          ctx.fillStyle = game.color;
+          ctx.textAlign = "center";
+          ctx.shadowColor = game.color;
+          ctx.shadowBlur = 5;
+          ctx.fillText(game.name, gx, gy + 66);
+          ctx.shadowBlur = 0;
+
+          ctx.restore();
+        }
+
+        // ═══ ROW 3: PRIZE MACHINES & CLAW GAMES - ENLARGED ═══
+        const prizeItems = [
+          { emoji: "🧸", color: PINK },
+          { emoji: "🎁", color: PURPLE },
+          { emoji: "🏆", color: GOLD },
+        ];
+
+        for (let i = 0; i < 3; i++) {
+          const px = cx - W * 0.28 + i * (W * 0.28);
+          const py = midY + 80;
+          const item = prizeItems[i];
+          const pulse = Math.sin(t * 2 + i * 1.5) * 0.25 + 0.75;
+          const floatY = Math.sin(t * 1.5 + i) * 4;
+
+          ctx.save();
+
+          // Glass case (LARGER)
+          ctx.fillStyle = "rgba(10,15,25,0.85)";
+          ctx.strokeStyle = item.color;
+          ctx.lineWidth = 3;
+          ctx.shadowColor = item.color;
+          ctx.shadowBlur = 18 * pulse;
+          rr(px - 35, py, 70, 60, 8);
+          ctx.fill();
+          ctx.stroke();
+          ctx.shadowBlur = 0;
+
+          // Inner glow (LARGER)
+          const innerGlow = ctx.createRadialGradient(px, py + 30, 0, px, py + 30, 35);
+          innerGlow.addColorStop(0, item.color + "35");
+          innerGlow.addColorStop(1, "rgba(0,0,0,0)");
+          ctx.fillStyle = innerGlow;
+          ctx.beginPath();
+          ctx.arc(px, py + 30, 35, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Prize item (LARGER)
+          ctx.font = "38px serif";
+          ctx.textAlign = "center";
+          ctx.shadowColor = item.color;
+          ctx.shadowBlur = 20;
+          ctx.fillText(item.emoji, px, py + 40 + floatY);
+          ctx.shadowBlur = 0;
+
+          // "INSERT COIN" text (LARGER)
+          ctx.font = "bold 7px Orbitron, monospace";
+          ctx.fillStyle = Math.sin(t * 4) > 0 ? GOLD : "#444";
+          ctx.shadowColor = GOLD;
+          ctx.shadowBlur = Math.sin(t * 4) > 0 ? 6 : 0;
+          ctx.fillText("INSERT COIN", px, py + 55);
+          ctx.shadowBlur = 0;
+
+          ctx.restore();
+        }
+
+        // ═══ AMBIENT EFFECTS ═══
+        ctx.save();
+        // Floating particles (MORE)
+        for (let pi = 0; pi < 15; pi++) {
+          const px = cx - W * 0.45 + ((t * 12 + pi * 65) % (W * 0.9));
+          const py = topY + 25 + Math.sin(t * 0.6 + pi * 0.7) * 50 + (pi * 22) % 100;
+          const alpha = Math.sin(t * 2 + pi) * 0.35 + 0.45;
+          const colors = [CYAN, PINK, GOLD, GREEN];
+          ctx.fillStyle = colors[pi % 4].slice(0, 7) + Math.floor(alpha * 255).toString(16).padStart(2, '0');
+          ctx.beginPath();
+          ctx.arc(px, py, 2, 0, Math.PI * 2);
           ctx.fill();
         }
+        ctx.restore();
+
+        // ═══ PRIZE COUNTER / DISPLAY STAND (between slot machines and cabinets) ═══
+        ctx.save();
+        const counterPulse = Math.sin(t * 2.5) * 0.3 + 0.7;
+
+        // Counter base - positioned between slot machines and arcade cabinets (lowered)
+        const standX = cx - 70;
+        const standY = topY + 155;
+        const standW = 140;
+        const standH = 35;
+
+        // Counter shadow
+        ctx.fillStyle = "rgba(0,0,0,0.4)";
+        ctx.fillRect(standX + 5, standY + standH + 3, standW, 6);
+
+        // Counter body
+        const counterGrad = ctx.createLinearGradient(standX, standY, standX, standY + standH);
+        counterGrad.addColorStop(0, "#1a1a2e");
+        counterGrad.addColorStop(1, "#0a0a14");
+        ctx.fillStyle = counterGrad;
+        rr(standX, standY, standW, standH, 8);
+        ctx.fill();
+
+        // Counter border with glow
+        ctx.strokeStyle = PURPLE;
+        ctx.lineWidth = 3;
+        ctx.shadowColor = PURPLE;
+        ctx.shadowBlur = 15 * counterPulse;
+        rr(standX, standY, standW, standH, 8);
+        ctx.stroke();
         ctx.shadowBlur = 0;
+
+        // Top edge glow
+        ctx.strokeStyle = CYAN;
+        ctx.lineWidth = 2;
+        ctx.shadowColor = CYAN;
+        ctx.shadowBlur = 12;
+        ctx.beginPath();
+        ctx.moveTo(standX + 8, standY + 3);
+        ctx.lineTo(standX + standW - 8, standY + 3);
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+
+        // Display items on counter
+        const counterItems = ["🎫", "🎟️", "🏅"];
+        for (let ci = 0; ci < 3; ci++) {
+          const itemX = standX + 30 + ci * 40;
+          const itemFloat = Math.sin(t * 2 + ci) * 2;
+          ctx.font = "20px serif";
+          ctx.textAlign = "center";
+          ctx.shadowColor = GOLD;
+          ctx.shadowBlur = 8;
+          ctx.fillText(counterItems[ci], itemX, standY + 22 + itemFloat);
+        }
+        ctx.shadowBlur = 0;
+
+        // "PRIZES" text
+        ctx.font = "bold 9px Orbitron, monospace";
+        ctx.fillStyle = GOLD;
+        ctx.shadowColor = GOLD;
+        ctx.shadowBlur = 8;
+        ctx.textAlign = "center";
+        ctx.fillText("★ PRIZES ★", cx, standY + standH + 18);
+        ctx.shadowBlur = 0;
+
+        ctx.restore();
+
+      } else {
+        // ── Default Arcade (other maps) ────────────────────────
+        const aColors = [
+          "#FF0044",
+          "#00AAFF",
+          "#00FF88",
+          "#FFAA00",
+          "#AA00FF",
+          "#FF6600",
+        ];
+        const aPos = [
+          [cx - W * 0.36, topY + 6],
+          [cx - W * 0.14, topY + 6],
+          [cx + W * 0.1, topY + 6],
+          [cx - W * 0.28, midY - 4],
+          [cx - W * 0.02, midY - 4],
+          [cx + W * 0.24, midY - 4],
+        ];
+        for (let i = 0; i < aPos.length; i++) {
+          const [ax, ay] = aPos[i],
+            ac = aColors[i];
+          ctx.fillStyle = "#1a1a2a";
+          ctx.strokeStyle = ac;
+          ctx.lineWidth = 1.5;
+          rr(ax - 17, ay, 34, 46, 3);
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#000820";
+          ctx.fillRect(ax - 13, ay + 4, 26, 20);
+          ctx.fillStyle = ac + "44";
+          ctx.fillRect(ax - 13, ay + 4, 26, 20);
+          ctx.shadowColor = ac;
+          ctx.shadowBlur = 8;
+          ctx.fillStyle = ac;
+          ctx.fillRect(ax - 5, ay + 8, 10, 7);
+          ctx.fillRect(ax - 7, ay + 10, 14, 4);
+          ctx.shadowBlur = 0;
+          ctx.fillStyle = "#2a2a3a";
+          ctx.fillRect(ax - 15, ay + 26, 30, 11);
+          ctx.fillStyle = "#888";
+          ctx.beginPath();
+          ctx.arc(ax - 4, ay + 31, 4, 0, Math.PI * 2);
+          ctx.fill();
+          const bC = ["#FF3333", "#33FF33", "#3333FF"];
+          for (let bi = 0; bi < 3; bi++) {
+            ctx.fillStyle = bC[bi];
+            ctx.shadowColor = bC[bi];
+            ctx.shadowBlur = 3;
+            ctx.beginPath();
+            ctx.arc(ax + 5 + bi * 4, ay + 31, 2.5, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          ctx.shadowBlur = 0;
+        }
+        // Prize counter
+        ctx.fillStyle = "#2a1a3a";
+        ctx.strokeStyle = "#AA44FF";
+        ctx.lineWidth = 1.5;
+        rr(cx - 46, midY + 32, 92, 22, 3);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = "#FFEE44";
+        ctx.font = "bold 7px monospace";
+        ctx.textAlign = "center";
+        ctx.fillText("PRIZE COUNTER", cx, midY + 48);
       }
-      // Prize counter
-      ctx.fillStyle = "#2a1a3a";
-      ctx.strokeStyle = "#AA44FF";
-      ctx.lineWidth = 1.5;
-      rr(cx - 46, midY + 32, 92, 22, 3);
-      ctx.fill();
-      ctx.stroke();
-      ctx.fillStyle = "#FFEE44";
-      ctx.font = "bold 7px monospace";
-      ctx.textAlign = "center";
-      ctx.fillText("PRIZE COUNTER", cx, midY + 48);
     } else if (type === 5) {
       // PHARMACY
       // ── Medicine shelves ─────────────────────────
