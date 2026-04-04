@@ -4,7 +4,7 @@
    Session is stored in localStorage under 'nc_session'.
    ═══════════════════════════════════════════════════════════ */
 
-const API_BASE = 'http://localhost:3000';
+const API_BASE = 'https://game-backend-wfmf.onrender.com';
 
 const Auth = (() => {
 
