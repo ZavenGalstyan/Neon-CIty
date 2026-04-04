@@ -244,6 +244,11 @@ class Game {
     ).toUpperCase();
     this._surviveTime = 0;
     this.player._displayName = this._playerName;
+    // ── Session tracking (for backend save) ───────────────────
+    this._grenadesThrown = 0;
+    this._weaponsUsed    = new Set([this.charData.starterWeapon || this.player.equippedWeaponId || 'pistol']);
+    this._vehiclesUsed   = new Set();
+    this._sessionSaved   = false;
     // ── Ambient Traffic ────────────────────────────────────────
     this._ambientCars = [];
     this._ambientSpawnT = 0;
@@ -417,6 +422,7 @@ class Game {
         ),
       );
       this._grenadeCount--;
+      this._grenadesThrown++;
       window.audio?.grenadeThrow();
       return;
     }
@@ -554,6 +560,8 @@ class Game {
   _update(dt) {
     // Survival timer
     this._surviveTime += dt;
+    // Track current weapon for session save
+    if (this.player.equippedWeaponId) this._weaponsUsed.add(this.player.equippedWeaponId);
     // Achievement popup decay
     if (this._achPopup) {
       this._achPopup.timer -= dt;
@@ -1766,11 +1774,53 @@ class Game {
           v.occupied = true;
           this._playerVehicle = v;
           this.player.inVehicle = true;
+          this._vehiclesUsed.add(v.id || v._type || 'car');
           window.audio?.vehicle();
           break;
         }
       }
     }
+  }
+
+  /* ── Save game result to backend ────────────────────────── */
+  _onGameOver() {
+    if (this._sessionSaved) return;
+    this._sessionSaved = true;
+
+    // Only save if player is logged in
+    if (typeof Auth === 'undefined' || !Auth.isLoggedIn()) return;
+    if (typeof API === 'undefined') return;
+
+    const payload = {
+      mapId:           this.map.config.id   || 'unknown',
+      characterId:     this.charData.id     || 'gangster',
+      waveReached:     this.wave            || 1,
+      kills:           this.kills           || 0,
+      deaths:          this.player.dead     ? 1 : 0,
+      moneyEarned:     this.money           || 0,
+      playtimeSec:     Math.round(this._surviveTime),
+      campaignLevel:   this._campaignMode   ? (this._campaignLevel || 1) : null,
+      bossKills:       this._achStats?.bossesKilled || 0,
+      mode: {
+        survival: !!this.map.config.survival,
+        hardcore: !!this._hardcoreMode,
+        blitz:    !!this._blitzMode,
+        siege:    !!this.map.config.siege,
+        zombie:   !!this._zombieMode,
+        arena:    !!this._arenaMode,
+        campaign: !!this._campaignMode,
+      },
+      weaponsUsed:      Array.from(this._weaponsUsed),
+      vehiclesUsed:     Array.from(this._vehiclesUsed),
+      grenadesThrown:   this._grenadesThrown,
+    };
+
+    API.saveSession(payload).then(result => {
+      // Store result so game-over screen can show XP/level info
+      this._sessionResult = result;
+    }).catch(() => {
+      // Silently fail — game still works offline
+    });
   }
 
   _streakMultiplier() {
@@ -8026,6 +8076,8 @@ class Game {
       }
     }
     if (this.state === "gameover") {
+      // Save session to backend once (first gameover frame)
+      this._onGameOver();
       if (this._towerVictory) {
         this._renderTowerVictory(ctx, W, H);
         // Only respond to OK button click
