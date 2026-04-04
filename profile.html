@@ -89,6 +89,7 @@
   </div>
 
   <script src="js/auth.js"></script>
+  <script src="js/api.js"></script>
   <script src="js/battlepass.js"></script>
   <script>
     /* ── Guard ─────────────────────────────────────────────── */
@@ -104,11 +105,11 @@
 
     /* ── Load profile from API ─────────────────────────────── */
     async function loadProfile() {
-      // Reset error state
       document.getElementById('profileError').hidden = true;
 
       try {
-        const data = await Auth.fetchProfile(session.name);
+        // Use GET /profile/me (token-protected) for own profile — most reliable
+        const data = await API.getProfile();
         renderProfile(data);
       } catch (err) {
         showError(err.message || 'Could not load profile. Is the server running?');

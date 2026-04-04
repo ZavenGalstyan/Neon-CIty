@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NEON CITY — Inventory</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="select-screen shop-page">
+  <div class="bg-grid"></div>
+  <div class="scanlines"></div>
+
+  <!-- ── Navbar ───────────────────────────────────────────── -->
+  <nav class="site-nav">
+    <a href="index.html" class="site-nav__logo">NEON CITY</a>
+    <div id="siteNav" class="site-nav__controls"></div>
+  </nav>
+
+  <!-- ── Page content ─────────────────────────────────────── -->
+  <div class="shop-wrap">
+
+    <header class="shop-header">
+      <div class="shop-title">
+        <span class="shop-title__main">INVENTORY</span>
+        <span class="shop-title__sub">YOUR OWNED ITEMS · EQUIP YOUR LOADOUT</span>
+      </div>
+      <div class="shop-balance" aria-label="Your NEX balance">
+        <span class="shop-balance__icon">⬢</span>
+        <div class="shop-balance__body">
+          <span class="shop-balance__label">NEX BALANCE</span>
+          <span class="shop-balance__value skeleton-text" id="invBalanceEl">000,000</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="shop-error" id="invErrorEl" hidden role="alert">
+      <span class="shop-error__msg" id="invErrorMsg"></span>
+      <button class="shop-error__retry" id="invRetryBtn">RETRY</button>
+    </div>
+
+    <nav class="shop-tabs" role="tablist" aria-label="Inventory categories">
+      <button class="shop-tab active" role="tab" aria-selected="true"  data-tab="weapons">WEAPONS</button>
+      <button class="shop-tab"        role="tab" aria-selected="false" data-tab="upgrades">UPGRADES</button>
+      <button class="shop-tab"        role="tab" aria-selected="false" data-tab="characters">CHARACTERS</button>
+      <button class="shop-tab"        role="tab" aria-selected="false" data-tab="vehicles">VEHICLES</button>
+    </nav>
+
+    <!-- Equip hint banner -->
+    <div class="inv-hint" id="invHint"></div>
+
+    <main class="shop-grid" id="invGridEl" role="list" aria-live="polite"></main>
+
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/api.js"></script>
+  <script>
+    /* ── Guard ─────────────────────────────────────────────── */
+    if (!Auth.isLoggedIn()) window.location.href = 'login.html';
+    Auth.mountNavbar();
+
+    /* ── State ─────────────────────────────────────────────── */
+    const state = {
+      nex: 0,
+      inventory: { weapons: [], upgrades: [], characters: [], vehicles: [] },
+      equippedWeapon: localStorage.getItem('equippedWeapon') || null,
+    };
+
+    let activeTab = 'weapons';
+
+    /* ── DOM refs ───────────────────────────────────────────── */
+    const balanceEl = document.getElementById('invBalanceEl');
+    const errorEl   = document.getElementById('invErrorEl');
+    const errorMsg  = document.getElementById('invErrorMsg');
+    const retryBtn  = document.getElementById('invRetryBtn');
+    const gridEl    = document.getElementById('invGridEl');
+    const hintEl    = document.getElementById('invHint');
+
+    /* ── Tab switching ──────────────────────────────────────── */
+    document.querySelectorAll('.shop-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.shop-tab').forEach(t => {
+          t.classList.remove('active');
+          t.setAttribute('aria-selected', 'false');
+        });
+        tab.classList.add('active');
+        tab.setAttribute('aria-selected', 'true');
+        activeTab = tab.dataset.tab;
+        updateHint();
+        renderTab();
+      });
+    });
+
+    /* ── Hint banner ────────────────────────────────────────── */
+    const HINTS = {
+      weapons:    'Click EQUIP to set your starting weapon for the next game. Pistol is always available.',
+      upgrades:   'Purchased upgrades are automatically applied at the start of every game session.',
+      characters: 'Unlocked characters are selectable in the game lobby. Use the shop to unlock more.',
+      vehicles:   'Owned vehicles are available in-game. Look for them on the map or near spawn.',
+    };
+    function updateHint() {
+      hintEl.textContent = HINTS[activeTab] || '';
+    }
+
+    /* ── Balance display ────────────────────────────────────── */
+    function updateBalanceDisplay() {
+      balanceEl.classList.remove('skeleton-text');
+      balanceEl.textContent = state.nex.toLocaleString();
+    }
+
+    /* ── Load inventory from backend ────────────────────────── */
+    async function loadInventory() {
+      errorEl.hidden = true;
+      try {
+        const data = await API.getShopInventory();
+        state.nex = data.nex ?? data.nexBalance ?? 0;
+        const inv = data.inventory || data;
+        state.inventory.weapons    = inv.weapons    || [];
+        state.inventory.upgrades   = inv.upgrades   || [];
+        state.inventory.characters = inv.characters || inv.unlockedCharacters || [];
+        state.inventory.vehicles   = inv.vehicles   || [];
+
+        /* Cache to localStorage so game.js can read on next game start */
+        localStorage.setItem('nc_inventory', JSON.stringify(state.inventory));
+
+        updateBalanceDisplay();
+        updateHint();
+        renderTab();
+      } catch (err) {
+        showError(err.message || 'Could not load inventory. Is the server running?');
+      }
+    }
+
+    /* ── Error handling ─────────────────────────────────────── */
+    function showError(msg) {
+      errorMsg.textContent = msg;
+      errorEl.hidden = false;
+    }
+
+    retryBtn.addEventListener('click', loadInventory);
+
+    /* ── Render current tab ─────────────────────────────────── */
+    function renderTab() {
+      gridEl.innerHTML = '';
+      switch (activeTab) {
+        case 'weapons':    renderWeapons();    break;
+        case 'upgrades':   renderUpgrades();   break;
+        case 'characters': renderCharacters(); break;
+        case 'vehicles':   renderVehicles();   break;
+      }
+    }
+
+    /* ── WEAPONS tab ────────────────────────────────────────── */
+    function renderWeapons() {
+      const ownedIds = new Set([
+        'pistol',
+        ...state.inventory.weapons.map(w => typeof w === 'string' ? w : w.id),
+      ]);
+
+      const weapons = CONFIG.WEAPONS.filter(w => ownedIds.has(w.id));
+
+      if (weapons.length === 0) {
+        gridEl.appendChild(_emptyState('No weapons purchased yet.', 'Visit the SHOP to buy weapons with NEX.'));
+        return;
+      }
+
+      /* If no weapon is equipped, default to pistol */
+      if (!state.equippedWeapon) {
+        state.equippedWeapon = 'pistol';
+        localStorage.setItem('equippedWeapon', 'pistol');
+      }
+
+      weapons.forEach(w => {
+        const isEquipped = state.equippedWeapon === w.id;
+
+        const stats = w.melee
+          ? [['DMG', w.damage], ['RANGE', w.range + 'px']]
+          : [['DMG', w.damage || 'BASE'], ['FIRE', w.fireRate + 'ms'], ['SPD', w.bulletSpeed]];
+
+        const footerEl = isEquipped
+          ? _badge('✓  EQUIPPED — STARTING WEAPON', 'shop-card__btn--equipped')
+          : _equipBtn(w.id);
+
+        gridEl.appendChild(_buildCard({
+          icon: w.melee ? '⚔' : '◎',
+          iconColor: w.color,
+          name: w.name,
+          desc: w.desc,
+          stats,
+          footerEl,
+          accentColor: isEquipped ? w.color : null,
+        }));
+      });
+    }
+
+    /* ── UPGRADES tab ───────────────────────────────────────── */
+    function renderUpgrades() {
+      const owned = state.inventory.upgrades;
+      if (!owned || owned.length === 0) {
+        gridEl.appendChild(_emptyState('No upgrades purchased yet.', 'Visit the SHOP to buy permanent upgrades with NEX.'));
+        return;
+      }
+
+      /* Tally levels: each duplicate entry counts as +1 level */
+      const levelMap = {};
+      owned.forEach(u => {
+        const id = typeof u === 'string' ? u : (u.id || u);
+        if (id) levelMap[id] = (levelMap[id] || 0) + 1;
+      });
+
+      Object.entries(levelMap).forEach(([id, level]) => {
+        const cfg = CONFIG.UPGRADES.find(u => u.id === id);
+        const name  = cfg?.name  || id.toUpperCase();
+        const desc  = cfg?.desc  || '';
+        const icon  = cfg?.icon  || '◆';
+        const color = cfg?.color || '#44EEFF';
+        const max   = cfg?.maxLevel || '?';
+
+        gridEl.appendChild(_buildCard({
+          icon,
+          iconColor: color,
+          name,
+          desc,
+          stats: [['LEVEL', `${level} / ${max}`], ['STATUS', 'PERMANENT']],
+          footerEl: _badge('⚡ AUTO-APPLIED AT GAME START', 'shop-card__btn--owned'),
+          accentColor: color,
+        }));
+      });
+    }
+
+    /* ── CHARACTERS tab ─────────────────────────────────────── */
+    function renderCharacters() {
+      const ownedIds = new Set(state.inventory.characters.map(c => typeof c === 'string' ? c : c.id));
+
+      /* Show free (non-locked) chars + any explicitly unlocked ones */
+      const visibleChars = CONFIG.CHARACTERS.filter(c => !c.locked || ownedIds.has(c.id));
+
+      if (visibleChars.length === 0) {
+        gridEl.appendChild(_emptyState('No characters unlocked.', 'Visit the SHOP to unlock new characters with NEX.'));
+        return;
+      }
+
+      visibleChars.forEach(c => {
+        const isUnlocked = !c.locked || ownedIds.has(c.id);
+        gridEl.appendChild(_buildCard({
+          icon: '◈',
+          iconColor: c.color,
+          name: c.name,
+          desc: c.lore || '',
+          stats: [
+            ['SPD', c.stats?.speed ?? '—'],
+            ['HP',  c.stats?.health ?? '—'],
+            ['DMG', c.stats?.damage ?? '—'],
+          ],
+          footerEl: isUnlocked
+            ? _badge('◈  SELECT IN LOBBY', 'shop-card__btn--owned')
+            : _badge('LOCKED', 'shop-card__btn--cant-afford'),
+          accentColor: c.color,
+        }));
+      });
+    }
+
+    /* ── VEHICLES tab ───────────────────────────────────────── */
+    function renderVehicles() {
+      const owned = state.inventory.vehicles;
+      if (!owned || owned.length === 0) {
+        gridEl.appendChild(_emptyState('No vehicles purchased yet.', 'Visit the SHOP to buy vehicles with NEX.'));
+        return;
+      }
+
+      owned.forEach(v => {
+        const vid = typeof v === 'string' ? v : v.id;
+        const cfg = CONFIG.CAR_DEALERSHIP?.find(c => c.id === vid);
+        const name = cfg?.name || vid.replace(/_/g, ' ').toUpperCase();
+        const desc = cfg?.desc || 'Your owned vehicle. Available in-game.';
+
+        const stats = [];
+        if (cfg?.hp)    stats.push(['HP',  cfg.hp]);
+        if (cfg?.speed) stats.push(['SPD', cfg.speed]);
+
+        gridEl.appendChild(_buildCard({
+          icon: '⬡',
+          iconColor: '#FF8800',
+          name,
+          desc,
+          stats,
+          footerEl: _badge('⬡  AVAILABLE IN GAME', 'shop-card__btn--owned'),
+          accentColor: '#FF8800',
+        }));
+      });
+    }
+
+    /* ── Equip handler ──────────────────────────────────────── */
+    function _handleEquip(weaponId) {
+      state.equippedWeapon = weaponId;
+      localStorage.setItem('equippedWeapon', weaponId);
+      renderTab();
+      const wName = CONFIG.WEAPONS.find(w => w.id === weaponId)?.name || weaponId;
+      _showToast(`${wName} set as starting weapon!`);
+    }
+
+    /* ── Card builder ───────────────────────────────────────── */
+    function _buildCard({ icon, iconColor, name, desc, stats, footerEl, accentColor }) {
+      const li = document.createElement('li');
+      li.className = 'shop-card';
+      li.setAttribute('role', 'listitem');
+
+      const accent = document.createElement('div');
+      accent.className = 'shop-card__accent';
+      if (accentColor) {
+        accent.style.background = `linear-gradient(90deg, ${accentColor}33, transparent)`;
+        li.style.borderColor = `${accentColor}44`;
+      }
+      li.appendChild(accent);
+
+      const body = document.createElement('div');
+      body.className = 'shop-card__body';
+
+      const iconEl = document.createElement('div');
+      iconEl.className = 'shop-card__icon';
+      iconEl.textContent = icon;
+      iconEl.style.color = iconColor;
+      iconEl.style.textShadow = `0 0 12px ${iconColor}`;
+      body.appendChild(iconEl);
+
+      const nameEl = document.createElement('div');
+      nameEl.className = 'shop-card__name';
+      nameEl.textContent = name;
+      body.appendChild(nameEl);
+
+      if (desc) {
+        const descEl = document.createElement('div');
+        descEl.className = 'shop-card__desc';
+        descEl.textContent = desc;
+        body.appendChild(descEl);
+      }
+
+      if (stats && stats.length) {
+        const statsEl = document.createElement('div');
+        statsEl.className = 'shop-card__stats';
+        stats.forEach(([label, value]) => {
+          const stat = document.createElement('span');
+          stat.className = 'shop-card__stat';
+          stat.textContent = `${label}: ${value}`;
+          statsEl.appendChild(stat);
+        });
+        body.appendChild(statsEl);
+      }
+
+      li.appendChild(body);
+
+      const footer = document.createElement('div');
+      footer.className = 'shop-card__footer';
+      footer.appendChild(footerEl);
+      li.appendChild(footer);
+
+      return li;
+    }
+
+    /* ── Badge (non-clickable label) ────────────────────────── */
+    function _badge(text, modifier) {
+      const span = document.createElement('span');
+      span.className = `shop-card__btn ${modifier}`;
+      span.textContent = text;
+      return span;
+    }
+
+    /* ── EQUIP button ───────────────────────────────────────── */
+    function _equipBtn(id) {
+      const btn = document.createElement('button');
+      btn.className = 'shop-card__btn';
+      btn.textContent = 'EQUIP AS STARTER';
+      btn.addEventListener('click', () => _handleEquip(id));
+      return btn;
+    }
+
+    /* ── Empty state ────────────────────────────────────────── */
+    function _emptyState(title, subtitle) {
+      const div = document.createElement('div');
+      div.className = 'shop-empty';
+      const h = document.createElement('strong');
+      h.textContent = title;
+      const p = document.createElement('small');
+      p.textContent = subtitle;
+      div.appendChild(h);
+      div.appendChild(document.createElement('br'));
+      div.appendChild(p);
+      return div;
+    }
+
+    /* ── Toast notification ─────────────────────────────────── */
+    function _showToast(msg, isErr = false) {
+      document.querySelector('.shop-toast')?.remove();
+      const t = document.createElement('div');
+      t.className = 'shop-toast shop-toast--visible ' + (isErr ? 'shop-toast--err' : 'shop-toast--ok');
+      t.textContent = msg;
+      document.body.appendChild(t);
+      setTimeout(() => {
+        t.classList.remove('shop-toast--visible');
+        setTimeout(() => t.remove(), 400);
+      }, 2500);
+    }
+
+    /* ── Init ───────────────────────────────────────────────── */
+    loadInventory();
+  </script>
+</body>
+</html>

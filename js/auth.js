@@ -69,14 +69,19 @@ const Auth = (() => {
 
   /* ── Profile ───────────────────────────────────────────── */
   /*
-   * Returns the raw profile object as-is:
-   * {
-   *   id, name, nex,
-   *   account:   { level, xp, xpInCurrentLevel, xpNeededForNextLevel, progressPercent },
-   *   battlePass:{ level, xp, xpInCurrentLevel, xpNeededForNextLevel, progressPercent }
-   * }
+   * Returns the raw profile object:
+   * { id, name, nex, account, battlePass, stats, unlockedCharacters }
+   *
+   * When viewing own profile (token present), uses GET /profile/me
+   * so the response always reflects the authenticated user's live data.
+   * For any other name, uses public GET /profile/:name.
    */
   async function fetchProfile(name) {
+    const session = getSession();
+    const isOwn   = session?.name?.toLowerCase() === name?.toLowerCase();
+    if (isOwn && session?.token) {
+      return get('/profile/me');   // protected — always fresh, no name mismatch
+    }
     return get(`/profile/${encodeURIComponent(name)}`);
   }
 
@@ -96,6 +101,18 @@ const Auth = (() => {
   }
 
   function logout() {
+    // Tell backend to invalidate the token, then clear local session.
+    // Fire-and-forget — we navigate away regardless of the response.
+    const session = getSession();
+    if (session?.token) {
+      fetch(`${API_BASE}/auth/logout`, {
+        method:  'POST',
+        headers: {
+          'Content-Type':  'application/json',
+          'Authorization': `Bearer ${session.token}`,
+        },
+      }).catch(() => {}); // silently ignore network errors
+    }
     clearSession();
     window.location.href = 'index.html';
   }
@@ -109,6 +126,16 @@ const Auth = (() => {
     if (session && session.name) {
       // Logged-in state
       nav.innerHTML = `
+        <div class="nav-links">
+          <a href="inventory.html" class="nav-shop-btn nav-inv-btn" title="Inventory">
+            <span class="nav-shop-icon">▦</span>
+            <span class="nav-shop-label">INVENTORY</span>
+          </a>
+          <a href="shop.html" class="nav-shop-btn" title="Item Shop">
+            <span class="nav-shop-icon">⬡</span>
+            <span class="nav-shop-label">SHOP</span>
+          </a>
+        </div>
         <div class="nav-account">
           <a href="profile.html" class="nav-account-btn" title="View profile">
             <span class="nav-account-icon">◈</span>
@@ -123,6 +150,16 @@ const Auth = (() => {
     } else {
       // Guest state
       nav.innerHTML = `
+        <div class="nav-links">
+          <a href="inventory.html" class="nav-shop-btn nav-inv-btn" title="Inventory">
+            <span class="nav-shop-icon">▦</span>
+            <span class="nav-shop-label">INVENTORY</span>
+          </a>
+          <a href="shop.html" class="nav-shop-btn" title="Item Shop">
+            <span class="nav-shop-icon">⬡</span>
+            <span class="nav-shop-label">SHOP</span>
+          </a>
+        </div>
         <div class="nav-account"></div>
         <div class="nav-auth">
           <a href="login.html"    class="nav-btn nav-btn--ghost">LOGIN</a>

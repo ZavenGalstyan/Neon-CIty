@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NEON CITY — Item Shop</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="select-screen shop-page">
+  <div class="bg-grid"></div>
+  <div class="scanlines"></div>
+
+  <!-- ── Navbar ───────────────────────────────────────────── -->
+  <nav class="site-nav">
+    <a href="index.html" class="site-nav__logo">NEON CITY</a>
+    <div id="siteNav" class="site-nav__controls"></div>
+  </nav>
+
+  <!-- ── Page content ─────────────────────────────────────── -->
+  <div class="shop-wrap">
+
+    <!-- Header -->
+    <header class="shop-header">
+      <div class="shop-title">
+        <span class="shop-title__main">ITEM SHOP</span>
+        <span class="shop-title__sub">SPEND YOUR NEX · DOMINATE THE CITY</span>
+      </div>
+
+      <!-- NEX balance (skeleton → real value after fetch) -->
+      <div class="shop-balance" aria-label="Your NEX balance">
+        <span class="shop-balance__icon">⬢</span>
+        <div class="shop-balance__body">
+          <span class="shop-balance__label">YOUR BALANCE</span>
+          <span class="shop-balance__value skeleton-text" id="shopBalanceEl">000,000</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Error banner (hidden by default) -->
+    <div class="shop-error" id="shopErrorEl" hidden role="alert">
+      <span class="shop-error__msg" id="shopErrorMsg"></span>
+      <button class="shop-error__retry" id="shopRetryBtn">RETRY</button>
+    </div>
+
+    <!-- Tabs -->
+    <nav class="shop-tabs" role="tablist" aria-label="Shop categories">
+      <button class="shop-tab active" role="tab" aria-selected="true"  data-tab="characters">CHARACTERS</button>
+      <button class="shop-tab"        role="tab" aria-selected="false" data-tab="weapons">WEAPONS</button>
+      <button class="shop-tab"        role="tab" aria-selected="false" data-tab="upgrades">UPGRADES</button>
+      <button class="shop-tab"        role="tab" aria-selected="false" data-tab="vehicles">VEHICLES</button>
+    </nav>
+
+    <!-- Item grid -->
+    <main class="shop-grid" id="shopGridEl" role="list" aria-live="polite"></main>
+
+  </div><!-- /.shop-wrap -->
+
+  <script src="js/config.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/api.js"></script>
+  <script>
+  'use strict';
+
+  Auth.mountNavbar();
+
+  /* ════════════════════════════════════════════════════════════
+     CATALOG — built from CONFIG, prices patched from server
+  ════════════════════════════════════════════════════════════ */
+
+  const CHAR_ICONS = {
+    timebreaker:'⏱', ai_avatar:'🤖', overlord:'👑', electric_eel:'⚡',
+    shadow_lord:'🌑', plasma_titan:'💥', quantum_ghost:'👻', omega_prime:'🔱',
+  };
+
+  const WEAPON_ICON = w =>
+    w.melee              ? '🗡️' :
+    w.special === 'fire'    ? '🔥' :
+    w.special === 'rocket'  ? '🚀' :
+    w.special === 'plasma'  ? '💜' :
+    w.experimental          ? '🧪' : '🔫';
+
+  /* Build display catalog from CONFIG (icons, colors, stats).
+     Prices start from CONFIG and get overwritten by server catalog. */
+  const CATALOG = {
+    characters: CONFIG.CHARACTERS
+      .filter(c => c.locked)
+      .map(c => ({
+        id:       c.id,
+        name:     c.name,
+        desc:     c.lore || '',
+        price:    c.price || 10000,
+        icon:     CHAR_ICONS[c.id] || '◈',
+        color:    c.color || '#FFD700',
+        stats:    [
+          `SPD ${c.stats?.speed  ?? '?'}`,
+          `HP ${c.stats?.health ?? '?'}`,
+          `DMG ${c.stats?.damage ?? '?'}`,
+        ],
+        category: 'characters',
+      })),
+
+    weapons: CONFIG.WEAPONS
+      .filter(w => w.price > 0)
+      .map(w => ({
+        id:       w.id,
+        name:     w.name,
+        desc:     w.desc || '',
+        price:    w.price,
+        icon:     WEAPON_ICON(w),
+        color:    w.color || '#44EEFF',
+        stats:    w.melee
+          ? [`DMG ${w.damage}`, `RNG ${w.range}`]
+          : [`DMG ${w.damage}`, `RPM ${Math.round(60000 / (w.fireRate || 1))}`],
+        category: 'weapons',
+      })),
+
+    upgrades: CONFIG.UPGRADES.map(u => ({
+      id:       u.id,
+      name:     u.name,
+      desc:     u.desc || '',
+      price:    u.baseCost,
+      icon:     u.icon || '◆',
+      color:    u.color || '#44EEFF',
+      stats:    [`MAX LV ${u.maxLevel}`],
+      category: 'upgrades',
+    })),
+
+    vehicles: CONFIG.CAR_DEALERSHIP.map(v => ({
+      id:       v.id,
+      name:     v.name,
+      desc:     v.desc || '',
+      price:    v.price,
+      icon:     '🚗',
+      color:    v.color || '#CC3333',
+      stats:    [`SPD ${v.speed}`, `HP ${v.hp}`],
+      category: 'vehicles',
+    })),
+  };
+
+  /**
+   * Patch CATALOG prices with server-authoritative values from
+   * GET /shop/catalog. Silently ignored if endpoint not ready.
+   */
+  async function applyServerPrices() {
+    try {
+      const serverCatalog = await API.getShopCatalog();
+      (['characters', 'weapons', 'upgrades', 'vehicles']).forEach(cat => {
+        const serverItems = serverCatalog[cat] ?? [];
+        serverItems.forEach(serverItem => {
+          const local = CATALOG[cat]?.find(i => i.id === serverItem.id);
+          if (local && typeof serverItem.price === 'number') {
+            local.price = serverItem.price; // trust server price
+          }
+        });
+      });
+    } catch {
+      // Catalog endpoint not yet live — CONFIG prices are fine
+    }
+  }
+
+  /* ════════════════════════════════════════════════════════════
+     STATE
+  ════════════════════════════════════════════════════════════ */
+
+  const FREE_CHAR_IDS = new Set(CONFIG.CHARACTERS.filter(c => !c.locked).map(c => c.id));
+
+  const state = {
+    nex:          0,
+    activeTab:    'characters',
+    owned: {
+      characters: new Set(FREE_CHAR_IDS),
+      weapons:    new Set(['pistol']),
+      upgrades:   new Set(),
+      vehicles:   new Set(),
+    },
+    loading:      true,
+    loadError:    null,
+  };
+
+  /* ════════════════════════════════════════════════════════════
+     DOM REFS
+  ════════════════════════════════════════════════════════════ */
+
+  const balanceEl  = document.getElementById('shopBalanceEl');
+  const errorEl    = document.getElementById('shopErrorEl');
+  const errorMsgEl = document.getElementById('shopErrorMsg');
+  const retryBtn   = document.getElementById('shopRetryBtn');
+  const gridEl     = document.getElementById('shopGridEl');
+
+  /* ════════════════════════════════════════════════════════════
+     BALANCE — fetch + display (mirrors profile page pattern)
+  ════════════════════════════════════════════════════════════ */
+
+  async function loadBalance() {
+    if (!Auth.isLoggedIn()) {
+      balanceEl.classList.remove('skeleton-text');
+      balanceEl.textContent = '—';
+      return;
+    }
+    try {
+      const data = await API.getNex();       // GET /nex/balance → { nex: Number }
+      state.nex = data.nex ?? 0;
+      balanceEl.classList.remove('skeleton-text');
+      balanceEl.textContent = state.nex.toLocaleString();
+    } catch {
+      balanceEl.classList.remove('skeleton-text');
+      balanceEl.textContent = '?';
+    }
+  }
+
+  function updateBalanceDisplay() {
+    balanceEl.textContent = state.nex.toLocaleString();
+  }
+
+  /* ════════════════════════════════════════════════════════════
+     INVENTORY — fetch what the player already owns
+  ════════════════════════════════════════════════════════════ */
+
+  async function loadInventory() {
+    if (!Auth.isLoggedIn()) return;
+    try {
+      // Try new unified endpoint first (GET /shop/inventory)
+      let data;
+      try {
+        data = await API.getShopInventory();
+      } catch {
+        // Fallback: two separate calls
+        const [profile, inv] = await Promise.all([API.getProfile(), API.getInventory()]);
+        data = {
+          nex:        profile.nex          ?? 0,
+          characters: profile.unlockedCharacters ?? [],
+          weapons:    inv.weapons          ?? [],
+          upgrades:   inv.upgrades         ?? [],
+          vehicles:   inv.vehicles         ?? [],
+        };
+      }
+
+      // Merge into state (keep FREE_CHAR_IDS baseline)
+      state.nex = data.nex ?? state.nex;
+      state.owned.characters = new Set([...FREE_CHAR_IDS, ...(data.characters ?? [])]);
+      state.owned.weapons    = new Set(['pistol',          ...(data.weapons   ?? [])]);
+      state.owned.upgrades   = new Set(data.upgrades ?? []);
+      state.owned.vehicles   = new Set(data.vehicles ?? []);
+
+      updateBalanceDisplay();
+    } catch (err) {
+      throw err; // Let caller handle
+    }
+  }
+
+  /* ════════════════════════════════════════════════════════════
+     RENDER
+  ════════════════════════════════════════════════════════════ */
+
+  function isOwned(item) {
+    return state.owned[item.category]?.has(item.id) ?? false;
+  }
+
+  function renderSkeletons(count = 8) {
+    gridEl.innerHTML = Array.from({ length: count }, () =>
+      '<div class="shop-card shop-card--skeleton" aria-hidden="true"></div>'
+    ).join('');
+  }
+
+  function renderGrid() {
+    const items     = CATALOG[state.activeTab] ?? [];
+    const loggedIn  = Auth.isLoggedIn();
+    gridEl.innerHTML = '';
+
+    if (items.length === 0) {
+      gridEl.innerHTML = '<p class="shop-empty">Nothing here yet.</p>';
+      return;
+    }
+
+    // Show login prompt once at end if guest
+    const fragment = document.createDocumentFragment();
+    items.forEach(item => fragment.appendChild(buildCard(item, loggedIn)));
+
+    if (!loggedIn) {
+      const prompt = buildLoginPrompt();
+      fragment.appendChild(prompt);
+    }
+
+    gridEl.appendChild(fragment);
+  }
+
+  function buildCard(item, loggedIn) {
+    const owned      = isOwned(item);
+    const canAfford  = state.nex >= item.price;
+
+    const card = document.createElement('article');
+    card.className  = `shop-card${owned ? ' owned' : ''}`;
+    card.setAttribute('role', 'listitem');
+    card.style.setProperty('--card-color', item.color);
+
+    /* Accent bar */
+    const accent = document.createElement('div');
+    accent.className = 'shop-card__accent';
+
+    /* Body */
+    const body = document.createElement('div');
+    body.className = 'shop-card__body';
+
+    const iconEl = document.createElement('div');
+    iconEl.className = 'shop-card__icon';
+    iconEl.textContent = item.icon;
+
+    const nameEl = document.createElement('h3');
+    nameEl.className = 'shop-card__name';
+    nameEl.textContent = item.name;
+
+    const descEl = document.createElement('p');
+    descEl.className = 'shop-card__desc';
+    descEl.textContent = item.desc;
+
+    const statsEl = document.createElement('div');
+    statsEl.className = 'shop-card__stats';
+    item.stats.forEach(s => {
+      const span = document.createElement('span');
+      span.className = 'shop-card__stat';
+      span.textContent = s;
+      statsEl.appendChild(span);
+    });
+
+    body.append(iconEl, nameEl, descEl, statsEl);
+
+    /* Footer */
+    const footer = document.createElement('div');
+    footer.className = 'shop-card__footer';
+
+    const priceEl = document.createElement('div');
+    priceEl.className = `shop-card__price${item.price === 0 ? ' shop-card__price--free' : ''}`;
+
+    const priceIcon = document.createElement('span');
+    priceIcon.className = 'shop-card__price-icon';
+    priceIcon.textContent = '⬢';
+
+    const priceNum = document.createElement('span');
+    priceNum.textContent = item.price === 0 ? 'FREE' : item.price.toLocaleString();
+    if (item.price === 0) priceIcon.hidden = true;
+
+    priceEl.append(priceIcon, priceNum);
+
+    const btn = document.createElement('button');
+    btn.className = 'shop-card__btn';
+
+    if (owned) {
+      btn.classList.add('shop-card__btn--owned');
+      btn.textContent = 'OWNED';
+      btn.disabled    = true;
+    } else if (!loggedIn) {
+      btn.textContent = 'BUY';
+      btn.disabled    = true;
+      btn.title       = 'Login to buy';
+    } else {
+      btn.textContent      = 'BUY';
+      btn.dataset.price    = item.price;   // used by refreshAffordability
+      btn.dataset.itemId   = item.id;
+      btn.dataset.category = item.category;
+      if (!canAfford) btn.classList.add('shop-card__btn--cant-afford');
+      btn.addEventListener('click', () => handleBuy(item, card, btn, priceNum));
+    }
+
+    footer.append(priceEl, btn);
+    card.append(accent, body, footer);
+    return card;
+  }
+
+  function buildLoginPrompt() {
+    const div = document.createElement('div');
+    div.className = 'shop-login-prompt';
+    div.innerHTML = `
+      <span>Login to purchase items and save your progress.</span>
+      <div class="shop-login-prompt__links">
+        <a href="login.html">LOGIN</a>
+        <a href="register.html">REGISTER</a>
+      </div>`;
+    return div;
+  }
+
+  /* ════════════════════════════════════════════════════════════
+     BUY
+  ════════════════════════════════════════════════════════════ */
+
+  async function handleBuy(item, card, btn, _priceEl) {
+    if (!Auth.isLoggedIn()) { showToast('Login to buy items.', true); return; }
+    if (state.nex < item.price) { showToast('Not enough NEX.', true); return; }
+
+    btn.disabled = true;
+    btn.classList.add('shop-card__btn--loading');
+    btn.textContent = '…';
+
+    try {
+      let newNex = state.nex - item.price; // optimistic fallback
+
+      // Try unified /shop/buy first, fall back to legacy endpoints
+      try {
+        const res = await API.shopBuy(item.id, item.category);
+        newNex = res.nexBalance ?? newNex;
+      } catch (shopErr) {
+        if (_isEndpointMissing(shopErr)) {
+          newNex = await _legacyBuy(item);
+        } else {
+          throw shopErr;
+        }
+      }
+
+      // Update state
+      state.nex = newNex;
+      state.owned[item.category]?.add(item.id);
+
+      // Update balance chip
+      updateBalanceDisplay();
+
+      // Update card to owned state
+      card.classList.add('owned');
+      btn.classList.remove('shop-card__btn--cant-afford', 'shop-card__btn--loading');
+      btn.classList.add('shop-card__btn--owned');
+      btn.textContent = 'OWNED';
+      btn.disabled    = true;
+
+      showToast(`${item.name} unlocked!`, false);
+      refreshAffordability();
+
+    } catch (err) {
+      btn.disabled = false;
+      btn.classList.remove('shop-card__btn--loading');
+      btn.textContent = 'BUY';
+      showToast(err.message || 'Purchase failed.', true);
+    }
+  }
+
+  async function _legacyBuy(item) {
+    let newNex = state.nex - item.price;
+    if (item.category === 'characters') {
+      const res = await API.unlockCharacter(item.id);
+      newNex = res.nexBalance ?? newNex;
+    } else {
+      const res = await API.spendNex(item.price, `${item.category}_buy`, item.id);
+      newNex = res.nex ?? newNex;
+      if (item.category === 'weapons')  await API.addWeapon(item.id);
+      if (item.category === 'upgrades') await API.addUpgrade(item.id);
+      if (item.category === 'vehicles') await API.addVehicle(item.id);
+    }
+    return newNex;
+  }
+
+  /**
+   * Returns true when the error means the endpoint doesn't exist yet.
+   * Matches: HTTP 404, or backend error keys ITEM_NOT_FOUND / NOT_FOUND.
+   */
+  function _isEndpointMissing(err) {
+    return (
+      err.message?.includes('404') ||
+      err.message === 'NOT_FOUND'  ||
+      err.message === 'ITEM_NOT_FOUND'
+    );
+  }
+
+  function refreshAffordability() {
+    gridEl.querySelectorAll('.shop-card__btn:not(.shop-card__btn--owned)').forEach(btn => {
+      const card  = btn.closest('.shop-card');
+      if (!card) return;
+      const price = parseInt(btn.dataset.price ?? '0', 10);
+      btn.classList.toggle('shop-card__btn--cant-afford', state.nex < price);
+    });
+  }
+
+  /* ════════════════════════════════════════════════════════════
+     TAB SWITCHING
+  ════════════════════════════════════════════════════════════ */
+
+  document.querySelectorAll('.shop-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.shop-tab').forEach(t => {
+        t.classList.remove('active');
+        t.setAttribute('aria-selected', 'false');
+      });
+      tab.classList.add('active');
+      tab.setAttribute('aria-selected', 'true');
+      state.activeTab = tab.dataset.tab;
+      renderGrid();
+    });
+  });
+
+  /* ════════════════════════════════════════════════════════════
+     ERROR + RETRY
+  ════════════════════════════════════════════════════════════ */
+
+  function showError(msg) {
+    errorMsgEl.textContent = msg;
+    errorEl.hidden = false;
+  }
+
+  function hideError() {
+    errorEl.hidden = true;
+  }
+
+  retryBtn.addEventListener('click', () => {
+    hideError();
+    init();
+  });
+
+  /* ════════════════════════════════════════════════════════════
+     TOAST
+  ════════════════════════════════════════════════════════════ */
+
+  let _toastTimer = null;
+  function showToast(msg, isErr) {
+    document.querySelectorAll('.shop-toast').forEach(t => t.remove());
+    clearTimeout(_toastTimer);
+    const toast = document.createElement('div');
+    toast.className = `shop-toast shop-toast--${isErr ? 'err' : 'ok'}`;
+    toast.textContent = msg;
+    document.body.appendChild(toast);
+    requestAnimationFrame(() => toast.classList.add('shop-toast--visible'));
+    _toastTimer = setTimeout(() => {
+      toast.classList.remove('shop-toast--visible');
+      setTimeout(() => toast.remove(), 350);
+    }, 2800);
+  }
+
+  /* ════════════════════════════════════════════════════════════
+     INIT
+  ════════════════════════════════════════════════════════════ */
+
+  async function init() {
+    renderSkeletons(8);
+    hideError();
+
+    // Show skeleton balance immediately while data loads
+    balanceEl.classList.add('skeleton-text');
+    balanceEl.textContent = '000,000';
+
+    try {
+      // Run all three fetches in parallel:
+      //   1. GET /nex/balance         — balance chip
+      //   2. GET /shop/inventory      — owned items (with fallback)
+      //   3. GET /shop/catalog        — server-authoritative prices (silently optional)
+      await Promise.all([
+        loadBalance(),
+        loadInventory(),
+        applyServerPrices(),
+      ]);
+    } catch (err) {
+      showError(err.message || 'Could not load shop data. Check your connection.');
+    }
+
+    renderGrid();
+  }
+
+  init();
+  </script>
+</body>
+</html>
