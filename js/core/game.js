@@ -3136,9 +3136,7 @@ class Game {
           // Pawnshop (type 12) - position vendor behind counter, closer to items
           const npcX = bType === 12 ? room.entryX : room.entryX + 60;
           const npcY = bType === 12 ? room.entryY - 75 : room.entryY - 110;
-          this._buildingNpcs = [
-            new BuildingNPC(npcX, npcY, bType, isNeonCity),
-          ];
+          this._buildingNpcs = [new BuildingNPC(npcX, npcY, bType, isNeonCity)];
         }
         return;
       }
@@ -4716,13 +4714,18 @@ class Game {
       ctx.fillStyle = "#fff";
       ctx.shadowColor = CYAN;
       ctx.shadowBlur = 18;
-      ctx.fillText("◈ CYBER PAWN ◈", cx, topY + 2);
+      ctx.fillText("◈ CYBER PAWN ◈", cx, topY + -12);
       ctx.shadowBlur = 0;
       ctx.restore();
 
       // ── Divider line under title ──
       ctx.save();
-      const divGrad = ctx.createLinearGradient(cx - W * 0.35, 0, cx + W * 0.35, 0);
+      const divGrad = ctx.createLinearGradient(
+        cx - W * 0.35,
+        0,
+        cx + W * 0.35,
+        0,
+      );
       divGrad.addColorStop(0, "rgba(68,238,255,0)");
       divGrad.addColorStop(0.5, "rgba(68,238,255,0.8)");
       divGrad.addColorStop(1, "rgba(68,238,255,0)");
@@ -4742,7 +4745,7 @@ class Game {
       ];
 
       for (let i = 0; i < 3; i++) {
-        const dx = cx - W * 0.30 + i * (W * 0.30);
+        const dx = cx - W * 0.3 + i * (W * 0.3);
         const dy = topY + 42;
         const item = topDisplays[i];
         const pulse = Math.sin(t * 2 + i * 1.5) * 0.3 + 0.7;
@@ -4755,15 +4758,28 @@ class Game {
         ctx.lineWidth = 3;
         ctx.shadowColor = item.color;
         ctx.shadowBlur = 20 * pulse;
-        rr(dx - 38, dy - 24, 76, 58, 10);
+        rr(dx - 38, dy - 20, 76, 58, 10);
         ctx.fill();
         ctx.stroke();
         ctx.shadowBlur = 0;
 
         // Inner bright glow background for contrast
-        const innerGlow = ctx.createRadialGradient(dx, dy + 8, 0, dx, dy + 8, 35);
-        innerGlow.addColorStop(0, `rgba(${item.color === CYAN ? "68,238,255" : item.color === PINK ? "255,68,102" : "255,136,68"},0.25)`);
-        innerGlow.addColorStop(0.6, `rgba(${item.color === CYAN ? "68,238,255" : item.color === PINK ? "255,68,102" : "255,136,68"},0.08)`);
+        const innerGlow = ctx.createRadialGradient(
+          dx,
+          dy + 8,
+          0,
+          dx,
+          dy + 8,
+          35,
+        );
+        innerGlow.addColorStop(
+          0,
+          `rgba(${item.color === CYAN ? "68,238,255" : item.color === PINK ? "255,68,102" : "255,136,68"},0.25)`,
+        );
+        innerGlow.addColorStop(
+          0.6,
+          `rgba(${item.color === CYAN ? "68,238,255" : item.color === PINK ? "255,68,102" : "255,136,68"},0.08)`,
+        );
         innerGlow.addColorStop(1, "rgba(0,0,0,0)");
         ctx.fillStyle = innerGlow;
         ctx.beginPath();
@@ -4802,7 +4818,12 @@ class Game {
       ctx.fillRect(counterX + 4, counterY + counterH + 2, counterW, 5);
 
       // Counter base
-      const counterGrad = ctx.createLinearGradient(counterX, counterY, counterX, counterY + counterH);
+      const counterGrad = ctx.createLinearGradient(
+        counterX,
+        counterY,
+        counterX,
+        counterY + counterH,
+      );
       counterGrad.addColorStop(0, "#1a1a2e");
       counterGrad.addColorStop(1, "#0a0a14");
       ctx.fillStyle = counterGrad;
@@ -4818,43 +4839,6 @@ class Game {
       ctx.moveTo(counterX, counterY + 2);
       ctx.lineTo(counterX + counterW, counterY + 2);
       ctx.stroke();
-      ctx.shadowBlur = 0;
-
-      // Register screen
-      ctx.fillStyle = "#050810";
-      ctx.strokeStyle = CYAN;
-      ctx.lineWidth = 1;
-      rr(counterX + counterW - 40, counterY + 8, 32, 18, 3);
-      ctx.fill();
-      ctx.stroke();
-
-      // Screen content with scanline
-      ctx.fillStyle = "#001825";
-      ctx.fillRect(counterX + counterW - 38, counterY + 10, 28, 14);
-      const scanline = (t * 25) % 14;
-      ctx.fillStyle = "rgba(68,238,255,0.3)";
-      ctx.fillRect(counterX + counterW - 38, counterY + 10 + scanline, 28, 2);
-
-      // Cash circle
-      ctx.fillStyle = CYAN;
-      ctx.shadowColor = CYAN;
-      ctx.shadowBlur = 8;
-      ctx.beginPath();
-      ctx.arc(counterX + 18, counterY + 16, 8, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = "#0a0a14";
-      ctx.beginPath();
-      ctx.arc(counterX + 18, counterY + 16, 5, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.shadowBlur = 0;
-
-      // "PAWN" text on counter
-      ctx.fillStyle = "#fff";
-      ctx.shadowColor = CYAN;
-      ctx.shadowBlur = 8;
-      ctx.font = "bold 6px Orbitron, monospace";
-      ctx.textAlign = "center";
-      ctx.fillText("PAWN", counterX + counterW / 2, counterY + counterH - 6);
       ctx.shadowBlur = 0;
 
       // ═══ BOTTOM ROW: 4 SMALLER ITEM DISPLAYS ═══
@@ -4898,9 +4882,12 @@ class Game {
       ctx.save();
       for (let pi = 0; pi < 6; pi++) {
         const px = cx - W * 0.35 + ((t * 10 + pi * 90) % (W * 0.7));
-        const py = topY + 25 + Math.sin(t * 0.8 + pi) * 25 + (pi * 18) % 50;
+        const py = topY + 25 + Math.sin(t * 0.8 + pi) * 25 + ((pi * 18) % 50);
         const alpha = Math.sin(t * 2 + pi) * 0.25 + 0.35;
-        ctx.fillStyle = pi % 2 === 0 ? `rgba(68,238,255,${alpha})` : `rgba(255,68,102,${alpha})`;
+        ctx.fillStyle =
+          pi % 2 === 0
+            ? `rgba(68,238,255,${alpha})`
+            : `rgba(255,68,102,${alpha})`;
         ctx.beginPath();
         ctx.arc(px, py, 1.5, 0, Math.PI * 2);
         ctx.fill();
@@ -4915,8 +4902,8 @@ class Game {
       ctx.shadowColor = CYAN;
       ctx.shadowBlur = 8;
       ctx.beginPath();
-      ctx.moveTo(cx - W * 0.30, midY + counterH + 20);
-      ctx.lineTo(cx + W * 0.30, midY + counterH + 20);
+      ctx.moveTo(cx - W * 0.3, midY + counterH + 20);
+      ctx.lineTo(cx + W * 0.3, midY + counterH + 20);
       ctx.stroke();
       ctx.shadowBlur = 0;
       ctx.restore();
