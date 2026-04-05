@@ -3370,8 +3370,12 @@ class Game {
             // Galactica Pharmacy: pharmacist behind counter near top
             npcX = room.roomW / 2;
             npcY = room.roomH * 0.19;
+          } else if (isGalactica && bType === 22) {
+            // Galactica Radio Station: DJ/host behind broadcast desk
+            npcX = room.roomW / 2;
+            npcY = room.roomH * 0.20;
           }
-          const useHumanRender = isNeonCity || (isGalactica && (bType === 3 || bType === 8 || bType === 0 || bType === 5));
+          const useHumanRender = isNeonCity || (isGalactica && (bType === 3 || bType === 8 || bType === 0 || bType === 5 || bType === 22));
           const useGirlRender  = isGalactica && bType === 8;
           this._buildingNpcs = [new BuildingNPC(npcX, npcY, bType, useHumanRender, useGirlRender)];
         }
@@ -8546,88 +8550,404 @@ class Game {
       );
     } else if (type === 22) {
       // RADIO STATION
-      // ── Broadcast desk (center) ───────────────────
-      ctx.fillStyle = "#0a0a18";
-      ctx.strokeStyle = "#FF88CC";
-      ctx.lineWidth = 1.5;
-      rr(cx - 52, midY - 14, 104, 36, 4);
-      ctx.fill();
-      ctx.stroke();
-      // Large mixing board
-      ctx.fillStyle = "#111122";
-      rr(cx - 44, midY - 10, 88, 28, 2);
-      ctx.fill();
-      // Faders
-      for (let fi = 0; fi < 8; fi++) {
-        ctx.fillStyle = "#334";
-        ctx.fillRect(cx - 40 + fi * 11, midY - 8, 9, 20);
-        ctx.fillStyle = "#88AAFF";
-        ctx.fillRect(
-          cx - 40 + fi * 11,
-          midY - 8 + Math.floor(Math.random() * 14),
-          9,
-          6,
-        );
-      }
-      // VU meter
-      ctx.fillStyle = "#44FF88";
-      ctx.shadowColor = "#44FF44";
-      ctx.shadowBlur = 6;
-      ctx.fillRect(cx + 26, midY - 10, 14, 6);
-      ctx.fillRect(cx + 26, midY - 2, 14, 4);
-      ctx.shadowBlur = 0;
-      ctx.fillStyle = "#FFCC00";
-      ctx.fillRect(cx + 26, midY + 4, 10, 3);
-      ctx.fillStyle = "#FF4400";
-      ctx.fillRect(cx + 26, midY + 9, 6, 3);
-      // ── Soundproof panels (walls) ─────────────────
-      ctx.fillStyle = "#1a1228";
-      ctx.strokeStyle = "#442266";
-      ctx.lineWidth = 1;
-      for (let pi = 0; pi < 5; pi++) {
-        const px2 = cx - W * 0.44 + pi * ((W * 0.88) / 4);
-        rr(px2, topY + 4, (W * 0.88) / 4 - 3, 44, 4);
+      if (!!this.map?.config?.galactica) {
+        // ═══ GALACTICA: NOVA BROADCAST ═══
+        const t = performance.now() / 1000;
+
+        // ── Cosmic floor tiles ────────────────────────
+        const tileSize = 54;
+        for (let gy = 0; gy < Math.ceil(H / tileSize) + 1; gy++) {
+          for (let gx = 0; gx < Math.ceil(W / tileSize) + 1; gx++) {
+            const tx = gx * tileSize, ty = gy * tileSize;
+            const seed = gx * 19 + gy * 13;
+            ctx.fillStyle = (seed % 3 === 0) ? "rgba(20,0,30,0.88)"
+                          : (seed % 3 === 1) ? "rgba(14,0,24,0.88)"
+                          : "rgba(18,0,28,0.88)";
+            ctx.fillRect(tx, ty, tileSize, tileSize);
+            ctx.strokeStyle = "rgba(255,80,200,0.12)";
+            ctx.lineWidth = 0.5;
+            ctx.strokeRect(tx, ty, tileSize, tileSize);
+            if (seed % 5 === 0) {
+              ctx.fillStyle = `rgba(255,120,220,${0.22 + 0.12 * Math.sin(t * 1.3 + seed)})`;
+              ctx.beginPath();
+              ctx.arc(tx + 27, ty + 27, 1.2, 0, Math.PI * 2);
+              ctx.fill();
+            }
+          }
+        }
+
+        // ── Room border glow ──────────────────────────
+        ctx.strokeStyle = "rgba(255,80,200,0.55)";
+        ctx.lineWidth = 3;
+        ctx.strokeRect(2, 2, W - 4, H - 4);
+        ctx.strokeStyle = "rgba(180,60,255,0.18)";
+        ctx.lineWidth = 1;
+        ctx.strokeRect(6, 6, W - 12, H - 12);
+
+        // ── Title sign ────────────────────────────────
+        const signW = 340, signH = 28;
+        const signX = W / 2 - signW / 2, signY = room.S - 24;
+        const signGrad = ctx.createLinearGradient(signX, signY, signX + signW, signY);
+        signGrad.addColorStop(0, "rgba(80,0,60,0.92)");
+        signGrad.addColorStop(0.5, "rgba(200,0,140,0.98)");
+        signGrad.addColorStop(1, "rgba(80,0,60,0.92)");
+        ctx.fillStyle = signGrad;
+        rr(signX, signY, signW, signH, 6);
+        ctx.fill();
+        ctx.strokeStyle = `rgba(255,100,220,${0.7 + 0.3 * Math.sin(t * 2.4)})`;
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        ctx.fillStyle = "#FFDDFF";
+        ctx.font = "bold 13px monospace";
+        ctx.textAlign = "center";
+        ctx.fillText("◉  NOVA BROADCAST  ◉", W / 2, signY + 18);
+
+        // ── ON AIR sign (animated blink) ──────────────
+        const onAirAlpha = 0.7 + 0.3 * Math.sin(t * 4);
+        ctx.fillStyle = `rgba(255,20,60,${onAirAlpha})`;
+        ctx.shadowColor = "#FF0040";
+        ctx.shadowBlur = 16 * onAirAlpha;
+        rr(W / 2 - 44, topY + 36, 88, 22, 5);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        ctx.strokeStyle = `rgba(255,80,100,${onAirAlpha})`;
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        ctx.fillStyle = "#FFFFFF";
+        ctx.font = "bold 11px monospace";
+        ctx.textAlign = "center";
+        ctx.fillText("● ON AIR", W / 2, topY + 51);
+
+        // ── Broadcast desk (main, top-center) ─────────
+        const deskY = topY + 66, deskW = 420, deskH = 34;
+        const deskX = W / 2 - deskW / 2;
+        const deskGrad = ctx.createLinearGradient(deskX, deskY, deskX + deskW, deskY);
+        deskGrad.addColorStop(0, "#1a0028");
+        deskGrad.addColorStop(0.5, "#2e0048");
+        deskGrad.addColorStop(1, "#1a0028");
+        ctx.fillStyle = deskGrad;
+        rr(deskX, deskY, deskW, deskH, 6);
+        ctx.fill();
+        ctx.strokeStyle = "rgba(255,80,200,0.8)";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.fillStyle = "rgba(255,120,220,0.08)";
+        ctx.fillRect(deskX + 4, deskY + 3, deskW - 8, 7);
+
+        // ── Mixing board on desk ───────────────────────
+        const mbX = deskX + 16, mbY = deskY + 4, mbW = deskW - 32, mbH = 26;
+        ctx.fillStyle = "#0d0020";
+        rr(mbX, mbY, mbW, mbH, 3);
+        ctx.fill();
+        ctx.strokeStyle = "rgba(200,60,180,0.5)";
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        // Fader channels
+        const faderCount = 14;
+        for (let fi = 0; fi < faderCount; fi++) {
+          const fx = mbX + 10 + fi * (mbW - 20) / faderCount;
+          // Track groove
+          ctx.fillStyle = "#1a0030";
+          ctx.fillRect(fx + 2, mbY + 3, 5, 20);
+          // Fader knob at animated position
+          const fPos = 4 + 10 * (0.5 + 0.5 * Math.sin(t * (0.8 + fi * 0.15) + fi));
+          ctx.fillStyle = fi % 3 === 0 ? "#FF88CC" : fi % 3 === 1 ? "#AA66FF" : "#88CCFF";
+          ctx.fillRect(fx, mbY + 3 + fPos, 9, 5);
+        }
+        // VU meter (right side of board)
+        const vuX = mbX + mbW - 28, vuY = mbY + 3;
+        const vuH = 20;
+        const vuBars = 5;
+        const vuColors = ["#44FF88","#44FF88","#FFCC00","#FF8800","#FF2244"];
+        for (let vi = 0; vi < vuBars; vi++) {
+          const barH = vuH / vuBars - 1;
+          const active = Math.sin(t * 5 + vi * 0.7) > (vi / vuBars - 0.4);
+          ctx.fillStyle = active ? vuColors[vi] : "#1a0030";
+          ctx.fillRect(vuX, vuY + (vuBars - 1 - vi) * (barH + 1), 24, barH);
+        }
+
+        // ── Soundproof foam panels (top wall row) ─────
+        const panelCount = 6;
+        const panelW = (W - 32) / panelCount - 4;
+        for (let pi = 0; pi < panelCount; pi++) {
+          const px = 16 + pi * ((W - 32) / panelCount);
+          const py = topY + 4;
+          ctx.fillStyle = "#120020";
+          ctx.strokeStyle = "rgba(180,40,160,0.35)";
+          ctx.lineWidth = 1;
+          rr(px, py, panelW, 28, 3);
+          ctx.fill();
+          ctx.stroke();
+          // Wedge foam pattern
+          const cols = 4, rows = 3;
+          const wW = (panelW - 6) / cols, wH = 22 / rows;
+          for (let wr = 0; wr < rows; wr++) {
+            for (let wc = 0; wc < cols; wc++) {
+              ctx.fillStyle = (wr + wc) % 2 === 0 ? "#1e0032" : "#160028";
+              ctx.beginPath();
+              ctx.moveTo(px + 3 + wc * wW,          py + 3 + wr * wH + wH);
+              ctx.lineTo(px + 3 + wc * wW + wW,     py + 3 + wr * wH + wH);
+              ctx.lineTo(px + 3 + wc * wW + wW / 2, py + 3 + wr * wH);
+              ctx.closePath();
+              ctx.fill();
+            }
+          }
+        }
+
+        // ── Left side: speaker monitors ───────────────
+        for (let si = 0; si < 2; si++) {
+          const spX = 18, spY = H * 0.35 + si * 110;
+          const spW = 64, spH = 80;
+          ctx.fillStyle = "#100018";
+          ctx.strokeStyle = "rgba(255,80,200,0.5)";
+          ctx.lineWidth = 1.5;
+          rr(spX, spY, spW, spH, 6);
+          ctx.fill();
+          ctx.stroke();
+          // Woofer cone
+          const wg = ctx.createRadialGradient(spX + spW/2, spY + 30, 2, spX + spW/2, spY + 30, 22);
+          wg.addColorStop(0, "#2a0040");
+          wg.addColorStop(0.6, "#180028");
+          wg.addColorStop(1, "#0a0018");
+          ctx.fillStyle = wg;
+          ctx.beginPath();
+          ctx.arc(spX + spW / 2, spY + 30, 22, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.strokeStyle = "rgba(255,80,200,0.4)";
+          ctx.lineWidth = 1;
+          ctx.stroke();
+          // Speaker rings
+          for (let ri = 1; ri <= 3; ri++) {
+            ctx.strokeStyle = `rgba(255,80,200,${0.15 * ri})`;
+            ctx.lineWidth = 0.8;
+            ctx.beginPath();
+            ctx.arc(spX + spW / 2, spY + 30, 7 * ri, 0, Math.PI * 2);
+            ctx.stroke();
+          }
+          // Tweeter
+          ctx.fillStyle = "#1a0030";
+          ctx.beginPath();
+          ctx.arc(spX + spW / 2, spY + 62, 6, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.strokeStyle = "rgba(255,80,200,0.3)";
+          ctx.lineWidth = 0.8;
+          ctx.stroke();
+          // Pulsing glow when sound is "playing"
+          const pulse = 0.3 + 0.2 * Math.sin(t * 6 + si * 1.5);
+          const spGlow = ctx.createRadialGradient(spX + spW/2, spY + 30, 0, spX + spW/2, spY + 30, 28);
+          spGlow.addColorStop(0, `rgba(255,80,200,${pulse})`);
+          spGlow.addColorStop(1, "rgba(0,0,0,0)");
+          ctx.fillStyle = spGlow;
+          ctx.beginPath();
+          ctx.arc(spX + spW / 2, spY + 30, 28, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // ── Right side: waveform display screen ───────
+        const scrX = W - 110, scrY = H * 0.33, scrW = 88, scrH = 64;
+        ctx.fillStyle = "#080014";
+        ctx.strokeStyle = "rgba(255,80,200,0.6)";
+        ctx.lineWidth = 1.5;
+        rr(scrX, scrY, scrW, scrH, 5);
         ctx.fill();
         ctx.stroke();
-        // Foam wedge pattern
-        ctx.fillStyle = "#2a1a38";
-        for (let ri = 0; ri < 3; ri++)
-          for (let ci2 = 0; ci2 < 3; ci2++) {
-            ctx.beginPath();
-            ctx.moveTo(px2 + 4 + ci2 * 12, topY + 6 + ri * 12);
-            ctx.lineTo(px2 + 10 + ci2 * 12, topY + 6 + ri * 12);
-            ctx.lineTo(px2 + 7 + ci2 * 12, topY + 14 + ri * 12);
-            ctx.closePath();
-            ctx.fill();
-          }
+        // Screen inner
+        ctx.fillStyle = "#0a0018";
+        rr(scrX + 3, scrY + 3, scrW - 6, scrH - 6, 3);
+        ctx.fill();
+        // Waveform animation
+        ctx.strokeStyle = `rgba(255,100,220,0.9)`;
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        for (let wx = 0; wx < scrW - 12; wx += 2) {
+          const amp = 10 + 8 * Math.sin(t * 3 + wx * 0.18);
+          const wy = scrY + scrH / 2 + amp * Math.sin(t * 8 + wx * 0.22);
+          wx === 0 ? ctx.moveTo(scrX + 6 + wx, wy) : ctx.lineTo(scrX + 6 + wx, wy);
+        }
+        ctx.stroke();
+        // Screen label
+        ctx.fillStyle = "rgba(255,160,240,0.7)";
+        ctx.font = "5px monospace";
+        ctx.textAlign = "center";
+        ctx.fillText("LIVE SIGNAL", scrX + scrW / 2, scrY + scrH - 6);
+
+        // ── Right side: playlist / track display ──────
+        const plX = W - 110, plY = H * 0.55, plW = 88, plH = 96;
+        ctx.fillStyle = "#080014";
+        ctx.strokeStyle = "rgba(180,60,255,0.5)";
+        ctx.lineWidth = 1.5;
+        rr(plX, plY, plW, plH, 5);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = "#AA66FF";
+        ctx.font = "bold 5px monospace";
+        ctx.textAlign = "center";
+        ctx.fillText("▶ NOW PLAYING", plX + plW / 2, plY + 12);
+        ctx.strokeStyle = "rgba(180,60,255,0.3)";
+        ctx.lineWidth = 0.5;
+        ctx.beginPath();
+        ctx.moveTo(plX + 6, plY + 15);
+        ctx.lineTo(plX + plW - 6, plY + 15);
+        ctx.stroke();
+        const tracks = ["NOVA WAVE","VOID BEAT","STARFIELD","PLASMA FX","NEBULA DUB"];
+        tracks.forEach((tr, ti) => {
+          const isActive = ti === Math.floor(t * 0.4) % tracks.length;
+          ctx.fillStyle = isActive ? "#FF88CC" : "rgba(200,140,255,0.6)";
+          ctx.font = isActive ? "bold 5px monospace" : "5px monospace";
+          ctx.textAlign = "left";
+          ctx.fillText((isActive ? "▶ " : "  ") + tr, plX + 7, plY + 26 + ti * 14);
+        });
+
+        // ── Center: microphone stand (in front of desk) ─
+        const micX = W / 2, micY = deskY + deskH + 36;
+        // Stand base
+        ctx.fillStyle = "#1a0030";
+        ctx.strokeStyle = "rgba(255,80,200,0.5)";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.ellipse(micX, micY + 14, 14, 4, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        // Stand pole
+        ctx.strokeStyle = "rgba(200,120,255,0.8)";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(micX, micY + 14);
+        ctx.lineTo(micX, micY - 16);
+        ctx.stroke();
+        // Arm
+        ctx.beginPath();
+        ctx.moveTo(micX, micY - 10);
+        ctx.lineTo(micX + 18, micY - 20);
+        ctx.stroke();
+        // Mic capsule
+        ctx.fillStyle = "#2a0044";
+        ctx.strokeStyle = "rgba(255,80,200,0.7)";
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.ellipse(micX + 18, micY - 24, 9, 14, -0.3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        // Mesh grid on mic
+        ctx.strokeStyle = "rgba(255,120,220,0.3)";
+        ctx.lineWidth = 0.5;
+        for (let mg = 0; mg < 4; mg++) {
+          ctx.beginPath();
+          ctx.ellipse(micX + 18, micY - 24, 9, 14 - mg * 3, -0.3, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+        // Mic glow
+        const micGlow = ctx.createRadialGradient(micX + 18, micY - 24, 0, micX + 18, micY - 24, 18);
+        micGlow.addColorStop(0, `rgba(255,80,200,${0.25 + 0.15 * Math.sin(t * 3)})`);
+        micGlow.addColorStop(1, "rgba(0,0,0,0)");
+        ctx.fillStyle = micGlow;
+        ctx.beginPath();
+        ctx.arc(micX + 18, micY - 24, 18, 0, Math.PI * 2);
+        ctx.fill();
+
+        // ── Sound wave rings (ambient) ─────────────────
+        for (let ri = 1; ri <= 3; ri++) {
+          const rr2 = ri * 28 + 10 * Math.sin(t * 2 - ri);
+          const alpha = (0.18 - ri * 0.04) * (0.5 + 0.5 * Math.sin(t * 2 + ri));
+          ctx.strokeStyle = `rgba(255,80,200,${alpha})`;
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.arc(micX + 18, micY - 24, rr2, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+
+        // ── Ambient particles ─────────────────────────
+        for (let pi = 0; pi < 7; pi++) {
+          const px = (Math.sin(pi * 2.5 + t * 0.45) * 0.38 + 0.5) * W;
+          const py = (Math.cos(pi * 1.8 + t * 0.3) * 0.32 + 0.5) * H;
+          ctx.fillStyle = `rgba(255,100,220,${0.2 + 0.12 * Math.sin(t * 1.6 + pi)})`;
+          ctx.beginPath();
+          ctx.arc(px, py, 1.5, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // ── [T] TALK hint ─────────────────────────────
+        ctx.fillStyle = "rgba(180,0,120,0.88)";
+        rr(W / 2 - 42, topY + 100, 84, 14, 4);
+        ctx.fill();
+        ctx.fillStyle = "#FFDDFF";
+        ctx.font = "bold 7px monospace";
+        ctx.textAlign = "center";
+        ctx.fillText("[T] TALK TO DJ", W / 2, topY + 110);
+
+      } else {
+        // ── Default radio station (non-galactica) ───────
+        // ── Broadcast desk (center) ───────────────────
+        ctx.fillStyle = "#0a0a18";
+        ctx.strokeStyle = "#FF88CC";
+        ctx.lineWidth = 1.5;
+        rr(cx - 52, midY - 14, 104, 36, 4);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = "#111122";
+        rr(cx - 44, midY - 10, 88, 28, 2);
+        ctx.fill();
+        for (let fi = 0; fi < 8; fi++) {
+          ctx.fillStyle = "#334";
+          ctx.fillRect(cx - 40 + fi * 11, midY - 8, 9, 20);
+          ctx.fillStyle = "#88AAFF";
+          ctx.fillRect(cx - 40 + fi * 11, midY - 8 + Math.floor(Math.random() * 14), 9, 6);
+        }
+        ctx.fillStyle = "#44FF88";
+        ctx.shadowColor = "#44FF44";
+        ctx.shadowBlur = 6;
+        ctx.fillRect(cx + 26, midY - 10, 14, 6);
+        ctx.fillRect(cx + 26, midY - 2, 14, 4);
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = "#FFCC00";
+        ctx.fillRect(cx + 26, midY + 4, 10, 3);
+        ctx.fillStyle = "#FF4400";
+        ctx.fillRect(cx + 26, midY + 9, 6, 3);
         ctx.fillStyle = "#1a1228";
-      }
-      // ── ON AIR sign ───────────────────────────────
-      ctx.fillStyle = "#FF2244";
-      ctx.shadowColor = "#FF0022";
-      ctx.shadowBlur = 16;
-      ctx.beginPath();
-      ctx.roundRect(cx - 28, topY + 52, 56, 18, 4);
-      ctx.fill();
-      ctx.fillStyle = "#FFFFFF";
-      ctx.font = "bold 9px Orbitron, monospace";
-      ctx.textAlign = "center";
-      ctx.shadowBlur = 0;
-      ctx.fillText("● ON AIR", cx, topY + 64);
-      // Microphone
-      ctx.fillStyle = "#AAAAAA";
-      ctx.beginPath();
-      ctx.ellipse(cx, midY - 28, 8, 14, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = "#888";
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.arc(cx, midY - 16, 12, 0, Math.PI);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(cx, midY - 4);
-      ctx.lineTo(cx, midY + 8);
-      ctx.stroke();
+        ctx.strokeStyle = "#442266";
+        ctx.lineWidth = 1;
+        for (let pi = 0; pi < 5; pi++) {
+          const px2 = cx - W * 0.44 + pi * ((W * 0.88) / 4);
+          rr(px2, topY + 4, (W * 0.88) / 4 - 3, 44, 4);
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#2a1a38";
+          for (let ri = 0; ri < 3; ri++)
+            for (let ci2 = 0; ci2 < 3; ci2++) {
+              ctx.beginPath();
+              ctx.moveTo(px2 + 4 + ci2 * 12, topY + 6 + ri * 12);
+              ctx.lineTo(px2 + 10 + ci2 * 12, topY + 6 + ri * 12);
+              ctx.lineTo(px2 + 7 + ci2 * 12, topY + 14 + ri * 12);
+              ctx.closePath();
+              ctx.fill();
+            }
+          ctx.fillStyle = "#1a1228";
+        }
+        ctx.fillStyle = "#FF2244";
+        ctx.shadowColor = "#FF0022";
+        ctx.shadowBlur = 16;
+        ctx.beginPath();
+        ctx.roundRect(cx - 28, topY + 52, 56, 18, 4);
+        ctx.fill();
+        ctx.fillStyle = "#FFFFFF";
+        ctx.font = "bold 9px Orbitron, monospace";
+        ctx.textAlign = "center";
+        ctx.shadowBlur = 0;
+        ctx.fillText("● ON AIR", cx, topY + 64);
+        ctx.fillStyle = "#AAAAAA";
+        ctx.beginPath();
+        ctx.ellipse(cx, midY - 28, 8, 14, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = "#888";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(cx, midY - 16, 12, 0, Math.PI);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(cx, midY - 4);
+        ctx.lineTo(cx, midY + 8);
+        ctx.stroke();
+      } // end default radio station
     } else if (type === 23) {
       // UNDERGROUND LAB
       // ── Experiment pods (top) ────────────────────
