@@ -3362,8 +3362,12 @@ class Game {
             // Galaxy Club: hostess near top, player-facing
             npcX = room.roomW / 2;
             npcY = room.roomH * 0.22;
+          } else if (isGalactica && bType === 0) {
+            // Nova Diner: chef/waiter behind service counter
+            npcX = room.roomW / 2;
+            npcY = room.roomH * 0.17;
           }
-          const useHumanRender = isNeonCity || (isGalactica && (bType === 3 || bType === 8));
+          const useHumanRender = isNeonCity || (isGalactica && (bType === 3 || bType === 8 || bType === 0));
           const useGirlRender  = isGalactica && bType === 8;
           this._buildingNpcs = [new BuildingNPC(npcX, npcY, bType, useHumanRender, useGirlRender)];
         }
@@ -4034,91 +4038,398 @@ class Game {
       }
       ctx.shadowBlur = 0;
     } else if (type === "restaurant" || type === 0) {
-      // ── Bar counter (top) ────────────────────────
-      ctx.fillStyle = "#3a2010";
-      ctx.strokeStyle = "#6a4020";
-      ctx.lineWidth = 1.5;
-      rr(cx - 72, topY + 6, 144, 22, 3);
-      ctx.fill();
-      ctx.stroke();
-      ctx.fillStyle = "rgba(255,200,150,0.12)";
-      ctx.fillRect(cx - 70, topY + 8, 140, 7);
-      for (let i = 0; i < 4; i++) {
-        const sx = cx - 54 + i * 36;
-        ctx.fillStyle = "#AA5533";
-        ctx.strokeStyle = "#CC7744";
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.arc(sx, topY + 38, 10, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.stroke();
-        ctx.strokeStyle = "#886633";
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(sx, topY + 38);
-        ctx.lineTo(sx, topY + 30);
-        ctx.stroke();
-      }
+      if (!!this.map?.config?.galactica) {
+        // ═══ GALACTICA: NOVA DINER ═══
+        const t = performance.now() / 1000;
 
-      // ── 3 round dining tables ────────────────────
-      for (const [tx2, ty2] of [
-        [cx - W * 0.3, midY - 8],
-        [cx, midY + 6],
-        [cx + W * 0.28, midY - 8],
-      ]) {
-        ctx.fillStyle = "#FFEECC";
-        ctx.strokeStyle = "#CC9966";
+        // ── Cosmic floor tiles ────────────────────────
+        const tileSize = 60;
+        for (let gy = 0; gy < Math.ceil(H / tileSize) + 1; gy++) {
+          for (let gx = 0; gx < Math.ceil(W / tileSize) + 1; gx++) {
+            const tx = gx * tileSize;
+            const ty = gy * tileSize;
+            const seed = gx * 13 + gy * 7;
+            const baseColor = (seed % 3 === 0) ? "rgba(20,4,50,0.82)"
+                            : (seed % 3 === 1) ? "rgba(12,2,38,0.82)"
+                            : "rgba(16,3,44,0.82)";
+            ctx.fillStyle = baseColor;
+            ctx.fillRect(tx, ty, tileSize, tileSize);
+            ctx.strokeStyle = "rgba(120,60,220,0.18)";
+            ctx.lineWidth = 0.5;
+            ctx.strokeRect(tx, ty, tileSize, tileSize);
+            // Star inlays
+            if (seed % 5 === 0) {
+              ctx.fillStyle = `rgba(200,160,255,${0.3 + 0.15 * Math.sin(t * 1.3 + seed)})`;
+              ctx.beginPath();
+              ctx.arc(tx + 30, ty + 30, 1.5, 0, Math.PI * 2);
+              ctx.fill();
+            }
+          }
+        }
+
+        // ── Room border glow ──────────────────────────
+        ctx.strokeStyle = "rgba(160,80,255,0.55)";
+        ctx.lineWidth = 3;
+        ctx.strokeRect(2, 2, W - 4, H - 4);
+        ctx.strokeStyle = "rgba(100,200,255,0.18)";
+        ctx.lineWidth = 1;
+        ctx.strokeRect(6, 6, W - 12, H - 12);
+
+        // ── Title sign ────────────────────────────────
+        const signW = 280, signH = 28;
+        const signX = W / 2 - signW / 2, signY = room.S - 24;
+        const signGrad = ctx.createLinearGradient(signX, signY, signX + signW, signY);
+        signGrad.addColorStop(0, "rgba(80,0,160,0.92)");
+        signGrad.addColorStop(0.5, "rgba(140,0,255,0.98)");
+        signGrad.addColorStop(1, "rgba(80,0,160,0.92)");
+        ctx.fillStyle = signGrad;
+        rr(signX, signY, signW, signH, 6);
+        ctx.fill();
+        ctx.strokeStyle = `rgba(200,120,255,${0.7 + 0.3 * Math.sin(t * 2)})`;
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        ctx.fillStyle = "#EEDDFF";
+        ctx.font = "bold 13px monospace";
+        ctx.textAlign = "center";
+        ctx.fillText("◈  NOVA  DINER  ◈", W / 2, signY + 18);
+
+        // ── Service counter (top area) ─────────────────
+        const ctrY = topY + 30;
+        const ctrW = 360, ctrH = 28;
+        const ctrX = W / 2 - ctrW / 2;
+        const ctrGrad = ctx.createLinearGradient(ctrX, ctrY, ctrX + ctrW, ctrY);
+        ctrGrad.addColorStop(0, "#1a0040");
+        ctrGrad.addColorStop(0.5, "#2a0060");
+        ctrGrad.addColorStop(1, "#1a0040");
+        ctx.fillStyle = ctrGrad;
+        rr(ctrX, ctrY, ctrW, ctrH, 6);
+        ctx.fill();
+        ctx.strokeStyle = "rgba(160,80,255,0.8)";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        // Counter surface gleam
+        ctx.fillStyle = "rgba(200,150,255,0.08)";
+        ctx.fillRect(ctrX + 4, ctrY + 3, ctrW - 8, 6);
+        // Counter items: menu terminal, food display domes
+        for (let di = 0; di < 3; di++) {
+          const dx = ctrX + 50 + di * 110;
+          const dy = ctrY + 14;
+          // dome
+          ctx.fillStyle = `rgba(180,120,255,${0.15 + 0.08 * Math.sin(t * 1.2 + di)})`;
+          ctx.beginPath();
+          ctx.ellipse(dx, dy, 20, 10, 0, Math.PI, 0);
+          ctx.fill();
+          ctx.strokeStyle = "rgba(200,150,255,0.4)";
+          ctx.lineWidth = 1;
+          ctx.stroke();
+          // plate
+          ctx.fillStyle = "rgba(240,220,255,0.2)";
+          ctx.beginPath();
+          ctx.ellipse(dx, dy, 18, 4, 0, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        // Menu terminal (right of counter)
+        const termX = ctrX + ctrW - 38, termY = ctrY + 4;
+        ctx.fillStyle = "#0d0030";
+        rr(termX, termY, 28, 20, 3);
+        ctx.fill();
+        ctx.strokeStyle = "rgba(100,200,255,0.6)";
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        ctx.fillStyle = "rgba(100,200,255,0.7)";
+        ctx.font = "4px monospace";
+        ctx.textAlign = "center";
+        ctx.fillText("ORDER", termX + 14, termY + 8);
+        ctx.fillText("SYSTEM", termX + 14, termY + 14);
+
+        // ── Menu board (left wall) ─────────────────────
+        const mbX = 14, mbY = topY + 36, mbW = 100, mbH = 130;
+        const mbGrad = ctx.createLinearGradient(mbX, mbY, mbX, mbY + mbH);
+        mbGrad.addColorStop(0, "#0a0028");
+        mbGrad.addColorStop(1, "#140050");
+        ctx.fillStyle = mbGrad;
+        rr(mbX, mbY, mbW, mbH, 6);
+        ctx.fill();
+        ctx.strokeStyle = "rgba(120,60,255,0.7)";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        // Neon border line
+        ctx.strokeStyle = "rgba(180,100,255,0.3)";
+        ctx.lineWidth = 1;
+        rr(mbX + 4, mbY + 4, mbW - 8, mbH - 8, 4);
+        ctx.stroke();
+        ctx.fillStyle = "#CC88FF";
+        ctx.font = "bold 8px monospace";
+        ctx.textAlign = "center";
+        ctx.fillText("✦ MENU ✦", mbX + mbW / 2, mbY + 18);
+        ctx.strokeStyle = "rgba(180,100,255,0.4)";
         ctx.lineWidth = 1;
         ctx.beginPath();
-        ctx.arc(tx2, ty2, 22, 0, Math.PI * 2);
+        ctx.moveTo(mbX + 8, mbY + 22);
+        ctx.lineTo(mbX + mbW - 8, mbY + 22);
+        ctx.stroke();
+        const menuItems = [
+          ["🍔 NOVA BURGER", "12 CR"],
+          ["🍝 STARPASTA",   "16 CR"],
+          ["🍕 VOID PIZZA",  "20 CR"],
+          ["🥗 MOON SALAD",  " 9 CR"],
+          ["☕ NEBULA BREW",  " 5 CR"],
+        ];
+        menuItems.forEach(([name, price], i) => {
+          const my = mbY + 34 + i * 18;
+          ctx.fillStyle = `rgba(200,160,255,${0.8 + 0.2 * Math.sin(t + i)})`;
+          ctx.font = "5.5px monospace";
+          ctx.textAlign = "left";
+          ctx.fillText(name, mbX + 7, my);
+          ctx.fillStyle = "#AAFFDD";
+          ctx.textAlign = "right";
+          ctx.fillText(price, mbX + mbW - 7, my);
+          // separator
+          ctx.strokeStyle = "rgba(100,50,200,0.3)";
+          ctx.lineWidth = 0.5;
+          ctx.beginPath();
+          ctx.moveTo(mbX + 7, my + 4);
+          ctx.lineTo(mbX + mbW - 7, my + 4);
+          ctx.stroke();
+        });
+
+        // ── Dining tables with chairs ──────────────────
+        const tableConfigs = [
+          { x: W * 0.22, y: H * 0.42 },
+          { x: W * 0.50, y: H * 0.42 },
+          { x: W * 0.78, y: H * 0.42 },
+          { x: W * 0.28, y: H * 0.68 },
+          { x: W * 0.72, y: H * 0.68 },
+        ];
+        for (const tc of tableConfigs) {
+          const { x: tx, y: ty } = tc;
+          const tW = 70, tH = 44;
+          // Table shadow
+          ctx.fillStyle = "rgba(0,0,0,0.3)";
+          rr(tx - tW / 2 + 3, ty - tH / 2 + 4, tW, tH, 6);
+          ctx.fill();
+          // Table surface
+          const tGrad = ctx.createLinearGradient(tx - tW / 2, ty - tH / 2, tx + tW / 2, ty + tH / 2);
+          tGrad.addColorStop(0, "#1c004a");
+          tGrad.addColorStop(1, "#2e0070");
+          ctx.fillStyle = tGrad;
+          rr(tx - tW / 2, ty - tH / 2, tW, tH, 6);
+          ctx.fill();
+          ctx.strokeStyle = "rgba(160,80,255,0.7)";
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+          // Table gleam
+          ctx.fillStyle = "rgba(200,150,255,0.1)";
+          ctx.fillRect(tx - tW / 2 + 4, ty - tH / 2 + 3, tW - 8, 6);
+
+          // Chairs: top and bottom of table
+          for (const side of [-1, 1]) {
+            const cy2 = ty + side * (tH / 2 + 10);
+            for (const cx2 of [tx - 16, tx + 16]) {
+              ctx.fillStyle = "#0d0035";
+              ctx.strokeStyle = "rgba(120,60,200,0.5)";
+              ctx.lineWidth = 1;
+              rr(cx2 - 9, cy2 - 7, 18, 14, 3);
+              ctx.fill();
+              ctx.stroke();
+            }
+          }
+          // Side chairs
+          for (const side of [-1, 1]) {
+            const cxS = tx + side * (tW / 2 + 8);
+            ctx.fillStyle = "#0d0035";
+            ctx.strokeStyle = "rgba(120,60,200,0.5)";
+            ctx.lineWidth = 1;
+            rr(cxS - 7, ty - 8, 14, 16, 3);
+            ctx.fill();
+            ctx.stroke();
+          }
+
+          // Food items on table (small icons)
+          // Burger
+          ctx.fillStyle = "#CC8833";
+          ctx.beginPath();
+          ctx.arc(tx - 12, ty - 4, 6, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#884400";
+          ctx.beginPath();
+          ctx.arc(tx - 12, ty - 4, 4, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#AADD44";
+          ctx.beginPath();
+          ctx.arc(tx - 12, ty - 5, 3, Math.PI, 0);
+          ctx.fill();
+          // Drink cup
+          ctx.fillStyle = "#2244AA";
+          ctx.fillRect(tx + 6, ty - 8, 8, 11);
+          ctx.fillStyle = "rgba(100,200,255,0.5)";
+          ctx.fillRect(tx + 7, ty - 7, 6, 6);
+          // Plate
+          ctx.fillStyle = "rgba(220,210,255,0.3)";
+          ctx.beginPath();
+          ctx.arc(tx + 14, ty + 5, 6, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#FFDD88";
+          ctx.beginPath();
+          ctx.arc(tx + 14, ty + 5, 3, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Seated client figures at table
+          const clientPositions = [
+            { x: tx - 16, y: ty - tH / 2 - 18 },
+            { x: tx + 16, y: ty - tH / 2 - 18 },
+            { x: tx - 16, y: ty + tH / 2 + 18 },
+            { x: tx + 16, y: ty + tH / 2 + 18 },
+          ];
+          const clientColors = ["#FF8888", "#88CCFF", "#AAFFAA", "#FFCC88", "#DD99FF"];
+          clientPositions.forEach((cp, ci) => {
+            const cc = clientColors[(tableConfigs.indexOf(tc) * 4 + ci) % clientColors.length];
+            // Body (seated, smaller)
+            ctx.fillStyle = cc;
+            ctx.beginPath();
+            ctx.arc(cp.x, cp.y, 7, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = "rgba(0,0,0,0.3)";
+            ctx.lineWidth = 0.8;
+            ctx.stroke();
+            // Head
+            ctx.fillStyle = "#FFDDBB";
+            ctx.beginPath();
+            ctx.arc(cp.x, cp.y - 9, 5, 0, Math.PI * 2);
+            ctx.fill();
+          });
+        }
+
+        // ── Decorative ambient particles ───────────────
+        const ptSeed = Math.floor(t * 0.5);
+        for (let pi = 0; pi < 8; pi++) {
+          const px = (Math.sin(pi * 2.3 + t * 0.4) * 0.4 + 0.5) * W;
+          const py = (Math.cos(pi * 1.7 + t * 0.3) * 0.35 + 0.5) * H;
+          const palpha = 0.3 + 0.2 * Math.sin(t * 1.5 + pi);
+          ctx.fillStyle = `rgba(180,100,255,${palpha})`;
+          ctx.beginPath();
+          ctx.arc(px, py, 1.5, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // ── Cosmic candle/lamp accents ─────────────────
+        const lampPositions = [
+          [W * 0.48, topY + 64],
+          [W * 0.52, topY + 64],
+          [W - 16, H * 0.45],
+          [W - 16, H * 0.65],
+        ];
+        for (const [lx, ly] of lampPositions) {
+          const lg = ctx.createRadialGradient(lx, ly, 0, lx, ly, 16);
+          lg.addColorStop(0, `rgba(200,140,255,${0.5 + 0.2 * Math.sin(t * 2.1 + lx)})`);
+          lg.addColorStop(1, "rgba(100,40,200,0)");
+          ctx.fillStyle = lg;
+          ctx.beginPath();
+          ctx.arc(lx, ly, 16, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = `rgba(255,220,255,${0.7 + 0.3 * Math.sin(t * 2.1 + lx)})`;
+          ctx.beginPath();
+          ctx.arc(lx, ly, 3, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // ── [T] TALK hint near NPC ─────────────────────
+        ctx.fillStyle = "rgba(160,80,255,0.85)";
+        rr(W / 2 - 34, topY + 60, 68, 14, 4);
+        ctx.fill();
+        ctx.fillStyle = "#EEDDFF";
+        ctx.font = "bold 7px monospace";
+        ctx.textAlign = "center";
+        ctx.fillText("[T] ORDER FOOD", W / 2, topY + 70);
+
+      } else {
+        // ── Default restaurant (non-galactica) ──────────
+        // ── Bar counter (top) ────────────────────────
+        ctx.fillStyle = "#3a2010";
+        ctx.strokeStyle = "#6a4020";
+        ctx.lineWidth = 1.5;
+        rr(cx - 72, topY + 6, 144, 22, 3);
         ctx.fill();
         ctx.stroke();
-        ctx.fillStyle = "#EE8844";
-        ctx.beginPath();
-        ctx.arc(tx2, ty2, 17, 0, Math.PI * 2);
-        ctx.fill();
-        for (let ci = 0; ci < 3; ci++) {
-          const ca = (ci / 3) * Math.PI * 2 - Math.PI / 2;
-          ctx.fillStyle = "#5a3820";
-          ctx.strokeStyle = "#8a5830";
+        ctx.fillStyle = "rgba(255,200,150,0.12)";
+        ctx.fillRect(cx - 70, topY + 8, 140, 7);
+        for (let i = 0; i < 4; i++) {
+          const sx = cx - 54 + i * 36;
+          ctx.fillStyle = "#AA5533";
+          ctx.strokeStyle = "#CC7744";
           ctx.lineWidth = 1;
-          rr(
-            tx2 + Math.cos(ca) * 29 - 7,
-            ty2 + Math.sin(ca) * 29 - 7,
-            14,
-            14,
-            3,
-          );
+          ctx.beginPath();
+          ctx.arc(sx, topY + 38, 10, 0, Math.PI * 2);
           ctx.fill();
           ctx.stroke();
+          ctx.strokeStyle = "#886633";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(sx, topY + 38);
+          ctx.lineTo(sx, topY + 30);
+          ctx.stroke();
         }
-        ctx.fillStyle = "#FFEEAA";
-        ctx.shadowColor = "#FFDD66";
-        ctx.shadowBlur = 8;
-        ctx.beginPath();
-        ctx.arc(tx2, ty2, 3, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.shadowBlur = 0;
-      }
 
-      // ── Menu board (left wall) ───────────────────
-      ctx.fillStyle = "#1a3a1a";
-      ctx.strokeStyle = "#44AA44";
-      ctx.lineWidth = 1.5;
-      rr(cx - W * 0.46, topY + 4, 54, 64, 3);
-      ctx.fill();
-      ctx.stroke();
-      ctx.fillStyle = "#AAFFAA";
-      ctx.font = "bold 6px monospace";
-      ctx.textAlign = "center";
-      ctx.fillText("MENU", cx - W * 0.46 + 27, topY + 16);
-      ctx.fillStyle = "#88FF88";
-      ctx.font = "5px monospace";
-      ["BURGER $8", "PASTA $12", "PIZZA $15", "SALAD $9", "COFFEE $4"].forEach(
-        (t, i) => {
-          ctx.fillText(t, cx - W * 0.46 + 27, topY + 26 + i * 9);
-        },
-      );
+        // ── 3 round dining tables ────────────────────
+        for (const [tx2, ty2] of [
+          [cx - W * 0.3, midY - 8],
+          [cx, midY + 6],
+          [cx + W * 0.28, midY - 8],
+        ]) {
+          ctx.fillStyle = "#FFEECC";
+          ctx.strokeStyle = "#CC9966";
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.arc(tx2, ty2, 22, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#EE8844";
+          ctx.beginPath();
+          ctx.arc(tx2, ty2, 17, 0, Math.PI * 2);
+          ctx.fill();
+          for (let ci = 0; ci < 3; ci++) {
+            const ca = (ci / 3) * Math.PI * 2 - Math.PI / 2;
+            ctx.fillStyle = "#5a3820";
+            ctx.strokeStyle = "#8a5830";
+            ctx.lineWidth = 1;
+            rr(
+              tx2 + Math.cos(ca) * 29 - 7,
+              ty2 + Math.sin(ca) * 29 - 7,
+              14,
+              14,
+              3,
+            );
+            ctx.fill();
+            ctx.stroke();
+          }
+          ctx.fillStyle = "#FFEEAA";
+          ctx.shadowColor = "#FFDD66";
+          ctx.shadowBlur = 8;
+          ctx.beginPath();
+          ctx.arc(tx2, ty2, 3, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.shadowBlur = 0;
+        }
+
+        // ── Menu board (left wall) ───────────────────
+        ctx.fillStyle = "#1a3a1a";
+        ctx.strokeStyle = "#44AA44";
+        ctx.lineWidth = 1.5;
+        rr(cx - W * 0.46, topY + 4, 54, 64, 3);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = "#AAFFAA";
+        ctx.font = "bold 6px monospace";
+        ctx.textAlign = "center";
+        ctx.fillText("MENU", cx - W * 0.46 + 27, topY + 16);
+        ctx.fillStyle = "#88FF88";
+        ctx.font = "5px monospace";
+        ["BURGER $8", "PASTA $12", "PIZZA $15", "SALAD $9", "COFFEE $4"].forEach(
+          (t, i) => {
+            ctx.fillText(t, cx - W * 0.46 + 27, topY + 26 + i * 9);
+          },
+        );
+      } // end default restaurant
     } else if (type === 1) {
       // OFFICE
       // ── Meeting table (center) ───────────────────
