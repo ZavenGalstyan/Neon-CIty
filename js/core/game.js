@@ -3366,8 +3366,12 @@ class Game {
             // Nova Diner: chef/waiter behind service counter
             npcX = room.roomW / 2;
             npcY = room.roomH * 0.17;
+          } else if (isGalactica && bType === 5) {
+            // Galactica Pharmacy: pharmacist behind counter near top
+            npcX = room.roomW / 2;
+            npcY = room.roomH * 0.19;
           }
-          const useHumanRender = isNeonCity || (isGalactica && (bType === 3 || bType === 8 || bType === 0));
+          const useHumanRender = isNeonCity || (isGalactica && (bType === 3 || bType === 8 || bType === 0 || bType === 5));
           const useGirlRender  = isGalactica && bType === 8;
           this._buildingNpcs = [new BuildingNPC(npcX, npcY, bType, useHumanRender, useGirlRender)];
         }
@@ -5555,49 +5559,331 @@ class Game {
       }
     } else if (type === 5) {
       // PHARMACY
-      // ── Medicine shelves ─────────────────────────
-      const mC = [
-        "#FF4444",
-        "#4444FF",
-        "#44FF44",
-        "#FFAA44",
-        "#FF44FF",
-        "#44FFFF",
-      ];
-      for (let row = 0; row < 2; row++) {
-        const sy2 = topY + 6 + row * 38;
-        ctx.fillStyle = "#EEEEFF";
-        ctx.strokeStyle = "#AAAACC";
-        ctx.lineWidth = 1;
-        ctx.fillRect(cx - W * 0.4, sy2, W * 0.8, 30);
-        ctx.fillStyle = "#CCCCEE";
-        ctx.fillRect(cx - W * 0.4, sy2 + 13, W * 0.8, 3);
-        ctx.fillRect(cx - W * 0.4, sy2 + 25, W * 0.8, 3);
-        for (let pi = 0; pi < 10; pi++) {
-          const px3 = cx - W * 0.38 + pi * ((W * 0.76) / 10);
-          ctx.fillStyle = mC[pi % mC.length];
-          const bh = 6 + (pi % 3) * 3;
-          ctx.fillRect(px3, sy2 + 2, (W * 0.76) / 10 - 2, bh);
-          ctx.fillRect(px3, sy2 + 15, (W * 0.76) / 10 - 2, bh - 2);
+      if (!!this.map?.config?.galactica) {
+        // ═══ GALACTICA: STELLAR PHARMACY ═══
+        const t = performance.now() / 1000;
+
+        // ── Cosmic floor tiles ────────────────────────
+        const tileSize = 54;
+        for (let gy = 0; gy < Math.ceil(H / tileSize) + 1; gy++) {
+          for (let gx = 0; gx < Math.ceil(W / tileSize) + 1; gx++) {
+            const tx = gx * tileSize, ty = gy * tileSize;
+            const seed = gx * 11 + gy * 17;
+            ctx.fillStyle = (seed % 3 === 0) ? "rgba(0,18,32,0.88)"
+                          : (seed % 3 === 1) ? "rgba(0,24,24,0.88)"
+                          : "rgba(0,14,28,0.88)";
+            ctx.fillRect(tx, ty, tileSize, tileSize);
+            ctx.strokeStyle = "rgba(0,200,180,0.14)";
+            ctx.lineWidth = 0.5;
+            ctx.strokeRect(tx, ty, tileSize, tileSize);
+            if (seed % 6 === 0) {
+              ctx.fillStyle = `rgba(0,220,200,${0.25 + 0.12 * Math.sin(t * 1.1 + seed)})`;
+              ctx.beginPath();
+              ctx.arc(tx + 27, ty + 27, 1.2, 0, Math.PI * 2);
+              ctx.fill();
+            }
+          }
         }
-      }
-      // ── Counter + cross ───────────────────────────
-      ctx.fillStyle = "#EEEEFF";
-      ctx.strokeStyle = "#4488FF";
-      ctx.lineWidth = 1.5;
-      rr(cx - 46, midY + 2, 92, 26, 3);
-      ctx.fill();
-      ctx.stroke();
-      ctx.fillStyle = "#22CC44";
-      ctx.shadowColor = "#22FF66";
-      ctx.shadowBlur = 12;
-      ctx.fillRect(cx - 4, midY - 18, 8, 20);
-      ctx.fillRect(cx - 10, midY - 12, 20, 8);
-      ctx.shadowBlur = 0;
-      ctx.fillStyle = "#111118";
-      ctx.fillRect(cx + 18, midY + 4, 22, 16);
-      ctx.fillStyle = "#003322";
-      ctx.fillRect(cx + 20, midY + 6, 18, 12);
+
+        // ── Room border glow ──────────────────────────
+        ctx.strokeStyle = "rgba(0,220,180,0.55)";
+        ctx.lineWidth = 3;
+        ctx.strokeRect(2, 2, W - 4, H - 4);
+        ctx.strokeStyle = "rgba(0,160,200,0.18)";
+        ctx.lineWidth = 1;
+        ctx.strokeRect(6, 6, W - 12, H - 12);
+
+        // ── Title sign ────────────────────────────────
+        const signW = 300, signH = 28;
+        const signX = W / 2 - signW / 2, signY = room.S - 24;
+        const signGrad = ctx.createLinearGradient(signX, signY, signX + signW, signY);
+        signGrad.addColorStop(0, "rgba(0,80,70,0.92)");
+        signGrad.addColorStop(0.5, "rgba(0,160,140,0.98)");
+        signGrad.addColorStop(1, "rgba(0,80,70,0.92)");
+        ctx.fillStyle = signGrad;
+        rr(signX, signY, signW, signH, 6);
+        ctx.fill();
+        ctx.strokeStyle = `rgba(0,240,200,${0.7 + 0.3 * Math.sin(t * 2.2)})`;
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        // Glowing cross on sign
+        ctx.fillStyle = `rgba(0,255,200,${0.9 + 0.1 * Math.sin(t * 3)})`;
+        ctx.shadowColor = "#00FFCC";
+        ctx.shadowBlur = 10;
+        ctx.fillRect(signX + 14, signY + 8, 5, 13);
+        ctx.fillRect(signX + 9, signY + 12, 15, 5);
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = "#CCFFEE";
+        ctx.font = "bold 13px monospace";
+        ctx.textAlign = "center";
+        ctx.fillText("✦  STELLAR PHARMACY  ✦", W / 2, signY + 18);
+
+        // ── Service counter (top) ─────────────────────
+        const ctrY = topY + 32;
+        const ctrW = 380, ctrH = 28;
+        const ctrX = W / 2 - ctrW / 2;
+        const ctrGrad = ctx.createLinearGradient(ctrX, ctrY, ctrX + ctrW, ctrY);
+        ctrGrad.addColorStop(0, "#001818");
+        ctrGrad.addColorStop(0.5, "#003030");
+        ctrGrad.addColorStop(1, "#001818");
+        ctx.fillStyle = ctrGrad;
+        rr(ctrX, ctrY, ctrW, ctrH, 6);
+        ctx.fill();
+        ctx.strokeStyle = "rgba(0,200,170,0.8)";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        // Counter gleam
+        ctx.fillStyle = "rgba(0,220,180,0.08)";
+        ctx.fillRect(ctrX + 4, ctrY + 3, ctrW - 8, 6);
+        // Rx terminal on counter
+        const rxX = ctrX + ctrW - 44, rxY = ctrY + 3;
+        ctx.fillStyle = "#000d18";
+        rr(rxX, rxY, 34, 22, 3);
+        ctx.fill();
+        ctx.strokeStyle = "rgba(0,200,160,0.6)";
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        ctx.fillStyle = "rgba(0,200,160,0.8)";
+        ctx.font = "bold 5px monospace";
+        ctx.textAlign = "center";
+        ctx.fillText("Rx SYSTEM", rxX + 17, rxY + 9);
+        ctx.fillStyle = "rgba(0,255,180,0.5)";
+        ctx.font = "4px monospace";
+        ctx.fillText("ONLINE", rxX + 17, rxY + 17);
+
+        // ── Medicine shelf rows (left half) ───────────
+        const shelfColors = ["#FF5566","#5577FF","#44FFCC","#FFCC44","#FF88FF","#44FF99","#FF7733","#88CCFF"];
+        const shelfLabels = ["MEDI-X","STIM+","NANO-K","VITA-Z","ANTI-R","NEURO","PLASMA","BOOST"];
+        for (let row = 0; row < 3; row++) {
+          const shelfY = topY + 68 + row * 62;
+          const shelfX = 18, shelfW = W * 0.44;
+          // Shelf backing
+          ctx.fillStyle = "#001c1c";
+          ctx.strokeStyle = "rgba(0,180,150,0.4)";
+          ctx.lineWidth = 1.5;
+          rr(shelfX, shelfY, shelfW, 48, 4);
+          ctx.fill();
+          ctx.stroke();
+          // Shelf rails
+          ctx.strokeStyle = "rgba(0,140,120,0.3)";
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(shelfX + 4, shelfY + 16);
+          ctx.lineTo(shelfX + shelfW - 4, shelfY + 16);
+          ctx.moveTo(shelfX + 4, shelfY + 32);
+          ctx.lineTo(shelfX + shelfW - 4, shelfY + 32);
+          ctx.stroke();
+          // Medicine bottles and boxes on each row
+          const itemCount = 8;
+          for (let mi = 0; mi < itemCount; mi++) {
+            const mc = shelfColors[(row * itemCount + mi) % shelfColors.length];
+            const mx = shelfX + 8 + mi * (shelfW - 16) / itemCount;
+            // Top shelf: tall bottles
+            const bH = 10 + (mi % 3) * 4;
+            ctx.fillStyle = mc;
+            ctx.globalAlpha = 0.85;
+            rr(mx, shelfY + 3, 10, bH, 2);
+            ctx.fill();
+            ctx.globalAlpha = 1;
+            ctx.strokeStyle = "rgba(255,255,255,0.3)";
+            ctx.lineWidth = 0.5;
+            ctx.stroke();
+            // Bottle cap
+            ctx.fillStyle = "rgba(255,255,255,0.6)";
+            ctx.fillRect(mx + 2, shelfY + 2, 6, 3);
+            // Bottom shelf: flat boxes
+            ctx.fillStyle = mc;
+            ctx.globalAlpha = 0.7;
+            ctx.fillRect(mx, shelfY + 20, 12, 8);
+            ctx.globalAlpha = 1;
+            // Label
+            ctx.fillStyle = "rgba(255,255,255,0.5)";
+            ctx.font = "3px monospace";
+            ctx.textAlign = "center";
+            ctx.fillText(shelfLabels[(row * itemCount + mi) % shelfLabels.length].slice(0,4), mx + 6, shelfY + 26);
+          }
+          // Shelf label tag
+          ctx.fillStyle = "rgba(0,200,160,0.7)";
+          ctx.font = "bold 5px monospace";
+          ctx.textAlign = "left";
+          ctx.fillText(`AISLE ${row + 1}`, shelfX + 4, shelfY + 45);
+        }
+
+        // ── Display cases (right side — premium items) ─
+        const caseConfigs = [
+          { x: W * 0.55, y: H * 0.30, label: "NANO HEAL", price: "180 CR", color: "#00FFCC" },
+          { x: W * 0.72, y: H * 0.30, label: "STIM PACK", price: "95 CR",  color: "#88AAFF" },
+          { x: W * 0.88, y: H * 0.30, label: "ANTI-TOX",  price: "120 CR", color: "#FF88CC" },
+          { x: W * 0.55, y: H * 0.50, label: "REGEN+",    price: "240 CR", color: "#AAFFAA" },
+          { x: W * 0.72, y: H * 0.50, label: "BOOST X",   price: "75 CR",  color: "#FFCC44" },
+          { x: W * 0.88, y: H * 0.50, label: "NEURO-K",   price: "310 CR", color: "#FF77AA" },
+        ];
+        for (const cc of caseConfigs) {
+          const { x: px, y: py, label, price, color } = cc;
+          const pW = 70, pH = 56;
+          // Platform shadow
+          ctx.fillStyle = "rgba(0,0,0,0.35)";
+          rr(px - pW / 2 + 3, py - pH / 2 + 4, pW, pH, 5);
+          ctx.fill();
+          // Platform base
+          const pGrad = ctx.createLinearGradient(px - pW / 2, py, px + pW / 2, py);
+          pGrad.addColorStop(0, "#001818");
+          pGrad.addColorStop(0.5, "#002828");
+          pGrad.addColorStop(1, "#001818");
+          ctx.fillStyle = pGrad;
+          rr(px - pW / 2, py - pH / 2, pW, pH, 5);
+          ctx.fill();
+          ctx.strokeStyle = `${color}88`;
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+          // Glow under item
+          const glowR = ctx.createRadialGradient(px, py, 0, px, py, 22);
+          glowR.addColorStop(0, `${color}44`);
+          glowR.addColorStop(1, "rgba(0,0,0,0)");
+          ctx.fillStyle = glowR;
+          ctx.beginPath();
+          ctx.arc(px, py, 22, 0, Math.PI * 2);
+          ctx.fill();
+          // Item: pill capsule
+          ctx.fillStyle = color;
+          ctx.globalAlpha = 0.9 + 0.1 * Math.sin(t * 1.8 + px);
+          ctx.beginPath();
+          ctx.ellipse(px, py - 6, 10, 5, 0.4, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.globalAlpha = 1;
+          ctx.strokeStyle = "rgba(255,255,255,0.3)";
+          ctx.lineWidth = 0.5;
+          ctx.stroke();
+          // Plus symbol on pill
+          ctx.fillStyle = "rgba(0,0,0,0.5)";
+          ctx.font = "bold 7px monospace";
+          ctx.textAlign = "center";
+          ctx.fillText("+", px, py - 3);
+          // Label
+          ctx.fillStyle = color;
+          ctx.font = "bold 5px monospace";
+          ctx.fillText(label, px, py + 8);
+          // Price
+          ctx.fillStyle = "#AAFFEE";
+          ctx.font = "5px monospace";
+          ctx.fillText(price, px, py + 16);
+          // Hover pulse ring
+          const ring = 0.5 + 0.5 * Math.sin(t * 2 + px * 0.01);
+          ctx.strokeStyle = `${color}${Math.floor(ring * 80).toString(16).padStart(2,'0')}`;
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.arc(px, py - 6, 14 + ring * 4, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+
+        // ── Waiting area seats (bottom) ────────────────
+        const seatY = H * 0.80;
+        for (let si = 0; si < 5; si++) {
+          const sx = W * 0.12 + si * W * 0.16;
+          // Seat
+          ctx.fillStyle = "#001a20";
+          ctx.strokeStyle = "rgba(0,180,150,0.5)";
+          ctx.lineWidth = 1;
+          rr(sx - 14, seatY - 9, 28, 20, 4);
+          ctx.fill();
+          ctx.stroke();
+          // Back
+          ctx.fillStyle = "#001518";
+          rr(sx - 13, seatY - 18, 26, 10, 3);
+          ctx.fill();
+          ctx.strokeStyle = "rgba(0,160,130,0.4)";
+          ctx.stroke();
+          // Seated figure (alternating occupied)
+          if (si % 2 === 0) {
+            // Body
+            ctx.fillStyle = ["#FF8888","#88CCFF","#AAFFCC"][si % 3];
+            ctx.beginPath();
+            ctx.arc(sx, seatY, 7, 0, Math.PI * 2);
+            ctx.fill();
+            // Head
+            ctx.fillStyle = "#FFDDBB";
+            ctx.beginPath();
+            ctx.arc(sx, seatY - 13, 5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = "rgba(0,0,0,0.25)";
+            ctx.lineWidth = 0.5;
+            ctx.stroke();
+          }
+        }
+
+        // ── Glowing cross emblem (wall center-right) ───
+        const crossX = W * 0.72, crossY = H * 0.71;
+        const crossGlow = ctx.createRadialGradient(crossX, crossY, 0, crossX, crossY, 30);
+        crossGlow.addColorStop(0, `rgba(0,255,200,${0.3 + 0.15 * Math.sin(t * 1.5)})`);
+        crossGlow.addColorStop(1, "rgba(0,0,0,0)");
+        ctx.fillStyle = crossGlow;
+        ctx.beginPath();
+        ctx.arc(crossX, crossY, 30, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = `rgba(0,255,190,${0.8 + 0.2 * Math.sin(t * 2)})`;
+        ctx.shadowColor = "#00FFCC";
+        ctx.shadowBlur = 14;
+        ctx.fillRect(crossX - 3, crossY - 14, 6, 28);
+        ctx.fillRect(crossX - 14, crossY - 3, 28, 6);
+        ctx.shadowBlur = 0;
+
+        // ── Ambient particles ─────────────────────────
+        for (let pi = 0; pi < 6; pi++) {
+          const px = (Math.sin(pi * 2.1 + t * 0.5) * 0.38 + 0.5) * W;
+          const py = (Math.cos(pi * 1.9 + t * 0.35) * 0.3 + 0.5) * H;
+          ctx.fillStyle = `rgba(0,220,180,${0.2 + 0.15 * Math.sin(t * 1.4 + pi)})`;
+          ctx.beginPath();
+          ctx.arc(px, py, 1.5, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // ── [T] TALK hint ─────────────────────────────
+        ctx.fillStyle = "rgba(0,160,130,0.88)";
+        rr(W / 2 - 40, topY + 62, 80, 14, 4);
+        ctx.fill();
+        ctx.fillStyle = "#CCFFEE";
+        ctx.font = "bold 7px monospace";
+        ctx.textAlign = "center";
+        ctx.fillText("[T] BUY MEDICINE", W / 2, topY + 72);
+
+      } else {
+        // ── Default pharmacy (non-galactica) ────────────
+        const mC = ["#FF4444","#4444FF","#44FF44","#FFAA44","#FF44FF","#44FFFF"];
+        for (let row = 0; row < 2; row++) {
+          const sy2 = topY + 6 + row * 38;
+          ctx.fillStyle = "#EEEEFF";
+          ctx.strokeStyle = "#AAAACC";
+          ctx.lineWidth = 1;
+          ctx.fillRect(cx - W * 0.4, sy2, W * 0.8, 30);
+          ctx.fillStyle = "#CCCCEE";
+          ctx.fillRect(cx - W * 0.4, sy2 + 13, W * 0.8, 3);
+          ctx.fillRect(cx - W * 0.4, sy2 + 25, W * 0.8, 3);
+          for (let pi = 0; pi < 10; pi++) {
+            const px3 = cx - W * 0.38 + pi * ((W * 0.76) / 10);
+            ctx.fillStyle = mC[pi % mC.length];
+            const bh = 6 + (pi % 3) * 3;
+            ctx.fillRect(px3, sy2 + 2, (W * 0.76) / 10 - 2, bh);
+            ctx.fillRect(px3, sy2 + 15, (W * 0.76) / 10 - 2, bh - 2);
+          }
+        }
+        // ── Counter + cross ─────────────────────────────
+        ctx.fillStyle = "#EEEEFF";
+        ctx.strokeStyle = "#4488FF";
+        ctx.lineWidth = 1.5;
+        rr(cx - 46, midY + 2, 92, 26, 3);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = "#22CC44";
+        ctx.shadowColor = "#22FF66";
+        ctx.shadowBlur = 12;
+        ctx.fillRect(cx - 4, midY - 18, 8, 20);
+        ctx.fillRect(cx - 10, midY - 12, 20, 8);
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = "#111118";
+        ctx.fillRect(cx + 18, midY + 4, 22, 16);
+        ctx.fillStyle = "#003322";
+        ctx.fillRect(cx + 20, midY + 6, 18, 12);
+      } // end default pharmacy
     } else if (type === 6) {
       // GYM
       // ── Treadmills (left) ────────────────────────
