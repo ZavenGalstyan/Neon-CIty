@@ -3356,12 +3356,16 @@ class Game {
             npcX = room.roomW / 2;
             npcY = room.roomH * 0.34;
           } else if (isGalactica && bType === 3) {
-            // Galactic Bazaar: worker behind top counter, same as dealership
             npcX = room.roomW / 2;
             npcY = room.roomH * 0.38;
+          } else if (isGalactica && bType === 8) {
+            // Galaxy Club: hostess near top, player-facing
+            npcX = room.roomW / 2;
+            npcY = room.roomH * 0.22;
           }
-          const useHumanRender = isNeonCity || (isGalactica && bType === 3);
-          this._buildingNpcs = [new BuildingNPC(npcX, npcY, bType, useHumanRender)];
+          const useHumanRender = isNeonCity || (isGalactica && (bType === 3 || bType === 8));
+          const useGirlRender  = isGalactica && bType === 8;
+          this._buildingNpcs = [new BuildingNPC(npcX, npcY, bType, useHumanRender, useGirlRender)];
         }
         return;
       }
@@ -5468,7 +5472,436 @@ class Game {
       }
     } else if (type === 8) {
       // NIGHTCLUB
-      // ── Dance floor (center) ─────────────────────
+      if (!!this.map?.config?.galactica) {
+        // ═══ GALACTICA: GALAXY CLUB ═══
+        const t = performance.now() / 1000;
+        const PURP = "#CC44FF", PINK = "#FF44CC", CYAN = "#44DDFF",
+              GOLD = "#FFDD44", HOT  = "#FF2299", BLUE = "#4455FF";
+
+        // ── SPACE FLOOR (same cosmic tiles as room) ──
+        for (let ty2 = 0; ty2 < room.H; ty2++) {
+          for (let tx2 = 0; tx2 < room.W; tx2++) {
+            if (room.layout[ty2][tx2] !== 0) continue;
+            const px2 = tx2 * room.S, py2 = ty2 * room.S;
+            ctx.fillStyle = (tx2 + ty2) % 2 === 0 ? "#06031e" : "#040118";
+            ctx.fillRect(px2, py2, room.S, room.S);
+            ctx.strokeStyle = "rgba(120,60,200,0.06)";
+            ctx.lineWidth = 1;
+            ctx.strokeRect(px2, py2, room.S, room.S);
+          }
+        }
+
+        // ── ROOM BORDER ──
+        ctx.strokeStyle = HOT;
+        ctx.lineWidth = 2;
+        ctx.shadowColor = HOT;
+        ctx.shadowBlur = 18;
+        ctx.strokeRect(room.S + 2, room.S + 2, W - room.S * 2 - 4, H - room.S * 2 - 4);
+        ctx.shadowBlur = 0;
+
+        // ── TITLE SIGN ──
+        ctx.save();
+        ctx.font = "bold 22px Orbitron, monospace";
+        ctx.textAlign = "center";
+        ctx.fillStyle = "#fff";
+        ctx.shadowColor = PINK;
+        ctx.shadowBlur = 30;
+        ctx.fillText("✦  GALAXY CLUB  ✦", W / 2, room.S - 18);
+        ctx.shadowBlur = 0;
+        ctx.restore();
+
+        // ── TOP ACCENT BAR ──
+        const tg = ctx.createLinearGradient(0, room.S, W, room.S);
+        tg.addColorStop(0,   "rgba(255,68,204,0)");
+        tg.addColorStop(0.5, "rgba(255,68,204,0.6)");
+        tg.addColorStop(1,   "rgba(255,68,204,0)");
+        ctx.fillStyle = tg;
+        ctx.fillRect(room.S, room.S, W - room.S * 2, 4);
+
+        // ── DJ BOOTH (top-center, large + detailed) ──
+        const djX = W / 2 - 110, djY = room.S * 1.1, djW = 220, djH = 54;
+        // Booth body
+        ctx.fillStyle = "#110020";
+        ctx.strokeStyle = PURP;
+        ctx.lineWidth = 2;
+        ctx.shadowColor = PURP;
+        ctx.shadowBlur = 14;
+        rr(djX, djY, djW, djH, 8);
+        ctx.fill(); ctx.stroke();
+        ctx.shadowBlur = 0;
+        // Booth top strip
+        const djG = ctx.createLinearGradient(djX, 0, djX + djW, 0);
+        djG.addColorStop(0, PINK + "00");
+        djG.addColorStop(0.5, PINK + "BB");
+        djG.addColorStop(1, PINK + "00");
+        ctx.fillStyle = djG;
+        ctx.fillRect(djX + 4, djY, djW - 8, 4);
+        // Turntable L
+        const tt = (t * 1.2) % (Math.PI * 2);
+        for (const [tx2, sign] of [[djX + 42, 1], [djX + djW - 42, -1]]) {
+          ctx.fillStyle = "#0a001a";
+          ctx.strokeStyle = PURP + "88";
+          ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.arc(tx2, djY + 28, 24, 0, Math.PI * 2);
+          ctx.fill(); ctx.stroke();
+          // Vinyl grooves
+          for (let gr = 1; gr <= 4; gr++) {
+            ctx.strokeStyle = `rgba(160,80,255,${0.1 + gr * 0.06})`;
+            ctx.beginPath(); ctx.arc(tx2, djY + 28, gr * 5, 0, Math.PI * 2);
+            ctx.stroke();
+          }
+          // Label sticker
+          ctx.fillStyle = PINK;
+          ctx.beginPath(); ctx.arc(tx2, djY + 28, 6, 0, Math.PI * 2);
+          ctx.fill();
+          // Rotation arm
+          ctx.strokeStyle = "#888";
+          ctx.lineWidth = 2;
+          ctx.save(); ctx.translate(tx2, djY + 28); ctx.rotate(tt * sign);
+          ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(22, -6); ctx.stroke();
+          ctx.fillStyle = "#aaa"; ctx.beginPath(); ctx.arc(22, -6, 2.5, 0, Math.PI * 2); ctx.fill();
+          ctx.restore();
+        }
+        // Mixer — animated EQ bars
+        const eqColors = [CYAN, PURP, PINK, HOT, GOLD, BLUE, CYAN, PURP];
+        for (let ei = 0; ei < 8; ei++) {
+          const bh = 8 + Math.sin(t * 8 + ei * 0.9) * 14;
+          ctx.fillStyle = eqColors[ei];
+          ctx.shadowColor = eqColors[ei];
+          ctx.shadowBlur = 6;
+          ctx.fillRect(djX + 80 + ei * 8, djY + djH - 6 - bh, 6, bh);
+        }
+        ctx.shadowBlur = 0;
+        // "DJ" label
+        ctx.fillStyle = PINK;
+        ctx.shadowColor = PINK;
+        ctx.shadowBlur = 10;
+        ctx.font = "bold 9px Orbitron, monospace";
+        ctx.textAlign = "center";
+        ctx.fillText("⬡ GALAXY MIX ⬡", W / 2, djY + djH + 14);
+        ctx.shadowBlur = 0;
+
+        // ── SPEAKERS — left & right of DJ booth ──
+        for (const [spX, spY] of [[djX - 50, djY - 4], [djX + djW + 24, djY - 4]]) {
+          ctx.fillStyle = "#0a0018";
+          ctx.strokeStyle = PURP + "88";
+          ctx.lineWidth = 1.5;
+          rr(spX, spY, 32, 56, 5);
+          ctx.fill(); ctx.stroke();
+          // Woofer rings
+          for (let ri = 0; ri < 4; ri++) {
+            const rp = Math.sin(t * 6 + ri) * 0.5 + 0.5;
+            ctx.strokeStyle = `rgba(160,80,255,${0.2 + rp * 0.5})`;
+            ctx.lineWidth = 1;
+            ctx.beginPath(); ctx.arc(spX + 16, spY + 20, 4 + ri * 3, 0, Math.PI * 2);
+            ctx.stroke();
+          }
+          // Tweeter
+          ctx.fillStyle = PURP;
+          ctx.shadowColor = PURP;
+          ctx.shadowBlur = 8;
+          ctx.beginPath(); ctx.arc(spX + 16, spY + 44, 5, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.shadowBlur = 0;
+        }
+
+        // ── DANCE FLOOR (center of room, animated tiles) ──
+        const dfCols = 8, dfRows = 5;
+        const dfW2 = W * 0.62, dfH2 = H * 0.32;
+        const dfX = W / 2 - dfW2 / 2, dfY2 = H * 0.40;
+        const tw = dfW2 / dfCols, th2 = dfH2 / dfRows;
+        const tileColors = [HOT, PURP, CYAN, PINK, BLUE, GOLD, "#44FFAA", PINK];
+        for (let tr = 0; tr < dfRows; tr++) {
+          for (let tc = 0; tc < dfCols; tc++) {
+            const seed = tc * 3 + tr * 7;
+            const phase = Math.sin(t * 4 + seed * 1.1) * 0.5 + 0.5;
+            const col = tileColors[(tc + tr + Math.floor(t * 2)) % tileColors.length];
+            // Tile base
+            ctx.fillStyle = `rgba(8,0,20,0.9)`;
+            ctx.fillRect(dfX + tc * tw + 1, dfY2 + tr * th2 + 1, tw - 2, th2 - 2);
+            // Lit tile
+            ctx.fillStyle = col + Math.floor(phase * 80 + 20).toString(16).padStart(2, "0");
+            ctx.fillRect(dfX + tc * tw + 1, dfY2 + tr * th2 + 1, tw - 2, th2 - 2);
+            // Border glow
+            ctx.strokeStyle = col + Math.floor(phase * 180 + 40).toString(16).padStart(2, "0");
+            ctx.lineWidth = 1;
+            ctx.strokeRect(dfX + tc * tw + 1, dfY2 + tr * th2 + 1, tw - 2, th2 - 2);
+            // Shine
+            ctx.fillStyle = `rgba(255,255,255,${0.04 + phase * 0.06})`;
+            ctx.fillRect(dfX + tc * tw + 2, dfY2 + tr * th2 + 2, tw / 2, th2 / 2);
+          }
+        }
+        // Dance floor label
+        ctx.fillStyle = "rgba(255,255,255,0.25)";
+        ctx.font = "bold 7px Orbitron, monospace";
+        ctx.textAlign = "center";
+        ctx.fillText("DANCE FLOOR", W / 2, dfY2 + dfH2 + 12);
+
+        // ── DANCERS on the dance floor ──
+        const dancerDefs = [
+          { x: W * 0.25, y: H * 0.50, color: PINK,  gender: "f" },
+          { x: W * 0.38, y: H * 0.53, color: CYAN,  gender: "m" },
+          { x: W * 0.50, y: H * 0.50, color: GOLD,  gender: "f" },
+          { x: W * 0.62, y: H * 0.53, color: PURP,  gender: "m" },
+          { x: W * 0.75, y: H * 0.50, color: HOT,   gender: "f" },
+        ];
+        for (const d of dancerDefs) {
+          const bounce  = Math.sin(t * 4 + d.x * 0.05) * 5;
+          const armSwing = Math.sin(t * 4 + d.x * 0.05) * 18;
+          ctx.save();
+          ctx.translate(d.x, d.y + bounce);
+
+          // Shadow
+          ctx.fillStyle = "rgba(0,0,0,0.3)";
+          ctx.beginPath();
+          ctx.ellipse(0, 22, 9, 3, 0, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Legs (alternating step)
+          const stepL = Math.sin(t * 4 + d.x) * 5;
+          ctx.fillStyle = d.gender === "f" ? "#1a0030" : "#0a1a2a";
+          ctx.fillRect(-8, 10, 5, 12 + stepL);
+          ctx.fillRect(3,  10, 5, 12 - stepL);
+
+          // Body
+          ctx.fillStyle = d.color + "CC";
+          ctx.shadowColor = d.color;
+          ctx.shadowBlur = 8;
+          ctx.beginPath();
+          ctx.roundRect(d.gender === "f" ? -8 : -7, -8, d.gender === "f" ? 16 : 14, 20, 3);
+          ctx.fill();
+          ctx.shadowBlur = 0;
+          if (d.gender === "f") {
+            // Dress flare
+            ctx.fillStyle = d.color + "88";
+            ctx.beginPath();
+            ctx.moveTo(-8, 8);
+            ctx.lineTo(-12, 22);
+            ctx.lineTo(12, 22);
+            ctx.lineTo(8, 8);
+            ctx.closePath();
+            ctx.fill();
+          }
+
+          // Arms (swinging)
+          ctx.strokeStyle = "#DDAA88";
+          ctx.lineWidth = 3;
+          ctx.lineCap = "round";
+          ctx.beginPath();
+          ctx.moveTo(-7, -4);
+          ctx.lineTo(-14 - armSwing * 0.3, 6);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(7, -4);
+          ctx.lineTo(14 + armSwing * 0.3, 2);
+          ctx.stroke();
+          ctx.lineCap = "butt";
+
+          // Head
+          ctx.fillStyle = "#DDAA88";
+          ctx.beginPath();
+          ctx.arc(0, -15, 8, 0, Math.PI * 2);
+          ctx.fill();
+          // Hair
+          ctx.fillStyle = d.gender === "f"
+            ? (d.color === GOLD ? "#441100" : "#1a002a")
+            : "#1a1a1a";
+          ctx.beginPath();
+          ctx.arc(0, -18, 7, Math.PI, 0);
+          ctx.fill();
+          if (d.gender === "f") {
+            // Long hair sides
+            ctx.fillRect(-8, -19, 4, 12);
+            ctx.fillRect(4, -19, 4, 12);
+          }
+          // Eyes — tiny glowing
+          ctx.fillStyle = d.color;
+          ctx.shadowColor = d.color;
+          ctx.shadowBlur = 4;
+          ctx.beginPath();
+          ctx.arc(-3, -16, 1.2, 0, Math.PI * 2);
+          ctx.arc(3,  -16, 1.2, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.shadowBlur = 0;
+
+          ctx.restore();
+        }
+
+        // ── STAGE / PODIUMS (left and right) ──
+        for (const [pdX, pdCol] of [[W * 0.12, PINK], [W * 0.88, CYAN]]) {
+          const podBounce = Math.sin(t * 3 + pdX) * 4;
+          // Platform
+          ctx.fillStyle = "#110025";
+          ctx.strokeStyle = pdCol;
+          ctx.lineWidth = 2;
+          ctx.shadowColor = pdCol;
+          ctx.shadowBlur = 12;
+          rr(pdX - 22, H * 0.42, 44, 14, 4);
+          ctx.fill(); ctx.stroke();
+          ctx.shadowBlur = 0;
+          // Pole dancer silhouette
+          ctx.save();
+          ctx.translate(pdX, H * 0.42 - 5 + podBounce);
+          // Pole
+          ctx.strokeStyle = "#aaa";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(0, 0); ctx.lineTo(0, -50);
+          ctx.stroke();
+          // Body
+          ctx.fillStyle = pdCol + "CC";
+          ctx.shadowColor = pdCol;
+          ctx.shadowBlur = 10;
+          ctx.beginPath();
+          ctx.roundRect(-6, -38, 12, 18, 3);
+          ctx.fill();
+          ctx.shadowBlur = 0;
+          // Dress/outfit
+          ctx.fillStyle = pdCol + "77";
+          ctx.beginPath();
+          ctx.moveTo(-6, -20); ctx.lineTo(-10, -8); ctx.lineTo(10, -8); ctx.lineTo(6, -20);
+          ctx.closePath(); ctx.fill();
+          // Head
+          ctx.fillStyle = "#DDAA88";
+          ctx.beginPath(); ctx.arc(0, -44, 7, 0, Math.PI * 2); ctx.fill();
+          // Hair
+          ctx.fillStyle = "#220044";
+          ctx.beginPath(); ctx.arc(0, -47, 6, Math.PI, 0); ctx.fill();
+          ctx.fillRect(-7, -48, 3, 12);
+          ctx.fillRect(4, -48, 3, 12);
+          // Arm on pole
+          ctx.strokeStyle = "#DDAA88";
+          ctx.lineWidth = 2.5;
+          ctx.lineCap = "round";
+          ctx.beginPath();
+          ctx.moveTo(6, -34);
+          ctx.lineTo(0, -42);
+          ctx.stroke();
+          ctx.lineCap = "butt";
+          ctx.restore();
+        }
+
+        // ── NEON LASER LIGHTS ──
+        for (let li = 0; li < 6; li++) {
+          const angle = t * 0.7 + (li * Math.PI * 2) / 6;
+          const originX = W / 2 + (li % 3 - 1) * 80;
+          const originY = room.S * 1.5;
+          const len = 180 + Math.sin(t * 2 + li) * 60;
+          const lCol = tileColors[li % tileColors.length];
+          ctx.strokeStyle = lCol + "55";
+          ctx.lineWidth = 1.5;
+          ctx.shadowColor = lCol;
+          ctx.shadowBlur = 8;
+          ctx.beginPath();
+          ctx.moveTo(originX, originY);
+          ctx.lineTo(originX + Math.cos(angle) * len, originY + Math.sin(angle) * len);
+          ctx.stroke();
+          ctx.shadowBlur = 0;
+        }
+
+        // ── STROBE SPOTLIGHTS on dance floor ──
+        for (let si = 0; si < 3; si++) {
+          const sp = Math.sin(t * 5 + si * 2) * 0.5 + 0.5;
+          const sCol = [PINK, CYAN, GOLD][si];
+          const sx = dfX + dfW2 * (0.2 + si * 0.3);
+          const sg = ctx.createRadialGradient(sx, dfY2 + dfH2 / 2, 0, sx, dfY2 + dfH2 / 2, 60);
+          sg.addColorStop(0, sCol + Math.floor(sp * 60).toString(16).padStart(2, "0"));
+          sg.addColorStop(1, "rgba(0,0,0,0)");
+          ctx.fillStyle = sg;
+          ctx.beginPath();
+          ctx.arc(sx, dfY2 + dfH2 / 2, 60, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // ── BAR (bottom-left) ──
+        const barX = room.S + 4, barY = H * 0.78, barW = W * 0.22, barH = 42;
+        ctx.fillStyle = "#0e0020";
+        ctx.strokeStyle = PURP;
+        ctx.lineWidth = 2;
+        ctx.shadowColor = PURP;
+        ctx.shadowBlur = 10;
+        rr(barX, barY, barW, barH, 6);
+        ctx.fill(); ctx.stroke();
+        ctx.shadowBlur = 0;
+        // Bar counter top
+        ctx.fillStyle = "#1e0040";
+        ctx.fillRect(barX, barY, barW, 6);
+        // Glowing bottles
+        const bColors = [HOT, PURP, CYAN, GOLD];
+        for (let bi = 0; bi < 4; bi++) {
+          const bc = bColors[bi];
+          const bx = barX + 12 + bi * (barW - 24) / 3;
+          const bp = Math.sin(t * 1.5 + bi) * 0.3 + 0.7;
+          ctx.fillStyle = bc + "50";
+          ctx.strokeStyle = bc;
+          ctx.lineWidth = 1;
+          ctx.shadowColor = bc;
+          ctx.shadowBlur = 6 * bp;
+          ctx.beginPath();
+          ctx.moveTo(bx - 5, barY + barH - 4);
+          ctx.lineTo(bx - 4, barY + 12);
+          ctx.lineTo(bx - 2, barY + 8);
+          ctx.lineTo(bx + 2, barY + 8);
+          ctx.lineTo(bx + 4, barY + 12);
+          ctx.lineTo(bx + 5, barY + barH - 4);
+          ctx.closePath();
+          ctx.fill(); ctx.stroke();
+          ctx.shadowBlur = 0;
+        }
+        ctx.fillStyle = PINK;
+        ctx.font = "bold 6px Orbitron, monospace";
+        ctx.textAlign = "center";
+        ctx.fillText("SPACE BAR", barX + barW / 2, barY + barH + 11);
+
+        // ── VIP LOUNGE (bottom-right) ──
+        const vipX = W - room.S - 4 - W * 0.22, vipY = H * 0.78;
+        ctx.fillStyle = "#0e0020";
+        ctx.strokeStyle = GOLD;
+        ctx.lineWidth = 2;
+        ctx.shadowColor = GOLD;
+        ctx.shadowBlur = 10;
+        rr(vipX, vipY, barW, barH, 6);
+        ctx.fill(); ctx.stroke();
+        ctx.shadowBlur = 0;
+        // VIP sofas
+        for (let vi = 0; vi < 2; vi++) {
+          const vsx = vipX + 10 + vi * (barW / 2 - 8);
+          ctx.fillStyle = "#2a0040";
+          ctx.strokeStyle = GOLD + "88";
+          ctx.lineWidth = 1;
+          rr(vsx, vipY + 10, barW / 2 - 14, 24, 4);
+          ctx.fill(); ctx.stroke();
+          ctx.fillStyle = "#1a002a";
+          rr(vsx, vipY + 8, barW / 2 - 14, 8, 2);
+          ctx.fill();
+        }
+        ctx.fillStyle = GOLD;
+        ctx.shadowColor = GOLD;
+        ctx.shadowBlur = 8;
+        ctx.font = "bold 6px Orbitron, monospace";
+        ctx.textAlign = "center";
+        ctx.fillText("★ VIP LOUNGE ★", vipX + barW / 2, vipY + barH + 11);
+        ctx.shadowBlur = 0;
+
+        // ── AMBIENT PARTICLES ──
+        for (let pi = 0; pi < 16; pi++) {
+          const px2 = (t * 18 + pi * 67) % W;
+          const py2 = room.S * 2 + Math.sin(t * 1.2 + pi * 0.7) * 30 + (pi * (H * 0.7)) / 16;
+          const al  = Math.sin(t * 2 + pi) * 0.3 + 0.4;
+          ctx.fillStyle = tileColors[pi % tileColors.length] + Math.floor(al * 200).toString(16).padStart(2, "0");
+          ctx.beginPath();
+          ctx.arc(px2, py2, pi % 4 === 0 ? 2 : 1, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Side neon strips
+        ctx.fillStyle = "rgba(255,68,204,0.25)";
+        ctx.fillRect(room.S, room.S * 1.5, 3, H - room.S * 3);
+        ctx.fillRect(W - room.S - 3, room.S * 1.5, 3, H - room.S * 3);
+
+      } else {
+        // ── DEFAULT NIGHTCLUB (other maps) ──────────
+        // ── Dance floor (center) ─────────────────────
       const tiles = 5;
       const tSize = Math.floor((W * 0.7) / tiles);
       const dfX = cx - (tSize * tiles) / 2,
@@ -5577,6 +6010,7 @@ class Game {
       ctx.textAlign = "center";
       ctx.fillText("NEON CLUB", cx, topY + 42);
       ctx.shadowBlur = 0;
+      } // end default nightclub
     } else if (type === 9) {
       // HOSPITAL
       // ── Operating table (center) ─────────────────
