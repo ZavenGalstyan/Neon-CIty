@@ -2127,123 +2127,165 @@ class Game {
 
     // ── Floor-specific accent color per floor ──────────────
     const FLOOR_COLORS = [
-      '#FFD700', // 0 unused
-      '#E8D8B0', // 1 Grand Lobby
-      '#FFCC00', // 2 Parking Garage
-      '#CC8844', // 3 Corporate Offices
-      '#00CCFF', // 4 Data Center
-      '#FF6666', // 5 Velvet Lounge
-      '#FF4444', // 6 Tactical Ops
-      '#44FF88', // 7 Bio-Research Lab
-      '#FF8844', // 8 Weapons Armory
-      '#BB88FF', // 9 Executive Suite
-      '#FFD700', // 10 The Penthouse
+      "#FFD700", // 0 unused
+      "#E8D8B0", // 1 Grand Lobby
+      "#FFCC00", // 2 Parking Garage
+      "#CC8844", // 3 Corporate Offices
+      "#00CCFF", // 4 Data Center
+      "#FF6666", // 5 Velvet Lounge
+      "#FF4444", // 6 Tactical Ops
+      "#44FF88", // 7 Bio-Research Lab
+      "#FF8844", // 8 Weapons Armory
+      "#BB88FF", // 9 Executive Suite
+      "#FFD700", // 10 The Penthouse
     ];
-    const flCol = FLOOR_COLORS[Math.min(fl, 10)] || '#FFD700';
-    const pulse  = Math.sin(t * 2.5) * 0.18 + 0.82;
+    const flCol = FLOOR_COLORS[Math.min(fl, 10)] || "#FFD700";
+    const pulse = Math.sin(t * 2.5) * 0.18 + 0.82;
 
     // ── Main floor panel — top-center ─────────────────────
-    const panW = 320, panH = 72, panX = W/2 - panW/2, panY = 12;
+    const panW = 320,
+      panH = 72,
+      panX = W / 2 - panW / 2,
+      panY = 12;
 
     // Panel drop shadow
-    ctx.fillStyle = 'rgba(0,0,0,0.40)';
-    ctx.beginPath(); ctx.roundRect(panX+3, panY+3, panW, panH, 10); ctx.fill();
+    ctx.fillStyle = "rgba(0,0,0,0.40)";
+    ctx.beginPath();
+    ctx.roundRect(panX + 3, panY + 3, panW, panH, 10);
+    ctx.fill();
 
     // Panel body
-    ctx.fillStyle = 'rgba(8,6,4,0.88)';
-    ctx.beginPath(); ctx.roundRect(panX, panY, panW, panH, 10); ctx.fill();
+    ctx.fillStyle = "rgba(8,6,4,0.88)";
+    ctx.beginPath();
+    ctx.roundRect(panX, panY, panW, panH, 10);
+    ctx.fill();
 
     // Colored top accent bar
     ctx.fillStyle = flCol;
     ctx.globalAlpha = 0.85;
-    ctx.beginPath(); ctx.roundRect(panX, panY, panW, 3, [10,10,0,0]); ctx.fill();
+    ctx.beginPath();
+    ctx.roundRect(panX, panY, panW, 3, [10, 10, 0, 0]);
+    ctx.fill();
     ctx.globalAlpha = 1;
 
     // Border
     ctx.strokeStyle = `${flCol}55`;
     ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.roundRect(panX, panY, panW, panH, 10); ctx.stroke();
+    ctx.beginPath();
+    ctx.roundRect(panX, panY, panW, panH, 10);
+    ctx.stroke();
 
     // "THE TOWER" label
-    ctx.font = 'bold 9px monospace';
-    ctx.textAlign = 'center';
+    ctx.font = "bold 9px monospace";
+    ctx.textAlign = "center";
     ctx.fillStyle = `${flCol}99`;
-    ctx.letterSpacing = '0.3em';
-    ctx.fillText('◈  THE TOWER  ◈', W/2, panY + 17);
-    ctx.letterSpacing = '0';
+    ctx.letterSpacing = "0.3em";
+    ctx.fillText("◈  THE TOWER  ◈", W / 2, panY + 17);
+    ctx.letterSpacing = "0";
 
     // Floor number (large, glowing)
-    ctx.font = 'bold 28px monospace';
+    ctx.font = "bold 28px monospace";
     ctx.fillStyle = flCol;
     ctx.shadowColor = flCol;
     ctx.shadowBlur = 14 * pulse;
-    ctx.fillText(`FLOOR  ${fl}  /  10`, W/2, panY + 47);
+    ctx.fillText(`FLOOR  ${fl}  /  10`, W / 2, panY + 47);
     ctx.shadowBlur = 0;
 
     // Subtitle (floor name)
     const sub = this._towerFloorSubtitle(fl);
-    ctx.font = '10px monospace';
-    ctx.fillStyle = 'rgba(255,255,255,0.38)';
-    ctx.fillText(sub, W/2, panY + 64);
+    ctx.font = "10px monospace";
+    ctx.fillStyle = "rgba(255,255,255,0.38)";
+    ctx.fillText(sub, W / 2, panY + 64);
 
     // ── Enemy count pill — below main panel ───────────────
-    const alive = this.bots.filter(b => !b.dead && !b.dying).length
-                + (this.boss && !this.boss.dead && !this.boss.dying ? 1 : 0);
+    const alive =
+      this.bots.filter((b) => !b.dead && !b.dying).length +
+      (this.boss && !this.boss.dead && !this.boss.dying ? 1 : 0);
 
-    const pillW = 200, pillH = 26, pillX = W/2 - pillW/2, pillY = panY + panH + 6;
-    ctx.fillStyle = alive > 0 ? 'rgba(255,60,40,0.15)' : 'rgba(40,255,120,0.12)';
-    ctx.beginPath(); ctx.roundRect(pillX, pillY, pillW, pillH, 13); ctx.fill();
-    ctx.strokeStyle = alive > 0 ? 'rgba(255,80,40,0.35)' : 'rgba(40,255,120,0.30)';
+    const pillW = 200,
+      pillH = 26,
+      pillX = W / 2 - pillW / 2,
+      pillY = panY + panH + 6;
+    ctx.fillStyle =
+      alive > 0 ? "rgba(255,60,40,0.15)" : "rgba(40,255,120,0.12)";
+    ctx.beginPath();
+    ctx.roundRect(pillX, pillY, pillW, pillH, 13);
+    ctx.fill();
+    ctx.strokeStyle =
+      alive > 0 ? "rgba(255,80,40,0.35)" : "rgba(40,255,120,0.30)";
     ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.roundRect(pillX, pillY, pillW, pillH, 13); ctx.stroke();
+    ctx.beginPath();
+    ctx.roundRect(pillX, pillY, pillW, pillH, 13);
+    ctx.stroke();
 
-    ctx.font = 'bold 10px monospace';
-    ctx.textAlign = 'center';
-    ctx.fillStyle = alive > 0 ? '#FF8866' : '#44FF88';
-    if (alive === 0) { ctx.shadowColor = '#44FF88'; ctx.shadowBlur = 8; }
+    ctx.font = "bold 10px monospace";
+    ctx.textAlign = "center";
+    ctx.fillStyle = alive > 0 ? "#FF8866" : "#44FF88";
+    if (alive === 0) {
+      ctx.shadowColor = "#44FF88";
+      ctx.shadowBlur = 8;
+    }
     ctx.fillText(
-      alive > 0 ? `☠  ${alive} ENEMIES REMAINING` : '✓  ALL CLEARED!',
-      W/2, pillY + 17
+      alive > 0 ? `☠  ${alive} ENEMIES REMAINING` : "✓  ALL CLEARED!",
+      W / 2,
+      pillY + 17,
     );
     ctx.shadowBlur = 0;
 
     // ── Floor progress dots ────────────────────────────────
-    const dotR = 5, dotGap = 16, dotsW = 10 * dotGap;
-    const dotStartX = W/2 - dotsW/2 + dotR;
+    const dotR = 5,
+      dotGap = 16,
+      dotsW = 10 * dotGap;
+    const dotStartX = W / 2 - dotsW / 2 + dotR;
     for (let i = 1; i <= 10; i++) {
-      const dx = dotStartX + (i-1)*dotGap;
+      const dx = dotStartX + (i - 1) * dotGap;
       const dy = panY + panH + 40;
       if (i < fl) {
         ctx.fillStyle = `${flCol}88`;
-        ctx.beginPath(); ctx.arc(dx, dy, dotR, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath();
+        ctx.arc(dx, dy, dotR, 0, Math.PI * 2);
+        ctx.fill();
       } else if (i === fl) {
         ctx.fillStyle = flCol;
-        ctx.shadowColor = flCol; ctx.shadowBlur = 10;
-        ctx.beginPath(); ctx.arc(dx, dy, dotR+1, 0, Math.PI*2); ctx.fill();
+        ctx.shadowColor = flCol;
+        ctx.shadowBlur = 10;
+        ctx.beginPath();
+        ctx.arc(dx, dy, dotR + 1, 0, Math.PI * 2);
+        ctx.fill();
         ctx.shadowBlur = 0;
       } else {
-        ctx.fillStyle = 'rgba(255,255,255,0.12)';
-        ctx.beginPath(); ctx.arc(dx, dy, dotR-1, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = "rgba(255,255,255,0.12)";
+        ctx.beginPath();
+        ctx.arc(dx, dy, dotR - 1, 0, Math.PI * 2);
+        ctx.fill();
       }
     }
 
     // ── Elevator active: dramatic pulsing banner ───────────
     if (this._towerElevatorActive) {
       const ep = Math.sin(t * 3.5) * 0.22 + 0.78;
-      const bW = 300, bH = 36, bX = W/2 - bW/2, bY = H - 60;
+      const bW = 300,
+        bH = 36,
+        bX = W / 2 - bW / 2,
+        bY = H - 60;
 
       ctx.fillStyle = `rgba(0,0,0,${ep * 0.6})`;
-      ctx.beginPath(); ctx.roundRect(bX, bY, bW, bH, 18); ctx.fill();
+      ctx.beginPath();
+      ctx.roundRect(bX, bY, bW, bH, 18);
+      ctx.fill();
       ctx.strokeStyle = `rgba(0,255,136,${ep * 0.55})`;
       ctx.lineWidth = 1.5;
-      ctx.beginPath(); ctx.roundRect(bX, bY, bW, bH, 18); ctx.stroke();
+      ctx.beginPath();
+      ctx.roundRect(bX, bY, bW, bH, 18);
+      ctx.stroke();
 
-      ctx.font = 'bold 14px monospace';
-      ctx.textAlign = 'center';
+      ctx.font = "bold 14px monospace";
+      ctx.textAlign = "center";
       ctx.globalAlpha = ep;
-      ctx.fillStyle = '#00FF88';
-      ctx.shadowColor = '#00FF88'; ctx.shadowBlur = 18;
-      ctx.fillText('▲  ENTER ELEVATOR  ▲', W/2, bY + 24);
+      ctx.fillStyle = "#00FF88";
+      ctx.shadowColor = "#00FF88";
+      ctx.shadowBlur = 18;
+      ctx.fillText("▲  ENTER ELEVATOR  ▲", W / 2, bY + 24);
       ctx.shadowBlur = 0;
       ctx.globalAlpha = 1;
     }
@@ -2253,19 +2295,19 @@ class Game {
 
   _towerFloorSubtitle(floor) {
     const subs = [
-      '',
-      'GRAND LOBBY  ·  SECURITY CHECKPOINT',
-      'PARKING GARAGE  ·  SUBLEVEL B2',
-      'CORPORATE OFFICES  ·  3RD FLOOR',
-      'DATA CENTER  ·  SERVER WING',
-      'VELVET LOUNGE  ·  VIP AREA',
-      'TACTICAL OPERATIONS  ·  CLASSIFIED',
-      'BIO-RESEARCH LAB  ·  CONTAINMENT',
-      'WEAPONS ARMORY  ·  RESTRICTED',
-      'EXECUTIVE SUITE  ·  PENTHOUSE ANTECHAMBER',
-      '★  THE PENTHOUSE  ·  FINAL CONFRONTATION  ★',
+      "",
+      "GRAND LOBBY  ·  SECURITY CHECKPOINT",
+      "PARKING GARAGE  ·  SUBLEVEL B2",
+      "CORPORATE OFFICES  ·  3RD FLOOR",
+      "DATA CENTER  ·  SERVER WING",
+      "VELVET LOUNGE  ·  VIP AREA",
+      "TACTICAL OPERATIONS  ·  CLASSIFIED",
+      "BIO-RESEARCH LAB  ·  CONTAINMENT",
+      "WEAPONS ARMORY  ·  RESTRICTED",
+      "EXECUTIVE SUITE  ·  PENTHOUSE ANTECHAMBER",
+      "★  THE PENTHOUSE  ·  FINAL CONFRONTATION  ★",
     ];
-    return subs[Math.min(floor, 10)] || '';
+    return subs[Math.min(floor, 10)] || "";
   }
 
   _renderTowerVictory(ctx, W, H) {
@@ -3299,23 +3341,27 @@ class Game {
           const bType =
             typeof room._buildingType === "number" ? room._buildingType : 0;
           const isNeonCity = this.map?.config?.id === "neon_city";
-          // Special positioning for Neon City buildings
+          const isGalactica = !!this.map?.config?.galactica;
+          const isSpecialMap = isNeonCity || isGalactica;
+          // Special positioning for Neon City / Galactica buildings
           let npcX = room.entryX + 60;
           let npcY = room.entryY - 110;
-          if (isNeonCity && bType === 12) {
-            // Pawnshop - position vendor above counter
+          if (isSpecialMap && bType === 12) {
             npcX = room.roomW / 2;
             npcY = room.roomH * 0.38;
-          } else if (isNeonCity && bType === 4) {
-            // Arcade - position attendant above prize counter
+          } else if (isSpecialMap && bType === 4) {
             npcX = room.roomW / 2;
             npcY = room.roomH * 0.3;
-          } else if (isNeonCity && bType === 11) {
-            // Bar - position bartender above service counter
+          } else if (isSpecialMap && bType === 11) {
             npcX = room.roomW / 2;
             npcY = room.roomH * 0.34;
+          } else if (isGalactica && bType === 3) {
+            // Galactic Bazaar: worker behind top counter, same as dealership
+            npcX = room.roomW / 2;
+            npcY = room.roomH * 0.38;
           }
-          this._buildingNpcs = [new BuildingNPC(npcX, npcY, bType, isNeonCity)];
+          const useHumanRender = isNeonCity || (isGalactica && bType === 3);
+          this._buildingNpcs = [new BuildingNPC(npcX, npcY, bType, useHumanRender)];
         }
         return;
       }
@@ -3616,38 +3662,122 @@ class Game {
     const offX = (W - room.roomW) / 2;
     const offY = (H - room.roomH) / 2;
     const S = room.S;
-    ctx.fillStyle = "#050508";
+    const _isGalactica = !!this.map.config.galactica;
+    const _t = performance.now() / 1000;
+    ctx.fillStyle = _isGalactica ? "#00000e" : "#050508";
     ctx.fillRect(0, 0, W, H);
     ctx.save();
     ctx.translate(offX + shake.x, offY + shake.y);
-    for (let ty = 0; ty < room.H; ty++) {
-      for (let tx = 0; tx < room.W; tx++) {
-        const t = room.layout[ty][tx];
-        const px = tx * S,
-          py = ty * S;
-        if (t === 0) {
-          ctx.fillStyle = "#1c1c22";
-          ctx.fillRect(px, py, S, S);
-          ctx.fillStyle = "rgba(255,255,255,0.025)";
-          ctx.fillRect(px, py, S, 1);
-          ctx.fillRect(px, py, 1, S);
-        } else if (t === 2) {
-          ctx.fillStyle = "#1c1c22";
-          ctx.fillRect(px, py, S, S);
-          ctx.fillStyle = "#3a2a1a";
-          ctx.fillRect(px + 5, py + 5, S - 10, S - 10);
-          ctx.strokeStyle = "#5a3a22";
-          ctx.lineWidth = 1;
-          ctx.strokeRect(px + 5, py + 5, S - 10, S - 10);
-        } else {
-          ctx.fillStyle = "#14141e";
-          ctx.fillRect(px, py, S, S);
-          ctx.fillStyle = "rgba(80,80,140,0.10)";
-          ctx.fillRect(px, py, S, 3);
-          ctx.fillRect(px, py, 3, S);
+
+    if (_isGalactica) {
+      // ── GALACTICA: cosmic deep-space interior tiles ──
+      for (let ty = 0; ty < room.H; ty++) {
+        for (let tx = 0; tx < room.W; tx++) {
+          const tile = room.layout[ty][tx];
+          const px = tx * S,
+            py = ty * S;
+          const seed = tx * 17 + ty * 11;
+          if (tile === 0) {
+            // Floor — deep space panels
+            ctx.fillStyle = (tx + ty) % 2 === 0 ? "#05031a" : "#030114";
+            ctx.fillRect(px, py, S, S);
+            // Purple grid lines
+            ctx.strokeStyle = "rgba(140,70,240,0.08)";
+            ctx.lineWidth = 1;
+            ctx.strokeRect(px, py, S, S);
+            // Star inlays
+            if (seed % 7 === 0) {
+              const twinkle = Math.sin(_t * 3 + seed) * 0.5 + 0.5;
+              ctx.fillStyle = `rgba(220,200,255,${0.06 + twinkle * 0.14})`;
+              ctx.beginPath();
+              ctx.arc(
+                px + (seed % (S - 4)) + 2,
+                py + ((seed * 3) % (S - 4)) + 2,
+                1,
+                0,
+                Math.PI * 2,
+              );
+              ctx.fill();
+            }
+            // Nebula glow
+            if (seed % 13 === 0) {
+              const pulse = Math.sin(_t * 1.0 + seed * 0.4) * 0.5 + 0.5;
+              ctx.fillStyle = `rgba(100,50,200,${0.015 + pulse * 0.025})`;
+              ctx.fillRect(px + 3, py + 3, S - 6, S - 6);
+            }
+          } else if (tile === 2) {
+            // Furniture tile — glowing alien console
+            ctx.fillStyle = "#05031a";
+            ctx.fillRect(px, py, S, S);
+            ctx.fillStyle = "#110630";
+            ctx.fillRect(px + 4, py + 4, S - 8, S - 8);
+            ctx.strokeStyle = "#8844FF";
+            ctx.lineWidth = 1;
+            ctx.shadowColor = "#8844FF";
+            ctx.shadowBlur = 6;
+            ctx.strokeRect(px + 4, py + 4, S - 8, S - 8);
+            ctx.shadowBlur = 0;
+            // Center LED
+            const lp = Math.sin(_t * 2 + seed) * 0.5 + 0.5;
+            ctx.fillStyle = `rgba(170,100,255,${0.5 + lp * 0.5})`;
+            ctx.beginPath();
+            ctx.arc(px + S / 2, py + S / 2, 3, 0, Math.PI * 2);
+            ctx.fill();
+          } else {
+            // Wall — void panels with purple trim
+            ctx.fillStyle = "#04020c";
+            ctx.fillRect(px, py, S, S);
+            if ((tx + ty) % 4 === 0) {
+              ctx.fillStyle = "rgba(140,70,220,0.14)";
+              ctx.fillRect(px + S / 2 - 1, py, 2, S);
+            }
+          }
+        }
+      }
+      // Room border glow
+      ctx.strokeStyle = "rgba(170,100,255,0.5)";
+      ctx.lineWidth = 2;
+      ctx.shadowColor = "#AA88FF";
+      ctx.shadowBlur = 14;
+      ctx.strokeRect(
+        S + 1,
+        S + 1,
+        room.roomW - S * 2 - 2,
+        room.roomH - S * 2 - 2,
+      );
+      ctx.shadowBlur = 0;
+    } else {
+      // ── DEFAULT interior tiles ──
+      for (let ty = 0; ty < room.H; ty++) {
+        for (let tx = 0; tx < room.W; tx++) {
+          const t = room.layout[ty][tx];
+          const px = tx * S,
+            py = ty * S;
+          if (t === 0) {
+            ctx.fillStyle = "#1c1c22";
+            ctx.fillRect(px, py, S, S);
+            ctx.fillStyle = "rgba(255,255,255,0.025)";
+            ctx.fillRect(px, py, S, 1);
+            ctx.fillRect(px, py, 1, S);
+          } else if (t === 2) {
+            ctx.fillStyle = "#1c1c22";
+            ctx.fillRect(px, py, S, S);
+            ctx.fillStyle = "#3a2a1a";
+            ctx.fillRect(px + 5, py + 5, S - 10, S - 10);
+            ctx.strokeStyle = "#5a3a22";
+            ctx.lineWidth = 1;
+            ctx.strokeRect(px + 5, py + 5, S - 10, S - 10);
+          } else {
+            ctx.fillStyle = "#14141e";
+            ctx.fillRect(px, py, S, S);
+            ctx.fillStyle = "rgba(80,80,140,0.10)";
+            ctx.fillRect(px, py, S, 3);
+            ctx.fillRect(px, py, 3, S);
+          }
         }
       }
     }
+
     ctx.save();
     try {
       this._renderIndoorFurniture(ctx, room);
@@ -3667,9 +3797,15 @@ class Game {
     ctx.save();
     ctx.font = "bold 11px Orbitron, monospace";
     ctx.textAlign = "center";
-    ctx.fillStyle = "#FFFFAA";
-    ctx.shadowColor = "#FFFF00";
-    ctx.shadowBlur = 10;
+    if (_isGalactica) {
+      ctx.fillStyle = "#CC99FF";
+      ctx.shadowColor = "#AA88FF";
+      ctx.shadowBlur = 12;
+    } else {
+      ctx.fillStyle = "#FFFFAA";
+      ctx.shadowColor = "#FFFF00";
+      ctx.shadowBlur = 10;
+    }
     ctx.fillText("[E] EXIT", room.entryX, room.roomH - 8);
     ctx.restore();
     ctx.restore();
@@ -4168,43 +4304,345 @@ class Game {
       ctx.shadowBlur = 0;
     } else if (type === 3) {
       // MARKET
-      // ── 3 shelf rows ─────────────────────────────
-      const sC = [
-        ["#CC3333", "#3366CC", "#44AA44", "#FFAA22"],
-        ["#FF6699", "#66CCFF", "#FFEE44", "#AA66FF"],
-        ["#EE8833", "#33CCAA", "#FF5544", "#88BBFF"],
-      ];
-      for (let row = 0; row < 3; row++) {
-        const sy2 = topY + 8 + row * 40;
-        ctx.fillStyle = "#2a2a2a";
-        ctx.strokeStyle = "#444";
-        ctx.lineWidth = 1;
-        ctx.fillRect(cx - W * 0.42, sy2, W * 0.84, 30);
-        ctx.fillStyle = "#3a3022";
-        ctx.fillRect(cx - W * 0.42, sy2 + 9, W * 0.84, 4);
-        ctx.fillRect(cx - W * 0.42, sy2 + 22, W * 0.84, 4);
-        for (let pi = 0; pi < 11; pi++) {
-          const px3 = cx - W * 0.4 + pi * ((W * 0.8) / 11);
-          ctx.fillStyle = sC[row][pi % 4];
-          ctx.fillRect(px3, sy2 + 2, (W * 0.8) / 11 - 2, 7);
-          ctx.fillRect(px3, sy2 + 15, (W * 0.8) / 11 - 2, 7);
+      if (!!this.map?.config?.galactica) {
+        // ═══ GALACTICA: GALACTIC BAZAAR — counter+NPC at top, shelves below ═══
+        const t = performance.now() / 1000;
+        const PURP = "#AA88FF", GOLD = "#FFDD55", CYAN = "#55DDFF", PINK = "#FF55CC";
+
+        // ─── GALACTIC BAZAAR — mirroring car-dealer layout ───────────────
+
+        // ── Floor grid (same as dealer) ──
+        for (let ty2 = 0; ty2 < room.H; ty2++) {
+          for (let tx2 = 0; tx2 < room.W; tx2++) {
+            const tile = room.layout[ty2][tx2];
+            const px2 = tx2 * room.S, py2 = ty2 * room.S;
+            if (tile === 1) {
+              ctx.fillStyle = "#04020c";
+              ctx.fillRect(px2, py2, room.S, room.S);
+              if ((tx2 + ty2) % 4 === 0) {
+                ctx.fillStyle = "rgba(170,100,255,0.12)";
+                ctx.fillRect(px2 + room.S / 2 - 1, py2, 2, room.S);
+              }
+            } else {
+              ctx.fillStyle = (tx2 + ty2) % 2 === 0 ? "#05031a" : "#030114";
+              ctx.fillRect(px2, py2, room.S, room.S);
+              ctx.strokeStyle = "rgba(150,80,255,0.07)";
+              ctx.lineWidth = 1;
+              ctx.strokeRect(px2, py2, room.S, room.S);
+              const seed = tx2 * 17 + ty2 * 11;
+              if (seed % 7 === 0) {
+                const tw = Math.sin(t * 3 + seed) * 0.5 + 0.5;
+                ctx.fillStyle = `rgba(220,200,255,${0.05 + tw * 0.1})`;
+                ctx.beginPath();
+                ctx.arc(px2 + (seed % (room.S - 4)) + 2, py2 + ((seed * 3) % (room.S - 4)) + 2, 1, 0, Math.PI * 2);
+                ctx.fill();
+              }
+            }
+          }
         }
+
+        // Purple room border (like cyan in dealer)
+        ctx.strokeStyle = "#AA88FF";
+        ctx.lineWidth = 2;
+        ctx.shadowColor = "#AA88FF";
+        ctx.shadowBlur = 20;
+        ctx.strokeRect(room.S + 2, room.S + 2, W - room.S * 2 - 4, H - room.S * 2 - 4);
+        ctx.shadowBlur = 0;
+
+        // Top accent bar
+        const topGrad2 = ctx.createLinearGradient(0, room.S, W, room.S);
+        topGrad2.addColorStop(0, "rgba(200,100,255,0.15)");
+        topGrad2.addColorStop(0.5, "rgba(170,136,255,0.5)");
+        topGrad2.addColorStop(1, "rgba(200,100,255,0.15)");
+        ctx.fillStyle = topGrad2;
+        ctx.fillRect(room.S, room.S, W - room.S * 2, 4);
+
+        // Showroom title
+        ctx.save();
+        ctx.font = "bold 20px Orbitron, monospace";
+        ctx.textAlign = "center";
+        ctx.fillStyle = "#CC99FF";
+        ctx.shadowColor = "#AA88FF";
+        ctx.shadowBlur = 28;
+        ctx.fillText("⬡  GALACTIC BAZAAR  ⬡", W / 2, room.S - 20);
+        ctx.shadowBlur = 0;
+        ctx.restore();
+
+        // ── CASHIER COUNTER (same position as dealer) ──
+        const ctrX = W / 2 - 75, ctrY = room.S * 1.2, ctrW = 150, ctrH = 40;
+
+        ctx.fillStyle = "rgba(0,0,0,0.4)";
+        ctx.fillRect(ctrX + 4, ctrY + ctrH + 2, ctrW, 6);
+
+        ctx.fillStyle = "#0e0520";
+        ctx.fillRect(ctrX, ctrY, ctrW, ctrH);
+        ctx.fillStyle = "#1e0d38";
+        ctx.fillRect(ctrX - 5, ctrY, ctrW + 10, 6);
+
+        ctx.strokeStyle = "#AA88FF";
+        ctx.lineWidth = 2;
+        ctx.shadowColor = "#AA88FF";
+        ctx.shadowBlur = 10;
+        ctx.beginPath();
+        ctx.moveTo(ctrX - 5, ctrY + 3);
+        ctx.lineTo(ctrX + ctrW + 5, ctrY + 3);
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+
+        // Scanner on counter
+        const scanP = Math.sin(t * 4) * 0.5 + 0.5;
+        ctx.fillStyle = "#080220";
+        rr(ctrX + 10, ctrY + 8, 60, 18, 3);
+        ctx.fill();
+        ctx.strokeStyle = `rgba(85,221,255,${0.4 + scanP * 0.6})`;
+        ctx.lineWidth = 1;
+        rr(ctrX + 10, ctrY + 8, 60, 18, 3);
+        ctx.stroke();
+        ctx.fillStyle = `rgba(85,221,255,${0.1 + scanP * 0.2})`;
+        ctx.fillRect(ctrX + 13, ctrY + 10 + scanP * 8, 54, 3);
+        ctx.fillStyle = CYAN;
+        ctx.font = "bold 5px Orbitron, monospace";
+        ctx.textAlign = "center";
+        ctx.shadowColor = CYAN;
+        ctx.shadowBlur = 5;
+        ctx.fillText("SCAN", ctrX + 40, ctrY + 32);
+        ctx.shadowBlur = 0;
+
+        // Credit display
+        ctx.fillStyle = "#050115";
+        rr(ctrX + 82, ctrY + 8, 52, 26, 3);
+        ctx.fill();
+        ctx.strokeStyle = GOLD;
+        ctx.lineWidth = 1;
+        rr(ctrX + 82, ctrY + 8, 52, 26, 3);
+        ctx.stroke();
+        ctx.fillStyle = GOLD;
+        ctx.font = "bold 5px Orbitron, monospace";
+        ctx.textAlign = "center";
+        ctx.fillText("CREDITS", ctrX + 108, ctrY + 17);
+        ctx.font = "bold 7px Orbitron, monospace";
+        ctx.fillText("∞", ctrX + 108, ctrY + 30);
+
+        ctx.fillStyle = "#CC99FF";
+        ctx.shadowColor = "#AA88FF";
+        ctx.shadowBlur = 10;
+        ctx.font = "bold 12px Orbitron, monospace";
+        ctx.textAlign = "center";
+        ctx.fillText("BAZAAR DESK", ctrX + ctrW / 2, ctrY + 26);
+        ctx.shadowBlur = 0;
+
+        // ── DISPLAY ITEMS ON PLATFORMS (same structure as car dealer) ──
+        const displays = [
+          // Front row
+          { x: W * 0.18, y: H * 0.45, color: "#FF55FF", name: "VOID CRYSTAL", label: "8 CR" },
+          { x: W * 0.38, y: H * 0.42, color: "#55AAFF", name: "NOVA SHARD",   label: "12 CR" },
+          { x: W * 0.62, y: H * 0.42, color: "#FFAA55", name: "STAR SPICE",   label: "5 CR" },
+          { x: W * 0.82, y: H * 0.45, color: "#44FF99", name: "NEBULA HERB",  label: "3 CR" },
+          // Back row
+          { x: W * 0.28, y: H * 0.58, color: "#CC88FF", name: "DARK MATTER",  label: "20 CR" },
+          { x: W * 0.72, y: H * 0.58, color: "#FF8888", name: "PLASMA ORB",   label: "15 CR" },
+        ];
+
+        for (const disp of displays) {
+          const pulse = Math.sin(t * 1.5 + disp.x * 0.01) * 0.3 + 0.7;
+          const hover = Math.sin(t * 2 + disp.x * 0.02) * 4;
+          ctx.save();
+          ctx.translate(disp.x, disp.y + hover);
+
+          // Platform base (like dealer)
+          ctx.beginPath();
+          ctx.arc(0, 15, 45, 0, Math.PI * 2);
+          ctx.fillStyle = "rgba(100,50,200,0.08)";
+          ctx.fill();
+          ctx.strokeStyle = `rgba(170,136,255,${0.55 * pulse})`;
+          ctx.lineWidth = 2;
+          ctx.stroke();
+
+          ctx.beginPath();
+          ctx.arc(0, 15, 34, 0, Math.PI * 2);
+          ctx.strokeStyle = `rgba(200,100,255,${0.3 * pulse})`;
+          ctx.lineWidth = 1;
+          ctx.stroke();
+
+          // Rotating energy under item
+          ctx.save();
+          ctx.translate(0, 15);
+          ctx.rotate(t * 0.8);
+          for (let i = 0; i < 6; i++) {
+            ctx.fillStyle = `rgba(170,136,255,${0.18 * pulse})`;
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.arc(0, 0, 38, (i * Math.PI * 2) / 6, (i * Math.PI * 2) / 6 + 0.35);
+            ctx.closePath();
+            ctx.fill();
+          }
+          ctx.restore();
+
+          // ── ITEM (floating geometric shape) ──
+          ctx.save();
+          ctx.rotate(t * 0.4 + disp.x * 0.01);
+
+          // Shadow
+          ctx.fillStyle = "rgba(0,0,0,0.35)";
+          ctx.beginPath();
+          ctx.ellipse(2, 12, 22, 8, 0, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Glowing item body
+          ctx.shadowColor = disp.color;
+          ctx.shadowBlur = 18 * pulse;
+          ctx.fillStyle = disp.color + "CC";
+          ctx.strokeStyle = disp.color;
+          ctx.lineWidth = 1.5;
+
+          // Each item has a unique shape based on index
+          const idx = displays.indexOf(disp);
+          if (idx === 0) {
+            // Crystal: tall hexagon
+            ctx.beginPath();
+            for (let h = 0; h < 6; h++) {
+              const ha = (h * Math.PI) / 3 - Math.PI / 6;
+              const hx = Math.cos(ha) * 16, hy = Math.sin(ha) * 22;
+              h === 0 ? ctx.moveTo(hx, hy) : ctx.lineTo(hx, hy);
+            }
+            ctx.closePath();
+            ctx.fill(); ctx.stroke();
+          } else if (idx === 1) {
+            // Shard: jagged crystal
+            ctx.beginPath();
+            ctx.moveTo(0, -22); ctx.lineTo(10, -6); ctx.lineTo(16, 4);
+            ctx.lineTo(6, 10); ctx.lineTo(-6, 10); ctx.lineTo(-16, 4);
+            ctx.lineTo(-10, -6); ctx.closePath();
+            ctx.fill(); ctx.stroke();
+          } else if (idx === 2) {
+            // Spice: 5-pointed star
+            for (let s = 0; s < 5; s++) {
+              const ao = (s * Math.PI * 2) / 5 - Math.PI / 2;
+              const ai = ao + Math.PI / 5;
+              s === 0 ? ctx.moveTo(Math.cos(ao) * 18, Math.sin(ao) * 18) : ctx.lineTo(Math.cos(ao) * 18, Math.sin(ao) * 18);
+              ctx.lineTo(Math.cos(ai) * 9, Math.sin(ai) * 9);
+            }
+            ctx.closePath(); ctx.fill(); ctx.stroke();
+          } else if (idx === 3) {
+            // Herb: diamond with inner glow
+            ctx.beginPath();
+            ctx.moveTo(0, -20); ctx.lineTo(14, 0); ctx.lineTo(0, 14); ctx.lineTo(-14, 0);
+            ctx.closePath(); ctx.fill(); ctx.stroke();
+          } else if (idx === 4) {
+            // Dark matter: spinning ring
+            ctx.beginPath();
+            ctx.arc(0, 0, 18, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = "#000010";
+            ctx.beginPath();
+            ctx.arc(0, 0, 10, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = disp.color;
+            ctx.lineWidth = 3;
+            ctx.shadowBlur = 12 * pulse;
+            ctx.beginPath();
+            ctx.arc(0, 0, 18, 0, Math.PI * 2);
+            ctx.stroke();
+          } else {
+            // Plasma orb: glowing sphere
+            const rGrad = ctx.createRadialGradient(-5, -5, 2, 0, 0, 18);
+            rGrad.addColorStop(0, "#FFFFFF");
+            rGrad.addColorStop(0.4, disp.color);
+            rGrad.addColorStop(1, disp.color + "44");
+            ctx.fillStyle = rGrad;
+            ctx.beginPath();
+            ctx.arc(0, 0, 18, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          ctx.shadowBlur = 0;
+          ctx.restore();
+
+          // Name label
+          ctx.fillStyle = "#FFFFFF";
+          ctx.shadowColor = disp.color;
+          ctx.shadowBlur = 8;
+          ctx.font = "bold 8px Orbitron, monospace";
+          ctx.textAlign = "center";
+          ctx.fillText(disp.name, 0, 46);
+          ctx.shadowBlur = 0;
+
+          // Price tag
+          ctx.fillStyle = "rgba(10,2,30,0.85)";
+          rr(-14, 50, 28, 12, 3);
+          ctx.fill();
+          ctx.strokeStyle = GOLD;
+          ctx.lineWidth = 1;
+          ctx.shadowColor = GOLD;
+          ctx.shadowBlur = 5;
+          rr(-14, 50, 28, 12, 3);
+          ctx.stroke();
+          ctx.shadowBlur = 0;
+          ctx.fillStyle = GOLD;
+          ctx.font = "bold 6px Orbitron, monospace";
+          ctx.fillText(disp.label, 0, 59);
+
+          ctx.restore();
+        }
+
+        // ── AMBIENT PARTICLES ──
+        for (let i = 0; i < 12; i++) {
+          const px2 = (t * 22 + i * 88) % W;
+          const py2 = room.S * 1.5 + Math.sin(t + i * 2) * 22 + (i * (H - room.S * 3)) / 12;
+          const alpha = Math.sin(t * 2 + i) * 0.3 + 0.4;
+          ctx.fillStyle = i % 3 === 0
+            ? `rgba(170,136,255,${alpha})`
+            : i % 3 === 1
+              ? `rgba(200,100,255,${alpha})`
+              : `rgba(100,180,255,${alpha})`;
+          ctx.beginPath();
+          ctx.arc(px2, py2, i % 4 === 0 ? 2 : 1, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Side strips
+        ctx.fillStyle = "rgba(150,80,255,0.22)";
+        ctx.fillRect(room.S, room.S * 1.5, 3, H - room.S * 3);
+        ctx.fillRect(W - room.S - 3, room.S * 1.5, 3, H - room.S * 3);
+
+      } else {
+        // ── Default market (other maps) ──────────────
+        const sC = [
+          ["#CC3333", "#3366CC", "#44AA44", "#FFAA22"],
+          ["#FF6699", "#66CCFF", "#FFEE44", "#AA66FF"],
+          ["#EE8833", "#33CCAA", "#FF5544", "#88BBFF"],
+        ];
+        for (let row = 0; row < 3; row++) {
+          const sy2 = topY + 8 + row * 40;
+          ctx.fillStyle = "#2a2a2a";
+          ctx.strokeStyle = "#444";
+          ctx.lineWidth = 1;
+          ctx.fillRect(cx - W * 0.42, sy2, W * 0.84, 30);
+          ctx.fillStyle = "#3a3022";
+          ctx.fillRect(cx - W * 0.42, sy2 + 9, W * 0.84, 4);
+          ctx.fillRect(cx - W * 0.42, sy2 + 22, W * 0.84, 4);
+          for (let pi = 0; pi < 11; pi++) {
+            const px3 = cx - W * 0.4 + pi * ((W * 0.8) / 11);
+            ctx.fillStyle = sC[row][pi % 4];
+            ctx.fillRect(px3, sy2 + 2, (W * 0.8) / 11 - 2, 7);
+            ctx.fillRect(px3, sy2 + 15, (W * 0.8) / 11 - 2, 7);
+          }
+        }
+        // ── Checkout counter ───────────────────────
+        ctx.fillStyle = "#1a2a3a";
+        ctx.strokeStyle = "#3a4a5a";
+        ctx.lineWidth = 1.5;
+        rr(cx - 32, midY + 18, 64, 26, 3);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = "#111118";
+        ctx.fillRect(cx - 14, midY + 19, 28, 16);
+        ctx.fillStyle = "#44EEFF";
+        ctx.fillRect(cx - 12, midY + 21, 24, 12);
+        ctx.fillStyle = "#FFCC44";
+        ctx.font = "bold 7px monospace";
+        ctx.textAlign = "center";
+        ctx.fillText("CHECKOUT", cx, midY + 54);
       }
-      // ── Checkout counter ─────────────────────────
-      ctx.fillStyle = "#1a2a3a";
-      ctx.strokeStyle = "#3a4a5a";
-      ctx.lineWidth = 1.5;
-      rr(cx - 32, midY + 18, 64, 26, 3);
-      ctx.fill();
-      ctx.stroke();
-      ctx.fillStyle = "#111118";
-      ctx.fillRect(cx - 14, midY + 19, 28, 16);
-      ctx.fillStyle = "#44EEFF";
-      ctx.fillRect(cx - 12, midY + 21, 24, 12);
-      ctx.fillStyle = "#FFCC44";
-      ctx.font = "bold 7px monospace";
-      ctx.textAlign = "center";
-      ctx.fillText("CHECKOUT", cx, midY + 54);
     } else if (type === 4) {
       // ARCADE
       const isNeonCityArcade = this.map?.config?.id === "neon_city";
@@ -4569,7 +5007,7 @@ class Game {
         ctx.shadowBlur = 0;
 
         ctx.restore();
-      } else {
+      } else if (!this.map?.config?.galactica) {
         // ── Default Arcade (other maps) ────────────────────────
         const aColors = [
           "#FF0044",
@@ -4634,6 +5072,171 @@ class Game {
         ctx.font = "bold 7px monospace";
         ctx.textAlign = "center";
         ctx.fillText("PRIZE COUNTER", cx, midY + 48);
+      } else {
+        // ═══ GALACTICA: STAR GATE ARCADE ═══
+        const t = performance.now() / 1000;
+        const PURP = "#AA88FF",
+          GOLD = "#FFDD55",
+          CYAN = "#55DDFF",
+          PINK = "#FF55CC";
+
+        // Title
+        ctx.save();
+        ctx.font = "bold 16px Orbitron, monospace";
+        ctx.textAlign = "center";
+        ctx.fillStyle = "#fff";
+        ctx.shadowColor = PURP;
+        ctx.shadowBlur = 22;
+        ctx.fillText("⬡ STAR GATE ARCADE ⬡", cx, topY - 2);
+        ctx.shadowBlur = 0;
+        ctx.restore();
+
+        // Divider
+        const dg = ctx.createLinearGradient(cx - W * 0.44, 0, cx + W * 0.44, 0);
+        dg.addColorStop(0, "rgba(170,136,255,0)");
+        dg.addColorStop(0.5, "rgba(170,136,255,0.9)");
+        dg.addColorStop(1, "rgba(170,136,255,0)");
+        ctx.strokeStyle = dg;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(cx - W * 0.44, topY + 12);
+        ctx.lineTo(cx + W * 0.44, topY + 12);
+        ctx.stroke();
+
+        // ── ROW 1: HOLOGRAPHIC GAME PODS ──
+        const podColors = [PURP, CYAN, GOLD, PINK];
+        for (let i = 0; i < 4; i++) {
+          const px2 = cx - W * 0.36 + i * (W * 0.24);
+          const py2 = topY + 28;
+          const col = podColors[i];
+          const pulse = Math.sin(t * 2.5 + i) * 0.3 + 0.7;
+          // Pod body — hexagonal shape
+          ctx.save();
+          ctx.translate(px2, py2 + 36);
+          ctx.fillStyle = "rgba(10,5,25,0.95)";
+          ctx.strokeStyle = col;
+          ctx.lineWidth = 2.5;
+          ctx.shadowColor = col;
+          ctx.shadowBlur = 14 * pulse;
+          ctx.beginPath();
+          for (let h = 0; h < 6; h++) {
+            const ha = (h * Math.PI) / 3 - Math.PI / 6;
+            const hx = Math.cos(ha) * 30,
+              hy = Math.sin(ha) * 36;
+            h === 0 ? ctx.moveTo(hx, hy) : ctx.lineTo(hx, hy);
+          }
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          ctx.shadowBlur = 0;
+          // Holographic screen inside
+          ctx.fillStyle = `rgba(20,5,40,0.9)`;
+          ctx.beginPath();
+          for (let h = 0; h < 6; h++) {
+            const ha = (h * Math.PI) / 3 - Math.PI / 6;
+            const hx = Math.cos(ha) * 22,
+              hy = Math.sin(ha) * 26;
+            h === 0 ? ctx.moveTo(hx, hy) : ctx.lineTo(hx, hy);
+          }
+          ctx.closePath();
+          ctx.fill();
+          // Animated alien symbol on screen
+          ctx.fillStyle = col;
+          ctx.shadowColor = col;
+          ctx.shadowBlur = 8;
+          ctx.font = `${14 + Math.sin(t * 3 + i) * 2}px serif`;
+          ctx.textAlign = "center";
+          const aliens = ["⬡", "◈", "✦", "⬢"];
+          ctx.fillText(aliens[i], 0, 6);
+          ctx.shadowBlur = 0;
+          // Top glow bar
+          ctx.fillStyle = col;
+          ctx.shadowColor = col;
+          ctx.shadowBlur = 10;
+          ctx.fillRect(-22, -30, 44, 8);
+          ctx.shadowBlur = 0;
+          ctx.restore();
+          // Label below
+          ctx.fillStyle = "#FFFFFF";
+          ctx.shadowColor = col;
+          ctx.shadowBlur = 6;
+          ctx.font = "bold 7px Orbitron, monospace";
+          ctx.textAlign = "center";
+          ctx.fillText(
+            ["VOID QUEST", "STAR RACE", "NOVA ARENA", "NEBULA"][i],
+            px2,
+            py2 + 82,
+          );
+          ctx.shadowBlur = 0;
+        }
+
+        // ── ROW 2: ENERGY DRINK DISPENSERS ──
+        const drinkPos = [
+          cx - W * 0.28,
+          cx - W * 0.08,
+          cx + W * 0.08,
+          cx + W * 0.28,
+        ];
+        const drinkCols = [PURP, GOLD, CYAN, PINK];
+        for (let i = 0; i < 4; i++) {
+          const dx = drinkPos[i],
+            dy = midY + 10;
+          const dc = drinkCols[i];
+          const lp = Math.sin(t * 2 + i * 1.5) * 0.5 + 0.5;
+          // Machine body
+          ctx.fillStyle = "#080518";
+          ctx.strokeStyle = dc;
+          ctx.lineWidth = 1.5;
+          ctx.shadowColor = dc;
+          ctx.shadowBlur = 8 * lp;
+          rr(dx - 16, dy - 28, 32, 48, 6);
+          ctx.fill();
+          ctx.stroke();
+          ctx.shadowBlur = 0;
+          // Liquid level
+          ctx.fillStyle = dc + "55";
+          ctx.fillRect(dx - 10, dy - 18 + (1 - lp) * 18, 20, 18 * lp);
+          // Dispenser nozzle
+          ctx.fillStyle = "#333";
+          ctx.fillRect(dx - 5, dy + 18, 10, 6);
+          // Glow dot
+          ctx.fillStyle = dc;
+          ctx.shadowColor = dc;
+          ctx.shadowBlur = 6;
+          ctx.beginPath();
+          ctx.arc(dx, dy - 24, 3, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.shadowBlur = 0;
+        }
+
+        // ── PRIZE COUNTER (bottom) ──
+        ctx.fillStyle = "#0a0520";
+        ctx.strokeStyle = PURP;
+        ctx.lineWidth = 2;
+        ctx.shadowColor = PURP;
+        ctx.shadowBlur = 10;
+        rr(cx - 52, midY + 38, 104, 24, 4);
+        ctx.fill();
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = GOLD;
+        ctx.shadowColor = GOLD;
+        ctx.shadowBlur = 8;
+        ctx.font = "bold 8px Orbitron, monospace";
+        ctx.textAlign = "center";
+        ctx.fillText("◈ STAR GATE PRIZES ◈", cx, midY + 55);
+        ctx.shadowBlur = 0;
+
+        // Ambient floating stars
+        for (let i = 0; i < 10; i++) {
+          const sx = (t * 25 + i * 90) % W;
+          const sy = topY + 14 + ((i * 37) % (H * 0.75));
+          const sa = Math.sin(t * 2 + i) * 0.4 + 0.5;
+          ctx.fillStyle = `rgba(220,200,255,${sa * 0.4})`;
+          ctx.beginPath();
+          ctx.arc(sx, sy, 1, 0, Math.PI * 2);
+          ctx.fill();
+        }
       }
     } else if (type === 5) {
       // PHARMACY
@@ -5777,7 +6380,7 @@ class Game {
           ctx.fill();
         }
         ctx.restore();
-      } else {
+      } else if (!this.map?.config?.galactica) {
         // ── Default Bar (other maps) ───────────────────
         ctx.fillStyle = "#2a1508";
         ctx.strokeStyle = "#7a4520";
@@ -5886,6 +6489,210 @@ class Game {
         ctx.font = "bold 5px monospace";
         ctx.textAlign = "center";
         ctx.fillText("JUKEBOX", cx + W * 0.3 + 18, topY + 44);
+      } else {
+        // ═══ GALACTICA: NEBULA CANTINA ═══
+        const t = performance.now() / 1000;
+        const PURP = "#AA88FF",
+          GOLD = "#FFDD55",
+          CYAN = "#55DDFF",
+          PINK = "#FF55CC";
+
+        // Title
+        ctx.save();
+        ctx.font = "bold 16px Orbitron, monospace";
+        ctx.textAlign = "center";
+        ctx.fillStyle = "#fff";
+        ctx.shadowColor = PURP;
+        ctx.shadowBlur = 22;
+        ctx.fillText("◈ NEBULA CANTINA ◈", cx, topY - 50);
+        ctx.shadowBlur = 0;
+        ctx.restore();
+
+        // ── COSMIC BAR COUNTER (curved top) ──
+        ctx.fillStyle = "#0c0420";
+        ctx.strokeStyle = PURP;
+        ctx.lineWidth = 2;
+        ctx.shadowColor = PURP;
+        ctx.shadowBlur = 14;
+        rr(cx - W * 0.38, topY + 6, W * 0.76, 28, 6);
+        ctx.fill();
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+        // Counter top surface glow
+        const ctGrad = ctx.createLinearGradient(
+          cx - W * 0.38,
+          0,
+          cx + W * 0.38,
+          0,
+        );
+        ctGrad.addColorStop(0, "rgba(170,136,255,0)");
+        ctGrad.addColorStop(0.5, "rgba(170,136,255,0.4)");
+        ctGrad.addColorStop(1, "rgba(170,136,255,0)");
+        ctx.fillStyle = ctGrad;
+        ctx.fillRect(cx - W * 0.38, topY + 6, W * 0.76, 5);
+
+        // ── ALIEN DRINK BOTTLES (on counter shelf) ──
+        const drinkData = [
+          { col: PURP, symbol: "◈", label: "VOID" },
+          { col: CYAN, symbol: "⬡", label: "CRYO" },
+          { col: PINK, symbol: "✦", label: "NOVA" },
+          { col: GOLD, symbol: "⬢", label: "SOLAR" },
+          { col: "#88FFCC", symbol: "◎", label: "NEBULA" },
+        ];
+        for (let i = 0; i < drinkData.length; i++) {
+          const dd = drinkData[i];
+          const bx = cx - W * 0.3 + i * (W * 0.15);
+          const by = topY + 2;
+          const lp = Math.sin(t * 1.5 + i * 1.2) * 0.3 + 0.7;
+          // Bottle body — tall hexagonal vial
+          ctx.fillStyle = dd.col + "30";
+          ctx.strokeStyle = dd.col;
+          ctx.lineWidth = 1.5;
+          ctx.shadowColor = dd.col;
+          ctx.shadowBlur = 8 * lp;
+          ctx.beginPath();
+          ctx.moveTo(bx - 6, by + 36);
+          ctx.lineTo(bx - 8, by + 28);
+          ctx.lineTo(bx - 5, by + 8);
+          ctx.lineTo(bx - 3, by);
+          ctx.lineTo(bx + 3, by);
+          ctx.lineTo(bx + 5, by + 8);
+          ctx.lineTo(bx + 8, by + 28);
+          ctx.lineTo(bx + 6, by + 36);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          ctx.shadowBlur = 0;
+          // Liquid fill
+          ctx.fillStyle = dd.col + "70";
+          ctx.beginPath();
+          ctx.moveTo(bx - 5.5, by + 36);
+          ctx.lineTo(bx - 7, by + 28);
+          ctx.lineTo(bx - 4, by + (8 + (1 - lp) * 16));
+          ctx.lineTo(bx + 4, by + (8 + (1 - lp) * 16));
+          ctx.lineTo(bx + 7, by + 28);
+          ctx.lineTo(bx + 5.5, by + 36);
+          ctx.closePath();
+          ctx.fill();
+          // Symbol
+          ctx.fillStyle = "#FFF";
+          ctx.shadowColor = dd.col;
+          ctx.shadowBlur = 5;
+          ctx.font = "8px serif";
+          ctx.textAlign = "center";
+          ctx.fillText(dd.symbol, bx, by + 22);
+          ctx.shadowBlur = 0;
+          // Label
+          ctx.fillStyle = dd.col;
+          ctx.font = "5px Orbitron, monospace";
+          ctx.fillText(dd.label, bx, by + 42);
+        }
+
+        // ── 3 CIRCULAR HOVER TABLES with alien seating ──
+        const tableData = [
+          { x: cx - W * 0.3, y: midY - 8, col: PURP },
+          { x: cx, y: midY + 6, col: CYAN },
+          { x: cx + W * 0.28, y: midY - 8, col: GOLD },
+        ];
+        for (const td of tableData) {
+          const hover = Math.sin(t * 1.2 + td.x * 0.01) * 2;
+          // Table hover shadow
+          ctx.fillStyle = "rgba(0,0,0,0.3)";
+          ctx.beginPath();
+          ctx.ellipse(td.x + 2, td.y + 16 + hover, 20, 8, 0, 0, Math.PI * 2);
+          ctx.fill();
+          // Table surface
+          ctx.fillStyle = "#0c0420";
+          ctx.strokeStyle = td.col;
+          ctx.lineWidth = 2;
+          ctx.shadowColor = td.col;
+          ctx.shadowBlur = 12;
+          ctx.beginPath();
+          ctx.arc(td.x, td.y + hover, 22, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+          ctx.shadowBlur = 0;
+          // Inner ring
+          ctx.strokeStyle = td.col + "55";
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.arc(td.x, td.y + hover, 16, 0, Math.PI * 2);
+          ctx.stroke();
+          // Center holo-candle
+          const cp = Math.sin(t * 3 + td.x) * 0.5 + 0.5;
+          ctx.fillStyle = `rgba(220,180,255,${0.5 + cp * 0.5})`;
+          ctx.shadowColor = td.col;
+          ctx.shadowBlur = 8 + cp * 6;
+          ctx.beginPath();
+          ctx.arc(td.x, td.y + hover, 3, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.shadowBlur = 0;
+          // 3 floating alien stools
+          for (let si = 0; si < 3; si++) {
+            const sa = (si / 3) * Math.PI * 2 - Math.PI / 2;
+            const sx = td.x + Math.cos(sa) * 32;
+            const sy = td.y + hover + Math.sin(sa) * 32;
+            ctx.fillStyle = "#0a0318";
+            ctx.strokeStyle = td.col + "88";
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.arc(sx, sy, 7, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+          }
+        }
+
+        // ── HOLOGRAPHIC JUKEBOX (right) ──
+        const jx = cx + W * 0.3,
+          jy = topY + 10;
+        ctx.fillStyle = "#0a0220";
+        ctx.strokeStyle = PINK;
+        ctx.lineWidth = 2;
+        ctx.shadowColor = PINK;
+        ctx.shadowBlur = 12;
+        rr(jx, jy, 44, 68, 6);
+        ctx.fill();
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+        // Rotating hologram inside
+        ctx.save();
+        ctx.translate(jx + 22, jy + 30);
+        ctx.rotate(t * 0.5);
+        for (let ri = 0; ri < 6; ri++) {
+          const ra = (ri / 6) * Math.PI * 2;
+          const rp = Math.sin(t * 2 + ri) * 0.5 + 0.5;
+          ctx.fillStyle = `rgba(255,100,220,${0.2 + rp * 0.4})`;
+          ctx.beginPath();
+          ctx.moveTo(0, 0);
+          ctx.arc(0, 0, 14, ra, ra + Math.PI / 3);
+          ctx.closePath();
+          ctx.fill();
+        }
+        ctx.restore();
+        ctx.fillStyle = PINK;
+        ctx.shadowColor = PINK;
+        ctx.shadowBlur = 8;
+        ctx.font = "5px monospace";
+        ctx.textAlign = "center";
+        ctx.fillText("HOLO JUKEBOX", jx + 22, jy + 60);
+        ctx.shadowBlur = 0;
+
+        // Ambient nebula particles
+        for (let i = 0; i < 12; i++) {
+          const nx = (t * 18 + i * 75) % W;
+          const ny =
+            topY + 40 + Math.sin(t + i * 0.8) * 20 + (i * (H * 0.55)) / 12;
+          const na = Math.sin(t * 1.5 + i) * 0.3 + 0.35;
+          ctx.fillStyle =
+            i % 3 === 0
+              ? `rgba(170,136,255,${na})`
+              : i % 3 === 1
+                ? `rgba(85,221,255,${na})`
+                : `rgba(255,85,204,${na})`;
+          ctx.beginPath();
+          ctx.arc(nx, ny, i % 4 === 0 ? 2 : 1, 0, Math.PI * 2);
+          ctx.fill();
+        }
       }
     } else if (type === 12) {
       // ═══ CYBER PAWNSHOP - NEON CITY STYLE ═══
@@ -7220,7 +8027,11 @@ class Game {
     const t = performance.now() / 1000;
 
     // Background
-    ctx.fillStyle = isNeonCity ? "#020208" : isGalactica ? "#00000e" : "#06060a";
+    ctx.fillStyle = isNeonCity
+      ? "#020208"
+      : isGalactica
+        ? "#00000e"
+        : "#06060a";
     ctx.fillRect(0, 0, W, H);
 
     ctx.save();
@@ -7547,7 +8358,9 @@ class Game {
       // Deep space floor — near-black with subtle nebula hue
       for (let ty = 0; ty < room.H; ty++) {
         for (let tx = 0; tx < room.W; tx++) {
-          const px = tx * S, py = ty * S, tile = room.layout[ty][tx];
+          const px = tx * S,
+            py = ty * S,
+            tile = room.layout[ty][tx];
           if (tile === 1) {
             // Void walls
             ctx.fillStyle = "#04020c";
@@ -7570,7 +8383,13 @@ class Game {
               const twinkle = Math.sin(t * 3 + seed) * 0.5 + 0.5;
               ctx.fillStyle = `rgba(220,200,255,${0.06 + twinkle * 0.12})`;
               ctx.beginPath();
-              ctx.arc(px + (seed % S), py + ((seed * 3) % S), 1, 0, Math.PI * 2);
+              ctx.arc(
+                px + (seed % S),
+                py + ((seed * 3) % S),
+                1,
+                0,
+                Math.PI * 2,
+              );
               ctx.fill();
             }
             // Animated nebula glow patches
@@ -7588,7 +8407,12 @@ class Game {
       ctx.lineWidth = 2;
       ctx.shadowColor = "#AA88FF";
       ctx.shadowBlur = 20;
-      ctx.strokeRect(S + 2, S + 2, room.roomW - S * 2 - 4, room.roomH - S * 2 - 4);
+      ctx.strokeRect(
+        S + 2,
+        S + 2,
+        room.roomW - S * 2 - 4,
+        room.roomH - S * 2 - 4,
+      );
       ctx.shadowBlur = 0;
 
       // Top accent bar — purple gradient
@@ -7613,7 +8437,8 @@ class Game {
       // ═══ COMMAND COUNTER ═══
       const counterX = room.roomW / 2 - 75;
       const counterY = S * 1.2;
-      const counterW = 150, counterH = 40;
+      const counterW = 150,
+        counterH = 40;
 
       // Shadow
       ctx.fillStyle = "rgba(0,0,0,0.5)";
@@ -7646,12 +8471,42 @@ class Game {
 
       // ═══ UFO / SPACECRAFT DISPLAYS ON PLATFORMS ═══
       const shipDisplays = [
-        { x: room.roomW * 0.18, y: room.roomH * 0.45, color: "#FF55FF", name: "SPECTER" },
-        { x: room.roomW * 0.38, y: room.roomH * 0.42, color: "#55AAFF", name: "NOVA" },
-        { x: room.roomW * 0.62, y: room.roomH * 0.42, color: "#AAFFAA", name: "PHANTOM" },
-        { x: room.roomW * 0.82, y: room.roomH * 0.45, color: "#FFAA55", name: "TITAN" },
-        { x: room.roomW * 0.28, y: room.roomH * 0.58, color: "#AA88FF", name: "WRAITH" },
-        { x: room.roomW * 0.72, y: room.roomH * 0.58, color: "#FF8888", name: "VOIDSHIP" },
+        {
+          x: room.roomW * 0.18,
+          y: room.roomH * 0.45,
+          color: "#FF55FF",
+          name: "SPECTER",
+        },
+        {
+          x: room.roomW * 0.38,
+          y: room.roomH * 0.42,
+          color: "#55AAFF",
+          name: "NOVA",
+        },
+        {
+          x: room.roomW * 0.62,
+          y: room.roomH * 0.42,
+          color: "#AAFFAA",
+          name: "PHANTOM",
+        },
+        {
+          x: room.roomW * 0.82,
+          y: room.roomH * 0.45,
+          color: "#FFAA55",
+          name: "TITAN",
+        },
+        {
+          x: room.roomW * 0.28,
+          y: room.roomH * 0.58,
+          color: "#AA88FF",
+          name: "WRAITH",
+        },
+        {
+          x: room.roomW * 0.72,
+          y: room.roomH * 0.58,
+          color: "#FF8888",
+          name: "VOIDSHIP",
+        },
       ];
 
       for (const ship of shipDisplays) {
@@ -7684,7 +8539,13 @@ class Game {
           ctx.fillStyle = `rgba(170,136,255,${0.18 * pulse})`;
           ctx.beginPath();
           ctx.moveTo(0, 0);
-          ctx.arc(0, 0, 38, (i * Math.PI * 2) / 6, (i * Math.PI * 2) / 6 + 0.35);
+          ctx.arc(
+            0,
+            0,
+            38,
+            (i * Math.PI * 2) / 6,
+            (i * Math.PI * 2) / 6 + 0.35,
+          );
           ctx.closePath();
           ctx.fill();
         }
@@ -7722,9 +8583,10 @@ class Game {
           const ang = (i / numLights) * Math.PI * 2 + t * 2;
           const lx = Math.cos(ang) * 20;
           const ly = Math.sin(ang) * 7 + 2;
-          ctx.fillStyle = i % 2 === 0
-            ? `rgba(255,200,100,${0.7 + Math.sin(t * 4 + i) * 0.3})`
-            : `rgba(100,200,255,${0.7 + Math.sin(t * 4 + i) * 0.3})`;
+          ctx.fillStyle =
+            i % 2 === 0
+              ? `rgba(255,200,100,${0.7 + Math.sin(t * 4 + i) * 0.3})`
+              : `rgba(100,200,255,${0.7 + Math.sin(t * 4 + i) * 0.3})`;
           ctx.beginPath();
           ctx.arc(lx, ly, 2.5, 0, Math.PI * 2);
           ctx.fill();
@@ -7762,13 +8624,17 @@ class Game {
       // Ambient space particles — drifting stars
       for (let i = 0; i < 12; i++) {
         const px = (t * 20 + i * 80) % room.roomW;
-        const py = S * 1.5 + Math.sin(t * 0.8 + i * 1.3) * 25 + (i * (room.roomH - S * 3)) / 12;
+        const py =
+          S * 1.5 +
+          Math.sin(t * 0.8 + i * 1.3) * 25 +
+          (i * (room.roomH - S * 3)) / 12;
         const alpha = Math.sin(t * 1.5 + i) * 0.3 + 0.4;
-        ctx.fillStyle = i % 3 === 0
-          ? `rgba(170,136,255,${alpha})`
-          : i % 3 === 1
-            ? `rgba(200,100,255,${alpha})`
-            : `rgba(100,180,255,${alpha})`;
+        ctx.fillStyle =
+          i % 3 === 0
+            ? `rgba(170,136,255,${alpha})`
+            : i % 3 === 1
+              ? `rgba(200,100,255,${alpha})`
+              : `rgba(100,180,255,${alpha})`;
         ctx.beginPath();
         ctx.arc(px, py, i % 4 === 0 ? 2 : 1, 0, Math.PI * 2);
         ctx.fill();
@@ -7778,7 +8644,6 @@ class Game {
       ctx.fillStyle = "rgba(150,80,255,0.22)";
       ctx.fillRect(S, S * 1.5, 3, room.roomH - S * 3);
       ctx.fillRect(room.roomW - S - 3, S * 1.5, 3, room.roomH - S * 3);
-
     } else {
       // ═══ DEFAULT SHOWROOM (other maps) ═══
       for (let ty = 0; ty < room.H; ty++) {
@@ -8068,7 +8933,7 @@ class Game {
       for (const p of this._portals) {
         const pulse = Math.sin(p._animT * 3.5) * 0.35 + 0.65;
         const near = Math.hypot(p.x - this.player.x, p.y - this.player.y) < 55;
-        const isNeonCity  = this.map.config.id === "neon_city";
+        const isNeonCity = this.map.config.id === "neon_city";
         const isGalactica = !!this.map.config.galactica;
         ctx.save();
         ctx.translate(p.x, p.y);
@@ -8165,78 +9030,92 @@ class Game {
             ctx.shadowBlur = 12;
             ctx.fillText("[E] TELEPORT", 0, -62);
           }
-
         } else if (isGalactica) {
           // ── GALACTICA: Cosmic warp gate — purple / gold star rings ─
           const t = p._animT;
-          const pulse2 = Math.sin(t * 2.2) * 0.30 + 0.70;
-          const pulse3 = Math.sin(t * 4.5) * 0.20 + 0.80;
+          const pulse2 = Math.sin(t * 2.2) * 0.3 + 0.7;
+          const pulse3 = Math.sin(t * 4.5) * 0.2 + 0.8;
 
           // Wide soft nebula halo
           const haloG = ctx.createRadialGradient(0, 0, 10, 0, 0, 55);
-          haloG.addColorStop(0,   `rgba(140,60,255,${pulse * 0.18})`);
-          haloG.addColorStop(0.5, `rgba(80,0,180,${pulse * 0.10})`);
-          haloG.addColorStop(1,   'rgba(0,0,0,0)');
+          haloG.addColorStop(0, `rgba(140,60,255,${pulse * 0.18})`);
+          haloG.addColorStop(0.5, `rgba(80,0,180,${pulse * 0.1})`);
+          haloG.addColorStop(1, "rgba(0,0,0,0)");
           ctx.fillStyle = haloG;
-          ctx.beginPath(); ctx.arc(0, 0, 55, 0, Math.PI*2); ctx.fill();
+          ctx.beginPath();
+          ctx.arc(0, 0, 55, 0, Math.PI * 2);
+          ctx.fill();
 
           // Outer rotating ring — purple dashes
           ctx.save();
-          ctx.rotate(t * 0.40);
-          ctx.strokeStyle = `rgba(180,80,255,${pulse * 0.70})`;
+          ctx.rotate(t * 0.4);
+          ctx.strokeStyle = `rgba(180,80,255,${pulse * 0.7})`;
           ctx.lineWidth = 2;
           ctx.setLineDash([9, 11]);
-          ctx.beginPath(); ctx.arc(0, 0, 40, 0, Math.PI*2); ctx.stroke();
+          ctx.beginPath();
+          ctx.arc(0, 0, 40, 0, Math.PI * 2);
+          ctx.stroke();
           ctx.setLineDash([]);
           ctx.restore();
 
           // Middle counter-rotating ring — gold dashes
           ctx.save();
-          ctx.rotate(-t * 0.70);
-          ctx.strokeStyle = `rgba(255,200,40,${pulse2 * 0.60})`;
+          ctx.rotate(-t * 0.7);
+          ctx.strokeStyle = `rgba(255,200,40,${pulse2 * 0.6})`;
           ctx.lineWidth = 1.5;
           ctx.setLineDash([5, 9]);
-          ctx.beginPath(); ctx.arc(0, 0, 32, 0, Math.PI*2); ctx.stroke();
+          ctx.beginPath();
+          ctx.arc(0, 0, 32, 0, Math.PI * 2);
+          ctx.stroke();
           ctx.setLineDash([]);
           ctx.restore();
 
           // Inner fast ring — faint lavender
           ctx.save();
-          ctx.rotate(t * 1.30);
+          ctx.rotate(t * 1.3);
           ctx.strokeStyle = `rgba(210,170,255,${pulse3 * 0.28})`;
           ctx.lineWidth = 1;
           ctx.setLineDash([3, 7]);
-          ctx.beginPath(); ctx.arc(0, 0, 23, 0, Math.PI*2); ctx.stroke();
+          ctx.beginPath();
+          ctx.arc(0, 0, 23, 0, Math.PI * 2);
+          ctx.stroke();
           ctx.setLineDash([]);
           ctx.restore();
 
           // Deep-space core gradient
           const coreG = ctx.createRadialGradient(0, 0, 0, 0, 0, 26);
-          coreG.addColorStop(0,   `rgba(240,200,255,${pulse3 * 0.95})`);
-          coreG.addColorStop(0.25,`rgba(160,60,255,${pulse2 * 0.70})`);
-          coreG.addColorStop(0.65,`rgba(60,0,120,${pulse * 0.40})`);
-          coreG.addColorStop(1,   'rgba(0,0,0,0)');
+          coreG.addColorStop(0, `rgba(240,200,255,${pulse3 * 0.95})`);
+          coreG.addColorStop(0.25, `rgba(160,60,255,${pulse2 * 0.7})`);
+          coreG.addColorStop(0.65, `rgba(60,0,120,${pulse * 0.4})`);
+          coreG.addColorStop(1, "rgba(0,0,0,0)");
           ctx.fillStyle = coreG;
-          ctx.beginPath(); ctx.arc(0, 0, 26, 0, Math.PI*2); ctx.fill();
+          ctx.beginPath();
+          ctx.arc(0, 0, 26, 0, Math.PI * 2);
+          ctx.fill();
 
           // Orbiting particles — 8 alternating purple + gold stars
           for (let i = 0; i < 8; i++) {
-            const angle = t * 1.80 + (i * Math.PI) / 4;
-            const dist  = 24 + Math.sin(t * 2.5 + i * 1.2) * 6;
+            const angle = t * 1.8 + (i * Math.PI) / 4;
+            const dist = 24 + Math.sin(t * 2.5 + i * 1.2) * 6;
             const gp = Math.cos(angle) * dist;
             const hp = Math.sin(angle) * dist;
-            const r  = i % 3 === 0 ? 2.8 : 1.8;
-            ctx.fillStyle = i % 2 === 0
-              ? `rgba(180,90,255,${pulse})`
-              : `rgba(255,200,40,${pulse2})`;
-            ctx.beginPath(); ctx.arc(gp, hp, r, 0, Math.PI*2); ctx.fill();
+            const r = i % 3 === 0 ? 2.8 : 1.8;
+            ctx.fillStyle =
+              i % 2 === 0
+                ? `rgba(180,90,255,${pulse})`
+                : `rgba(255,200,40,${pulse2})`;
+            ctx.beginPath();
+            ctx.arc(gp, hp, r, 0, Math.PI * 2);
+            ctx.fill();
           }
 
           // Bright central star core
           ctx.shadowColor = "#BB66FF";
           ctx.shadowBlur = 24 * pulse;
           ctx.fillStyle = `rgba(255,240,200,${pulse3})`;
-          ctx.beginPath(); ctx.arc(0, 0, 7, 0, Math.PI*2); ctx.fill();
+          ctx.beginPath();
+          ctx.arc(0, 0, 7, 0, Math.PI * 2);
+          ctx.fill();
 
           // 8-point star-gate frame
           ctx.shadowBlur = 16 * pulse;
@@ -8245,18 +9124,21 @@ class Game {
           ctx.beginPath();
           for (let i = 0; i < 8; i++) {
             const ang = (Math.PI / 4) * i - Math.PI / 2;
-            const r   = i % 2 === 0 ? 30 : 20;
-            const fx  = Math.cos(ang) * r;
-            const fy  = Math.sin(ang) * r;
+            const r = i % 2 === 0 ? 30 : 20;
+            const fx = Math.cos(ang) * r;
+            const fy = Math.sin(ang) * r;
             i === 0 ? ctx.moveTo(fx, fy) : ctx.lineTo(fx, fy);
           }
-          ctx.closePath(); ctx.stroke();
+          ctx.closePath();
+          ctx.stroke();
 
           // Gold accent ring on 8-point frame
           ctx.shadowBlur = 8 * pulse2;
           ctx.strokeStyle = `rgba(255,200,40,${pulse2 * 0.45})`;
           ctx.lineWidth = 1;
-          ctx.beginPath(); ctx.arc(0, 0, 25, 0, Math.PI*2); ctx.stroke();
+          ctx.beginPath();
+          ctx.arc(0, 0, 25, 0, Math.PI * 2);
+          ctx.stroke();
 
           ctx.shadowBlur = 0;
           ctx.fillStyle = near ? "#FFE080" : "#BB88FF";
@@ -8271,7 +9153,6 @@ class Game {
             ctx.shadowBlur = 14;
             ctx.fillText("[E]  ENTER WARP", 0, -66);
           }
-
         } else {
           // ── DEFAULT portal style ──────────────────────────────────
           ctx.shadowColor = "#44EEFF";
