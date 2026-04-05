@@ -3229,6 +3229,7 @@ class Game {
 
         if (room.isDealership) {
           const isNeonCity = this.map.config.id === "neon_city";
+          const isGalactica = !!this.map.config.galactica;
           if (isNeonCity) {
             // Neon City: One professional cyber salesperson behind the counter
             // Counter is at S * 1.8 + 35 height, salesperson stands in front of counter (facing customers)
@@ -3236,6 +3237,13 @@ class Game {
             const spY = room.roomH * 0.38; // Closer to the display cars
             this._salespersons = [
               new Salesperson(spX, spY, "#00FFFF", "SALES REP", true),
+            ];
+          } else if (isGalactica) {
+            // Galactica: Cosmic COMMANDER salesperson
+            const spX = room.roomW / 2;
+            const spY = room.roomH * 0.38;
+            this._salespersons = [
+              new Salesperson(spX, spY, "#AA88FF", "COMMANDER", true),
             ];
           } else {
             this._salespersons = [
@@ -7208,10 +7216,11 @@ class Game {
       offY = (H - room.roomH) / 2;
     const S = room.S;
     const isNeonCity = this.map.config.id === "neon_city";
+    const isGalactica = !!this.map.config.galactica;
     const t = performance.now() / 1000;
 
     // Background
-    ctx.fillStyle = isNeonCity ? "#020208" : "#06060a";
+    ctx.fillStyle = isNeonCity ? "#020208" : isGalactica ? "#00000e" : "#06060a";
     ctx.fillRect(0, 0, W, H);
 
     ctx.save();
@@ -7532,6 +7541,244 @@ class Game {
       ctx.fillStyle = "rgba(255,0,255,0.2)";
       ctx.fillRect(S, S * 1.5, 3, room.roomH - S * 3);
       ctx.fillRect(room.roomW - S - 3, S * 1.5, 3, room.roomH - S * 3);
+    } else if (isGalactica) {
+      // ═══ GALACTICA: COSMIC SPACE SHOWROOM ═══
+
+      // Deep space floor — near-black with subtle nebula hue
+      for (let ty = 0; ty < room.H; ty++) {
+        for (let tx = 0; tx < room.W; tx++) {
+          const px = tx * S, py = ty * S, tile = room.layout[ty][tx];
+          if (tile === 1) {
+            // Void walls
+            ctx.fillStyle = "#04020c";
+            ctx.fillRect(px, py, S, S);
+            if ((tx + ty) % 4 === 0) {
+              ctx.fillStyle = "rgba(170,100,255,0.12)";
+              ctx.fillRect(px + S / 2 - 1, py, 2, S);
+            }
+          } else {
+            // Space floor — alternating deep tones
+            ctx.fillStyle = (tx + ty) % 2 === 0 ? "#05031a" : "#030114";
+            ctx.fillRect(px, py, S, S);
+            // Purple grid
+            ctx.strokeStyle = "rgba(150,80,255,0.07)";
+            ctx.lineWidth = 1;
+            ctx.strokeRect(px, py, S, S);
+            // Twinkling star inlays
+            const seed = tx * 17 + ty * 11;
+            if (seed % 7 === 0) {
+              const twinkle = Math.sin(t * 3 + seed) * 0.5 + 0.5;
+              ctx.fillStyle = `rgba(220,200,255,${0.06 + twinkle * 0.12})`;
+              ctx.beginPath();
+              ctx.arc(px + (seed % S), py + ((seed * 3) % S), 1, 0, Math.PI * 2);
+              ctx.fill();
+            }
+            // Animated nebula glow patches
+            if (seed % 11 === 0) {
+              const pulse = Math.sin(t * 1.2 + seed * 0.5) * 0.5 + 0.5;
+              ctx.fillStyle = `rgba(120,60,220,${0.02 + pulse * 0.03})`;
+              ctx.fillRect(px + 2, py + 2, S - 4, S - 4);
+            }
+          }
+        }
+      }
+
+      // Purple cosmos border
+      ctx.strokeStyle = "#AA88FF";
+      ctx.lineWidth = 2;
+      ctx.shadowColor = "#AA88FF";
+      ctx.shadowBlur = 20;
+      ctx.strokeRect(S + 2, S + 2, room.roomW - S * 2 - 4, room.roomH - S * 2 - 4);
+      ctx.shadowBlur = 0;
+
+      // Top accent bar — purple gradient
+      const topGrad = ctx.createLinearGradient(0, S, room.roomW, S);
+      topGrad.addColorStop(0, "rgba(200,100,255,0.15)");
+      topGrad.addColorStop(0.5, "rgba(170,136,255,0.5)");
+      topGrad.addColorStop(1, "rgba(200,100,255,0.15)");
+      ctx.fillStyle = topGrad;
+      ctx.fillRect(S, S, room.roomW - S * 2, 4);
+
+      // Showroom title
+      ctx.save();
+      ctx.font = "bold 20px Orbitron, monospace";
+      ctx.textAlign = "center";
+      ctx.fillStyle = "#CC99FF";
+      ctx.shadowColor = "#AA88FF";
+      ctx.shadowBlur = 28;
+      ctx.fillText("◈ GALACTIC MOTORS ◈", room.roomW / 2, S - 20);
+      ctx.shadowBlur = 0;
+      ctx.restore();
+
+      // ═══ COMMAND COUNTER ═══
+      const counterX = room.roomW / 2 - 75;
+      const counterY = S * 1.2;
+      const counterW = 150, counterH = 40;
+
+      // Shadow
+      ctx.fillStyle = "rgba(0,0,0,0.5)";
+      ctx.fillRect(counterX + 4, counterY + counterH + 2, counterW, 6);
+
+      // Counter body
+      ctx.fillStyle = "#0e0520";
+      ctx.fillRect(counterX, counterY, counterW, counterH);
+      // Top surface
+      ctx.fillStyle = "#1e0d38";
+      ctx.fillRect(counterX - 5, counterY, counterW + 10, 6);
+      // Glowing edge
+      ctx.strokeStyle = "#AA88FF";
+      ctx.lineWidth = 2;
+      ctx.shadowColor = "#AA88FF";
+      ctx.shadowBlur = 10;
+      ctx.beginPath();
+      ctx.moveTo(counterX - 5, counterY + 3);
+      ctx.lineTo(counterX + counterW + 5, counterY + 3);
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+      // Label
+      ctx.fillStyle = "#CC99FF";
+      ctx.shadowColor = "#AA88FF";
+      ctx.shadowBlur = 10;
+      ctx.font = "bold 12px Orbitron, monospace";
+      ctx.textAlign = "center";
+      ctx.fillText("COMMAND DECK", counterX + counterW / 2, counterY + 26);
+      ctx.shadowBlur = 0;
+
+      // ═══ UFO / SPACECRAFT DISPLAYS ON PLATFORMS ═══
+      const shipDisplays = [
+        { x: room.roomW * 0.18, y: room.roomH * 0.45, color: "#FF55FF", name: "SPECTER" },
+        { x: room.roomW * 0.38, y: room.roomH * 0.42, color: "#55AAFF", name: "NOVA" },
+        { x: room.roomW * 0.62, y: room.roomH * 0.42, color: "#AAFFAA", name: "PHANTOM" },
+        { x: room.roomW * 0.82, y: room.roomH * 0.45, color: "#FFAA55", name: "TITAN" },
+        { x: room.roomW * 0.28, y: room.roomH * 0.58, color: "#AA88FF", name: "WRAITH" },
+        { x: room.roomW * 0.72, y: room.roomH * 0.58, color: "#FF8888", name: "VOIDSHIP" },
+      ];
+
+      for (const ship of shipDisplays) {
+        const pulse = Math.sin(t * 1.5 + ship.x * 0.01) * 0.3 + 0.7;
+        const hover = Math.sin(t * 2 + ship.x * 0.02) * 4; // hovering effect
+        ctx.save();
+        ctx.translate(ship.x, ship.y + hover);
+
+        // Platform base — glowing purple ring
+        ctx.beginPath();
+        ctx.arc(0, 18, 45, 0, Math.PI * 2);
+        ctx.fillStyle = "rgba(100,50,200,0.08)";
+        ctx.fill();
+        ctx.strokeStyle = `rgba(170,136,255,${0.55 * pulse})`;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Inner ring
+        ctx.beginPath();
+        ctx.arc(0, 18, 34, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(200,100,255,${0.3 * pulse})`;
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        // Rotating energy ring beneath ship
+        ctx.save();
+        ctx.translate(0, 18);
+        ctx.rotate(t * 0.8);
+        for (let i = 0; i < 6; i++) {
+          ctx.fillStyle = `rgba(170,136,255,${0.18 * pulse})`;
+          ctx.beginPath();
+          ctx.moveTo(0, 0);
+          ctx.arc(0, 0, 38, (i * Math.PI * 2) / 6, (i * Math.PI * 2) / 6 + 0.35);
+          ctx.closePath();
+          ctx.fill();
+        }
+        ctx.restore();
+
+        // ═══ UFO (top-down view) ═══
+        ctx.save();
+        // Shadow ellipse
+        ctx.fillStyle = "rgba(0,0,0,0.4)";
+        ctx.beginPath();
+        ctx.ellipse(2, 14, 26, 9, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // UFO saucer body
+        ctx.beginPath();
+        ctx.ellipse(0, 0, 28, 11, 0, 0, Math.PI * 2);
+        ctx.fillStyle = ship.color + "BB";
+        ctx.fill();
+        ctx.strokeStyle = ship.color;
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        // UFO dome (cockpit)
+        ctx.beginPath();
+        ctx.ellipse(0, -2, 13, 8, 0, 0, Math.PI);
+        ctx.fillStyle = "rgba(180,220,255,0.35)";
+        ctx.fill();
+        ctx.strokeStyle = "rgba(200,240,255,0.6)";
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        // Engine lights (rotating)
+        const numLights = 5;
+        for (let i = 0; i < numLights; i++) {
+          const ang = (i / numLights) * Math.PI * 2 + t * 2;
+          const lx = Math.cos(ang) * 20;
+          const ly = Math.sin(ang) * 7 + 2;
+          ctx.fillStyle = i % 2 === 0
+            ? `rgba(255,200,100,${0.7 + Math.sin(t * 4 + i) * 0.3})`
+            : `rgba(100,200,255,${0.7 + Math.sin(t * 4 + i) * 0.3})`;
+          ctx.beginPath();
+          ctx.arc(lx, ly, 2.5, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Center beam glow downward
+        ctx.fillStyle = `rgba(170,136,255,${0.15 + pulse * 0.1})`;
+        ctx.beginPath();
+        ctx.moveTo(-4, 5);
+        ctx.lineTo(4, 5);
+        ctx.lineTo(8, 20);
+        ctx.lineTo(-8, 20);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.restore();
+
+        // Ship name label
+        ctx.fillStyle = "#FFFFFF";
+        ctx.shadowColor = ship.color;
+        ctx.shadowBlur = 8;
+        ctx.font = "bold 8px Orbitron, monospace";
+        ctx.textAlign = "center";
+        ctx.fillText(ship.name, 0, 48);
+        ctx.shadowBlur = 0;
+
+        // "ON DISPLAY" tag
+        ctx.fillStyle = "#AA88FF";
+        ctx.font = "7px Orbitron, monospace";
+        ctx.fillText("ON DISPLAY", 0, 57);
+
+        ctx.restore();
+      }
+
+      // Ambient space particles — drifting stars
+      for (let i = 0; i < 12; i++) {
+        const px = (t * 20 + i * 80) % room.roomW;
+        const py = S * 1.5 + Math.sin(t * 0.8 + i * 1.3) * 25 + (i * (room.roomH - S * 3)) / 12;
+        const alpha = Math.sin(t * 1.5 + i) * 0.3 + 0.4;
+        ctx.fillStyle = i % 3 === 0
+          ? `rgba(170,136,255,${alpha})`
+          : i % 3 === 1
+            ? `rgba(200,100,255,${alpha})`
+            : `rgba(100,180,255,${alpha})`;
+        ctx.beginPath();
+        ctx.arc(px, py, i % 4 === 0 ? 2 : 1, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Side purple strips
+      ctx.fillStyle = "rgba(150,80,255,0.22)";
+      ctx.fillRect(S, S * 1.5, 3, room.roomH - S * 3);
+      ctx.fillRect(room.roomW - S - 3, S * 1.5, 3, room.roomH - S * 3);
+
     } else {
       // ═══ DEFAULT SHOWROOM (other maps) ═══
       for (let ty = 0; ty < room.H; ty++) {
@@ -7576,6 +7823,11 @@ class Game {
           ctx.shadowColor = "#00FFFF";
           ctx.shadowBlur = 12;
           ctx.fillText("[T] OPEN SHOP", nearSp.x, nearSp.y - 102);
+        } else if (isGalactica) {
+          ctx.fillStyle = "#CC99FF";
+          ctx.shadowColor = "#AA88FF";
+          ctx.shadowBlur = 14;
+          ctx.fillText("[T] OPEN SHOP", nearSp.x, nearSp.y - 102);
         } else {
           ctx.fillStyle = "#FFFFAA";
           ctx.shadowColor = "#FFFF00";
@@ -7594,6 +7846,11 @@ class Game {
       ctx.fillStyle = "#00FFFF";
       ctx.shadowColor = "#00FFFF";
       ctx.shadowBlur = 10;
+      ctx.fillText("[E] EXIT", room.entryX, room.roomH - 25);
+    } else if (isGalactica) {
+      ctx.fillStyle = "#CC99FF";
+      ctx.shadowColor = "#AA88FF";
+      ctx.shadowBlur = 12;
       ctx.fillText("[E] EXIT", room.entryX, room.roomH - 25);
     } else {
       ctx.fillStyle = "#FFFFAA";
@@ -7811,12 +8068,13 @@ class Game {
       for (const p of this._portals) {
         const pulse = Math.sin(p._animT * 3.5) * 0.35 + 0.65;
         const near = Math.hypot(p.x - this.player.x, p.y - this.player.y) < 55;
-        const isNeonCity = this.map.config.id === "neon_city";
+        const isNeonCity  = this.map.config.id === "neon_city";
+        const isGalactica = !!this.map.config.galactica;
         ctx.save();
         ctx.translate(p.x, p.y);
 
         if (isNeonCity) {
-          // Neon City: Beautiful cyber portal with rotating rings and energy effects
+          // ── NEON CITY: Cyber portal — cyan / magenta rings ────────
           const t = p._animT;
           const pulse2 = Math.sin(t * 2) * 0.3 + 0.7;
           const pulse3 = Math.sin(t * 4) * 0.2 + 0.8;
@@ -7907,8 +8165,115 @@ class Game {
             ctx.shadowBlur = 12;
             ctx.fillText("[E] TELEPORT", 0, -62);
           }
+
+        } else if (isGalactica) {
+          // ── GALACTICA: Cosmic warp gate — purple / gold star rings ─
+          const t = p._animT;
+          const pulse2 = Math.sin(t * 2.2) * 0.30 + 0.70;
+          const pulse3 = Math.sin(t * 4.5) * 0.20 + 0.80;
+
+          // Wide soft nebula halo
+          const haloG = ctx.createRadialGradient(0, 0, 10, 0, 0, 55);
+          haloG.addColorStop(0,   `rgba(140,60,255,${pulse * 0.18})`);
+          haloG.addColorStop(0.5, `rgba(80,0,180,${pulse * 0.10})`);
+          haloG.addColorStop(1,   'rgba(0,0,0,0)');
+          ctx.fillStyle = haloG;
+          ctx.beginPath(); ctx.arc(0, 0, 55, 0, Math.PI*2); ctx.fill();
+
+          // Outer rotating ring — purple dashes
+          ctx.save();
+          ctx.rotate(t * 0.40);
+          ctx.strokeStyle = `rgba(180,80,255,${pulse * 0.70})`;
+          ctx.lineWidth = 2;
+          ctx.setLineDash([9, 11]);
+          ctx.beginPath(); ctx.arc(0, 0, 40, 0, Math.PI*2); ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.restore();
+
+          // Middle counter-rotating ring — gold dashes
+          ctx.save();
+          ctx.rotate(-t * 0.70);
+          ctx.strokeStyle = `rgba(255,200,40,${pulse2 * 0.60})`;
+          ctx.lineWidth = 1.5;
+          ctx.setLineDash([5, 9]);
+          ctx.beginPath(); ctx.arc(0, 0, 32, 0, Math.PI*2); ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.restore();
+
+          // Inner fast ring — faint lavender
+          ctx.save();
+          ctx.rotate(t * 1.30);
+          ctx.strokeStyle = `rgba(210,170,255,${pulse3 * 0.28})`;
+          ctx.lineWidth = 1;
+          ctx.setLineDash([3, 7]);
+          ctx.beginPath(); ctx.arc(0, 0, 23, 0, Math.PI*2); ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.restore();
+
+          // Deep-space core gradient
+          const coreG = ctx.createRadialGradient(0, 0, 0, 0, 0, 26);
+          coreG.addColorStop(0,   `rgba(240,200,255,${pulse3 * 0.95})`);
+          coreG.addColorStop(0.25,`rgba(160,60,255,${pulse2 * 0.70})`);
+          coreG.addColorStop(0.65,`rgba(60,0,120,${pulse * 0.40})`);
+          coreG.addColorStop(1,   'rgba(0,0,0,0)');
+          ctx.fillStyle = coreG;
+          ctx.beginPath(); ctx.arc(0, 0, 26, 0, Math.PI*2); ctx.fill();
+
+          // Orbiting particles — 8 alternating purple + gold stars
+          for (let i = 0; i < 8; i++) {
+            const angle = t * 1.80 + (i * Math.PI) / 4;
+            const dist  = 24 + Math.sin(t * 2.5 + i * 1.2) * 6;
+            const gp = Math.cos(angle) * dist;
+            const hp = Math.sin(angle) * dist;
+            const r  = i % 3 === 0 ? 2.8 : 1.8;
+            ctx.fillStyle = i % 2 === 0
+              ? `rgba(180,90,255,${pulse})`
+              : `rgba(255,200,40,${pulse2})`;
+            ctx.beginPath(); ctx.arc(gp, hp, r, 0, Math.PI*2); ctx.fill();
+          }
+
+          // Bright central star core
+          ctx.shadowColor = "#BB66FF";
+          ctx.shadowBlur = 24 * pulse;
+          ctx.fillStyle = `rgba(255,240,200,${pulse3})`;
+          ctx.beginPath(); ctx.arc(0, 0, 7, 0, Math.PI*2); ctx.fill();
+
+          // 8-point star-gate frame
+          ctx.shadowBlur = 16 * pulse;
+          ctx.strokeStyle = `rgba(180,80,255,${pulse})`;
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          for (let i = 0; i < 8; i++) {
+            const ang = (Math.PI / 4) * i - Math.PI / 2;
+            const r   = i % 2 === 0 ? 30 : 20;
+            const fx  = Math.cos(ang) * r;
+            const fy  = Math.sin(ang) * r;
+            i === 0 ? ctx.moveTo(fx, fy) : ctx.lineTo(fx, fy);
+          }
+          ctx.closePath(); ctx.stroke();
+
+          // Gold accent ring on 8-point frame
+          ctx.shadowBlur = 8 * pulse2;
+          ctx.strokeStyle = `rgba(255,200,40,${pulse2 * 0.45})`;
+          ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.arc(0, 0, 25, 0, Math.PI*2); ctx.stroke();
+
+          ctx.shadowBlur = 0;
+          ctx.fillStyle = near ? "#FFE080" : "#BB88FF";
+          ctx.font = "bold 9px Orbitron, monospace";
+          ctx.textAlign = "center";
+          ctx.shadowColor = "#8844FF";
+          ctx.shadowBlur = 12;
+          ctx.fillText("⬡ WARP GATE ⬡", 0, -52);
+          if (near) {
+            ctx.fillStyle = "#FFE080";
+            ctx.shadowColor = "#FFD700";
+            ctx.shadowBlur = 14;
+            ctx.fillText("[E]  ENTER WARP", 0, -66);
+          }
+
         } else {
-          // Default portal style
+          // ── DEFAULT portal style ──────────────────────────────────
           ctx.shadowColor = "#44EEFF";
           ctx.shadowBlur = 28 * pulse;
           ctx.fillStyle = `rgba(0,120,200,${pulse * 0.25})`;
