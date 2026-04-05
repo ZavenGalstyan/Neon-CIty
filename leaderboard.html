@@ -592,6 +592,154 @@
     .lb-podium-card { max-width: 100%; width: 100%; transform: none !important; order: unset !important; }
     .lb-podium-card--gold { transform: none !important; }
   }
+
+  /* ═══════════════════════════════════════════════════════════
+     RANKS — Enhanced premium styles
+  ═══════════════════════════════════════════════════════════ */
+
+  /* ── Ambient orbs ───────────────────────────────────────── */
+  body { position: relative; }
+  body::before, body::after {
+    content: '';
+    position: fixed;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 0;
+    filter: blur(130px);
+  }
+  body::before {
+    width: 700px; height: 700px;
+    top: -200px; left: -100px;
+    background: radial-gradient(circle, rgba(255,68,102,0.12) 0%, transparent 65%);
+    animation: lb-orb-a 22s ease-in-out infinite alternate;
+  }
+  body::after {
+    width: 550px; height: 550px;
+    bottom: -100px; right: -80px;
+    background: radial-gradient(circle, rgba(255,215,0,0.09) 0%, transparent 65%);
+    animation: lb-orb-b 28s ease-in-out infinite alternate;
+  }
+  @keyframes lb-orb-a {
+    from { transform: translate(0,0) scale(1); opacity: 0.8; }
+    to   { transform: translate(80px,60px) scale(1.2); opacity: 1; }
+  }
+  @keyframes lb-orb-b {
+    from { transform: translate(0,0) scale(1); opacity: 0.7; }
+    to   { transform: translate(-60px,-50px) scale(1.15); opacity: 1; }
+  }
+
+  .lb-page { position: relative; z-index: 1; }
+
+  /* ── Hero enhancements ──────────────────────────────────── */
+  .lb-hero {
+    background: radial-gradient(ellipse 90% 70% at 50% -10%,
+      rgba(255,68,102,0.08) 0%, transparent 65%);
+  }
+  .lb-hero-title {
+    filter: drop-shadow(0 0 30px rgba(255,68,102,0.22));
+    animation: title-glow 4s ease-in-out infinite alternate;
+  }
+  @keyframes title-glow {
+    from { filter: drop-shadow(0 0 25px rgba(255,68,102,0.18)); }
+    to   { filter: drop-shadow(0 0 45px rgba(255,68,102,0.35)); }
+  }
+
+  /* ── Podium card: richer glow + glass feel ──────────────── */
+  .lb-podium-card {
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+  }
+  .lb-podium-card--gold {
+    box-shadow: 0 0 60px rgba(255,215,0,0.18), 0 12px 40px rgba(0,0,0,0.5);
+    animation: podium-gold-pulse 3.5s ease-in-out infinite alternate;
+  }
+  @keyframes podium-gold-pulse {
+    from { box-shadow: 0 0 45px rgba(255,215,0,0.14), 0 12px 40px rgba(0,0,0,0.5); }
+    to   { box-shadow: 0 0 80px rgba(255,215,0,0.26), 0 12px 40px rgba(0,0,0,0.5); }
+  }
+  .lb-podium-card--silver {
+    box-shadow: 0 0 36px rgba(192,192,192,0.12), 0 8px 28px rgba(0,0,0,0.4);
+  }
+  .lb-podium-card--bronze {
+    box-shadow: 0 0 36px rgba(205,127,50,0.12), 0 8px 28px rgba(0,0,0,0.4);
+  }
+
+  /* Crown/rank badge above podium avatar */
+  .lb-podium-card--gold   .lb-podium-medal { animation: crown-float 2.5s ease-in-out infinite; }
+  @keyframes crown-float {
+    0%,100% { transform: translateY(0);   }
+    50%      { transform: translateY(-5px); }
+  }
+
+  /* ── Rank rows: neon left border on "you" ───────────────── */
+  .lb-row {
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+  }
+  .lb-row--me {
+    box-shadow: inset 3px 0 0 var(--cyan), 0 0 24px rgba(68,238,255,0.04) !important;
+  }
+
+  /* ── Rank number: tier-colored badges ──────────────────── */
+  .lb-row__rank {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.07);
+    font-size: 11px;
+  }
+  .lb-row--top10 .lb-row__rank {
+    background: rgba(68,238,255,0.08);
+    border-color: rgba(68,238,255,0.25);
+    box-shadow: 0 0 10px rgba(68,238,255,0.1);
+  }
+
+  /* ── Tab bar: pill style ────────────────────────────────── */
+  .lb-tab {
+    border-radius: 100px;
+    transition: all 0.22s;
+  }
+  .lb-tab.active {
+    box-shadow: 0 0 22px rgba(255,68,102,0.18), inset 0 0 16px rgba(255,68,102,0.06);
+  }
+
+  /* ── Content fade-in ────────────────────────────────────── */
+  .lb-content { animation: lb-page-in 0.4s ease both; }
+  @keyframes lb-page-in {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── Row stagger ────────────────────────────────────────── */
+  .lb-row:nth-child(1)  { animation-delay:  0ms }
+  .lb-row:nth-child(2)  { animation-delay: 35ms }
+  .lb-row:nth-child(3)  { animation-delay: 70ms }
+  .lb-row:nth-child(4)  { animation-delay:105ms }
+  .lb-row:nth-child(5)  { animation-delay:140ms }
+  .lb-row:nth-child(6)  { animation-delay:175ms }
+  .lb-row:nth-child(7)  { animation-delay:210ms }
+  .lb-row:nth-child(8)  { animation-delay:245ms }
+  .lb-row:nth-child(9)  { animation-delay:280ms }
+  .lb-row:nth-child(10) { animation-delay:315ms }
+
+  /* ── Value glow ─────────────────────────────────────────── */
+  .lb-row--top10 .lb-row__val {
+    text-shadow: 0 0 14px rgba(68,238,255,0.45);
+  }
+
+  /* ── Map select: styled ─────────────────────────────────── */
+  .lb-map-select {
+    backdrop-filter: blur(12px);
+  }
+
+  /* ── Divider glow ───────────────────────────────────────── */
+  .lb-divider__line {
+    background: linear-gradient(90deg, transparent,
+      rgba(255,68,102,0.22) 40%, rgba(255,215,0,0.18) 60%, transparent);
+  }
   </style>
 </head>
 <body class="select-screen">

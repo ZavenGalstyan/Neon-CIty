@@ -818,41 +818,65 @@ class GameMap {
     const doorCol = DOOR_COLORS[Math.min(floor, 10)] || DOOR_COLORS[1];
     const glowCol = GLOW_COLORS[Math.min(floor, 10)] || GLOW_COLORS[1];
 
-    // Outer glow when active
+    // ── Wide glow halo when active ──────────────────────────
     if (active) {
       const pulse = Math.sin(t * 3.5) * 0.3 + 0.7;
-      ctx.globalAlpha = pulse * 0.55;
+      // Outer soft halo
+      ctx.globalAlpha = pulse * 0.35;
       ctx.fillStyle = glowCol;
-      ctx.beginPath();
-      ctx.ellipse(ex, ey, w * 1.0, h * 0.55, 0, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.beginPath(); ctx.ellipse(ex, ey, w*1.5, h*0.65, 0, 0, Math.PI*2); ctx.fill();
+      // Inner tighter glow
+      ctx.globalAlpha = pulse * 0.55;
+      ctx.beginPath(); ctx.ellipse(ex, ey, w*0.9, h*0.5, 0, 0, Math.PI*2); ctx.fill();
       ctx.globalAlpha = 1;
     }
 
-    // Elevator shaft frame
-    ctx.fillStyle = '#2a2420';
-    ctx.fillRect(ex - w/2 - 4, ey - h/2 - 4, w + 8, h + 8);
+    // Elevator shaft surround (dark trim)
+    ctx.fillStyle = '#181410';
+    ctx.fillRect(ex - w/2 - 6, ey - h/2 - 6, w + 12, h + 12);
+    // Gold/colored trim border
+    ctx.fillStyle = active ? glowCol : '#4a3a28';
+    ctx.fillRect(ex - w/2 - 6, ey - h/2 - 6, w + 12, 3);
+    ctx.fillRect(ex - w/2 - 6, ey + h/2 + 3, w + 12, 3);
+    ctx.fillRect(ex - w/2 - 6, ey - h/2 - 6, 3, h + 12);
+    ctx.fillRect(ex + w/2 + 3, ey - h/2 - 6, 3, h + 12);
 
-    // Door panels (split open when active)
+    // Door panels (split open when active, slide apart)
     const openAmt = active ? Math.min(1, ((Math.sin(t * 2) + 1) / 2) * 0.6 + 0.4) : 0;
-    const panelW  = (w / 2) * (1 - openAmt * 0.8);
+    const panelW  = (w / 2) * (1 - openAmt * 0.85);
 
-    // Left door
+    // Left door with sheen
     ctx.fillStyle = doorCol;
     ctx.fillRect(ex - w/2, ey - h/2, panelW, h);
-    // Right door
+    ctx.fillStyle = 'rgba(255,255,255,0.12)';
+    ctx.fillRect(ex - w/2, ey - h/2, 4, h);
+    // Right door with sheen
+    ctx.fillStyle = doorCol;
     ctx.fillRect(ex + w/2 - panelW, ey - h/2, panelW, h);
+    ctx.fillStyle = 'rgba(0,0,0,0.12)';
+    ctx.fillRect(ex + w/2 - panelW, ey - h/2, 4, h);
 
-    // Door centre seam shine
-    ctx.fillStyle = 'rgba(255,255,255,0.15)';
+    // Elevator interior when open
+    if (openAmt > 0.4) {
+      ctx.fillStyle = 'rgba(255,255,255,0.06)';
+      ctx.fillRect(ex - w/2 + panelW, ey - h/2, w - panelW*2, h);
+      // Interior back wall lines
+      ctx.fillStyle = 'rgba(255,255,255,0.04)';
+      for (let ln=1; ln<=3; ln++) {
+        ctx.fillRect(ex - w/2 + panelW, ey - h/2 + h*(ln/4), w - panelW*2, 1);
+      }
+    }
+
+    // Centre seam
+    ctx.fillStyle = 'rgba(255,255,255,0.18)';
     ctx.fillRect(ex - 1, ey - h/2, 2, h);
 
-    // Floor number above elevator
-    ctx.font = 'bold 18px monospace';
+    // Floor indicator display (above elevator)
+    ctx.font = 'bold 13px monospace';
     ctx.textAlign = 'center';
-    ctx.fillStyle = active ? glowCol : '#888';
-    if (active) { ctx.shadowColor = glowCol; ctx.shadowBlur = 12; }
-    ctx.fillText(active ? '▲ UP' : `▲`, ex, ey - h/2 - 8);
+    if (active) { ctx.shadowColor = glowCol; ctx.shadowBlur = 16; }
+    ctx.fillStyle = active ? glowCol : '#665544';
+    ctx.fillText(active ? '▲  ENTER ELEVATOR' : '▲', ex, ey - h/2 - 10);
     ctx.shadowBlur = 0;
 
     // Panel buttons (small dots on frame)
@@ -997,7 +1021,8 @@ class GameMap {
     const ey  = Math.min(this.H - 1, Math.ceil((camY + canvasH) / S));
 
     // Pre-compute time-based wave offset once per frame (not per tile)
-    const _waveNow = cfg.ocean ? Date.now() * 0.001 : 0;
+    const _waveNow  = cfg.ocean  ? Date.now() * 0.001 : 0;
+    const _towerNow = cfg.tower  ? Date.now() * 0.001 : 0;
 
     for (let y = sy; y <= ey; y++) {
       for (let x = sx; x <= ex; x++) {
@@ -1009,113 +1034,343 @@ class GameMap {
 
         if (tile === TILE.ROAD) {
           if (cfg.tower) {
-            // Tower: 10 UNIQUE floor designs — each floor is completely different
-            const fl = this._towerFloor || 1;
-            // Night floors: 2, 4, 6, 8 | Day floors: 1, 3, 5, 7, 9, 10
-            const isNightFloor = (fl === 2 || fl === 4 || fl === 6 || fl === 8);
-            let flA, flB, lineCol, accentCol;
+            // ═══════════════════════════════════════════════════════════
+            //  TOWER FLOORS — 10 fully unique, beautiful floor designs
+            // ═══════════════════════════════════════════════════════════
+            const fl  = this._towerFloor || 1;
+            const t   = _towerNow;
+            const ts  = x * 13 + y * 7; // deterministic tile seed
 
             if (fl === 1) {
-              // Floor 1: Grand Lobby — white marble checkerboard (DAY)
-              flA = '#f0ebe0'; flB = '#e0d8c8'; lineCol = 'rgba(0,0,0,0.06)';
-              accentCol = 'rgba(200,180,120,0.15)';
-            } else if (fl === 2) {
-              // Floor 2: Parking Garage — dark concrete (NIGHT)
-              flA = (x + y) % 2 === 0 ? '#2a2a2a' : '#222222'; flB = flA; lineCol = 'rgba(255,255,255,0.04)';
-              accentCol = 'rgba(255,200,0,0.12)';
-            } else if (fl === 3) {
-              // Floor 3: Office Space — warm wood parquet (DAY)
-              flA = (x + y) % 2 === 0 ? '#a87830' : '#906820'; flB = flA; lineCol = 'rgba(0,0,0,0.12)';
-              accentCol = 'rgba(255,240,200,0.08)';
-            } else if (fl === 4) {
-              // Floor 4: Server Room — dark tech grid (NIGHT)
-              flA = (x * 3 + y) % 3 === 0 ? '#0a1520' : '#081218'; flB = flA; lineCol = 'rgba(0,200,255,0.15)';
-              accentCol = 'rgba(0,255,200,0.12)';
-            } else if (fl === 5) {
-              // Floor 5: Lounge — rich red carpet (DAY)
-              flA = (x + y) % 2 === 0 ? '#6a2020' : '#5a1818'; flB = flA; lineCol = 'rgba(255,200,150,0.08)';
-              accentCol = 'rgba(255,215,0,0.10)';
-            } else if (fl === 6) {
-              // Floor 6: Security Level — dark steel blue (NIGHT)
-              flA = (x + y) % 2 === 0 ? '#1a1a30' : '#141428'; flB = flA; lineCol = 'rgba(60,100,200,0.18)';
-              accentCol = 'rgba(255,0,0,0.08)';
-            } else if (fl === 7) {
-              // Floor 7: Research Lab — clean white tiles (DAY)
-              flA = (x + y) % 2 === 0 ? '#e8f0e8' : '#d8e8d8'; flB = flA; lineCol = 'rgba(0,100,50,0.08)';
-              accentCol = 'rgba(0,255,100,0.06)';
-            } else if (fl === 8) {
-              // Floor 8: Armory — industrial gunmetal (NIGHT)
-              flA = (x * 2 + y) % 3 === 0 ? '#3a3a40' : '#2a2a30'; flB = flA; lineCol = 'rgba(255,100,0,0.12)';
-              accentCol = 'rgba(255,50,0,0.10)';
-            } else if (fl === 9) {
-              // Floor 9: Executive Suite — luxury purple velvet (DAY)
-              flA = (x + y) % 2 === 0 ? '#4a2060' : '#3a1850'; flB = flA; lineCol = 'rgba(200,150,255,0.10)';
-              accentCol = 'rgba(255,200,255,0.08)';
-            } else {
-              // Floor 10: Penthouse — black marble with gold veins (DAY - Boss floor)
-              flA = (x + y) % 3 === 0 ? '#181010' : '#100808'; flB = flA; lineCol = 'rgba(255,200,0,0.25)';
-              accentCol = 'rgba(255,215,0,0.20)';
-            }
-
-            // Draw base floor
-            const col = (fl === 1 && (x + y) % 2 === 0) ? flA : flB;
-            ctx.fillStyle = col;
-            ctx.fillRect(wx, wy, S, S);
-
-            // Grid seam lines
-            ctx.fillStyle = lineCol;
-            ctx.fillRect(wx, wy, S, 1);
-            ctx.fillRect(wx, wy, 1, S);
-
-            // Floor-specific decorative accents
-            if (fl === 1 && (x * 5 + y * 7) % 11 === 0) {
-              // Lobby: golden inlay pattern
-              ctx.fillStyle = accentCol;
-              ctx.fillRect(wx + S*0.3, wy + S*0.3, S*0.4, S*0.4);
-            } else if (fl === 2 && (x * 3 + y * 5) % 7 === 0) {
-              // Parking: yellow line markings
-              ctx.fillStyle = accentCol;
-              ctx.fillRect(wx + S*0.1, wy + S*0.45, S*0.8, S*0.1);
-            } else if (fl === 3 && (x + y) % 4 === 0) {
-              // Office: subtle wood grain
-              ctx.fillStyle = 'rgba(60,40,20,0.08)';
-              ctx.fillRect(wx, wy + S*0.2, S, 2);
-              ctx.fillRect(wx, wy + S*0.6, S, 2);
-            } else if (fl === 4 && (x * 7 + y * 11) % 5 === 0) {
-              // Server: LED status lights
-              ctx.fillStyle = accentCol;
-              ctx.beginPath(); ctx.arc(wx + S*0.5, wy + S*0.5, 4, 0, Math.PI*2); ctx.fill();
-            } else if (fl === 5 && (x * 9 + y * 13) % 8 === 0) {
-              // Lounge: carpet pattern
-              ctx.fillStyle = accentCol;
-              ctx.fillRect(wx + S*0.2, wy + S*0.2, S*0.15, S*0.15);
-              ctx.fillRect(wx + S*0.65, wy + S*0.65, S*0.15, S*0.15);
-            } else if (fl === 6 && (x * 11 + y * 17) % 9 === 0) {
-              // Security: warning stripes
-              ctx.fillStyle = accentCol;
-              ctx.fillRect(wx, wy, S*0.2, S);
-            } else if (fl === 7 && (x + y) % 6 === 0) {
-              // Lab: biohazard markings
-              ctx.fillStyle = accentCol;
-              ctx.beginPath(); ctx.arc(wx + S*0.5, wy + S*0.5, S*0.15, 0, Math.PI*2); ctx.fill();
-            } else if (fl === 8 && (x * 13 + y * 19) % 7 === 0) {
-              // Armory: shell casings / metal plates
-              ctx.fillStyle = accentCol;
-              ctx.fillRect(wx + S*0.35, wy + S*0.35, S*0.3, S*0.3);
-            } else if (fl === 9 && (x * 17 + y * 23) % 10 === 0) {
-              // Executive: crystal chandelier reflection
-              ctx.fillStyle = accentCol;
-              ctx.beginPath(); ctx.arc(wx + S*0.5, wy + S*0.5, S*0.2, 0, Math.PI*2); ctx.fill();
-            } else if (fl === 10 && (x * 7 + y * 11) % 9 === 0) {
-              // Penthouse: gold vein accent
-              ctx.fillStyle = accentCol;
-              ctx.fillRect(wx + S*0.1, wy + S*0.45, S*0.8, 2);
-            }
-
-            // Night floor ambient darkness overlay
-            if (isNightFloor) {
-              ctx.fillStyle = 'rgba(0,0,20,0.25)';
+              // ── F1: GRAND LOBBY — White marble checkerboard, gold inlay ──
+              const checker = (Math.floor(x/2) + Math.floor(y/2)) % 2 === 0;
+              ctx.fillStyle = checker ? '#f4f0e8' : '#e8e2d4';
               ctx.fillRect(wx, wy, S, S);
+              // Hairline gold grout
+              ctx.fillStyle = 'rgba(190,155,80,0.24)';
+              ctx.fillRect(wx, wy, S, 1); ctx.fillRect(wx, wy, 1, S);
+              // Large marble vein (deterministic)
+              if ((x * 17 + y * 11) % 7 === 0) {
+                ctx.fillStyle = 'rgba(170,148,108,0.14)';
+                ctx.fillRect(wx + ts%40, wy, 2, S);
+              }
+              if ((x * 11 + y * 13) % 9 === 0) {
+                ctx.fillStyle = 'rgba(160,140,100,0.10)';
+                ctx.fillRect(wx, wy + ts%40, S, 2);
+              }
+              // Ornate gold medallion at every 4×4 center
+              if (x % 4 === 2 && y % 4 === 2) {
+                ctx.fillStyle = 'rgba(210,175,70,0.22)';
+                ctx.beginPath(); ctx.arc(wx+S*.5, wy+S*.5, S*.28, 0, Math.PI*2); ctx.fill();
+                ctx.fillStyle = 'rgba(230,195,90,0.16)';
+                ctx.beginPath(); ctx.arc(wx+S*.5, wy+S*.5, S*.17, 0, Math.PI*2); ctx.fill();
+                ctx.fillStyle = 'rgba(210,175,70,0.22)';
+                ctx.fillRect(wx+S*.47, wy+S*.15, S*.06, S*.70);
+                ctx.fillRect(wx+S*.15, wy+S*.47, S*.70, S*.06);
+              }
+              // Subtle warm light from ceiling
+              if ((x + y) % 6 === 0) { ctx.fillStyle='rgba(255,230,160,0.04)'; ctx.fillRect(wx,wy,S,S); }
+
+            } else if (fl === 2) {
+              // ── F2: PARKING GARAGE — Raw concrete, glowing lane markings ──
+              const greys = ['#252525','#222222','#282828','#242424','#272727'];
+              ctx.fillStyle = greys[ts % 5];
+              ctx.fillRect(wx, wy, S, S);
+              // Concrete panel crack seam
+              ctx.fillStyle = 'rgba(0,0,0,0.22)';
+              ctx.fillRect(wx, wy, S, 2); ctx.fillRect(wx, wy, 2, S);
+              // Glowing yellow lane lines
+              if (y % 3 === 1 && x % 2 === 0) {
+                ctx.fillStyle = 'rgba(255,200,0,0.55)';
+                ctx.fillRect(wx+S*.08, wy+S*.44, S*.84, S*.12);
+              }
+              // Parking bay diagonal arrows
+              if (x % 5 === 2 && y % 4 === 2) {
+                ctx.fillStyle = 'rgba(255,210,0,0.32)';
+                ctx.fillRect(wx+S*.4, wy+S*.18, S*.2, S*.64);
+                ctx.fillRect(wx+S*.22, wy+S*.28, S*.56, S*.18);
+              }
+              // Oil stain
+              if ((x*19+y*13) % 11 === 0) {
+                ctx.fillStyle = 'rgba(0,0,0,0.35)';
+                ctx.beginPath(); ctx.ellipse(wx+S*.5, wy+S*.5, S*.28,S*.18, .7, 0, Math.PI*2); ctx.fill();
+              }
+              // Flickering neon reflection on wet floor
+              if ((x+y) % 7 === 0) {
+                const flick = Math.sin(t*4 + x*.7 + y*.4) * .3 + .7;
+                ctx.fillStyle = `rgba(255,220,0,${flick*.04})`;
+                ctx.fillRect(wx, wy, S, S);
+              }
+              // Wheel track marks
+              if (y % 2 === 0 && (ts % 8) < 3) {
+                ctx.fillStyle = 'rgba(0,0,0,0.18)';
+                ctx.fillRect(wx+S*.15, wy, S*.15, S);
+                ctx.fillRect(wx+S*.70, wy, S*.15, S);
+              }
+
+            } else if (fl === 3) {
+              // ── F3: CORPORATE OFFICES — Rich walnut parquet ──
+              const plankIdx = Math.floor(x/2) % 2;
+              const woods = ['#7a5220','#6e4818','#825826','#765022','#70481e'];
+              ctx.fillStyle = woods[(x*3 + plankIdx) % 5];
+              ctx.fillRect(wx, wy, S, S);
+              // Horizontal wood grain lines
+              for (let g = 1; g <= 5; g++) {
+                ctx.fillStyle = `rgba(0,0,0,${g%2===0 ? .05:.03})`;
+                ctx.fillRect(wx, wy+S*(g/6), S, 1);
+              }
+              // Plank boundary every 2 tiles
+              if (x % 2 === 0) {
+                ctx.fillStyle = 'rgba(0,0,0,0.24)'; ctx.fillRect(wx, wy, 2, S);
+              }
+              // Wood knot
+              if ((x*11+y*17) % 13 === 0) {
+                ctx.fillStyle = 'rgba(45,20,5,0.26)';
+                ctx.beginPath(); ctx.ellipse(wx+S*.5, wy+S*.5, S*.12, S*.08, .3, 0, Math.PI*2); ctx.fill();
+                ctx.fillStyle = 'rgba(35,15,5,0.16)';
+                ctx.beginPath(); ctx.ellipse(wx+S*.5, wy+S*.5, S*.20, S*.13, .3, 0, Math.PI*2); ctx.fill();
+              }
+              // Warm overhead light sheen
+              if ((x+y) % 5 === 0) { ctx.fillStyle='rgba(255,200,120,0.055)'; ctx.fillRect(wx,wy,S,S); }
+              // Cross-direction plank seam (herringbone feel)
+              if (y % 4 === 0) { ctx.fillStyle='rgba(0,0,0,0.14)'; ctx.fillRect(wx,wy,S,2); }
+
+            } else if (fl === 4) {
+              // ── F4: DATA CENTER — Raised access floor, cyan circuit grid ──
+              ctx.fillStyle = '#0a1218'; ctx.fillRect(wx, wy, S, S);
+              // Inset panel
+              ctx.fillStyle = '#0c1620'; ctx.fillRect(wx+3, wy+3, S-6, S-6);
+              // Panel border (cyan glow)
+              ctx.fillStyle = 'rgba(0,180,255,0.20)';
+              ctx.fillRect(wx, wy, S, 2);   ctx.fillRect(wx, wy, 2, S);
+              ctx.fillRect(wx+S-2, wy, 2, S); ctx.fillRect(wx, wy+S-2, S, 2);
+              // Animated LED corner
+              const ledP = (t*2 + x*.5 + y*.3) % (Math.PI*2);
+              const ledV = Math.sin(ledP)*.35 + .65;
+              ctx.fillStyle = `rgba(0,255,180,${.55 * ledV})`;
+              ctx.beginPath(); ctx.arc(wx+5, wy+5, 2.8, 0, Math.PI*2); ctx.fill();
+              // Alternate color LED (red alert status)
+              if ((x*7+y*11) % 7 === 0) {
+                const rledV = Math.sin(ledP + Math.PI)*.4 + .6;
+                ctx.fillStyle = `rgba(255,60,0,${.45 * rledV})`;
+                ctx.beginPath(); ctx.arc(wx+S-5, wy+5, 2.8, 0, Math.PI*2); ctx.fill();
+              }
+              // Circuit traces
+              if ((x*7+y*13) % 5 === 0) {
+                ctx.fillStyle='rgba(0,160,220,0.14)'; ctx.fillRect(wx+S*.45, wy+10, 3, S-20);
+              }
+              if ((x*11+y*7) % 5 === 0) {
+                ctx.fillStyle='rgba(0,160,220,0.14)'; ctx.fillRect(wx+10, wy+S*.45, S-20, 3);
+              }
+              // Vent slots
+              if ((x*3+y*5) % 7 === 0) {
+                for (let sl=0; sl<3; sl++) {
+                  ctx.fillStyle='rgba(0,80,140,0.22)'; ctx.fillRect(wx+S*.18, wy+S*.22+sl*13, S*.64, 4);
+                }
+              }
+              // Floor glow from server lights above
+              const glow4 = Math.sin(t*.8 + x*.3 + y*.4)*.3 + .7;
+              ctx.fillStyle = `rgba(0,40,80,${glow4*.08})`; ctx.fillRect(wx, wy, S, S);
+
+            } else if (fl === 5) {
+              // ── F5: VELVET LOUNGE — Deep crimson carpet, gold diamond lattice ──
+              const reds = ['#5a1818','#541415','#621c1c'];
+              ctx.fillStyle = reds[ts % 3]; ctx.fillRect(wx, wy, S, S);
+              // Carpet texture (fibre noise)
+              if ((x*7+y*9) % 3 === 0) {
+                ctx.fillStyle='rgba(0,0,0,0.07)';
+                ctx.fillRect(wx+(ts%20)*3, wy+(ts*3%20)*3, 8, 2);
+              }
+              // Gold diamond lattice
+              ctx.fillStyle = 'rgba(210,170,50,0.20)';
+              ctx.fillRect(wx, wy+S*.48, S, 3);
+              ctx.fillRect(wx+S*.48, wy, 3, S);
+              // Diamond intersection gems
+              if ((x+y) % 2 === 0 && x % 2 === 0) {
+                ctx.fillStyle='rgba(230,190,70,0.35)';
+                ctx.beginPath(); ctx.arc(wx+S*.5, wy+S*.5, 4.5, 0, Math.PI*2); ctx.fill();
+                ctx.fillStyle='rgba(255,220,120,0.20)';
+                ctx.beginPath(); ctx.arc(wx+S*.5, wy+S*.5, 2, 0, Math.PI*2); ctx.fill();
+              }
+              // Border gold strip (room edge)
+              if (x<=1 || x>=20 || y<=1 || y>=14) {
+                ctx.fillStyle='rgba(210,170,50,0.35)'; ctx.fillRect(wx, wy, S, S);
+              }
+              // Chandelier warm glow pool
+              const chPulse = Math.sin(t*.6)*.15 + .85;
+              if (x>=9 && x<=12 && y>=6 && y<=9) {
+                ctx.fillStyle = `rgba(255,220,100,${chPulse*.10})`; ctx.fillRect(wx, wy, S, S);
+              }
+
+            } else if (fl === 6) {
+              // ── F6: TACTICAL OPS — Steel grid, hazard stripes, red alerts ──
+              const steel = (x+y) % 2 === 0 ? '#1e2228' : '#1a1e24';
+              ctx.fillStyle = steel; ctx.fillRect(wx, wy, S, S);
+              // Metal grid lines
+              ctx.fillStyle='rgba(55,75,95,0.22)';
+              ctx.fillRect(wx, wy, S, 1); ctx.fillRect(wx, wy, 1, S);
+              // Sub-grid
+              ctx.fillStyle='rgba(55,75,95,0.10)';
+              ctx.fillRect(wx, wy+S*.5, S, 1); ctx.fillRect(wx+S*.5, wy, 1, S);
+              // Hazard border stripes
+              if (x<=2 || x>=19 || y<=2 || y>=13) {
+                const stripe = Math.floor((x+y)*.5) % 2 === 0;
+                ctx.fillStyle = stripe ? 'rgba(235,175,0,0.38)' : 'rgba(0,0,0,0.38)';
+                ctx.fillRect(wx, wy, S, S);
+              }
+              // Drain / ventilation grate holes
+              if ((x*5+y*3) % 8 === 0) {
+                ctx.fillStyle='rgba(0,0,0,0.50)';
+                ctx.beginPath(); ctx.arc(wx+S*.3, wy+S*.3, 4, 0, Math.PI*2); ctx.fill();
+                ctx.beginPath(); ctx.arc(wx+S*.7, wy+S*.7, 4, 0, Math.PI*2); ctx.fill();
+                ctx.beginPath(); ctx.arc(wx+S*.7, wy+S*.3, 4, 0, Math.PI*2); ctx.fill();
+                ctx.beginPath(); ctx.arc(wx+S*.3, wy+S*.7, 4, 0, Math.PI*2); ctx.fill();
+              }
+              // Animated red emergency flash
+              if ((x*17+y*13) % 12 === 0) {
+                const flash = Math.sin(t*2.8 + x*.4)*.35 + .35;
+                ctx.fillStyle = `rgba(200,0,0,${flash*.10})`; ctx.fillRect(wx, wy, S, S);
+              }
+              // Footprint scuff
+              if ((x*23+y*19) % 15 === 0) {
+                ctx.fillStyle='rgba(0,0,0,0.20)';
+                ctx.beginPath(); ctx.ellipse(wx+S*.4, wy+S*.5, S*.10, S*.15, .5, 0, Math.PI*2); ctx.fill();
+              }
+
+            } else if (fl === 7) {
+              // ── F7: BIO-RESEARCH LAB — Sterile white, mint seams, biohazard ──
+              ctx.fillStyle = (x+y) % 2 === 0 ? '#edf2ed' : '#e3ece3';
+              ctx.fillRect(wx, wy, S, S);
+              // Mint green precision grout
+              ctx.fillStyle='rgba(30,150,90,0.16)';
+              ctx.fillRect(wx, wy, S, 2); ctx.fillRect(wx, wy, 2, S);
+              // Biohazard symbol (3-lobe) every 5×5
+              if (x % 5 === 2 && y % 5 === 2) {
+                ctx.fillStyle='rgba(0,150,75,0.15)';
+                ctx.beginPath(); ctx.arc(wx+S*.5, wy+S*.5, S*.28, 0, Math.PI*2); ctx.fill();
+                ctx.fillStyle='rgba(237,242,237,.9)';
+                ctx.beginPath(); ctx.arc(wx+S*.5, wy+S*.5, S*.14, 0, Math.PI*2); ctx.fill();
+                for (let l=0; l<3; l++) {
+                  const ang = l*(Math.PI*2/3) - Math.PI/2;
+                  const lx = wx+S*.5 + Math.cos(ang)*S*.13;
+                  const ly = wy+S*.5 + Math.sin(ang)*S*.13;
+                  ctx.fillStyle='rgba(0,150,75,0.18)';
+                  ctx.beginPath(); ctx.arc(lx, ly, S*.09, 0, Math.PI*2); ctx.fill();
+                }
+                ctx.fillStyle='rgba(0,150,75,0.22)';
+                ctx.beginPath(); ctx.arc(wx+S*.5, wy+S*.5, S*.05, 0, Math.PI*2); ctx.fill();
+              }
+              // Chemical/reagent splash stain
+              if ((x*13+y*19) % 15 === 0) {
+                ctx.fillStyle='rgba(60,200,110,0.10)';
+                ctx.beginPath(); ctx.ellipse(wx+S*.5, wy+S*.5, S*.22, S*.14, .5, 0, Math.PI*2); ctx.fill();
+              }
+              // UV strip lighting every 3rd row
+              if (y % 3 === 0) { ctx.fillStyle='rgba(180,230,190,0.07)'; ctx.fillRect(wx, wy, S, S); }
+              // Tile crack
+              if ((x*29+y*23) % 19 === 0) {
+                ctx.fillStyle='rgba(0,0,0,0.12)';
+                ctx.fillRect(wx+S*.3, wy+S*.1, 1, S*.4);
+              }
+
+            } else if (fl === 8) {
+              // ── F8: WEAPONS ARMORY — Steel diamond plate, orange safety ──
+              ctx.fillStyle = (x+y) % 2 === 0 ? '#2e2e34' : '#28282e';
+              ctx.fillRect(wx, wy, S, S);
+              // Diamond plate cross-hatch
+              ctx.fillStyle='rgba(255,255,255,0.05)';
+              ctx.fillRect(wx, wy, S, 1);       ctx.fillRect(wx, wy, 1, S);
+              ctx.fillRect(wx, wy+S*.33, S, 1); ctx.fillRect(wx, wy+S*.66, S, 1);
+              ctx.fillRect(wx+S*.33, wy, 1, S); ctx.fillRect(wx+S*.66, wy, 1, S);
+              ctx.fillStyle='rgba(255,255,255,0.025)';
+              ctx.fillRect(wx, wy+S*.165, S, 1); ctx.fillRect(wx, wy+S*.50, S, 1); ctx.fillRect(wx, wy+S*.83, S, 1);
+              // Orange safety edge marking
+              if (x<=1 || x>=20 || y<=1 || y>=14) {
+                ctx.fillStyle='rgba(255,100,0,0.42)'; ctx.fillRect(wx, wy, S, S);
+              }
+              // Rivet heads at panel corners
+              ctx.fillStyle='rgba(180,180,190,0.30)';
+              ctx.beginPath(); ctx.arc(wx+5, wy+5, 3, 0, Math.PI*2); ctx.fill();
+              ctx.beginPath(); ctx.arc(wx+S-5, wy+5, 3, 0, Math.PI*2); ctx.fill();
+              ctx.beginPath(); ctx.arc(wx+5, wy+S-5, 3, 0, Math.PI*2); ctx.fill();
+              ctx.beginPath(); ctx.arc(wx+S-5, wy+S-5, 3, 0, Math.PI*2); ctx.fill();
+              // Brass shell casings
+              if ((x*7+y*11) % 9 === 0) {
+                ctx.fillStyle='rgba(200,145,45,0.40)';
+                ctx.beginPath(); ctx.arc(wx+S*.28, wy+S*.38, 3, 0, Math.PI*2); ctx.fill();
+                ctx.beginPath(); ctx.arc(wx+S*.72, wy+S*.62, 3, 0, Math.PI*2); ctx.fill();
+                ctx.beginPath(); ctx.arc(wx+S*.50, wy+S*.25, 2, 0, Math.PI*2); ctx.fill();
+              }
+              // Machine oil stain
+              if ((x*17+y*23) % 13 === 0) {
+                ctx.fillStyle='rgba(0,0,0,0.38)';
+                ctx.beginPath(); ctx.ellipse(wx+S*.5, wy+S*.5, S*.20, S*.13, 1.1, 0, Math.PI*2); ctx.fill();
+              }
+
+            } else if (fl === 9) {
+              // ── F9: EXECUTIVE SUITE — Black/purple marble, gold inlay ──
+              const purples = ['#1e0a30','#180824','#22102a'];
+              ctx.fillStyle = purples[ts % 3]; ctx.fillRect(wx, wy, S, S);
+              // Marble veins — deterministic purple/gold lines
+              if ((x*7+y*11) % 5 === 0) {
+                const vx9 = wx + ts % (S-8);
+                ctx.fillStyle='rgba(170,90,255,0.20)'; ctx.fillRect(vx9, wy, 2, S);
+              }
+              if ((x*11+y*7) % 5 === 0) {
+                const vy9 = wy + (ts*3) % (S-8);
+                ctx.fillStyle='rgba(195,140,255,0.14)'; ctx.fillRect(wx, vy9, S, 2);
+              }
+              // Gold precision border
+              ctx.fillStyle='rgba(210,170,65,0.18)';
+              ctx.fillRect(wx, wy, S, 1); ctx.fillRect(wx, wy, 1, S);
+              // Animated crystal chandelier reflection
+              if ((x*13+y*17) % 9 === 0) {
+                const cr = Math.sin(t*1.5 + x*.8 + y*.6)*.30 + .30;
+                ctx.fillStyle = `rgba(215,175,255,${cr*.14})`;
+                ctx.beginPath(); ctx.arc(wx+S*.5, wy+S*.5, S*.24, 0, Math.PI*2); ctx.fill();
+                // Crystal spark
+                ctx.fillStyle = `rgba(255,240,255,${cr*.20})`;
+                ctx.beginPath(); ctx.arc(wx+S*.5, wy+S*.5, S*.06, 0, Math.PI*2); ctx.fill();
+              }
+              // Velvet depth overlay
+              if ((x+y) % 3 === 0) { ctx.fillStyle='rgba(0,0,0,0.09)'; ctx.fillRect(wx,wy,S,S); }
+              // Subtle purple ambient light
+              ctx.fillStyle='rgba(80,0,120,0.06)'; ctx.fillRect(wx,wy,S,S);
+
+            } else {
+              // ── F10: PENTHOUSE — Black obsidian, animated gold veins (BOSS) ──
+              const blacks = ['#0a0606','#080404','#0e0808'];
+              ctx.fillStyle = blacks[ts % 3]; ctx.fillRect(wx, wy, S, S);
+              // Animated glowing gold veins
+              const vP = Math.sin(t*1.2 + x*.4 + y*.5)*.4 + .6;
+              if ((x*7+y*11) % 5 === 0) {
+                const vx10 = wx + (x*23+y*17) % (S-10);
+                ctx.fillStyle = `rgba(255,200,0,${.28*vP})`;
+                ctx.fillRect(vx10, wy, 2, S);
+              }
+              if ((x*13+y*7) % 5 === 0) {
+                const vy10 = wy + (x*19+y*29) % (S-10);
+                ctx.fillStyle = `rgba(255,180,0,${.22*vP})`;
+                ctx.fillRect(wx, vy10, S, 2);
+              }
+              // Pulsing gold grout
+              const gP = Math.sin(t*.8 + x*.2 + y*.3)*.3 + .7;
+              ctx.fillStyle = `rgba(170,130,0,${.20*gP})`;
+              ctx.fillRect(wx, wy, S, 1); ctx.fillRect(wx, wy, 1, S);
+              // Boss aura glow pools
+              if ((x*17+y*23) % 11 === 0) {
+                const bossG = Math.sin(t*2 + x + y)*.3 + .5;
+                ctx.fillStyle = `rgba(255,150,0,${bossG*.09})`;
+                ctx.beginPath(); ctx.arc(wx+S*.5, wy+S*.5, S*.45, 0, Math.PI*2); ctx.fill();
+              }
+              // Dark depth overlay
+              ctx.fillStyle='rgba(0,0,0,0.14)'; ctx.fillRect(wx,wy,S,S);
+              // Scattered ember sparks
+              if ((x*29+y*31) % 17 === 0) {
+                const sp = Math.sin(t*3 + ts)*.5 + .5;
+                ctx.fillStyle = `rgba(255,120,0,${sp*.35})`;
+                ctx.beginPath(); ctx.arc(wx+(ts*7)%S, wy+(ts*11)%S, 1.5, 0, Math.PI*2); ctx.fill();
+              }
             }
           } else if (cfg.robot) {
             // Robot City: dark metal grating floor
@@ -1465,111 +1720,285 @@ class GameMap {
               ctx.beginPath(); ctx.arc(wx + S*0.60, wy + S*0.35, 5, 0, Math.PI*2); ctx.fill();
             }
           } else if (cfg.tower) {
-            // Tower: 10 UNIQUE wall designs — each floor completely different
-            const fl = this._towerFloor || 1;
-            const isNightFloor = (fl === 2 || fl === 4 || fl === 6 || fl === 8);
-            let wallBase, accentCol, accentPos;
+            // ═══════════════════════════════════════════════════════════
+            //  TOWER WALLS — 10 fully unique, beautiful wall designs
+            // ═══════════════════════════════════════════════════════════
+            const fl  = this._towerFloor || 1;
+            const t   = _towerNow;
+            const ts  = x * 13 + y * 7;
 
             if (fl === 1) {
-              // Floor 1: Grand Lobby — cream marble pillars
-              wallBase = '#c8b898';
-              accentCol = 'rgba(180,160,120,0.40)';
-              accentPos = 'vertical';
-            } else if (fl === 2) {
-              // Floor 2: Parking Garage — raw concrete (NIGHT)
-              wallBase = '#3a3a3a';
-              accentCol = 'rgba(255,200,0,0.25)';
-              accentPos = 'stripe';
-            } else if (fl === 3) {
-              // Floor 3: Office Space — warm wood panels
-              wallBase = '#5a4020';
-              accentCol = 'rgba(255,240,200,0.15)';
-              accentPos = 'horizontal';
-            } else if (fl === 4) {
-              // Floor 4: Server Room — dark tech walls (NIGHT)
-              wallBase = '#0a1018';
-              accentCol = 'rgba(0,200,255,0.30)';
-              accentPos = 'led';
-            } else if (fl === 5) {
-              // Floor 5: Lounge — velvet red walls
-              wallBase = '#4a1515';
-              accentCol = 'rgba(255,215,0,0.20)';
-              accentPos = 'frame';
-            } else if (fl === 6) {
-              // Floor 6: Security Level — steel blue (NIGHT)
-              wallBase = '#14142a';
-              accentCol = 'rgba(255,0,0,0.25)';
-              accentPos = 'warning';
-            } else if (fl === 7) {
-              // Floor 7: Research Lab — sterile white
-              wallBase = '#d0e0d0';
-              accentCol = 'rgba(0,200,100,0.20)';
-              accentPos = 'horizontal';
-            } else if (fl === 8) {
-              // Floor 8: Armory — gunmetal grey (NIGHT)
-              wallBase = '#2a2a30';
-              accentCol = 'rgba(255,100,0,0.25)';
-              accentPos = 'rivets';
-            } else if (fl === 9) {
-              // Floor 9: Executive Suite — royal purple
-              wallBase = '#2a1040';
-              accentCol = 'rgba(200,150,255,0.25)';
-              accentPos = 'frame';
-            } else {
-              // Floor 10: Penthouse — black with gold trim (Boss)
-              wallBase = '#1a0808';
-              accentCol = 'rgba(255,200,0,0.40)';
-              accentPos = 'gold';
-            }
-
-            ctx.fillStyle = wallBase;
-            ctx.fillRect(wx, wy, S, S);
-
-            // Panel bevel effect
-            ctx.fillStyle = 'rgba(255,255,255,0.06)';
-            ctx.fillRect(wx, wy, S, 2);
-            ctx.fillRect(wx, wy, 2, S);
-            ctx.fillStyle = 'rgba(0,0,0,0.20)';
-            ctx.fillRect(wx + S - 2, wy, 2, S);
-            ctx.fillRect(wx, wy + S - 2, S, 2);
-
-            // Floor-specific wall accents
-            ctx.fillStyle = accentCol;
-            if (accentPos === 'vertical') {
-              ctx.fillRect(wx + S*0.45, wy, S*0.1, S);
-            } else if (accentPos === 'horizontal') {
-              ctx.fillRect(wx, wy + S*0.4, S, S*0.2);
-            } else if (accentPos === 'stripe') {
-              ctx.fillRect(wx, wy + S*0.3, S, 4);
-              ctx.fillRect(wx, wy + S*0.7, S, 4);
-            } else if (accentPos === 'led') {
-              ctx.fillRect(wx + 4, wy + S - 6, S - 8, 3);
-              if ((x * 7 + y * 11) % 3 === 0) {
-                ctx.fillStyle = 'rgba(0,255,100,0.40)';
-                ctx.beginPath(); ctx.arc(wx + S*0.5, wy + S*0.3, 3, 0, Math.PI*2); ctx.fill();
+              // ── W1: GRAND LOBBY — Cream marble columns, gold trim ──
+              ctx.fillStyle = '#cfc0a0'; ctx.fillRect(wx, wy, S, S);
+              // Marble slab seam lines
+              ctx.fillStyle='rgba(180,158,118,0.38)';
+              ctx.fillRect(wx, wy, S, 2); ctx.fillRect(wx, wy, 2, S);
+              ctx.fillStyle='rgba(150,130,90,0.22)';
+              ctx.fillRect(wx+S-2, wy, 2, S); ctx.fillRect(wx, wy+S-2, S, 2);
+              // Gold capital detail (top of column)
+              ctx.fillStyle='rgba(200,165,70,0.35)';
+              ctx.fillRect(wx+4, wy+3, S-8, 6);
+              ctx.fillRect(wx+4, wy+S-9, S-8, 6);
+              // Marble vein
+              if ((ts*7) % 5 === 0) {
+                ctx.fillStyle='rgba(160,140,100,0.20)';
+                ctx.fillRect(wx+ts%30+10, wy, 2, S);
               }
-            } else if (accentPos === 'frame') {
-              ctx.fillRect(wx + 4, wy + 4, S - 8, 3);
-              ctx.fillRect(wx + 4, wy + S - 7, S - 8, 3);
-              ctx.fillRect(wx + 4, wy + 4, 3, S - 8);
-              ctx.fillRect(wx + S - 7, wy + 4, 3, S - 8);
-            } else if (accentPos === 'warning') {
-              ctx.fillRect(wx, wy, S*0.15, S);
-              ctx.fillRect(wx + S*0.85, wy, S*0.15, S);
-            } else if (accentPos === 'rivets') {
-              ctx.beginPath(); ctx.arc(wx + S*0.2, wy + S*0.2, 4, 0, Math.PI*2); ctx.fill();
-              ctx.beginPath(); ctx.arc(wx + S*0.8, wy + S*0.2, 4, 0, Math.PI*2); ctx.fill();
-              ctx.beginPath(); ctx.arc(wx + S*0.2, wy + S*0.8, 4, 0, Math.PI*2); ctx.fill();
-              ctx.beginPath(); ctx.arc(wx + S*0.8, wy + S*0.8, 4, 0, Math.PI*2); ctx.fill();
-            } else if (accentPos === 'gold') {
-              ctx.fillRect(wx, wy, S, 4);
-              ctx.fillRect(wx, wy + S - 4, S, 4);
-            }
+              // Bevel highlight
+              ctx.fillStyle='rgba(255,255,255,0.10)';
+              ctx.fillRect(wx, wy, S, 2); ctx.fillRect(wx, wy, 2, S);
+              // Column fluting (vertical grooves)
+              for (let g=0; g<3; g++) {
+                ctx.fillStyle='rgba(0,0,0,0.06)';
+                ctx.fillRect(wx+S*(g*.28+.12), wy+8, 3, S-16);
+              }
 
-            // Night floor ambient darkness overlay
-            if (isNightFloor) {
-              ctx.fillStyle = 'rgba(0,0,20,0.20)';
-              ctx.fillRect(wx, wy, S, S);
+            } else if (fl === 2) {
+              // ── W2: PARKING GARAGE — Raw concrete, signage, pipes ──
+              const greyW = ['#363636','#323232','#3a3a3a'];
+              ctx.fillStyle = greyW[ts % 3]; ctx.fillRect(wx, wy, S, S);
+              // Concrete form-work lines
+              ctx.fillStyle='rgba(0,0,0,0.18)'; ctx.fillRect(wx, wy, S, 2); ctx.fillRect(wx, wy, 2, S);
+              ctx.fillStyle='rgba(255,255,255,0.04)';
+              ctx.fillRect(wx+S-2, wy, 2, S); ctx.fillRect(wx, wy+S-2, S, 2);
+              // Yellow safety stripe (top)
+              ctx.fillStyle='rgba(255,200,0,0.30)';
+              ctx.fillRect(wx, wy, S, 5); ctx.fillRect(wx, wy+S-5, S, 5);
+              // Pipe conduit
+              if (ts % 4 === 0) {
+                ctx.fillStyle='rgba(100,100,110,0.45)';
+                ctx.fillRect(wx+S*.4, wy, S*.2, S);
+                ctx.fillStyle='rgba(140,140,150,0.20)';
+                ctx.fillRect(wx+S*.42, wy, S*.16, S);
+              }
+              // Water stain / rust
+              if ((x*23+y*17) % 11 === 0) {
+                ctx.fillStyle='rgba(80,50,20,0.20)';
+                ctx.beginPath(); ctx.ellipse(wx+S*.5, wy+S*.6, S*.15, S*.22, .2, 0, Math.PI*2); ctx.fill();
+              }
+              // Spray tag
+              if ((x*31+y*19) % 13 === 0) {
+                ctx.fillStyle='rgba(255,80,0,0.15)'; ctx.fillRect(wx+10, wy+S*.3, S-20, S*.4);
+              }
+
+            } else if (fl === 3) {
+              // ── W3: CORPORATE OFFICES — Dark walnut panels, glass strip ──
+              ctx.fillStyle = '#4a3218'; ctx.fillRect(wx, wy, S, S);
+              // Wood grain
+              for (let g=1; g<=5; g++) {
+                ctx.fillStyle=`rgba(0,0,0,${g%2===0?.07:.04})`;
+                ctx.fillRect(wx, wy+S*(g/6), S, 1);
+              }
+              // Frosted glass strip (center horizontal band)
+              ctx.fillStyle='rgba(180,200,220,0.16)';
+              ctx.fillRect(wx, wy+S*.38, S, S*.24);
+              ctx.fillStyle='rgba(220,235,245,0.08)';
+              ctx.fillRect(wx, wy+S*.40, S, S*.20);
+              // Panel frame
+              ctx.fillStyle='rgba(255,210,140,0.14)';
+              ctx.fillRect(wx+4, wy+4, S-8, 3);
+              ctx.fillRect(wx+4, wy+S-7, S-8, 3);
+              ctx.fillRect(wx+4, wy+4, 3, S-8);
+              ctx.fillRect(wx+S-7, wy+4, 3, S-8);
+              // Bevel
+              ctx.fillStyle='rgba(255,255,255,0.06)'; ctx.fillRect(wx, wy, S, 2); ctx.fillRect(wx, wy, 2, S);
+              ctx.fillStyle='rgba(0,0,0,0.22)'; ctx.fillRect(wx+S-2, wy, 2, S); ctx.fillRect(wx, wy+S-2, S, 2);
+
+            } else if (fl === 4) {
+              // ── W4: DATA CENTER — Black server racks, LED arrays ──
+              ctx.fillStyle = '#08100e'; ctx.fillRect(wx, wy, S, S);
+              // Server rack panel lines
+              for (let r=0; r<5; r++) {
+                ctx.fillStyle='rgba(0,0,0,0.35)'; ctx.fillRect(wx+3, wy+3+r*15, S-6, 12);
+                ctx.fillStyle='rgba(0,30,50,0.60)'; ctx.fillRect(wx+4, wy+4+r*15, S-8, 10);
+              }
+              // LED status row (animated)
+              for (let r=0; r<5; r++) {
+                const ledC = (t*2 + r*.7 + x*.3) % (Math.PI*2);
+                const v = Math.sin(ledC)*.4 + .6;
+                const colors = ['rgba(0,255,0,', 'rgba(0,200,255,', 'rgba(255,60,0,', 'rgba(255,200,0,', 'rgba(0,255,120,'];
+                ctx.fillStyle = colors[(r + ts) % 5] + `${v*.65})`;
+                ctx.beginPath(); ctx.arc(wx+S-9, wy+9+r*15, 2.5, 0, Math.PI*2); ctx.fill();
+              }
+              // Cyan border glow
+              ctx.fillStyle='rgba(0,160,220,0.20)';
+              ctx.fillRect(wx, wy, S, 2); ctx.fillRect(wx, wy, 2, S);
+              ctx.fillRect(wx+S-2, wy, 2, S); ctx.fillRect(wx, wy+S-2, S, 2);
+              // Cable bundle
+              ctx.fillStyle='rgba(20,20,40,0.60)'; ctx.fillRect(wx+S*.4, wy+S*.7, S*.2, S*.3);
+              for (let c=0; c<3; c++) {
+                ctx.fillStyle=['rgba(255,60,0,0.4)','rgba(0,200,255,0.4)','rgba(255,255,0,0.3)'][c];
+                ctx.fillRect(wx+S*.42+c*4, wy+S*.7, 3, S*.3);
+              }
+
+            } else if (fl === 5) {
+              // ── W5: VELVET LOUNGE — Deep burgundy panels, gold frames ──
+              ctx.fillStyle = '#3e1212'; ctx.fillRect(wx, wy, S, S);
+              // Velvet texture
+              if ((ts*3) % 4 === 0) {
+                ctx.fillStyle='rgba(0,0,0,0.06)';
+                ctx.fillRect(wx+(ts*7)%S, wy, 2, S);
+              }
+              // Gold ornate frame
+              ctx.fillStyle='rgba(210,170,55,0.30)';
+              ctx.fillRect(wx+5, wy+5, S-10, 3);
+              ctx.fillRect(wx+5, wy+S-8, S-10, 3);
+              ctx.fillRect(wx+5, wy+5, 3, S-10);
+              ctx.fillRect(wx+S-8, wy+5, 3, S-10);
+              // Inner frame
+              ctx.fillStyle='rgba(210,170,55,0.15)';
+              ctx.fillRect(wx+10, wy+10, S-20, 2);
+              ctx.fillRect(wx+10, wy+S-12, S-20, 2);
+              ctx.fillRect(wx+10, wy+10, 2, S-20);
+              ctx.fillRect(wx+S-12, wy+10, 2, S-20);
+              // Sconce light
+              if (x % 4 === 2 || y % 4 === 2) {
+                const scP = Math.sin(t*.5)*.15 + .85;
+                ctx.fillStyle = `rgba(255,200,80,${scP*.18})`;
+                ctx.beginPath(); ctx.arc(wx+S*.5, wy+S*.5, S*.2, 0, Math.PI*2); ctx.fill();
+              }
+              // Bevel
+              ctx.fillStyle='rgba(255,255,255,0.06)'; ctx.fillRect(wx, wy, S, 2);
+              ctx.fillStyle='rgba(0,0,0,0.25)'; ctx.fillRect(wx+S-2, wy, 2, S);
+
+            } else if (fl === 6) {
+              // ── W6: TACTICAL OPS — Armored steel, red alert strips ──
+              ctx.fillStyle = '#12141a'; ctx.fillRect(wx, wy, S, S);
+              // Armored panel bolts
+              ctx.fillStyle='rgba(40,50,70,0.60)'; ctx.fillRect(wx+3, wy+3, S-6, S-6);
+              ctx.fillStyle='rgba(60,70,90,0.35)'; ctx.fillRect(wx+5, wy+5, S-10, S-10);
+              // Red alert strip (top + bottom)
+              const alertP = Math.sin(t*2.8)*.5 + .5;
+              ctx.fillStyle = `rgba(200,0,0,${alertP*.40})`;
+              ctx.fillRect(wx, wy, S, 6); ctx.fillRect(wx, wy+S-6, S, 6);
+              // Warning arrows
+              ctx.fillStyle='rgba(220,160,0,0.25)';
+              ctx.fillRect(wx, wy+S*.45, S*.2, S*.1);
+              ctx.fillRect(wx+S*.8, wy+S*.45, S*.2, S*.1);
+              // Security camera mount
+              if ((x*17+y*23) % 8 === 0) {
+                ctx.fillStyle='rgba(30,40,60,0.70)'; ctx.fillRect(wx+S*.35, wy+4, S*.3, S*.2);
+                ctx.fillStyle='rgba(80,90,110,0.50)'; ctx.beginPath(); ctx.arc(wx+S*.5, wy+18, 6, 0, Math.PI*2); ctx.fill();
+                const camP = Math.sin(t*1.8)*.3 + .7;
+                ctx.fillStyle=`rgba(0,255,0,${camP*.5})`; ctx.beginPath(); ctx.arc(wx+S*.5, wy+18, 2, 0, Math.PI*2); ctx.fill();
+              }
+              // Panel bolts
+              ctx.fillStyle='rgba(160,170,185,0.30)';
+              ctx.beginPath(); ctx.arc(wx+6, wy+6, 3, 0, Math.PI*2); ctx.fill();
+              ctx.beginPath(); ctx.arc(wx+S-6, wy+6, 3, 0, Math.PI*2); ctx.fill();
+              ctx.beginPath(); ctx.arc(wx+6, wy+S-6, 3, 0, Math.PI*2); ctx.fill();
+              ctx.beginPath(); ctx.arc(wx+S-6, wy+S-6, 3, 0, Math.PI*2); ctx.fill();
+
+            } else if (fl === 7) {
+              // ── W7: BIO-RESEARCH LAB — White containment walls, hazard tape ──
+              ctx.fillStyle = '#d8eed8'; ctx.fillRect(wx, wy, S, S);
+              // Clean tile seam
+              ctx.fillStyle='rgba(25,140,80,0.16)'; ctx.fillRect(wx, wy, S, 2); ctx.fillRect(wx, wy, 2, S);
+              ctx.fillStyle='rgba(0,0,0,0.10)'; ctx.fillRect(wx+S-2, wy, 2, S); ctx.fillRect(wx, wy+S-2, S, 2);
+              // Green safety stripe band
+              ctx.fillStyle='rgba(0,160,80,0.22)';
+              ctx.fillRect(wx, wy+S*.35, S, S*.30);
+              ctx.fillStyle='rgba(0,200,100,0.10)';
+              ctx.fillRect(wx, wy+S*.40, S, S*.20);
+              // Biohazard warning label
+              if ((x*7+y*13) % 6 === 0) {
+                ctx.fillStyle='rgba(0,160,80,0.20)';
+                ctx.beginPath(); ctx.arc(wx+S*.5, wy+S*.5, S*.18, 0, Math.PI*2); ctx.fill();
+                ctx.fillStyle='rgba(215,235,215,.7)';
+                ctx.beginPath(); ctx.arc(wx+S*.5, wy+S*.5, S*.09, 0, Math.PI*2); ctx.fill();
+              }
+              // Containment seals
+              ctx.fillStyle='rgba(255,255,255,0.15)';
+              ctx.fillRect(wx+6, wy+6, S-12, 2); ctx.fillRect(wx+6, wy+S-8, S-12, 2);
+              // UV sterilization lamp glow
+              if ((x+y) % 4 === 0) { ctx.fillStyle='rgba(180,230,190,0.08)'; ctx.fillRect(wx,wy,S,S); }
+
+            } else if (fl === 8) {
+              // ── W8: WEAPONS ARMORY — Gunmetal, weapon rack outlines ──
+              ctx.fillStyle = '#252530'; ctx.fillRect(wx, wy, S, S);
+              // Steel plate seam
+              ctx.fillStyle='rgba(255,255,255,0.05)'; ctx.fillRect(wx, wy, S, 2); ctx.fillRect(wx, wy, 2, S);
+              ctx.fillStyle='rgba(0,0,0,0.25)'; ctx.fillRect(wx+S-2, wy, 2, S); ctx.fillRect(wx, wy+S-2, S, 2);
+              // Weapon rack silhouettes
+              if (ts % 3 === 0) {
+                ctx.fillStyle='rgba(80,90,105,0.40)';
+                ctx.fillRect(wx+S*.15, wy+S*.15, S*.7, S*.08);
+                ctx.fillRect(wx+S*.15, wy+S*.45, S*.7, S*.08);
+                ctx.fillRect(wx+S*.15, wy+S*.75, S*.7, S*.08);
+                // Gun pegs
+                for (let p=0; p<4; p++) {
+                  ctx.fillStyle='rgba(100,110,125,0.50)';
+                  ctx.fillRect(wx+S*(.2+p*.18), wy+S*.15, 4, S*.35);
+                }
+              }
+              // Orange safety diagonal
+              if (x<=1 || x>=20) {
+                ctx.fillStyle='rgba(255,100,0,0.35)';
+                ctx.fillRect(wx, wy, S*.4, S);
+                ctx.fillRect(wx+S*.6, wy, S*.4, S);
+              }
+              // Heavy rivet corners
+              ctx.fillStyle='rgba(175,180,195,0.35)';
+              ctx.beginPath(); ctx.arc(wx+7, wy+7, 4, 0, Math.PI*2); ctx.fill();
+              ctx.beginPath(); ctx.arc(wx+S-7, wy+7, 4, 0, Math.PI*2); ctx.fill();
+              ctx.beginPath(); ctx.arc(wx+7, wy+S-7, 4, 0, Math.PI*2); ctx.fill();
+              ctx.beginPath(); ctx.arc(wx+S-7, wy+S-7, 4, 0, Math.PI*2); ctx.fill();
+              // Ammo stencil
+              if ((x*29+y*17) % 9 === 0) {
+                ctx.fillStyle='rgba(255,100,0,0.18)'; ctx.fillRect(wx+12, wy+S*.3, S-24, S*.4);
+              }
+
+            } else if (fl === 9) {
+              // ── W9: EXECUTIVE SUITE — Royal purple velvet, gold filigree ──
+              ctx.fillStyle = '#200840'; ctx.fillRect(wx, wy, S, S);
+              // Velvet depth
+              if (ts % 3 === 0) {
+                ctx.fillStyle='rgba(0,0,0,0.08)'; ctx.fillRect(wx+(ts*7)%S, wy, 2, S);
+              }
+              // Ornate gold filigree frame
+              ctx.fillStyle='rgba(210,170,60,0.32)';
+              ctx.fillRect(wx+4, wy+4, S-8, 4);
+              ctx.fillRect(wx+4, wy+S-8, S-8, 4);
+              ctx.fillRect(wx+4, wy+4, 4, S-8);
+              ctx.fillRect(wx+S-8, wy+4, 4, S-8);
+              // Inner gold line
+              ctx.fillStyle='rgba(210,170,60,0.16)';
+              ctx.fillRect(wx+10, wy+10, S-20, 2);
+              ctx.fillRect(wx+10, wy+S-12, S-20, 2);
+              ctx.fillRect(wx+10, wy+10, 2, S-20);
+              ctx.fillRect(wx+S-12, wy+10, 2, S-20);
+              // Crystal chandelier light on wall
+              const cr9 = Math.sin(t*1.2 + x*.7 + y*.5)*.25 + .25;
+              ctx.fillStyle = `rgba(200,160,255,${cr9*.18})`;
+              ctx.beginPath(); ctx.arc(wx+S*.5, wy+S*.5, S*.22, 0, Math.PI*2); ctx.fill();
+              // Purple ambient glow
+              ctx.fillStyle='rgba(100,0,180,0.08)'; ctx.fillRect(wx,wy,S,S);
+
+            } else {
+              // ── W10: PENTHOUSE — Black marble, animated gold bands (BOSS) ──
+              ctx.fillStyle = '#120808'; ctx.fillRect(wx, wy, S, S);
+              // Black marble depth variation
+              if (ts % 3 === 0) {
+                ctx.fillStyle='rgba(30,8,8,1)'; ctx.fillRect(wx+3, wy+3, S-6, S-6);
+              }
+              // Animated gold border (pulsing)
+              const gP10 = Math.sin(t*1.0 + x*.3 + y*.5)*.4 + .6;
+              ctx.fillStyle = `rgba(255,200,0,${.40*gP10})`;
+              ctx.fillRect(wx, wy, S, 4); ctx.fillRect(wx, wy+S-4, S, 4);
+              ctx.fillRect(wx, wy, 4, S); ctx.fillRect(wx+S-4, wy, 4, S);
+              // Gold vein
+              if ((x*7+y*11) % 4 === 0) {
+                const vP10 = Math.sin(t*1.5 + ts)*.35 + .65;
+                ctx.fillStyle = `rgba(255,180,0,${.22*vP10})`;
+                ctx.fillRect(wx+ts%30+5, wy, 2, S);
+              }
+              // Ember glow
+              const emb = Math.sin(t*2 + x*.5 + y*.7)*.3 + .5;
+              ctx.fillStyle = `rgba(200,60,0,${emb*.10})`; ctx.fillRect(wx,wy,S,S);
+              // Gold inner trim
+              ctx.fillStyle = `rgba(200,150,0,${.20*gP10})`;
+              ctx.fillRect(wx+8, wy+8, S-16, 2); ctx.fillRect(wx+8, wy+S-10, S-16, 2);
+              ctx.fillRect(wx+8, wy+8, 2, S-16); ctx.fillRect(wx+S-10, wy+8, 2, S-16);
             }
           } else if (cfg.robot) {
             // Robot City: server tower / tech block

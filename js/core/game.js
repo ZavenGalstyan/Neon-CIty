@@ -2123,55 +2123,127 @@ class Game {
   _renderTowerHUD(ctx, W, H) {
     ctx.save();
     const t = Date.now() * 0.001;
+    const fl = this._towerFloor;
 
-    // Floor panel — top-center
-    const panW = 260,
-      panH = 66,
-      panX = W / 2 - panW / 2,
-      panY = 14;
-    ctx.fillStyle = "rgba(10,8,6,0.78)";
-    ctx.strokeStyle = "#FFD700";
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.roundRect(panX, panY, panW, panH, 8);
-    ctx.fill();
-    ctx.stroke();
+    // ── Floor-specific accent color per floor ──────────────
+    const FLOOR_COLORS = [
+      '#FFD700', // 0 unused
+      '#E8D8B0', // 1 Grand Lobby
+      '#FFCC00', // 2 Parking Garage
+      '#CC8844', // 3 Corporate Offices
+      '#00CCFF', // 4 Data Center
+      '#FF6666', // 5 Velvet Lounge
+      '#FF4444', // 6 Tactical Ops
+      '#44FF88', // 7 Bio-Research Lab
+      '#FF8844', // 8 Weapons Armory
+      '#BB88FF', // 9 Executive Suite
+      '#FFD700', // 10 The Penthouse
+    ];
+    const flCol = FLOOR_COLORS[Math.min(fl, 10)] || '#FFD700';
+    const pulse  = Math.sin(t * 2.5) * 0.18 + 0.82;
 
-    // Floor label
-    ctx.font = "bold 11px monospace";
-    ctx.textAlign = "center";
-    ctx.fillStyle = "#AA8822";
-    ctx.fillText("THE TOWER", W / 2, panY + 16);
+    // ── Main floor panel — top-center ─────────────────────
+    const panW = 320, panH = 72, panX = W/2 - panW/2, panY = 12;
 
-    // Floor number
-    ctx.font = "bold 26px monospace";
-    ctx.fillStyle = "#FFD700";
-    ctx.shadowColor = "#FFD700";
-    ctx.shadowBlur = 10;
-    ctx.fillText(`FLOOR  ${this._towerFloor} / 10`, W / 2, panY + 43);
+    // Panel drop shadow
+    ctx.fillStyle = 'rgba(0,0,0,0.40)';
+    ctx.beginPath(); ctx.roundRect(panX+3, panY+3, panW, panH, 10); ctx.fill();
+
+    // Panel body
+    ctx.fillStyle = 'rgba(8,6,4,0.88)';
+    ctx.beginPath(); ctx.roundRect(panX, panY, panW, panH, 10); ctx.fill();
+
+    // Colored top accent bar
+    ctx.fillStyle = flCol;
+    ctx.globalAlpha = 0.85;
+    ctx.beginPath(); ctx.roundRect(panX, panY, panW, 3, [10,10,0,0]); ctx.fill();
+    ctx.globalAlpha = 1;
+
+    // Border
+    ctx.strokeStyle = `${flCol}55`;
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.roundRect(panX, panY, panW, panH, 10); ctx.stroke();
+
+    // "THE TOWER" label
+    ctx.font = 'bold 9px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = `${flCol}99`;
+    ctx.letterSpacing = '0.3em';
+    ctx.fillText('◈  THE TOWER  ◈', W/2, panY + 17);
+    ctx.letterSpacing = '0';
+
+    // Floor number (large, glowing)
+    ctx.font = 'bold 28px monospace';
+    ctx.fillStyle = flCol;
+    ctx.shadowColor = flCol;
+    ctx.shadowBlur = 14 * pulse;
+    ctx.fillText(`FLOOR  ${fl}  /  10`, W/2, panY + 47);
     ctx.shadowBlur = 0;
 
-    // Enemies remaining (bottom of panel)
-    const alive =
-      this.bots.filter((b) => !b.dead && !b.dying).length +
-      (this.boss && !this.boss.dead && !this.boss.dying ? 1 : 0);
-    ctx.font = "12px monospace";
-    ctx.fillStyle = alive > 0 ? "#FF6644" : "#44FF88";
-    ctx.fillText(
-      alive > 0 ? `${alive} ENEMIES REMAINING` : "ALL CLEARED!",
-      W / 2,
-      panY + 61,
-    );
+    // Subtitle (floor name)
+    const sub = this._towerFloorSubtitle(fl);
+    ctx.font = '10px monospace';
+    ctx.fillStyle = 'rgba(255,255,255,0.38)';
+    ctx.fillText(sub, W/2, panY + 64);
 
-    // Elevator hint (bottom-center, pulsing)
+    // ── Enemy count pill — below main panel ───────────────
+    const alive = this.bots.filter(b => !b.dead && !b.dying).length
+                + (this.boss && !this.boss.dead && !this.boss.dying ? 1 : 0);
+
+    const pillW = 200, pillH = 26, pillX = W/2 - pillW/2, pillY = panY + panH + 6;
+    ctx.fillStyle = alive > 0 ? 'rgba(255,60,40,0.15)' : 'rgba(40,255,120,0.12)';
+    ctx.beginPath(); ctx.roundRect(pillX, pillY, pillW, pillH, 13); ctx.fill();
+    ctx.strokeStyle = alive > 0 ? 'rgba(255,80,40,0.35)' : 'rgba(40,255,120,0.30)';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.roundRect(pillX, pillY, pillW, pillH, 13); ctx.stroke();
+
+    ctx.font = 'bold 10px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = alive > 0 ? '#FF8866' : '#44FF88';
+    if (alive === 0) { ctx.shadowColor = '#44FF88'; ctx.shadowBlur = 8; }
+    ctx.fillText(
+      alive > 0 ? `☠  ${alive} ENEMIES REMAINING` : '✓  ALL CLEARED!',
+      W/2, pillY + 17
+    );
+    ctx.shadowBlur = 0;
+
+    // ── Floor progress dots ────────────────────────────────
+    const dotR = 5, dotGap = 16, dotsW = 10 * dotGap;
+    const dotStartX = W/2 - dotsW/2 + dotR;
+    for (let i = 1; i <= 10; i++) {
+      const dx = dotStartX + (i-1)*dotGap;
+      const dy = panY + panH + 40;
+      if (i < fl) {
+        ctx.fillStyle = `${flCol}88`;
+        ctx.beginPath(); ctx.arc(dx, dy, dotR, 0, Math.PI*2); ctx.fill();
+      } else if (i === fl) {
+        ctx.fillStyle = flCol;
+        ctx.shadowColor = flCol; ctx.shadowBlur = 10;
+        ctx.beginPath(); ctx.arc(dx, dy, dotR+1, 0, Math.PI*2); ctx.fill();
+        ctx.shadowBlur = 0;
+      } else {
+        ctx.fillStyle = 'rgba(255,255,255,0.12)';
+        ctx.beginPath(); ctx.arc(dx, dy, dotR-1, 0, Math.PI*2); ctx.fill();
+      }
+    }
+
+    // ── Elevator active: dramatic pulsing banner ───────────
     if (this._towerElevatorActive) {
-      const pulse = Math.sin(t * 3.5) * 0.25 + 0.75;
-      ctx.globalAlpha = pulse;
-      ctx.font = "bold 18px monospace";
-      ctx.fillStyle = "#00FF88";
-      ctx.shadowColor = "#00FF88";
-      ctx.shadowBlur = 14;
-      ctx.fillText("▲  GO TO ELEVATOR  ▲", W / 2, H - 38);
+      const ep = Math.sin(t * 3.5) * 0.22 + 0.78;
+      const bW = 300, bH = 36, bX = W/2 - bW/2, bY = H - 60;
+
+      ctx.fillStyle = `rgba(0,0,0,${ep * 0.6})`;
+      ctx.beginPath(); ctx.roundRect(bX, bY, bW, bH, 18); ctx.fill();
+      ctx.strokeStyle = `rgba(0,255,136,${ep * 0.55})`;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.roundRect(bX, bY, bW, bH, 18); ctx.stroke();
+
+      ctx.font = 'bold 14px monospace';
+      ctx.textAlign = 'center';
+      ctx.globalAlpha = ep;
+      ctx.fillStyle = '#00FF88';
+      ctx.shadowColor = '#00FF88'; ctx.shadowBlur = 18;
+      ctx.fillText('▲  ENTER ELEVATOR  ▲', W/2, bY + 24);
       ctx.shadowBlur = 0;
       ctx.globalAlpha = 1;
     }
@@ -2181,19 +2253,19 @@ class Game {
 
   _towerFloorSubtitle(floor) {
     const subs = [
-      "",
-      "LOBBY · SECURITY FLOOR",
-      "OFFICES · LEVEL 2",
-      "OFFICES · LEVEL 3",
-      "OPERATIONS CENTER",
-      "COMMAND DECK",
-      "CLASSIFIED WING",
-      "RESTRICTED ZONE",
-      "WEAPONS LAB",
-      "ELITE GUARD",
-      "PENTHOUSE · FINAL STAND",
+      '',
+      'GRAND LOBBY  ·  SECURITY CHECKPOINT',
+      'PARKING GARAGE  ·  SUBLEVEL B2',
+      'CORPORATE OFFICES  ·  3RD FLOOR',
+      'DATA CENTER  ·  SERVER WING',
+      'VELVET LOUNGE  ·  VIP AREA',
+      'TACTICAL OPERATIONS  ·  CLASSIFIED',
+      'BIO-RESEARCH LAB  ·  CONTAINMENT',
+      'WEAPONS ARMORY  ·  RESTRICTED',
+      'EXECUTIVE SUITE  ·  PENTHOUSE ANTECHAMBER',
+      '★  THE PENTHOUSE  ·  FINAL CONFRONTATION  ★',
     ];
-    return subs[Math.min(floor, 10)] || "";
+    return subs[Math.min(floor, 10)] || '';
   }
 
   _renderTowerVictory(ctx, W, H) {
