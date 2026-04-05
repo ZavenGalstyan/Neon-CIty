@@ -70,109 +70,201 @@ class ShopManager {
   render(ctx, W, H, player, money, mx, my) {
     if (!this.isOpen) return;
     this._areas = [];
+    const t = performance.now() / 1000;
 
-    const PW = Math.min(820, W - 40);
-    const PH = Math.min(580, H - 50);
+    const PW = Math.min(880, W - 40);
+    const PH = Math.min(620, H - 50);
     const px = (W - PW) / 2;
     const py = (H - PH) / 2;
 
-    // Dim backdrop
-    ctx.fillStyle = 'rgba(0,0,0,0.80)';
+    // Dim backdrop with gradient
+    const bgGrad = ctx.createRadialGradient(W/2, H/2, 0, W/2, H/2, Math.max(W, H) * 0.7);
+    bgGrad.addColorStop(0, 'rgba(5,10,20,0.92)');
+    bgGrad.addColorStop(1, 'rgba(0,0,0,0.96)');
+    ctx.fillStyle = bgGrad;
     ctx.fillRect(0, 0, W, H);
 
-    // Panel shadow
+    // Subtle animated scanlines
     ctx.save();
+    ctx.globalAlpha = 0.03;
+    for (let sy = 0; sy < H; sy += 3) {
+      ctx.fillStyle = sy % 6 === 0 ? '#44EEFF' : '#000';
+      ctx.fillRect(0, sy, W, 1);
+    }
+    ctx.restore();
+
+    // Outer glow effect
+    ctx.save();
+    ctx.shadowColor = '#44EEFF';
+    ctx.shadowBlur = 60;
+    ctx.strokeStyle = 'rgba(68,238,255,0.3)';
+    ctx.lineWidth = 2;
+    this._rr(ctx, px - 4, py - 4, PW + 8, PH + 8, 16);
+    ctx.stroke();
+    ctx.restore();
+
+    // Panel background with gradient
+    ctx.save();
+    const panelGrad = ctx.createLinearGradient(px, py, px, py + PH);
+    panelGrad.addColorStop(0, '#0a0f18');
+    panelGrad.addColorStop(0.5, '#060a10');
+    panelGrad.addColorStop(1, '#080c14');
     ctx.shadowColor = '#44EEFF';
     ctx.shadowBlur = 40;
-    ctx.fillStyle = '#06060f';
-    ctx.strokeStyle = 'rgba(68,238,255,0.55)';
+    ctx.fillStyle = panelGrad;
+    ctx.strokeStyle = 'rgba(68,238,255,0.6)';
     ctx.lineWidth = 1.5;
-    this._rr(ctx, px, py, PW, PH, 12);
+    this._rr(ctx, px, py, PW, PH, 14);
     ctx.fill();
     ctx.stroke();
     ctx.restore();
 
-    // Inner top gradient stripe
+    // Inner border
     ctx.save();
-    const grd = ctx.createLinearGradient(px, py, px, py + 60);
-    grd.addColorStop(0, 'rgba(68,238,255,0.08)');
-    grd.addColorStop(1, 'rgba(68,238,255,0)');
-    ctx.fillStyle = grd;
-    this._rr(ctx, px, py, PW, 60, 12);
-    ctx.fill();
-    ctx.restore();
-
-    // Corner accents
-    this._corners(ctx, px, py, PW, PH, '#44EEFF');
-
-    // ── Title ──────────────────────────────────────────────
-    ctx.save();
-    ctx.font = 'bold 26px Orbitron, monospace';
-    ctx.textAlign = 'center';
-    ctx.shadowColor = '#44EEFF';
-    ctx.shadowBlur = 18;
-    ctx.fillStyle = '#fff';
-    ctx.fillText('SHOP', px + PW / 2, py + 38);
-    ctx.restore();
-
-    // Divider
     ctx.strokeStyle = 'rgba(68,238,255,0.15)';
     ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(px + 24, py + 52);
-    ctx.lineTo(px + PW - 24, py + 52);
+    this._rr(ctx, px + 6, py + 6, PW - 12, PH - 12, 10);
     ctx.stroke();
+    ctx.restore();
 
-    // ── Close button ────────────────────────────────────────
-    const clx = px + PW - 22, cly = py + 22, clr = 15;
+    // Top header gradient stripe
+    ctx.save();
+    const grd = ctx.createLinearGradient(px, py, px, py + 80);
+    grd.addColorStop(0, 'rgba(68,238,255,0.12)');
+    grd.addColorStop(0.5, 'rgba(68,238,255,0.04)');
+    grd.addColorStop(1, 'rgba(68,238,255,0)');
+    ctx.fillStyle = grd;
+    this._rr(ctx, px, py, PW, 80, 14);
+    ctx.fill();
+    ctx.restore();
+
+    // Enhanced corner accents with animation
+    this._cornersAnimated(ctx, px, py, PW, PH, '#44EEFF', t);
+
+    // ── Title with enhanced styling ──────────────────────────────────────────────
+    ctx.save();
+    ctx.textAlign = 'center';
+    // Title glow background
+    ctx.shadowColor = '#44EEFF';
+    ctx.shadowBlur = 30;
+    ctx.font = 'bold 32px Orbitron, monospace';
+    ctx.fillStyle = '#44EEFF';
+    ctx.fillText('⟨ SHOP ⟩', px + PW / 2, py + 42);
+    // Title text
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillText('⟨ SHOP ⟩', px + PW / 2, py + 42);
+    ctx.restore();
+
+    // Decorative title lines
+    ctx.save();
+    ctx.strokeStyle = 'rgba(68,238,255,0.4)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(px + 40, py + 42);
+    ctx.lineTo(px + PW / 2 - 80, py + 42);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(px + PW / 2 + 80, py + 42);
+    ctx.lineTo(px + PW - 40, py + 42);
+    ctx.stroke();
+    ctx.restore();
+
+    // Divider with gradient
+    ctx.save();
+    const divGrad = ctx.createLinearGradient(px + 24, 0, px + PW - 24, 0);
+    divGrad.addColorStop(0, 'rgba(68,238,255,0)');
+    divGrad.addColorStop(0.5, 'rgba(68,238,255,0.3)');
+    divGrad.addColorStop(1, 'rgba(68,238,255,0)');
+    ctx.strokeStyle = divGrad;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(px + 24, py + 58);
+    ctx.lineTo(px + PW - 24, py + 58);
+    ctx.stroke();
+    ctx.restore();
+
+    // ── Close button - enhanced ────────────────────────────────────────
+    const clx = px + PW - 26, cly = py + 26, clr = 16;
     const clHover = Math.hypot(mx - clx, my - cly) < clr + 4;
     ctx.save();
+    // Button background
+    ctx.fillStyle = clHover ? 'rgba(255,68,102,0.2)' : 'rgba(255,68,102,0.08)';
+    ctx.beginPath(); ctx.arc(clx, cly, clr, 0, Math.PI * 2); ctx.fill();
+    // Button border
     ctx.shadowColor = clHover ? '#FF4466' : 'rgba(255,68,102,0.4)';
-    ctx.shadowBlur = clHover ? 20 : 6;
-    ctx.strokeStyle = clHover ? '#FF4466' : 'rgba(255,68,102,0.55)';
-    ctx.lineWidth = 1.5;
+    ctx.shadowBlur = clHover ? 20 : 8;
+    ctx.strokeStyle = clHover ? '#FF4466' : 'rgba(255,68,102,0.6)';
+    ctx.lineWidth = 2;
     ctx.beginPath(); ctx.arc(clx, cly, clr, 0, Math.PI * 2); ctx.stroke();
-    ctx.fillStyle = clHover ? '#FF4466' : 'rgba(255,68,102,0.7)';
-    ctx.font = 'bold 18px Orbitron, monospace';
+    // X icon
+    ctx.fillStyle = clHover ? '#FF4466' : 'rgba(255,68,102,0.8)';
+    ctx.font = 'bold 20px Orbitron, monospace';
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText('×', clx, cly);
+    ctx.fillText('×', clx, cly + 1);
     ctx.textBaseline = 'alphabetic';
     ctx.restore();
     this._pushArea(clx - clr - 4, cly - clr - 4, (clr + 4) * 2, (clr + 4) * 2,
       () => this.close());
 
-    // ── Tabs ────────────────────────────────────────────────
-    const tabY = py + 60;
-    const tabH = 38;
-    const tabs = [['weapons','WEAPONS / GUNS'],['upgrades','UPGRADES / STATS'],['security','HIRE SECURITY']];
-    const tabW = (PW - (tabs.length + 1) * 14) / tabs.length;
-    tabs.forEach(([id, label], i) => {
-      const tx = px + 14 + i * (tabW + 14);
+    // ── Tabs - enhanced with better spacing ────────────────────────────────────────────────
+    const tabY = py + 68;
+    const tabH = 42;
+    const tabs = [
+      ['weapons', '🔫', 'WEAPONS'],
+      ['upgrades', '⬆️', 'UPGRADES'],
+      ['security', '🛡️', 'SECURITY']
+    ];
+    const tabW = (PW - (tabs.length + 1) * 16) / tabs.length;
+    tabs.forEach(([id, icon, label], i) => {
+      const tx = px + 16 + i * (tabW + 16);
       const active = this.tab === id;
       const hover  = mx >= tx && mx <= tx + tabW && my >= tabY && my <= tabY + tabH;
+
       ctx.save();
+      // Tab background gradient
+      if (active) {
+        const tabGrad = ctx.createLinearGradient(tx, tabY, tx, tabY + tabH);
+        tabGrad.addColorStop(0, 'rgba(68,238,255,0.2)');
+        tabGrad.addColorStop(1, 'rgba(68,238,255,0.08)');
+        ctx.fillStyle = tabGrad;
+      } else {
+        ctx.fillStyle = hover ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.02)';
+      }
       ctx.shadowColor = active ? '#44EEFF' : 'transparent';
-      ctx.shadowBlur  = active ? 10 : 0;
-      ctx.fillStyle   = active ? 'rgba(68,238,255,0.14)' : hover ? 'rgba(255,255,255,0.04)' : 'transparent';
-      ctx.strokeStyle = active ? '#44EEFF' : 'rgba(255,255,255,0.1)';
-      ctx.lineWidth   = active ? 1.5 : 1;
-      this._rr(ctx, tx, tabY, tabW, tabH, 7);
+      ctx.shadowBlur  = active ? 15 : 0;
+      ctx.strokeStyle = active ? '#44EEFF' : hover ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.08)';
+      ctx.lineWidth   = active ? 2 : 1;
+      this._rr(ctx, tx, tabY, tabW, tabH, 8);
       ctx.fill(); ctx.stroke();
-      ctx.font = `bold ${active ? 11 : 10}px Orbitron, monospace`;
-      ctx.fillStyle = active ? '#44EEFF' : 'rgba(255,255,255,0.35)';
+
+      // Active indicator bar
+      if (active) {
+        ctx.fillStyle = '#44EEFF';
+        ctx.shadowColor = '#44EEFF';
+        ctx.shadowBlur = 10;
+        ctx.fillRect(tx + 10, tabY + tabH - 3, tabW - 20, 2);
+      }
+
+      // Icon and label - FIXED: increased spacing between icon and text
       ctx.textAlign = 'center';
-      ctx.fillText(label, tx + tabW / 2, tabY + 24);
+      ctx.font = '15px sans-serif';
+      ctx.fillText(icon, tx + tabW / 2 - 55, tabY + 27);  // Icon moved further left
+      ctx.font = `bold ${active ? 13 : 11}px Orbitron, monospace`;
+      ctx.fillStyle = active ? '#44EEFF' : hover ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.35)';
+      ctx.shadowBlur = active ? 8 : 0;
+      ctx.fillText(label, tx + tabW / 2 + 10, tabY + 27);  // Text moved right
       ctx.restore();
       if (!active) this._pushArea(tx, tabY, tabW, tabH, () => { this.tab = id; this._scrollY = 0; });
     });
 
     // ── Content ─────────────────────────────────────────────
-    const contentY = tabY + tabH + 10;
-    const contentH = PH - (contentY - py) - 46;
+    const contentY = tabY + tabH + 14;
+    const contentH = PH - (contentY - py) - 54;
 
     ctx.save();
     ctx.beginPath();
-    ctx.rect(px + 12, contentY, PW - 24, contentH);
+    ctx.rect(px + 14, contentY, PW - 28, contentH);
     ctx.clip();
 
     if (this.tab === 'weapons') {
@@ -184,22 +276,37 @@ class ShopManager {
     }
     ctx.restore();
 
-    // ── Balance ─────────────────────────────────────────────
+    // ── Balance - enhanced with background ─────────────────────────────────────────────
     ctx.save();
-    ctx.font = 'bold 18px Orbitron, monospace';
+    // Balance background
+    ctx.fillStyle = 'rgba(0,255,204,0.08)';
+    ctx.beginPath();
+    ctx.roundRect(px + 16, py + PH - 38, 280, 30, 6);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(0,255,204,0.3)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    // NEX icon
+    this._renderNexIcon(ctx, px + 38, py + PH - 23, 20, { animated: true });
+    // Balance text
+    ctx.font = 'bold 15px Orbitron, monospace';
     ctx.fillStyle = '#00FFCC';
     ctx.shadowColor = '#00FFCC';
-    ctx.shadowBlur = 14;
+    ctx.shadowBlur = 12;
     ctx.textAlign = 'left';
-    ctx.fillText(`BALANCE:  ⬢ ${money.toLocaleString()} NEX`, px + 22, py + PH - 14);
+    ctx.fillText(`BALANCE:  ${money.toLocaleString()} NEX`, px + 55, py + PH - 18);
     ctx.restore();
 
-    // Close hint
+    // Close hint - enhanced
     ctx.save();
+    ctx.fillStyle = 'rgba(255,255,255,0.08)';
+    ctx.beginPath();
+    ctx.roundRect(px + PW - 175, py + PH - 38, 160, 30, 6);
+    ctx.fill();
     ctx.font = '10px Orbitron, monospace';
-    ctx.fillStyle = 'rgba(255,255,255,0.22)';
-    ctx.textAlign = 'right';
-    ctx.fillText('[B] or [ESC] CLOSE', px + PW - 22, py + PH - 14);
+    ctx.fillStyle = 'rgba(255,255,255,0.4)';
+    ctx.textAlign = 'center';
+    ctx.fillText('[B] or [ESC] CLOSE', px + PW - 95, py + PH - 18);
     ctx.restore();
 
     // ── Feedback message ────────────────────────────────────
@@ -207,26 +314,55 @@ class ShopManager {
       const a = Math.min(1, this._feedback.t / 0.6);
       ctx.save();
       ctx.globalAlpha = a;
-      ctx.font = 'bold 17px Orbitron, monospace';
+      // Feedback background
+      ctx.fillStyle = 'rgba(0,0,0,0.8)';
+      ctx.beginPath();
+      ctx.roundRect(W/2 - 150, py + PH - 60, 300, 36, 8);
+      ctx.fill();
+      ctx.strokeStyle = this._feedback.color;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      // Feedback text
+      ctx.font = 'bold 16px Orbitron, monospace';
       ctx.fillStyle = this._feedback.color;
       ctx.shadowColor = this._feedback.color;
       ctx.shadowBlur = 20;
       ctx.textAlign = 'center';
-      ctx.fillText(this._feedback.msg, W / 2, py + PH - 14);
+      ctx.fillText(this._feedback.msg, W / 2, py + PH - 36);
       ctx.restore();
     }
+  }
+
+  // Enhanced corner accents with subtle animation
+  _cornersAnimated(ctx, x, y, w, h, color, t) {
+    const L = 18;
+    const pulse = Math.sin(t * 2) * 0.2 + 0.8;
+    ctx.save();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.shadowColor = color;
+    ctx.shadowBlur = 8 * pulse;
+    ctx.lineCap = 'round';
+    // Top-left
+    ctx.beginPath(); ctx.moveTo(x, y + L); ctx.lineTo(x, y); ctx.lineTo(x + L, y); ctx.stroke();
+    // Top-right
+    ctx.beginPath(); ctx.moveTo(x + w - L, y); ctx.lineTo(x + w, y); ctx.lineTo(x + w, y + L); ctx.stroke();
+    // Bottom-left
+    ctx.beginPath(); ctx.moveTo(x, y + h - L); ctx.lineTo(x, y + h); ctx.lineTo(x + L, y + h); ctx.stroke();
+    // Bottom-right
+    ctx.beginPath(); ctx.moveTo(x + w - L, y + h); ctx.lineTo(x + w, y + h); ctx.lineTo(x + w, y + h - L); ctx.stroke();
+    ctx.restore();
   }
 
   // ── Weapons tab ─────────────────────────────────────────
   _drawWeapons(ctx, px, y, PW, PH, player, money, mx, my) {
     const weapons = CONFIG.WEAPONS;
     const cols  = 3;
-    const gap   = 12;
-    const sbW   = 8;   // scrollbar width
+    const gap   = 14;
+    const sbW   = 10;
     const cardW = Math.floor((PW - gap * (cols + 1) - sbW - 4) / cols);
-    const cardH = 138; // fixed height — enough for all weapon info
+    const cardH = 175; // Taller cards for better spacing
 
-    // Total scrollable height & clamp
     const rows   = Math.ceil(weapons.length / cols);
     const totalH = gap + rows * (cardH + gap);
     this._maxScrollY = Math.max(0, totalH - PH + 20);
@@ -238,7 +374,6 @@ class ShopManager {
       const cx  = px + gap + col * (cardW + gap);
       const cy  = y  + gap + row * (cardH + gap) - this._scrollY;
 
-      // Skip fully off-screen cards
       if (cy + cardH < y || cy > y + PH) return;
 
       const owned    = player.ownedWeapons.has(w.id);
@@ -248,80 +383,186 @@ class ShopManager {
 
       // Card background
       ctx.save();
-      let bg  = 'rgba(0,0,0,0.35)';
-      let bdr = 'rgba(255,255,255,0.07)';
-      if (equipped) { bg = `rgba(${this._rgb(w.color)},0.14)`; bdr = w.color; }
-      else if (owned && hover) { bg = 'rgba(255,255,255,0.07)'; bdr = 'rgba(255,255,255,0.3)'; }
-      else if (canBuy && hover) { bg = `rgba(${this._rgb(w.color)},0.08)`; bdr = w.color; }
-      else if (!owned && !canBuy) { bg = 'rgba(0,0,0,0.5)'; }
+      let cardGrad = ctx.createLinearGradient(cx, cy, cx, cy + cardH);
+      if (equipped) {
+        cardGrad.addColorStop(0, `rgba(${this._rgb(w.color)},0.22)`);
+        cardGrad.addColorStop(1, `rgba(${this._rgb(w.color)},0.10)`);
+      } else if (hover && (owned || canBuy)) {
+        cardGrad.addColorStop(0, `rgba(${this._rgb(w.color)},0.12)`);
+        cardGrad.addColorStop(1, `rgba(${this._rgb(w.color)},0.05)`);
+      } else if (!owned && !canBuy) {
+        cardGrad.addColorStop(0, 'rgba(15,15,20,0.7)');
+        cardGrad.addColorStop(1, 'rgba(8,8,12,0.8)');
+      } else {
+        cardGrad.addColorStop(0, 'rgba(12,16,24,0.6)');
+        cardGrad.addColorStop(1, 'rgba(6,10,16,0.7)');
+      }
+
+      let bdr = equipped ? w.color : owned ? 'rgba(255,255,255,0.18)' : canBuy ? `rgba(${this._rgb(w.color)},0.4)` : 'rgba(255,255,255,0.05)';
+      if (hover && (owned || canBuy)) bdr = w.color;
 
       ctx.shadowColor = (equipped || (hover && (owned || canBuy))) ? w.color : 'transparent';
-      ctx.shadowBlur  = equipped ? 18 : hover ? 10 : 0;
-      ctx.fillStyle   = bg;
+      ctx.shadowBlur  = equipped ? 22 : hover ? 12 : 0;
+      ctx.fillStyle   = cardGrad;
       ctx.strokeStyle = bdr;
-      ctx.lineWidth   = equipped ? 1.8 : 1;
-      this._rr(ctx, cx, cy, cardW, cardH, 9);
+      ctx.lineWidth   = equipped ? 2 : 1;
+      this._rr(ctx, cx, cy, cardW, cardH, 10);
       ctx.fill();
       ctx.stroke();
 
-      // Top color bar
-      ctx.fillStyle = w.color + (equipped ? 'dd' : owned ? '55' : canBuy ? '44' : '1a');
-      ctx.fillRect(cx + 9, cy, cardW - 18, 3);
+      // Top accent bar
+      ctx.fillStyle = w.color + (equipped ? 'dd' : owned ? '66' : canBuy ? '44' : '18');
+      ctx.beginPath();
+      ctx.roundRect(cx + 15, cy + 5, cardW - 30, 3, 2);
+      ctx.fill();
 
       // Experimental badge
       if (w.experimental) {
         ctx.save();
-        ctx.font = 'bold 7px Orbitron, monospace'; ctx.textAlign = 'right';
-        ctx.fillStyle = '#FF88FF'; ctx.shadowColor = '#FF88FF'; ctx.shadowBlur = 8;
-        ctx.fillText('⚗ EXP', cx + cardW - 6, cy + 13);
+        ctx.fillStyle = 'rgba(255,136,255,0.15)';
+        ctx.beginPath();
+        ctx.roundRect(cx + cardW - 48, cy + 10, 42, 14, 3);
+        ctx.fill();
+        ctx.font = 'bold 8px Orbitron, monospace';
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#FF88FF';
+        ctx.fillText('⚗ EXP', cx + cardW - 27, cy + 20);
         ctx.restore();
       }
 
-      // Weapon name
-      ctx.font = `bold ${cardW > 200 ? 12 : 10}px Orbitron, monospace`;
-      ctx.fillStyle  = equipped ? '#fff' : owned ? '#ccc' : canBuy ? '#aaa' : '#444';
+      // === SECTION 1: Weapon Name (top area) ===
+      ctx.font = 'bold 13px Orbitron, monospace';
+      ctx.fillStyle = equipped ? '#FFFFFF' : owned ? '#DDDDDD' : canBuy ? '#BBBBBB' : '#555555';
       ctx.shadowColor = equipped ? w.color : 'transparent';
-      ctx.shadowBlur  = equipped ? 8 : 0;
+      ctx.shadowBlur = equipped ? 10 : 0;
       ctx.textAlign = 'center';
-      ctx.fillText(w.name, cx + cardW / 2, cy + 22);
+      ctx.fillText(w.name, cx + cardW / 2, cy + 28);
 
-      // Weapon icon
-      this._weaponIcon(ctx, cx + cardW / 2, cy + cardH * 0.44, w, owned || equipped, equipped);
+      // === SECTION 2: Description (below name) ===
+      ctx.shadowBlur = 0;
+      ctx.font = '9px Rajdhani, monospace';
+      ctx.fillStyle = equipped ? 'rgba(255,255,255,0.6)' : 'rgba(255,255,255,0.35)';
+      ctx.fillText(w.desc, cx + cardW / 2, cy + 44);
 
-      // Stats
+      // === SECTION 3: Weapon Icon (centered, main visual) ===
+      const iconCenterY = cy + 78;
+      this._drawRealisticWeapon(ctx, cx + cardW / 2, iconCenterY, w, owned || equipped, equipped);
+
+      // === SECTION 4: Stats Row (below icon) ===
+      const statsY = cy + 118;
+      ctx.save();
+      ctx.fillStyle = 'rgba(0,0,0,0.25)';
+      ctx.beginPath();
+      ctx.roundRect(cx + 12, statsY, cardW - 24, 22, 4);
+      ctx.fill();
+
       const eff = w.damage > 0 ? w.damage : '—';
       const rpm = w.fireRate > 0 ? Math.round(60000 / w.fireRate) : '—';
-      ctx.font = '9px Orbitron, monospace';
-      ctx.fillStyle = 'rgba(255,255,255,0.35)';
-      ctx.shadowBlur = 0;
+      const hasPellets = w.bullets > 1;
+
       ctx.textAlign = 'center';
-      ctx.fillText(`DMG ${eff}   RPM ${rpm}${w.bullets > 1 ? `   ×${w.bullets}` : ''}`, cx + cardW / 2, cy + cardH - 30);
+      if (hasPellets) {
+        // Three columns: DMG | RPM | PELLETS - single line layout
+        ctx.font = 'bold 9px Orbitron, monospace';
+        ctx.fillStyle = '#FF6666';
+        ctx.fillText('DMG', cx + cardW * 0.18, statsY + 8);
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillText(eff, cx + cardW * 0.18, statsY + 18);
 
-      // Description
-      ctx.font = '9px Rajdhani, monospace';
-      ctx.fillStyle = 'rgba(255,255,255,0.25)';
-      ctx.fillText(w.desc, cx + cardW / 2, cy + cardH - 42);
+        ctx.fillStyle = '#66AAFF';
+        ctx.fillText('RPM', cx + cardW * 0.5, statsY + 8);
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillText(rpm, cx + cardW * 0.5, statsY + 18);
 
-      // Status / buy button
+        ctx.fillStyle = '#FFAA44';
+        ctx.fillText('×' + w.bullets, cx + cardW * 0.82, statsY + 8);
+        ctx.fillStyle = '#FFFFFF';
+        ctx.font = 'bold 8px Orbitron, monospace';
+        ctx.fillText('PELLETS', cx + cardW * 0.82, statsY + 18);
+      } else {
+        // Two columns centered: DMG | RPM
+        ctx.font = 'bold 9px Orbitron, monospace';
+        ctx.fillStyle = '#FF6666';
+        ctx.fillText('DMG', cx + cardW * 0.32, statsY + 8);
+        ctx.fillStyle = '#FFFFFF';
+        ctx.font = 'bold 10px Orbitron, monospace';
+        ctx.fillText(eff, cx + cardW * 0.32, statsY + 18);
+
+        ctx.font = 'bold 9px Orbitron, monospace';
+        ctx.fillStyle = '#66AAFF';
+        ctx.fillText('RPM', cx + cardW * 0.68, statsY + 8);
+        ctx.fillStyle = '#FFFFFF';
+        ctx.font = 'bold 10px Orbitron, monospace';
+        ctx.fillText(rpm, cx + cardW * 0.68, statsY + 18);
+      }
+      ctx.restore();
+
+      // === SECTION 5: Action Button (bottom) ===
+      const btnY = cy + cardH - 14;
       if (equipped) {
-        ctx.shadowColor = w.color; ctx.shadowBlur = 10;
+        ctx.save();
+        ctx.fillStyle = `rgba(${this._rgb(w.color)},0.25)`;
+        ctx.beginPath();
+        ctx.roundRect(cx + cardW * 0.2, btnY - 10, cardW * 0.6, 20, 5);
+        ctx.fill();
         ctx.font = 'bold 10px Orbitron, monospace';
         ctx.fillStyle = w.color;
-        ctx.fillText('● EQUIPPED', cx + cardW / 2, cy + cardH - 12);
+        ctx.shadowColor = w.color;
+        ctx.shadowBlur = 12;
+        ctx.textAlign = 'center';
+        ctx.fillText('✓ EQUIPPED', cx + cardW / 2, btnY + 3);
+        ctx.restore();
       } else if (owned) {
-        ctx.shadowBlur = 0;
-        ctx.font = '10px Orbitron, monospace';
-        ctx.fillStyle = hover ? '#fff' : '#aaa';
-        ctx.fillText('CLICK TO EQUIP', cx + cardW / 2, cy + cardH - 12);
-        // Only add hit area if card is actually visible on screen
+        ctx.save();
+        ctx.fillStyle = hover ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.04)';
+        ctx.strokeStyle = hover ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.1)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.roundRect(cx + cardW * 0.15, btnY - 10, cardW * 0.7, 20, 5);
+        ctx.fill();
+        ctx.stroke();
+        ctx.font = '9px Orbitron, monospace';
+        ctx.fillStyle = hover ? '#FFFFFF' : '#999999';
+        ctx.textAlign = 'center';
+        ctx.fillText('CLICK TO EQUIP', cx + cardW / 2, btnY + 3);
+        ctx.restore();
         const cardVisible = cy >= y - 10 && cy + cardH <= y + PH + 10;
         if (cardVisible && hover) this._pushArea(cx, cy, cardW, cardH, (p) => { p.equipWeapon(w.id); this._msg(`${w.name} EQUIPPED`, w.color); });
       } else {
-        ctx.font = `bold 12px Orbitron, monospace`;
-        ctx.fillStyle  = canBuy ? (hover ? '#fff' : '#00FFCC') : '#444';
-        ctx.shadowColor = canBuy && hover ? '#00FFCC' : 'transparent';
-        ctx.shadowBlur  = canBuy && hover ? 14 : 0;
-        ctx.fillText(w.price > 0 ? `⬢ ${w.price.toLocaleString()}` : 'FREE', cx + cardW / 2, cy + cardH - 12);
+        ctx.save();
+        ctx.fillStyle = canBuy ? (hover ? 'rgba(0,255,204,0.2)' : 'rgba(0,255,204,0.08)') : 'rgba(50,50,50,0.3)';
+        ctx.beginPath();
+        ctx.roundRect(cx + cardW * 0.12, btnY - 10, cardW * 0.76, 20, 5);
+        ctx.fill();
+        if (canBuy) {
+          ctx.strokeStyle = hover ? '#00FFCC' : 'rgba(0,255,204,0.3)';
+          ctx.lineWidth = 1;
+          ctx.stroke();
+        }
+        // NEX icon for price
+        if (w.price > 0) {
+          if (canBuy) {
+            this._renderNexIcon(ctx, cx + cardW * 0.28, btnY, 14, { animated: hover });
+          } else {
+            ctx.globalAlpha = 0.3;
+            this._renderNexIcon(ctx, cx + cardW * 0.28, btnY, 14, { animated: false });
+            ctx.globalAlpha = 1;
+          }
+          ctx.font = 'bold 11px Orbitron, monospace';
+          ctx.fillStyle = canBuy ? (hover ? '#FFFFFF' : '#00FFCC') : '#444444';
+          ctx.shadowColor = canBuy && hover ? '#00FFCC' : 'transparent';
+          ctx.shadowBlur = canBuy && hover ? 12 : 0;
+          ctx.textAlign = 'center';
+          ctx.fillText(`${w.price.toLocaleString()} NEX`, cx + cardW / 2 + 12, btnY + 3);
+        } else {
+          ctx.font = 'bold 11px Orbitron, monospace';
+          ctx.fillStyle = '#44FF88';
+          ctx.shadowColor = '#44FF88';
+          ctx.shadowBlur = 8;
+          ctx.textAlign = 'center';
+          ctx.fillText('FREE', cx + cardW / 2, btnY + 3);
+        }
+        ctx.restore();
         const cardVisible2 = cy >= y - 10 && cy + cardH <= y + PH + 10;
         if (canBuy && cardVisible2) {
           this._pushArea(cx, cy, cardW, cardH, (p, g) => {
@@ -339,27 +580,783 @@ class ShopManager {
       ctx.restore();
     });
 
-    // ── Scrollbar ──────────────────────────────────────────
+    // Scrollbar
     if (this._maxScrollY > 0) {
-      const sbX    = px + PW - 10;
-      const trackH = PH - 4;
-      const thumbH = Math.max(30, trackH * (PH / totalH));
-      const thumbY = y + 2 + (this._scrollY / this._maxScrollY) * (trackH - thumbH);
-      ctx.fillStyle = 'rgba(68,238,255,0.12)';
-      ctx.fillRect(sbX, y + 2, 6, trackH);
-      ctx.fillStyle = 'rgba(68,238,255,0.6)';
-      ctx.fillRect(sbX, thumbY, 6, thumbH);
+      const sbX = px + PW - 12;
+      const trackH = PH - 6;
+      const thumbH = Math.max(35, trackH * (PH / totalH));
+      const thumbY = y + 3 + (this._scrollY / this._maxScrollY) * (trackH - thumbH);
+      ctx.fillStyle = 'rgba(68,238,255,0.06)';
+      ctx.beginPath();
+      ctx.roundRect(sbX, y + 3, 6, trackH, 3);
+      ctx.fill();
+      ctx.fillStyle = 'rgba(68,238,255,0.45)';
+      ctx.beginPath();
+      ctx.roundRect(sbX, thumbY, 6, thumbH, 3);
+      ctx.fill();
     }
 
     // Hint
     ctx.save();
     ctx.font = '9px Orbitron, monospace';
-    ctx.fillStyle = 'rgba(255,255,255,0.18)';
+    ctx.fillStyle = 'rgba(255,255,255,0.25)';
     ctx.textAlign = 'center';
-    const hintTxt = this._maxScrollY > 0
-      ? 'SCROLL WHEEL to see all weapons   ·   1–9 KEYS to cycle'
-      : 'SCROLL WHEEL  or  1–9 KEYS  to cycle weapons';
-    ctx.fillText(hintTxt, px + PW / 2, y + PH - 2);
+    ctx.fillText(this._maxScrollY > 0 ? 'SCROLL to see all  ·  1–9 to cycle' : '1–9 to cycle weapons', px + PW / 2, y + PH - 6);
+    ctx.restore();
+  }
+
+  // Realistic weapon drawings
+  _drawRealisticWeapon(ctx, x, y, weapon, visible, equipped) {
+    if (!visible) { ctx.save(); ctx.globalAlpha = 0.2; }
+    ctx.save();
+    ctx.translate(x, y);
+
+    const color = weapon.color;
+    const bright = equipped ? 1 : 0.7;
+
+    // Set up styles
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+
+    switch (weapon.id) {
+      case 'pistol':
+        this._drawPistol(ctx, color, bright, equipped);
+        break;
+      case 'knife':
+        this._drawKnife(ctx, color, bright, equipped);
+        break;
+      case 'smg':
+        this._drawSMG(ctx, color, bright, equipped);
+        break;
+      case 'shotgun':
+        this._drawShotgun(ctx, color, bright, equipped);
+        break;
+      case 'assault':
+        this._drawAssaultRifle(ctx, color, bright, equipped);
+        break;
+      case 'sniper':
+        this._drawSniperRifle(ctx, color, bright, equipped);
+        break;
+      case 'minigun':
+        this._drawMinigun(ctx, color, bright, equipped);
+        break;
+      case 'timecannon':
+        this._drawTimeCannon(ctx, color, bright, equipped);
+        break;
+      case 'gravitgun':
+        this._drawGravityRifle(ctx, color, bright, equipped);
+        break;
+      case 'electricwhip':
+        this._drawElectricWhip(ctx, color, bright, equipped);
+        break;
+      case 'plasmashotgun':
+        this._drawPlasmaShotgun(ctx, color, bright, equipped);
+        break;
+      case 'burst':
+        this._drawBurstPistol(ctx, color, bright, equipped);
+        break;
+      case 'flamethrower':
+        this._drawFlamethrower(ctx, color, bright, equipped);
+        break;
+      case 'crossbow':
+        this._drawCrossbow(ctx, color, bright, equipped);
+        break;
+      case 'rocket':
+        this._drawRocketLauncher(ctx, color, bright, equipped);
+        break;
+      default:
+        this._drawGenericGun(ctx, color, bright, equipped);
+    }
+
+    ctx.restore();
+    if (!visible) ctx.restore();
+  }
+
+  _drawPistol(ctx, color, bright, equipped) {
+    ctx.save();
+    if (equipped) { ctx.shadowColor = color; ctx.shadowBlur = 15; }
+    // Barrel
+    ctx.fillStyle = `rgba(${this._rgb(color)},${0.9 * bright})`;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.roundRect(-8, -8, 32, 12, 2);
+    ctx.fill(); ctx.stroke();
+    // Slide detail
+    ctx.fillStyle = `rgba(255,255,255,0.15)`;
+    ctx.fillRect(-5, -6, 26, 3);
+    // Grip
+    ctx.fillStyle = `rgba(${this._rgb(color)},${0.7 * bright})`;
+    ctx.beginPath();
+    ctx.moveTo(-8, 4); ctx.lineTo(-4, 4); ctx.lineTo(-2, 20); ctx.lineTo(-12, 20); ctx.lineTo(-10, 4);
+    ctx.closePath();
+    ctx.fill(); ctx.stroke();
+    // Trigger guard
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(2, 10, 6, 0.3, Math.PI - 0.3);
+    ctx.stroke();
+    // Muzzle
+    ctx.fillStyle = '#222';
+    ctx.beginPath();
+    ctx.ellipse(24, -2, 3, 4, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  _drawKnife(ctx, color, bright, equipped) {
+    ctx.save();
+    if (equipped) { ctx.shadowColor = color; ctx.shadowBlur = 15; }
+    // Blade
+    ctx.fillStyle = `rgba(200,200,220,${0.9 * bright})`;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(-25, 0);
+    ctx.lineTo(20, -4);
+    ctx.lineTo(28, 0);
+    ctx.lineTo(20, 4);
+    ctx.lineTo(-25, 2);
+    ctx.closePath();
+    ctx.fill(); ctx.stroke();
+    // Blade shine
+    ctx.fillStyle = 'rgba(255,255,255,0.3)';
+    ctx.beginPath();
+    ctx.moveTo(-20, -1); ctx.lineTo(15, -3); ctx.lineTo(15, -1); ctx.lineTo(-20, 0);
+    ctx.closePath();
+    ctx.fill();
+    // Guard
+    ctx.fillStyle = color;
+    ctx.fillRect(-27, -6, 4, 12);
+    // Handle
+    ctx.fillStyle = `rgba(${this._rgb(color)},${0.6 * bright})`;
+    ctx.beginPath();
+    ctx.roundRect(-42, -5, 16, 10, 2);
+    ctx.fill(); ctx.stroke();
+    // Handle wrap
+    for (let i = 0; i < 3; i++) {
+      ctx.fillStyle = 'rgba(0,0,0,0.3)';
+      ctx.fillRect(-40 + i * 5, -4, 2, 8);
+    }
+    ctx.restore();
+  }
+
+  _drawSMG(ctx, color, bright, equipped) {
+    ctx.save();
+    if (equipped) { ctx.shadowColor = color; ctx.shadowBlur = 15; }
+    ctx.fillStyle = `rgba(${this._rgb(color)},${0.85 * bright})`;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1.5;
+    // Main body
+    ctx.beginPath();
+    ctx.roundRect(-22, -8, 44, 14, 3);
+    ctx.fill(); ctx.stroke();
+    // Top rail
+    ctx.fillStyle = `rgba(255,255,255,0.1)`;
+    ctx.fillRect(-18, -7, 32, 3);
+    // Magazine
+    ctx.fillStyle = `rgba(${this._rgb(color)},${0.6 * bright})`;
+    ctx.beginPath();
+    ctx.roundRect(-8, 6, 12, 18, 2);
+    ctx.fill(); ctx.stroke();
+    // Grip
+    ctx.fillStyle = `rgba(${this._rgb(color)},${0.5 * bright})`;
+    ctx.beginPath();
+    ctx.moveTo(-20, 6); ctx.lineTo(-16, 6); ctx.lineTo(-14, 18); ctx.lineTo(-22, 18);
+    ctx.closePath();
+    ctx.fill(); ctx.stroke();
+    // Muzzle
+    ctx.fillStyle = '#222';
+    ctx.beginPath();
+    ctx.ellipse(22, -1, 3, 5, 0, 0, Math.PI * 2);
+    ctx.fill();
+    // Stock
+    ctx.fillStyle = `rgba(${this._rgb(color)},${0.7 * bright})`;
+    ctx.beginPath();
+    ctx.roundRect(-35, -5, 14, 8, 2);
+    ctx.fill(); ctx.stroke();
+    ctx.restore();
+  }
+
+  _drawShotgun(ctx, color, bright, equipped) {
+    ctx.save();
+    if (equipped) { ctx.shadowColor = color; ctx.shadowBlur = 15; }
+    ctx.fillStyle = `rgba(${this._rgb(color)},${0.85 * bright})`;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1.5;
+    // Long barrel
+    ctx.beginPath();
+    ctx.roundRect(-20, -5, 55, 8, 2);
+    ctx.fill(); ctx.stroke();
+    // Barrel shine
+    ctx.fillStyle = 'rgba(255,255,255,0.12)';
+    ctx.fillRect(-15, -4, 45, 2);
+    // Pump
+    ctx.fillStyle = `rgba(${this._rgb(color)},${0.6 * bright})`;
+    ctx.beginPath();
+    ctx.roundRect(5, -8, 18, 14, 2);
+    ctx.fill(); ctx.stroke();
+    // Stock
+    ctx.fillStyle = `rgba(${this._rgb(color)},${0.5 * bright})`;
+    ctx.beginPath();
+    ctx.moveTo(-20, -4); ctx.lineTo(-38, -2); ctx.lineTo(-38, 4); ctx.lineTo(-20, 3);
+    ctx.closePath();
+    ctx.fill(); ctx.stroke();
+    // Grip
+    ctx.beginPath();
+    ctx.moveTo(-22, 3); ctx.lineTo(-18, 3); ctx.lineTo(-16, 16); ctx.lineTo(-24, 16);
+    ctx.closePath();
+    ctx.fill(); ctx.stroke();
+    // Muzzle
+    ctx.fillStyle = '#222';
+    ctx.beginPath();
+    ctx.ellipse(35, -1, 3, 4, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  _drawAssaultRifle(ctx, color, bright, equipped) {
+    ctx.save();
+    if (equipped) { ctx.shadowColor = color; ctx.shadowBlur = 15; }
+    ctx.fillStyle = `rgba(${this._rgb(color)},${0.85 * bright})`;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1.5;
+    // Main body
+    ctx.beginPath();
+    ctx.roundRect(-25, -7, 50, 12, 3);
+    ctx.fill(); ctx.stroke();
+    // Barrel extension
+    ctx.beginPath();
+    ctx.roundRect(25, -4, 15, 6, 1);
+    ctx.fill(); ctx.stroke();
+    // Scope mount
+    ctx.fillStyle = `rgba(${this._rgb(color)},${0.7 * bright})`;
+    ctx.beginPath();
+    ctx.roundRect(-15, -14, 25, 7, 2);
+    ctx.fill(); ctx.stroke();
+    // Magazine
+    ctx.fillStyle = `rgba(${this._rgb(color)},${0.55 * bright})`;
+    ctx.beginPath();
+    ctx.moveTo(-5, 5); ctx.lineTo(8, 5); ctx.lineTo(10, 22); ctx.lineTo(-7, 22);
+    ctx.closePath();
+    ctx.fill(); ctx.stroke();
+    // Grip
+    ctx.beginPath();
+    ctx.moveTo(-20, 5); ctx.lineTo(-15, 5); ctx.lineTo(-13, 18); ctx.lineTo(-22, 18);
+    ctx.closePath();
+    ctx.fill(); ctx.stroke();
+    // Stock
+    ctx.fillStyle = `rgba(${this._rgb(color)},${0.65 * bright})`;
+    ctx.beginPath();
+    ctx.roundRect(-42, -5, 18, 10, 2);
+    ctx.fill(); ctx.stroke();
+    // Muzzle
+    ctx.fillStyle = '#222';
+    ctx.beginPath();
+    ctx.ellipse(40, -1, 2, 3, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  _drawSniperRifle(ctx, color, bright, equipped) {
+    ctx.save();
+    if (equipped) { ctx.shadowColor = color; ctx.shadowBlur = 15; }
+    ctx.fillStyle = `rgba(${this._rgb(color)},${0.85 * bright})`;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1.5;
+    // Long barrel
+    ctx.beginPath();
+    ctx.roundRect(-30, -4, 70, 7, 2);
+    ctx.fill(); ctx.stroke();
+    // Barrel shine
+    ctx.fillStyle = 'rgba(255,255,255,0.1)';
+    ctx.fillRect(-25, -3, 60, 2);
+    // Scope
+    ctx.fillStyle = `rgba(${this._rgb(color)},${0.9 * bright})`;
+    ctx.beginPath();
+    ctx.roundRect(-15, -14, 30, 10, 3);
+    ctx.fill(); ctx.stroke();
+    // Scope lens
+    ctx.fillStyle = '#115588';
+    ctx.beginPath();
+    ctx.ellipse(15, -9, 4, 4, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.4)';
+    ctx.beginPath();
+    ctx.ellipse(14, -10, 2, 2, 0, 0, Math.PI * 2);
+    ctx.fill();
+    // Bipod
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(15, 3); ctx.lineTo(10, 18);
+    ctx.moveTo(15, 3); ctx.lineTo(20, 18);
+    ctx.stroke();
+    // Stock
+    ctx.fillStyle = `rgba(${this._rgb(color)},${0.6 * bright})`;
+    ctx.beginPath();
+    ctx.moveTo(-30, -3); ctx.lineTo(-48, 0); ctx.lineTo(-48, 6); ctx.lineTo(-30, 3);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    // Grip
+    ctx.beginPath();
+    ctx.moveTo(-25, 3); ctx.lineTo(-20, 3); ctx.lineTo(-18, 14); ctx.lineTo(-27, 14);
+    ctx.closePath();
+    ctx.fill(); ctx.stroke();
+    ctx.restore();
+  }
+
+  _drawMinigun(ctx, color, bright, equipped) {
+    ctx.save();
+    if (equipped) { ctx.shadowColor = color; ctx.shadowBlur = 15; }
+    ctx.fillStyle = `rgba(${this._rgb(color)},${0.8 * bright})`;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1.5;
+    // Multiple barrels
+    for (let i = -2; i <= 2; i++) {
+      ctx.beginPath();
+      ctx.roundRect(-15, i * 6 - 2, 45, 4, 1);
+      ctx.fill(); ctx.stroke();
+    }
+    // Barrel housing (front)
+    ctx.fillStyle = `rgba(${this._rgb(color)},${0.7 * bright})`;
+    ctx.beginPath();
+    ctx.ellipse(30, 0, 6, 16, 0, 0, Math.PI * 2);
+    ctx.fill(); ctx.stroke();
+    // Body/motor housing
+    ctx.fillStyle = `rgba(${this._rgb(color)},${0.85 * bright})`;
+    ctx.beginPath();
+    ctx.ellipse(-15, 0, 10, 18, 0, 0, Math.PI * 2);
+    ctx.fill(); ctx.stroke();
+    // Handle grips
+    ctx.fillStyle = `rgba(${this._rgb(color)},${0.5 * bright})`;
+    ctx.beginPath();
+    ctx.roundRect(-35, -6, 12, 12, 3);
+    ctx.fill(); ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(-15, 18); ctx.lineTo(-8, 18); ctx.lineTo(-5, 28); ctx.lineTo(-18, 28);
+    ctx.closePath();
+    ctx.fill(); ctx.stroke();
+    // Ammo feed
+    ctx.fillStyle = `rgba(${this._rgb(color)},${0.6 * bright})`;
+    ctx.beginPath();
+    ctx.roundRect(-28, 8, 10, 20, 2);
+    ctx.fill(); ctx.stroke();
+    ctx.restore();
+  }
+
+  _drawTimeCannon(ctx, color, bright, equipped) {
+    ctx.save();
+    if (equipped) { ctx.shadowColor = color; ctx.shadowBlur = 20; }
+    // Energy core (glowing)
+    const t = performance.now() / 1000;
+    const pulse = Math.sin(t * 4) * 0.2 + 0.8;
+    ctx.fillStyle = `rgba(${this._rgb(color)},${0.3 * pulse})`;
+    ctx.beginPath();
+    ctx.arc(5, 0, 22, 0, Math.PI * 2);
+    ctx.fill();
+    // Outer ring
+    ctx.fillStyle = `rgba(${this._rgb(color)},${0.85 * bright})`;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(5, 0, 18, 0, Math.PI * 2);
+    ctx.stroke();
+    // Inner core
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(5, 0, 10, 0, Math.PI * 2);
+    ctx.fill();
+    // Clock hands (time theme)
+    ctx.strokeStyle = '#FFF';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(5, 0); ctx.lineTo(5, -7);
+    ctx.moveTo(5, 0); ctx.lineTo(10, 3);
+    ctx.stroke();
+    // Barrel
+    ctx.fillStyle = `rgba(${this._rgb(color)},${0.8 * bright})`;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.roundRect(23, -5, 20, 10, 2);
+    ctx.fill(); ctx.stroke();
+    // Handle
+    ctx.fillStyle = `rgba(${this._rgb(color)},${0.6 * bright})`;
+    ctx.beginPath();
+    ctx.moveTo(-12, 5); ctx.lineTo(-5, 5); ctx.lineTo(-3, 20); ctx.lineTo(-14, 20);
+    ctx.closePath();
+    ctx.fill(); ctx.stroke();
+    ctx.restore();
+  }
+
+  _drawGravityRifle(ctx, color, bright, equipped) {
+    ctx.save();
+    if (equipped) { ctx.shadowColor = color; ctx.shadowBlur = 20; }
+    const t = performance.now() / 1000;
+    // Gravity field effect
+    ctx.strokeStyle = `rgba(${this._rgb(color)},${0.3 + Math.sin(t * 3) * 0.15})`;
+    ctx.lineWidth = 1;
+    for (let r = 12; r <= 20; r += 4) {
+      ctx.beginPath();
+      ctx.arc(0, 0, r, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    // Main body
+    ctx.fillStyle = `rgba(${this._rgb(color)},${0.85 * bright})`;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.roundRect(-30, -6, 35, 12, 3);
+    ctx.fill(); ctx.stroke();
+    // Gravity orb
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(0, 0, 10, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#FFF';
+    ctx.beginPath();
+    ctx.arc(-3, -3, 3, 0, Math.PI * 2);
+    ctx.fill();
+    // Barrel
+    ctx.fillStyle = `rgba(${this._rgb(color)},${0.75 * bright})`;
+    ctx.beginPath();
+    ctx.roundRect(10, -4, 25, 8, 2);
+    ctx.fill(); ctx.stroke();
+    // Stock
+    ctx.fillStyle = `rgba(${this._rgb(color)},${0.6 * bright})`;
+    ctx.beginPath();
+    ctx.roundRect(-45, -4, 16, 8, 2);
+    ctx.fill(); ctx.stroke();
+    // Grip
+    ctx.beginPath();
+    ctx.moveTo(-22, 6); ctx.lineTo(-16, 6); ctx.lineTo(-14, 18); ctx.lineTo(-24, 18);
+    ctx.closePath();
+    ctx.fill(); ctx.stroke();
+    ctx.restore();
+  }
+
+  _drawElectricWhip(ctx, color, bright, equipped) {
+    ctx.save();
+    if (equipped) { ctx.shadowColor = color; ctx.shadowBlur = 20; }
+    const t = performance.now() / 1000;
+
+    // Handle
+    ctx.fillStyle = `rgba(${this._rgb(color)},${0.7 * bright})`;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.roundRect(-38, -6, 16, 12, 3);
+    ctx.fill(); ctx.stroke();
+
+    // Whip cord - wavy electric line
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 3;
+    ctx.shadowColor = color;
+    ctx.shadowBlur = 12;
+    ctx.beginPath();
+    ctx.moveTo(-22, 0);
+    for (let i = 0; i <= 8; i++) {
+      const px = -22 + i * 7;
+      const py = Math.sin(i * 1.2 + t * 8) * (4 + i * 0.8);
+      ctx.lineTo(px, py);
+    }
+    ctx.stroke();
+
+    // Electric sparks
+    ctx.strokeStyle = '#FFFFFF';
+    ctx.lineWidth = 1.5;
+    for (let i = 0; i < 4; i++) {
+      const sx = -15 + i * 12;
+      const sy = Math.sin(i * 1.5 + t * 10) * 5;
+      ctx.beginPath();
+      ctx.moveTo(sx, sy - 4);
+      ctx.lineTo(sx + 3, sy);
+      ctx.lineTo(sx, sy + 4);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  _drawPlasmaShotgun(ctx, color, bright, equipped) {
+    ctx.save();
+    if (equipped) { ctx.shadowColor = color; ctx.shadowBlur = 18; }
+    const t = performance.now() / 1000;
+
+    // Main body
+    ctx.fillStyle = `rgba(${this._rgb(color)},${0.8 * bright})`;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.roundRect(-25, -7, 50, 14, 4);
+    ctx.fill(); ctx.stroke();
+
+    // Plasma chamber (glowing)
+    const pulse = Math.sin(t * 5) * 0.2 + 0.8;
+    ctx.fillStyle = `rgba(${this._rgb(color)},${0.4 * pulse})`;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 12, 8, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 6, 4, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Wide muzzle (shotgun spread)
+    ctx.fillStyle = `rgba(${this._rgb(color)},${0.6 * bright})`;
+    ctx.beginPath();
+    ctx.moveTo(25, -10); ctx.lineTo(38, -14); ctx.lineTo(38, 14); ctx.lineTo(25, 10);
+    ctx.closePath();
+    ctx.fill(); ctx.stroke();
+
+    // Grip
+    ctx.fillStyle = `rgba(${this._rgb(color)},${0.5 * bright})`;
+    ctx.beginPath();
+    ctx.moveTo(-20, 7); ctx.lineTo(-14, 7); ctx.lineTo(-12, 20); ctx.lineTo(-22, 20);
+    ctx.closePath();
+    ctx.fill(); ctx.stroke();
+    ctx.restore();
+  }
+
+  _drawBurstPistol(ctx, color, bright, equipped) {
+    ctx.save();
+    if (equipped) { ctx.shadowColor = color; ctx.shadowBlur = 15; }
+
+    // Slide/barrel
+    ctx.fillStyle = `rgba(${this._rgb(color)},${0.85 * bright})`;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.roundRect(-12, -10, 38, 14, 3);
+    ctx.fill(); ctx.stroke();
+
+    // Triple barrel indicator (burst)
+    ctx.fillStyle = '#222';
+    for (let i = -1; i <= 1; i++) {
+      ctx.beginPath();
+      ctx.ellipse(26, -3 + i * 4, 2, 2, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Slide detail
+    ctx.fillStyle = 'rgba(255,255,255,0.15)';
+    ctx.fillRect(-8, -8, 28, 3);
+
+    // Grip
+    ctx.fillStyle = `rgba(${this._rgb(color)},${0.6 * bright})`;
+    ctx.beginPath();
+    ctx.moveTo(-10, 4); ctx.lineTo(-4, 4); ctx.lineTo(-2, 22); ctx.lineTo(-14, 22); ctx.lineTo(-12, 4);
+    ctx.closePath();
+    ctx.fill(); ctx.stroke();
+
+    // Trigger guard
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(4, 10, 6, 0.3, Math.PI - 0.3);
+    ctx.stroke();
+
+    // Burst mode indicator
+    ctx.fillStyle = color;
+    ctx.font = 'bold 7px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('III', 8, -4);
+    ctx.restore();
+  }
+
+  _drawFlamethrower(ctx, color, bright, equipped) {
+    ctx.save();
+    if (equipped) { ctx.shadowColor = color; ctx.shadowBlur = 18; }
+    const t = performance.now() / 1000;
+
+    // Main body/tank
+    ctx.fillStyle = `rgba(${this._rgb(color)},${0.75 * bright})`;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.roundRect(-30, -8, 35, 16, 4);
+    ctx.fill(); ctx.stroke();
+
+    // Fuel tank
+    ctx.fillStyle = `rgba(${this._rgb(color)},${0.6 * bright})`;
+    ctx.beginPath();
+    ctx.ellipse(-18, 0, 10, 12, 0, 0, Math.PI * 2);
+    ctx.fill(); ctx.stroke();
+
+    // Nozzle
+    ctx.fillStyle = `rgba(${this._rgb(color)},${0.8 * bright})`;
+    ctx.beginPath();
+    ctx.roundRect(5, -5, 25, 10, 2);
+    ctx.fill(); ctx.stroke();
+
+    // Flame effect
+    ctx.fillStyle = '#FF6600';
+    ctx.shadowColor = '#FF4400';
+    ctx.shadowBlur = 15;
+    const flameSize = 8 + Math.sin(t * 15) * 3;
+    ctx.beginPath();
+    ctx.moveTo(30, 0);
+    ctx.quadraticCurveTo(35 + flameSize, -8, 40 + flameSize, 0);
+    ctx.quadraticCurveTo(35 + flameSize, 8, 30, 0);
+    ctx.fill();
+
+    // Inner flame
+    ctx.fillStyle = '#FFAA00';
+    ctx.beginPath();
+    ctx.moveTo(30, 0);
+    ctx.quadraticCurveTo(33 + flameSize * 0.5, -4, 36 + flameSize * 0.5, 0);
+    ctx.quadraticCurveTo(33 + flameSize * 0.5, 4, 30, 0);
+    ctx.fill();
+
+    // Handle
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = `rgba(${this._rgb(color)},${0.5 * bright})`;
+    ctx.beginPath();
+    ctx.moveTo(-5, 8); ctx.lineTo(2, 8); ctx.lineTo(4, 20); ctx.lineTo(-7, 20);
+    ctx.closePath();
+    ctx.fill(); ctx.stroke();
+    ctx.restore();
+  }
+
+  _drawCrossbow(ctx, color, bright, equipped) {
+    ctx.save();
+    if (equipped) { ctx.shadowColor = color; ctx.shadowBlur = 15; }
+
+    // Main rail/stock
+    ctx.fillStyle = `rgba(${this._rgb(color)},${0.8 * bright})`;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.roundRect(-25, -4, 50, 8, 2);
+    ctx.fill(); ctx.stroke();
+
+    // Bow limbs (curved)
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(-10, -4);
+    ctx.quadraticCurveTo(-25, -20, -35, -15);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(-10, 4);
+    ctx.quadraticCurveTo(-25, 20, -35, 15);
+    ctx.stroke();
+
+    // Bow string
+    ctx.strokeStyle = 'rgba(255,255,255,0.6)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(-35, -15);
+    ctx.lineTo(-5, 0);
+    ctx.lineTo(-35, 15);
+    ctx.stroke();
+
+    // Bolt/arrow
+    ctx.fillStyle = '#AAAAAA';
+    ctx.strokeStyle = '#888888';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(-5, 0);
+    ctx.lineTo(30, 0);
+    ctx.lineTo(35, -2);
+    ctx.lineTo(38, 0);
+    ctx.lineTo(35, 2);
+    ctx.lineTo(30, 0);
+    ctx.stroke();
+    ctx.fill();
+
+    // Fletching
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(-3, 0); ctx.lineTo(-8, -4); ctx.lineTo(-8, 4);
+    ctx.closePath();
+    ctx.fill();
+
+    // Scope/sight
+    ctx.fillStyle = `rgba(${this._rgb(color)},${0.7 * bright})`;
+    ctx.beginPath();
+    ctx.roundRect(5, -10, 12, 6, 2);
+    ctx.fill(); ctx.stroke();
+
+    // Grip
+    ctx.fillStyle = `rgba(${this._rgb(color)},${0.5 * bright})`;
+    ctx.beginPath();
+    ctx.moveTo(0, 4); ctx.lineTo(8, 4); ctx.lineTo(10, 18); ctx.lineTo(-2, 18);
+    ctx.closePath();
+    ctx.fill(); ctx.stroke();
+    ctx.restore();
+  }
+
+  _drawRocketLauncher(ctx, color, bright, equipped) {
+    ctx.save();
+    if (equipped) { ctx.shadowColor = color; ctx.shadowBlur = 18; }
+
+    // Main tube
+    ctx.fillStyle = `rgba(${this._rgb(color)},${0.8 * bright})`;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.roundRect(-35, -10, 70, 20, 5);
+    ctx.fill(); ctx.stroke();
+
+    // Tube opening (front)
+    ctx.fillStyle = '#222';
+    ctx.beginPath();
+    ctx.ellipse(35, 0, 5, 10, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Tube opening (back)
+    ctx.beginPath();
+    ctx.ellipse(-35, 0, 4, 8, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Rocket visible inside
+    ctx.fillStyle = '#DD3300';
+    ctx.beginPath();
+    ctx.roundRect(-20, -5, 40, 10, 3);
+    ctx.fill();
+    ctx.fillStyle = '#FF5500';
+    ctx.beginPath();
+    ctx.moveTo(20, -5); ctx.lineTo(28, 0); ctx.lineTo(20, 5);
+    ctx.closePath();
+    ctx.fill();
+
+    // Sight
+    ctx.fillStyle = `rgba(${this._rgb(color)},${0.7 * bright})`;
+    ctx.beginPath();
+    ctx.roundRect(-5, -18, 20, 8, 2);
+    ctx.fill(); ctx.stroke();
+
+    // Handle grips
+    ctx.fillStyle = `rgba(${this._rgb(color)},${0.5 * bright})`;
+    ctx.beginPath();
+    ctx.roundRect(-30, 10, 14, 12, 3);
+    ctx.fill(); ctx.stroke();
+    ctx.beginPath();
+    ctx.roundRect(5, 10, 14, 12, 3);
+    ctx.fill(); ctx.stroke();
+
+    // Trigger mechanism
+    ctx.fillStyle = `rgba(${this._rgb(color)},${0.6 * bright})`;
+    ctx.beginPath();
+    ctx.roundRect(-12, 8, 10, 6, 2);
+    ctx.fill(); ctx.stroke();
+    ctx.restore();
+  }
+
+  _drawGenericGun(ctx, color, bright, equipped) {
+    ctx.save();
+    if (equipped) { ctx.shadowColor = color; ctx.shadowBlur = 15; }
+    ctx.fillStyle = `rgba(${this._rgb(color)},${0.8 * bright})`;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.roundRect(-20, -5, 40, 10, 3);
+    ctx.fill(); ctx.stroke();
     ctx.restore();
   }
 
@@ -457,11 +1454,19 @@ class ShopManager {
         this._rr(ctx, bx, by, btnW, btnH, 6);
         ctx.fill(); ctx.stroke();
 
-        ctx.font = `bold 12px Orbitron, monospace`;
+        // NEX icon for upgrade price
+        if (canBuy) {
+          this._renderNexIcon(ctx, bx + 16, by + btnH / 2, 13, { animated: bHov });
+        } else {
+          ctx.globalAlpha = 0.3;
+          this._renderNexIcon(ctx, bx + 16, by + btnH / 2, 13, { animated: false });
+          ctx.globalAlpha = 1;
+        }
+        ctx.font = `bold 10px Orbitron, monospace`;
         ctx.fillStyle  = canBuy ? (bHov ? '#fff' : u.color) : '#3a3a3a';
         ctx.textAlign  = 'center';
         ctx.shadowBlur = 0;
-        ctx.fillText(`UPGRADE  ⬢ ${cost.toLocaleString()}`, bx + btnW / 2, by + btnH / 2 + 4);
+        ctx.fillText(`UPGRADE  ${cost.toLocaleString()}`, bx + btnW / 2 + 14, by + btnH / 2 + 4);
 
         if (canBuy) {
           this._pushArea(bx, by, btnW, btnH, (p, g) => {
@@ -532,10 +1537,10 @@ class ShopManager {
       { tier:'medic',  name:'MEDIC GUARD',  desc:'Heals you when HP < 70%.',   price:4000, hp:120, dmg:18, color:'#44FFEE' },
       { tier:'ghost',  name:'GHOST GUARD',  desc:'Fast. 22% bullet dodge.',    price:7000, hp:90,  dmg:35, color:'#CC88FF' },
     ];
-    const gap  = 18, cols = 3;
+    const gap  = 14, cols = 3;
     const cardW = Math.floor((PW - gap * (cols + 1)) / cols);
-    const cardH = 175;
-    const startY = cy + 10;
+    const cardH = 155;  // Reduced height to fit all content
+    const startY = cy + 6;
 
     // Guard count header
     const guardCount = this._guardCount || 0;
@@ -549,7 +1554,7 @@ class ShopManager {
       const row  = i < 3 ? 0 : 1;
       const col  = i % cols;
       const cx2 = px + gap + col * (cardW + gap);
-      const ry  = startY + 40 + row * (cardH + 14);
+      const ry  = startY + 32 + row * (cardH + 10);
       const hover = mx >= cx2 && mx <= cx2 + cardW && my >= ry && my <= ry + cardH;
       const t = Date.now() * 0.001;
       const pulse = (Math.sin(t * 3 + i) + 1) * 0.5;
@@ -562,37 +1567,45 @@ class ShopManager {
       this._rr(ctx, cx2, ry, cardW, cardH, 8); ctx.fill(); ctx.stroke();
 
       // Render unique guard preview based on tier
-      const mx2 = cx2 + cardW / 2, my2 = ry + 52;
+      const mx2 = cx2 + cardW / 2, my2 = ry + 42;
       this._renderGuardPreview(ctx, mx2, my2, g.tier, g.color, hover, pulse);
 
       // Name
       ctx.shadowBlur = 0;
-      ctx.font = 'bold 11px Orbitron, monospace'; ctx.textAlign = 'center'; ctx.fillStyle = g.color;
+      ctx.font = 'bold 10px Orbitron, monospace'; ctx.textAlign = 'center'; ctx.fillStyle = g.color;
       ctx.shadowColor = g.color; ctx.shadowBlur = hover ? 10 : 0;
-      ctx.fillText(g.name, mx2, ry + 90);
+      ctx.fillText(g.name, mx2, ry + 78);
       ctx.shadowBlur = 0;
 
       // HP + DMG
-      ctx.font = '9px Orbitron, monospace'; ctx.fillStyle = 'rgba(255,255,255,0.55)';
-      ctx.fillText(`HP: ${g.hp}  DMG: ${g.dmg}`, mx2, ry + 106);
+      ctx.font = '8px Orbitron, monospace'; ctx.fillStyle = 'rgba(255,255,255,0.55)';
+      ctx.fillText(`HP: ${g.hp}  DMG: ${g.dmg}`, mx2, ry + 92);
 
       // Desc
-      ctx.font = '9px Orbitron, monospace'; ctx.fillStyle = 'rgba(255,255,255,0.4)';
-      ctx.fillText(g.desc, mx2, ry + 120);
+      ctx.font = '8px Orbitron, monospace'; ctx.fillStyle = 'rgba(255,255,255,0.4)';
+      ctx.fillText(g.desc, mx2, ry + 105);
 
       // Price button
-      const btnY = ry + cardH - 32, btnW = cardW - 24, btnX = cx2 + 12;
+      const btnY = ry + cardH - 28, btnW = cardW - 20, btnX = cx2 + 10;
       const canBuy = money >= g.price;
       ctx.fillStyle = canBuy ? (hover ? `rgba(${this._rgb(g.color)},0.25)` : `rgba(${this._rgb(g.color)},0.12)`) : 'rgba(100,100,100,0.12)';
       ctx.strokeStyle = canBuy ? g.color : '#555'; ctx.lineWidth = 1;
-      this._rr(ctx, btnX, btnY, btnW, 26, 5); ctx.fill(); ctx.stroke();
-      ctx.font = 'bold 11px Orbitron, monospace'; ctx.textAlign = 'center';
+      this._rr(ctx, btnX, btnY, btnW, 22, 4); ctx.fill(); ctx.stroke();
+      // NEX icon for hire price
+      if (canBuy) {
+        this._renderNexIcon(ctx, btnX + 18, btnY + 11, 12, { animated: hover });
+      } else {
+        ctx.globalAlpha = 0.3;
+        this._renderNexIcon(ctx, btnX + 18, btnY + 11, 12, { animated: false });
+        ctx.globalAlpha = 1;
+      }
+      ctx.font = 'bold 9px Orbitron, monospace'; ctx.textAlign = 'center';
       ctx.fillStyle = canBuy ? g.color : '#555'; ctx.shadowColor = canBuy ? g.color : 'transparent'; ctx.shadowBlur = canBuy ? 8 : 0;
-      ctx.fillText(`⬢ ${g.price.toLocaleString()}  HIRE`, btnX + btnW / 2, btnY + 18);
+      ctx.fillText(`${g.price.toLocaleString()}  HIRE`, btnX + btnW / 2 + 8, btnY + 14);
       ctx.shadowBlur = 0; ctx.restore();
 
       const tier = g.tier, price = g.price, color = g.color;
-      this._pushArea(btnX, btnY, btnW, 26, (p, gameRef) => {
+      this._pushArea(btnX, btnY, btnW, 22, (p, gameRef) => {
         if ((gameRef._bodyguards || []).length >= 6) { this._msg('MAX 6 GUARDS', '#FF4466'); return; }
         if (gameRef.money < price) { this._msg('NOT ENOUGH MONEY', '#FF4466'); return; }
         gameRef.money -= price;
@@ -610,18 +1623,18 @@ class ShopManager {
     });
 
     // Dismiss button
-    const dismissY = startY + 40 + cardH * 2 + 14 + 16;
+    const dismissY = startY + 32 + cardH * 2 + 10 + 10;
     const dismissX = px + PW / 2 - 100;
-    const dismissHover = mx >= dismissX && mx <= dismissX + 200 && my >= dismissY && my <= dismissY + 28;
+    const dismissHover = mx >= dismissX && mx <= dismissX + 200 && my >= dismissY && my <= dismissY + 24;
     ctx.save();
     ctx.fillStyle = dismissHover ? 'rgba(255,68,68,0.18)' : 'rgba(255,68,68,0.07)';
     ctx.strokeStyle = dismissHover ? '#FF4444' : 'rgba(255,68,68,0.3)'; ctx.lineWidth = 1;
-    this._rr(ctx, dismissX, dismissY, 200, 28, 5); ctx.fill(); ctx.stroke();
-    ctx.font = 'bold 10px Orbitron, monospace'; ctx.textAlign = 'center';
+    this._rr(ctx, dismissX, dismissY, 200, 24, 5); ctx.fill(); ctx.stroke();
+    ctx.font = 'bold 9px Orbitron, monospace'; ctx.textAlign = 'center';
     ctx.fillStyle = dismissHover ? '#FF6666' : 'rgba(255,68,68,0.6)';
-    ctx.fillText('DISMISS ALL GUARDS', dismissX + 100, dismissY + 19);
+    ctx.fillText('DISMISS ALL GUARDS', dismissX + 100, dismissY + 16);
     ctx.restore();
-    this._pushArea(dismissX, dismissY, 200, 28, (p, gameRef) => {
+    this._pushArea(dismissX, dismissY, 200, 24, (p, gameRef) => {
       gameRef._bodyguards = [];
       this._msg('ALL GUARDS DISMISSED', '#FF6666');
     });
@@ -940,6 +1953,48 @@ class ShopManager {
     const g = parseInt(hex.slice(3,5),16);
     const b = parseInt(hex.slice(5,7),16);
     return `${r},${g},${b}`;
+  }
+
+  // Render proper NEX currency icon (hexagon with N)
+  _renderNexIcon(ctx, x, y, size, opts = {}) {
+    const animated = opts.animated !== false;
+    const t = animated ? performance.now() / 1000 : 0;
+    const r = size / 2;
+
+    ctx.save();
+    const pulse = animated ? Math.sin(t * 2.5) * 0.2 + 0.8 : 1;
+
+    // Outer glow
+    if (animated) {
+      ctx.shadowColor = '#00FFCC';
+      ctx.shadowBlur = 8 * pulse;
+    }
+
+    // Hexagon shape
+    ctx.fillStyle = `rgba(0,255,204,${0.2 * pulse})`;
+    ctx.strokeStyle = `rgba(0,255,204,${0.8 * pulse})`;
+    ctx.lineWidth = Math.max(1, size / 12);
+    ctx.beginPath();
+    for (let i = 0; i < 6; i++) {
+      const angle = (i * Math.PI / 3) - Math.PI / 2;
+      const px = x + r * Math.cos(angle);
+      const py = y + r * Math.sin(angle);
+      if (i === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    // Inner N letter
+    ctx.fillStyle = '#00FFCC';
+    ctx.font = `bold ${Math.round(size * 0.5)}px Orbitron, monospace`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.shadowBlur = 0;
+    ctx.fillText('N', x, y + 1);
+
+    ctx.restore();
   }
 }
 
