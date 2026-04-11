@@ -10244,7 +10244,7 @@ class Salesperson {
 // ─── BuildingNPC ─────────────────────────────────────────────────────────────
 // Interactive NPC that appears inside buildings. Unique per building type.
 class BuildingNPC {
-  constructor(x, y, buildingType, isNeonCity = false) {
+  constructor(x, y, buildingType, isNeonCity = false, isGirl = false) {
     const cfg        = CONFIG.BUILDING_INTERACTIONS[buildingType] || CONFIG.BUILDING_INTERACTIONS[0];
     this.x = x; this.y = y;
     this.radius      = 18;
@@ -10252,15 +10252,18 @@ class BuildingNPC {
     this.name        = cfg.npcName;
     this.dialogue    = cfg.dialogue;
     this._waveT      = 0;
-    this._interactR  = 65; // interaction radius
+    this._interactR  = 65;
     this._isNeonCity = isNeonCity;
+    this._isGirl     = isGirl;
     this._buildingType = buildingType;
   }
 
   update(dt) { this._waveT += dt * 1.2; }
 
   render(ctx) {
-    if (this._isNeonCity) {
+    if (this._isGirl) {
+      this._renderGirl(ctx);
+    } else if (this._isNeonCity) {
       this._renderNeonCity(ctx);
     } else {
       this._renderDefault(ctx);
@@ -10451,6 +10454,268 @@ class BuildingNPC {
     ctx.shadowBlur = 10 * pulse;
     ctx.font = 'bold 11px Orbitron, monospace';
     ctx.fillText('[T] TALK', this.x + sway, this.y - 61);
+    ctx.restore();
+  }
+
+  _renderGirl(ctx) {
+    const t     = performance.now() / 1000;
+    const breathe = Math.sin(t * 1.6) * 1.2;
+    const sway   = Math.sin(this._waveT * 0.9) * 1.8;
+
+    ctx.save();
+    ctx.translate(this.x + sway, this.y);
+
+    // Shadow
+    ctx.save();
+    ctx.globalAlpha = 0.30;
+    ctx.fillStyle = '#000';
+    ctx.beginPath();
+    ctx.ellipse(3, 30, 12, 4, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    // ── DRESS / SKIRT ──
+    ctx.fillStyle = '#220040';
+    ctx.beginPath();
+    ctx.moveTo(-10, 12 + breathe * 0.2);
+    ctx.lineTo(-14, 30);
+    ctx.lineTo(14, 30);
+    ctx.lineTo(10, 12 + breathe * 0.2);
+    ctx.closePath();
+    ctx.fill();
+    // Dress shimmer strip
+    ctx.fillStyle = this.color + '88';
+    ctx.beginPath();
+    ctx.moveTo(-6, 14 + breathe * 0.2);
+    ctx.lineTo(-7, 30);
+    ctx.lineTo(7, 30);
+    ctx.lineTo(6, 14 + breathe * 0.2);
+    ctx.closePath();
+    ctx.fill();
+    // Dress glitter lines
+    for (let gl = 0; gl < 3; gl++) {
+      const gp = Math.sin(t * 3 + gl * 2) * 0.5 + 0.5;
+      ctx.strokeStyle = `rgba(255,180,255,${0.2 + gp * 0.5})`;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(-9 + gl * 3, 14 + breathe * 0.2);
+      ctx.lineTo(-11 + gl * 4, 30);
+      ctx.stroke();
+    }
+
+    // ── BODY / TORSO ──
+    const bodyG = ctx.createLinearGradient(-10, -8, 10, 12);
+    bodyG.addColorStop(0, '#2a0050');
+    bodyG.addColorStop(1, '#180030');
+    ctx.fillStyle = bodyG;
+    ctx.beginPath();
+    ctx.roundRect(-10, -8 + breathe * 0.3, 20, 22, [4, 4, 2, 2]);
+    ctx.fill();
+    // Top neckline
+    ctx.fillStyle = this.color + '55';
+    ctx.beginPath();
+    ctx.moveTo(-8, -8 + breathe * 0.3);
+    ctx.lineTo(8, -8 + breathe * 0.3);
+    ctx.lineTo(5, -1 + breathe * 0.3);
+    ctx.lineTo(-5, -1 + breathe * 0.3);
+    ctx.closePath();
+    ctx.fill();
+    // Neon trim on dress edge
+    ctx.strokeStyle = this.color;
+    ctx.lineWidth = 1.5;
+    ctx.shadowColor = this.color;
+    ctx.shadowBlur = 8;
+    ctx.beginPath();
+    ctx.moveTo(-10, -8 + breathe * 0.3);
+    ctx.lineTo(-10, 12 + breathe * 0.2);
+    ctx.moveTo(10, -8 + breathe * 0.3);
+    ctx.lineTo(10, 12 + breathe * 0.2);
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    // ── ARMS ──
+    ctx.fillStyle = '#DDAA88';
+    // Left arm
+    ctx.beginPath();
+    ctx.moveTo(-10, -4 + breathe * 0.3);
+    ctx.quadraticCurveTo(-18, 4, -15, 14 + breathe * 0.3);
+    ctx.lineTo(-12, 14 + breathe * 0.3);
+    ctx.quadraticCurveTo(-14, 5, -7, -2 + breathe * 0.3);
+    ctx.closePath();
+    ctx.fill();
+    // Right arm (raised slightly — welcoming gesture)
+    ctx.beginPath();
+    ctx.moveTo(10, -4 + breathe * 0.3);
+    ctx.quadraticCurveTo(20, -8 + breathe, 18, 4 + breathe * 0.3);
+    ctx.lineTo(15, 5 + breathe * 0.3);
+    ctx.quadraticCurveTo(16, -4, 7, -1 + breathe * 0.3);
+    ctx.closePath();
+    ctx.fill();
+
+    // Hands
+    ctx.fillStyle = '#DDAA88';
+    ctx.beginPath();
+    ctx.arc(-14, 15 + breathe * 0.3, 3, 0, Math.PI * 2);
+    ctx.arc(18, 4 + breathe * 0.3, 3, 0, Math.PI * 2);
+    ctx.fill();
+
+    // ── NECK ──
+    ctx.fillStyle = '#DDAA88';
+    ctx.fillRect(-3, -13, 6, 7);
+
+    // ── HEAD ──
+    const headG = ctx.createRadialGradient(-3, -22, 2, 0, -20, 11);
+    headG.addColorStop(0, '#FFE4C4');
+    headG.addColorStop(1, '#D4916A');
+    ctx.fillStyle = headG;
+    ctx.beginPath();
+    ctx.arc(0, -20, 11, 0, Math.PI * 2);
+    ctx.fill();
+
+    // ── HAIR — long, flowing ──
+    // Back layer (darker)
+    ctx.fillStyle = '#1a0030';
+    ctx.beginPath();
+    ctx.ellipse(0, -22, 12, 13, 0, 0, Math.PI * 2);
+    ctx.fill();
+    // Side strands
+    ctx.fillStyle = '#2a0050';
+    ctx.beginPath();
+    ctx.moveTo(-11, -26);
+    ctx.quadraticCurveTo(-18, -10, -14, 8);
+    ctx.lineTo(-10, 8);
+    ctx.quadraticCurveTo(-14, -8, -9, -24);
+    ctx.closePath();
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(11, -26);
+    ctx.quadraticCurveTo(18, -10, 14, 8);
+    ctx.lineTo(10, 8);
+    ctx.quadraticCurveTo(14, -8, 9, -24);
+    ctx.closePath();
+    ctx.fill();
+    // Top hair with purple highlight
+    ctx.fillStyle = '#3a0060';
+    ctx.beginPath();
+    ctx.arc(0, -24, 10, Math.PI, 0);
+    ctx.fill();
+    // Hair shimmer
+    const hs = Math.sin(t * 2) * 0.5 + 0.5;
+    ctx.fillStyle = `rgba(200,100,255,${0.15 + hs * 0.2})`;
+    ctx.beginPath();
+    ctx.arc(-2, -27, 6, Math.PI * 1.1, Math.PI * 1.9);
+    ctx.fill();
+
+    // ── FACE ──
+    // Eyes — almond shaped, dramatic
+    for (const [ex, ey] of [[-4, -21], [4, -21]]) {
+      // Eye white
+      ctx.fillStyle = '#FFF';
+      ctx.beginPath();
+      ctx.ellipse(ex, ey, 3, 2, 0, 0, Math.PI * 2);
+      ctx.fill();
+      // Iris — purple/pink
+      ctx.fillStyle = this.color;
+      ctx.shadowColor = this.color;
+      ctx.shadowBlur = 4;
+      ctx.beginPath();
+      ctx.ellipse(ex, ey, 1.8, 1.8, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      // Pupil
+      ctx.fillStyle = '#000';
+      ctx.beginPath();
+      ctx.arc(ex, ey, 0.9, 0, Math.PI * 2);
+      ctx.fill();
+      // Lash line
+      ctx.strokeStyle = '#1a001a';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(ex - 3, ey - 1);
+      ctx.lineTo(ex + 3, ey - 1);
+      ctx.stroke();
+    }
+    // Eyebrows
+    ctx.strokeStyle = '#2a0040';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(-6, -24); ctx.quadraticCurveTo(-4, -25.5, -2, -24);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(2, -24); ctx.quadraticCurveTo(4, -25.5, 6, -24);
+    ctx.stroke();
+    // Lips — pink
+    ctx.fillStyle = '#FF6699';
+    ctx.shadowColor = '#FF4488';
+    ctx.shadowBlur = 4;
+    ctx.beginPath();
+    ctx.ellipse(0, -16, 3.5, 1.8, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    // Blush
+    ctx.fillStyle = 'rgba(255,100,150,0.18)';
+    ctx.beginPath();
+    ctx.ellipse(-5, -18, 3, 2, 0, 0, Math.PI * 2);
+    ctx.ellipse(5, -18, 3, 2, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // ── NAME BADGE (chest) ──
+    ctx.fillStyle = 'rgba(0,0,0,0.75)';
+    ctx.beginPath();
+    ctx.roundRect(-12, 0, 24, 9, 2);
+    ctx.fill();
+    ctx.fillStyle = this.color;
+    ctx.shadowColor = this.color;
+    ctx.shadowBlur = 6;
+    ctx.font = 'bold 4px Orbitron, monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('HOSTESS', 0, 7);
+    ctx.shadowBlur = 0;
+
+    ctx.restore();
+
+    // ── FLOATING UI — name tag + [T] prompt ──
+    const pulse = Math.sin(t * 3) * 0.2 + 0.8;
+    ctx.save();
+    // Name badge
+    ctx.fillStyle = 'rgba(0,0,0,0.88)';
+    ctx.shadowColor = this.color;
+    ctx.shadowBlur = 12;
+    ctx.beginPath();
+    ctx.roundRect(this.x + sway - 38, this.y - 58, 76, 16, 4);
+    ctx.fill();
+    ctx.strokeStyle = this.color + 'AA';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.roundRect(this.x + sway - 38, this.y - 58, 76, 16, 4);
+    ctx.stroke();
+    ctx.fillStyle = this.color;
+    ctx.shadowColor = this.color;
+    ctx.shadowBlur = 14;
+    ctx.font = 'bold 8px Orbitron, monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(this.name, this.x + sway, this.y - 46);
+
+    // [T] TALK
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = `rgba(0,0,0,${0.85 + pulse * 0.1})`;
+    ctx.beginPath();
+    ctx.roundRect(this.x + sway - 34, this.y - 82, 68, 21, 6);
+    ctx.fill();
+    ctx.strokeStyle = `rgba(255,100,200,${0.5 + pulse * 0.4})`;
+    ctx.lineWidth = 1.5;
+    ctx.shadowColor = this.color;
+    ctx.shadowBlur = 8 * pulse;
+    ctx.beginPath();
+    ctx.roundRect(this.x + sway - 34, this.y - 82, 68, 21, 6);
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = '#FFDD44';
+    ctx.shadowColor = '#FFAA00';
+    ctx.shadowBlur = 8;
+    ctx.font = 'bold 10px Orbitron, monospace';
+    ctx.fillText('[T] TALK', this.x + sway, this.y - 66);
+    ctx.shadowBlur = 0;
     ctx.restore();
   }
 

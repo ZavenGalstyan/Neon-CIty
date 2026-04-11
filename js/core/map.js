@@ -2440,11 +2440,31 @@ class GameMap {
 
   // ── Indoor room factory ───────────────────────────────────
   getRoom(door) {
-    const RS     = 60;  // indoor tile size (px)
-    const isNeonDealer = this.config.id === 'neon_city' && door.specialType === 'dealership';
-    const isNeonArcade = this.config.id === 'neon_city' && door.bTypeIdx === 4;
-    const layout = isNeonDealer ? ROOM_LAYOUT_DEALER_NEON
-                 : isNeonArcade ? ROOM_LAYOUT_ARCADE_NEON
+    const RS          = 60;  // indoor tile size (px)
+    const isGalactica = !!this.config.galactica;
+    const isNeonDealer  = this.config.id === 'neon_city' && door.specialType === 'dealership';
+    const isGalDealer   = isGalactica && door.specialType === 'dealership';
+    const isNeonArcade  = this.config.id === 'neon_city' && door.bTypeIdx === 4;
+    const isGalArcade   = isGalactica && door.bTypeIdx === 4;
+    const isGalMarket   = isGalactica && door.bTypeIdx === 3;
+    const isGalClub     = isGalactica && door.bTypeIdx === 8;
+    const isGalRest     = isGalactica && (door.bTypeIdx === 0 || door.specialType === 'restaurant');
+    const isGalPharmacy = isGalactica && door.bTypeIdx === 5;
+    const isGalRadio    = isGalactica && door.bTypeIdx === 22;
+    const useLargeDealer = isNeonDealer || isGalDealer;
+    const useLargeArcade = isNeonArcade || isGalArcade;
+    const useLargeMarket = isGalMarket;
+    const useLargeClub   = isGalClub;
+    const useLargeRest   = isGalRest;
+    const useLargePharm  = isGalPharmacy;
+    const useLargeRadio  = isGalRadio;
+    const layout = useLargeDealer ? ROOM_LAYOUT_DEALER_NEON
+                 : useLargeArcade ? ROOM_LAYOUT_ARCADE_NEON
+                 : useLargeMarket ? ROOM_LAYOUT_DEALER_NEON
+                 : useLargeClub   ? ROOM_LAYOUT_ARCADE_NEON
+                 : useLargeRest   ? ROOM_LAYOUT_ARCADE_NEON
+                 : useLargePharm  ? ROOM_LAYOUT_ARCADE_NEON
+                 : useLargeRadio  ? ROOM_LAYOUT_ARCADE_NEON
                  : door.type === 2 ? ROOM_LAYOUT_2 : ROOM_LAYOUT_1;
     const RH     = layout.length;
     const RW     = layout[0].length;
@@ -2452,8 +2472,8 @@ class GameMap {
     const RH_px  = RH * RS;
 
     // Entry X = door gap center of the bottom row
-    const entryX = (isNeonDealer || isNeonArcade)
-      ? ((7 + 10) / 2 + 0.5) * RS   // Neon dealer/arcade: gap cols 7-10 center
+    const entryX = (useLargeDealer || useLargeArcade || useLargeMarket || useLargeClub || useLargeRest || useLargePharm || useLargeRadio)
+      ? ((7 + 10) / 2 + 0.5) * RS   // Large rooms: gap cols 7-10 center
       : door.type === 2
         ? ((6 + 7) / 2 + 0.5) * RS   // gap cols 6-8 center
         : ((4 + 5) / 2 + 0.5) * RS;  // gap cols 4-5 center
