@@ -1435,6 +1435,39 @@ class GameMap {
               if (isColR) ctx.fillRect(wx, wy, 6, S);
               if (isRowR) ctx.fillRect(wx, wy, S, 6);
             }
+          } else if (cfg.zombie) {
+            // Zombie: cracked infected asphalt with green sludge seepage
+            const zseed = (x * 17 + y * 31) % 4;
+            ctx.fillStyle = ['#060c06','#070d07','#050b05','#080e08'][zseed];
+            ctx.fillRect(wx, wy, S, S);
+            // Crumble cracks
+            if ((x * 11 + y * 7) % 3 === 0) {
+              ctx.fillStyle = 'rgba(0,30,0,0.35)';
+              ctx.fillRect(wx + (x * 19) % (S - 2), wy, 1, S);
+            }
+            if ((x * 7 + y * 11) % 4 === 0) {
+              ctx.fillStyle = 'rgba(0,25,0,0.28)';
+              ctx.fillRect(wx, wy + (y * 17) % (S - 2), S, 1);
+            }
+            // Green biohazard seepage pool
+            if ((x * 13 + y * 19) % 7 === 0) {
+              ctx.fillStyle = 'rgba(30,160,50,0.13)';
+              ctx.beginPath(); ctx.ellipse(wx + S * 0.42, wy + S * 0.52, S * 0.22, S * 0.13, 0.4, 0, Math.PI * 2); ctx.fill();
+            }
+            // Blood splash on random tiles
+            if ((x * 17 + y * 23) % 11 === 0) {
+              ctx.fillStyle = 'rgba(110,0,0,0.22)';
+              ctx.beginPath(); ctx.ellipse(wx + S * 0.6, wy + S * 0.38, S * 0.13, S * 0.08, -0.5, 0, Math.PI * 2); ctx.fill();
+            }
+            // Green sludge lane strips
+            if (isColR && !isRowR) {
+              ctx.fillStyle = 'rgba(44,180,60,0.08)';
+              ctx.fillRect(wx + S / 2 - 3, wy, 6, S);
+            }
+            if (isRowR && !isColR) {
+              ctx.fillStyle = 'rgba(44,180,60,0.08)';
+              ctx.fillRect(wx, wy + S / 2 - 3, S, 6);
+            }
           } else if (cfg.galactica) {
             // Galactica: void space lane — deep purple-black with star dust
             ctx.fillStyle = '#04000e';
@@ -1587,6 +1620,30 @@ class GameMap {
             if ((x * 5 + y * 3) % 9 === 0) {
               ctx.fillStyle = '#5a4a3a';
               ctx.fillRect(wx + S/2 - 4, wy + S/2 - 4, 8, 8);
+            }
+          } else if (cfg.zombie) {
+            // Zombie: cracked mossy sidewalk with blood stains and overgrowth
+            const ss = (x * 17 + y * 23) % 3;
+            ctx.fillStyle = ['#0a120a','#0c140c','#091009'][ss];
+            ctx.fillRect(wx, wy, S, S);
+            // Pavement slab joints
+            ctx.fillStyle = 'rgba(0,30,0,0.3)';
+            ctx.fillRect(wx, wy + Math.round(S * 0.5), S, 1);
+            ctx.fillRect(wx + Math.round(S * 0.5), wy, 1, S);
+            // Moss/lichen growth patches
+            if ((x * 7 + y * 11) % 4 === 0) {
+              ctx.fillStyle = 'rgba(30,130,40,0.22)';
+              ctx.beginPath(); ctx.ellipse(wx + S * 0.38, wy + S * 0.52, S * 0.20, S * 0.12, 0.3, 0, Math.PI * 2); ctx.fill();
+            }
+            // Overgrown grass crack
+            if ((x * 11 + y * 7) % 5 === 0) {
+              ctx.fillStyle = 'rgba(44,160,44,0.18)';
+              ctx.fillRect(wx + Math.round(S * 0.25), wy, 2, S);
+            }
+            // Blood stain
+            if ((x * 13 + y * 17) % 13 === 0) {
+              ctx.fillStyle = 'rgba(130,8,8,0.20)';
+              ctx.beginPath(); ctx.ellipse(wx + S * 0.62, wy + S * 0.40, S * 0.14, S * 0.09, -0.5, 0, Math.PI * 2); ctx.fill();
             }
           } else if (cfg.galactica) {
             // Galactica: cosmic platform — dark nebula plates with energy veins
@@ -2096,6 +2153,60 @@ class GameMap {
               ctx.beginPath(); ctx.arc(wx + Math.round(S*0.84), wy + Math.round(S*0.28), 9, 0, Math.PI*2); ctx.fill();
               ctx.globalAlpha = 1;
             }
+          } else if (cfg.zombie) {
+            // Zombie: decayed crumbling infected buildings
+            const bseed = (x * 41 + y * 59) % 6;
+            ctx.fillStyle = ['#091209','#0a140a','#081008','#0b160b','#070e07','#0c1a0c'][bseed];
+            ctx.fillRect(wx, wy, S, S);
+            // Crumbled corner damage
+            ctx.fillStyle = 'rgba(0,0,0,0.32)';
+            if (bseed % 3 === 0)      { ctx.fillRect(wx, wy, Math.round(S * 0.28), Math.round(S * 0.28)); }
+            else if (bseed % 3 === 1) { ctx.fillRect(wx + Math.round(S * 0.72), wy, Math.round(S * 0.28), Math.round(S * 0.28)); }
+            // Mold/decay staining — top portion darker
+            ctx.fillStyle = 'rgba(20,80,20,0.16)';
+            ctx.fillRect(wx + 3, wy + 3, S - 6, Math.round(S * 0.45));
+            // Crack lines
+            if ((x * 7 + y * 11) % 3 === 0) {
+              ctx.fillStyle = 'rgba(0,20,0,0.38)';
+              ctx.fillRect(wx + Math.round(S * 0.38), wy, 2, S);
+            }
+            if ((x * 11 + y * 13) % 4 === 0) {
+              ctx.fillStyle = 'rgba(0,18,0,0.30)';
+              ctx.fillRect(wx, wy + Math.round(S * 0.45), S, 2);
+            }
+            // Biohazard glow bloom on some buildings
+            if ((x * 13 + y * 17) % 5 === 0) {
+              ctx.fillStyle = 'rgba(44,200,60,0.09)';
+              ctx.fillRect(wx + Math.round(S * 0.18), wy + Math.round(S * 0.18), Math.round(S * 0.64), Math.round(S * 0.64));
+            }
+            // Green neon edge glow
+            ctx.strokeStyle = cfg.neonColors[(x + y) % cfg.neonColors.length] + '55';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(wx + 2, wy + 2, S - 4, S - 4);
+            // Broken + dim windows
+            for (let wy2 = 0; wy2 < 2; wy2++) {
+              for (let wx2 = 0; wx2 < 2; wx2++) {
+                if (Math.sin(x * 5.7 + y * 3.3 + wx2 * 7 + wy2 * 11) > 0.15) {
+                  const broken = (x + y + wx2 + wy2) % 3 === 0;
+                  ctx.fillStyle = broken ? 'rgba(0,0,0,0.85)' : cfg.windowColors[(x * 3 + y * 7) % cfg.windowColors.length] + '44';
+                  ctx.fillRect(wx + 12 + wx2 * 22, wy + 12 + wy2 * 22, 8, 6);
+                  if (broken) {
+                    ctx.fillStyle = 'rgba(44,200,60,0.20)';
+                    ctx.fillRect(wx + 12 + wx2 * 22 + 3, wy + 12 + wy2 * 22, 1, 6);
+                    ctx.fillRect(wx + 12 + wx2 * 22, wy + 12 + wy2 * 22 + 3, 8, 1);
+                  }
+                }
+              }
+            }
+            // Biohazard circle emblem on rarer buildings
+            if ((x * 13 + y * 19) % 7 === 0) {
+              ctx.globalAlpha = 0.22;
+              ctx.fillStyle = '#44FF88';
+              ctx.beginPath(); ctx.arc(wx + S * 0.5, wy + S * 0.52, S * 0.12, 0, Math.PI * 2); ctx.fill();
+              ctx.globalAlpha = 0.10;
+              ctx.beginPath(); ctx.arc(wx + S * 0.5, wy + S * 0.52, S * 0.22, 0, Math.PI * 2); ctx.fill();
+              ctx.globalAlpha = 1;
+            }
           } else if (cfg.id === 'neon_city') {
             // Neon City: Varied 2D building shapes with cyberpunk style
             const bseed = (x * 41 + y * 59) % 8;
@@ -2208,7 +2319,7 @@ class GameMap {
 
           // Windows (not in robot/jungle/desert/neon_city) — no shadowBlur for performance
           // Neon City has custom windows in the building shapes above
-          if (!cfg.robot && !cfg.jungle && !cfg.desert && !cfg.galactica && cfg.id !== 'neon_city' && this.buildingWindows[y][x]) {
+          if (!cfg.robot && !cfg.jungle && !cfg.desert && !cfg.galactica && !cfg.zombie && cfg.id !== 'neon_city' && this.buildingWindows[y][x]) {
             const wc = cfg.windowColors[(Math.floor(x/2) + Math.floor(y/2)) % cfg.windowColors.length];
             ctx.fillStyle = wc + 'CC';
             for (let wy2 = 0; wy2 < 2; wy2++) {
@@ -2221,7 +2332,7 @@ class GameMap {
           }
           // Neon sign strips (not in robot/jungle/desert/neon_city) — no shadowBlur for performance
           // Neon City has custom neon effects in building shapes
-          if (!cfg.robot && !cfg.jungle && !cfg.desert && !cfg.galactica && cfg.id !== 'neon_city' && (x + y) % cfg.neonFreq === 0) {
+          if (!cfg.robot && !cfg.jungle && !cfg.desert && !cfg.galactica && !cfg.zombie && cfg.id !== 'neon_city' && (x + y) % cfg.neonFreq === 0) {
             const nc = cfg.neonColors[(x * 3 + y) % cfg.neonColors.length];
             ctx.globalAlpha = 0.65;
             ctx.strokeStyle = nc; ctx.lineWidth = 2;
@@ -2451,6 +2562,7 @@ class GameMap {
     const isGalRest     = isGalactica && (door.bTypeIdx === 0 || door.specialType === 'restaurant');
     const isGalPharmacy = isGalactica && door.bTypeIdx === 5;
     const isGalRadio    = isGalactica && door.bTypeIdx === 22;
+    const isZombieMap   = !!this.config.zombie;
     const useLargeDealer = isNeonDealer || isGalDealer;
     const useLargeArcade = isNeonArcade || isGalArcade;
     const useLargeMarket = isGalMarket;
@@ -2458,6 +2570,9 @@ class GameMap {
     const useLargeRest   = isGalRest;
     const useLargePharm  = isGalPharmacy;
     const useLargeRadio  = isGalRadio;
+    // All zombie buildings use the large arcade layout (1080×840)
+    const useLargeZombie = isZombieMap;
+    const useLarge = useLargeDealer || useLargeArcade || useLargeMarket || useLargeClub || useLargeRest || useLargePharm || useLargeRadio || useLargeZombie;
     const layout = useLargeDealer ? ROOM_LAYOUT_DEALER_NEON
                  : useLargeArcade ? ROOM_LAYOUT_ARCADE_NEON
                  : useLargeMarket ? ROOM_LAYOUT_DEALER_NEON
@@ -2465,6 +2580,7 @@ class GameMap {
                  : useLargeRest   ? ROOM_LAYOUT_ARCADE_NEON
                  : useLargePharm  ? ROOM_LAYOUT_ARCADE_NEON
                  : useLargeRadio  ? ROOM_LAYOUT_ARCADE_NEON
+                 : useLargeZombie ? ROOM_LAYOUT_ARCADE_NEON
                  : door.type === 2 ? ROOM_LAYOUT_2 : ROOM_LAYOUT_1;
     const RH     = layout.length;
     const RW     = layout[0].length;
@@ -2472,7 +2588,7 @@ class GameMap {
     const RH_px  = RH * RS;
 
     // Entry X = door gap center of the bottom row
-    const entryX = (useLargeDealer || useLargeArcade || useLargeMarket || useLargeClub || useLargeRest || useLargePharm || useLargeRadio)
+    const entryX = useLarge
       ? ((7 + 10) / 2 + 0.5) * RS   // Large rooms: gap cols 7-10 center
       : door.type === 2
         ? ((6 + 7) / 2 + 0.5) * RS   // gap cols 6-8 center
