@@ -3730,7 +3730,22 @@ class Bot {
       targetX = this._patrolTarget.x; targetY = this._patrolTarget.y;
     }
 
-    const minAttackDist = this.type === 'mini' ? 0 : this._cfg.keepDistance ? this._cfg.keepDistance : 75;
+    // Minimum distance prevents enemies from overlapping with player
+    const playerRadius = 14;
+    const minSeparation = this.radius + playerRadius + 8; // Keep a small gap
+    const minAttackDist = this._cfg.keepDistance ? this._cfg.keepDistance : Math.max(minSeparation, 45);
+
+    // Push away if too close to player (collision prevention)
+    if (dist < minSeparation && dist > 0) {
+      const pushDx = this.x - player.x, pushDy = this.y - player.y;
+      const pushD = Math.hypot(pushDx, pushDy) || 1;
+      const pushAmount = (minSeparation - dist) * 0.5;
+      const newX = this.x + (pushDx / pushD) * pushAmount;
+      const newY = this.y + (pushDy / pushD) * pushAmount;
+      if (!gameMap.isBlockedCircle(newX, this.y, this.radius - 2)) this.x = newX;
+      if (!gameMap.isBlockedCircle(this.x, newY, this.radius - 2)) this.y = newY;
+    }
+
     // Sniper backs away when player gets too close
     if (this._cfg.keepDistance && this.state === BOT_STATE.ATTACK && dist < this._cfg.keepDistance) {
       const dx = this.x - player.x, dy = this.y - player.y;

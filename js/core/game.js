@@ -306,6 +306,9 @@ class Game {
       } else if (this.state === "shop") {
         e.preventDefault();
         this.shop.handleScroll(e.deltaY);
+      } else if (this.state === "carshop") {
+        e.preventDefault();
+        this._dealership.handleScroll(e.deltaY);
       }
     };
     this.canvas.addEventListener("wheel", this._wheelHandler, {
@@ -2127,123 +2130,165 @@ class Game {
 
     // ── Floor-specific accent color per floor ──────────────
     const FLOOR_COLORS = [
-      '#FFD700', // 0 unused
-      '#E8D8B0', // 1 Grand Lobby
-      '#FFCC00', // 2 Parking Garage
-      '#CC8844', // 3 Corporate Offices
-      '#00CCFF', // 4 Data Center
-      '#FF6666', // 5 Velvet Lounge
-      '#FF4444', // 6 Tactical Ops
-      '#44FF88', // 7 Bio-Research Lab
-      '#FF8844', // 8 Weapons Armory
-      '#BB88FF', // 9 Executive Suite
-      '#FFD700', // 10 The Penthouse
+      "#FFD700", // 0 unused
+      "#E8D8B0", // 1 Grand Lobby
+      "#FFCC00", // 2 Parking Garage
+      "#CC8844", // 3 Corporate Offices
+      "#00CCFF", // 4 Data Center
+      "#FF6666", // 5 Velvet Lounge
+      "#FF4444", // 6 Tactical Ops
+      "#44FF88", // 7 Bio-Research Lab
+      "#FF8844", // 8 Weapons Armory
+      "#BB88FF", // 9 Executive Suite
+      "#FFD700", // 10 The Penthouse
     ];
-    const flCol = FLOOR_COLORS[Math.min(fl, 10)] || '#FFD700';
-    const pulse  = Math.sin(t * 2.5) * 0.18 + 0.82;
+    const flCol = FLOOR_COLORS[Math.min(fl, 10)] || "#FFD700";
+    const pulse = Math.sin(t * 2.5) * 0.18 + 0.82;
 
     // ── Main floor panel — top-center ─────────────────────
-    const panW = 320, panH = 72, panX = W/2 - panW/2, panY = 12;
+    const panW = 320,
+      panH = 72,
+      panX = W / 2 - panW / 2,
+      panY = 12;
 
     // Panel drop shadow
-    ctx.fillStyle = 'rgba(0,0,0,0.40)';
-    ctx.beginPath(); ctx.roundRect(panX+3, panY+3, panW, panH, 10); ctx.fill();
+    ctx.fillStyle = "rgba(0,0,0,0.40)";
+    ctx.beginPath();
+    ctx.roundRect(panX + 3, panY + 3, panW, panH, 10);
+    ctx.fill();
 
     // Panel body
-    ctx.fillStyle = 'rgba(8,6,4,0.88)';
-    ctx.beginPath(); ctx.roundRect(panX, panY, panW, panH, 10); ctx.fill();
+    ctx.fillStyle = "rgba(8,6,4,0.88)";
+    ctx.beginPath();
+    ctx.roundRect(panX, panY, panW, panH, 10);
+    ctx.fill();
 
     // Colored top accent bar
     ctx.fillStyle = flCol;
     ctx.globalAlpha = 0.85;
-    ctx.beginPath(); ctx.roundRect(panX, panY, panW, 3, [10,10,0,0]); ctx.fill();
+    ctx.beginPath();
+    ctx.roundRect(panX, panY, panW, 3, [10, 10, 0, 0]);
+    ctx.fill();
     ctx.globalAlpha = 1;
 
     // Border
     ctx.strokeStyle = `${flCol}55`;
     ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.roundRect(panX, panY, panW, panH, 10); ctx.stroke();
+    ctx.beginPath();
+    ctx.roundRect(panX, panY, panW, panH, 10);
+    ctx.stroke();
 
     // "THE TOWER" label
-    ctx.font = 'bold 9px monospace';
-    ctx.textAlign = 'center';
+    ctx.font = "bold 9px monospace";
+    ctx.textAlign = "center";
     ctx.fillStyle = `${flCol}99`;
-    ctx.letterSpacing = '0.3em';
-    ctx.fillText('◈  THE TOWER  ◈', W/2, panY + 17);
-    ctx.letterSpacing = '0';
+    ctx.letterSpacing = "0.3em";
+    ctx.fillText("◈  THE TOWER  ◈", W / 2, panY + 17);
+    ctx.letterSpacing = "0";
 
     // Floor number (large, glowing)
-    ctx.font = 'bold 28px monospace';
+    ctx.font = "bold 28px monospace";
     ctx.fillStyle = flCol;
     ctx.shadowColor = flCol;
     ctx.shadowBlur = 14 * pulse;
-    ctx.fillText(`FLOOR  ${fl}  /  10`, W/2, panY + 47);
+    ctx.fillText(`FLOOR  ${fl}  /  10`, W / 2, panY + 47);
     ctx.shadowBlur = 0;
 
     // Subtitle (floor name)
     const sub = this._towerFloorSubtitle(fl);
-    ctx.font = '10px monospace';
-    ctx.fillStyle = 'rgba(255,255,255,0.38)';
-    ctx.fillText(sub, W/2, panY + 64);
+    ctx.font = "10px monospace";
+    ctx.fillStyle = "rgba(255,255,255,0.38)";
+    ctx.fillText(sub, W / 2, panY + 64);
 
     // ── Enemy count pill — below main panel ───────────────
-    const alive = this.bots.filter(b => !b.dead && !b.dying).length
-                + (this.boss && !this.boss.dead && !this.boss.dying ? 1 : 0);
+    const alive =
+      this.bots.filter((b) => !b.dead && !b.dying).length +
+      (this.boss && !this.boss.dead && !this.boss.dying ? 1 : 0);
 
-    const pillW = 200, pillH = 26, pillX = W/2 - pillW/2, pillY = panY + panH + 6;
-    ctx.fillStyle = alive > 0 ? 'rgba(255,60,40,0.15)' : 'rgba(40,255,120,0.12)';
-    ctx.beginPath(); ctx.roundRect(pillX, pillY, pillW, pillH, 13); ctx.fill();
-    ctx.strokeStyle = alive > 0 ? 'rgba(255,80,40,0.35)' : 'rgba(40,255,120,0.30)';
+    const pillW = 200,
+      pillH = 26,
+      pillX = W / 2 - pillW / 2,
+      pillY = panY + panH + 6;
+    ctx.fillStyle =
+      alive > 0 ? "rgba(255,60,40,0.15)" : "rgba(40,255,120,0.12)";
+    ctx.beginPath();
+    ctx.roundRect(pillX, pillY, pillW, pillH, 13);
+    ctx.fill();
+    ctx.strokeStyle =
+      alive > 0 ? "rgba(255,80,40,0.35)" : "rgba(40,255,120,0.30)";
     ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.roundRect(pillX, pillY, pillW, pillH, 13); ctx.stroke();
+    ctx.beginPath();
+    ctx.roundRect(pillX, pillY, pillW, pillH, 13);
+    ctx.stroke();
 
-    ctx.font = 'bold 10px monospace';
-    ctx.textAlign = 'center';
-    ctx.fillStyle = alive > 0 ? '#FF8866' : '#44FF88';
-    if (alive === 0) { ctx.shadowColor = '#44FF88'; ctx.shadowBlur = 8; }
+    ctx.font = "bold 10px monospace";
+    ctx.textAlign = "center";
+    ctx.fillStyle = alive > 0 ? "#FF8866" : "#44FF88";
+    if (alive === 0) {
+      ctx.shadowColor = "#44FF88";
+      ctx.shadowBlur = 8;
+    }
     ctx.fillText(
-      alive > 0 ? `☠  ${alive} ENEMIES REMAINING` : '✓  ALL CLEARED!',
-      W/2, pillY + 17
+      alive > 0 ? `☠  ${alive} ENEMIES REMAINING` : "✓  ALL CLEARED!",
+      W / 2,
+      pillY + 17,
     );
     ctx.shadowBlur = 0;
 
     // ── Floor progress dots ────────────────────────────────
-    const dotR = 5, dotGap = 16, dotsW = 10 * dotGap;
-    const dotStartX = W/2 - dotsW/2 + dotR;
+    const dotR = 5,
+      dotGap = 16,
+      dotsW = 10 * dotGap;
+    const dotStartX = W / 2 - dotsW / 2 + dotR;
     for (let i = 1; i <= 10; i++) {
-      const dx = dotStartX + (i-1)*dotGap;
+      const dx = dotStartX + (i - 1) * dotGap;
       const dy = panY + panH + 40;
       if (i < fl) {
         ctx.fillStyle = `${flCol}88`;
-        ctx.beginPath(); ctx.arc(dx, dy, dotR, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath();
+        ctx.arc(dx, dy, dotR, 0, Math.PI * 2);
+        ctx.fill();
       } else if (i === fl) {
         ctx.fillStyle = flCol;
-        ctx.shadowColor = flCol; ctx.shadowBlur = 10;
-        ctx.beginPath(); ctx.arc(dx, dy, dotR+1, 0, Math.PI*2); ctx.fill();
+        ctx.shadowColor = flCol;
+        ctx.shadowBlur = 10;
+        ctx.beginPath();
+        ctx.arc(dx, dy, dotR + 1, 0, Math.PI * 2);
+        ctx.fill();
         ctx.shadowBlur = 0;
       } else {
-        ctx.fillStyle = 'rgba(255,255,255,0.12)';
-        ctx.beginPath(); ctx.arc(dx, dy, dotR-1, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = "rgba(255,255,255,0.12)";
+        ctx.beginPath();
+        ctx.arc(dx, dy, dotR - 1, 0, Math.PI * 2);
+        ctx.fill();
       }
     }
 
     // ── Elevator active: dramatic pulsing banner ───────────
     if (this._towerElevatorActive) {
       const ep = Math.sin(t * 3.5) * 0.22 + 0.78;
-      const bW = 300, bH = 36, bX = W/2 - bW/2, bY = H - 60;
+      const bW = 300,
+        bH = 36,
+        bX = W / 2 - bW / 2,
+        bY = H - 60;
 
       ctx.fillStyle = `rgba(0,0,0,${ep * 0.6})`;
-      ctx.beginPath(); ctx.roundRect(bX, bY, bW, bH, 18); ctx.fill();
+      ctx.beginPath();
+      ctx.roundRect(bX, bY, bW, bH, 18);
+      ctx.fill();
       ctx.strokeStyle = `rgba(0,255,136,${ep * 0.55})`;
       ctx.lineWidth = 1.5;
-      ctx.beginPath(); ctx.roundRect(bX, bY, bW, bH, 18); ctx.stroke();
+      ctx.beginPath();
+      ctx.roundRect(bX, bY, bW, bH, 18);
+      ctx.stroke();
 
-      ctx.font = 'bold 14px monospace';
-      ctx.textAlign = 'center';
+      ctx.font = "bold 14px monospace";
+      ctx.textAlign = "center";
       ctx.globalAlpha = ep;
-      ctx.fillStyle = '#00FF88';
-      ctx.shadowColor = '#00FF88'; ctx.shadowBlur = 18;
-      ctx.fillText('▲  ENTER ELEVATOR  ▲', W/2, bY + 24);
+      ctx.fillStyle = "#00FF88";
+      ctx.shadowColor = "#00FF88";
+      ctx.shadowBlur = 18;
+      ctx.fillText("▲  ENTER ELEVATOR  ▲", W / 2, bY + 24);
       ctx.shadowBlur = 0;
       ctx.globalAlpha = 1;
     }
@@ -2253,19 +2298,19 @@ class Game {
 
   _towerFloorSubtitle(floor) {
     const subs = [
-      '',
-      'GRAND LOBBY  ·  SECURITY CHECKPOINT',
-      'PARKING GARAGE  ·  SUBLEVEL B2',
-      'CORPORATE OFFICES  ·  3RD FLOOR',
-      'DATA CENTER  ·  SERVER WING',
-      'VELVET LOUNGE  ·  VIP AREA',
-      'TACTICAL OPERATIONS  ·  CLASSIFIED',
-      'BIO-RESEARCH LAB  ·  CONTAINMENT',
-      'WEAPONS ARMORY  ·  RESTRICTED',
-      'EXECUTIVE SUITE  ·  PENTHOUSE ANTECHAMBER',
-      '★  THE PENTHOUSE  ·  FINAL CONFRONTATION  ★',
+      "",
+      "GRAND LOBBY  ·  SECURITY CHECKPOINT",
+      "PARKING GARAGE  ·  SUBLEVEL B2",
+      "CORPORATE OFFICES  ·  3RD FLOOR",
+      "DATA CENTER  ·  SERVER WING",
+      "VELVET LOUNGE  ·  VIP AREA",
+      "TACTICAL OPERATIONS  ·  CLASSIFIED",
+      "BIO-RESEARCH LAB  ·  CONTAINMENT",
+      "WEAPONS ARMORY  ·  RESTRICTED",
+      "EXECUTIVE SUITE  ·  PENTHOUSE ANTECHAMBER",
+      "★  THE PENTHOUSE  ·  FINAL CONFRONTATION  ★",
     ];
-    return subs[Math.min(floor, 10)] || '';
+    return subs[Math.min(floor, 10)] || "";
   }
 
   _renderTowerVictory(ctx, W, H) {
@@ -3295,9 +3340,9 @@ class Game {
           let npcX = room.entryX + 60;
           let npcY = room.entryY - 110;
           if (isNeonCity && bType === 12) {
-            // Pawnshop - position vendor above counter
+            // Pawnshop - position vendor near the counter
             npcX = room.roomW / 2;
-            npcY = room.roomH * 0.38;
+            npcY = room.roomH * 0.48;
           } else if (isNeonCity && bType === 4) {
             // Arcade - position attendant above prize counter
             npcX = room.roomW / 2;
@@ -3662,7 +3707,7 @@ class Game {
     ctx.fillStyle = "#FFFFAA";
     ctx.shadowColor = "#FFFF00";
     ctx.shadowBlur = 10;
-    ctx.fillText("[E] EXIT", room.entryX, room.roomH - 8);
+    ctx.fillText("[E] EXIT", room.roomW / 2, room.roomH - 8);
     ctx.restore();
     ctx.restore();
   }
@@ -6976,207 +7021,438 @@ class Game {
     ctx.save();
     ctx.translate(offX + shake.x, offY + shake.y);
 
+    // ── Ambient underground glow ───────────────────────────────
+    const ambientGrad = ctx.createRadialGradient(room.roomW / 2, room.roomH / 2, 0, room.roomW / 2, room.roomH / 2, room.roomW * 0.7);
+    ambientGrad.addColorStop(0, 'rgba(30,50,80,0.06)');
+    ambientGrad.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = ambientGrad;
+    ctx.fillRect(0, 0, room.roomW, room.roomH);
+
+    const platEdge = 3 * S;
+
     // ── Tile pass ─────────────────────────────────────────────
     for (let ty = 0; ty < room.H; ty++) {
       for (let tx = 0; tx < room.W; tx++) {
-        const t = room.layout[ty][tx];
+        const tile = room.layout[ty][tx];
         const px = tx * S,
           py = ty * S;
-        if (t === 1) {
-          // Concrete wall / ceiling
+        if (tile === 1) {
+          // Concrete wall / ceiling with panel texture
           ctx.fillStyle = "#0d0d18";
           ctx.fillRect(px, py, S, S);
-          ctx.fillStyle = "rgba(255,255,255,0.018)";
+          ctx.fillStyle = "rgba(255,255,255,0.012)";
+          ctx.fillRect(px + 2, py + 2, S - 4, S - 4);
+          ctx.fillStyle = "rgba(255,255,255,0.022)";
           ctx.fillRect(px, py, S, 2);
           ctx.fillRect(px, py, 2, S);
-        } else if (t === 2) {
-          // Bench
-          ctx.fillStyle = "#161622";
+          // Vertical groove on walls
+          if (ty >= 3) {
+            ctx.fillStyle = "rgba(0,0,0,0.25)";
+            ctx.fillRect(px + S / 2 - 1, py, 2, S);
+          }
+        } else if (tile === 2) {
+          // Enhanced bench with metal frame
+          ctx.fillStyle = "#12121c";
           ctx.fillRect(px, py, S, S);
-          ctx.fillStyle = "#263648";
-          ctx.fillRect(px + 5, py + S * 0.28, S - 10, 18);
-          ctx.fillStyle = "#1e2e3e";
-          ctx.fillRect(px + 5, py + S * 0.12, S - 10, S * 0.18);
-          ctx.strokeStyle = "#3a4e62";
-          ctx.lineWidth = 1;
-          ctx.strokeRect(px + 5, py + S * 0.12, S - 10, S * 0.5);
-        } else if (t === 3) {
-          // Train tracks / pit
-          ctx.fillStyle = "#05050e";
-          ctx.fillRect(px, py, S, S);
-          // Cross ties (wooden sleepers)
-          ctx.fillStyle = "#1a1208";
-          for (let ci = 0; ci < 3; ci++)
-            ctx.fillRect(px, py + ci * (S / 3) + 2, S, 7);
-          // Rails (two per tile)
-          ctx.fillStyle = "#3a3a50";
-          ctx.fillRect(px + 7, py, 5, S);
-          ctx.fillRect(px + S - 12, py, 5, S);
-          ctx.fillStyle = "#5a5a70";
-          ctx.fillRect(px + 8, py, 3, S);
-          ctx.fillRect(px + S - 11, py, 3, S);
-        } else {
-          // Platform floor — checkerboard tiles
+          // Bench legs (chrome)
+          ctx.fillStyle = "#3a3a4a";
+          ctx.fillRect(px + 8, py + S * 0.48, 5, S * 0.42);
+          ctx.fillRect(px + S - 13, py + S * 0.48, 5, S * 0.42);
+          ctx.fillStyle = "#4a4a5a";
+          ctx.fillRect(px + 9, py + S * 0.48, 2, S * 0.42);
+          ctx.fillRect(px + S - 12, py + S * 0.48, 2, S * 0.42);
+          // Seat (blue plastic)
+          ctx.fillStyle = "#1a4a6a";
+          ctx.fillRect(px + 4, py + S * 0.38, S - 8, 14);
+          ctx.fillStyle = "#2a6a9a";
+          ctx.fillRect(px + 4, py + S * 0.38, S - 8, 4);
+          // Backrest
+          ctx.fillStyle = "#1a4a6a";
+          ctx.fillRect(px + 4, py + S * 0.15, S - 8, 12);
+          ctx.fillStyle = "#2a6a9a";
+          ctx.fillRect(px + 4, py + S * 0.15, S - 8, 3);
+          // Armrests
+          ctx.fillStyle = "#3a4a5a";
+          ctx.fillRect(px + 2, py + S * 0.32, 7, 18);
+          ctx.fillRect(px + S - 9, py + S * 0.32, 7, 18);
+          // Floor under bench
           ctx.fillStyle = (tx + ty) % 2 === 0 ? "#14141f" : "#111019";
+          ctx.fillRect(px, py + S * 0.9, S, S * 0.1);
+        } else if (tile === 3) {
+          // Enhanced train tracks / pit with depth
+          ctx.fillStyle = "#030308";
           ctx.fillRect(px, py, S, S);
-          ctx.fillStyle = "rgba(0,0,0,0.35)";
+          // Gravel bed texture
+          ctx.fillStyle = "#080810";
+          ctx.fillRect(px, py, S, S);
+          for (let gi = 0; gi < 8; gi++) {
+            ctx.fillStyle = `rgba(20,20,30,${0.3 + Math.random() * 0.2})`;
+            ctx.fillRect(px + Math.random() * S, py + Math.random() * S, 3, 3);
+          }
+          // Cross ties (wooden sleepers) with detail
+          for (let ci = 0; ci < 3; ci++) {
+            const tieY = py + ci * (S / 3) + 4;
+            ctx.fillStyle = "#1a1408";
+            ctx.fillRect(px, tieY, S, 9);
+            ctx.fillStyle = "#231a0c";
+            ctx.fillRect(px, tieY, S, 2);
+            ctx.fillStyle = "#0a0804";
+            ctx.fillRect(px, tieY + 7, S, 2);
+            // Bolt marks
+            ctx.fillStyle = "#2a2010";
+            ctx.fillRect(px + 10, tieY + 3, 3, 3);
+            ctx.fillRect(px + S - 13, tieY + 3, 3, 3);
+          }
+          // Rails with 3D effect
+          ctx.fillStyle = "#2a2a40";
+          ctx.fillRect(px + 5, py, 8, S);
+          ctx.fillRect(px + S - 13, py, 8, S);
+          ctx.fillStyle = "#4a4a60";
+          ctx.fillRect(px + 6, py, 5, S);
+          ctx.fillRect(px + S - 12, py, 5, S);
+          ctx.fillStyle = "#6a6a80";
+          ctx.fillRect(px + 7, py, 3, S);
+          ctx.fillRect(px + S - 11, py, 3, S);
+          // Third rail (electric) with glow
+          if (ty === 2) {
+            ctx.fillStyle = "#1a1a28";
+            ctx.fillRect(px + S / 2 - 4, py + S - 10, 8, 8);
+            const pulse = Math.sin(T * 3 + tx * 0.5) * 0.3 + 0.7;
+            ctx.fillStyle = `rgba(80,160,255,${0.25 * pulse})`;
+            ctx.shadowColor = "#4488FF";
+            ctx.shadowBlur = 8 * pulse;
+            ctx.fillRect(px + S / 2 - 3, py + S - 9, 6, 6);
+            ctx.shadowBlur = 0;
+          }
+        } else {
+          // Platform floor — polished tile pattern
+          const isDark = (tx + ty) % 2 === 0;
+          ctx.fillStyle = isDark ? "#16161f" : "#121218";
+          ctx.fillRect(px, py, S, S);
+          // Tile edge highlights
+          ctx.fillStyle = "rgba(255,255,255,0.025)";
           ctx.fillRect(px, py, S, 1);
           ctx.fillRect(px, py, 1, S);
+          ctx.fillStyle = "rgba(0,0,0,0.2)";
+          ctx.fillRect(px + S - 1, py, 1, S);
+          ctx.fillRect(px, py + S - 1, S, 1);
+          // Tactile safety strips near edge
+          if (ty === 3 && tx > 0 && tx < room.W - 1) {
+            ctx.fillStyle = "#4a4a30";
+            for (let dot = 0; dot < 4; dot++) {
+              ctx.fillRect(px + 6 + dot * 11, py + S - 9, 7, 7);
+            }
+          }
         }
       }
     }
 
-    // ── Subway train parked at top (rows 1-2) ──────────────────
+    // ── Floor guide lines (walking paths) ──────────────────────
+    ctx.save();
+    ctx.strokeStyle = "rgba(68,238,255,0.06)";
+    ctx.lineWidth = 2;
+    ctx.setLineDash([20, 12]);
+    for (const lineX of [S * 4.5, S * 10, S * 15.5]) {
+      ctx.beginPath();
+      ctx.moveTo(lineX, platEdge + 25);
+      ctx.lineTo(lineX, room.roomH - S - 15);
+      ctx.stroke();
+    }
+    ctx.setLineDash([]);
+    ctx.restore();
+
+    // ── Subtle floor glow strips ───────────────────────────────
+    for (let stripX = S * 2; stripX < room.roomW - S * 2; stripX += S * 3.5) {
+      const glowPulse = Math.sin(T * 1.2 + stripX * 0.008) * 0.3 + 0.7;
+      ctx.fillStyle = `rgba(68,238,255,${0.025 * glowPulse})`;
+      ctx.fillRect(stripX - 25, room.roomH - S - 5, 50, 4);
+    }
+
+    // ── Subway train parked at top ─────────────────────────────
     const trainTop = S,
       trainH = S * 2;
-    // Car shell
-    ctx.fillStyle = "#1c2d3e";
+    // Car shell gradient
+    const trainGrad = ctx.createLinearGradient(0, trainTop, 0, trainTop + trainH);
+    trainGrad.addColorStop(0, "#2a3d4e");
+    trainGrad.addColorStop(0.3, "#1c2d3e");
+    trainGrad.addColorStop(1, "#14222e");
+    ctx.fillStyle = trainGrad;
     ctx.fillRect(0, trainTop, room.roomW, trainH);
     // Body panel
     ctx.fillStyle = "#253848";
-    ctx.fillRect(3, trainTop + 5, room.roomW - 6, trainH - 10);
-    // Windows (warm glow)
+    ctx.fillRect(3, trainTop + 5, room.roomW - 6, trainH - 12);
+    // Roof detail
+    ctx.fillStyle = "#1a2838";
+    ctx.fillRect(0, trainTop, room.roomW, 6);
+    // Windows with interior
     const numWin = Math.floor(room.roomW / 78);
     for (let wi = 0; wi < numWin; wi++) {
       const wx2 = 18 + wi * 78;
+      ctx.fillStyle = "#1a2028";
+      ctx.fillRect(wx2 - 2, trainTop + 7, 50, 30);
       ctx.fillStyle = "#3a2a10";
       ctx.fillRect(wx2, trainTop + 9, 46, 26);
-      ctx.fillStyle = "rgba(255,215,100,0.72)";
+      const winFlick = Math.sin(T * 0.4 + wi * 0.7) > -0.2 ? 1 : 0.8;
+      ctx.fillStyle = `rgba(255,215,100,${0.75 * winFlick})`;
       ctx.fillRect(wx2 + 2, trainTop + 11, 42, 22);
-      ctx.fillStyle = "rgba(255,255,255,0.1)";
-      ctx.fillRect(wx2 + 2, trainTop + 11, 12, 9);
+      ctx.fillStyle = "rgba(255,255,255,0.12)";
+      ctx.fillRect(wx2 + 2, trainTop + 11, 14, 10);
+      // Passenger silhouettes
+      ctx.fillStyle = "rgba(0,0,0,0.12)";
+      ctx.fillRect(wx2 + 20, trainTop + 18, 8, 12);
+      if (wi % 2 === 0) ctx.fillRect(wx2 + 32, trainTop + 16, 6, 14);
     }
-    // Blue stripe
-    ctx.fillStyle = "#0044AA";
+    // Blue stripe with glow
+    ctx.fillStyle = "#0055CC";
+    ctx.shadowColor = "#0088FF";
+    ctx.shadowBlur = 10;
     ctx.fillRect(0, trainTop + trainH - 14, room.roomW, 8);
+    ctx.shadowBlur = 0;
     // Door openings
     for (const dx of [room.roomW * 0.22, room.roomW * 0.5, room.roomW * 0.78]) {
-      ctx.fillStyle = "#080c14";
-      ctx.fillRect(dx - 18, trainTop + 5, 36, trainH - 10);
-      // door frame
-      ctx.strokeStyle = "#224466";
-      ctx.lineWidth = 1.5;
-      ctx.strokeRect(dx - 18, trainTop + 5, 36, trainH - 10);
+      ctx.fillStyle = "#060a10";
+      ctx.fillRect(dx - 20, trainTop + 4, 40, trainH - 8);
+      ctx.fillStyle = "rgba(255,200,100,0.08)";
+      ctx.fillRect(dx - 18, trainTop + 6, 36, trainH - 12);
+      ctx.strokeStyle = "#3a5570";
+      ctx.lineWidth = 2;
+      ctx.strokeRect(dx - 20, trainTop + 4, 40, trainH - 8);
+      // Door handles
+      ctx.fillStyle = "#5a6a7a";
+      ctx.fillRect(dx - 3, trainTop + trainH / 2, 6, 14);
     }
     // Headlight flicker
     const flickOn = Math.sin(T * 2.4) > 0.3;
     if (flickOn) {
-      ctx.fillStyle = "rgba(180,220,255,0.18)";
-      ctx.fillRect(0, trainTop, room.roomW * 0.12, trainH);
-      ctx.fillRect(room.roomW * 0.88, trainTop, room.roomW * 0.12, trainH);
+      ctx.fillStyle = "rgba(180,220,255,0.12)";
+      ctx.fillRect(0, trainTop, room.roomW * 0.08, trainH);
+      ctx.fillRect(room.roomW * 0.92, trainTop, room.roomW * 0.08, trainH);
     }
+    // Destination sign
+    ctx.fillStyle = "#000a10";
+    ctx.fillRect(room.roomW / 2 - 58, trainTop + 2, 116, 17);
+    ctx.fillStyle = "#FF8800";
+    ctx.shadowColor = "#FF6600";
+    ctx.shadowBlur = 8;
+    ctx.font = "bold 10px Orbitron, monospace";
+    ctx.textAlign = "center";
+    ctx.fillText("DOWNTOWN EXPRESS", room.roomW / 2, trainTop + 14);
+    ctx.shadowBlur = 0;
     // Car number
     ctx.fillStyle = "#FFFFFF";
-    ctx.font = "bold 13px monospace";
-    ctx.textAlign = "center";
-    ctx.fillText(
-      "LINE 1 · NEON CITY METRO",
-      room.roomW / 2,
-      trainTop + trainH - 2,
-    );
+    ctx.font = "bold 11px monospace";
+    ctx.fillText("LINE 1 · NEON CITY METRO", room.roomW / 2, trainTop + trainH - 3);
 
-    // ── Platform edge yellow safety stripe ─────────────────────
-    const platEdge = 3 * S;
+    // ── Platform edge safety stripe ────────────────────────────
     ctx.fillStyle = "#FFCC00";
-    ctx.shadowColor = "#FFCC00";
-    ctx.shadowBlur = 10;
-    ctx.fillRect(0, platEdge - 7, room.roomW, 7);
+    ctx.shadowColor = "#FFAA00";
+    ctx.shadowBlur = 14;
+    ctx.fillRect(0, platEdge - 8, room.roomW, 8);
     ctx.shadowBlur = 0;
+    // Hazard diagonal stripes
     ctx.fillStyle = "#1a0a00";
+    for (let hx = -8; hx < room.roomW; hx += 16) {
+      ctx.beginPath();
+      ctx.moveTo(hx, platEdge - 8);
+      ctx.lineTo(hx + 8, platEdge - 8);
+      ctx.lineTo(hx + 16, platEdge);
+      ctx.lineTo(hx + 8, platEdge);
+      ctx.closePath();
+      ctx.fill();
+    }
+    // Caution text
+    ctx.fillStyle = "#1a0800";
     ctx.font = "bold 5px monospace";
     ctx.textAlign = "left";
-    for (let xi = 0; xi < 10; xi++)
-      ctx.fillText("▲ CAUTION — PLATFORM EDGE ▲", xi * 140, platEdge - 1);
+    for (let xi = 0; xi < 8; xi++)
+      ctx.fillText("▲ CAUTION — PLATFORM EDGE ▲", xi * 135 + 8, platEdge - 1);
 
     // ── Ceiling fluorescent lights ─────────────────────────────
-    for (const lx of [room.roomW * 0.2, room.roomW * 0.5, room.roomW * 0.8]) {
-      const flick = Math.sin(T * 60 + lx) > 0.98 ? 0.3 : 1;
-      ctx.fillStyle = "#0d0d18";
-      ctx.fillRect(lx - 34, 3, 68, 9);
-      ctx.fillStyle = `rgba(200,230,255,${0.92 * flick})`;
-      ctx.shadowColor = "#88BBFF";
-      ctx.shadowBlur = 16 * flick;
-      ctx.fillRect(lx - 30, 5, 60, 5);
+    for (const lx of [room.roomW * 0.12, room.roomW * 0.32, room.roomW * 0.5, room.roomW * 0.68, room.roomW * 0.88]) {
+      const flick = Math.sin(T * 50 + lx * 0.08) > 0.96 ? 0.35 : 1;
+      ctx.fillStyle = "#080810";
+      ctx.fillRect(lx - 30, 2, 60, 11);
+      ctx.fillStyle = `rgba(220,240,255,${0.95 * flick})`;
+      ctx.shadowColor = "#AADDFF";
+      ctx.shadowBlur = 22 * flick;
+      ctx.fillRect(lx - 26, 4, 52, 7);
       ctx.shadowBlur = 0;
-      const cone = ctx.createLinearGradient(0, 12, 0, platEdge);
-      cone.addColorStop(0, `rgba(160,200,255,${0.07 * flick})`);
+      // Light cone
+      const cone = ctx.createLinearGradient(0, 14, 0, platEdge + 60);
+      cone.addColorStop(0, `rgba(180,210,255,${0.055 * flick})`);
+      cone.addColorStop(0.6, `rgba(160,200,255,${0.02 * flick})`);
       cone.addColorStop(1, "rgba(160,200,255,0)");
       ctx.fillStyle = cone;
       ctx.beginPath();
-      ctx.moveTo(lx - 30, 12);
-      ctx.lineTo(lx + 30, 12);
-      ctx.lineTo(lx + 65, platEdge);
-      ctx.lineTo(lx - 65, platEdge);
+      ctx.moveTo(lx - 26, 14);
+      ctx.lineTo(lx + 26, 14);
+      ctx.lineTo(lx + 75, platEdge + 60);
+      ctx.lineTo(lx - 75, platEdge + 60);
       ctx.closePath();
       ctx.fill();
     }
 
-    // ── Concrete pillars ───────────────────────────────────────
-    for (let pi = 2; pi <= room.W - 3; pi += 5) {
-      const pilX = (pi + 0.5) * S;
-      ctx.fillStyle = "#161622";
-      ctx.strokeStyle = "#222230";
-      ctx.lineWidth = 1;
-      ctx.fillRect(pilX - 7, platEdge - 6, 14, room.roomH - platEdge - S);
-      ctx.strokeRect(pilX - 7, platEdge - 6, 14, room.roomH - platEdge - S);
-      ctx.fillStyle = "#202030";
-      ctx.fillRect(pilX - 10, platEdge - 8, 20, 5);
-      // Blue neon stripe on pillar
-      ctx.fillStyle = "#0033AA";
-      ctx.shadowColor = "#0055FF";
-      ctx.shadowBlur = 7;
-      ctx.fillRect(pilX - 2, platEdge, 4, room.roomH - platEdge - S * 1.2);
-      ctx.shadowBlur = 0;
-    }
-
-    // ── Overhead METRO sign ────────────────────────────────────
-    ctx.fillStyle = "#001800";
-    ctx.strokeStyle = "#22FF66";
-    ctx.lineWidth = 1.5;
-    ctx.fillRect(room.roomW / 2 - 72, 0, 144, 19);
-    ctx.strokeRect(room.roomW / 2 - 72, 0, 144, 19);
-    ctx.fillStyle = "#22FF66";
-    ctx.shadowColor = "#22FF66";
-    ctx.shadowBlur = 14;
-    ctx.font = "bold 12px Orbitron, monospace";
-    ctx.textAlign = "center";
-    ctx.fillText("◉  METRO  LINE 1  ◉", room.roomW / 2, 14);
+    // ── Wall neon accent strips ────────────────────────────────
+    const neonPulse = Math.sin(T * 1.8) * 0.25 + 0.75;
+    ctx.fillStyle = `rgba(68,238,255,${0.45 * neonPulse})`;
+    ctx.shadowColor = "#44EEFF";
+    ctx.shadowBlur = 12;
+    ctx.fillRect(3, platEdge + 25, 3, room.roomH - platEdge - S - 35);
+    ctx.fillRect(room.roomW - 6, platEdge + 25, 3, room.roomH - platEdge - S - 35);
     ctx.shadowBlur = 0;
 
-    // EXIT signs on side walls
-    for (const sx2 of [24, room.roomW - 24]) {
-      ctx.fillStyle = "#001800";
-      ctx.fillRect(sx2 - 18, platEdge + 6, 36, 14);
-      ctx.fillStyle = "#22FF44";
-      ctx.shadowColor = "#22FF44";
-      ctx.shadowBlur = 8;
-      ctx.font = "bold 7px monospace";
-      ctx.textAlign = "center";
-      ctx.fillText("EXIT ↓", sx2, platEdge + 16);
+    // ── Concrete pillars with neon ─────────────────────────────
+    for (let pi = 2; pi <= room.W - 3; pi += 4) {
+      const pilX = (pi + 0.5) * S;
+      const pilH = room.roomH - platEdge - S;
+      ctx.fillStyle = "rgba(0,0,0,0.25)";
+      ctx.fillRect(pilX - 5, platEdge - 4, 18, pilH);
+      ctx.fillStyle = "#181828";
+      ctx.fillRect(pilX - 8, platEdge - 6, 16, pilH);
+      ctx.fillStyle = "#222236";
+      ctx.fillRect(pilX - 8, platEdge - 6, 5, pilH);
+      ctx.fillStyle = "#242438";
+      ctx.fillRect(pilX - 12, platEdge - 10, 24, 8);
+      ctx.fillStyle = "#1a1a2a";
+      ctx.fillRect(pilX - 10, room.roomH - S - 6, 20, 6);
+      // Blue neon stripe
+      const stripPulse = Math.sin(T * 2.2 + pi * 0.8) * 0.25 + 0.75;
+      ctx.fillStyle = `rgba(0,100,255,${0.85 * stripPulse})`;
+      ctx.shadowColor = "#0066FF";
+      ctx.shadowBlur = 14 * stripPulse;
+      ctx.fillRect(pilX - 2, platEdge + 12, 4, pilH - 35);
       ctx.shadowBlur = 0;
     }
 
-    // ── Wave counter top-right ────────────────────────────────
+    // ── Advertisement panels (small posters) ────────────────────
+    const ads = [
+      { x: S * 1.5, text: "CYBER", color: "#FF4488" },
+      { x: S * 6.5, text: "NEURO", color: "#44FFAA" },
+      { x: S * 13.5, text: "HOLO", color: "#FF8844" },
+      { x: S * 18.5, text: "SYNTH", color: "#AA88FF" }
+    ];
+    for (const ad of ads) {
+      const adY = platEdge + 42;
+      const adW = 28;
+      const adH = 22;
+      ctx.fillStyle = "#06080c";
+      ctx.fillRect(ad.x - adW / 2, adY, adW, adH);
+      ctx.strokeStyle = ad.color;
+      ctx.lineWidth = 1;
+      ctx.strokeRect(ad.x - adW / 2, adY, adW, adH);
+      const adPulse = Math.sin(T * 1.3 + ad.x * 0.015) * 0.2 + 0.8;
+      ctx.fillStyle = ad.color;
+      ctx.shadowColor = ad.color;
+      ctx.shadowBlur = 6 * adPulse;
+      ctx.font = "bold 6px Orbitron, monospace";
+      ctx.textAlign = "center";
+      ctx.fillText(ad.text, ad.x, adY + 14);
+      ctx.shadowBlur = 0;
+    }
+
+    // ── Destination board (compact) ─────────────────────────────
+    const boardX = room.roomW / 2;
+    const boardY = platEdge + 32;
+    ctx.fillStyle = "#000810";
+    ctx.fillRect(boardX - 65, boardY, 130, 28);
+    ctx.strokeStyle = "#224466";
+    ctx.lineWidth = 1;
+    ctx.strokeRect(boardX - 65, boardY, 130, 28);
+    ctx.fillStyle = "#FFAA00";
+    ctx.shadowColor = "#FF8800";
+    ctx.shadowBlur = 6;
+    ctx.font = "bold 8px Orbitron, monospace";
+    ctx.textAlign = "center";
+    ctx.fillText("NEXT: CENTRAL", boardX, boardY + 11);
+    ctx.fillStyle = "#44FF88";
+    ctx.shadowColor = "#22FF44";
+    ctx.font = "7px Orbitron, monospace";
+    ctx.fillText("2 MIN", boardX, boardY + 22);
+    ctx.shadowBlur = 0;
+
+    // ── Map panel (compact) ────────────────────────────────────
+    const mapX = S * 4.5;
+    const mapY = platEdge + 75;
+    ctx.fillStyle = "#080c18";
+    ctx.fillRect(mapX - 28, mapY, 56, 38);
+    ctx.strokeStyle = "#44EEFF";
+    ctx.lineWidth = 1;
+    ctx.strokeRect(mapX - 28, mapY, 56, 38);
+    ctx.fillStyle = "#44EEFF";
+    ctx.font = "bold 5px monospace";
+    ctx.textAlign = "center";
+    ctx.fillText("MAP", mapX, mapY + 9);
+    // Line representation
+    ctx.strokeStyle = "#FF4466";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(mapX - 20, mapY + 20);
+    ctx.lineTo(mapX + 20, mapY + 20);
+    ctx.stroke();
+    ctx.fillStyle = "#FF4466";
+    ctx.beginPath();
+    ctx.arc(mapX - 12, mapY + 20, 3, 0, Math.PI * 2);
+    ctx.arc(mapX, mapY + 20, 3, 0, Math.PI * 2);
+    ctx.arc(mapX + 12, mapY + 20, 3, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#44FF88";
+    ctx.font = "4px monospace";
+    ctx.fillText("HERE", mapX, mapY + 32);
+    ctx.strokeStyle = "#44FF88";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.arc(mapX, mapY + 20, 5, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // ── Overhead METRO sign ────────────────────────────────────
+    ctx.fillStyle = "#001408";
+    ctx.strokeStyle = "#22FF66";
+    ctx.lineWidth = 2;
+    ctx.fillRect(room.roomW / 2 - 82, 0, 164, 23);
+    ctx.strokeRect(room.roomW / 2 - 82, 0, 164, 23);
+    ctx.fillStyle = "#22FF66";
+    ctx.shadowColor = "#22FF66";
+    ctx.shadowBlur = 18;
+    ctx.font = "bold 13px Orbitron, monospace";
+    ctx.textAlign = "center";
+    ctx.fillText("◉  METRO  LINE 1  ◉", room.roomW / 2, 17);
+    ctx.shadowBlur = 0;
+
+    // EXIT signs
+    for (const sx2 of [30, room.roomW - 30]) {
+      ctx.fillStyle = "#001808";
+      ctx.fillRect(sx2 - 24, platEdge + 5, 48, 19);
+      ctx.strokeStyle = "#22FF44";
+      ctx.lineWidth = 1;
+      ctx.strokeRect(sx2 - 24, platEdge + 5, 48, 19);
+      ctx.fillStyle = "#22FF44";
+      ctx.shadowColor = "#22FF44";
+      ctx.shadowBlur = 12;
+      ctx.font = "bold 9px monospace";
+      ctx.textAlign = "center";
+      ctx.fillText("← EXIT →", sx2, platEdge + 17);
+      ctx.shadowBlur = 0;
+    }
+
+    // ── Wave counter ───────────────────────────────────────────
     const aliveCnt = this._indoorBots.filter((b) => !b.dead && !b.dying).length;
     ctx.fillStyle = "#44FF88";
-    ctx.font = "bold 10px Orbitron, monospace";
+    ctx.font = "bold 11px Orbitron, monospace";
     ctx.textAlign = "right";
     ctx.shadowColor = "#22FF44";
-    ctx.shadowBlur = 8;
-    ctx.fillText(`METRO WAVE ${this._metroWave}`, room.roomW - 8, 14);
+    ctx.shadowBlur = 10;
+    ctx.fillText(`METRO WAVE ${this._metroWave}`, room.roomW - 10, 17);
     if (aliveCnt > 0) {
       ctx.fillStyle = "#FF4444";
-      ctx.fillText(`▼ ${aliveCnt} ENEMY`, room.roomW - 8, 27);
+      ctx.shadowColor = "#FF0000";
+      ctx.fillText(`▼ ${aliveCnt} HOSTILE`, room.roomW - 10, 32);
     } else if (this._metroWaveTimer !== undefined) {
       ctx.fillStyle = "#FFEE44";
-      ctx.fillText(
-        `NEXT WAVE ${Math.ceil(this._metroWaveTimer)}s`,
-        room.roomW - 8,
-        27,
-      );
+      ctx.shadowColor = "#FFAA00";
+      ctx.fillText(`NEXT WAVE ${Math.ceil(this._metroWaveTimer)}s`, room.roomW - 10, 32);
     } else {
       ctx.fillStyle = "#44FF88";
-      ctx.fillText("SECTOR CLEAR", room.roomW - 8, 27);
+      ctx.fillText("SECTOR CLEAR", room.roomW - 10, 32);
     }
     ctx.shadowBlur = 0;
 
@@ -7191,12 +7467,12 @@ class Game {
 
     // ── Exit hint ─────────────────────────────────────────────
     ctx.save();
-    ctx.font = "bold 11px Orbitron, monospace";
+    ctx.font = "bold 12px Orbitron, monospace";
     ctx.textAlign = "center";
     ctx.fillStyle = "#FFFFAA";
     ctx.shadowColor = "#FFFF00";
-    ctx.shadowBlur = 10;
-    ctx.fillText("[E] EXIT METRO", room.entryX, room.roomH - 8);
+    ctx.shadowBlur = 12;
+    ctx.fillText("[E] EXIT METRO", room.roomW / 2, room.roomH - 10);
     ctx.restore();
 
     ctx.restore();
@@ -7594,7 +7870,7 @@ class Game {
       ctx.fillStyle = "#00FFFF";
       ctx.shadowColor = "#00FFFF";
       ctx.shadowBlur = 10;
-      ctx.fillText("[E] EXIT", room.entryX, room.roomH - 25);
+      ctx.fillText("[E] EXIT", room.roomW / 2, room.roomH - 25);
     } else {
       ctx.fillStyle = "#FFFFAA";
       ctx.shadowColor = "#FFFF00";
