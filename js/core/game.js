@@ -306,6 +306,9 @@ class Game {
       } else if (this.state === "shop") {
         e.preventDefault();
         this.shop.handleScroll(e.deltaY);
+      } else if (this.state === "carshop") {
+        e.preventDefault();
+        this._dealership.handleScroll(e.deltaY);
       }
     };
     this.canvas.addEventListener("wheel", this._wheelHandler, {
@@ -1744,14 +1747,61 @@ class Game {
 
     // Neon City: spawn 3 orange vehicles for the player (no other traffic)
     if (isNeonCity) {
+      // Collect positions to avoid (portals, metro entrance, building doors)
+      const avoidPositions = [];
+      const avoidRadius = 120; // Keep cars this far from portals/entrances
+
+      // Add portals to avoid list
+      if (this.map.portals) {
+        for (const portal of this.map.portals) {
+          if (portal && portal.wx !== undefined) {
+            avoidPositions.push({ x: portal.wx, y: portal.wy });
+          }
+        }
+      }
+
+      // Add metro entrance to avoid list
+      if (this.map.metroEntrance) {
+        const me = this.map.metroEntrance;
+        avoidPositions.push({ x: me.wx, y: me.wy });
+      }
+
+      // Add building doors to avoid list
+      if (this.map.doors) {
+        for (const door of this.map.doors) {
+          if (door && door.wx !== undefined) {
+            avoidPositions.push({ x: door.wx, y: door.wy });
+          }
+        }
+      }
+
+      // Helper to check if position is too close to any avoid position
+      const isTooCloseToAvoid = (x, y) => {
+        for (const pos of avoidPositions) {
+          if (Math.hypot(x - pos.x, y - pos.y) < avoidRadius) return true;
+        }
+        return false;
+      };
+
       for (let i = 0; i < 3; i++) {
         let rp;
-        // Try to find a road position not too far from player (but not too close)
-        for (let t = 0; t < 15; t++) {
+        let validPosition = false;
+        // Try to find a road position not near portals/entrances
+        for (let t = 0; t < 30; t++) {
           rp = this.map.randomRoadPos();
-          const dist = Math.hypot(rp.x - this.player.x, rp.y - this.player.y);
-          // Between 150-600 pixels from player for easier finding
-          if (dist > 150 && dist < 600) break;
+          const distFromPlayer = Math.hypot(rp.x - this.player.x, rp.y - this.player.y);
+          // Between 150-600 pixels from player and not near avoid positions
+          if (distFromPlayer > 150 && distFromPlayer < 600 && !isTooCloseToAvoid(rp.x, rp.y)) {
+            validPosition = true;
+            break;
+          }
+        }
+        // Fallback: if no valid position found, still spawn but try to avoid portals
+        if (!validPosition) {
+          for (let t = 0; t < 20; t++) {
+            rp = this.map.randomRoadPos();
+            if (!isTooCloseToAvoid(rp.x, rp.y)) break;
+          }
         }
         const v = new Vehicle(rp.x, rp.y, "#FF8800", this.map.config); // Orange vehicle
         this.vehicles.push(v);
@@ -3347,10 +3397,12 @@ class Game {
           // Special positioning for Neon City / Galactica / Zombie buildings
           let npcX = room.entryX + 60;
           let npcY = room.entryY - 110;
-          if (isSpecialMap && bType === 12) {
+          if (isNeonCity && bType === 12) {
+            // Pawnshop - position vendor near the counter
             npcX = room.roomW / 2;
-            npcY = room.roomH * 0.38;
-          } else if (isSpecialMap && bType === 4) {
+            npcY = room.roomH * 0.48;
+          } else if (isNeonCity && bType === 4) {
+            // Arcade - position attendant above prize counter
             npcX = room.roomW / 2;
             npcY = room.roomH * 0.3;
           } else if (isSpecialMap && bType === 11) {
@@ -3895,6 +3947,10 @@ class Game {
     ctx.save();
     ctx.font = "bold 11px Orbitron, monospace";
     ctx.textAlign = "center";
+    ctx.fillStyle = "#FFFFAA";
+    ctx.shadowColor = "#FFFF00";
+    ctx.shadowBlur = 10;
+    ctx.fillText("[E] EXIT", room.roomW / 2, room.roomH - 8);
     if (_isGalactica) {
       ctx.fillStyle = "#CC99FF";
       ctx.shadowColor = "#AA88FF";
@@ -9792,207 +9848,677 @@ class Game {
     ctx.save();
     ctx.translate(offX + shake.x, offY + shake.y);
 
+    // ── Ambient underground glow ───────────────────────────────
+    const ambientGrad = ctx.createRadialGradient(room.roomW / 2, room.roomH / 2, 0, room.roomW / 2, room.roomH / 2, room.roomW * 0.7);
+    ambientGrad.addColorStop(0, 'rgba(30,50,80,0.06)');
+    ambientGrad.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = ambientGrad;
+    ctx.fillRect(0, 0, room.roomW, room.roomH);
+
+    const platEdge = 3 * S;
+
     // ── Tile pass ─────────────────────────────────────────────
     for (let ty = 0; ty < room.H; ty++) {
       for (let tx = 0; tx < room.W; tx++) {
-        const t = room.layout[ty][tx];
+        const tile = room.layout[ty][tx];
         const px = tx * S,
           py = ty * S;
-        if (t === 1) {
-          // Concrete wall / ceiling
+        if (tile === 1) {
+          // Concrete wall / ceiling with panel texture
           ctx.fillStyle = "#0d0d18";
           ctx.fillRect(px, py, S, S);
-          ctx.fillStyle = "rgba(255,255,255,0.018)";
+          ctx.fillStyle = "rgba(255,255,255,0.012)";
+          ctx.fillRect(px + 2, py + 2, S - 4, S - 4);
+          ctx.fillStyle = "rgba(255,255,255,0.022)";
           ctx.fillRect(px, py, S, 2);
           ctx.fillRect(px, py, 2, S);
-        } else if (t === 2) {
-          // Bench
-          ctx.fillStyle = "#161622";
+          // Vertical groove on walls
+          if (ty >= 3) {
+            ctx.fillStyle = "rgba(0,0,0,0.25)";
+            ctx.fillRect(px + S / 2 - 1, py, 2, S);
+          }
+        } else if (tile === 2) {
+          // Enhanced bench with metal frame
+          ctx.fillStyle = "#12121c";
           ctx.fillRect(px, py, S, S);
-          ctx.fillStyle = "#263648";
-          ctx.fillRect(px + 5, py + S * 0.28, S - 10, 18);
-          ctx.fillStyle = "#1e2e3e";
-          ctx.fillRect(px + 5, py + S * 0.12, S - 10, S * 0.18);
-          ctx.strokeStyle = "#3a4e62";
-          ctx.lineWidth = 1;
-          ctx.strokeRect(px + 5, py + S * 0.12, S - 10, S * 0.5);
-        } else if (t === 3) {
-          // Train tracks / pit
-          ctx.fillStyle = "#05050e";
-          ctx.fillRect(px, py, S, S);
-          // Cross ties (wooden sleepers)
-          ctx.fillStyle = "#1a1208";
-          for (let ci = 0; ci < 3; ci++)
-            ctx.fillRect(px, py + ci * (S / 3) + 2, S, 7);
-          // Rails (two per tile)
-          ctx.fillStyle = "#3a3a50";
-          ctx.fillRect(px + 7, py, 5, S);
-          ctx.fillRect(px + S - 12, py, 5, S);
-          ctx.fillStyle = "#5a5a70";
-          ctx.fillRect(px + 8, py, 3, S);
-          ctx.fillRect(px + S - 11, py, 3, S);
-        } else {
-          // Platform floor — checkerboard tiles
+          // Bench legs (chrome)
+          ctx.fillStyle = "#3a3a4a";
+          ctx.fillRect(px + 8, py + S * 0.48, 5, S * 0.42);
+          ctx.fillRect(px + S - 13, py + S * 0.48, 5, S * 0.42);
+          ctx.fillStyle = "#4a4a5a";
+          ctx.fillRect(px + 9, py + S * 0.48, 2, S * 0.42);
+          ctx.fillRect(px + S - 12, py + S * 0.48, 2, S * 0.42);
+          // Seat (blue plastic)
+          ctx.fillStyle = "#1a4a6a";
+          ctx.fillRect(px + 4, py + S * 0.38, S - 8, 14);
+          ctx.fillStyle = "#2a6a9a";
+          ctx.fillRect(px + 4, py + S * 0.38, S - 8, 4);
+          // Backrest
+          ctx.fillStyle = "#1a4a6a";
+          ctx.fillRect(px + 4, py + S * 0.15, S - 8, 12);
+          ctx.fillStyle = "#2a6a9a";
+          ctx.fillRect(px + 4, py + S * 0.15, S - 8, 3);
+          // Armrests
+          ctx.fillStyle = "#3a4a5a";
+          ctx.fillRect(px + 2, py + S * 0.32, 7, 18);
+          ctx.fillRect(px + S - 9, py + S * 0.32, 7, 18);
+          // Floor under bench
           ctx.fillStyle = (tx + ty) % 2 === 0 ? "#14141f" : "#111019";
+          ctx.fillRect(px, py + S * 0.9, S, S * 0.1);
+        } else if (tile === 3) {
+          // Enhanced train tracks / pit with depth
+          ctx.fillStyle = "#030308";
           ctx.fillRect(px, py, S, S);
-          ctx.fillStyle = "rgba(0,0,0,0.35)";
+          // Gravel bed texture
+          ctx.fillStyle = "#080810";
+          ctx.fillRect(px, py, S, S);
+          for (let gi = 0; gi < 8; gi++) {
+            ctx.fillStyle = `rgba(20,20,30,${0.3 + Math.random() * 0.2})`;
+            ctx.fillRect(px + Math.random() * S, py + Math.random() * S, 3, 3);
+          }
+          // Cross ties (wooden sleepers) with detail
+          for (let ci = 0; ci < 3; ci++) {
+            const tieY = py + ci * (S / 3) + 4;
+            ctx.fillStyle = "#1a1408";
+            ctx.fillRect(px, tieY, S, 9);
+            ctx.fillStyle = "#231a0c";
+            ctx.fillRect(px, tieY, S, 2);
+            ctx.fillStyle = "#0a0804";
+            ctx.fillRect(px, tieY + 7, S, 2);
+            // Bolt marks
+            ctx.fillStyle = "#2a2010";
+            ctx.fillRect(px + 10, tieY + 3, 3, 3);
+            ctx.fillRect(px + S - 13, tieY + 3, 3, 3);
+          }
+          // Rails with 3D effect
+          ctx.fillStyle = "#2a2a40";
+          ctx.fillRect(px + 5, py, 8, S);
+          ctx.fillRect(px + S - 13, py, 8, S);
+          ctx.fillStyle = "#4a4a60";
+          ctx.fillRect(px + 6, py, 5, S);
+          ctx.fillRect(px + S - 12, py, 5, S);
+          ctx.fillStyle = "#6a6a80";
+          ctx.fillRect(px + 7, py, 3, S);
+          ctx.fillRect(px + S - 11, py, 3, S);
+          // Third rail (electric) with glow
+          if (ty === 2) {
+            ctx.fillStyle = "#1a1a28";
+            ctx.fillRect(px + S / 2 - 4, py + S - 10, 8, 8);
+            const pulse = Math.sin(T * 3 + tx * 0.5) * 0.3 + 0.7;
+            ctx.fillStyle = `rgba(80,160,255,${0.25 * pulse})`;
+            ctx.shadowColor = "#4488FF";
+            ctx.shadowBlur = 8 * pulse;
+            ctx.fillRect(px + S / 2 - 3, py + S - 9, 6, 6);
+            ctx.shadowBlur = 0;
+          }
+        } else {
+          // Platform floor — polished tile pattern
+          const isDark = (tx + ty) % 2 === 0;
+          ctx.fillStyle = isDark ? "#16161f" : "#121218";
+          ctx.fillRect(px, py, S, S);
+          // Tile edge highlights
+          ctx.fillStyle = "rgba(255,255,255,0.025)";
           ctx.fillRect(px, py, S, 1);
           ctx.fillRect(px, py, 1, S);
+          ctx.fillStyle = "rgba(0,0,0,0.2)";
+          ctx.fillRect(px + S - 1, py, 1, S);
+          ctx.fillRect(px, py + S - 1, S, 1);
+          // Tactile safety strips near edge
+          if (ty === 3 && tx > 0 && tx < room.W - 1) {
+            ctx.fillStyle = "#4a4a30";
+            for (let dot = 0; dot < 4; dot++) {
+              ctx.fillRect(px + 6 + dot * 11, py + S - 9, 7, 7);
+            }
+          }
         }
       }
     }
 
-    // ── Subway train parked at top (rows 1-2) ──────────────────
+    // ── Floor guide lines (walking paths) ──────────────────────
+    ctx.save();
+    ctx.strokeStyle = "rgba(68,238,255,0.06)";
+    ctx.lineWidth = 2;
+    ctx.setLineDash([20, 12]);
+    for (const lineX of [S * 4.5, S * 10, S * 15.5]) {
+      ctx.beginPath();
+      ctx.moveTo(lineX, platEdge + 25);
+      ctx.lineTo(lineX, room.roomH - S - 15);
+      ctx.stroke();
+    }
+    ctx.setLineDash([]);
+    ctx.restore();
+
+    // ── Subtle floor glow strips ───────────────────────────────
+    for (let stripX = S * 2; stripX < room.roomW - S * 2; stripX += S * 3.5) {
+      const glowPulse = Math.sin(T * 1.2 + stripX * 0.008) * 0.3 + 0.7;
+      ctx.fillStyle = `rgba(68,238,255,${0.025 * glowPulse})`;
+      ctx.fillRect(stripX - 25, room.roomH - S - 5, 50, 4);
+    }
+
+    // ── Subway train parked at top ─────────────────────────────
     const trainTop = S,
       trainH = S * 2;
-    // Car shell
-    ctx.fillStyle = "#1c2d3e";
+    // Car shell gradient
+    const trainGrad = ctx.createLinearGradient(0, trainTop, 0, trainTop + trainH);
+    trainGrad.addColorStop(0, "#2a3d4e");
+    trainGrad.addColorStop(0.3, "#1c2d3e");
+    trainGrad.addColorStop(1, "#14222e");
+    ctx.fillStyle = trainGrad;
     ctx.fillRect(0, trainTop, room.roomW, trainH);
     // Body panel
     ctx.fillStyle = "#253848";
-    ctx.fillRect(3, trainTop + 5, room.roomW - 6, trainH - 10);
-    // Windows (warm glow)
+    ctx.fillRect(3, trainTop + 5, room.roomW - 6, trainH - 12);
+    // Roof detail
+    ctx.fillStyle = "#1a2838";
+    ctx.fillRect(0, trainTop, room.roomW, 6);
+    // Windows with interior
     const numWin = Math.floor(room.roomW / 78);
     for (let wi = 0; wi < numWin; wi++) {
       const wx2 = 18 + wi * 78;
+      ctx.fillStyle = "#1a2028";
+      ctx.fillRect(wx2 - 2, trainTop + 7, 50, 30);
       ctx.fillStyle = "#3a2a10";
       ctx.fillRect(wx2, trainTop + 9, 46, 26);
-      ctx.fillStyle = "rgba(255,215,100,0.72)";
+      const winFlick = Math.sin(T * 0.4 + wi * 0.7) > -0.2 ? 1 : 0.8;
+      ctx.fillStyle = `rgba(255,215,100,${0.75 * winFlick})`;
       ctx.fillRect(wx2 + 2, trainTop + 11, 42, 22);
-      ctx.fillStyle = "rgba(255,255,255,0.1)";
-      ctx.fillRect(wx2 + 2, trainTop + 11, 12, 9);
+      ctx.fillStyle = "rgba(255,255,255,0.12)";
+      ctx.fillRect(wx2 + 2, trainTop + 11, 14, 10);
+      // Passenger silhouettes
+      ctx.fillStyle = "rgba(0,0,0,0.12)";
+      ctx.fillRect(wx2 + 20, trainTop + 18, 8, 12);
+      if (wi % 2 === 0) ctx.fillRect(wx2 + 32, trainTop + 16, 6, 14);
     }
-    // Blue stripe
-    ctx.fillStyle = "#0044AA";
+    // Blue stripe with glow
+    ctx.fillStyle = "#0055CC";
+    ctx.shadowColor = "#0088FF";
+    ctx.shadowBlur = 10;
     ctx.fillRect(0, trainTop + trainH - 14, room.roomW, 8);
+    ctx.shadowBlur = 0;
     // Door openings
     for (const dx of [room.roomW * 0.22, room.roomW * 0.5, room.roomW * 0.78]) {
-      ctx.fillStyle = "#080c14";
-      ctx.fillRect(dx - 18, trainTop + 5, 36, trainH - 10);
-      // door frame
-      ctx.strokeStyle = "#224466";
-      ctx.lineWidth = 1.5;
-      ctx.strokeRect(dx - 18, trainTop + 5, 36, trainH - 10);
+      ctx.fillStyle = "#060a10";
+      ctx.fillRect(dx - 20, trainTop + 4, 40, trainH - 8);
+      ctx.fillStyle = "rgba(255,200,100,0.08)";
+      ctx.fillRect(dx - 18, trainTop + 6, 36, trainH - 12);
+      ctx.strokeStyle = "#3a5570";
+      ctx.lineWidth = 2;
+      ctx.strokeRect(dx - 20, trainTop + 4, 40, trainH - 8);
+      // Door handles
+      ctx.fillStyle = "#5a6a7a";
+      ctx.fillRect(dx - 3, trainTop + trainH / 2, 6, 14);
     }
     // Headlight flicker
     const flickOn = Math.sin(T * 2.4) > 0.3;
     if (flickOn) {
-      ctx.fillStyle = "rgba(180,220,255,0.18)";
-      ctx.fillRect(0, trainTop, room.roomW * 0.12, trainH);
-      ctx.fillRect(room.roomW * 0.88, trainTop, room.roomW * 0.12, trainH);
+      ctx.fillStyle = "rgba(180,220,255,0.12)";
+      ctx.fillRect(0, trainTop, room.roomW * 0.08, trainH);
+      ctx.fillRect(room.roomW * 0.92, trainTop, room.roomW * 0.08, trainH);
     }
+    // Destination sign
+    ctx.fillStyle = "#000a10";
+    ctx.fillRect(room.roomW / 2 - 58, trainTop + 2, 116, 17);
+    ctx.fillStyle = "#FF8800";
+    ctx.shadowColor = "#FF6600";
+    ctx.shadowBlur = 8;
+    ctx.font = "bold 10px Orbitron, monospace";
+    ctx.textAlign = "center";
+    ctx.fillText("DOWNTOWN EXPRESS", room.roomW / 2, trainTop + 14);
+    ctx.shadowBlur = 0;
     // Car number
     ctx.fillStyle = "#FFFFFF";
-    ctx.font = "bold 13px monospace";
-    ctx.textAlign = "center";
-    ctx.fillText(
-      "LINE 1 · NEON CITY METRO",
-      room.roomW / 2,
-      trainTop + trainH - 2,
-    );
+    ctx.font = "bold 11px monospace";
+    ctx.fillText("LINE 1 · NEON CITY METRO", room.roomW / 2, trainTop + trainH - 3);
 
-    // ── Platform edge yellow safety stripe ─────────────────────
-    const platEdge = 3 * S;
+    // ── Platform edge safety stripe ────────────────────────────
     ctx.fillStyle = "#FFCC00";
-    ctx.shadowColor = "#FFCC00";
-    ctx.shadowBlur = 10;
-    ctx.fillRect(0, platEdge - 7, room.roomW, 7);
+    ctx.shadowColor = "#FFAA00";
+    ctx.shadowBlur = 14;
+    ctx.fillRect(0, platEdge - 8, room.roomW, 8);
     ctx.shadowBlur = 0;
+    // Hazard diagonal stripes
     ctx.fillStyle = "#1a0a00";
+    for (let hx = -8; hx < room.roomW; hx += 16) {
+      ctx.beginPath();
+      ctx.moveTo(hx, platEdge - 8);
+      ctx.lineTo(hx + 8, platEdge - 8);
+      ctx.lineTo(hx + 16, platEdge);
+      ctx.lineTo(hx + 8, platEdge);
+      ctx.closePath();
+      ctx.fill();
+    }
+    // Caution text
+    ctx.fillStyle = "#1a0800";
     ctx.font = "bold 5px monospace";
     ctx.textAlign = "left";
-    for (let xi = 0; xi < 10; xi++)
-      ctx.fillText("▲ CAUTION — PLATFORM EDGE ▲", xi * 140, platEdge - 1);
+    for (let xi = 0; xi < 8; xi++)
+      ctx.fillText("▲ CAUTION — PLATFORM EDGE ▲", xi * 135 + 8, platEdge - 1);
 
     // ── Ceiling fluorescent lights ─────────────────────────────
-    for (const lx of [room.roomW * 0.2, room.roomW * 0.5, room.roomW * 0.8]) {
-      const flick = Math.sin(T * 60 + lx) > 0.98 ? 0.3 : 1;
-      ctx.fillStyle = "#0d0d18";
-      ctx.fillRect(lx - 34, 3, 68, 9);
-      ctx.fillStyle = `rgba(200,230,255,${0.92 * flick})`;
-      ctx.shadowColor = "#88BBFF";
-      ctx.shadowBlur = 16 * flick;
-      ctx.fillRect(lx - 30, 5, 60, 5);
+    for (const lx of [room.roomW * 0.12, room.roomW * 0.32, room.roomW * 0.5, room.roomW * 0.68, room.roomW * 0.88]) {
+      const flick = Math.sin(T * 50 + lx * 0.08) > 0.96 ? 0.35 : 1;
+      ctx.fillStyle = "#080810";
+      ctx.fillRect(lx - 30, 2, 60, 11);
+      ctx.fillStyle = `rgba(220,240,255,${0.95 * flick})`;
+      ctx.shadowColor = "#AADDFF";
+      ctx.shadowBlur = 22 * flick;
+      ctx.fillRect(lx - 26, 4, 52, 7);
       ctx.shadowBlur = 0;
-      const cone = ctx.createLinearGradient(0, 12, 0, platEdge);
-      cone.addColorStop(0, `rgba(160,200,255,${0.07 * flick})`);
+      // Light cone
+      const cone = ctx.createLinearGradient(0, 14, 0, platEdge + 60);
+      cone.addColorStop(0, `rgba(180,210,255,${0.055 * flick})`);
+      cone.addColorStop(0.6, `rgba(160,200,255,${0.02 * flick})`);
       cone.addColorStop(1, "rgba(160,200,255,0)");
       ctx.fillStyle = cone;
       ctx.beginPath();
-      ctx.moveTo(lx - 30, 12);
-      ctx.lineTo(lx + 30, 12);
-      ctx.lineTo(lx + 65, platEdge);
-      ctx.lineTo(lx - 65, platEdge);
+      ctx.moveTo(lx - 26, 14);
+      ctx.lineTo(lx + 26, 14);
+      ctx.lineTo(lx + 75, platEdge + 60);
+      ctx.lineTo(lx - 75, platEdge + 60);
       ctx.closePath();
       ctx.fill();
     }
 
-    // ── Concrete pillars ───────────────────────────────────────
-    for (let pi = 2; pi <= room.W - 3; pi += 5) {
-      const pilX = (pi + 0.5) * S;
-      ctx.fillStyle = "#161622";
-      ctx.strokeStyle = "#222230";
-      ctx.lineWidth = 1;
-      ctx.fillRect(pilX - 7, platEdge - 6, 14, room.roomH - platEdge - S);
-      ctx.strokeRect(pilX - 7, platEdge - 6, 14, room.roomH - platEdge - S);
-      ctx.fillStyle = "#202030";
-      ctx.fillRect(pilX - 10, platEdge - 8, 20, 5);
-      // Blue neon stripe on pillar
-      ctx.fillStyle = "#0033AA";
-      ctx.shadowColor = "#0055FF";
-      ctx.shadowBlur = 7;
-      ctx.fillRect(pilX - 2, platEdge, 4, room.roomH - platEdge - S * 1.2);
-      ctx.shadowBlur = 0;
-    }
-
-    // ── Overhead METRO sign ────────────────────────────────────
-    ctx.fillStyle = "#001800";
-    ctx.strokeStyle = "#22FF66";
-    ctx.lineWidth = 1.5;
-    ctx.fillRect(room.roomW / 2 - 72, 0, 144, 19);
-    ctx.strokeRect(room.roomW / 2 - 72, 0, 144, 19);
-    ctx.fillStyle = "#22FF66";
-    ctx.shadowColor = "#22FF66";
-    ctx.shadowBlur = 14;
-    ctx.font = "bold 12px Orbitron, monospace";
-    ctx.textAlign = "center";
-    ctx.fillText("◉  METRO  LINE 1  ◉", room.roomW / 2, 14);
+    // ── Wall neon accent strips ────────────────────────────────
+    const neonPulse = Math.sin(T * 1.8) * 0.25 + 0.75;
+    ctx.fillStyle = `rgba(68,238,255,${0.45 * neonPulse})`;
+    ctx.shadowColor = "#44EEFF";
+    ctx.shadowBlur = 12;
+    ctx.fillRect(3, platEdge + 25, 3, room.roomH - platEdge - S - 35);
+    ctx.fillRect(room.roomW - 6, platEdge + 25, 3, room.roomH - platEdge - S - 35);
     ctx.shadowBlur = 0;
 
-    // EXIT signs on side walls
-    for (const sx2 of [24, room.roomW - 24]) {
-      ctx.fillStyle = "#001800";
-      ctx.fillRect(sx2 - 18, platEdge + 6, 36, 14);
-      ctx.fillStyle = "#22FF44";
-      ctx.shadowColor = "#22FF44";
-      ctx.shadowBlur = 8;
-      ctx.font = "bold 7px monospace";
-      ctx.textAlign = "center";
-      ctx.fillText("EXIT ↓", sx2, platEdge + 16);
+    // ── Concrete pillars with neon ─────────────────────────────
+    for (let pi = 2; pi <= room.W - 3; pi += 4) {
+      const pilX = (pi + 0.5) * S;
+      const pilH = room.roomH - platEdge - S;
+      ctx.fillStyle = "rgba(0,0,0,0.25)";
+      ctx.fillRect(pilX - 5, platEdge - 4, 18, pilH);
+      ctx.fillStyle = "#181828";
+      ctx.fillRect(pilX - 8, platEdge - 6, 16, pilH);
+      ctx.fillStyle = "#222236";
+      ctx.fillRect(pilX - 8, platEdge - 6, 5, pilH);
+      ctx.fillStyle = "#242438";
+      ctx.fillRect(pilX - 12, platEdge - 10, 24, 8);
+      ctx.fillStyle = "#1a1a2a";
+      ctx.fillRect(pilX - 10, room.roomH - S - 6, 20, 6);
+      // Blue neon stripe
+      const stripPulse = Math.sin(T * 2.2 + pi * 0.8) * 0.25 + 0.75;
+      ctx.fillStyle = `rgba(0,100,255,${0.85 * stripPulse})`;
+      ctx.shadowColor = "#0066FF";
+      ctx.shadowBlur = 14 * stripPulse;
+      ctx.fillRect(pilX - 2, platEdge + 12, 4, pilH - 35);
       ctx.shadowBlur = 0;
     }
 
-    // ── Wave counter top-right ────────────────────────────────
+    // ── Metro passengers (waiting NPCs) ─────────────────────────
+    const passengers = [
+      // Sitting passengers with varied poses
+      { x: S * 2.5, y: S * 4.5, pose: 'sit_phone', color: '#FF4488', accent: '#44EEFF', id: 1 },
+      { x: S * 5.5, y: S * 4.5, pose: 'sit_relaxed', color: '#44EEFF', accent: '#FF8844', id: 2 },
+      { x: S * 12.5, y: S * 7.5, pose: 'sit_leaning', color: '#AA88FF', accent: '#44FF88', id: 3 },
+      { x: S * 15.5, y: S * 7.5, pose: 'sit_looking', color: '#FFAA44', accent: '#FF4488', id: 4 },
+      // Standing passengers with varied poses
+      { x: S * 8, y: platEdge + 38, pose: 'stand_phone', color: '#44FF88', accent: '#FF4488', id: 5 },
+      { x: S * 11, y: platEdge + 55, pose: 'stand_crossed', color: '#FF4488', accent: '#44EEFF', id: 6 },
+      { x: S * 16, y: platEdge + 42, pose: 'stand_looking', color: '#44EEFF', accent: '#AA88FF', id: 7 },
+      { x: S * 3.5, y: platEdge + 60, pose: 'stand_waiting', color: '#AA88FF', accent: '#FFAA44', id: 8 },
+    ];
+
+    for (const p of passengers) {
+      ctx.save();
+      // Unique animation phase per passenger
+      const phase = p.id * 1.3;
+      const breathe = Math.sin(T * 2.2 + phase) * 0.8;
+      const sway = Math.sin(T * 0.8 + phase) * 2;
+      const headTurn = Math.sin(T * 0.4 + phase * 0.7) * 3;
+      const lookUp = Math.sin(T * 0.3 + phase) > 0.7;
+
+      if (p.pose.startsWith('sit')) {
+        const sitY = p.y - 8;
+        const leanAngle = p.pose === 'sit_leaning' ? 0.15 : 0;
+
+        ctx.translate(p.x, sitY);
+        ctx.rotate(leanAngle);
+        ctx.translate(-p.x, -sitY);
+
+        // Legs (varied positions)
+        ctx.fillStyle = '#1a1a2a';
+        if (p.pose === 'sit_relaxed') {
+          // Crossed legs
+          ctx.fillRect(p.x - 8, sitY + 12, 6, 10);
+          ctx.fillRect(p.x - 2, sitY + 14, 6, 8);
+        } else {
+          ctx.fillRect(p.x - 6, sitY + 12, 5, 10);
+          ctx.fillRect(p.x + 1, sitY + 12, 5, 10);
+        }
+
+        // Body with breathing
+        ctx.fillStyle = p.color;
+        ctx.shadowColor = p.color;
+        ctx.shadowBlur = 4;
+        ctx.beginPath();
+        ctx.ellipse(p.x, sitY + 6 + breathe * 0.3, 7 + breathe * 0.2, 9, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = p.accent;
+        ctx.fillRect(p.x - 2, sitY + 2, 4, 8);
+        ctx.shadowBlur = 0;
+
+        // Head with subtle movement
+        const headX = p.x + headTurn * 0.3;
+        const headY = sitY - 6 + (lookUp ? -1 : 0);
+        ctx.fillStyle = '#e8c8a8';
+        ctx.beginPath();
+        ctx.arc(headX, headY, 6, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Eyes (blinking)
+        const blink = Math.sin(T * 8 + phase * 2) > 0.95;
+        if (!blink) {
+          ctx.fillStyle = '#222';
+          ctx.fillRect(headX - 3, headY - 1, 2, blink ? 0.5 : 2);
+          ctx.fillRect(headX + 1, headY - 1, 2, blink ? 0.5 : 2);
+        }
+
+        // Hair
+        ctx.fillStyle = p.accent;
+        ctx.beginPath();
+        ctx.ellipse(headX, headY - 3, 6, 4, 0, Math.PI, Math.PI * 2);
+        ctx.fill();
+
+        // Cyber implant with pulse
+        const implantGlow = Math.sin(T * 4 + phase) * 0.3 + 0.7;
+        ctx.fillStyle = p.accent;
+        ctx.shadowColor = p.accent;
+        ctx.shadowBlur = 4 * implantGlow;
+        ctx.fillRect(headX + 4, headY - 2, 3, 2);
+        ctx.shadowBlur = 0;
+
+        if (p.pose === 'sit_phone') {
+          // Arms holding phone
+          ctx.fillStyle = p.color;
+          ctx.fillRect(p.x - 5, sitY + 6, 4, 8);
+          ctx.fillRect(p.x + 1, sitY + 6, 4, 8);
+          // Phone
+          ctx.fillStyle = '#111';
+          ctx.fillRect(p.x - 3, sitY + 12, 6, 9);
+          const phoneGlow = Math.sin(T * 3 + phase) * 0.2 + 0.8;
+          ctx.fillStyle = `rgba(68,238,255,${0.85 * phoneGlow})`;
+          ctx.shadowColor = '#44EEFF';
+          ctx.shadowBlur = 8 * phoneGlow;
+          ctx.fillRect(p.x - 2, sitY + 13, 4, 7);
+          ctx.shadowBlur = 0;
+          // Screen reflection on face
+          ctx.fillStyle = `rgba(68,238,255,${0.18 * phoneGlow})`;
+          ctx.beginPath();
+          ctx.arc(headX, headY, 7, 0, Math.PI * 2);
+          ctx.fill();
+        } else if (p.pose === 'sit_looking') {
+          // Looking at train - head turned up
+          ctx.fillStyle = p.color;
+          ctx.fillRect(p.x - 9, sitY + 4, 4, 10);
+          ctx.fillRect(p.x + 5, sitY + 4, 4, 10);
+        }
+      } else {
+        // Standing passengers
+        const standY = p.y;
+        const weightShift = p.pose === 'stand_waiting' ? sway : 0;
+
+        // Legs with weight shift
+        ctx.fillStyle = '#1a1a2a';
+        const legSpread = p.pose === 'stand_crossed' ? 2 : 6;
+        ctx.fillRect(p.x - legSpread + weightShift * 0.3, standY + 8, 4, 16);
+        ctx.fillRect(p.x + legSpread - 4 - weightShift * 0.3, standY + 8, 4, 16);
+
+        // Shoes
+        ctx.fillStyle = p.accent;
+        ctx.shadowColor = p.accent;
+        ctx.shadowBlur = 3;
+        ctx.fillRect(p.x - legSpread - 1 + weightShift * 0.3, standY + 22, 5, 3);
+        ctx.fillRect(p.x + legSpread - 4 - weightShift * 0.3, standY + 22, 5, 3);
+        ctx.shadowBlur = 0;
+
+        // Body with breathing and sway
+        ctx.fillStyle = p.color;
+        ctx.shadowColor = p.color;
+        ctx.shadowBlur = 5;
+        ctx.beginPath();
+        ctx.ellipse(p.x + weightShift * 0.2, standY + breathe * 0.2, 8 + breathe * 0.15, 11, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#0a0a12';
+        ctx.fillRect(p.x - 1, standY - 8, 2, 16);
+        ctx.shadowBlur = 0;
+
+        // Neon trim
+        ctx.fillStyle = p.accent;
+        ctx.shadowColor = p.accent;
+        ctx.shadowBlur = 4;
+        ctx.fillRect(p.x - 8, standY - 2, 2, 8);
+        ctx.fillRect(p.x + 6, standY - 2, 2, 8);
+        ctx.shadowBlur = 0;
+
+        // Head with movement
+        const headX = p.x + headTurn * 0.4 + weightShift * 0.15;
+        const headY = standY - 14;
+        ctx.fillStyle = '#e8c8a8';
+        ctx.beginPath();
+        ctx.arc(headX, headY, 6, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Eyes with blinking
+        const blink = Math.sin(T * 6 + phase * 3) > 0.92;
+        if (!blink) {
+          ctx.fillStyle = '#222';
+          ctx.fillRect(headX - 3, headY - 1, 2, 2);
+          ctx.fillRect(headX + 1, headY - 1, 2, 2);
+        }
+
+        // Hair/helmet
+        ctx.fillStyle = p.accent;
+        ctx.beginPath();
+        ctx.ellipse(headX, headY - 3, 7, 4, 0, Math.PI, Math.PI * 2);
+        ctx.fill();
+
+        // Visor
+        ctx.fillStyle = '#111';
+        ctx.fillRect(headX - 6, headY - 1, 12, 3);
+        const visorGlow = Math.sin(T * 2 + phase) * 0.2 + 0.8;
+        ctx.fillStyle = p.accent;
+        ctx.shadowColor = p.accent;
+        ctx.shadowBlur = 5 * visorGlow;
+        ctx.fillRect(headX - 5, headY - 1, 4, 2);
+        ctx.fillRect(headX + 1, headY - 1, 4, 2);
+        ctx.shadowBlur = 0;
+
+        if (p.pose === 'stand_phone') {
+          // Arm bent holding phone
+          const armBob = Math.sin(T * 1.5 + phase) * 1;
+          ctx.fillStyle = p.color;
+          ctx.fillRect(p.x + 6, standY - 6 + armBob, 12, 4);
+          ctx.fillStyle = '#e8c8a8';
+          ctx.beginPath();
+          ctx.arc(p.x + 16, standY - 4 + armBob, 3, 0, Math.PI * 2);
+          ctx.fill();
+          // Phone
+          ctx.fillStyle = '#111';
+          ctx.fillRect(p.x + 13, standY - 12 + armBob, 6, 10);
+          const phoneGlow = Math.sin(T * 2.8 + phase) * 0.2 + 0.8;
+          ctx.fillStyle = `rgba(68,238,255,${0.9 * phoneGlow})`;
+          ctx.shadowColor = '#44EEFF';
+          ctx.shadowBlur = 10 * phoneGlow;
+          ctx.fillRect(p.x + 14, standY - 11 + armBob, 4, 8);
+          ctx.shadowBlur = 0;
+          // Other arm relaxed
+          ctx.fillStyle = p.color;
+          ctx.fillRect(p.x - 10, standY - 2, 4, 10);
+          // Face glow from phone
+          ctx.fillStyle = `rgba(68,238,255,${0.15 * phoneGlow})`;
+          ctx.beginPath();
+          ctx.arc(headX, headY, 8, 0, Math.PI * 2);
+          ctx.fill();
+        } else if (p.pose === 'stand_crossed') {
+          // Arms crossed
+          ctx.fillStyle = p.color;
+          ctx.fillRect(p.x - 9, standY - 3, 18, 5);
+          ctx.fillStyle = '#e8c8a8';
+          ctx.beginPath();
+          ctx.arc(p.x - 7, standY, 3, 0, Math.PI * 2);
+          ctx.arc(p.x + 7, standY, 3, 0, Math.PI * 2);
+          ctx.fill();
+        } else if (p.pose === 'stand_looking') {
+          // Looking at train, hand shading eyes
+          ctx.fillStyle = p.color;
+          ctx.fillRect(p.x - 10, standY - 4, 4, 12);
+          ctx.fillRect(p.x + 4, standY - 10, 10, 4);
+          ctx.fillStyle = '#e8c8a8';
+          ctx.beginPath();
+          ctx.arc(p.x + 12, standY - 8, 3, 0, Math.PI * 2);
+          ctx.fill();
+        } else {
+          // Waiting - arms at sides with subtle movement
+          const armSwing = Math.sin(T * 0.6 + phase) * 2;
+          ctx.fillStyle = p.color;
+          ctx.fillRect(p.x - 10, standY - 4 + armSwing, 4, 12);
+          ctx.fillRect(p.x + 6, standY - 4 - armSwing, 4, 12);
+          ctx.fillStyle = '#e8c8a8';
+          ctx.beginPath();
+          ctx.arc(p.x - 8, standY + 9 + armSwing, 3, 0, Math.PI * 2);
+          ctx.arc(p.x + 8, standY + 9 - armSwing, 3, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+      ctx.restore();
+    }
+
+    // ── Advertisement panels (small posters) ────────────────────
+    const ads = [
+      { x: S * 1.5, text: "CYBER", color: "#FF4488" },
+      { x: S * 6.5, text: "NEURO", color: "#44FFAA" },
+      { x: S * 13.5, text: "HOLO", color: "#FF8844" },
+      { x: S * 18.5, text: "SYNTH", color: "#AA88FF" }
+    ];
+    for (const ad of ads) {
+      const adY = platEdge + 42;
+      const adW = 28;
+      const adH = 22;
+      ctx.fillStyle = "#06080c";
+      ctx.fillRect(ad.x - adW / 2, adY, adW, adH);
+      ctx.strokeStyle = ad.color;
+      ctx.lineWidth = 1;
+      ctx.strokeRect(ad.x - adW / 2, adY, adW, adH);
+      const adPulse = Math.sin(T * 1.3 + ad.x * 0.015) * 0.2 + 0.8;
+      ctx.fillStyle = ad.color;
+      ctx.shadowColor = ad.color;
+      ctx.shadowBlur = 6 * adPulse;
+      ctx.font = "bold 6px Orbitron, monospace";
+      ctx.textAlign = "center";
+      ctx.fillText(ad.text, ad.x, adY + 14);
+      ctx.shadowBlur = 0;
+    }
+
+    // ── Destination board (compact) ─────────────────────────────
+    const boardX = room.roomW / 2;
+    const boardY = platEdge + 32;
+    ctx.fillStyle = "#000810";
+    ctx.fillRect(boardX - 65, boardY, 130, 28);
+    ctx.strokeStyle = "#224466";
+    ctx.lineWidth = 1;
+    ctx.strokeRect(boardX - 65, boardY, 130, 28);
+    ctx.fillStyle = "#FFAA00";
+    ctx.shadowColor = "#FF8800";
+    ctx.shadowBlur = 6;
+    ctx.font = "bold 8px Orbitron, monospace";
+    ctx.textAlign = "center";
+    ctx.fillText("NEXT: CENTRAL", boardX, boardY + 11);
+    ctx.fillStyle = "#44FF88";
+    ctx.shadowColor = "#22FF44";
+    ctx.font = "7px Orbitron, monospace";
+    ctx.fillText("2 MIN", boardX, boardY + 22);
+    ctx.shadowBlur = 0;
+
+    // ── Map panel (compact) ────────────────────────────────────
+    const mapX = S * 4.5;
+    const mapY = platEdge + 75;
+    ctx.fillStyle = "#080c18";
+    ctx.fillRect(mapX - 28, mapY, 56, 38);
+    ctx.strokeStyle = "#44EEFF";
+    ctx.lineWidth = 1;
+    ctx.strokeRect(mapX - 28, mapY, 56, 38);
+    ctx.fillStyle = "#44EEFF";
+    ctx.font = "bold 5px monospace";
+    ctx.textAlign = "center";
+    ctx.fillText("MAP", mapX, mapY + 9);
+    // Line representation
+    ctx.strokeStyle = "#FF4466";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(mapX - 20, mapY + 20);
+    ctx.lineTo(mapX + 20, mapY + 20);
+    ctx.stroke();
+    ctx.fillStyle = "#FF4466";
+    ctx.beginPath();
+    ctx.arc(mapX - 12, mapY + 20, 3, 0, Math.PI * 2);
+    ctx.arc(mapX, mapY + 20, 3, 0, Math.PI * 2);
+    ctx.arc(mapX + 12, mapY + 20, 3, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#44FF88";
+    ctx.font = "4px monospace";
+    ctx.fillText("HERE", mapX, mapY + 32);
+    ctx.strokeStyle = "#44FF88";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.arc(mapX, mapY + 20, 5, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // ── Overhead METRO sign ────────────────────────────────────
+    ctx.fillStyle = "#001408";
+    ctx.strokeStyle = "#22FF66";
+    ctx.lineWidth = 2;
+    ctx.fillRect(room.roomW / 2 - 82, 0, 164, 23);
+    ctx.strokeRect(room.roomW / 2 - 82, 0, 164, 23);
+    ctx.fillStyle = "#22FF66";
+    ctx.shadowColor = "#22FF66";
+    ctx.shadowBlur = 18;
+    ctx.font = "bold 13px Orbitron, monospace";
+    ctx.textAlign = "center";
+    ctx.fillText("◉  METRO  LINE 1  ◉", room.roomW / 2, 17);
+    ctx.shadowBlur = 0;
+
+    // EXIT signs
+    for (const sx2 of [30, room.roomW - 30]) {
+      ctx.fillStyle = "#001808";
+      ctx.fillRect(sx2 - 24, platEdge + 5, 48, 19);
+      ctx.strokeStyle = "#22FF44";
+      ctx.lineWidth = 1;
+      ctx.strokeRect(sx2 - 24, platEdge + 5, 48, 19);
+      ctx.fillStyle = "#22FF44";
+      ctx.shadowColor = "#22FF44";
+      ctx.shadowBlur = 12;
+      ctx.font = "bold 9px monospace";
+      ctx.textAlign = "center";
+      ctx.fillText("← EXIT →", sx2, platEdge + 17);
+      ctx.shadowBlur = 0;
+    }
+
+    // ── Wave counter ───────────────────────────────────────────
     const aliveCnt = this._indoorBots.filter((b) => !b.dead && !b.dying).length;
     ctx.fillStyle = "#44FF88";
-    ctx.font = "bold 10px Orbitron, monospace";
+    ctx.font = "bold 11px Orbitron, monospace";
     ctx.textAlign = "right";
     ctx.shadowColor = "#22FF44";
-    ctx.shadowBlur = 8;
-    ctx.fillText(`METRO WAVE ${this._metroWave}`, room.roomW - 8, 14);
+    ctx.shadowBlur = 10;
+    ctx.fillText(`METRO WAVE ${this._metroWave}`, room.roomW - 10, 17);
     if (aliveCnt > 0) {
       ctx.fillStyle = "#FF4444";
-      ctx.fillText(`▼ ${aliveCnt} ENEMY`, room.roomW - 8, 27);
+      ctx.shadowColor = "#FF0000";
+      ctx.fillText(`▼ ${aliveCnt} HOSTILE`, room.roomW - 10, 32);
     } else if (this._metroWaveTimer !== undefined) {
       ctx.fillStyle = "#FFEE44";
-      ctx.fillText(
-        `NEXT WAVE ${Math.ceil(this._metroWaveTimer)}s`,
-        room.roomW - 8,
-        27,
-      );
+      ctx.shadowColor = "#FFAA00";
+      ctx.fillText(`NEXT WAVE ${Math.ceil(this._metroWaveTimer)}s`, room.roomW - 10, 32);
     } else {
       ctx.fillStyle = "#44FF88";
-      ctx.fillText("SECTOR CLEAR", room.roomW - 8, 27);
+      ctx.fillText("SECTOR CLEAR", room.roomW - 10, 32);
     }
     ctx.shadowBlur = 0;
 
@@ -10007,12 +10533,12 @@ class Game {
 
     // ── Exit hint ─────────────────────────────────────────────
     ctx.save();
-    ctx.font = "bold 11px Orbitron, monospace";
+    ctx.font = "bold 12px Orbitron, monospace";
     ctx.textAlign = "center";
     ctx.fillStyle = "#FFFFAA";
     ctx.shadowColor = "#FFFF00";
-    ctx.shadowBlur = 10;
-    ctx.fillText("[E] EXIT METRO", room.entryX, room.roomH - 8);
+    ctx.shadowBlur = 12;
+    ctx.fillText("[E] EXIT METRO", room.roomW / 2, room.roomH - 10);
     ctx.restore();
 
     ctx.restore();
@@ -10712,6 +11238,7 @@ class Game {
       ctx.fillStyle = "#00FFFF";
       ctx.shadowColor = "#00FFFF";
       ctx.shadowBlur = 10;
+      ctx.fillText("[E] EXIT", room.roomW / 2, room.roomH - 25);
       ctx.fillText("[E] EXIT", room.entryX, room.roomH - 25);
     } else if (isGalactica) {
       ctx.fillStyle = "#CC99FF";
