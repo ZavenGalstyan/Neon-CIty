@@ -1747,14 +1747,61 @@ class Game {
 
     // Neon City: spawn 3 orange vehicles for the player (no other traffic)
     if (isNeonCity) {
+      // Collect positions to avoid (portals, metro entrance, building doors)
+      const avoidPositions = [];
+      const avoidRadius = 120; // Keep cars this far from portals/entrances
+
+      // Add portals to avoid list
+      if (this.map.portals) {
+        for (const portal of this.map.portals) {
+          if (portal && portal.wx !== undefined) {
+            avoidPositions.push({ x: portal.wx, y: portal.wy });
+          }
+        }
+      }
+
+      // Add metro entrance to avoid list
+      if (this.map.metroEntrance) {
+        const me = this.map.metroEntrance;
+        avoidPositions.push({ x: me.wx, y: me.wy });
+      }
+
+      // Add building doors to avoid list
+      if (this.map.doors) {
+        for (const door of this.map.doors) {
+          if (door && door.wx !== undefined) {
+            avoidPositions.push({ x: door.wx, y: door.wy });
+          }
+        }
+      }
+
+      // Helper to check if position is too close to any avoid position
+      const isTooCloseToAvoid = (x, y) => {
+        for (const pos of avoidPositions) {
+          if (Math.hypot(x - pos.x, y - pos.y) < avoidRadius) return true;
+        }
+        return false;
+      };
+
       for (let i = 0; i < 3; i++) {
         let rp;
-        // Try to find a road position not too far from player (but not too close)
-        for (let t = 0; t < 15; t++) {
+        let validPosition = false;
+        // Try to find a road position not near portals/entrances
+        for (let t = 0; t < 30; t++) {
           rp = this.map.randomRoadPos();
-          const dist = Math.hypot(rp.x - this.player.x, rp.y - this.player.y);
-          // Between 150-600 pixels from player for easier finding
-          if (dist > 150 && dist < 600) break;
+          const distFromPlayer = Math.hypot(rp.x - this.player.x, rp.y - this.player.y);
+          // Between 150-600 pixels from player and not near avoid positions
+          if (distFromPlayer > 150 && distFromPlayer < 600 && !isTooCloseToAvoid(rp.x, rp.y)) {
+            validPosition = true;
+            break;
+          }
+        }
+        // Fallback: if no valid position found, still spawn but try to avoid portals
+        if (!validPosition) {
+          for (let t = 0; t < 20; t++) {
+            rp = this.map.randomRoadPos();
+            if (!isTooCloseToAvoid(rp.x, rp.y)) break;
+          }
         }
         const v = new Vehicle(rp.x, rp.y, "#FF8800", this.map.config); // Orange vehicle
         this.vehicles.push(v);
@@ -7322,6 +7369,245 @@ class Game {
       ctx.shadowBlur = 14 * stripPulse;
       ctx.fillRect(pilX - 2, platEdge + 12, 4, pilH - 35);
       ctx.shadowBlur = 0;
+    }
+
+    // ── Metro passengers (waiting NPCs) ─────────────────────────
+    const passengers = [
+      // Sitting passengers with varied poses
+      { x: S * 2.5, y: S * 4.5, pose: 'sit_phone', color: '#FF4488', accent: '#44EEFF', id: 1 },
+      { x: S * 5.5, y: S * 4.5, pose: 'sit_relaxed', color: '#44EEFF', accent: '#FF8844', id: 2 },
+      { x: S * 12.5, y: S * 7.5, pose: 'sit_leaning', color: '#AA88FF', accent: '#44FF88', id: 3 },
+      { x: S * 15.5, y: S * 7.5, pose: 'sit_looking', color: '#FFAA44', accent: '#FF4488', id: 4 },
+      // Standing passengers with varied poses
+      { x: S * 8, y: platEdge + 38, pose: 'stand_phone', color: '#44FF88', accent: '#FF4488', id: 5 },
+      { x: S * 11, y: platEdge + 55, pose: 'stand_crossed', color: '#FF4488', accent: '#44EEFF', id: 6 },
+      { x: S * 16, y: platEdge + 42, pose: 'stand_looking', color: '#44EEFF', accent: '#AA88FF', id: 7 },
+      { x: S * 3.5, y: platEdge + 60, pose: 'stand_waiting', color: '#AA88FF', accent: '#FFAA44', id: 8 },
+    ];
+
+    for (const p of passengers) {
+      ctx.save();
+      // Unique animation phase per passenger
+      const phase = p.id * 1.3;
+      const breathe = Math.sin(T * 2.2 + phase) * 0.8;
+      const sway = Math.sin(T * 0.8 + phase) * 2;
+      const headTurn = Math.sin(T * 0.4 + phase * 0.7) * 3;
+      const lookUp = Math.sin(T * 0.3 + phase) > 0.7;
+
+      if (p.pose.startsWith('sit')) {
+        const sitY = p.y - 8;
+        const leanAngle = p.pose === 'sit_leaning' ? 0.15 : 0;
+
+        ctx.translate(p.x, sitY);
+        ctx.rotate(leanAngle);
+        ctx.translate(-p.x, -sitY);
+
+        // Legs (varied positions)
+        ctx.fillStyle = '#1a1a2a';
+        if (p.pose === 'sit_relaxed') {
+          // Crossed legs
+          ctx.fillRect(p.x - 8, sitY + 12, 6, 10);
+          ctx.fillRect(p.x - 2, sitY + 14, 6, 8);
+        } else {
+          ctx.fillRect(p.x - 6, sitY + 12, 5, 10);
+          ctx.fillRect(p.x + 1, sitY + 12, 5, 10);
+        }
+
+        // Body with breathing
+        ctx.fillStyle = p.color;
+        ctx.shadowColor = p.color;
+        ctx.shadowBlur = 4;
+        ctx.beginPath();
+        ctx.ellipse(p.x, sitY + 6 + breathe * 0.3, 7 + breathe * 0.2, 9, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = p.accent;
+        ctx.fillRect(p.x - 2, sitY + 2, 4, 8);
+        ctx.shadowBlur = 0;
+
+        // Head with subtle movement
+        const headX = p.x + headTurn * 0.3;
+        const headY = sitY - 6 + (lookUp ? -1 : 0);
+        ctx.fillStyle = '#e8c8a8';
+        ctx.beginPath();
+        ctx.arc(headX, headY, 6, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Eyes (blinking)
+        const blink = Math.sin(T * 8 + phase * 2) > 0.95;
+        if (!blink) {
+          ctx.fillStyle = '#222';
+          ctx.fillRect(headX - 3, headY - 1, 2, blink ? 0.5 : 2);
+          ctx.fillRect(headX + 1, headY - 1, 2, blink ? 0.5 : 2);
+        }
+
+        // Hair
+        ctx.fillStyle = p.accent;
+        ctx.beginPath();
+        ctx.ellipse(headX, headY - 3, 6, 4, 0, Math.PI, Math.PI * 2);
+        ctx.fill();
+
+        // Cyber implant with pulse
+        const implantGlow = Math.sin(T * 4 + phase) * 0.3 + 0.7;
+        ctx.fillStyle = p.accent;
+        ctx.shadowColor = p.accent;
+        ctx.shadowBlur = 4 * implantGlow;
+        ctx.fillRect(headX + 4, headY - 2, 3, 2);
+        ctx.shadowBlur = 0;
+
+        if (p.pose === 'sit_phone') {
+          // Arms holding phone
+          ctx.fillStyle = p.color;
+          ctx.fillRect(p.x - 5, sitY + 6, 4, 8);
+          ctx.fillRect(p.x + 1, sitY + 6, 4, 8);
+          // Phone
+          ctx.fillStyle = '#111';
+          ctx.fillRect(p.x - 3, sitY + 12, 6, 9);
+          const phoneGlow = Math.sin(T * 3 + phase) * 0.2 + 0.8;
+          ctx.fillStyle = `rgba(68,238,255,${0.85 * phoneGlow})`;
+          ctx.shadowColor = '#44EEFF';
+          ctx.shadowBlur = 8 * phoneGlow;
+          ctx.fillRect(p.x - 2, sitY + 13, 4, 7);
+          ctx.shadowBlur = 0;
+          // Screen reflection on face
+          ctx.fillStyle = `rgba(68,238,255,${0.18 * phoneGlow})`;
+          ctx.beginPath();
+          ctx.arc(headX, headY, 7, 0, Math.PI * 2);
+          ctx.fill();
+        } else if (p.pose === 'sit_looking') {
+          // Looking at train - head turned up
+          ctx.fillStyle = p.color;
+          ctx.fillRect(p.x - 9, sitY + 4, 4, 10);
+          ctx.fillRect(p.x + 5, sitY + 4, 4, 10);
+        }
+      } else {
+        // Standing passengers
+        const standY = p.y;
+        const weightShift = p.pose === 'stand_waiting' ? sway : 0;
+
+        // Legs with weight shift
+        ctx.fillStyle = '#1a1a2a';
+        const legSpread = p.pose === 'stand_crossed' ? 2 : 6;
+        ctx.fillRect(p.x - legSpread + weightShift * 0.3, standY + 8, 4, 16);
+        ctx.fillRect(p.x + legSpread - 4 - weightShift * 0.3, standY + 8, 4, 16);
+
+        // Shoes
+        ctx.fillStyle = p.accent;
+        ctx.shadowColor = p.accent;
+        ctx.shadowBlur = 3;
+        ctx.fillRect(p.x - legSpread - 1 + weightShift * 0.3, standY + 22, 5, 3);
+        ctx.fillRect(p.x + legSpread - 4 - weightShift * 0.3, standY + 22, 5, 3);
+        ctx.shadowBlur = 0;
+
+        // Body with breathing and sway
+        ctx.fillStyle = p.color;
+        ctx.shadowColor = p.color;
+        ctx.shadowBlur = 5;
+        ctx.beginPath();
+        ctx.ellipse(p.x + weightShift * 0.2, standY + breathe * 0.2, 8 + breathe * 0.15, 11, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#0a0a12';
+        ctx.fillRect(p.x - 1, standY - 8, 2, 16);
+        ctx.shadowBlur = 0;
+
+        // Neon trim
+        ctx.fillStyle = p.accent;
+        ctx.shadowColor = p.accent;
+        ctx.shadowBlur = 4;
+        ctx.fillRect(p.x - 8, standY - 2, 2, 8);
+        ctx.fillRect(p.x + 6, standY - 2, 2, 8);
+        ctx.shadowBlur = 0;
+
+        // Head with movement
+        const headX = p.x + headTurn * 0.4 + weightShift * 0.15;
+        const headY = standY - 14;
+        ctx.fillStyle = '#e8c8a8';
+        ctx.beginPath();
+        ctx.arc(headX, headY, 6, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Eyes with blinking
+        const blink = Math.sin(T * 6 + phase * 3) > 0.92;
+        if (!blink) {
+          ctx.fillStyle = '#222';
+          ctx.fillRect(headX - 3, headY - 1, 2, 2);
+          ctx.fillRect(headX + 1, headY - 1, 2, 2);
+        }
+
+        // Hair/helmet
+        ctx.fillStyle = p.accent;
+        ctx.beginPath();
+        ctx.ellipse(headX, headY - 3, 7, 4, 0, Math.PI, Math.PI * 2);
+        ctx.fill();
+
+        // Visor
+        ctx.fillStyle = '#111';
+        ctx.fillRect(headX - 6, headY - 1, 12, 3);
+        const visorGlow = Math.sin(T * 2 + phase) * 0.2 + 0.8;
+        ctx.fillStyle = p.accent;
+        ctx.shadowColor = p.accent;
+        ctx.shadowBlur = 5 * visorGlow;
+        ctx.fillRect(headX - 5, headY - 1, 4, 2);
+        ctx.fillRect(headX + 1, headY - 1, 4, 2);
+        ctx.shadowBlur = 0;
+
+        if (p.pose === 'stand_phone') {
+          // Arm bent holding phone
+          const armBob = Math.sin(T * 1.5 + phase) * 1;
+          ctx.fillStyle = p.color;
+          ctx.fillRect(p.x + 6, standY - 6 + armBob, 12, 4);
+          ctx.fillStyle = '#e8c8a8';
+          ctx.beginPath();
+          ctx.arc(p.x + 16, standY - 4 + armBob, 3, 0, Math.PI * 2);
+          ctx.fill();
+          // Phone
+          ctx.fillStyle = '#111';
+          ctx.fillRect(p.x + 13, standY - 12 + armBob, 6, 10);
+          const phoneGlow = Math.sin(T * 2.8 + phase) * 0.2 + 0.8;
+          ctx.fillStyle = `rgba(68,238,255,${0.9 * phoneGlow})`;
+          ctx.shadowColor = '#44EEFF';
+          ctx.shadowBlur = 10 * phoneGlow;
+          ctx.fillRect(p.x + 14, standY - 11 + armBob, 4, 8);
+          ctx.shadowBlur = 0;
+          // Other arm relaxed
+          ctx.fillStyle = p.color;
+          ctx.fillRect(p.x - 10, standY - 2, 4, 10);
+          // Face glow from phone
+          ctx.fillStyle = `rgba(68,238,255,${0.15 * phoneGlow})`;
+          ctx.beginPath();
+          ctx.arc(headX, headY, 8, 0, Math.PI * 2);
+          ctx.fill();
+        } else if (p.pose === 'stand_crossed') {
+          // Arms crossed
+          ctx.fillStyle = p.color;
+          ctx.fillRect(p.x - 9, standY - 3, 18, 5);
+          ctx.fillStyle = '#e8c8a8';
+          ctx.beginPath();
+          ctx.arc(p.x - 7, standY, 3, 0, Math.PI * 2);
+          ctx.arc(p.x + 7, standY, 3, 0, Math.PI * 2);
+          ctx.fill();
+        } else if (p.pose === 'stand_looking') {
+          // Looking at train, hand shading eyes
+          ctx.fillStyle = p.color;
+          ctx.fillRect(p.x - 10, standY - 4, 4, 12);
+          ctx.fillRect(p.x + 4, standY - 10, 10, 4);
+          ctx.fillStyle = '#e8c8a8';
+          ctx.beginPath();
+          ctx.arc(p.x + 12, standY - 8, 3, 0, Math.PI * 2);
+          ctx.fill();
+        } else {
+          // Waiting - arms at sides with subtle movement
+          const armSwing = Math.sin(T * 0.6 + phase) * 2;
+          ctx.fillStyle = p.color;
+          ctx.fillRect(p.x - 10, standY - 4 + armSwing, 4, 12);
+          ctx.fillRect(p.x + 6, standY - 4 - armSwing, 4, 12);
+          ctx.fillStyle = '#e8c8a8';
+          ctx.beginPath();
+          ctx.arc(p.x - 8, standY + 9 + armSwing, 3, 0, Math.PI * 2);
+          ctx.arc(p.x + 8, standY + 9 - armSwing, 3, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+      ctx.restore();
     }
 
     // ── Advertisement panels (small posters) ────────────────────
