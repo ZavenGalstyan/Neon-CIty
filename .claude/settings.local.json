@@ -14,7 +14,8 @@
       "Bash(awk 'NR>4835' js/entities/entities.js)",
       "Bash(awk 'NR==6013' js/entities/entities.js)",
       "Bash(awk 'NR>6507' js/entities/entities.js)",
-      "Bash(awk 'NR>=1 && /6[56][0-9][0-9]:|6[67][0-9][0-9]:/')"
+      "Bash(awk 'NR>=1 && /6[56][0-9][0-9]:|6[67][0-9][0-9]:/')",
+      "Bash(awk '{print $NF, $5}')"
     ]
   }
 }

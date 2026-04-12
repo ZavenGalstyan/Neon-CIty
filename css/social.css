@@ -1,0 +1,1287 @@
+/* ═══════════════════════════════════════════════════════════
+   NEON CITY — Social CSS  v3
+   Three full-page overlays: Friends · Clans · Chat
+   All classes: ncs-  prefix
+   ═══════════════════════════════════════════════════════════ */
+
+:root {
+  --ncs-bg:     #06060e;
+  --ncs-card:   rgba(12, 12, 26, 0.98);
+  --ncs-border: rgba(68,238,255,0.13);
+  --ncs-cyan:   #44EEFF;
+  --ncs-pink:   #FF4466;
+  --ncs-purple: #CC88FF;
+  --ncs-green:  #44FF88;
+  --ncs-gold:   #FFD700;
+  --ncs-text:   #dde0f0;
+  --ncs-muted:  rgba(255,255,255,0.36);
+  --ncs-ease:   cubic-bezier(0.4, 0, 0.2, 1);
+  --ncs-input-bg: rgba(255,255,255,0.055);
+  --ncs-input-border: rgba(68,238,255,0.2);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   FULL-PAGE OVERLAY BASE
+   ═══════════════════════════════════════════════════════════ */
+.ncs-page {
+  position: fixed;
+  inset: 0;
+  z-index: 1800;
+  background: rgba(4, 4, 12, 0.96);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+}
+.ncs-page.ncs-open {
+  display: flex;
+  animation: ncsPageIn 0.28s var(--ncs-ease);
+}
+@keyframes ncsPageIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Animated grid overlay on pages */
+.ncs-page::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(68,238,255,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(68,238,255,0.025) 1px, transparent 1px);
+  background-size: 48px 48px;
+  z-index: 0;
+}
+
+/* ── Page top bar ─────────────────────────────────────────── */
+.ncs-topbar {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0 28px;
+  height: 64px;
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--ncs-border);
+  background: rgba(6,6,18,0.9);
+}
+.ncs-topbar::after {
+  content: '';
+  position: absolute;
+  bottom: -1px; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--ncs-cyan) 30%, var(--ncs-purple) 70%, transparent);
+  opacity: 0.5;
+}
+.ncs-topbar-icon {
+  font-size: 22px;
+  filter: drop-shadow(0 0 8px rgba(68,238,255,0.6));
+}
+.ncs-topbar-title {
+  font-family: 'Orbitron', monospace;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: var(--ncs-cyan);
+  text-shadow: 0 0 20px rgba(68,238,255,0.5);
+  flex: 1;
+}
+.ncs-topbar-sub {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 13px;
+  color: var(--ncs-muted);
+  letter-spacing: 0.05em;
+}
+.ncs-close-btn {
+  margin-left: auto;
+  width: 38px; height: 38px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.04);
+  color: var(--ncs-muted);
+  font-size: 16px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  flex-shrink: 0;
+}
+.ncs-close-btn:hover {
+  background: rgba(255,68,102,0.14);
+  border-color: rgba(255,68,102,0.4);
+  color: var(--ncs-pink);
+}
+
+/* ── Page body ────────────────────────────────────────────── */
+.ncs-page-body {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   SHARED: SIDEBAR + MAIN SPLIT
+   ═══════════════════════════════════════════════════════════ */
+.ncs-sidebar {
+  width: 320px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--ncs-border);
+  overflow: hidden;
+  background: rgba(6,6,18,0.5);
+}
+.ncs-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-width: 0;
+}
+
+/* ── Sidebar search bar ───────────────────────────────────── */
+.ncs-search-box {
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  flex-shrink: 0;
+}
+.ncs-search-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ncs-search-icon {
+  position: absolute;
+  left: 12px;
+  color: var(--ncs-muted);
+  pointer-events: none;
+  display: flex; align-items: center;
+}
+.ncs-input {
+  width: 100%;
+  padding: 10px 12px 10px 36px;
+  background: var(--ncs-input-bg);
+  border: 1px solid var(--ncs-input-border);
+  border-radius: 10px;
+  color: var(--ncs-text);
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  outline: none;
+  transition: border-color 0.18s, box-shadow 0.18s, background 0.18s;
+  box-sizing: border-box;
+}
+.ncs-input:focus {
+  border-color: rgba(68,238,255,0.5);
+  background: rgba(68,238,255,0.04);
+  box-shadow: 0 0 0 3px rgba(68,238,255,0.08);
+}
+.ncs-input::placeholder { color: var(--ncs-muted); font-weight: 400; }
+.ncs-input-plain {
+  padding: 10px 14px;
+}
+.ncs-btn {
+  padding: 10px 20px;
+  border-radius: 10px;
+  border: 1px solid rgba(68,238,255,0.35);
+  background: rgba(68,238,255,0.1);
+  color: var(--ncs-cyan);
+  font-family: 'Orbitron', monospace;
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+}
+.ncs-btn:hover {
+  background: rgba(68,238,255,0.2);
+  border-color: rgba(68,238,255,0.6);
+  box-shadow: 0 0 12px rgba(68,238,255,0.25);
+}
+.ncs-btn:active { transform: scale(0.97); }
+.ncs-btn-purple {
+  border-color: rgba(204,136,255,0.4);
+  background: rgba(204,136,255,0.1);
+  color: var(--ncs-purple);
+}
+.ncs-btn-purple:hover {
+  background: rgba(204,136,255,0.22);
+  border-color: rgba(204,136,255,0.65);
+  box-shadow: 0 0 12px rgba(204,136,255,0.25);
+}
+.ncs-btn-pink {
+  border-color: rgba(255,68,102,0.4);
+  background: rgba(255,68,102,0.1);
+  color: var(--ncs-pink);
+}
+.ncs-btn-pink:hover { background: rgba(255,68,102,0.2); box-shadow: 0 0 10px rgba(255,68,102,0.25); }
+.ncs-btn-sm {
+  padding: 6px 14px;
+  font-size: 9px;
+  border-radius: 8px;
+}
+.ncs-btn-full {
+  width: 100%;
+  padding: 14px;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  box-shadow: 0 0 18px rgba(68,238,255,0.2);
+  justify-content: center;
+}
+.ncs-btn-full-purple {
+  width: 100%;
+  padding: 14px;
+  border-radius: 10px;
+  border: none;
+  background: linear-gradient(135deg, #8866FF, #CC44FF);
+  color: #fff;
+  font-family: 'Orbitron', monospace;
+  font-size: 11px; font-weight: 700;
+  letter-spacing: 0.12em;
+  cursor: pointer;
+  box-shadow: 0 0 22px rgba(136,102,255,0.45);
+  transition: opacity 0.15s, transform 0.12s, box-shadow 0.15s;
+}
+.ncs-btn-full-purple:hover { opacity: 0.9; transform: translateY(-1px); box-shadow: 0 0 32px rgba(136,102,255,0.6); }
+.ncs-btn-full-purple:active { transform: none; }
+
+/* ── Section label ───────────────────────────────────────── */
+.ncs-sec-label {
+  font-family: 'Orbitron', monospace;
+  font-size: 9px; font-weight: 700;
+  letter-spacing: 0.18em;
+  color: var(--ncs-cyan);
+  padding: 12px 16px 8px;
+  opacity: 0.65;
+  flex-shrink: 0;
+}
+.ncs-sec-label-purple { color: var(--ncs-purple); }
+.ncs-sec-label-gold   { color: var(--ncs-gold); }
+
+/* ── Scrollable list ─────────────────────────────────────── */
+.ncs-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px 0 16px;
+  min-height: 0;
+}
+.ncs-list::-webkit-scrollbar { width: 3px; }
+.ncs-list::-webkit-scrollbar-track { background: transparent; }
+.ncs-list::-webkit-scrollbar-thumb { background: rgba(68,238,255,0.2); border-radius: 99px; }
+
+/* ── Empty state ─────────────────────────────────────────── */
+.ncs-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 48px 24px;
+  color: var(--ncs-muted);
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 14px;
+  text-align: center;
+  line-height: 1.6;
+  flex: 1;
+}
+.ncs-empty-icon { font-size: 36px; opacity: 0.4; }
+
+/* ═══════════════════════════════════════════════════════════
+   PERSON ROW  (used in friends, members)
+   ═══════════════════════════════════════════════════════════ */
+.ncs-person-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  cursor: pointer;
+  border-radius: 10px;
+  margin: 2px 8px;
+  transition: background 0.14s;
+  position: relative;
+}
+.ncs-person-row:hover { background: rgba(68,238,255,0.05); }
+.ncs-person-row.selected { background: rgba(68,238,255,0.09); }
+
+/* Avatar */
+.ncs-av {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(68,238,255,0.2), rgba(204,136,255,0.2));
+  border: 1.5px solid rgba(68,238,255,0.25);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Orbitron', monospace;
+  font-size: 14px; font-weight: 700;
+  color: var(--ncs-cyan);
+  flex-shrink: 0;
+  position: relative;
+}
+.ncs-av-sm {
+  width: 32px; height: 32px;
+  font-size: 11px;
+}
+.ncs-av.online::after {
+  content: '';
+  position: absolute;
+  bottom: 1px; right: 1px;
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: var(--ncs-green);
+  border: 2px solid #06060e;
+  box-shadow: 0 0 6px rgba(68,255,136,0.8);
+}
+.ncs-av-clan {
+  background: linear-gradient(135deg, rgba(204,136,255,0.2), rgba(255,215,0,0.1));
+  border-color: rgba(204,136,255,0.3);
+  color: var(--ncs-purple);
+}
+
+/* Name + sub */
+.ncs-person-info { flex: 1; min-width: 0; }
+.ncs-person-name {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 15px; font-weight: 700;
+  color: var(--ncs-text);
+  display: flex; align-items: center; gap: 6px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.ncs-person-sub {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 12px;
+  color: var(--ncs-muted);
+  margin-top: 1px;
+  display: flex; align-items: center; gap: 6px;
+}
+.ncs-clan-tag {
+  font-family: 'Orbitron', monospace;
+  font-size: 9px; font-weight: 700;
+  color: var(--ncs-purple);
+  letter-spacing: 0.1em;
+  background: rgba(204,136,255,0.1);
+  border: 1px solid rgba(204,136,255,0.22);
+  border-radius: 4px;
+  padding: 1px 5px;
+}
+.ncs-online-dot {
+  display: inline-block;
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--ncs-green);
+  box-shadow: 0 0 5px rgba(68,255,136,0.7);
+  flex-shrink: 0;
+}
+.ncs-offline-dot {
+  display: inline-block;
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.18);
+  flex-shrink: 0;
+}
+
+/* Row actions */
+.ncs-row-actions {
+  display: flex;
+  gap: 6px;
+  opacity: 0;
+  transition: opacity 0.15s;
+  flex-shrink: 0;
+}
+.ncs-person-row:hover .ncs-row-actions { opacity: 1; }
+.ncs-row-actions.always { opacity: 1; }
+.ncs-icon-btn {
+  width: 30px; height: 30px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.04);
+  color: var(--ncs-muted);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.14s, border-color 0.14s, color 0.14s;
+  flex-shrink: 0;
+}
+.ncs-icon-btn:hover { background: rgba(68,238,255,0.12); border-color: rgba(68,238,255,0.35); color: var(--ncs-cyan); }
+.ncs-icon-btn.danger:hover { background: rgba(255,68,102,0.12); border-color: rgba(255,68,102,0.35); color: var(--ncs-pink); }
+.ncs-icon-btn.success:hover { background: rgba(68,255,136,0.12); border-color: rgba(68,255,136,0.35); color: var(--ncs-green); }
+
+/* ═══════════════════════════════════════════════════════════
+   FRIENDS PAGE
+   ═══════════════════════════════════════════════════════════ */
+#ncsPageFriends .ncs-topbar { border-color: rgba(68,238,255,0.18); }
+#ncsPageFriends .ncs-topbar::after {
+  background: linear-gradient(90deg, transparent, var(--ncs-cyan) 40%, var(--ncs-green) 60%, transparent);
+}
+
+/* Right panel — add friends / requests */
+.ncs-friends-right {
+  width: 380px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-left: 1px solid rgba(255,255,255,0.06);
+  background: rgba(4,4,12,0.3);
+}
+.ncs-panel-section {
+  padding: 20px 20px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  flex-shrink: 0;
+}
+.ncs-panel-section-title {
+  font-family: 'Orbitron', monospace;
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 0.15em;
+  color: var(--ncs-cyan);
+  margin-bottom: 12px;
+  opacity: 0.75;
+}
+.ncs-add-row {
+  display: flex;
+  gap: 8px;
+}
+.ncs-search-results {
+  overflow-y: auto;
+  max-height: 220px;
+  padding: 4px 0;
+}
+.ncs-search-results::-webkit-scrollbar { width: 3px; }
+.ncs-search-results::-webkit-scrollbar-thumb { background: rgba(68,238,255,0.15); border-radius: 99px; }
+.ncs-requests-list {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   CHAT PAGE
+   ═══════════════════════════════════════════════════════════ */
+#ncsPageChat .ncs-topbar::after {
+  background: linear-gradient(90deg, transparent, var(--ncs-green) 40%, var(--ncs-cyan) 60%, transparent);
+}
+#ncsPageChat .ncs-topbar-title { color: var(--ncs-green); text-shadow: 0 0 20px rgba(68,255,136,0.5); }
+
+/* Conversation list item */
+.ncs-conv-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 16px;
+  cursor: pointer;
+  border-radius: 10px;
+  margin: 2px 8px;
+  transition: background 0.14s;
+}
+.ncs-conv-row:hover { background: rgba(68,255,136,0.05); }
+.ncs-conv-row.selected { background: rgba(68,255,136,0.09); }
+.ncs-conv-info { flex: 1; min-width: 0; }
+.ncs-conv-name {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 15px; font-weight: 700;
+  color: var(--ncs-text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.ncs-conv-preview {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 12px;
+  color: var(--ncs-muted);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  margin-top: 2px;
+}
+.ncs-conv-badge {
+  min-width: 20px; height: 20px;
+  border-radius: 10px;
+  background: var(--ncs-pink);
+  color: #fff;
+  font-family: 'Orbitron', monospace;
+  font-size: 9px; font-weight: 700;
+  padding: 0 5px;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 0 8px rgba(255,68,102,0.6);
+  flex-shrink: 0;
+}
+
+/* Chat window */
+.ncs-chat-window {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+  min-width: 0;
+}
+.ncs-chat-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 24px;
+  border-bottom: 1px solid var(--ncs-border);
+  flex-shrink: 0;
+  background: rgba(6,6,18,0.7);
+}
+.ncs-chat-header-name {
+  font-family: 'Orbitron', monospace;
+  font-size: 13px; font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--ncs-text);
+}
+.ncs-chat-header-status {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 12px;
+  color: var(--ncs-muted);
+  display: flex; align-items: center; gap: 5px;
+  margin-top: 1px;
+}
+
+/* Messages area */
+.ncs-messages-area {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 0;
+}
+.ncs-messages-area::-webkit-scrollbar { width: 3px; }
+.ncs-messages-area::-webkit-scrollbar-thumb { background: rgba(68,238,255,0.15); border-radius: 99px; }
+
+.ncs-msg-group { margin-bottom: 10px; }
+.ncs-msg-date-div {
+  text-align: center;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 11px;
+  color: var(--ncs-muted);
+  padding: 8px 0;
+  position: relative;
+}
+.ncs-msg-date-div::before, .ncs-msg-date-div::after {
+  content: '';
+  position: absolute;
+  top: 50%; transform: translateY(-50%);
+  width: calc(50% - 70px);
+  height: 1px;
+  background: rgba(255,255,255,0.06);
+}
+.ncs-msg-date-div::before { left: 0; }
+.ncs-msg-date-div::after  { right: 0; }
+
+.ncs-msg {
+  display: flex;
+  flex-direction: column;
+  max-width: 68%;
+}
+.ncs-msg.mine { align-items: flex-end; margin-left: auto; }
+.ncs-msg.theirs { align-items: flex-start; margin-right: auto; }
+.ncs-msg-bubble {
+  padding: 10px 14px;
+  border-radius: 14px;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 14px;
+  line-height: 1.45;
+  word-break: break-word;
+  max-width: 100%;
+}
+.ncs-msg.mine .ncs-msg-bubble {
+  background: linear-gradient(135deg, rgba(68,238,255,0.18), rgba(68,238,255,0.1));
+  border: 1px solid rgba(68,238,255,0.25);
+  color: var(--ncs-text);
+  border-bottom-right-radius: 4px;
+}
+.ncs-msg.theirs .ncs-msg-bubble {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: var(--ncs-text);
+  border-bottom-left-radius: 4px;
+}
+.ncs-msg-time {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 10px;
+  color: rgba(255,255,255,0.22);
+  margin-top: 3px;
+  padding: 0 4px;
+}
+
+/* Message input bar */
+.ncs-input-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 20px;
+  border-top: 1px solid var(--ncs-border);
+  background: rgba(6,6,18,0.8);
+  flex-shrink: 0;
+}
+.ncs-msg-input {
+  flex: 1;
+  padding: 12px 16px;
+  background: var(--ncs-input-bg);
+  border: 1px solid var(--ncs-input-border);
+  border-radius: 12px;
+  color: var(--ncs-text);
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.ncs-msg-input:focus {
+  border-color: rgba(68,238,255,0.45);
+  box-shadow: 0 0 0 3px rgba(68,238,255,0.07);
+}
+.ncs-msg-input::placeholder { color: var(--ncs-muted); font-weight: 400; }
+.ncs-send-btn {
+  width: 46px; height: 46px;
+  border-radius: 12px;
+  border: none;
+  background: linear-gradient(135deg, var(--ncs-cyan), #4466FF);
+  color: #fff;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 0 14px rgba(68,238,255,0.35);
+  transition: transform 0.12s, box-shadow 0.15s;
+}
+.ncs-send-btn:hover { transform: scale(1.06); box-shadow: 0 0 20px rgba(68,238,255,0.55); }
+.ncs-send-btn:active { transform: scale(0.96); }
+
+/* No conversation selected */
+.ncs-no-conv {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: var(--ncs-muted);
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 15px;
+  text-align: center;
+  padding: 40px;
+}
+.ncs-no-conv-icon { font-size: 48px; opacity: 0.25; margin-bottom: 4px; }
+
+.ncs-load-more-btn {
+  align-self: center;
+  padding: 6px 16px;
+  border-radius: 8px;
+  border: 1px solid rgba(68,238,255,0.2);
+  background: rgba(68,238,255,0.06);
+  color: var(--ncs-cyan);
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 12px;
+  cursor: pointer;
+  margin: 8px auto;
+  transition: background 0.14s;
+}
+.ncs-load-more-btn:hover { background: rgba(68,238,255,0.12); }
+
+/* ═══════════════════════════════════════════════════════════
+   CLANS PAGE
+   ═══════════════════════════════════════════════════════════ */
+#ncsPageClans .ncs-topbar::after {
+  background: linear-gradient(90deg, transparent, var(--ncs-purple) 40%, var(--ncs-gold) 60%, transparent);
+}
+#ncsPageClans .ncs-topbar-title { color: var(--ncs-purple); text-shadow: 0 0 20px rgba(204,136,255,0.5); }
+
+/* Clan sub-nav (vertical sidebar nav) */
+.ncs-clan-sidenav {
+  width: 200px;
+  flex-shrink: 0;
+  border-right: 1px solid rgba(255,255,255,0.06);
+  display: flex;
+  flex-direction: column;
+  padding: 16px 10px;
+  gap: 4px;
+  background: rgba(4,4,12,0.4);
+  overflow-y: auto;
+}
+.ncs-sidenav-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--ncs-muted);
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 14px; font-weight: 600;
+  cursor: pointer;
+  transition: background 0.14s, color 0.14s, border-color 0.14s;
+  text-align: left;
+  width: 100%;
+}
+.ncs-sidenav-btn:hover {
+  background: rgba(204,136,255,0.08);
+  color: var(--ncs-text);
+}
+.ncs-sidenav-btn.active {
+  background: rgba(204,136,255,0.14);
+  border-color: rgba(204,136,255,0.28);
+  color: var(--ncs-purple);
+  box-shadow: 0 0 12px rgba(204,136,255,0.12);
+}
+.ncs-sidenav-icon { font-size: 16px; flex-shrink: 0; }
+
+/* Clan content area */
+.ncs-clan-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  padding: 24px;
+  gap: 16px;
+  min-width: 0;
+}
+.ncs-clan-content::-webkit-scrollbar { width: 3px; }
+.ncs-clan-content::-webkit-scrollbar-thumb { background: rgba(204,136,255,0.2); border-radius: 99px; }
+
+/* Browse clan grid */
+.ncs-clan-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 14px;
+}
+.ncs-clan-card {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 14px;
+  padding: 18px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, transform 0.12s, box-shadow 0.15s;
+}
+.ncs-clan-card:hover {
+  border-color: rgba(204,136,255,0.28);
+  background: rgba(204,136,255,0.04);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+}
+.ncs-clan-card-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 12px;
+}
+.ncs-clan-emblem {
+  font-size: 32px;
+  filter: drop-shadow(0 0 8px rgba(255,215,0,0.5));
+  flex-shrink: 0;
+  line-height: 1;
+}
+.ncs-clan-card-title {
+  flex: 1; min-width: 0;
+}
+.ncs-clan-card-name {
+  font-family: 'Orbitron', monospace;
+  font-size: 13px; font-weight: 700;
+  color: var(--ncs-text);
+  letter-spacing: 0.04em;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.ncs-clan-tag-lg {
+  font-family: 'Orbitron', monospace;
+  font-size: 10px; font-weight: 700;
+  color: var(--ncs-purple);
+  letter-spacing: 0.14em;
+  background: rgba(204,136,255,0.1);
+  border: 1px solid rgba(204,136,255,0.2);
+  border-radius: 5px;
+  padding: 2px 7px;
+  display: inline-block;
+  margin-top: 3px;
+}
+.ncs-clan-card-stats {
+  display: flex; gap: 14px;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 12px;
+  color: var(--ncs-muted);
+}
+.ncs-clan-card-stat { display: flex; align-items: center; gap: 4px; }
+.ncs-clan-card-desc {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 12px;
+  color: rgba(255,255,255,0.45);
+  margin: 8px 0;
+  line-height: 1.5;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+.ncs-clan-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 10px;
+}
+.ncs-clan-card-leader {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 11px;
+  color: var(--ncs-muted);
+}
+.ncs-clan-open-badge {
+  font-family: 'Orbitron', monospace;
+  font-size: 8px; font-weight: 700;
+  letter-spacing: 0.1em;
+  padding: 3px 8px;
+  border-radius: 5px;
+  background: rgba(68,255,136,0.1);
+  color: var(--ncs-green);
+  border: 1px solid rgba(68,255,136,0.2);
+}
+.ncs-clan-invite-badge {
+  font-family: 'Orbitron', monospace;
+  font-size: 8px; font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 3px 8px;
+  border-radius: 5px;
+  background: rgba(255,255,255,0.05);
+  color: var(--ncs-muted);
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+/* My Clan hero */
+.ncs-myclan-hero {
+  background: linear-gradient(135deg, rgba(204,136,255,0.1), rgba(255,215,0,0.05));
+  border: 1px solid rgba(204,136,255,0.2);
+  border-radius: 16px;
+  padding: 24px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-shrink: 0;
+}
+.ncs-myclan-emblem {
+  font-size: 52px;
+  filter: drop-shadow(0 0 14px rgba(255,215,0,0.6));
+  flex-shrink: 0;
+  line-height: 1;
+}
+.ncs-myclan-info { flex: 1; min-width: 0; }
+.ncs-myclan-name {
+  font-family: 'Orbitron', monospace;
+  font-size: 20px; font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--ncs-text);
+}
+.ncs-myclan-tag {
+  font-family: 'Orbitron', monospace;
+  font-size: 12px; font-weight: 700;
+  color: var(--ncs-purple);
+  letter-spacing: 0.18em;
+  margin: 4px 0;
+}
+.ncs-myclan-stats {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 13px;
+  color: var(--ncs-muted);
+  display: flex; gap: 16px; flex-wrap: wrap;
+  margin-top: 6px;
+}
+.ncs-myclan-stat { display: flex; align-items: center; gap: 5px; }
+.ncs-myclan-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* Member rows */
+.ncs-member-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 14px;
+  overflow: hidden;
+}
+.ncs-member-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  transition: background 0.13s;
+}
+.ncs-member-row:hover { background: rgba(255,255,255,0.03); }
+.ncs-member-row + .ncs-member-row { border-top: 1px solid rgba(255,255,255,0.04); }
+.ncs-member-info { flex: 1; min-width: 0; }
+.ncs-member-name {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 14px; font-weight: 700;
+  color: var(--ncs-text);
+  display: flex; align-items: center; gap: 7px;
+}
+.ncs-member-sub {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 11px;
+  color: var(--ncs-muted);
+  margin-top: 1px;
+}
+
+/* Role badges */
+.ncs-role {
+  font-family: 'Orbitron', monospace;
+  font-size: 8px; font-weight: 700;
+  letter-spacing: 0.1em;
+  padding: 2px 7px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+.ncs-role-leader  { background: rgba(255,215,0,0.12);    color: var(--ncs-gold);   border: 1px solid rgba(255,215,0,0.25); }
+.ncs-role-officer { background: rgba(204,136,255,0.12);  color: var(--ncs-purple); border: 1px solid rgba(204,136,255,0.25); }
+.ncs-role-member  { background: rgba(255,255,255,0.05);  color: var(--ncs-muted);  border: 1px solid rgba(255,255,255,0.1); }
+
+/* Clan create form */
+.ncs-create-form {
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 16px;
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  max-width: 560px;
+}
+.ncs-field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.ncs-field-label {
+  font-family: 'Orbitron', monospace;
+  font-size: 9px; font-weight: 700;
+  letter-spacing: 0.14em;
+  color: var(--ncs-cyan);
+  opacity: 0.75;
+  display: flex; align-items: center; gap: 8px;
+}
+.ncs-field-hint {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 11px;
+  color: var(--ncs-muted);
+  font-weight: 400;
+  letter-spacing: 0;
+  opacity: 1;
+}
+.ncs-field-input {
+  width: 100%;
+  padding: 11px 14px;
+  background: var(--ncs-input-bg);
+  border: 1px solid var(--ncs-input-border);
+  border-radius: 10px;
+  color: var(--ncs-text);
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 14px; font-weight: 500;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  box-sizing: border-box;
+}
+.ncs-field-input:focus {
+  border-color: rgba(68,238,255,0.5);
+  box-shadow: 0 0 0 3px rgba(68,238,255,0.08);
+}
+.ncs-field-input::placeholder { color: var(--ncs-muted); font-weight: 400; }
+.ncs-field-textarea {
+  min-height: 80px;
+  resize: none;
+}
+.ncs-field-tag {
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-family: 'Orbitron', monospace;
+  font-size: 12px;
+}
+.ncs-field-row {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+.ncs-emblem-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.ncs-emblem-btn {
+  width: 42px; height: 42px;
+  border-radius: 10px;
+  border: 1.5px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.04);
+  font-size: 20px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: border-color 0.14s, background 0.14s, transform 0.12s, box-shadow 0.14s;
+}
+.ncs-emblem-btn:hover { border-color: rgba(204,136,255,0.4); transform: scale(1.08); }
+.ncs-emblem-btn.selected {
+  border-color: var(--ncs-purple);
+  background: rgba(204,136,255,0.18);
+  box-shadow: 0 0 10px rgba(204,136,255,0.4);
+  transform: scale(1.1);
+}
+/* Toggle */
+.ncs-toggle-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.ncs-toggle {
+  position: relative;
+  width: 44px; height: 24px;
+  flex-shrink: 0;
+}
+.ncs-toggle input { display: none; }
+.ncs-toggle-track {
+  position: absolute; inset: 0;
+  background: rgba(255,255,255,0.1);
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.15);
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+.ncs-toggle input:checked ~ .ncs-toggle-track {
+  background: rgba(68,238,255,0.25);
+  border-color: var(--ncs-cyan);
+}
+.ncs-toggle-thumb {
+  position: absolute;
+  top: 3px; left: 3px;
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  transition: left 0.2s;
+  pointer-events: none;
+}
+.ncs-toggle input:checked ~ .ncs-toggle-track .ncs-toggle-thumb { left: 23px; }
+.ncs-toggle-label {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 13px; font-weight: 600;
+  color: var(--ncs-text);
+}
+.ncs-form-error {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 12px;
+  color: var(--ncs-pink);
+  text-align: center;
+  min-height: 18px;
+}
+
+/* Clan chat (full-height inside clan content) */
+.ncs-clanchat-wrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 14px;
+  min-height: 400px;
+}
+.ncs-clanchat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+}
+.ncs-clanchat-messages::-webkit-scrollbar { width: 3px; }
+.ncs-clanchat-messages::-webkit-scrollbar-thumb { background: rgba(204,136,255,0.2); border-radius: 99px; }
+.ncs-clan-msg {
+  display: flex; align-items: flex-start; gap: 10px;
+}
+.ncs-clan-msg-body { flex: 1; min-width: 0; }
+.ncs-clan-msg-from {
+  font-family: 'Orbitron', monospace;
+  font-size: 9px; font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--ncs-cyan);
+  margin-bottom: 3px;
+  display: flex; align-items: center; gap: 6px;
+}
+.ncs-clan-msg-from.role-leader  { color: var(--ncs-gold); }
+.ncs-clan-msg-from.role-officer { color: var(--ncs-purple); }
+.ncs-clan-msg-text {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 14px;
+  color: rgba(255,255,255,0.82);
+  line-height: 1.45;
+  word-break: break-word;
+}
+.ncs-clan-msg-time {
+  font-size: 10px;
+  color: rgba(255,255,255,0.2);
+  font-family: 'Rajdhani', sans-serif;
+  margin-top: 2px;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   NAV BUTTONS
+   ═══════════════════════════════════════════════════════════ */
+.ncs-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 15px;
+  border-radius: 9px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.04);
+  color: var(--ncs-muted);
+  font-family: 'Orbitron', monospace;
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s, box-shadow 0.15s;
+  position: relative;
+  white-space: nowrap;
+}
+.ncs-nav-btn:hover {
+  background: rgba(204,136,255,0.12);
+  border-color: rgba(204,136,255,0.35);
+  color: var(--ncs-purple);
+  box-shadow: 0 0 12px rgba(204,136,255,0.2);
+}
+.ncs-nav-icon-btn {
+  position: relative;
+  width: 38px; height: 38px;
+  border-radius: 9px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: var(--ncs-muted);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.14s, border-color 0.14s, color 0.14s;
+}
+.ncs-nav-icon-btn:hover {
+  background: rgba(68,238,255,0.1);
+  border-color: rgba(68,238,255,0.3);
+  color: var(--ncs-cyan);
+}
+.ncs-nav-badge {
+  position: absolute;
+  top: -5px; right: -5px;
+  min-width: 18px; height: 18px;
+  border-radius: 9px;
+  background: var(--ncs-pink);
+  color: #fff;
+  font-family: 'Orbitron', monospace;
+  font-size: 8px; font-weight: 700;
+  padding: 0 4px;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 0 8px rgba(255,68,102,0.6);
+  border: 1.5px solid #06060e;
+}
+
+/* FAB */
+.ncs-fab {
+  position: fixed;
+  bottom: 28px; right: 28px;
+  width: 58px; height: 58px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  z-index: 2000;
+  background: linear-gradient(135deg, #44EEFF 0%, #8866FF 55%, #CC44FF 100%);
+  color: #fff;
+  box-shadow: 0 0 0 2px rgba(68,238,255,0.2), 0 0 20px rgba(68,238,255,0.4), 0 0 44px rgba(136,102,255,0.2), 0 4px 20px rgba(0,0,0,0.5);
+  transition: transform 0.2s var(--ncs-ease), box-shadow 0.2s;
+  animation: ncsFabPulse 3s ease-in-out infinite;
+}
+.ncs-fab:hover {
+  transform: scale(1.1) translateY(-2px);
+  box-shadow: 0 0 0 3px rgba(68,238,255,0.45), 0 0 30px rgba(68,238,255,0.65), 0 0 60px rgba(136,102,255,0.35), 0 8px 28px rgba(0,0,0,0.55);
+  animation: none;
+}
+.ncs-fab:active { transform: scale(0.95); }
+@keyframes ncsFabPulse {
+  0%,100% { box-shadow: 0 0 0 2px rgba(68,238,255,0.2), 0 0 20px rgba(68,238,255,0.4), 0 0 44px rgba(136,102,255,0.2), 0 4px 20px rgba(0,0,0,0.5); }
+  50%      { box-shadow: 0 0 0 4px rgba(68,238,255,0.12), 0 0 30px rgba(68,238,255,0.5), 0 0 60px rgba(136,102,255,0.3), 0 4px 20px rgba(0,0,0,0.5); }
+}
+.ncs-fab-badge {
+  position: absolute;
+  top: -4px; right: -4px;
+  min-width: 20px; height: 20px;
+  padding: 0 5px;
+  border-radius: 10px;
+  background: var(--ncs-pink);
+  color: #fff;
+  font-family: 'Orbitron', monospace;
+  font-size: 9px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 0 10px rgba(255,68,102,0.8);
+  border: 2px solid #06060e;
+  animation: ncsBadgePop 0.3s var(--ncs-ease);
+}
+@keyframes ncsBadgePop { 0% { transform: scale(0); } 70% { transform: scale(1.2); } 100% { transform: scale(1); } }
+
+/* ═══════════════════════════════════════════════════════════
+   TOAST NOTIFICATIONS
+   ═══════════════════════════════════════════════════════════ */
+.ncs-toast-container {
+  position: fixed;
+  top: 72px; right: 18px;
+  z-index: 3000;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+  max-width: 320px;
+}
+.ncs-toast {
+  background: rgba(10,10,24,0.97);
+  border: 1px solid rgba(68,238,255,0.15);
+  border-radius: 12px;
+  padding: 13px 16px;
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  box-shadow: 0 6px 28px rgba(0,0,0,0.55), 0 0 0 1px rgba(68,238,255,0.04);
+  pointer-events: all;
+  opacity: 0;
+  transform: translateX(20px);
+  transition: opacity 0.28s var(--ncs-ease), transform 0.28s var(--ncs-ease);
+}
+.ncs-toast.ncs-toast-in  { opacity: 1; transform: translateX(0); }
+.ncs-toast.ncs-toast-out { opacity: 0; transform: translateX(20px); }
+.ncs-toast-friend { border-color: rgba(68,238,255,0.28); }
+.ncs-toast-clan   { border-color: rgba(204,136,255,0.28); }
+.ncs-toast-dm     { border-color: rgba(68,255,136,0.28); }
+.ncs-toast-error  { border-color: rgba(255,68,102,0.3); }
+.ncs-toast-icon   { font-size: 20px; flex-shrink: 0; margin-top: 1px; }
+.ncs-toast-msg {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 13px; font-weight: 500;
+  color: var(--ncs-text);
+  line-height: 1.45;
+  word-break: break-word;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   RESPONSIVE
+   ═══════════════════════════════════════════════════════════ */
+@media (max-width: 860px) {
+  .ncs-friends-right { width: 300px; }
+  .ncs-clan-sidenav  { width: 160px; }
+}
+@media (max-width: 640px) {
+  .ncs-topbar { padding: 0 16px; height: 56px; }
+  .ncs-topbar-title { font-size: 13px; }
+  .ncs-sidebar { width: 100%; }
+  .ncs-page-body { flex-direction: column; }
+  .ncs-friends-right { width: 100%; border-left: none; border-top: 1px solid var(--ncs-border); max-height: 45vh; }
+  .ncs-clan-sidenav { width: 100%; flex-direction: row; overflow-x: auto; padding: 10px; border-right: none; border-bottom: 1px solid rgba(255,255,255,0.06); height: auto; gap: 6px; }
+  .ncs-sidenav-btn { min-width: max-content; }
+  .ncs-clan-content { padding: 16px; }
+  .ncs-fab { bottom: 18px; right: 18px; width: 52px; height: 52px; }
+  .ncs-create-form { padding: 18px; }
+  .ncs-myclan-hero { flex-direction: column; text-align: center; }
+  .ncs-myclan-actions { flex-direction: row; }
+}
