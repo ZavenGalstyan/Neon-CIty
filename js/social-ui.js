@@ -331,7 +331,7 @@ const SocialUI = (() => {
       : `<span class="ncs-offline-dot"></span> ${_timeAgo(f.lastSeen)}`;
     return `
       <div class="ncs-person-row" data-name="${_esc(f.name)}" title="Click to chat">
-        <div class="ncs-av ${f.isOnline ? 'online' : ''}">${f.name[0].toUpperCase()}</div>
+        <div class="ncs-av ${f.isOnline ? 'online' : ''}" data-col="${_avCol(f.name)}">${f.name[0].toUpperCase()}</div>
         <div class="ncs-person-info">
           <div class="ncs-person-name">${_esc(f.name)} ${tag}</div>
           <div class="ncs-person-sub">${statusDot} &nbsp;·&nbsp; Lv ${f.account?.level || 1}</div>
@@ -382,7 +382,7 @@ const SocialUI = (() => {
     // Incoming friend requests
     html += S.incoming.map(r => `
       <div class="ncs-person-row">
-        <div class="ncs-av">${r.fromName[0].toUpperCase()}</div>
+        <div class="ncs-av" data-col="${_avCol(r.fromName)}">${r.fromName[0].toUpperCase()}</div>
         <div class="ncs-person-info">
           <div class="ncs-person-name">${_esc(r.fromName)}</div>
           <div class="ncs-person-sub">Wants to be friends</div>
@@ -401,7 +401,7 @@ const SocialUI = (() => {
     // Outgoing requests
     html += S.outgoing.map(r => `
       <div class="ncs-person-row">
-        <div class="ncs-av" style="opacity:0.6">${r.toName[0].toUpperCase()}</div>
+        <div class="ncs-av" data-col="${_avCol(r.toName)}" style="opacity:0.55">${r.toName[0].toUpperCase()}</div>
         <div class="ncs-person-info">
           <div class="ncs-person-name">${_esc(r.toName)}</div>
           <div class="ncs-person-sub" style="opacity:0.55">Request sent · pending</div>
@@ -451,7 +451,7 @@ const SocialUI = (() => {
       const tag = p.clanTag ? `<span class="ncs-clan-tag">[${_esc(p.clanTag)}]</span>` : '';
       return `
         <div class="ncs-person-row" style="margin:2px 0;">
-          <div class="ncs-av ncs-av-sm ${p.isOnline?'online':''}">${p.name[0].toUpperCase()}</div>
+          <div class="ncs-av ncs-av-sm ${p.isOnline?'online':''}" data-col="${_avCol(p.name)}">${p.name[0].toUpperCase()}</div>
           <div class="ncs-person-info">
             <div class="ncs-person-name" style="font-size:14px;">${_esc(p.name)} ${tag}</div>
             <div class="ncs-person-sub">Lv ${p.account?.level || '?'}</div>
@@ -547,7 +547,7 @@ const SocialUI = (() => {
             const isActive = S.activeDM?.conversationId === c.id;
             return `
               <div class="ncs-conv-row${isActive?' selected':''}" data-conv-id="${_esc(c.id)}" data-partner="${_esc(partnerName)}">
-                <div class="ncs-av ncs-av-sm">${(partnerName[0]||'?').toUpperCase()}</div>
+                <div class="ncs-av ncs-av-sm" data-col="${_avCol(partnerName)}">${(partnerName[0]||'?').toUpperCase()}</div>
                 <div class="ncs-conv-info">
                   <div class="ncs-conv-name">${_esc(partnerName)}</div>
                   <div class="ncs-conv-preview">${mine?'You: ':''}${_esc(preview)}</div>
@@ -563,7 +563,7 @@ const SocialUI = (() => {
           html += `<div class="ncs-sec-label" style="opacity:0.45">FRIENDS</div>`;
           html += unchatted.map(f => `
             <div class="ncs-conv-row" data-partner="${_esc(f.name)}">
-              <div class="ncs-av ncs-av-sm ${f.isOnline?'online':''}">${f.name[0].toUpperCase()}</div>
+              <div class="ncs-av ncs-av-sm ${f.isOnline?'online':''}" data-col="${_avCol(f.name)}">${f.name[0].toUpperCase()}</div>
               <div class="ncs-conv-info">
                 <div class="ncs-conv-name">${_esc(f.name)}</div>
                 <div class="ncs-conv-preview" style="opacity:0.4">Start a conversation…</div>
@@ -633,7 +633,7 @@ const SocialUI = (() => {
 
     win.innerHTML = `
       <div class="ncs-chat-header">
-        <div class="ncs-av ncs-av-sm ${isOnline?'online':''}">${S.activeDM.friendName[0].toUpperCase()}</div>
+        <div class="ncs-av ncs-av-sm ${isOnline?'online':''}" data-col="${_avCol(S.activeDM.friendName)}">${S.activeDM.friendName[0].toUpperCase()}</div>
         <div>
           <div class="ncs-chat-header-name">${_esc(S.activeDM.friendName)}</div>
           <div class="ncs-chat-header-status">
@@ -668,7 +668,7 @@ const SocialUI = (() => {
     for (const msg of S.dmMessages) {
       const mine = msg.fromName === S.me?.name;
       const d = msg.createdAt ? new Date(msg.createdAt).toLocaleDateString() : '';
-      if (d !== lastDate) { html += `<div class="ncs-msg-date-div">${d}</div>`; lastDate = d; }
+      if (d !== lastDate) { html += `<div class="ncs-msg-date-div"><span>${d}</span></div>`; lastDate = d; }
       html += `
         <div class="ncs-msg ${mine?'mine':'theirs'}">
           <div class="ncs-msg-bubble">${_esc(msg.content)}</div>
@@ -897,7 +897,7 @@ const SocialUI = (() => {
       }
       return `
         <div class="ncs-member-row">
-          <div class="ncs-av ncs-av-sm ${m.isOnline?'online':''}">${m.name[0].toUpperCase()}</div>
+          <div class="ncs-av ncs-av-sm ${m.isOnline?'online':''}" data-col="${_avCol(m.name)}">${m.name[0].toUpperCase()}</div>
           <div class="ncs-member-info">
             <div class="ncs-member-name">${_esc(m.name)} <span class="ncs-role ncs-role-${m.role}">${m.role}</span></div>
             <div class="ncs-member-sub">Lv ${m.account?.level||1} · ${m.stats?.kills||0} kills${m.isOnline?' · <span style="color:var(--ncs-green)">Online</span>':''}</div>
@@ -933,7 +933,7 @@ const SocialUI = (() => {
       const roleClass = msg.fromRole === 'leader' ? 'role-leader' : msg.fromRole === 'officer' ? 'role-officer' : '';
       return `
         <div class="ncs-clan-msg">
-          <div class="ncs-av ncs-av-sm">${msg.fromName[0].toUpperCase()}</div>
+          <div class="ncs-av ncs-av-sm" data-col="${_avCol(msg.fromName)}">${msg.fromName[0].toUpperCase()}</div>
           <div class="ncs-clan-msg-body">
             <div class="ncs-clan-msg-from ${roleClass}">${_esc(msg.fromName)} <span class="ncs-role ncs-role-${msg.fromRole||'member'}" style="font-size:7px;">${msg.fromRole||''}</span></div>
             <div class="ncs-clan-msg-text">${_esc(msg.content)}</div>
@@ -1191,6 +1191,14 @@ const SocialUI = (() => {
   /* ══════════════════════════════════════════════════════════
      UTILS
   ══════════════════════════════════════════════════════════ */
+  /* Avatar color index — deterministic, based on name */
+  function _avCol(name) {
+    if (!name) return 0;
+    let h = 0;
+    for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;
+    return h % 8;
+  }
+
   function _esc(s) {
     if (s == null) return '';
     return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
