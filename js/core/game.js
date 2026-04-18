@@ -230,6 +230,10 @@ class Game {
     this._casino = new CasinoManager();
     this._casinoHosts = [];
     this._nearCasinoHost = false;
+    // ── Police Station ─────────────────────────────────────────
+    this._policeOfficers = [];
+    // ── Tech Shop (Wasteland) ─────────────────────────────────
+    this._techShopCustomers = [];
     // ── Building NPC Shop ─────────────────────────────────────
     this._buildingNpcs = [];
     this._nearBuildingNpc = false;
@@ -2834,16 +2838,16 @@ class Game {
 
   _spawnAmbientTraffic() {
     if (this._arenaMode || this._zombieMode || this._towerMode) return;
-    // No ambient traffic on neon city map
-    if (this.map.config.id === "neon_city") return;
+    // No ambient traffic on neon city or wasteland maps
+    if (this.map.config.id === "neon_city" || this.map.config.wasteland) return;
     const base = this._metropolisMode ? 12 : 6;
     const count = base + Math.floor(Math.random() * 6);
     for (let i = 0; i < count; i++) this._respawnAmbientCar();
   }
 
   _respawnAmbientCar() {
-    // No ambient traffic on neon city map
-    if (this.map.config.id === "neon_city") return;
+    // No ambient traffic on neon city or wasteland maps
+    if (this.map.config.id === "neon_city" || this.map.config.wasteland) return;
     const maxCars = this._metropolisMode ? 22 : 14;
     if (this._ambientCars.length >= maxCars) return;
     // Spawn off-camera on a road tile
@@ -3277,6 +3281,12 @@ class Game {
           this.state = "playing";
         }
       }
+      if (this._indoor.isPoliceStation) {
+        this._policeOfficers = [];
+      }
+      if (this._indoor.isTechShop) {
+        this._techShopCustomers = [];
+      }
       if (this._indoor.isMetro) {
         this._metroWaveTimer = undefined;
       }
@@ -3322,6 +3332,7 @@ class Game {
         if (room.isDealership) {
           const isNeonCity = this.map.config.id === "neon_city";
           const isGalactica = !!this.map.config.galactica;
+          const isWasteland = !!this.map.config.wasteland;
           if (isNeonCity) {
             // Neon City: One professional cyber salesperson behind the counter
             // Counter is at S * 1.8 + 35 height, salesperson stands in front of counter (facing customers)
@@ -3335,7 +3346,14 @@ class Game {
             const spX = room.roomW / 2;
             const spY = room.roomH * 0.38;
             this._salespersons = [
-              new Salesperson(spX, spY, "#AA88FF", "COMMANDER", true),
+              new Salesperson(spX, spY, "#AA88FF", "COMMANDER", "galactica"),
+            ];
+          } else if (isWasteland) {
+            // Wasteland: Grizzled mechanic/trader behind the counter
+            const spX = room.roomW / 2;
+            const spY = room.roomH * 0.38;
+            this._salespersons = [
+              new Salesperson(spX, spY, "#a08060", "MECHANIC", "wasteland"),
             ];
           } else {
             this._salespersons = [
@@ -3368,6 +3386,26 @@ class Game {
               "HOST",
             ),
           ];
+        } else if (door.bTypeIdx === 15) {
+          // POLICE STATION: No enemies, spawn police officers instead
+          room.isPoliceStation = true;
+          this._policeOfficers = [
+            // Officer standing near the first desk (left side)
+            { x: room.roomW * 0.22, y: room.roomH * 0.46, sitting: false, label: "OFC. MARTINEZ" },
+            // Officer sitting at the second desk
+            { x: room.roomW * 0.40, y: room.roomH * 0.72, sitting: true, label: "DET. WONG" },
+            // Officer standing guard next to the criminal's cell (top-right)
+            { x: room.roomW * 0.68, y: room.roomH * 0.26, sitting: false, label: "SGT. KELLY" },
+          ];
+        } else if (door.bTypeIdx === 13 && !!this.map?.config?.wasteland) {
+          // WASTELAND TECH LAB: Tech shop with vendor and customers, no enemies
+          room.isTechShop = true;
+          this._techShopCustomers = [
+            // Customer browsing gadgets
+            { x: room.roomW * 0.30, y: room.roomH * 0.45, browsing: true },
+            // Customer at counter
+            { x: room.roomW * 0.55, y: room.roomH * 0.28, atCounter: true },
+          ];
         } else if (!this._lifeMode) {
           const key = `${door.tx},${door.ty}`;
           if (!this._visitedRooms.has(key)) {
@@ -3386,18 +3424,20 @@ class Game {
           !room.isDealership &&
           !room.isCasino &&
           !room.isHome &&
-          !room.isMetro
+          !room.isMetro &&
+          !room.isPoliceStation
         ) {
           const bType =
             typeof room._buildingType === "number" ? room._buildingType : 0;
           const isNeonCity = this.map?.config?.id === "neon_city";
           const isGalactica = !!this.map?.config?.galactica;
           const isZombie    = !!this.map?.config?.zombie;
-          const isSpecialMap = isNeonCity || isGalactica;
-          // Special positioning for Neon City / Galactica / Zombie buildings
+          const isWasteland = !!this.map?.config?.wasteland;
+          const isSpecialMap = isNeonCity || isGalactica || isWasteland;
+          // Special positioning for Neon City / Galactica / Wasteland / Zombie buildings
           let npcX = room.entryX + 60;
           let npcY = room.entryY - 110;
-          if (isNeonCity && bType === 12) {
+          if ((isNeonCity || isWasteland) && bType === 12) {
             // Pawnshop - position vendor near the counter
             npcX = room.roomW / 2;
             npcY = room.roomH * 0.48;
@@ -3432,9 +3472,15 @@ class Game {
             npcX = room.roomW / 2;
             npcY = room.roomH * 0.20;
           }
-          const useHumanRender = isNeonCity || isZombie || (isGalactica && (bType === 3 || bType === 8 || bType === 0 || bType === 5 || bType === 22));
           const useGirlRender  = isGalactica && bType === 8;
-          this._buildingNpcs = [new BuildingNPC(npcX, npcY, bType, useHumanRender, useGirlRender)];
+          // Determine render type for BuildingNPC
+          let npcRenderType = false;
+          if (isWasteland) {
+            npcRenderType = 'wasteland';
+          } else if (isNeonCity || isZombie || (isGalactica && (bType === 3 || bType === 8 || bType === 0 || bType === 5 || bType === 22))) {
+            npcRenderType = true; // neonCity style
+          }
+          this._buildingNpcs = [new BuildingNPC(npcX, npcY, bType, npcRenderType, useGirlRender)];
         }
         return;
       }
@@ -3944,6 +3990,14 @@ class Game {
     for (const b of this._indoorBullets) if (b.isPlayer) b.render(ctx);
     if (!this.player.dead) this.player.render(ctx);
     for (const npc of this._buildingNpcs) npc.render(ctx);
+    // Render police officers
+    for (const officer of this._policeOfficers) {
+      this._renderPoliceOfficer(ctx, officer);
+    }
+    // Render tech shop customers
+    for (const customer of this._techShopCustomers) {
+      this._renderTechShopCustomer(ctx, customer);
+    }
     ctx.save();
     ctx.font = "bold 11px Orbitron, monospace";
     ctx.textAlign = "center";
@@ -3966,6 +4020,349 @@ class Game {
     }
     ctx.fillText("[E] EXIT", room.entryX, room.roomH - 8);
     ctx.restore();
+    ctx.restore();
+  }
+
+  _renderPoliceOfficer(ctx, officer) {
+    const { x, y, sitting, label } = officer;
+    const t = performance.now() / 1000;
+    const breathe = Math.sin(t * 1.5) * 1;
+    const sway = Math.sin(t * 0.8 + x * 0.1) * 1.2;
+
+    ctx.save();
+    ctx.translate(x + sway, y);
+
+    // Shadow
+    ctx.globalAlpha = 0.4;
+    ctx.fillStyle = "#000";
+    ctx.beginPath();
+    ctx.ellipse(2, sitting ? 14 : 28, 12, 4, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+
+    if (sitting) {
+      // ═══ SITTING POSE ═══
+      // Legs (bent, dark blue pants)
+      ctx.fillStyle = "#1a2a4a";
+      ctx.fillRect(-8, 4, 6, 10);
+      ctx.fillRect(2, 4, 6, 10);
+
+      // Shoes
+      ctx.fillStyle = "#1a1a1a";
+      ctx.fillRect(-9, 12, 8, 4);
+      ctx.fillRect(1, 12, 8, 4);
+
+      // Body/Torso (police uniform shirt)
+      const bodyGrad = ctx.createLinearGradient(-10, -22, 10, 6);
+      bodyGrad.addColorStop(0, "#2a3a6a");
+      bodyGrad.addColorStop(0.5, "#1a2a5a");
+      bodyGrad.addColorStop(1, "#0a1a4a");
+      ctx.fillStyle = bodyGrad;
+      ctx.beginPath();
+      ctx.roundRect(-11, -20 + breathe * 0.3, 22, 26, 3);
+      ctx.fill();
+
+      // Shirt collar
+      ctx.fillStyle = "#3a4a7a";
+      ctx.beginPath();
+      ctx.moveTo(-5, -18 + breathe * 0.3);
+      ctx.lineTo(0, -14 + breathe * 0.3);
+      ctx.lineTo(5, -18 + breathe * 0.3);
+      ctx.lineTo(4, -20 + breathe * 0.3);
+      ctx.lineTo(-4, -20 + breathe * 0.3);
+      ctx.closePath();
+      ctx.fill();
+
+      // Badge on chest
+      ctx.fillStyle = "#FFD700";
+      ctx.shadowColor = "#FFD700";
+      ctx.shadowBlur = 4;
+      ctx.beginPath();
+      ctx.moveTo(-6, -12 + breathe * 0.3);
+      ctx.lineTo(-3, -8 + breathe * 0.3);
+      ctx.lineTo(-6, -4 + breathe * 0.3);
+      ctx.lineTo(-9, -8 + breathe * 0.3);
+      ctx.closePath();
+      ctx.fill();
+      ctx.shadowBlur = 0;
+
+      // Arms resting on desk
+      ctx.fillStyle = "#1a2a5a";
+      ctx.fillRect(-15, -8 + breathe * 0.3, 5, 12);
+      ctx.fillRect(10, -8 + breathe * 0.3, 5, 12);
+
+      // Hands
+      ctx.fillStyle = "#DDCCAA";
+      ctx.beginPath();
+      ctx.arc(-12.5, 6 + breathe * 0.3, 3, 0, Math.PI * 2);
+      ctx.arc(12.5, 6 + breathe * 0.3, 3, 0, Math.PI * 2);
+      ctx.fill();
+
+    } else {
+      // ═══ STANDING POSE ═══
+      // Legs (dark blue uniform pants)
+      ctx.fillStyle = "#1a2a4a";
+      ctx.fillRect(-7, 8, 6, 18);
+      ctx.fillRect(1, 8, 6, 18);
+
+      // Shoes (black police shoes)
+      ctx.fillStyle = "#1a1a1a";
+      ctx.fillRect(-8, 24, 8, 5);
+      ctx.fillRect(0, 24, 8, 5);
+      // Shoe shine
+      ctx.fillStyle = "#3a3a3a";
+      ctx.fillRect(-7, 25, 6, 2);
+      ctx.fillRect(1, 25, 6, 2);
+
+      // Body/Torso (police uniform shirt)
+      const bodyGrad = ctx.createLinearGradient(-12, -26, 12, 10);
+      bodyGrad.addColorStop(0, "#2a3a6a");
+      bodyGrad.addColorStop(0.5, "#1a2a5a");
+      bodyGrad.addColorStop(1, "#0a1a4a");
+      ctx.fillStyle = bodyGrad;
+      ctx.beginPath();
+      ctx.roundRect(-12, -24 + breathe * 0.3, 24, 34, 3);
+      ctx.fill();
+
+      // Shirt details - buttons
+      ctx.fillStyle = "#4a5a8a";
+      for (let i = 0; i < 4; i++) {
+        ctx.beginPath();
+        ctx.arc(0, -18 + i * 8 + breathe * 0.3, 1.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Collar
+      ctx.fillStyle = "#3a4a7a";
+      ctx.beginPath();
+      ctx.moveTo(-6, -22 + breathe * 0.3);
+      ctx.lineTo(0, -17 + breathe * 0.3);
+      ctx.lineTo(6, -22 + breathe * 0.3);
+      ctx.lineTo(5, -24 + breathe * 0.3);
+      ctx.lineTo(-5, -24 + breathe * 0.3);
+      ctx.closePath();
+      ctx.fill();
+
+      // Badge on chest
+      ctx.fillStyle = "#FFD700";
+      ctx.shadowColor = "#FFD700";
+      ctx.shadowBlur = 5;
+      ctx.beginPath();
+      ctx.moveTo(-7, -14 + breathe * 0.3);
+      ctx.lineTo(-4, -9 + breathe * 0.3);
+      ctx.lineTo(-7, -4 + breathe * 0.3);
+      ctx.lineTo(-10, -9 + breathe * 0.3);
+      ctx.closePath();
+      ctx.fill();
+      ctx.shadowBlur = 0;
+
+      // Duty belt
+      ctx.fillStyle = "#2a2a2a";
+      ctx.fillRect(-12, 6 + breathe * 0.3, 24, 4);
+      ctx.fillStyle = "#FFD700";
+      ctx.fillRect(-2, 7 + breathe * 0.3, 4, 2); // belt buckle
+
+      // Arms
+      ctx.fillStyle = "#1a2a5a";
+      ctx.fillRect(-16, -20 + breathe * 0.3, 5, 18);
+      ctx.fillRect(11, -20 + breathe * 0.3, 5, 18);
+
+      // Hands
+      ctx.fillStyle = "#DDCCAA";
+      ctx.beginPath();
+      ctx.arc(-13.5, 0 + breathe * 0.3, 3.5, 0, Math.PI * 2);
+      ctx.arc(13.5, 0 + breathe * 0.3, 3.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Neck
+    ctx.fillStyle = "#DDCCAA";
+    ctx.fillRect(-3, sitting ? -24 : -28, 6, 5);
+
+    // Head
+    const headY = sitting ? -32 : -36;
+    const headGrad = ctx.createRadialGradient(-2, headY + breathe * 0.2, 2, 0, headY + 2 + breathe * 0.2, 11);
+    headGrad.addColorStop(0, "#EEDDCC");
+    headGrad.addColorStop(1, "#CCBBAA");
+    ctx.fillStyle = headGrad;
+    ctx.beginPath();
+    ctx.ellipse(0, headY + breathe * 0.2, 10, 11, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Hair (short, professional)
+    ctx.fillStyle = "#2a2a2a";
+    ctx.beginPath();
+    ctx.ellipse(0, headY - 6 + breathe * 0.2, 9, 5, 0, Math.PI, 0);
+    ctx.fill();
+    // Side hair
+    ctx.fillRect(-10, headY - 4 + breathe * 0.2, 3, 6);
+    ctx.fillRect(7, headY - 4 + breathe * 0.2, 3, 6);
+
+    // Police cap
+    ctx.fillStyle = "#0a1a3a";
+    ctx.beginPath();
+    ctx.ellipse(0, headY - 8 + breathe * 0.2, 12, 4, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillRect(-11, headY - 10 + breathe * 0.2, 22, 4);
+    // Cap visor
+    ctx.fillStyle = "#1a1a1a";
+    ctx.beginPath();
+    ctx.ellipse(0, headY - 6 + breathe * 0.2, 10, 3, 0, 0, Math.PI);
+    ctx.fill();
+    // Cap badge
+    ctx.fillStyle = "#FFD700";
+    ctx.shadowColor = "#FFD700";
+    ctx.shadowBlur = 3;
+    ctx.beginPath();
+    ctx.arc(0, headY - 8 + breathe * 0.2, 3, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // Eyes
+    ctx.fillStyle = "#FFFFFF";
+    ctx.beginPath();
+    ctx.ellipse(-4, headY + breathe * 0.2, 2.5, 2, 0, 0, Math.PI * 2);
+    ctx.ellipse(4, headY + breathe * 0.2, 2.5, 2, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#3a3020";
+    ctx.beginPath();
+    ctx.arc(-4, headY + breathe * 0.2, 1.3, 0, Math.PI * 2);
+    ctx.arc(4, headY + breathe * 0.2, 1.3, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Serious expression
+    ctx.strokeStyle = "#AA8877";
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(-3, headY + 6 + breathe * 0.2);
+    ctx.lineTo(3, headY + 6 + breathe * 0.2);
+    ctx.stroke();
+
+    // Name tag
+    ctx.fillStyle = "#4477FF";
+    ctx.shadowColor = "#4477FF";
+    ctx.shadowBlur = 6;
+    ctx.font = "bold 7px Orbitron, monospace";
+    ctx.textAlign = "center";
+    ctx.fillText(label, 0, sitting ? 24 : 40);
+    ctx.shadowBlur = 0;
+
+    ctx.restore();
+  }
+
+  _renderTechShopCustomer(ctx, customer) {
+    const { x, y, browsing, atCounter } = customer;
+    const t = performance.now() / 1000;
+    const breathe = Math.sin(t * 1.3 + x * 0.1) * 1;
+    const sway = Math.sin(t * 0.6 + y * 0.1) * 1.5;
+
+    ctx.save();
+    ctx.translate(x + sway, y);
+
+    // Shadow
+    ctx.globalAlpha = 0.35;
+    ctx.fillStyle = "#000";
+    ctx.beginPath();
+    ctx.ellipse(2, 28, 11, 4, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+
+    // Legs (cargo pants)
+    ctx.fillStyle = "#4a4540";
+    ctx.fillRect(-6, 10, 5, 16);
+    ctx.fillRect(1, 10, 5, 16);
+
+    // Boots
+    ctx.fillStyle = "#2a2420";
+    ctx.fillRect(-7, 24, 7, 5);
+    ctx.fillRect(0, 24, 7, 5);
+
+    // Body (worn jacket)
+    const bodyGrad = ctx.createLinearGradient(-10, -18, 10, 12);
+    bodyGrad.addColorStop(0, "#5a5550");
+    bodyGrad.addColorStop(0.5, "#4a4540");
+    bodyGrad.addColorStop(1, "#3a3530");
+    ctx.fillStyle = bodyGrad;
+    ctx.beginPath();
+    ctx.roundRect(-10, -16 + breathe * 0.3, 20, 28, 3);
+    ctx.fill();
+
+    // Undershirt
+    ctx.fillStyle = "#6a6560";
+    ctx.beginPath();
+    ctx.moveTo(-4, -14 + breathe * 0.3);
+    ctx.lineTo(0, -8 + breathe * 0.3);
+    ctx.lineTo(4, -14 + breathe * 0.3);
+    ctx.closePath();
+    ctx.fill();
+
+    // Arms
+    ctx.fillStyle = "#4a4540";
+    ctx.fillRect(-14, -12 + breathe * 0.3, 5, 14);
+    ctx.fillRect(9, -12 + breathe * 0.3, 5, 14);
+
+    // Hands
+    ctx.fillStyle = "#C4A090";
+    ctx.beginPath();
+    ctx.arc(-11.5, 4 + breathe * 0.3, 3, 0, Math.PI * 2);
+    ctx.arc(11.5, 4 + breathe * 0.3, 3, 0, Math.PI * 2);
+    ctx.fill();
+
+    // If browsing, show gadget in hand
+    if (browsing) {
+      ctx.fillStyle = "#2a2a3a";
+      ctx.fillRect(-14, 0 + breathe * 0.3, 8, 12);
+      ctx.fillStyle = "#00FFCC";
+      ctx.fillRect(-13, 2 + breathe * 0.3, 6, 8);
+    }
+
+    // Neck
+    ctx.fillStyle = "#C4A090";
+    ctx.fillRect(-3, -20, 6, 5);
+
+    // Head
+    const headY = -28;
+    const headGrad = ctx.createRadialGradient(-2, headY + breathe * 0.2, 2, 0, headY + 2 + breathe * 0.2, 10);
+    headGrad.addColorStop(0, "#D4B8A0");
+    headGrad.addColorStop(1, "#B49880");
+    ctx.fillStyle = headGrad;
+    ctx.beginPath();
+    ctx.ellipse(0, headY + breathe * 0.2, 9, 10, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Hair (messy)
+    ctx.fillStyle = "#3a3530";
+    ctx.beginPath();
+    ctx.ellipse(0, headY - 5 + breathe * 0.2, 8, 5, 0, Math.PI, 0);
+    ctx.fill();
+    // Messy strands
+    ctx.fillStyle = "#4a4540";
+    ctx.beginPath();
+    ctx.moveTo(-7, headY - 3 + breathe * 0.2);
+    ctx.quadraticCurveTo(-9, headY + 2 + breathe * 0.2, -6, headY + 4 + breathe * 0.2);
+    ctx.lineTo(-5, headY - 1 + breathe * 0.2);
+    ctx.fill();
+
+    // Eyes
+    ctx.fillStyle = "#FFFFFF";
+    ctx.beginPath();
+    ctx.ellipse(-3, headY + breathe * 0.2, 2, 1.5, 0, 0, Math.PI * 2);
+    ctx.ellipse(3, headY + breathe * 0.2, 2, 1.5, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#3a3020";
+    ctx.beginPath();
+    ctx.arc(-3, headY + breathe * 0.2, 1, 0, Math.PI * 2);
+    ctx.arc(3, headY + breathe * 0.2, 1, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Mouth
+    ctx.strokeStyle = "#8a6655";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(-2, headY + 5 + breathe * 0.2);
+    ctx.lineTo(2, headY + 5 + breathe * 0.2);
+    ctx.stroke();
+
     ctx.restore();
   }
 
@@ -8915,14 +9312,218 @@ class Game {
         }
       }
     } else if (type === 12) {
-      // ═══ CYBER PAWNSHOP - NEON CITY STYLE ═══
       const t = performance.now() / 1000;
+      const isWasteland = !!this.map?.config?.wasteland;
 
-      // Neon City theme colors (matching the map)
-      const CYAN = "#44EEFF";
-      const PINK = "#FF4466";
-      const GREEN = "#44FF88";
-      const PURPLE = "#CC88FF";
+      if (isWasteland) {
+        // ═══ WASTELAND PAWNSHOP - POST-APOCALYPTIC STYLE ═══
+
+        // Wasteland theme colors (dusty, industrial, muted)
+        const RUST = "#8a6040";
+        const TAN = "#a08060";
+        const BROWN = "#6a5040";
+        const GRAY = "#6a6a68";
+
+        // ── Vertical offset to ensure visibility ──
+        const vOffset = 35;
+
+        // ── Shop title (weathered sign) ──
+        ctx.save();
+        ctx.font = "bold 12px monospace";
+        ctx.textAlign = "center";
+        ctx.fillStyle = "#c0a080";
+        ctx.fillText("▲ SCRAP TRADER ▲", cx, topY + vOffset - 12);
+        ctx.restore();
+
+        // ── Divider line under title (rusty) ──
+        ctx.save();
+        const divGrad = ctx.createLinearGradient(
+          cx - W * 0.35,
+          0,
+          cx + W * 0.35,
+          0,
+        );
+        divGrad.addColorStop(0, "rgba(138,96,64,0)");
+        divGrad.addColorStop(0.5, "rgba(138,96,64,0.7)");
+        divGrad.addColorStop(1, "rgba(138,96,64,0)");
+        ctx.strokeStyle = divGrad;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(cx - W * 0.35, topY + vOffset);
+        ctx.lineTo(cx + W * 0.35, topY + vOffset);
+        ctx.stroke();
+        ctx.restore();
+
+        // ═══ TOP ROW: 3 DISPLAY CRATES (SALVAGED GOODS) ═══
+        const topDisplays = [
+          { emoji: "🔫", label: "WEAPONS", color: RUST },
+          { emoji: "💣", label: "EXPLOSIVES", color: BROWN },
+          { emoji: "⚙️", label: "PARTS", color: GRAY },
+        ];
+
+        for (let i = 0; i < 3; i++) {
+          const dx = cx - W * 0.3 + i * (W * 0.3);
+          const dy = topY + vOffset + 30;
+          const item = topDisplays[i];
+
+          // Wooden crate background
+          ctx.save();
+          ctx.fillStyle = "#3a3228";
+          ctx.strokeStyle = "#5a4a38";
+          ctx.lineWidth = 3;
+          rr(dx - 38, dy - 20, 76, 58, 4);
+          ctx.fill();
+          ctx.stroke();
+
+          // Wood grain lines
+          ctx.strokeStyle = "rgba(90,74,56,0.5)";
+          ctx.lineWidth = 1;
+          for (let li = 0; li < 4; li++) {
+            ctx.beginPath();
+            ctx.moveTo(dx - 36, dy - 16 + li * 15);
+            ctx.lineTo(dx + 36, dy - 16 + li * 15);
+            ctx.stroke();
+          }
+
+          // Corner brackets (metal)
+          ctx.fillStyle = "#5a5a58";
+          ctx.fillRect(dx - 38, dy - 20, 12, 4);
+          ctx.fillRect(dx - 38, dy - 20, 4, 12);
+          ctx.fillRect(dx + 26, dy - 20, 12, 4);
+          ctx.fillRect(dx + 34, dy - 20, 4, 12);
+          ctx.fillRect(dx - 38, dy + 34, 12, 4);
+          ctx.fillRect(dx - 38, dy + 26, 4, 12);
+          ctx.fillRect(dx + 26, dy + 34, 12, 4);
+          ctx.fillRect(dx + 34, dy + 26, 4, 12);
+
+          // Item emoji
+          ctx.font = "38px serif";
+          ctx.textAlign = "center";
+          ctx.fillText(item.emoji, dx, dy + 16);
+
+          // Label on metal plate
+          ctx.fillStyle = "#4a4a48";
+          rr(dx - 28, dy + 24, 56, 14, 2);
+          ctx.fill();
+          ctx.font = "bold 8px monospace";
+          ctx.fillStyle = TAN;
+          ctx.fillText(item.label, dx, dy + 34);
+          ctx.restore();
+        }
+
+        // ═══ MIDDLE ROW: RUSTY COUNTER ═══
+        const counterX = cx - 55;
+        const counterY = midY + 55;
+        const counterW = 110;
+        const counterH = 30;
+
+        // Counter shadow
+        ctx.fillStyle = "rgba(0,0,0,0.5)";
+        ctx.fillRect(counterX + 4, counterY + counterH + 2, counterW, 5);
+
+        // Counter base (rusty metal)
+        const counterGrad = ctx.createLinearGradient(
+          counterX,
+          counterY,
+          counterX,
+          counterY + counterH,
+        );
+        counterGrad.addColorStop(0, "#4a4038");
+        counterGrad.addColorStop(1, "#2a2420");
+        ctx.fillStyle = counterGrad;
+        rr(counterX, counterY, counterW, counterH, 4);
+        ctx.fill();
+
+        // Counter top edge (worn wood)
+        ctx.fillStyle = "#5a4a38";
+        ctx.fillRect(counterX - 3, counterY, counterW + 6, 5);
+
+        // Rust stains on counter
+        ctx.fillStyle = "rgba(100,50,20,0.3)";
+        ctx.beginPath();
+        ctx.ellipse(counterX + 25, counterY + 15, 12, 8, 0.2, 0, Math.PI * 2);
+        ctx.fill();
+
+        // "TRADE" sign on counter
+        ctx.fillStyle = "#3a3028";
+        rr(counterX + counterW / 2 - 25, counterY + 8, 50, 16, 2);
+        ctx.fill();
+        ctx.fillStyle = TAN;
+        ctx.font = "bold 10px monospace";
+        ctx.textAlign = "center";
+        ctx.fillText("TRADE", counterX + counterW / 2, counterY + 20);
+
+        // ═══ BOTTOM ROW: 4 SMALLER SALVAGE ITEMS ═══
+        const bottomItems = [
+          { emoji: "🔧", color: GRAY },
+          { emoji: "⛽", color: RUST },
+          { emoji: "🔋", color: BROWN },
+          { emoji: "📻", color: TAN },
+        ];
+
+        for (let i = 0; i < 4; i++) {
+          const bx = cx - W * 0.32 + i * (W * 0.22);
+          const by = midY + 25;
+          const item = bottomItems[i];
+
+          // Small metal box
+          ctx.save();
+          ctx.fillStyle = "#2a2820";
+          ctx.strokeStyle = "#4a4540";
+          ctx.lineWidth = 1.5;
+          rr(bx - 18, by - 14, 36, 32, 3);
+          ctx.fill();
+          ctx.stroke();
+
+          // Dents/damage
+          ctx.fillStyle = "rgba(0,0,0,0.2)";
+          ctx.beginPath();
+          ctx.arc(bx - 8, by - 6, 5, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Item emoji
+          ctx.font = "20px serif";
+          ctx.textAlign = "center";
+          ctx.fillText(item.emoji, bx, by + 8);
+          ctx.restore();
+        }
+
+        // ═══ AMBIENT DUST PARTICLES ═══
+        ctx.save();
+        for (let pi = 0; pi < 6; pi++) {
+          const px = cx - W * 0.35 + ((t * 8 + pi * 90) % (W * 0.7));
+          const py = topY + 25 + Math.sin(t * 0.6 + pi) * 20 + ((pi * 18) % 50);
+          const alpha = Math.sin(t * 1.5 + pi) * 0.15 + 0.2;
+          ctx.fillStyle = `rgba(120,100,70,${alpha})`;
+          ctx.beginPath();
+          ctx.arc(px, py, 1.5, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
+
+        // ═══ WALL DECORATIONS ═══
+        // Hanging tools on left
+        ctx.fillStyle = "#5a5a58";
+        ctx.fillRect(cx - W * 0.42, topY - 5, 3, 25);
+        ctx.fillRect(cx - W * 0.38, topY - 5, 3, 20);
+        ctx.fillRect(cx - W * 0.34, topY - 5, 3, 30);
+
+        // Shelf with junk on right
+        ctx.fillStyle = "#4a4038";
+        ctx.fillRect(cx + W * 0.28, topY + 5, 50, 6);
+        ctx.fillStyle = "#6a6058";
+        ctx.fillRect(cx + W * 0.30, topY - 8, 12, 13);
+        ctx.fillRect(cx + W * 0.38, topY - 5, 8, 10);
+        ctx.fillRect(cx + W * 0.44, topY - 10, 10, 15);
+
+      } else {
+        // ═══ CYBER PAWNSHOP - NEON CITY STYLE ═══
+
+        // Neon City theme colors (matching the map)
+        const CYAN = "#44EEFF";
+        const PINK = "#FF4466";
+        const GREEN = "#44FF88";
+        const PURPLE = "#CC88FF";
 
       // ── Vertical offset to ensure visibility ──
       const vOffset = 35;
@@ -9113,85 +9714,232 @@ class Game {
         ctx.fill();
       }
       ctx.restore();
+      }
     } else if (type === 13) {
-      // TECH LAB
-      // ── Main server bank (top) ───────────────────
-      ctx.fillStyle = "#050a0f";
-      ctx.strokeStyle = "#00FFCC";
-      ctx.lineWidth = 1.5;
-      rr(cx - W * 0.44, topY + 4, W * 0.88, 44, 3);
-      ctx.fill();
-      ctx.stroke();
-      // Server units
-      for (let si = 0; si < 5; si++) {
-        const sx2 = cx - W * 0.4 + si * ((W * 0.8) / 4.5);
-        ctx.fillStyle = "#0a1218";
-        rr(sx2 - 14, topY + 6, 28, 40, 2);
+      // TECH LAB / WASTELAND TECH SHOP
+      const isTechShop = room.isTechShop;
+
+      if (isTechShop) {
+        // ═══ WASTELAND TECH SHOP ═══
+        // ── Sales counter (top center) ───────────────────
+        ctx.fillStyle = "#3a3530";
+        ctx.strokeStyle = "#5a5048";
+        ctx.lineWidth = 2;
+        rr(cx - 60, topY + 8, 120, 38, 3);
         ctx.fill();
-        ctx.fillStyle = "#00FFCC" + (si % 2 === 0 ? "88" : "44");
-        ctx.fillRect(sx2 - 12, topY + 8, 24, 4);
-        ctx.fillRect(sx2 - 12, topY + 16, 24, 4);
-        ctx.fillRect(sx2 - 12, topY + 24, 24, 4);
-        ctx.fillStyle = ["#00FF88", "#FF4400", "#4488FF", "#FFCC00", "#FF00CC"][
-          si
+        ctx.stroke();
+        // Counter top (worn metal)
+        ctx.fillStyle = "#4a4540";
+        rr(cx - 58, topY + 10, 116, 8, 2);
+        ctx.fill();
+        // Cash register
+        ctx.fillStyle = "#2a2520";
+        rr(cx + 20, topY + 12, 32, 28, 2);
+        ctx.fill();
+        ctx.fillStyle = "#00FFCC";
+        ctx.fillRect(cx + 24, topY + 16, 24, 12);
+        ctx.fillStyle = "#00AA88";
+        ctx.font = "bold 6px monospace";
+        ctx.textAlign = "center";
+        ctx.fillText("$$$", cx + 36, topY + 24);
+        // Items on counter
+        ctx.fillStyle = "#1a1a2a";
+        rr(cx - 50, topY + 18, 18, 22, 2);
+        ctx.fill();
+        ctx.fillStyle = "#00FFCC";
+        ctx.fillRect(cx - 48, topY + 20, 14, 16);
+
+        // ── Display shelves (left wall) ───────────────────
+        ctx.fillStyle = "#3a3530";
+        ctx.strokeStyle = "#5a5048";
+        ctx.lineWidth = 1.5;
+        rr(W * 0.08, topY + 4, 48, 80, 2);
+        ctx.fill();
+        ctx.stroke();
+        // Shelf dividers
+        ctx.fillStyle = "#4a4540";
+        ctx.fillRect(W * 0.08, topY + 28, 48, 3);
+        ctx.fillRect(W * 0.08, topY + 54, 48, 3);
+        // Tech items on shelves
+        const shelfItems = [
+          { x: W * 0.10, y: topY + 10, w: 14, h: 14, color: "#00FFCC" },
+          { x: W * 0.10 + 18, y: topY + 12, w: 18, h: 12, color: "#FF8844" },
+          { x: W * 0.10, y: topY + 34, w: 20, h: 16, color: "#4488FF" },
+          { x: W * 0.10 + 24, y: topY + 36, w: 12, h: 14, color: "#FFCC00" },
+          { x: W * 0.10, y: topY + 60, w: 16, h: 18, color: "#FF44AA" },
+          { x: W * 0.10 + 20, y: topY + 62, w: 20, h: 14, color: "#44FF88" },
         ];
-        ctx.shadowColor = ctx.fillStyle;
-        ctx.shadowBlur = 6;
+        for (const item of shelfItems) {
+          ctx.fillStyle = "#1a1a1a";
+          rr(item.x, item.y, item.w, item.h, 2);
+          ctx.fill();
+          ctx.fillStyle = item.color;
+          ctx.shadowColor = item.color;
+          ctx.shadowBlur = 4;
+          ctx.fillRect(item.x + 2, item.y + 2, item.w - 4, item.h - 4);
+          ctx.shadowBlur = 0;
+        }
+
+        // ── Display table (center) with gadgets ───────────────────
+        ctx.fillStyle = "#3a3028";
+        ctx.strokeStyle = "#5a4a38";
+        ctx.lineWidth = 1.5;
+        rr(cx - 45, midY - 8, 90, 40, 3);
+        ctx.fill();
+        ctx.stroke();
+        // Gadgets on table
+        const gadgets = [
+          { x: cx - 38, y: midY - 2, w: 24, h: 18, color: "#00FFCC", label: "CHIP" },
+          { x: cx - 8, y: midY, w: 20, h: 14, color: "#FFAA00", label: "MOD" },
+          { x: cx + 18, y: midY - 4, w: 26, h: 22, color: "#4488FF", label: "CORE" },
+        ];
+        for (const g of gadgets) {
+          ctx.fillStyle = "#1a1a2a";
+          rr(g.x, g.y, g.w, g.h, 2);
+          ctx.fill();
+          ctx.fillStyle = g.color;
+          ctx.shadowColor = g.color;
+          ctx.shadowBlur = 5;
+          ctx.fillRect(g.x + 3, g.y + 3, g.w - 6, g.h - 6);
+          ctx.shadowBlur = 0;
+          ctx.fillStyle = "#FFFFFF";
+          ctx.font = "bold 5px monospace";
+          ctx.textAlign = "center";
+          ctx.fillText(g.label, g.x + g.w / 2, g.y + g.h + 8);
+        }
+
+        // ── Repair station (right) ───────────────────
+        ctx.fillStyle = "#2a2a30";
+        ctx.strokeStyle = "#4a4a50";
+        ctx.lineWidth = 1.5;
+        rr(W * 0.72, topY + 8, 56, 70, 3);
+        ctx.fill();
+        ctx.stroke();
+        // Tools
+        ctx.fillStyle = "#6a6a70";
+        ctx.fillRect(W * 0.74, topY + 14, 8, 24);
+        ctx.fillRect(W * 0.74 + 12, topY + 16, 6, 20);
+        ctx.fillRect(W * 0.74 + 22, topY + 12, 10, 26);
+        // Soldering station glow
+        ctx.fillStyle = "#FF6600";
+        ctx.shadowColor = "#FF6600";
+        ctx.shadowBlur = 8;
         ctx.beginPath();
-        ctx.arc(sx2 + 10, topY + 40, 3, 0, Math.PI * 2);
+        ctx.arc(W * 0.74 + 40, topY + 50, 6, 0, Math.PI * 2);
         ctx.fill();
         ctx.shadowBlur = 0;
-      }
-      // ── Holographic workstation (center) ─────────
-      ctx.fillStyle = "#050810";
-      ctx.strokeStyle = "#0088FF";
-      ctx.lineWidth = 1.5;
-      rr(cx - 36, midY - 14, 72, 36, 4);
-      ctx.fill();
-      ctx.stroke();
-      // Hologram display
-      ctx.fillStyle = "rgba(0,136,255,0.12)";
-      ctx.strokeStyle = "#0088FF88";
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(cx - 20, midY - 10);
-      ctx.lineTo(cx + 20, midY - 10);
-      ctx.lineTo(cx + 28, midY - 28);
-      ctx.lineTo(cx - 28, midY - 28);
-      ctx.closePath();
-      ctx.fill();
-      ctx.stroke();
-      ctx.fillStyle = "#00FFCC";
-      ctx.shadowColor = "#00FFCC";
-      ctx.shadowBlur = 10;
-      ctx.font = "bold 6px Orbitron, monospace";
-      ctx.textAlign = "center";
-      ctx.fillText("SYSTEM ONLINE", cx, midY - 18);
-      ctx.shadowBlur = 0;
-      // Keyboard glow
-      ctx.fillStyle = "#0a1820";
-      rr(cx - 28, midY - 8, 56, 12, 2);
-      ctx.fill();
-      for (let ki = 0; ki < 8; ki++) {
-        ctx.fillStyle = "#00FFCC44";
-        ctx.fillRect(cx - 26 + ki * 7, midY - 6, 5, 8);
-      }
-      // ── Chemical station (left) ───────────────────
-      ctx.fillStyle = "#0a1210";
-      ctx.strokeStyle = "#44FF88";
-      ctx.lineWidth = 1;
-      rr(cx - W * 0.44, midY - 8, 52, 48, 3);
-      ctx.fill();
-      ctx.stroke();
-      const cColors = ["#FF4444", "#44FFCC", "#FFCC00", "#4444FF"];
-      for (let fi = 0; fi < 4; fi++) {
-        ctx.fillStyle = cColors[fi];
-        ctx.shadowColor = cColors[fi];
-        ctx.shadowBlur = 6;
-        ctx.beginPath();
-        ctx.roundRect(cx - W * 0.42 + fi * 12, midY - 4, 9, 22, [3, 3, 0, 0]);
+        // "REPAIRS" sign
+        ctx.fillStyle = "#00FFCC";
+        ctx.font = "bold 7px monospace";
+        ctx.textAlign = "center";
+        ctx.fillText("REPAIRS", W * 0.72 + 28, topY + 82);
+
+        // ── Crate with parts (bottom left) ───────────────────
+        ctx.fillStyle = "#4a3a22";
+        ctx.strokeStyle = "#6a5a32";
+        ctx.lineWidth = 1;
+        rr(W * 0.10, midY + 20, 36, 30, 2);
         ctx.fill();
+        ctx.stroke();
+        ctx.strokeStyle = "#5a4a28";
+        ctx.beginPath();
+        ctx.moveTo(W * 0.10 + 4, midY + 24);
+        ctx.lineTo(W * 0.10 + 32, midY + 46);
+        ctx.moveTo(W * 0.10 + 32, midY + 24);
+        ctx.lineTo(W * 0.10 + 4, midY + 46);
+        ctx.stroke();
+        ctx.fillStyle = "#8a7a68";
+        ctx.font = "bold 6px monospace";
+        ctx.textAlign = "center";
+        ctx.fillText("PARTS", W * 0.10 + 18, midY + 56);
+
+        // ── Shop sign ───────────────────
+        ctx.fillStyle = "#00FFCC";
+        ctx.shadowColor = "#00FFCC";
+        ctx.shadowBlur = 10;
+        ctx.font = "bold 10px Orbitron, monospace";
+        ctx.textAlign = "center";
+        ctx.fillText("TECH TRADER", cx, topY - 2);
         ctx.shadowBlur = 0;
+
+      } else {
+        // ═══ DEFAULT TECH LAB ═══
+        // ── Main server bank (top) ───────────────────
+        ctx.fillStyle = "#050a0f";
+        ctx.strokeStyle = "#00FFCC";
+        ctx.lineWidth = 1.5;
+        rr(cx - W * 0.44, topY + 4, W * 0.88, 44, 3);
+        ctx.fill();
+        ctx.stroke();
+        // Server units
+        for (let si = 0; si < 5; si++) {
+          const sx2 = cx - W * 0.4 + si * ((W * 0.8) / 4.5);
+          ctx.fillStyle = "#0a1218";
+          rr(sx2 - 14, topY + 6, 28, 40, 2);
+          ctx.fill();
+          ctx.fillStyle = "#00FFCC" + (si % 2 === 0 ? "88" : "44");
+          ctx.fillRect(sx2 - 12, topY + 8, 24, 4);
+          ctx.fillRect(sx2 - 12, topY + 16, 24, 4);
+          ctx.fillRect(sx2 - 12, topY + 24, 24, 4);
+          ctx.fillStyle = ["#00FF88", "#FF4400", "#4488FF", "#FFCC00", "#FF00CC"][si];
+          ctx.shadowColor = ctx.fillStyle;
+          ctx.shadowBlur = 6;
+          ctx.beginPath();
+          ctx.arc(sx2 + 10, topY + 40, 3, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.shadowBlur = 0;
+        }
+        // ── Holographic workstation (center) ─────────
+        ctx.fillStyle = "#050810";
+        ctx.strokeStyle = "#0088FF";
+        ctx.lineWidth = 1.5;
+        rr(cx - 36, midY - 14, 72, 36, 4);
+        ctx.fill();
+        ctx.stroke();
+        // Hologram display
+        ctx.fillStyle = "rgba(0,136,255,0.12)";
+        ctx.strokeStyle = "#0088FF88";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(cx - 20, midY - 10);
+        ctx.lineTo(cx + 20, midY - 10);
+        ctx.lineTo(cx + 28, midY - 28);
+        ctx.lineTo(cx - 28, midY - 28);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = "#00FFCC";
+        ctx.shadowColor = "#00FFCC";
+        ctx.shadowBlur = 10;
+        ctx.font = "bold 6px Orbitron, monospace";
+        ctx.textAlign = "center";
+        ctx.fillText("SYSTEM ONLINE", cx, midY - 18);
+        ctx.shadowBlur = 0;
+        // Keyboard glow
+        ctx.fillStyle = "#0a1820";
+        rr(cx - 28, midY - 8, 56, 12, 2);
+        ctx.fill();
+        for (let ki = 0; ki < 8; ki++) {
+          ctx.fillStyle = "#00FFCC44";
+          ctx.fillRect(cx - 26 + ki * 7, midY - 6, 5, 8);
+        }
+        // ── Chemical station (left) ───────────────────
+        ctx.fillStyle = "#0a1210";
+        ctx.strokeStyle = "#44FF88";
+        ctx.lineWidth = 1;
+        rr(cx - W * 0.44, midY - 8, 52, 48, 3);
+        ctx.fill();
+        ctx.stroke();
+        const cColors = ["#FF4444", "#44FFCC", "#FFCC00", "#4444FF"];
+        for (let fi = 0; fi < 4; fi++) {
+          ctx.fillStyle = cColors[fi];
+          ctx.shadowColor = cColors[fi];
+          ctx.shadowBlur = 6;
+          ctx.beginPath();
+          ctx.roundRect(cx - W * 0.42 + fi * 12, midY - 4, 9, 22, [3, 3, 0, 0]);
+          ctx.fill();
+          ctx.shadowBlur = 0;
+        }
       }
     } else if (type === 14) {
       // WAREHOUSE
@@ -9378,58 +10126,246 @@ class Game {
       }
     } else if (type === 15) {
       // POLICE STATION
-      // ── Desk with evidence board (top) ───────────
-      ctx.fillStyle = "#1a2030";
-      ctx.strokeStyle = "#4477FF";
-      ctx.lineWidth = 1.5;
-      rr(cx - W * 0.44, topY + 4, W * 0.88, 42, 2);
-      ctx.fill();
-      ctx.stroke();
-      // Mug shots board
+      // ── Police badge and sign on wall (top-left corner) ──────────────────
+      ctx.fillStyle = "#FFD700";
+      ctx.shadowColor = "#FFD700";
+      ctx.shadowBlur = 16;
+      ctx.font = "28px serif";
+      ctx.textAlign = "center";
+      ctx.fillText("⭐", W * 0.12, topY + 24);
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = "#4477FF";
+      ctx.font = "bold 10px Orbitron, monospace";
+      ctx.fillText("NCPD", W * 0.12, topY + 42);
+
+      // ── Evidence board (center-top wall) ───────────
       ctx.fillStyle = "#0a1020";
-      rr(cx - 32, topY + 6, 64, 38, 2);
+      rr(cx - 55, topY + 4, 110, 40, 2);
       ctx.fill();
-      for (let mi = 0; mi < 4; mi++) {
+      ctx.strokeStyle = "#4477FF";
+      ctx.lineWidth = 1;
+      ctx.strokeRect(cx - 55, topY + 4, 110, 40);
+      // Mug shots
+      for (let mi = 0; mi < 6; mi++) {
         ctx.fillStyle = "#EEDDCC";
         ctx.beginPath();
-        ctx.arc(cx - 24 + mi * 16, topY + 16, 6, 0, Math.PI * 2);
+        ctx.arc(cx - 44 + mi * 18, topY + 16, 5, 0, Math.PI * 2);
         ctx.fill();
         ctx.fillStyle = "#1a1a2a";
-        ctx.fillRect(cx - 27 + mi * 16, topY + 22, 12, 16);
+        ctx.fillRect(cx - 47 + mi * 18, topY + 22, 10, 16);
       }
       ctx.fillStyle = "#FF4444";
       ctx.font = "bold 6px monospace";
       ctx.textAlign = "center";
-      ctx.fillText("WANTED", cx + 38, topY + 28);
-      // ── Holding cell (right side) ─────────────────
-      const cellX = cx + W * 0.12,
-        cellY = topY + 54;
-      ctx.fillStyle = "#0a0e18";
-      ctx.strokeStyle = "#4466AA";
-      ctx.lineWidth = 1.5;
-      rr(cellX, cellY, 74, 60, 2);
+      ctx.fillText("WANTED", cx, topY + 8);
+
+      // ── Prison cell with criminal (top-right corner) ─────────────────
+      const cellX = W * 0.78;
+      const cellY = topY + 8;
+      const cellW = 72;
+      const cellH = 58;
+
+      // Cell floor/interior
+      ctx.fillStyle = "#0a0e14";
+      ctx.strokeStyle = "#3a4a6a";
+      ctx.lineWidth = 2;
+      rr(cellX, cellY, cellW, cellH, 2);
       ctx.fill();
       ctx.stroke();
-      // Cell bars
-      ctx.strokeStyle = "#5577BB";
-      ctx.lineWidth = 2;
+
+      // Cell bench
+      ctx.fillStyle = "#2a2a3a";
+      rr(cellX + 4, cellY + cellH - 16, cellW - 8, 12, 2);
+      ctx.fill();
+
+      // Cell bars (vertical)
+      ctx.strokeStyle = "#6688AA";
+      ctx.lineWidth = 3;
       for (let bi = 0; bi < 5; bi++) {
         ctx.beginPath();
-        ctx.moveTo(cellX + 10 + bi * 13, cellY);
-        ctx.lineTo(cellX + 10 + bi * 13, cellY + 60);
+        ctx.moveTo(cellX + 10 + bi * 14, cellY);
+        ctx.lineTo(cellX + 10 + bi * 14, cellY + cellH);
         ctx.stroke();
       }
-      // ── Police badge on wall ──────────────────────
-      ctx.fillStyle = "#FFDD44";
-      ctx.shadowColor = "#FFCC00";
-      ctx.shadowBlur = 10;
-      ctx.font = "22px serif";
-      ctx.textAlign = "center";
-      ctx.fillText("🔵", cx - W * 0.32, midY + 10);
-      ctx.shadowBlur = 0;
-      ctx.fillStyle = "#AABBDD";
-      ctx.font = "bold 7px Orbitron, monospace";
-      ctx.fillText("NCPD HQ", cx - W * 0.32, midY + 22);
+      // Horizontal bars
+      ctx.beginPath();
+      ctx.moveTo(cellX, cellY + cellH * 0.33);
+      ctx.lineTo(cellX + cellW, cellY + cellH * 0.33);
+      ctx.moveTo(cellX, cellY + cellH * 0.66);
+      ctx.lineTo(cellX + cellW, cellY + cellH * 0.66);
+      ctx.stroke();
+
+      // Criminal sitting on bench
+      const crimX = cellX + cellW / 2;
+      const crimY = cellY + cellH - 24;
+
+      // Legs
+      ctx.fillStyle = "#4a4a4a";
+      ctx.fillRect(crimX - 7, crimY + 6, 6, 10);
+      ctx.fillRect(crimX + 1, crimY + 6, 6, 10);
+
+      // Body (orange jumpsuit)
+      ctx.fillStyle = "#DD6600";
+      ctx.beginPath();
+      ctx.roundRect(crimX - 9, crimY - 10, 18, 18, 3);
+      ctx.fill();
+
+      // Arms
+      ctx.fillRect(crimX - 14, crimY - 6, 6, 12);
+      ctx.fillRect(crimX + 8, crimY - 6, 6, 12);
+
+      // Head
+      ctx.fillStyle = "#CCAA88";
+      ctx.beginPath();
+      ctx.arc(crimX, crimY - 18, 8, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Shaved head
+      ctx.fillStyle = "#3a3a3a";
+      ctx.beginPath();
+      ctx.arc(crimX, crimY - 20, 7, Math.PI, 0);
+      ctx.fill();
+
+      // Angry eyes
+      ctx.fillStyle = "#FFFFFF";
+      ctx.beginPath();
+      ctx.arc(crimX - 3, crimY - 18, 2, 0, Math.PI * 2);
+      ctx.arc(crimX + 3, crimY - 18, 2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#1a1a1a";
+      ctx.beginPath();
+      ctx.arc(crimX - 3, crimY - 18, 1, 0, Math.PI * 2);
+      ctx.arc(crimX + 3, crimY - 18, 1, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Frown
+      ctx.strokeStyle = "#886655";
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.arc(crimX, crimY - 12, 3, 0.2, Math.PI - 0.2);
+      ctx.stroke();
+
+      // ── Second empty prison cell (below first) ─────────────────
+      const cell2Y = cellY + cellH + 10;
+      ctx.fillStyle = "#0a0e14";
+      ctx.strokeStyle = "#3a4a6a";
+      ctx.lineWidth = 2;
+      rr(cellX, cell2Y, cellW, cellH, 2);
+      ctx.fill();
+      ctx.stroke();
+      // Cell bench
+      ctx.fillStyle = "#2a2a3a";
+      rr(cellX + 4, cell2Y + cellH - 16, cellW - 8, 12, 2);
+      ctx.fill();
+      // Cell bars
+      ctx.strokeStyle = "#6688AA";
+      ctx.lineWidth = 3;
+      for (let bi = 0; bi < 5; bi++) {
+        ctx.beginPath();
+        ctx.moveTo(cellX + 10 + bi * 14, cell2Y);
+        ctx.lineTo(cellX + 10 + bi * 14, cell2Y + cellH);
+        ctx.stroke();
+      }
+      ctx.beginPath();
+      ctx.moveTo(cellX, cell2Y + cellH * 0.33);
+      ctx.lineTo(cellX + cellW, cell2Y + cellH * 0.33);
+      ctx.moveTo(cellX, cell2Y + cellH * 0.66);
+      ctx.lineTo(cellX + cellW, cell2Y + cellH * 0.66);
+      ctx.stroke();
+
+      // ── Officer's desk (left-center) ───────────────
+      const deskX = W * 0.12;
+      const deskY = H * 0.38;
+      ctx.fillStyle = "#2a3040";
+      ctx.strokeStyle = "#4477FF";
+      ctx.lineWidth = 1.5;
+      rr(deskX, deskY, 85, 36, 3);
+      ctx.fill();
+      ctx.stroke();
+      // Computer monitor
+      ctx.fillStyle = "#0a1020";
+      rr(deskX + 50, deskY + 4, 28, 20, 2);
+      ctx.fill();
+      ctx.fillStyle = "#4488FF";
+      ctx.fillRect(deskX + 52, deskY + 6, 24, 14);
+      // Desk items
+      ctx.fillStyle = "#EEDDCC";
+      ctx.fillRect(deskX + 8, deskY + 8, 20, 14);
+      ctx.fillStyle = "#FF4444";
+      ctx.beginPath();
+      ctx.arc(deskX + 38, deskY + 16, 5, 0, Math.PI * 2);
+      ctx.fill();
+
+      // ── Filing cabinets (bottom-left) ───────────────
+      ctx.fillStyle = "#3a3a4a";
+      ctx.strokeStyle = "#5a5a6a";
+      ctx.lineWidth = 1;
+      rr(W * 0.08, midY + 30, 32, 48, 2);
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = "#2a2a3a";
+      for (let fi = 0; fi < 3; fi++) {
+        rr(W * 0.08 + 3, midY + 34 + fi * 15, 26, 13, 1);
+        ctx.fill();
+      }
+      // Second cabinet
+      ctx.fillStyle = "#3a3a4a";
+      rr(W * 0.08 + 38, midY + 30, 32, 48, 2);
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = "#2a2a3a";
+      for (let fi = 0; fi < 3; fi++) {
+        rr(W * 0.08 + 41, midY + 34 + fi * 15, 26, 13, 1);
+        ctx.fill();
+      }
+
+      // ── Second desk with chair (center-bottom area) ───────────────
+      const desk2X = W * 0.32;
+      const desk2Y = H * 0.54;
+      ctx.fillStyle = "#2a3040";
+      ctx.strokeStyle = "#4477FF";
+      ctx.lineWidth = 1.5;
+      rr(desk2X, desk2Y, 90, 38, 3);
+      ctx.fill();
+      ctx.stroke();
+      // Computer monitor on desk
+      ctx.fillStyle = "#0a1020";
+      rr(desk2X + 55, desk2Y + 5, 28, 20, 2);
+      ctx.fill();
+      ctx.fillStyle = "#4488FF";
+      ctx.fillRect(desk2X + 57, desk2Y + 7, 24, 14);
+      // Papers and items
+      ctx.fillStyle = "#EEDDCC";
+      ctx.fillRect(desk2X + 8, desk2Y + 8, 22, 16);
+      ctx.fillStyle = "#886644";
+      ctx.fillRect(desk2X + 10, desk2Y + 10, 18, 2);
+      ctx.fillRect(desk2X + 10, desk2Y + 14, 18, 2);
+      ctx.fillRect(desk2X + 10, desk2Y + 18, 18, 2);
+      // Coffee mug
+      ctx.fillStyle = "#FFFFFF";
+      ctx.beginPath();
+      ctx.arc(desk2X + 42, desk2Y + 18, 5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#3a2a1a";
+      ctx.beginPath();
+      ctx.arc(desk2X + 42, desk2Y + 18, 3, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Chair for sitting officer
+      const chairX = desk2X + 20;
+      const chairY = desk2Y + 42;
+      ctx.fillStyle = "#2a2a3a";
+      ctx.strokeStyle = "#4a4a5a";
+      ctx.lineWidth = 1;
+      // Chair seat
+      rr(chairX - 12, chairY, 24, 18, 3);
+      ctx.fill();
+      ctx.stroke();
+      // Chair back
+      ctx.fillStyle = "#3a3a4a";
+      rr(chairX - 10, chairY - 20, 20, 22, 3);
+      ctx.fill();
+      ctx.stroke();
     } else if (type === 16) {
       // TATTOO PARLOR
       // ── Reclining chair (center) ──────────────────
@@ -11414,6 +12350,7 @@ class Game {
     const S = room.S;
     const isNeonCity = this.map.config.id === "neon_city";
     const isGalactica = !!this.map.config.galactica;
+    const isWasteland = !!this.map.config.wasteland;
     const t = performance.now() / 1000;
 
     // Background
@@ -11421,7 +12358,9 @@ class Game {
       ? "#020208"
       : isGalactica
         ? "#00000e"
-        : "#06060a";
+        : isWasteland
+          ? "#0c0a08"
+          : "#06060a";
     ctx.fillRect(0, 0, W, H);
 
     ctx.save();
@@ -12034,6 +12973,299 @@ class Game {
       ctx.fillStyle = "rgba(150,80,255,0.22)";
       ctx.fillRect(S, S * 1.5, 3, room.roomH - S * 3);
       ctx.fillRect(room.roomW - S - 3, S * 1.5, 3, room.roomH - S * 3);
+    } else if (isWasteland) {
+      // ═══ WASTELAND: POST-APOCALYPTIC GARAGE ═══
+
+      // Dusty concrete floor base
+      for (let ty = 0; ty < room.H; ty++) {
+        for (let tx = 0; tx < room.W; tx++) {
+          const px = tx * S,
+            py = ty * S,
+            tile = room.layout[ty][tx];
+          if (tile === 1) {
+            // Rusted metal walls
+            ctx.fillStyle = "#1a1612";
+            ctx.fillRect(px, py, S, S);
+            // Rust streaks
+            if ((tx + ty) % 4 === 0) {
+              ctx.fillStyle = "rgba(120,60,30,0.25)";
+              ctx.fillRect(px + S / 2 - 2, py, 4, S);
+            }
+            // Rivets
+            if ((tx * 3 + ty * 5) % 5 === 0) {
+              ctx.fillStyle = "#3a3230";
+              ctx.beginPath();
+              ctx.arc(px + 10, py + 10, 3, 0, Math.PI * 2);
+              ctx.arc(px + S - 10, py + 10, 3, 0, Math.PI * 2);
+              ctx.fill();
+            }
+          } else {
+            // Cracked concrete floor
+            const floorSeed = tx * 17 + ty * 31;
+            ctx.fillStyle = floorSeed % 2 === 0 ? "#28241e" : "#242018";
+            ctx.fillRect(px, py, S, S);
+
+            // Floor cracks
+            ctx.strokeStyle = "rgba(0,0,0,0.3)";
+            ctx.lineWidth = 1;
+            if (floorSeed % 7 === 0) {
+              ctx.beginPath();
+              ctx.moveTo(px + 5, py + S / 2);
+              ctx.lineTo(px + S - 10, py + S / 3);
+              ctx.stroke();
+            }
+
+            // Oil stains
+            if (floorSeed % 11 === 0) {
+              ctx.fillStyle = "rgba(20,15,10,0.4)";
+              ctx.beginPath();
+              ctx.ellipse(px + S / 2, py + S / 2, 15, 10, floorSeed * 0.5, 0, Math.PI * 2);
+              ctx.fill();
+            }
+
+            // Grid lines (faded)
+            ctx.strokeStyle = "rgba(80,60,40,0.12)";
+            ctx.lineWidth = 1;
+            ctx.strokeRect(px, py, S, S);
+          }
+        }
+      }
+
+      // Rusty border around room
+      ctx.strokeStyle = "#8a6040";
+      ctx.lineWidth = 3;
+      ctx.strokeRect(
+        S + 2,
+        S + 2,
+        room.roomW - S * 2 - 4,
+        room.roomH - S * 2 - 4,
+      );
+
+      // Top warning stripe bar
+      const stripeW = 20;
+      for (let sx = S; sx < room.roomW - S; sx += stripeW * 2) {
+        ctx.fillStyle = "#8a7030";
+        ctx.fillRect(sx, S, stripeW, 6);
+        ctx.fillStyle = "#2a2420";
+        ctx.fillRect(sx + stripeW, S, stripeW, 6);
+      }
+
+      // Showroom title
+      ctx.save();
+      ctx.font = "bold 20px monospace";
+      ctx.textAlign = "center";
+      ctx.fillStyle = "#a08060";
+      ctx.fillText("▲ WASTELAND MOTORS ▲", room.roomW / 2, S - 20);
+      ctx.restore();
+
+      // ═══ WORK COUNTER / DESK ═══
+      const counterX = room.roomW / 2 - 75;
+      const counterY = S * 1.2;
+      const counterW = 150;
+      const counterH = 40;
+
+      // Counter shadow
+      ctx.fillStyle = "rgba(0,0,0,0.5)";
+      ctx.fillRect(counterX + 4, counterY + counterH + 2, counterW, 6);
+
+      // Counter base (rusty metal)
+      const counterGrad = ctx.createLinearGradient(
+        counterX,
+        counterY,
+        counterX,
+        counterY + counterH,
+      );
+      counterGrad.addColorStop(0, "#4a4038");
+      counterGrad.addColorStop(0.5, "#3a3228");
+      counterGrad.addColorStop(1, "#2a2420");
+      ctx.fillStyle = counterGrad;
+      ctx.fillRect(counterX, counterY, counterW, counterH);
+
+      // Counter top surface (worn wood)
+      ctx.fillStyle = "#5a4a38";
+      ctx.fillRect(counterX - 5, counterY, counterW + 10, 6);
+
+      // Rust edge on counter
+      ctx.strokeStyle = "#6a5040";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(counterX - 5, counterY + 3);
+      ctx.lineTo(counterX + counterW + 5, counterY + 3);
+      ctx.stroke();
+
+      // "PARTS" sign on counter
+      ctx.fillStyle = "#9a8060";
+      ctx.font = "bold 12px monospace";
+      ctx.textAlign = "center";
+      ctx.fillText("PARTS & SERVICE", counterX + counterW / 2, counterY + 26);
+
+      // ═══ SALVAGED VEHICLES ON PLATFORMS ═══
+      const carDisplays = [
+        // Front row
+        { x: room.roomW * 0.18, y: room.roomH * 0.45, color: "#6a5040", name: "RUST BUCKET" },
+        { x: room.roomW * 0.38, y: room.roomH * 0.42, color: "#5a6050", name: "SURVIVOR" },
+        { x: room.roomW * 0.62, y: room.roomH * 0.42, color: "#7a6a50", name: "WAR WAGON" },
+        { x: room.roomW * 0.82, y: room.roomH * 0.45, color: "#6a6055", name: "TANK" },
+        // Back row
+        { x: room.roomW * 0.28, y: room.roomH * 0.58, color: "#5a5048", name: "SALVAGE" },
+        { x: room.roomW * 0.72, y: room.roomH * 0.58, color: "#8a7060", name: "BEAST" },
+      ];
+
+      for (const car of carDisplays) {
+        ctx.save();
+        ctx.translate(car.x, car.y);
+
+        // Platform base (concrete slab with cracks)
+        ctx.fillStyle = "#3a3530";
+        ctx.beginPath();
+        ctx.arc(0, 15, 45, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = "#4a4540";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Inner platform ring (oil ring)
+        ctx.beginPath();
+        ctx.arc(0, 15, 35, 0, Math.PI * 2);
+        ctx.strokeStyle = "rgba(40,30,20,0.5)";
+        ctx.lineWidth = 3;
+        ctx.stroke();
+
+        // ═══ SALVAGED CAR (top-down view) ═══
+        ctx.save();
+        // Car shadow
+        ctx.fillStyle = "rgba(0,0,0,0.5)";
+        ctx.beginPath();
+        ctx.ellipse(3, 18, 28, 12, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Car body (rusty, dented)
+        const carGrad = ctx.createLinearGradient(-25, -15, 25, 15);
+        carGrad.addColorStop(0, car.color);
+        carGrad.addColorStop(0.5, car.color);
+        carGrad.addColorStop(1, "#3a3530");
+        ctx.fillStyle = carGrad;
+
+        // Main body shape
+        ctx.beginPath();
+        ctx.moveTo(-22, -8);
+        ctx.lineTo(-25, 0);
+        ctx.lineTo(-22, 10);
+        ctx.lineTo(22, 10);
+        ctx.lineTo(25, 0);
+        ctx.lineTo(22, -8);
+        ctx.closePath();
+        ctx.fill();
+
+        // Rust patches
+        ctx.fillStyle = "rgba(100,50,20,0.4)";
+        ctx.fillRect(-18, -6, 8, 5);
+        ctx.fillRect(12, 4, 10, 4);
+
+        // Roof/cabin (dented)
+        ctx.fillStyle = "#2a2520";
+        ctx.beginPath();
+        ctx.roundRect(-12, -5, 24, 12, 2);
+        ctx.fill();
+
+        // Cracked windshield
+        ctx.fillStyle = "rgba(80,80,70,0.5)";
+        ctx.beginPath();
+        ctx.moveTo(-12, -4);
+        ctx.lineTo(-8, -8);
+        ctx.lineTo(8, -8);
+        ctx.lineTo(12, -4);
+        ctx.closePath();
+        ctx.fill();
+        // Crack line
+        ctx.strokeStyle = "rgba(0,0,0,0.4)";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(-6, -7);
+        ctx.lineTo(4, -4);
+        ctx.stroke();
+
+        // Headlights (one broken, one dim)
+        ctx.fillStyle = "#6a6050";
+        ctx.fillRect(-20, -6, 4, 3);
+        ctx.fillStyle = "#888870";
+        ctx.fillRect(16, -6, 4, 3);
+
+        // Taillights (dim red)
+        ctx.fillStyle = "#5a3030";
+        ctx.fillRect(-20, 6, 4, 2);
+        ctx.fillRect(16, 6, 4, 2);
+
+        // Wheels (worn)
+        ctx.fillStyle = "#1a1a1a";
+        ctx.beginPath();
+        ctx.arc(-16, -10, 5, 0, Math.PI * 2);
+        ctx.arc(16, -10, 5, 0, Math.PI * 2);
+        ctx.arc(-16, 12, 5, 0, Math.PI * 2);
+        ctx.arc(16, 12, 5, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Wheel rims (rusty)
+        ctx.fillStyle = "#4a4038";
+        ctx.beginPath();
+        ctx.arc(-16, -10, 3, 0, Math.PI * 2);
+        ctx.arc(16, -10, 3, 0, Math.PI * 2);
+        ctx.arc(-16, 12, 3, 0, Math.PI * 2);
+        ctx.arc(16, 12, 3, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Armor plating / modifications
+        ctx.fillStyle = "#4a4540";
+        ctx.fillRect(-24, -2, 4, 6);
+        ctx.fillRect(20, -2, 4, 6);
+
+        ctx.restore();
+
+        // Car name label
+        ctx.fillStyle = "#a09080";
+        ctx.font = "bold 8px monospace";
+        ctx.textAlign = "center";
+        ctx.fillText(car.name, 0, 45);
+
+        // Price tag
+        ctx.fillStyle = "#8a7a60";
+        ctx.font = "7px monospace";
+        ctx.fillText("SALVAGED", 0, 54);
+
+        ctx.restore();
+      }
+
+      // Dust particles
+      for (let i = 0; i < 6; i++) {
+        const px = (t * 15 + i * 120) % room.roomW;
+        const py = S * 1.5 + Math.sin(t * 0.5 + i * 2) * 30 + (i * (room.roomH - S * 3)) / 6;
+        const alpha = Math.sin(t + i) * 0.15 + 0.2;
+        ctx.fillStyle = `rgba(120,100,70,${alpha})`;
+        ctx.beginPath();
+        ctx.arc(px, py, 1.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Side rust strips
+      ctx.fillStyle = "rgba(100,60,30,0.25)";
+      ctx.fillRect(S, S * 1.5, 4, room.roomH - S * 3);
+      ctx.fillRect(room.roomW - S - 4, S * 1.5, 4, room.roomH - S * 3);
+
+      // Tool rack on left wall
+      ctx.fillStyle = "#3a3530";
+      ctx.fillRect(S + 8, S * 2, 20, 80);
+      ctx.fillStyle = "#5a5550";
+      ctx.fillRect(S + 10, S * 2 + 10, 3, 15);
+      ctx.fillRect(S + 16, S * 2 + 8, 3, 20);
+      ctx.fillRect(S + 22, S * 2 + 12, 3, 12);
+
+      // Barrel on right wall
+      ctx.fillStyle = "#4a4540";
+      ctx.beginPath();
+      ctx.ellipse(room.roomW - S - 30, S * 2.5, 18, 12, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#5a5550";
+      ctx.fillRect(room.roomW - S - 48, S * 2.5, 36, 3);
     } else {
       // ═══ DEFAULT SHOWROOM (other maps) ═══
       for (let ty = 0; ty < room.H; ty++) {
@@ -12083,6 +13315,11 @@ class Game {
           ctx.shadowColor = "#AA88FF";
           ctx.shadowBlur = 14;
           ctx.fillText("[T] OPEN SHOP", nearSp.x, nearSp.y - 102);
+        } else if (isWasteland) {
+          ctx.fillStyle = "#c0a080";
+          ctx.shadowColor = "#8a6040";
+          ctx.shadowBlur = 8;
+          ctx.fillText("[T] OPEN SHOP", nearSp.x, nearSp.y - 102);
         } else {
           ctx.fillStyle = "#FFFFAA";
           ctx.shadowColor = "#FFFF00";
@@ -12107,6 +13344,11 @@ class Game {
       ctx.fillStyle = "#CC99FF";
       ctx.shadowColor = "#AA88FF";
       ctx.shadowBlur = 12;
+      ctx.fillText("[E] EXIT", room.entryX, room.roomH - 25);
+    } else if (isWasteland) {
+      ctx.fillStyle = "#c0a080";
+      ctx.shadowColor = "#8a6040";
+      ctx.shadowBlur = 8;
       ctx.fillText("[E] EXIT", room.entryX, room.roomH - 25);
     } else {
       ctx.fillStyle = "#FFFFAA";
@@ -12325,11 +13567,12 @@ class Game {
         const pulse = Math.sin(p._animT * 3.5) * 0.35 + 0.65;
         const near = Math.hypot(p.x - this.player.x, p.y - this.player.y) < 55;
         const isNeonCity = this.map.config.id === "neon_city";
+        const isWasteland = !!this.map.config.wasteland;
         const isGalactica = !!this.map.config.galactica;
         ctx.save();
         ctx.translate(p.x, p.y);
 
-        if (isNeonCity) {
+        if (isNeonCity || isWasteland) {
           // ── NEON CITY: Cyber portal — cyan / magenta rings ────────
           const t = p._animT;
           const pulse2 = Math.sin(t * 2) * 0.3 + 0.7;
@@ -12941,8 +14184,8 @@ class Game {
           this._currentDistrict,
           this._shopDiscount,
         );
-        // Neon City: skip the center screen district entry notification
-        if (this._districtTimer > 0 && this.map.config.id !== "neon_city") {
+        // Neon City & Wasteland: skip the center screen district entry notification
+        if (this._districtTimer > 0 && this.map.config.id !== "neon_city" && !this.map.config.wasteland) {
           this.hud.renderDistrictEntry(
             this._currentDistrict,
             this._districtTimer,

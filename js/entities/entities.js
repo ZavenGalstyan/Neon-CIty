@@ -10057,9 +10057,12 @@ class Grenade {
 
 // ─── Salesperson ─────────────────────────────────────────────────────────────
 class Salesperson {
-  constructor(x, y, color = '#FFAA55', label = 'DEALER', isNeonCity = false) {
+  constructor(x, y, color = '#FFAA55', label = 'DEALER', mapType = false) {
     this.x = x; this.y = y; this.color = color; this.label = label; this.radius = 16;
-    this.isNeonCity = isNeonCity;
+    // mapType can be: true (neonCity), 'galactica', 'wasteland', or false (default)
+    this.isNeonCity = mapType === true || mapType === 'neonCity';
+    this.isGalactica = mapType === 'galactica';
+    this.isWasteland = mapType === 'wasteland';
     this._waveT = 0;
   }
   update(dt) { this._waveT += dt * 1.4; }
@@ -10068,7 +10071,174 @@ class Salesperson {
     ctx.save();
     ctx.translate(this.x + sway, this.y);
 
-    if (this.isNeonCity) {
+    if (this.isWasteland) {
+      // ═══ WASTELAND: Grizzled mechanic in work clothes ═══
+      const breathe = Math.sin(this._waveT * 0.8) * 1;
+
+      // Shadow
+      ctx.globalAlpha = 0.4;
+      ctx.fillStyle = '#000';
+      ctx.beginPath();
+      ctx.ellipse(2, 4, 14, 5, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+
+      // Legs (worn work pants)
+      ctx.fillStyle = '#3a3530';
+      ctx.fillRect(-6, -8, 5, 12);
+      ctx.fillRect(1, -8, 5, 12);
+
+      // Boots (heavy work boots)
+      ctx.fillStyle = '#2a2420';
+      ctx.fillRect(-8, 2, 7, 5);
+      ctx.fillRect(1, 2, 7, 5);
+      // Boot details
+      ctx.fillStyle = '#4a4038';
+      ctx.fillRect(-7, 2, 5, 2);
+      ctx.fillRect(2, 2, 5, 2);
+
+      // Body (worn mechanic jumpsuit)
+      const suitGrad = ctx.createLinearGradient(-12, -38, 12, -10);
+      suitGrad.addColorStop(0, '#5a5048');
+      suitGrad.addColorStop(0.5, '#4a4238');
+      suitGrad.addColorStop(1, '#3a3530');
+      ctx.fillStyle = suitGrad;
+      ctx.beginPath();
+      ctx.moveTo(-11, -10);
+      ctx.lineTo(-13, -38 + breathe);
+      ctx.lineTo(-8, -42 + breathe);
+      ctx.lineTo(8, -42 + breathe);
+      ctx.lineTo(13, -38 + breathe);
+      ctx.lineTo(11, -10);
+      ctx.closePath();
+      ctx.fill();
+
+      // Oil stains on jumpsuit
+      ctx.fillStyle = 'rgba(30,20,10,0.4)';
+      ctx.beginPath();
+      ctx.ellipse(-5, -25 + breathe, 4, 3, 0.3, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.ellipse(7, -18 + breathe, 3, 4, -0.2, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Collar (dirty undershirt)
+      ctx.fillStyle = '#8a8078';
+      ctx.beginPath();
+      ctx.moveTo(-5, -40 + breathe);
+      ctx.lineTo(0, -37 + breathe);
+      ctx.lineTo(5, -40 + breathe);
+      ctx.lineTo(4, -42 + breathe);
+      ctx.lineTo(-4, -42 + breathe);
+      ctx.closePath();
+      ctx.fill();
+
+      // Neck (weathered skin)
+      ctx.fillStyle = '#C4A090';
+      ctx.fillRect(-3, -46 + breathe, 6, 6);
+
+      // Head (weathered, rugged)
+      const headGrad = ctx.createRadialGradient(-3, -54 + breathe, 2, 0, -52 + breathe, 12);
+      headGrad.addColorStop(0, '#D4B8A0');
+      headGrad.addColorStop(1, '#B49880');
+      ctx.fillStyle = headGrad;
+      ctx.beginPath();
+      ctx.ellipse(0, -54 + breathe, 10, 12, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Stubble/beard shadow
+      ctx.fillStyle = 'rgba(60,50,40,0.3)';
+      ctx.beginPath();
+      ctx.ellipse(0, -48 + breathe, 7, 5, 0, 0, Math.PI);
+      ctx.fill();
+
+      // Hair (messy, graying)
+      ctx.fillStyle = '#4a4540';
+      ctx.beginPath();
+      ctx.ellipse(0, -62 + breathe, 9, 5, 0, Math.PI, 0);
+      ctx.fill();
+      // Messy strands
+      ctx.fillStyle = '#5a5550';
+      ctx.beginPath();
+      ctx.moveTo(-8, -60 + breathe);
+      ctx.quadraticCurveTo(-11, -56 + breathe, -9, -52 + breathe);
+      ctx.lineTo(-7, -58 + breathe);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(7, -61 + breathe);
+      ctx.quadraticCurveTo(10, -55 + breathe, 8, -51 + breathe);
+      ctx.lineTo(6, -58 + breathe);
+      ctx.fill();
+
+      // Eyes (tired but sharp)
+      ctx.fillStyle = '#FFFFFF';
+      ctx.beginPath();
+      ctx.ellipse(-4, -54 + breathe, 2.5, 1.8, 0, 0, Math.PI * 2);
+      ctx.ellipse(4, -54 + breathe, 2.5, 1.8, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#3a3020';
+      ctx.beginPath();
+      ctx.arc(-4, -54 + breathe, 1.2, 0, Math.PI * 2);
+      ctx.arc(4, -54 + breathe, 1.2, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Slight frown/serious expression
+      ctx.strokeStyle = '#8a6655';
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.moveTo(-3, -48 + breathe);
+      ctx.lineTo(3, -48 + breathe);
+      ctx.stroke();
+
+      // Arms (muscular, work-worn)
+      ctx.fillStyle = '#4a4238';
+      ctx.beginPath();
+      ctx.moveTo(-13, -36 + breathe);
+      ctx.lineTo(-17, -20);
+      ctx.lineTo(-15, -10);
+      ctx.lineTo(-11, -10);
+      ctx.lineTo(-11, -34 + breathe);
+      ctx.closePath();
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(13, -36 + breathe);
+      ctx.lineTo(17, -20);
+      ctx.lineTo(15, -10);
+      ctx.lineTo(11, -10);
+      ctx.lineTo(11, -34 + breathe);
+      ctx.closePath();
+      ctx.fill();
+
+      // Hands (calloused)
+      ctx.fillStyle = '#C4A090';
+      ctx.beginPath();
+      ctx.arc(-16, -8, 4, 0, Math.PI * 2);
+      ctx.arc(16, -8, 4, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Wrench in hand
+      ctx.fillStyle = '#6a6a68';
+      ctx.fillRect(-20, -12, 8, 3);
+      ctx.fillStyle = '#5a5a58';
+      ctx.fillRect(-22, -14, 4, 7);
+
+      // Name patch on chest
+      ctx.fillStyle = '#6a5a48';
+      ctx.fillRect(-16, -32 + breathe, 16, 9);
+      ctx.fillStyle = '#3a3028';
+      ctx.fillRect(-15, -31 + breathe, 14, 7);
+      ctx.fillStyle = '#a09080';
+      ctx.font = 'bold 5px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText('MECH', -8, -26 + breathe);
+
+      // Label above head
+      ctx.fillStyle = '#c0a080';
+      ctx.font = 'bold 8px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText(this.label, 0, -76 + breathe);
+
+    } else if (this.isNeonCity) {
       // ═══ NEON CITY: Professional cyber salesperson ═══
       const breathe = Math.sin(this._waveT * 0.8) * 1;
 
@@ -10259,7 +10429,7 @@ class Salesperson {
 // ─── BuildingNPC ─────────────────────────────────────────────────────────────
 // Interactive NPC that appears inside buildings. Unique per building type.
 class BuildingNPC {
-  constructor(x, y, buildingType, isNeonCity = false, isGirl = false) {
+  constructor(x, y, buildingType, renderType = false, isGirl = false) {
     const cfg        = CONFIG.BUILDING_INTERACTIONS[buildingType] || CONFIG.BUILDING_INTERACTIONS[0];
     this.x = x; this.y = y;
     this.radius      = 18;
@@ -10268,7 +10438,9 @@ class BuildingNPC {
     this.dialogue    = cfg.dialogue;
     this._waveT      = 0;
     this._interactR  = 65;
-    this._isNeonCity = isNeonCity;
+    // renderType can be: true (neonCity for backwards compat), 'wasteland', or false (default)
+    this._isNeonCity = renderType === true || renderType === 'neonCity';
+    this._isWasteland = renderType === 'wasteland';
     this._isGirl     = isGirl;
     this._buildingType = buildingType;
   }
@@ -10278,11 +10450,164 @@ class BuildingNPC {
   render(ctx) {
     if (this._isGirl) {
       this._renderGirl(ctx);
+    } else if (this._isWasteland) {
+      this._renderWasteland(ctx);
     } else if (this._isNeonCity) {
       this._renderNeonCity(ctx);
     } else {
       this._renderDefault(ctx);
     }
+  }
+
+  _renderWasteland(ctx) {
+    const t = performance.now() / 1000;
+    const breathe = Math.sin(t * 1.5) * 1;
+    const sway = Math.sin(this._waveT) * 1.2;
+
+    ctx.save();
+    ctx.translate(this.x + sway, this.y);
+
+    // ═══ WASTELAND NPC RENDERING (Rugged trader/worker) ═══
+
+    // Shadow
+    ctx.save();
+    ctx.globalAlpha = 0.4;
+    ctx.fillStyle = '#000';
+    ctx.beginPath();
+    ctx.ellipse(3, 28, 14, 5, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    // Legs (worn cargo pants)
+    ctx.fillStyle = '#3a3530';
+    ctx.fillRect(-8, 12, 6, 16);
+    ctx.fillRect(2, 12, 6, 16);
+
+    // Boots (heavy work boots)
+    ctx.fillStyle = '#2a2420';
+    ctx.fillRect(-9, 26, 8, 5);
+    ctx.fillRect(1, 26, 8, 5);
+    // Boot straps
+    ctx.fillStyle = '#4a4038';
+    ctx.fillRect(-8, 27, 6, 2);
+    ctx.fillRect(2, 27, 6, 2);
+
+    // Body/Torso (worn work vest over dirty shirt)
+    const bodyGrad = ctx.createLinearGradient(-12, -8, 12, 14);
+    bodyGrad.addColorStop(0, '#5a5048');
+    bodyGrad.addColorStop(0.5, '#4a4238');
+    bodyGrad.addColorStop(1, '#3a3530');
+    ctx.fillStyle = bodyGrad;
+    ctx.beginPath();
+    ctx.roundRect(-12, -8 + breathe * 0.3, 24, 22, 3);
+    ctx.fill();
+
+    // Vest/jacket opening
+    ctx.fillStyle = '#6a6058';
+    ctx.beginPath();
+    ctx.moveTo(-3, -6 + breathe * 0.3);
+    ctx.lineTo(0, 12 + breathe * 0.3);
+    ctx.lineTo(3, -6 + breathe * 0.3);
+    ctx.closePath();
+    ctx.fill();
+
+    // Undershirt visible
+    ctx.fillStyle = '#8a8078';
+    ctx.beginPath();
+    ctx.moveTo(-3, -6 + breathe * 0.3);
+    ctx.lineTo(0, 4 + breathe * 0.3);
+    ctx.lineTo(3, -6 + breathe * 0.3);
+    ctx.closePath();
+    ctx.fill();
+
+    // Stains on clothes
+    ctx.fillStyle = 'rgba(40,30,20,0.3)';
+    ctx.beginPath();
+    ctx.ellipse(-6, 4 + breathe * 0.3, 4, 3, 0.3, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(8, 8 + breathe * 0.3, 3, 4, -0.2, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Arms
+    ctx.fillStyle = '#4a4238';
+    ctx.fillRect(-16, -4 + breathe * 0.3, 5, 14);
+    ctx.fillRect(11, -4 + breathe * 0.3, 5, 14);
+
+    // Hands (calloused)
+    ctx.fillStyle = '#C4A090';
+    ctx.beginPath();
+    ctx.arc(-13.5, 12 + breathe * 0.3, 3, 0, Math.PI * 2);
+    ctx.arc(13.5, 12 + breathe * 0.3, 3, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Neck (weathered skin)
+    ctx.fillStyle = '#C4A090';
+    ctx.fillRect(-3, -12, 6, 6);
+
+    // Head (rugged, weathered)
+    const headGrad = ctx.createRadialGradient(-2, -20 + breathe * 0.2, 2, 0, -18 + breathe * 0.2, 11);
+    headGrad.addColorStop(0, '#D4B8A0');
+    headGrad.addColorStop(1, '#B49880');
+    ctx.fillStyle = headGrad;
+    ctx.beginPath();
+    ctx.ellipse(0, -20 + breathe * 0.2, 10, 11, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Stubble/beard
+    ctx.fillStyle = 'rgba(60,50,40,0.35)';
+    ctx.beginPath();
+    ctx.ellipse(0, -14 + breathe * 0.2, 7, 5, 0, 0, Math.PI);
+    ctx.fill();
+
+    // Hair (messy, graying)
+    ctx.fillStyle = '#4a4540';
+    ctx.beginPath();
+    ctx.ellipse(0, -28 + breathe * 0.2, 9, 5, 0, Math.PI, 0);
+    ctx.fill();
+    // Messy strands
+    ctx.fillStyle = '#5a5550';
+    ctx.beginPath();
+    ctx.moveTo(-9, -26 + breathe * 0.2);
+    ctx.quadraticCurveTo(-11, -22 + breathe * 0.2, -8, -18 + breathe * 0.2);
+    ctx.lineTo(-7, -24 + breathe * 0.2);
+    ctx.fill();
+
+    // Eyes (tired but alert)
+    ctx.fillStyle = '#FFFFFF';
+    ctx.beginPath();
+    ctx.ellipse(-4, -20 + breathe * 0.2, 2.5, 1.8, 0, 0, Math.PI * 2);
+    ctx.ellipse(4, -20 + breathe * 0.2, 2.5, 1.8, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#3a3020';
+    ctx.beginPath();
+    ctx.arc(-4, -20 + breathe * 0.2, 1.2, 0, Math.PI * 2);
+    ctx.arc(4, -20 + breathe * 0.2, 1.2, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Serious expression
+    ctx.strokeStyle = '#8a6655';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(-3, -14 + breathe * 0.2);
+    ctx.lineTo(3, -14 + breathe * 0.2);
+    ctx.stroke();
+
+    // Name badge (worn metal)
+    ctx.fillStyle = '#5a5048';
+    ctx.fillRect(-15, -2 + breathe * 0.3, 12, 7);
+    ctx.fillStyle = '#a09080';
+    ctx.font = 'bold 5px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('TRADE', -9, 4 + breathe * 0.3);
+
+    // Label above head
+    ctx.fillStyle = '#c0a080';
+    ctx.font = 'bold 8px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(this.name, 0, -42 + breathe * 0.2);
+
+    ctx.restore();
   }
 
   _renderNeonCity(ctx) {
