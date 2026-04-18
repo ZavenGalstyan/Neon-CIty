@@ -527,9 +527,9 @@ const CONFIG = {
 
       roadColor:      '#0d0004',
       sidewalkColor:  '#160008',
-      buildingPalette: ['#220008', '#1a0005', '#2a000a'],
-      neonColors:     ['#FF0044', '#FF2200', '#CC0033'],
-      windowColors:   ['#FF2244', '#FF4422', '#FF0033'],
+      buildingPalette: ['#220008', '#1a0005', '#2a000a', '#1e0010', '#260012', '#180008'],
+      neonColors:     ['#FF0044', '#FF6600', '#CC00FF', '#FF2200', '#AA00CC', '#FF4400'],
+      windowColors:   ['#FF2244', '#FF6622', '#CC44FF', '#FF4400', '#AA22CC'],
       lightColor:     '#FF0044',
       lightGlow:      '#CC0033',
       neonFreq:       3,
@@ -667,15 +667,15 @@ const CONFIG = {
       name: 'WASTELAND',
       desc: 'Massive open terrain with huge buildings. Choose your color theme.',
       theme: '#FF6622',  // Default orange
-      tags: ['CUSTOMIZABLE', 'BIG BUILDINGS'],
-      previewGridSize: 25,
+      tags: ['CUSTOMIZABLE', 'POST-APOCALYPTIC'],
+      previewGridSize: 16,
       previewBg: '#0a0602',
       previewRoad: 'rgba(255,102,34,0.38)',
       hasColorThemes: true,
       defaultTheme: 'orange',
 
-      // Gameplay - big buildings like badlands
-      mapW: 44, mapH: 44, tileSize: 80, roadEvery: 13,
+      // Gameplay - tighter grid with more roads
+      mapW: 44, mapH: 44, tileSize: 80, roadEvery: 6,
 
       // Rendering defaults (orange theme)
       roadColor: '#0c0a06',
@@ -687,6 +687,7 @@ const CONFIG = {
       lightGlow: '#CC4400',
       neonFreq: 12,
       weather: 'sandstorm',
+      wasteland: true,
       botPalettes: {
         mini:   [{ body:'#883311', accent:'#FF6622' }, { body:'#662200', accent:'#CC4400' }],
         normal: [{ body:'#AA4422', accent:'#FF6633' }, { body:'#882200', accent:'#CC4422' }, { body:'#CC5533', accent:'#FF7744' }],

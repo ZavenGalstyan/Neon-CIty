@@ -1511,8 +1511,8 @@ class GameMap {
               ctx.fillStyle = 'rgba(255,248,210,0.10)';
               ctx.fillRect(wx + (x*19)%S - 5, wy + (y*17)%S - 5, 10, 10);
             }
-          } else if (cfg.desert) {
-            // Desert: sandy dirt road with ripples
+          } else if (cfg.desert || cfg.wasteland) {
+            // Desert/Wasteland: sandy dirt road with ripples
             const dseed = (x * 17 + y * 31) % 5;
             const sands = ['#c8a05a','#c2985a','#caa862','#be9850','#c4a258'];
             ctx.fillStyle = sands[dseed];
@@ -1539,6 +1539,110 @@ class GameMap {
               ctx.fillStyle = 'rgba(90,55,18,0.28)';
               ctx.beginPath(); ctx.ellipse(wx + S*0.34, wy + S/2 - 9, S*0.045, S*0.065, 0.35, 0, Math.PI*2); ctx.fill();
               ctx.beginPath(); ctx.ellipse(wx + S*0.66, wy + S/2 + 11, S*0.040, S*0.055, -0.3, 0, Math.PI*2); ctx.fill();
+            }
+          } else if (cfg.arena) {
+            // ═══════════════════════════════════════════════════════════════
+            //  ARENA ROADS: Very dark asphalt with clear lane markings
+            // ═══════════════════════════════════════════════════════════════
+            const aseed = (x * 17 + y * 31) % 6;
+
+            // Very dark asphalt base (almost black) for high contrast with buildings
+            const roadColors = ['#050203','#040202','#060204','#050202','#040203','#030201'];
+            ctx.fillStyle = roadColors[aseed];
+            ctx.fillRect(wx, wy, S, S);
+
+            // Subtle asphalt texture variation
+            ctx.fillStyle = 'rgba(20,10,15,0.15)';
+            if ((x * 7 + y * 11) % 3 === 0) {
+              ctx.fillRect(wx + (aseed * 7 % 30) + 10, wy + (aseed * 11 % 30) + 10, 18, 12);
+            }
+
+            // Road edge borders (clear demarcation from building zones)
+            ctx.fillStyle = 'rgba(80,30,40,0.35)';
+            ctx.fillRect(wx, wy, S, 2);           // Top border
+            ctx.fillRect(wx, wy + S - 2, S, 2);   // Bottom border
+            ctx.fillRect(wx, wy, 2, S);           // Left border
+            ctx.fillRect(wx + S - 2, wy, 2, S);   // Right border
+
+            // Center lane markings (dashed white/yellow lines)
+            if (isColR && !isRowR) {
+              // Vertical road - center dashed line
+              ctx.fillStyle = 'rgba(255,200,100,0.25)';
+              for (let dash = 0; dash < 4; dash++) {
+                ctx.fillRect(wx + S/2 - 1, wy + dash * 20 + 4, 2, 12);
+              }
+              // Edge lane lines
+              ctx.fillStyle = 'rgba(255,255,255,0.12)';
+              ctx.fillRect(wx + 6, wy, 1, S);
+              ctx.fillRect(wx + S - 7, wy, 1, S);
+            }
+            if (isRowR && !isColR) {
+              // Horizontal road - center dashed line
+              ctx.fillStyle = 'rgba(255,200,100,0.25)';
+              for (let dash = 0; dash < 4; dash++) {
+                ctx.fillRect(wx + dash * 20 + 4, wy + S/2 - 1, 12, 2);
+              }
+              // Edge lane lines
+              ctx.fillStyle = 'rgba(255,255,255,0.12)';
+              ctx.fillRect(wx, wy + 6, S, 1);
+              ctx.fillRect(wx, wy + S - 7, S, 1);
+            }
+
+            // Intersection - neon direction arrows (no confusing red squares)
+            if (isColR && isRowR) {
+              // Small neon arrow indicators pointing to roads
+              ctx.fillStyle = 'rgba(255,100,50,0.12)';
+              // North arrow
+              ctx.beginPath();
+              ctx.moveTo(wx + S/2, wy + 6);
+              ctx.lineTo(wx + S/2 - 4, wy + 12);
+              ctx.lineTo(wx + S/2 + 4, wy + 12);
+              ctx.closePath();
+              ctx.fill();
+              // South arrow
+              ctx.beginPath();
+              ctx.moveTo(wx + S/2, wy + S - 6);
+              ctx.lineTo(wx + S/2 - 4, wy + S - 12);
+              ctx.lineTo(wx + S/2 + 4, wy + S - 12);
+              ctx.closePath();
+              ctx.fill();
+              // West arrow
+              ctx.beginPath();
+              ctx.moveTo(wx + 6, wy + S/2);
+              ctx.lineTo(wx + 12, wy + S/2 - 4);
+              ctx.lineTo(wx + 12, wy + S/2 + 4);
+              ctx.closePath();
+              ctx.fill();
+              // East arrow
+              ctx.beginPath();
+              ctx.moveTo(wx + S - 6, wy + S/2);
+              ctx.lineTo(wx + S - 12, wy + S/2 - 4);
+              ctx.lineTo(wx + S - 12, wy + S/2 + 4);
+              ctx.closePath();
+              ctx.fill();
+            }
+
+            // Occasional road damage/cracks
+            if ((x * 7 + y * 11) % 8 === 0) {
+              ctx.fillStyle = 'rgba(0,0,0,0.5)';
+              const crackX = wx + (x * 13 % 40) + 15;
+              ctx.fillRect(crackX, wy + 10, 1, S - 20);
+            }
+
+            // Sparse blood stains on road
+            if ((x * 13 + y * 17) % 12 === 0) {
+              ctx.fillStyle = 'rgba(60,0,8,0.25)';
+              ctx.beginPath();
+              ctx.ellipse(wx + S * 0.5, wy + S * 0.5, 10, 6, 0.5, 0, Math.PI * 2);
+              ctx.fill();
+            }
+
+            // Shell casings on road
+            if ((x * 7 + y * 5) % 10 === 0) {
+              ctx.fillStyle = 'rgba(150,120,40,0.40)';
+              ctx.beginPath();
+              ctx.ellipse(wx + 25 + (aseed * 5 % 30), wy + 30 + (aseed * 3 % 20), 2, 1, aseed, 0, Math.PI * 2);
+              ctx.fill();
             }
           } else {
             ctx.fillStyle = cfg.roadColor;
@@ -1645,6 +1749,115 @@ class GameMap {
               ctx.fillStyle = 'rgba(130,8,8,0.20)';
               ctx.beginPath(); ctx.ellipse(wx + S * 0.62, wy + S * 0.40, S * 0.14, S * 0.09, -0.5, 0, Math.PI * 2); ctx.fill();
             }
+          } else if (cfg.arena) {
+            // ═══════════════════════════════════════════════════════════════
+            //  ARENA SIDEWALK: Thin strip (6px) + 1-2 MASSIVE buildings
+            // ═══════════════════════════════════════════════════════════════
+            const ts = x * 41 + y * 59;
+            const t = Date.now() * 0.001;
+            const neons = ['#FF0066','#FF6600','#CC00FF','#FF3366','#AA00FF'];
+            const signs = ['RAMEN','NEURO','DATA-X','ARENA','COMBAT'];
+
+            // Detect adjacent roads
+            const roadLeft = x > 0 && this.tiles[y][x-1] === TILE.ROAD;
+            const roadRight = x < this.W-1 && this.tiles[y][x+1] === TILE.ROAD;
+            const roadTop = y > 0 && this.tiles[y-1][x] === TILE.ROAD;
+            const roadBottom = y < this.H-1 && this.tiles[y+1][x] === TILE.ROAD;
+
+            // Dark background
+            ctx.fillStyle = '#0a0406';
+            ctx.fillRect(wx, wy, S, S);
+
+            // Thin sidewalk width
+            const sw = 6;
+
+            // Building area (after sidewalk)
+            const bx = roadLeft ? wx + sw : wx;
+            const by = roadTop ? wy + sw : wy;
+            const bw = S - (roadLeft ? sw : 0) - (roadRight ? sw : 0);
+            const bh = S - (roadTop ? sw : 0) - (roadBottom ? sw : 0);
+
+            const seed = ts * 7;
+            const neonCol = neons[seed % neons.length];
+
+            // ONE large building fills the space
+            // Shadow
+            ctx.fillStyle = 'rgba(0,0,0,0.6)';
+            ctx.fillRect(bx + 3, by + 3, bw, bh);
+
+            // Solid building body
+            ctx.fillStyle = '#1a0a0c';
+            ctx.fillRect(bx, by, bw, bh);
+
+            // Neon border
+            ctx.strokeStyle = neonCol;
+            ctx.lineWidth = 3;
+            ctx.strokeRect(bx + 2, by + 2, bw - 4, bh - 4);
+
+            // Inner panel
+            ctx.fillStyle = '#120608';
+            ctx.fillRect(bx + 6, by + 6, bw - 12, bh - 12);
+
+            // Secondary border
+            ctx.strokeStyle = neonCol + '66';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(bx + 10, by + 10, bw - 20, bh - 20);
+
+            // Roof equipment
+            const roofType = seed % 3;
+            if (roofType === 0 && bw > 30) {
+              // Satellite dish
+              ctx.fillStyle = '#999';
+              ctx.beginPath();
+              ctx.ellipse(bx + bw - 18, by + 14, 12, 6, -0.25, 0, Math.PI * 2);
+              ctx.fill();
+              ctx.fillStyle = '#555';
+              ctx.fillRect(bx + bw - 19, by + 14, 2, 10);
+            } else if (roofType === 1 && bw > 26) {
+              // Solar panels
+              ctx.fillStyle = '#1a4488';
+              ctx.fillRect(bx + 10, by + 8, bw - 20, 14);
+              ctx.strokeStyle = '#2a66aa';
+              ctx.lineWidth = 1;
+              ctx.beginPath();
+              ctx.moveTo(bx + 10, by + 15);
+              ctx.lineTo(bx + bw - 10, by + 15);
+              ctx.stroke();
+            } else {
+              // Antenna
+              ctx.fillStyle = '#555';
+              ctx.fillRect(bx + bw/2 - 2, by - 6, 4, 16);
+              const blink = Math.sin(t * 4 + seed) > 0.2;
+              ctx.fillStyle = blink ? '#FF0044' : '#550015';
+              ctx.beginPath();
+              ctx.arc(bx + bw/2, by - 6, 4, 0, Math.PI * 2);
+              ctx.fill();
+            }
+
+            // Neon sign
+            if (bw > 32 && bh > 30) {
+              const signText = signs[seed % signs.length];
+              const signW = Math.min(bw - 16, 50);
+              const signH = 12;
+              const signX = bx + (bw - signW) / 2;
+              const signY = by + bh - 18;
+
+              ctx.fillStyle = '#080004';
+              ctx.fillRect(signX, signY, signW, signH);
+              ctx.strokeStyle = neonCol;
+              ctx.lineWidth = 2;
+              ctx.strokeRect(signX, signY, signW, signH);
+              ctx.fillStyle = neonCol;
+              ctx.font = 'bold 9px monospace';
+              ctx.fillText(signText, signX + 5, signY + 9);
+            }
+
+            // Thin dark sidewalk strip
+            ctx.fillStyle = '#080405';
+            if (roadLeft) ctx.fillRect(wx, wy, sw, S);
+            if (roadRight) ctx.fillRect(wx + S - sw, wy, sw, S);
+            if (roadTop) ctx.fillRect(wx, wy, S, sw);
+            if (roadBottom) ctx.fillRect(wx, wy + S - sw, S, sw);
           } else if (cfg.galactica) {
             // Galactica: cosmic platform — dark nebula plates with energy veins
             const gseed = (x * 23 + y * 37) % 4;
@@ -1677,31 +1890,138 @@ class GameMap {
               ctx.fillStyle = 'rgba(220,200,255,0.45)';
               ctx.beginPath(); ctx.arc(wx + (x*23)%S, wy + (y*19)%S, 0.9, 0, Math.PI*2); ctx.fill();
             }
-          } else if (cfg.desert) {
-            // Desert: sandstone / ancient paving
-            const pseed = (x * 23 + y * 37) % 4;
-            const stones = ['#a87a3a','#b08422','#9c7020','#a47830'];
-            ctx.fillStyle = stones[pseed];
+          } else if (cfg.desert || cfg.wasteland) {
+            // ═══════════════════════════════════════════════════════════════
+            //  WASTELAND SIDEWALK: Thin strip + unique ruined structures
+            // ═══════════════════════════════════════════════════════════════
+            const ts = x * 41 + y * 59;
+
+            // Detect adjacent roads
+            const roadLeft = x > 0 && this.tiles[y][x-1] === TILE.ROAD;
+            const roadRight = x < this.W-1 && this.tiles[y][x+1] === TILE.ROAD;
+            const roadTop = y > 0 && this.tiles[y-1][x] === TILE.ROAD;
+            const roadBottom = y < this.H-1 && this.tiles[y+1][x] === TILE.ROAD;
+
+            // Scorched ground
+            const bgColors = ['#1c1612','#1a1410','#18120e','#1e1814'];
+            ctx.fillStyle = bgColors[ts % bgColors.length];
             ctx.fillRect(wx, wy, S, S);
-            // Mortar joints
-            ctx.fillStyle = 'rgba(55,35,8,0.28)';
-            ctx.fillRect(wx, wy + Math.round(S*0.50), S, 2);
-            ctx.fillRect(wx + Math.round(S*0.50), wy, 2, S);
-            // Crack lines
-            if ((x*7+y*11) % 7 === 0) {
-              ctx.fillStyle = 'rgba(70,42,10,0.30)';
-              ctx.fillRect(wx + Math.round(S*0.22), wy + Math.round(S*0.20), Math.round(S*0.52), 1);
-              ctx.fillRect(wx + Math.round(S*0.36), wy + Math.round(S*0.60), Math.round(S*0.28), 1);
+
+            // Thin sidewalk (6px)
+            const sw = 6;
+
+            // Building area after sidewalk
+            const areaX = roadLeft ? wx + sw : wx;
+            const areaY = roadTop ? wy + sw : wy;
+            const areaW = S - (roadLeft ? sw : 0) - (roadRight ? sw : 0);
+            const areaH = S - (roadTop ? sw : 0) - (roadBottom ? sw : 0);
+
+            // Unique structure type per tile
+            const structType = ts % 5;
+
+            if (structType === 0) {
+              // Small collapsed shed
+              ctx.fillStyle = '#3a3530';
+              ctx.fillRect(areaX + 4, areaY + areaH * 0.3, areaW - 8, areaH * 0.65);
+              // Collapsed roof
+              ctx.fillStyle = '#4a4540';
+              ctx.beginPath();
+              ctx.moveTo(areaX + 4, areaY + areaH * 0.3);
+              ctx.lineTo(areaX + areaW/2, areaY + 4);
+              ctx.lineTo(areaX + areaW - 4, areaY + areaH * 0.35);
+              ctx.closePath();
+              ctx.fill();
+              // Door hole
+              ctx.fillStyle = '#0c0a08';
+              ctx.fillRect(areaX + areaW/2 - 8, areaY + areaH * 0.55, 16, areaH * 0.38);
+
+            } else if (structType === 1) {
+              // Rubble mound
+              ctx.fillStyle = '#4a4540';
+              ctx.beginPath();
+              ctx.moveTo(areaX + 4, areaY + areaH - 4);
+              ctx.lineTo(areaX + areaW * 0.35, areaY + 8);
+              ctx.lineTo(areaX + areaW * 0.65, areaY + 12);
+              ctx.lineTo(areaX + areaW - 4, areaY + areaH - 4);
+              ctx.closePath();
+              ctx.fill();
+              // Debris chunks
+              ctx.fillStyle = '#5a5a58';
+              ctx.fillRect(areaX + 8, areaY + areaH - 15, 10, 8);
+              ctx.fillRect(areaX + areaW - 20, areaY + areaH - 12, 8, 6);
+              // Rebar
+              ctx.strokeStyle = '#6a5a4a';
+              ctx.lineWidth = 2;
+              ctx.beginPath();
+              ctx.moveTo(areaX + areaW * 0.4, areaY + 12);
+              ctx.lineTo(areaX + areaW * 0.5, areaY + 4);
+              ctx.stroke();
+
+            } else if (structType === 2) {
+              // Small bunker
+              ctx.fillStyle = '#484848';
+              ctx.fillRect(areaX + 6, areaY + areaH * 0.4, areaW - 12, areaH * 0.55);
+              // Sloped top
+              ctx.fillStyle = '#525252';
+              ctx.beginPath();
+              ctx.moveTo(areaX + 6, areaY + areaH * 0.4);
+              ctx.lineTo(areaX + 14, areaY + areaH * 0.25);
+              ctx.lineTo(areaX + areaW - 14, areaY + areaH * 0.25);
+              ctx.lineTo(areaX + areaW - 6, areaY + areaH * 0.4);
+              ctx.closePath();
+              ctx.fill();
+              // Door slit
+              ctx.fillStyle = '#0a0a0a';
+              ctx.fillRect(areaX + areaW/2 - 10, areaY + areaH * 0.55, 20, 4);
+
+            } else if (structType === 3) {
+              // Fallen tank/barrel
+              ctx.fillStyle = '#5a5248';
+              ctx.save();
+              ctx.translate(areaX + areaW/2, areaY + areaH/2);
+              ctx.rotate(0.2);
+              ctx.beginPath();
+              ctx.ellipse(0, 0, areaW * 0.4, areaH * 0.25, 0, 0, Math.PI * 2);
+              ctx.fill();
+              ctx.restore();
+              // Spill
+              ctx.fillStyle = 'rgba(40,30,20,0.5)';
+              ctx.beginPath();
+              ctx.ellipse(areaX + areaW * 0.7, areaY + areaH * 0.75, 15, 8, 0.3, 0, Math.PI * 2);
+              ctx.fill();
+
+            } else {
+              // Broken wall segment
+              ctx.fillStyle = '#3e3830';
+              ctx.fillRect(areaX + 4, areaY + 8, areaW - 8, areaH - 12);
+              // Jagged top
+              ctx.fillStyle = '#1c1612';
+              ctx.beginPath();
+              ctx.moveTo(areaX + 4, areaY + 8);
+              ctx.lineTo(areaX + 12, areaY + 4);
+              ctx.lineTo(areaX + 25, areaY + 14);
+              ctx.lineTo(areaX + 40, areaY + 6);
+              ctx.lineTo(areaX + 55, areaY + 12);
+              ctx.lineTo(areaX + areaW - 4, areaY + 8);
+              ctx.lineTo(areaX + areaW - 4, areaY + 8);
+              ctx.lineTo(areaX + 4, areaY + 8);
+              ctx.fill();
+              // Window hole
+              ctx.fillStyle = '#0c0a08';
+              ctx.fillRect(areaX + areaW/2 - 10, areaY + 25, 20, 15);
             }
-            // Drifted sand in corners
-            ctx.fillStyle = 'rgba(200,168,80,0.18)';
-            ctx.fillRect(wx, wy, 9, 9);
-            ctx.fillRect(wx + S - 9, wy + S - 9, 9, 9);
-            // Occasional sand pile
-            if ((x*13+y*17) % 9 === 0) {
-              ctx.fillStyle = 'rgba(220,185,90,0.25)';
-              ctx.beginPath(); ctx.ellipse(wx + S*0.65, wy + S*0.72, S*0.18, S*0.10, 0, 0, Math.PI*2); ctx.fill();
-            }
+
+            // Thin cracked sidewalk
+            ctx.fillStyle = '#3a3428';
+            if (roadLeft) ctx.fillRect(wx, wy, sw, S);
+            if (roadRight) ctx.fillRect(wx + S - sw, wy, sw, S);
+            if (roadTop) ctx.fillRect(wx, wy, S, sw);
+            if (roadBottom) ctx.fillRect(wx, wy + S - sw, S, sw);
+
+            // Cracks
+            ctx.fillStyle = '#2a2418';
+            if (roadLeft) ctx.fillRect(wx + 2, wy + 20, 1, 35);
+            if (roadTop) ctx.fillRect(wx + 25, wy + 2, 25, 1);
           } else if (isPark) {
             // Park: lush green ground
             ctx.fillStyle = '#0d2010';
@@ -2121,37 +2441,302 @@ class GameMap {
           } else if (cfg.sky) {
             // Sky Realm: blit pre-rendered cloud canvas — single drawImage instead of 7 ellipses
             ctx.drawImage(this._skyCloudCanvas, wx, wy);
-          } else if (cfg.desert) {
-            // Desert: pyramid / sandstone block
-            const pseed = (x * 41 + y * 59) % 5;
-            const stoneColors = ['#8B6914','#9e7c20','#7a5c10','#A0801e','#8a6818'];
-            ctx.fillStyle = stoneColors[pseed];
+          } else if (cfg.desert || cfg.wasteland) {
+            // ═══════════════════════════════════════════════════════════════
+            //  WASTELAND: Unique ruined industrial structures
+            // ═══════════════════════════════════════════════════════════════
+            const ts = x * 41 + y * 59;
+            const t = Date.now() * 0.001;
+
+            // Scorched earth background
+            const bgColors = ['#1c1612','#1a1410','#18120e','#1e1814','#161210'];
+            ctx.fillStyle = bgColors[ts % bgColors.length];
             ctx.fillRect(wx, wy, S, S);
-            // Horizontal sandstone strata banding
-            ctx.fillStyle = 'rgba(255,200,80,0.09)';
-            for (let band = 0; band < 4; band++) {
-              ctx.fillRect(wx, wy + Math.round(band * S / 4), S, 2);
+
+            // Structure type varies by tile
+            const structType = ts % 7;
+
+            if (structType === 0) {
+              // === COLLAPSED FACTORY ===
+              // Main ruined structure
+              ctx.fillStyle = '#3a3530';
+              ctx.fillRect(wx + 4, wy + 20, 72, 56);
+              // Collapsed roof (triangular debris)
+              ctx.fillStyle = '#4a4540';
+              ctx.beginPath();
+              ctx.moveTo(wx + 4, wy + 20);
+              ctx.lineTo(wx + 40, wy + 4);
+              ctx.lineTo(wx + 76, wy + 20);
+              ctx.closePath();
+              ctx.fill();
+              // Collapsed section
+              ctx.fillStyle = '#1c1612';
+              ctx.beginPath();
+              ctx.moveTo(wx + 50, wy + 20);
+              ctx.lineTo(wx + 76, wy + 20);
+              ctx.lineTo(wx + 76, wy + 50);
+              ctx.lineTo(wx + 58, wy + 35);
+              ctx.closePath();
+              ctx.fill();
+              // Exposed rebar
+              ctx.strokeStyle = '#5a4a3a';
+              ctx.lineWidth = 2;
+              ctx.beginPath();
+              ctx.moveTo(wx + 52, wy + 22); ctx.lineTo(wx + 68, wy + 38);
+              ctx.moveTo(wx + 58, wy + 22); ctx.lineTo(wx + 72, wy + 42);
+              ctx.stroke();
+              // Broken windows
+              ctx.fillStyle = '#0a0806';
+              ctx.fillRect(wx + 12, wy + 30, 14, 18);
+              ctx.fillRect(wx + 32, wy + 30, 14, 18);
+              // Smoke stack
+              ctx.fillStyle = '#4a4a48';
+              ctx.fillRect(wx + 8, wy + 6, 12, 20);
+              ctx.fillStyle = '#3a3a38';
+              ctx.fillRect(wx + 10, wy + 2, 8, 8);
+
+            } else if (structType === 1) {
+              // === BUNKER COMPLEX ===
+              // Low fortified structure
+              ctx.fillStyle = '#484848';
+              ctx.fillRect(wx + 6, wy + 35, 68, 40);
+              // Sloped front
+              ctx.beginPath();
+              ctx.moveTo(wx + 6, wy + 35);
+              ctx.lineTo(wx + 20, wy + 25);
+              ctx.lineTo(wx + 60, wy + 25);
+              ctx.lineTo(wx + 74, wy + 35);
+              ctx.lineTo(wx + 6, wy + 35);
+              ctx.fillStyle = '#525252';
+              ctx.fill();
+              // Blast door
+              ctx.fillStyle = '#3a3a3a';
+              ctx.fillRect(wx + 28, wy + 45, 24, 28);
+              ctx.fillStyle = '#2a2a2a';
+              ctx.fillRect(wx + 30, wy + 47, 20, 24);
+              // Reinforcement bands
+              ctx.fillStyle = '#5a5a5a';
+              ctx.fillRect(wx + 28, wy + 50, 24, 3);
+              ctx.fillRect(wx + 28, wy + 62, 24, 3);
+              // Gun slit
+              ctx.fillStyle = '#0a0a0a';
+              ctx.fillRect(wx + 12, wy + 40, 10, 4);
+              ctx.fillRect(wx + 58, wy + 40, 10, 4);
+              // Sandbags
+              ctx.fillStyle = '#6a6050';
+              ctx.fillRect(wx + 4, wy + 68, 18, 8);
+              ctx.fillRect(wx + 58, wy + 68, 18, 8);
+
+            } else if (structType === 2) {
+              // === FUEL DEPOT RUINS ===
+              // Toppled storage tank
+              ctx.fillStyle = '#5a5248';
+              ctx.save();
+              ctx.translate(wx + 40, wy + 50);
+              ctx.rotate(0.15);
+              ctx.beginPath();
+              ctx.ellipse(0, 0, 32, 18, 0, 0, Math.PI * 2);
+              ctx.fill();
+              ctx.restore();
+              // Tank details
+              ctx.fillStyle = '#4a4238';
+              ctx.save();
+              ctx.translate(wx + 40, wy + 50);
+              ctx.rotate(0.15);
+              ctx.beginPath();
+              ctx.ellipse(-28, 0, 4, 16, 0, 0, Math.PI * 2);
+              ctx.fill();
+              ctx.restore();
+              // Spilled contents
+              ctx.fillStyle = 'rgba(40,30,20,0.6)';
+              ctx.beginPath();
+              ctx.ellipse(wx + 55, wy + 65, 20, 10, 0.3, 0, Math.PI * 2);
+              ctx.fill();
+              // Support frame (collapsed)
+              ctx.fillStyle = '#4a4a4a';
+              ctx.fillRect(wx + 8, wy + 60, 6, 16);
+              ctx.fillRect(wx + 66, wy + 55, 6, 20);
+              // Warning stripes
+              ctx.fillStyle = '#8a7020';
+              ctx.fillRect(wx + 20, wy + 32, 40, 4);
+              ctx.fillStyle = '#2a2a2a';
+              ctx.fillRect(wx + 24, wy + 32, 8, 4);
+              ctx.fillRect(wx + 40, wy + 32, 8, 4);
+
+            } else if (structType === 3) {
+              // === CRUMBLING TOWER ===
+              // Tall narrow ruin
+              ctx.fillStyle = '#3e3830';
+              ctx.fillRect(wx + 25, wy + 8, 30, 68);
+              // Jagged top (partially collapsed)
+              ctx.fillStyle = '#1c1612';
+              ctx.beginPath();
+              ctx.moveTo(wx + 25, wy + 8);
+              ctx.lineTo(wx + 32, wy + 4);
+              ctx.lineTo(wx + 38, wy + 12);
+              ctx.lineTo(wx + 45, wy + 2);
+              ctx.lineTo(wx + 55, wy + 8);
+              ctx.lineTo(wx + 55, wy + 8);
+              ctx.lineTo(wx + 25, wy + 8);
+              ctx.fill();
+              // Rubble at base
+              ctx.fillStyle = '#4a4540';
+              ctx.beginPath();
+              ctx.moveTo(wx + 10, wy + 76);
+              ctx.lineTo(wx + 25, wy + 60);
+              ctx.lineTo(wx + 25, wy + 76);
+              ctx.closePath();
+              ctx.fill();
+              ctx.beginPath();
+              ctx.moveTo(wx + 70, wy + 76);
+              ctx.lineTo(wx + 55, wy + 55);
+              ctx.lineTo(wx + 55, wy + 76);
+              ctx.closePath();
+              ctx.fill();
+              // Window holes
+              ctx.fillStyle = '#0c0a08';
+              for (let wy2 = 20; wy2 < 70; wy2 += 16) {
+                ctx.fillRect(wx + 32, wy + wy2, 10, 8);
+                ctx.fillRect(wx + 46, wy + wy2 + 8, 6, 6);
+              }
+              // Exposed floors
+              ctx.fillStyle = '#5a5550';
+              ctx.fillRect(wx + 25, wy + 35, 30, 3);
+              ctx.fillRect(wx + 25, wy + 55, 30, 3);
+
+            } else if (structType === 4) {
+              // === DEBRIS FIELD ===
+              // Multiple rubble piles
+              ctx.fillStyle = '#4a4540';
+              ctx.beginPath();
+              ctx.moveTo(wx + 5, wy + 50);
+              ctx.lineTo(wx + 25, wy + 25);
+              ctx.lineTo(wx + 45, wy + 50);
+              ctx.closePath();
+              ctx.fill();
+              ctx.fillStyle = '#3a3530';
+              ctx.beginPath();
+              ctx.moveTo(wx + 35, wy + 65);
+              ctx.lineTo(wx + 55, wy + 35);
+              ctx.lineTo(wx + 75, wy + 65);
+              ctx.closePath();
+              ctx.fill();
+              // Scattered concrete chunks
+              ctx.fillStyle = '#5a5a58';
+              ctx.fillRect(wx + 10, wy + 55, 12, 8);
+              ctx.fillRect(wx + 60, wy + 45, 10, 10);
+              ctx.fillRect(wx + 30, wy + 68, 15, 6);
+              // Rebar sticking out
+              ctx.strokeStyle = '#6a5a4a';
+              ctx.lineWidth = 2;
+              ctx.beginPath();
+              ctx.moveTo(wx + 22, wy + 30); ctx.lineTo(wx + 28, wy + 18);
+              ctx.moveTo(wx + 52, wy + 40); ctx.lineTo(wx + 58, wy + 28);
+              ctx.moveTo(wx + 18, wy + 58); ctx.lineTo(wx + 12, wy + 48);
+              ctx.stroke();
+              // Dust/ash layer
+              ctx.fillStyle = 'rgba(80,75,70,0.25)';
+              ctx.fillRect(wx + 2, wy + 70, 76, 8);
+
+            } else if (structType === 5) {
+              // === WRECKED WAREHOUSE ===
+              // Long low structure
+              ctx.fillStyle = '#3e3a35';
+              ctx.fillRect(wx + 2, wy + 30, 76, 46);
+              // Corrugated roof (partial)
+              ctx.fillStyle = '#5a5550';
+              ctx.fillRect(wx + 2, wy + 26, 50, 8);
+              // Roof corrugation
+              ctx.strokeStyle = '#4a4540';
+              ctx.lineWidth = 1;
+              for (let rx = 6; rx < 48; rx += 6) {
+                ctx.beginPath();
+                ctx.moveTo(wx + rx, wy + 26);
+                ctx.lineTo(wx + rx, wy + 34);
+                ctx.stroke();
+              }
+              // Collapsed roof section
+              ctx.fillStyle = '#4a4540';
+              ctx.beginPath();
+              ctx.moveTo(wx + 52, wy + 26);
+              ctx.lineTo(wx + 78, wy + 26);
+              ctx.lineTo(wx + 78, wy + 50);
+              ctx.lineTo(wx + 58, wy + 38);
+              ctx.closePath();
+              ctx.fill();
+              // Loading dock
+              ctx.fillStyle = '#4a4a48';
+              ctx.fillRect(wx + 8, wy + 55, 30, 18);
+              ctx.fillStyle = '#2a2a28';
+              ctx.fillRect(wx + 12, wy + 58, 22, 12);
+              // Cargo crates
+              ctx.fillStyle = '#5a5040';
+              ctx.fillRect(wx + 45, wy + 58, 12, 14);
+              ctx.fillRect(wx + 60, wy + 62, 10, 10);
+
+            } else {
+              // === RADIO TOWER RUIN ===
+              // Fallen lattice tower
+              ctx.strokeStyle = '#5a5a58';
+              ctx.lineWidth = 3;
+              // Main tower (tilted)
+              ctx.save();
+              ctx.translate(wx + 40, wy + 70);
+              ctx.rotate(-0.35);
+              ctx.beginPath();
+              ctx.moveTo(-8, 0); ctx.lineTo(-4, -60);
+              ctx.moveTo(8, 0); ctx.lineTo(4, -60);
+              ctx.moveTo(-4, -60); ctx.lineTo(4, -60);
+              ctx.stroke();
+              // Cross braces
+              ctx.lineWidth = 1;
+              for (let ty = -10; ty > -55; ty -= 15) {
+                ctx.beginPath();
+                ctx.moveTo(-6, ty); ctx.lineTo(6, ty - 10);
+                ctx.moveTo(6, ty); ctx.lineTo(-6, ty - 10);
+                ctx.stroke();
+              }
+              ctx.restore();
+              // Base wreckage
+              ctx.fillStyle = '#4a4a48';
+              ctx.fillRect(wx + 30, wy + 62, 20, 14);
+              // Dish (fallen)
+              ctx.fillStyle = '#5a5a58';
+              ctx.beginPath();
+              ctx.ellipse(wx + 18, wy + 55, 14, 8, -0.4, 0, Math.PI * 2);
+              ctx.fill();
+              ctx.fillStyle = '#3a3a38';
+              ctx.beginPath();
+              ctx.ellipse(wx + 18, wy + 55, 8, 4, -0.4, 0, Math.PI * 2);
+              ctx.fill();
+              // Cables
+              ctx.strokeStyle = '#3a3530';
+              ctx.lineWidth = 1;
+              ctx.beginPath();
+              ctx.moveTo(wx + 25, wy + 52);
+              ctx.quadraticCurveTo(wx + 40, wy + 45, wx + 55, wy + 58);
+              ctx.stroke();
             }
-            // Sunlit (left) vs shadow (right) face — pyramid look
-            ctx.fillStyle = 'rgba(255,220,100,0.12)';
-            ctx.fillRect(wx, wy, Math.round(S/2), S);
-            ctx.fillStyle = 'rgba(0,0,0,0.14)';
-            ctx.fillRect(wx + Math.round(S/2), wy, Math.round(S/2), S);
-            // Hieroglyph scratches
-            if ((x*7+y*11) % 6 === 0) {
-              ctx.fillStyle = 'rgba(35,20,4,0.30)';
-              ctx.fillRect(wx + Math.round(S*0.22), wy + Math.round(S*0.15), 2, Math.round(S*0.70));
-              ctx.fillRect(wx + Math.round(S*0.50), wy + Math.round(S*0.20), 2, Math.round(S*0.60));
-              ctx.fillRect(wx + Math.round(S*0.72), wy + Math.round(S*0.25), 2, Math.round(S*0.50));
+
+            // === COMMON ELEMENTS ===
+            // Faint fire glow (rare)
+            if (ts % 11 === 0) {
+              const flicker = 0.4 + Math.sin(t * 6) * 0.15;
+              ctx.fillStyle = `rgba(200,100,30,${flicker * 0.3})`;
+              ctx.beginPath();
+              ctx.arc(wx + 20 + (ts % 40), wy + 50 + (ts % 20), 12, 0, Math.PI * 2);
+              ctx.fill();
             }
-            // Torch glow on some blocks
-            if ((x*13+y*19) % 10 === 0) {
-              ctx.globalAlpha = 0.58;
-              ctx.fillStyle = '#FF9933';
-              ctx.beginPath(); ctx.arc(wx + Math.round(S*0.84), wy + Math.round(S*0.28), 5, 0, Math.PI*2); ctx.fill();
-              ctx.fillStyle = 'rgba(255,200,80,0.40)';
-              ctx.beginPath(); ctx.arc(wx + Math.round(S*0.84), wy + Math.round(S*0.28), 9, 0, Math.PI*2); ctx.fill();
-              ctx.globalAlpha = 1;
+
+            // Cracks in ground
+            ctx.strokeStyle = 'rgba(0,0,0,0.35)';
+            ctx.lineWidth = 1;
+            if (ts % 3 === 0) {
+              ctx.beginPath();
+              ctx.moveTo(wx + 5, wy + 70 + (ts % 8));
+              ctx.lineTo(wx + 30 + (ts % 20), wy + 65);
+              ctx.lineTo(wx + 50, wy + 75);
+              ctx.stroke();
             }
           } else if (cfg.zombie) {
             // Zombie: decayed crumbling infected buildings
@@ -2282,6 +2867,162 @@ class GameMap {
                 }
               }
             }
+          } else if (cfg.arena) {
+            // ═══════════════════════════════════════════════════════════════
+            //  ARENA: 2-3 MASSIVE monolithic buildings per tile
+            // ═══════════════════════════════════════════════════════════════
+            const t = Date.now() * 0.001;
+            const ts = x * 41 + y * 59;
+            const neons = ['#FF0066','#FF6600','#CC00FF','#FF3366','#AA00FF'];
+            const signs = ['RAMEN','NEURO','ARENA','COMBAT','DATA-X','CYBER','BLADE'];
+
+            // Dark background
+            ctx.fillStyle = '#0a0406';
+            ctx.fillRect(wx, wy, S, S);
+
+            // 2-3 MASSIVE buildings per tile (not dense clusters)
+            const layout = ts % 3;
+            let bldDefs = [];
+            if (layout === 0) {
+              // Two large buildings side by side
+              bldDefs = [
+                {x:0, y:0, w:42, h:80},
+                {x:44, y:0, w:36, h:80}
+              ];
+            } else if (layout === 1) {
+              // Two large buildings stacked
+              bldDefs = [
+                {x:0, y:0, w:80, h:42},
+                {x:0, y:44, w:80, h:36}
+              ];
+            } else {
+              // Three buildings - one large, two medium
+              bldDefs = [
+                {x:0, y:0, w:80, h:48},
+                {x:0, y:50, w:42, h:30},
+                {x:44, y:50, w:36, h:30}
+              ];
+            }
+
+            // Draw each MASSIVE building
+            for (let i = 0; i < bldDefs.length; i++) {
+              const bd = bldDefs[i];
+              const bx = wx + bd.x, by = wy + bd.y, bw = bd.w, bh = bd.h;
+              const seed = ts * 7 + i * 31;
+              const neonCol = neons[seed % neons.length];
+
+              // Drop shadow
+              ctx.fillStyle = 'rgba(0,0,0,0.6)';
+              ctx.fillRect(bx + 4, by + 4, bw, bh);
+
+              // Solid building body
+              ctx.fillStyle = '#1a0a0c';
+              ctx.fillRect(bx, by, bw, bh);
+
+              // Bright neon border
+              ctx.strokeStyle = neonCol;
+              ctx.lineWidth = 3;
+              ctx.strokeRect(bx + 2, by + 2, bw - 4, bh - 4);
+
+              // Inner panel
+              ctx.fillStyle = '#120608';
+              ctx.fillRect(bx + 6, by + 6, bw - 12, bh - 12);
+
+              // Secondary border
+              ctx.strokeStyle = neonCol + '66';
+              ctx.lineWidth = 1;
+              ctx.strokeRect(bx + 10, by + 10, bw - 20, bh - 20);
+
+              // === LARGE ROOF EQUIPMENT ===
+              const roofType = (seed + i) % 4;
+
+              if (roofType === 0) {
+                // Large satellite dish
+                ctx.fillStyle = '#999999';
+                ctx.beginPath();
+                ctx.ellipse(bx + bw - 22, by + 16, 14, 7, -0.25, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#666666';
+                ctx.beginPath();
+                ctx.ellipse(bx + bw - 22, by + 15, 9, 4, -0.25, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#444444';
+                ctx.fillRect(bx + bw - 23, by + 16, 3, 14);
+                ctx.fillRect(bx + bw - 28, by + 28, 14, 4);
+              } else if (roofType === 1) {
+                // Large solar panel array
+                ctx.fillStyle = '#1a4488';
+                ctx.fillRect(bx + 12, by + 8, bw - 24, 16);
+                ctx.strokeStyle = '#2a66aa';
+                ctx.lineWidth = 1;
+                const panelW = bw - 24;
+                for (let p = 1; p < 6; p++) {
+                  ctx.beginPath();
+                  ctx.moveTo(bx + 12 + p * panelW / 6, by + 8);
+                  ctx.lineTo(bx + 12 + p * panelW / 6, by + 24);
+                  ctx.stroke();
+                }
+                ctx.beginPath();
+                ctx.moveTo(bx + 12, by + 16);
+                ctx.lineTo(bx + bw - 12, by + 16);
+                ctx.stroke();
+              } else if (roofType === 2) {
+                // Multiple vent units
+                ctx.fillStyle = '#444444';
+                ctx.fillRect(bx + 10, by + 8, 20, 14);
+                ctx.fillRect(bx + bw - 30, by + 10, 18, 12);
+                ctx.fillStyle = '#2a2a2a';
+                ctx.fillRect(bx + 12, by + 10, 16, 3);
+                ctx.fillRect(bx + 12, by + 16, 16, 3);
+                ctx.fillRect(bx + bw - 28, by + 12, 14, 3);
+                ctx.fillRect(bx + bw - 28, by + 17, 14, 3);
+              } else {
+                // Antenna with blinking light + small dish
+                ctx.fillStyle = '#555555';
+                ctx.fillRect(bx + bw/2 - 2, by - 8, 4, 18);
+                ctx.fillRect(bx + bw/2 - 8, by + 6, 16, 4);
+                const blink = Math.sin(t * 4 + seed) > 0.2;
+                ctx.fillStyle = blink ? '#FF0044' : '#550015';
+                ctx.beginPath();
+                ctx.arc(bx + bw/2, by - 8, 5, 0, Math.PI * 2);
+                ctx.fill();
+                // Small dish
+                ctx.fillStyle = '#888888';
+                ctx.beginPath();
+                ctx.ellipse(bx + 20, by + 14, 10, 5, 0, 0, Math.PI * 2);
+                ctx.fill();
+              }
+
+              // === LARGE NEON SIGN ===
+              if (bw > 35) {
+                const signText = signs[seed % signs.length];
+                const signW = Math.min(bw - 20, 55);
+                const signH = 14;
+                const signX = bx + (bw - signW) / 2;
+                const signY = by + bh - 20;
+
+                // Sign backing
+                ctx.fillStyle = '#080004';
+                ctx.fillRect(signX, signY, signW, signH);
+
+                // Sign border
+                ctx.strokeStyle = neonCol;
+                ctx.lineWidth = 2;
+                ctx.strokeRect(signX, signY, signW, signH);
+
+                // Sign text
+                ctx.fillStyle = neonCol;
+                ctx.font = 'bold 10px monospace';
+                ctx.fillText(signText, signX + 6, signY + 11);
+              }
+
+              // Horizontal neon accent
+              if (bh > 40) {
+                ctx.fillStyle = neonCol;
+                ctx.fillRect(bx + 12, by + Math.floor(bh * 0.45), bw - 24, 2);
+              }
+            }
+
           } else {
             ctx.fillStyle = this.buildingColors[y][x];
             ctx.fillRect(wx, wy, S, S);
@@ -2470,17 +3211,18 @@ class GameMap {
             }
 
             // ── Sign above awning ─────────────────────────────
-            const signW  = dw + 24;
+            ctx.save();
+            ctx.font = 'bold 7px Orbitron, monospace';
+            const textWidth = ctx.measureText(signText).width;
+            const signW  = Math.max(dw + 24, textWidth + 16);
             const signH  = 14;
             const signX  = cx2 - signW / 2;
             const signY  = awY - signH - 2;
-            ctx.save();
             ctx.fillStyle = 'rgba(6,6,14,0.90)';
             ctx.beginPath(); ctx.roundRect(signX, signY, signW, signH, 3); ctx.fill();
             ctx.strokeStyle = signColor; ctx.lineWidth = 1.4;
             ctx.beginPath(); ctx.roundRect(signX, signY, signW, signH, 3); ctx.stroke();
             ctx.fillStyle = signColor;
-            ctx.font = 'bold 7px Orbitron, monospace';
             ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
             ctx.fillText(signText, cx2, signY + signH / 2);
             ctx.textBaseline = 'alphabetic';
@@ -2555,6 +3297,7 @@ class GameMap {
     const isGalactica = !!this.config.galactica;
     const isNeonDealer  = this.config.id === 'neon_city' && door.specialType === 'dealership';
     const isGalDealer   = isGalactica && door.specialType === 'dealership';
+    const isWastelandDealer = !!this.config.wasteland && door.specialType === 'dealership';
     const isNeonArcade  = this.config.id === 'neon_city' && door.bTypeIdx === 4;
     const isGalArcade   = isGalactica && door.bTypeIdx === 4;
     const isGalMarket   = isGalactica && door.bTypeIdx === 3;
@@ -2563,7 +3306,7 @@ class GameMap {
     const isGalPharmacy = isGalactica && door.bTypeIdx === 5;
     const isGalRadio    = isGalactica && door.bTypeIdx === 22;
     const isZombieMap   = !!this.config.zombie;
-    const useLargeDealer = isNeonDealer || isGalDealer;
+    const useLargeDealer = isNeonDealer || isGalDealer || isWastelandDealer;
     const useLargeArcade = isNeonArcade || isGalArcade;
     const useLargeMarket = isGalMarket;
     const useLargeClub   = isGalClub;
