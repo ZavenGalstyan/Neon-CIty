@@ -148,5 +148,21 @@ const Social = (() => {
       _getPublic(`/players/search?q=${encodeURIComponent(q)}&limit=${limit}`),
   };
 
-  return { Friends, DM, Clans, Notifications, Players };
+  /* ══════════════════════════════════════════════════════════
+     PROFILE
+  ══════════════════════════════════════════════════════════ */
+
+  const Profile = {
+    me: () => _get('/profile/me'),
+  };
+
+  /* ══════════════════════════════════════════════════════════
+     LEADERBOARD
+  ══════════════════════════════════════════════════════════ */
+
+  const Leaderboard = {
+    get: (type = 'kills') => _getPublic(`/leaderboard/${type}`),
+  };
+
+  return { Friends, DM, Clans, Notifications, Players, Profile, Leaderboard };
 })();

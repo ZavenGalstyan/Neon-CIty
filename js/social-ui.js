@@ -18,7 +18,10 @@ const SocialUI = (() => {
     searchResults: [],
     unreadNotif: 0,
     heartbeatTimer: null,
-    activePage: null,   // 'friends' | 'chat' | 'clans' | null
+    activePage: null,   // 'friends' | 'chat' | 'clans' | 'profile' | 'ranks'
+    profileData: null,
+    rankType: 'kills',
+    rankData: [],
   };
 
   /* ══════════════════════════════════════════════════════════
@@ -100,11 +103,29 @@ const SocialUI = (() => {
       notifBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="17" height="17"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><span class="ncs-nav-badge" id="ncsNavNotifBadge" style="display:none">0</span>`;
       notifBtn.onclick = () => openPage('friends'); // opens friends with requests visible
 
+      // PROFILE
+      const profileBtn = document.createElement('button');
+      profileBtn.className = 'ncs-nav-icon-btn ncs-nav-profile-btn';
+      profileBtn.id = 'ncsNavProfileBtn';
+      profileBtn.title = 'Profile';
+      profileBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="17" height="17"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`;
+      profileBtn.onclick = () => openPage('profile');
+
+      // RANKS
+      const ranksBtn = document.createElement('button');
+      ranksBtn.className = 'ncs-nav-icon-btn ncs-nav-ranks-btn';
+      ranksBtn.id = 'ncsNavRanksBtn';
+      ranksBtn.title = 'Leaderboard';
+      ranksBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="17" height="17"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>`;
+      ranksBtn.onclick = () => openPage('ranks');
+
       const links = nav.querySelector('.nav-links');
       const acct  = nav.querySelector('.nav-account') || nav.lastElementChild;
       if (links) links.prepend(clanBtn);
       else nav.insertBefore(clanBtn, acct);
-      nav.insertBefore(notifBtn, acct);
+      nav.insertBefore(ranksBtn, acct);
+      nav.insertBefore(profileBtn, ranksBtn);
+      nav.insertBefore(notifBtn, profileBtn);
       nav.insertBefore(friendBtn, notifBtn);
     };
     try_(); setTimeout(try_, 300); setTimeout(try_, 900);
@@ -216,6 +237,36 @@ const SocialUI = (() => {
         </div>
       </div>
 
+      <!-- ══ PROFILE PAGE ════════════════════════════════════ -->
+      <div class="ncs-page" id="ncsPageProfile">
+        <div class="ncs-topbar">
+          <span class="ncs-topbar-icon">👤</span>
+          <div>
+            <div class="ncs-topbar-title">PROFILE</div>
+            <div class="ncs-topbar-sub" id="ncsProfileSub">Your stats &amp; identity</div>
+          </div>
+          <button class="ncs-close-btn" data-close="profile">✕</button>
+        </div>
+        <div class="ncs-page-body ncs-profile-body" id="ncsProfileBody">
+          <div class="ncs-empty"><div class="ncs-empty-icon">👤</div>Loading profile…</div>
+        </div>
+      </div>
+
+      <!-- ══ RANKS PAGE ════════════════════════════════════ -->
+      <div class="ncs-page" id="ncsPageRanks">
+        <div class="ncs-topbar">
+          <span class="ncs-topbar-icon">🏆</span>
+          <div>
+            <div class="ncs-topbar-title">LEADERBOARD</div>
+            <div class="ncs-topbar-sub" id="ncsRanksSub">Top players worldwide</div>
+          </div>
+          <button class="ncs-close-btn" data-close="ranks">✕</button>
+        </div>
+        <div class="ncs-page-body ncs-ranks-body" id="ncsRanksBody">
+          <div class="ncs-empty"><div class="ncs-empty-icon">🏆</div>Loading rankings…</div>
+        </div>
+      </div>
+
       <!-- Toasts -->
       <div class="ncs-toast-container" id="ncsToasts"></div>
     `;
@@ -241,7 +292,12 @@ const SocialUI = (() => {
   }
 
   function _pageId(p) {
-    return p === 'friends' ? 'ncsPageFriends' : p === 'chat' ? 'ncsPageChat' : 'ncsPageClans';
+    if (p === 'friends') return 'ncsPageFriends';
+    if (p === 'chat')    return 'ncsPageChat';
+    if (p === 'clans')   return 'ncsPageClans';
+    if (p === 'profile') return 'ncsPageProfile';
+    if (p === 'ranks')   return 'ncsPageRanks';
+    return 'ncsPageFriends';
   }
 
   function _rerenderActivePage() {
@@ -252,6 +308,8 @@ const SocialUI = (() => {
     if (page === 'friends') _renderFriendsPage();
     if (page === 'chat')    _renderChatPage();
     if (page === 'clans')   _renderClansPage();
+    if (page === 'profile') _renderProfilePage();
+    if (page === 'ranks')   _renderRanksPage(S.rankType);
   }
 
   /* ── Global event binding ────────────────────────────────── */
@@ -1074,6 +1132,209 @@ const SocialUI = (() => {
       if (area) { area.innerHTML = _buildClanChatHTML(); area.scrollTop = area.scrollHeight; }
     } catch(e) { toast(e.message, 'error'); }
     finally { input.disabled = false; input.focus(); }
+  }
+
+  /* ══════════════════════════════════════════════════════════
+     PROFILE PAGE RENDER
+  ══════════════════════════════════════════════════════════ */
+  async function _renderProfilePage() {
+    const body = document.getElementById('ncsProfileBody');
+    if (!body) return;
+
+    // Fetch fresh profile data
+    try {
+      S.profileData = await Social.Profile.me();
+    } catch(e) {
+      body.innerHTML = `<div class="ncs-empty"><div class="ncs-empty-icon">⚠️</div>Could not load profile.<br><span style="opacity:.4;font-size:12px;">${_esc(e.message)}</span></div>`;
+      return;
+    }
+
+    const p = S.profileData;
+    const name    = p.name || S.me?.name || 'Player';
+    const level   = p.account?.level || 1;
+    const xp      = p.account?.xp || 0;
+    const xpNext  = level * 1000; // approximate XP per level
+    const xpPct   = Math.min(100, Math.round((xp % xpNext) / xpNext * 100));
+    const kills   = p.stats?.kills || 0;
+    const waves   = p.stats?.waves || 0;
+    const nex     = p.nex || 0;
+    const clanTag = p.clanTag || '';
+
+    const sub = document.getElementById('ncsProfileSub');
+    if (sub) sub.textContent = clanTag ? `[${clanTag}] ${name}` : name;
+
+    body.innerHTML = `
+      <div class="ncs-profile-wrap">
+        <!-- Hero -->
+        <div class="ncs-profile-hero">
+          <div class="ncs-profile-av-wrap">
+            <div class="ncs-profile-level-ring" style="--xp-pct:${xpPct}%"></div>
+            <div class="ncs-av ncs-av-xxl" data-col="${_avCol(name)}">${name[0].toUpperCase()}</div>
+          </div>
+          <div class="ncs-profile-info">
+            <div class="ncs-profile-name">${_esc(name)}</div>
+            ${clanTag ? `<div class="ncs-profile-clan-row"><span class="ncs-clan-tag">[${_esc(clanTag)}]</span></div>` : ''}
+            <div style="display:flex;align-items:baseline;gap:10px;margin:10px 0 4px;">
+              <span style="font-family:'Orbitron',monospace;font-size:9px;font-weight:700;letter-spacing:.16em;color:var(--nc-muted)">LEVEL</span>
+              <span style="font-family:'Orbitron',monospace;font-size:22px;font-weight:900;color:var(--nc-gold);text-shadow:0 0 20px rgba(255,215,0,.5)">${level}</span>
+            </div>
+            <div style="font-family:'Orbitron',monospace;font-size:8px;color:var(--nc-gold);opacity:.7;letter-spacing:.12em;margin-bottom:5px;">${xp.toLocaleString()} XP</div>
+            <div class="ncs-xp-bar-track" style="width:260px;max-width:100%;">
+              <div class="ncs-xp-bar-fill" style="width:${xpPct}%"></div>
+            </div>
+          </div>
+          <div style="flex-shrink:0;text-align:center;padding:16px 20px;background:rgba(0,255,136,0.05);border:1px solid rgba(0,255,136,0.14);border-radius:16px;position:relative;z-index:1;">
+            <div style="font-family:'Orbitron',monospace;font-size:8px;font-weight:700;letter-spacing:.18em;color:var(--nc-green);opacity:.7;margin-bottom:4px;">NEX</div>
+            <div style="font-family:'Orbitron',monospace;font-size:24px;font-weight:900;color:var(--nc-green);text-shadow:0 0 18px rgba(0,255,136,.5);">${nex.toLocaleString()}</div>
+          </div>
+        </div>
+
+        <!-- Stats Grid -->
+        <div style="font-family:'Orbitron',monospace;font-size:9px;font-weight:700;letter-spacing:.18em;color:var(--nc-muted);padding:0 2px;">STATISTICS</div>
+        <div class="ncs-stats-grid">
+          <div class="ncs-stat-card ncs-stat-card-kills">
+            <div style="font-size:22px;margin-bottom:6px;">💀</div>
+            <div class="ncs-stat-num">${kills.toLocaleString()}</div>
+            <div class="ncs-stat-label">KILLS</div>
+          </div>
+          <div class="ncs-stat-card ncs-stat-card-waves">
+            <div style="font-size:22px;margin-bottom:6px;">🌊</div>
+            <div class="ncs-stat-num">${waves.toLocaleString()}</div>
+            <div class="ncs-stat-label">WAVES</div>
+          </div>
+          <div class="ncs-stat-card ncs-stat-card-level">
+            <div style="font-size:22px;margin-bottom:6px;">⚡</div>
+            <div class="ncs-stat-num">${level}</div>
+            <div class="ncs-stat-label">LEVEL</div>
+          </div>
+          <div class="ncs-stat-card ncs-stat-card-nex">
+            <div style="font-size:22px;margin-bottom:6px;">💎</div>
+            <div class="ncs-stat-num">${nex.toLocaleString()}</div>
+            <div class="ncs-stat-label">NEX</div>
+          </div>
+        </div>
+
+        <!-- Friends strip -->
+        ${S.friends.length ? `
+        <div style="font-family:'Orbitron',monospace;font-size:9px;font-weight:700;letter-spacing:.18em;color:var(--nc-muted);padding:0 2px;margin-top:8px;">FRIENDS — ${S.friends.length}</div>
+        <div class="ncs-friends-strip">
+          <div class="ncs-strip-row">
+            ${S.friends.slice(0, 12).map(f => `
+              <div class="ncs-strip-person" title="${_esc(f.name)}">
+                <div class="ncs-av ncs-av-sm ${f.isOnline?'online':''}" data-col="${_avCol(f.name)}">${f.name[0].toUpperCase()}</div>
+                <div class="ncs-strip-name">${_esc(f.name)}</div>
+              </div>
+            `).join('')}
+            ${S.friends.length > 12 ? `<div class="ncs-strip-person" style="opacity:.4;"><div class="ncs-av ncs-av-sm" style="font-size:9px;background:rgba(255,255,255,.05);">+${S.friends.length - 12}</div><div class="ncs-strip-name">more</div></div>` : ''}
+          </div>
+        </div>` : ''}
+      </div>
+    `;
+  }
+
+  /* ══════════════════════════════════════════════════════════
+     RANKS PAGE RENDER
+  ══════════════════════════════════════════════════════════ */
+  async function _renderRanksPage(type = 'kills') {
+    S.rankType = type;
+    const body = document.getElementById('ncsRanksBody');
+    if (!body) return;
+
+    body.innerHTML = `<div class="ncs-empty"><div class="ncs-empty-icon" style="animation:spin 1s linear infinite;">⟳</div>Loading…</div>`;
+
+    try {
+      const res = await Social.Leaderboard.get(type);
+      S.rankData = res.leaderboard || res.players || res.entries || res || [];
+    } catch(e) {
+      body.innerHTML = `<div class="ncs-empty"><div class="ncs-empty-icon">⚠️</div>Could not load leaderboard.<br><span style="opacity:.4;font-size:12px;">${_esc(e.message)}</span></div>`;
+      return;
+    }
+
+    const tabs = ['kills','waves','level','nex'];
+    const tabLabels = { kills:'💀 Kills', waves:'🌊 Waves', level:'⚡ Level', nex:'💎 NEX' };
+    const myName = S.me?.name || S.profileData?.name || '';
+
+    // Find max score for bar scaling
+    const maxScore = Math.max(1, ...S.rankData.map(e => _rankScore(e, type)));
+
+    const top3 = S.rankData.slice(0, 3);
+    const rest = S.rankData.slice(3);
+
+    body.innerHTML = `
+      <div class="ncs-ranks-wrap">
+        <!-- Tabs -->
+        <div class="ncs-rank-tabs">
+          ${tabs.map(t => `
+            <button class="ncs-rank-tab ${t===type?'active':''}" data-ranktype="${t}">${tabLabels[t]}</button>
+          `).join('')}
+        </div>
+
+        <!-- Podium -->
+        ${top3.length >= 2 ? `
+        <div class="ncs-podium">
+          <!-- 2nd -->
+          <div class="ncs-podium-slot ncs-podium-slot-2">
+            <div class="ncs-podium-crown">🥈</div>
+            <div class="ncs-av ncs-av-lg" data-col="${_avCol(top3[1]?.name)}">${(top3[1]?.name||'?')[0].toUpperCase()}</div>
+            <div class="ncs-podium-name">${_esc(top3[1]?.name||'')}</div>
+            <div class="ncs-podium-score">${_rankScore(top3[1], type).toLocaleString()}</div>
+            <div class="ncs-podium-base ncs-podium-base-2">#2</div>
+          </div>
+          <!-- 1st -->
+          <div class="ncs-podium-slot ncs-podium-slot-1">
+            <div class="ncs-podium-crown">👑</div>
+            <div class="ncs-av ncs-av-xl" data-col="${_avCol(top3[0]?.name)}">${(top3[0]?.name||'?')[0].toUpperCase()}</div>
+            <div class="ncs-podium-name">${_esc(top3[0]?.name||'')}</div>
+            <div class="ncs-podium-score">${_rankScore(top3[0], type).toLocaleString()}</div>
+            <div class="ncs-podium-base ncs-podium-base-1">#1</div>
+          </div>
+          <!-- 3rd -->
+          ${top3[2] ? `
+          <div class="ncs-podium-slot ncs-podium-slot-3">
+            <div class="ncs-podium-crown">🥉</div>
+            <div class="ncs-av ncs-av-lg" data-col="${_avCol(top3[2]?.name)}">${(top3[2]?.name||'?')[0].toUpperCase()}</div>
+            <div class="ncs-podium-name">${_esc(top3[2]?.name||'')}</div>
+            <div class="ncs-podium-score">${_rankScore(top3[2], type).toLocaleString()}</div>
+            <div class="ncs-podium-base ncs-podium-base-3">#3</div>
+          </div>` : ''}
+        </div>` : ''}
+
+        <!-- Full table -->
+        ${S.rankData.length ? `
+        <div class="ncs-ranks-table">
+          ${S.rankData.map((entry, i) => {
+            const isMe = entry.name === myName;
+            const score = _rankScore(entry, type);
+            const barPct = Math.round(score / maxScore * 100);
+            return `
+              <div class="ncs-rank-row ${isMe ? 'is-me' : ''}">
+                <div class="ncs-rank-num">${i < 3 ? ['🥇','🥈','🥉'][i] : `#${i+1}`}</div>
+                <div class="ncs-av ncs-av-sm" data-col="${_avCol(entry.name)}">${(entry.name||'?')[0].toUpperCase()}</div>
+                <div class="ncs-rank-info">
+                  <div class="ncs-rank-name">${_esc(entry.name||'')}${isMe ? ' <span class="ncs-me-badge">YOU</span>' : ''}${entry.clanTag ? ` <span class="ncs-clan-tag">[${_esc(entry.clanTag)}]</span>` : ''}</div>
+                  <div class="ncs-rank-bar-wrap"><div class="ncs-rank-bar"><div class="ncs-rank-bar-fill" style="width:${barPct}%"></div></div></div>
+                </div>
+                <div class="ncs-rank-score">${score.toLocaleString()}</div>
+              </div>
+            `;
+          }).join('')}
+        </div>` : `<div class="ncs-empty"><div class="ncs-empty-icon">🏆</div>No data yet — be the first!</div>`}
+      </div>
+    `;
+
+    // Bind tab clicks
+    body.querySelectorAll('[data-ranktype]').forEach(btn => {
+      btn.addEventListener('click', () => _renderRanksPage(btn.dataset.ranktype));
+    });
+  }
+
+  function _rankScore(entry, type) {
+    if (!entry) return 0;
+    if (type === 'kills')  return entry.kills  || entry.stats?.kills  || entry.score || 0;
+    if (type === 'waves')  return entry.waves  || entry.stats?.waves  || entry.score || 0;
+    if (type === 'level')  return entry.level  || entry.account?.level || entry.score || 0;
+    if (type === 'nex')    return entry.nex    || entry.score || 0;
+    return entry.score || 0;
   }
 
   /* ══════════════════════════════════════════════════════════
