@@ -3991,6 +3991,38 @@ class Game {
       ctx.roundRect(x, y, w, h, r);
     };
 
+    // Corpse helper — draws a top-down human silhouette with blood pool
+    // rot: rotation in radians. skinColor: dark tint color. poolAlpha: blood pool opacity.
+    const drawCorpse = (x, y, rot, skinColor = '#2a1208', poolAlpha = 0.45) => {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(rot);
+      // Blood pool (radial gradient beneath body)
+      const bpG = ctx.createRadialGradient(0, 4, 0, 0, 4, 20);
+      bpG.addColorStop(0, `rgba(110,0,0,${poolAlpha})`);
+      bpG.addColorStop(0.6, `rgba(80,0,0,${poolAlpha * 0.5})`);
+      bpG.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = bpG;
+      ctx.beginPath(); ctx.ellipse(0, 6, 18, 11, 0, 0, Math.PI * 2); ctx.fill();
+      // Torso
+      ctx.fillStyle = skinColor;
+      ctx.beginPath(); ctx.ellipse(0, 4, 6, 12, 0, 0, Math.PI * 2); ctx.fill();
+      // Head
+      ctx.beginPath(); ctx.arc(0, -10, 5.5, 0, Math.PI * 2); ctx.fill();
+      // Left arm
+      ctx.save(); ctx.translate(-7, 2); ctx.rotate(-0.55);
+      ctx.beginPath(); ctx.ellipse(0, 0, 2.5, 7, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+      // Right arm
+      ctx.save(); ctx.translate(7, 2); ctx.rotate(0.55);
+      ctx.beginPath(); ctx.ellipse(0, 0, 2.5, 7, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+      // Legs
+      ctx.save(); ctx.translate(-3, 15); ctx.rotate(-0.15);
+      ctx.beginPath(); ctx.ellipse(0, 0, 2.5, 8, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+      ctx.save(); ctx.translate(3, 15); ctx.rotate(0.15);
+      ctx.beginPath(); ctx.ellipse(0, 0, 2.5, 8, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+      ctx.restore();
+    };
+
     // Floor tint per building type
     const _floorTints = {
       home: "#1a0a2a",
@@ -6350,6 +6382,41 @@ class Game {
           pg.addColorStop(0,`rgba(44,200,44,${0.2+0.1*Math.sin(t*0.8+px4)})`); pg.addColorStop(1,"rgba(0,0,0,0)");
           ctx.fillStyle=pg; ctx.beginPath(); ctx.arc(px4,py4,20,0,Math.PI*2); ctx.fill();
         }
+        // ── Dead researcher — sprawled on floor ──
+        drawCorpse(W*0.30, H*0.58, 1.1, '#182010', 0.5);
+        // ── Second corpse near containment tanks ──
+        drawCorpse(W*0.15, H*0.73, -0.45, '#141a0c', 0.4);
+        // ── Overturned medicine shelf with scattered boxes ──
+        ctx.save(); ctx.translate(W*0.42, H*0.62); ctx.rotate(0.1);
+        ctx.fillStyle="rgba(10,22,10,0.85)"; rr(-50,-9,100,18,3); ctx.fill();
+        ctx.strokeStyle="rgba(44,100,44,0.45)"; ctx.lineWidth=1; ctx.stroke();
+        ctx.restore();
+        for (let mi2=0;mi2<6;mi2++) {
+          const mx=W*0.26+mi2*W*0.065, my=H*0.66+mi2%2*6;
+          ctx.save(); ctx.translate(mx,my); ctx.rotate(mi2*0.35-0.4);
+          ctx.fillStyle=["rgba(200,20,20,0.65)","rgba(20,80,200,0.65)","rgba(20,160,20,0.65)","rgba(200,140,0,0.65)","rgba(160,0,160,0.65)","rgba(0,160,160,0.6)"][mi2];
+          rr(-5,-4,10,8,1); ctx.fill(); ctx.restore();
+        }
+        // ── Broken syringe on floor ──
+        ctx.save(); ctx.translate(W*0.52, H*0.70); ctx.rotate(0.65);
+        ctx.fillStyle="rgba(190,210,195,0.55)"; ctx.fillRect(-13,-2,26,4);
+        ctx.fillStyle=`rgba(44,200,44,${0.5+0.2*Math.sin(t*1.5)})`; ctx.fillRect(-12,-1.5,10,3);
+        ctx.fillStyle="rgba(170,170,170,0.85)"; ctx.fillRect(11,-1,5,2);
+        ctx.restore();
+        // ── Scattered pill capsules ──
+        for (let pi2=0;pi2<14;pi2++) {
+          const px5=W*0.33+Math.sin(pi2*137.5)*W*0.24, py5=H*0.50+Math.cos(pi2*73.1)*H*0.20;
+          const pc=["rgba(255,80,80,0.7)","rgba(80,100,255,0.7)","rgba(80,220,80,0.7)","rgba(255,230,60,0.65)"][pi2%4];
+          ctx.fillStyle=pc; ctx.save(); ctx.translate(px5,py5); ctx.rotate(pi2*0.75);
+          ctx.beginPath(); ctx.ellipse(0,0,3,5,0,0,Math.PI*2); ctx.fill(); ctx.restore();
+        }
+        // ── Hazard tape strips on floor (bottom area) ──
+        for (let hi=0;hi<4;hi++) {
+          const hx=W*0.10+hi*(W*0.22), hy=H*0.84;
+          ctx.fillStyle=hi%2===0?"rgba(255,200,0,0.22)":"rgba(0,0,0,0.18)";
+          ctx.save(); ctx.translate(hx,hy); ctx.rotate(-0.05);
+          ctx.fillRect(0,0,W*0.20,8); ctx.restore();
+        }
       } else {
         // ── Default pharmacy (non-galactica) ────────────
         const mC = ["#FF4444","#4444FF","#44FF44","#FFAA44","#FF44FF","#44FFFF"];
@@ -8189,6 +8256,50 @@ class Game {
         ctx.fillText("WANTED:", W-44, H*0.35+14); ctx.fillText("ZOMBIES", W-44, H*0.35+24);
         ctx.fillStyle="rgba(140,0,0,0.7)"; ctx.font="5px monospace";
         ctx.fillText("SHOOT ON SIGHT", W-44, H*0.35+42);
+        // ── Corpse 1: patron slumped at bar ──
+        drawCorpse(cx-W*0.22, topY+52, 0.25, '#1a0d06', 0.55);
+        // ── Corpse 2: bartender collapsed behind counter ──
+        drawCorpse(cx+W*0.12, topY+16, Math.PI+0.3, '#140a04', 0.38);
+        // ── Corpse 3: body face-down center floor ──
+        drawCorpse(cx-W*0.05, midY+22, 0.85, '#1a1008', 0.6);
+        // ── Corpse 4: near pool table ──
+        drawCorpse(cx+W*0.28, midY+30, -0.55, '#180808', 0.45);
+        // ── Blood trails from corpses to center ──
+        for (let tri=0;tri<3;tri++) {
+          const [tx1,ty1,tx2,ty2]=[
+            [cx-W*0.22,topY+52,cx-W*0.12,midY+10],
+            [cx+W*0.12,topY+16,cx,midY-10],
+            [cx+W*0.28,midY+30,cx+W*0.1,midY+15]
+          ][tri];
+          const trG=ctx.createLinearGradient(tx1,ty1,tx2,ty2);
+          trG.addColorStop(0,`rgba(110,0,0,0.45)`); trG.addColorStop(1,'rgba(80,0,0,0)');
+          ctx.strokeStyle=trG; ctx.lineWidth=3+tri*0.8;
+          ctx.beginPath(); ctx.moveTo(tx1,ty1); ctx.lineTo(tx2,ty2); ctx.stroke();
+        }
+        // ── Overturned chairs scattered around ──
+        for (let ci2=0;ci2<4;ci2++) {
+          const chx=cx-W*0.38+ci2*W*0.25, chy=midY-10+ci2*22;
+          ctx.save(); ctx.translate(chx,chy); ctx.rotate(ci2*0.55-0.6);
+          ctx.fillStyle="#160400"; rr(-8,-8,16,16,3); ctx.fill();
+          ctx.strokeStyle="rgba(70,20,0,0.4)"; ctx.lineWidth=1; ctx.stroke();
+          ctx.fillStyle="#0d0200";
+          ctx.fillRect(-1,-8,2,14); // leg
+          ctx.fillRect(-8,-1,14,2); // crossbar
+          ctx.restore();
+        }
+        // ── Broken glass shards near bar ──
+        for (let gi=0;gi<10;gi++) {
+          const gx=cx-W*0.38+gi*W*0.085, gy=topY+34+(gi%3)*7;
+          ctx.fillStyle=`rgba(160,200,160,${0.18+gi%3*0.08})`;
+          ctx.save(); ctx.translate(gx,gy); ctx.rotate(gi*0.65);
+          ctx.beginPath(); ctx.moveTo(0,-4); ctx.lineTo(3.5,2); ctx.lineTo(-3,2.5); ctx.closePath(); ctx.fill();
+          ctx.restore();
+        }
+        // ── Overturned table (bottom area) ──
+        ctx.save(); ctx.translate(cx-W*0.15, H*0.78); ctx.rotate(0.2);
+        ctx.fillStyle="#140600"; rr(-40,-8,80,16,3); ctx.fill();
+        ctx.strokeStyle="rgba(80,30,0,0.35)"; ctx.lineWidth=1; ctx.stroke();
+        ctx.restore();
       } else if (!this.map?.config?.galactica) {
         // ── Default Bar (other maps) ───────────────────
         ctx.fillStyle = "#2a1508";
@@ -8925,75 +9036,187 @@ class Game {
       }
     } else if (type === 14) {
       // WAREHOUSE
-      // ── Stacked crates (multiple areas) ──────────
-      const crateColor = "#4a3a22",
-        crateStroke = "#8a6a3a";
-      const cratePositions = [
-        [cx - W * 0.42, topY + 4, 3, 2],
-        [cx - W * 0.08, topY + 4, 2, 3],
-        [cx + W * 0.2, topY + 4, 3, 2],
-        [cx - W * 0.42, midY - 6, 2, 2],
-        [cx + W * 0.22, midY - 6, 2, 2],
-      ];
-      for (const [bx3, by3, cols, rows] of cratePositions) {
-        for (let cr = 0; cr < rows; cr++)
-          for (let cc = 0; cc < cols; cc++) {
-            const px3 = bx3 + cc * 22,
-              py3 = by3 + cr * 22;
-            ctx.fillStyle = crateColor;
-            ctx.strokeStyle = crateStroke;
-            ctx.lineWidth = 1;
-            rr(px3, py3, 20, 20, 2);
-            ctx.fill();
-            ctx.stroke();
-            // Crate X mark
-            ctx.strokeStyle = "#6a4a22";
-            ctx.lineWidth = 0.8;
-            ctx.beginPath();
-            ctx.moveTo(px3 + 3, py3 + 3);
-            ctx.lineTo(px3 + 17, py3 + 17);
-            ctx.stroke();
-            ctx.beginPath();
-            ctx.moveTo(px3 + 17, py3 + 3);
-            ctx.lineTo(px3 + 3, py3 + 17);
-            ctx.stroke();
+      if (!!this.map?.config?.zombie) {
+        // ═══ ZOMBIE: INFECTED WAREHOUSE ═══
+        const t = performance.now() / 1000;
+        // Sign
+        ctx.fillStyle="rgba(20,10,0,0.92)"; rr(W/2-130,room.S-22,260,26,5); ctx.fill();
+        ctx.strokeStyle=`rgba(180,60,0,${0.6+0.3*Math.sin(t*1.6)})`; ctx.lineWidth=1.5; ctx.stroke();
+        ctx.fillStyle="#FFCC88"; ctx.font="bold 11px monospace"; ctx.textAlign="center";
+        ctx.fillText("☠  INFECTED WAREHOUSE  ☠", W/2, room.S-9);
+        // ── Dark infected crates (top rows) ──
+        const zCratePositions = [
+          [cx-W*0.42, topY+4, 3, 2],
+          [cx-W*0.08, topY+4, 2, 2],
+          [cx+W*0.18, topY+4, 3, 2],
+          [cx-W*0.40, midY-6, 2, 2],
+          [cx+W*0.20, midY-6, 2, 2],
+        ];
+        for (const [bx3,by3,cols,rows] of zCratePositions) {
+          for (let cr=0;cr<rows;cr++) for (let cc=0;cc<cols;cc++) {
+            const px3=bx3+cc*22, py3=by3+cr*22;
+            const seed=(px3*7+py3*13)%100;
+            // Some crates are cracked/infected
+            const infected=seed<35;
+            ctx.fillStyle=infected?"#1a0e04":"#2a1c0a";
+            ctx.strokeStyle=infected?"rgba(44,140,0,0.5)":"rgba(80,60,20,0.6)";
+            ctx.lineWidth=1;
+            rr(px3,py3,20,20,2); ctx.fill(); ctx.stroke();
+            ctx.strokeStyle=infected?"rgba(44,100,0,0.4)":"rgba(60,40,10,0.4)";
+            ctx.lineWidth=0.8;
+            ctx.beginPath(); ctx.moveTo(px3+3,py3+3); ctx.lineTo(px3+17,py3+17); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(px3+17,py3+3); ctx.lineTo(px3+3,py3+17); ctx.stroke();
+            if (infected) {
+              // Green slime seeping from crack
+              const sg=ctx.createRadialGradient(px3+10,py3+18,0,px3+10,py3+18,10);
+              sg.addColorStop(0,`rgba(44,180,0,${0.25+0.1*Math.sin(t*0.7+seed)})`);
+              sg.addColorStop(1,"rgba(0,0,0,0)");
+              ctx.fillStyle=sg; ctx.beginPath(); ctx.ellipse(px3+10,py3+22,8,5,0,0,Math.PI*2); ctx.fill();
+              // Biohazard label on infected crate
+              ctx.fillStyle=`rgba(44,200,0,${0.55+0.2*Math.sin(t*1.1+cc)})`; ctx.font="8px serif";
+              ctx.textAlign="center"; ctx.fillText("☢",px3+10,py3+13);
+            }
           }
+        }
+        // ── Aisle markings (cracked/faded) ──
+        ctx.strokeStyle="rgba(140,100,0,0.3)"; ctx.lineWidth=1;
+        ctx.setLineDash([5,5]);
+        ctx.beginPath(); ctx.moveTo(cx-8,topY+4); ctx.lineTo(cx-8,H-14); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(cx+8,topY+4); ctx.lineTo(cx+8,H-14); ctx.stroke();
+        ctx.setLineDash([]);
+        // ── Hazard tape strips (floor — yellow/black) ──
+        for (let hi=0;hi<5;hi++) {
+          const htx=W*0.06+hi*(W*0.195), hty=H*0.82;
+          ctx.fillStyle=hi%2===0?"rgba(200,160,0,0.22)":"rgba(0,0,0,0.20)";
+          ctx.save(); ctx.translate(htx,hty); ctx.rotate(-0.04+hi*0.01);
+          ctx.fillRect(0,0,W*0.18,7); ctx.restore();
+        }
+        // ── Broken forklift (center, derelict) ──
+        ctx.fillStyle="#1a1000"; rr(cx-22,midY-18,44,34,3); ctx.fill();
+        ctx.strokeStyle="rgba(100,70,0,0.5)"; ctx.lineWidth=1.5; ctx.stroke();
+        // Forklift forks
+        ctx.fillStyle="#0e0a00";
+        ctx.fillRect(cx-18,midY-24,6,10); ctx.fillRect(cx+12,midY-24,6,10);
+        // Rust stains
+        ctx.fillStyle="rgba(140,60,0,0.35)"; ctx.beginPath(); ctx.ellipse(cx,midY-5,14,6,0,0,Math.PI*2); ctx.fill();
+        // Infection pool under forklift
+        const ifkG=ctx.createRadialGradient(cx,midY+12,0,cx,midY+12,22);
+        ifkG.addColorStop(0,`rgba(44,160,0,${0.22+0.1*Math.sin(t*0.9)})`); ifkG.addColorStop(1,"rgba(0,0,0,0)");
+        ctx.fillStyle=ifkG; ctx.beginPath(); ctx.arc(cx,midY+12,22,0,Math.PI*2); ctx.fill();
+        // ── Flickering hanging light ──
+        const flicker=0.6+0.4*Math.abs(Math.sin(t*8.3));
+        ctx.fillStyle=`rgba(220,180,60,${flicker*0.85})`;
+        ctx.shadowColor="#FFCC44"; ctx.shadowBlur=14*flicker;
+        ctx.beginPath(); ctx.ellipse(cx,topY+2,11,4,0,0,Math.PI*2); ctx.fill();
+        ctx.shadowBlur=0;
+        ctx.strokeStyle="rgba(100,100,100,0.8)"; ctx.lineWidth=1.5;
+        ctx.beginPath(); ctx.moveTo(cx,topY+2); ctx.lineTo(cx,0); ctx.stroke();
+        // ── Corpse 1: worker collapsed by left crates ──
+        drawCorpse(cx-W*0.30, topY+52, 0.4, '#1a1208', 0.5);
+        // ── Corpse 2: worker in center aisle ──
+        drawCorpse(cx+W*0.04, midY+30, -0.6, '#160e06', 0.55);
+        // ── Corpse 3: near right crates ──
+        drawCorpse(cx+W*0.32, topY+46, 1.8, '#141008', 0.42);
+        // ── Blood smears across aisle ──
+        for (let bsi=0;bsi<3;bsi++) {
+          const bsx1=cx-W*0.30+bsi*W*0.18, bsy1=topY+52+bsi*20;
+          const bsx2=cx-W*0.15+bsi*W*0.1, bsy2=midY+10+bsi*12;
+          const bsG=ctx.createLinearGradient(bsx1,bsy1,bsx2,bsy2);
+          bsG.addColorStop(0,"rgba(100,0,0,0.4)"); bsG.addColorStop(1,"rgba(60,0,0,0)");
+          ctx.strokeStyle=bsG; ctx.lineWidth=4+bsi;
+          ctx.beginPath(); ctx.moveTo(bsx1,bsy1); ctx.lineTo(bsx2,bsy2); ctx.stroke();
+        }
+        // ── Warning board (right wall) ──
+        ctx.fillStyle="#1a0e00"; rr(W-74,H*0.36,58,80,4); ctx.fill();
+        ctx.strokeStyle="rgba(180,80,0,0.5)"; ctx.lineWidth=1.5; ctx.stroke();
+        ctx.fillStyle="rgba(200,100,0,0.8)"; ctx.font="bold 5px monospace"; ctx.textAlign="center";
+        ctx.fillText("QUARANTINE", W-45, H*0.36+14);
+        ctx.strokeStyle="rgba(180,80,0,0.3)"; ctx.lineWidth=0.5;
+        ctx.beginPath(); ctx.moveTo(W-70,H*0.36+18); ctx.lineTo(W-20,H*0.36+18); ctx.stroke();
+        const wNotes=["ZONE INFECTED","ALL STAFF DOWN","DO NOT REOPEN","☢ HAZMAT REQ."];
+        wNotes.forEach((n,i)=>{
+          ctx.fillStyle=`rgba(${i>1?220:160},${i>1?60:120},0,0.7)`;
+          ctx.font=`${i>1?"bold ":""}5px monospace`; ctx.textAlign="left";
+          ctx.fillText(n, W-70, H*0.36+30+i*14);
+        });
+        // ── Green infection pools (floor) ──
+        for (const [ipx,ipy,ipr] of [[W*0.28,H*0.64,16],[W*0.55,H*0.75,14],[W*0.40,H*0.86,12]]) {
+          const ipG=ctx.createRadialGradient(ipx,ipy,0,ipx,ipy,ipr);
+          ipG.addColorStop(0,`rgba(44,180,0,${0.25+0.1*Math.sin(t*0.7+ipx)})`);
+          ipG.addColorStop(1,"rgba(0,0,0,0)");
+          ctx.fillStyle=ipG; ctx.beginPath(); ctx.arc(ipx,ipy,ipr,0,Math.PI*2); ctx.fill();
+        }
+      } else {
+        // ── Default Warehouse ──────────────────────────
+        const crateColor = "#4a3a22",
+          crateStroke = "#8a6a3a";
+        const cratePositions = [
+          [cx - W * 0.42, topY + 4, 3, 2],
+          [cx - W * 0.08, topY + 4, 2, 3],
+          [cx + W * 0.2, topY + 4, 3, 2],
+          [cx - W * 0.42, midY - 6, 2, 2],
+          [cx + W * 0.22, midY - 6, 2, 2],
+        ];
+        for (const [bx3, by3, cols, rows] of cratePositions) {
+          for (let cr = 0; cr < rows; cr++)
+            for (let cc = 0; cc < cols; cc++) {
+              const px3 = bx3 + cc * 22,
+                py3 = by3 + cr * 22;
+              ctx.fillStyle = crateColor;
+              ctx.strokeStyle = crateStroke;
+              ctx.lineWidth = 1;
+              rr(px3, py3, 20, 20, 2);
+              ctx.fill();
+              ctx.stroke();
+              // Crate X mark
+              ctx.strokeStyle = "#6a4a22";
+              ctx.lineWidth = 0.8;
+              ctx.beginPath();
+              ctx.moveTo(px3 + 3, py3 + 3);
+              ctx.lineTo(px3 + 17, py3 + 17);
+              ctx.stroke();
+              ctx.beginPath();
+              ctx.moveTo(px3 + 17, py3 + 3);
+              ctx.lineTo(px3 + 3, py3 + 17);
+              ctx.stroke();
+            }
+        }
+        // ── Forklift path (center aisle) ─────────────
+        ctx.strokeStyle = "#FFCC00";
+        ctx.lineWidth = 1;
+        ctx.setLineDash([6, 4]);
+        ctx.beginPath();
+        ctx.moveTo(cx - 8, topY + 4);
+        ctx.lineTo(cx - 8, H - 14);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(cx + 8, topY + 4);
+        ctx.lineTo(cx + 8, H - 14);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        // ── Hanging light (center) ────────────────────
+        ctx.fillStyle = "#FFEE88";
+        ctx.shadowColor = "#FFCC44";
+        ctx.shadowBlur = 18;
+        ctx.beginPath();
+        ctx.ellipse(cx, topY + 2, 12, 5, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        ctx.strokeStyle = "#888";
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(cx, topY + 2);
+        ctx.lineTo(cx, 0);
+        ctx.stroke();
+        // ── Shipping label on ground ──────────────────
+        ctx.fillStyle = "rgba(255,255,255,0.06)";
+        rr(cx - 36, midY + 24, 72, 28, 2);
+        ctx.fill();
+        ctx.fillStyle = "#AAAAAA";
+        ctx.font = "bold 8px monospace";
+        ctx.textAlign = "center";
+        ctx.fillText("FRAGILE", cx, midY + 41);
       }
-      // ── Forklift path (center aisle) ─────────────
-      ctx.strokeStyle = "#FFCC00";
-      ctx.lineWidth = 1;
-      ctx.setLineDash([6, 4]);
-      ctx.beginPath();
-      ctx.moveTo(cx - 8, topY + 4);
-      ctx.lineTo(cx - 8, H - 14);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(cx + 8, topY + 4);
-      ctx.lineTo(cx + 8, H - 14);
-      ctx.stroke();
-      ctx.setLineDash([]);
-      // ── Hanging light (center) ────────────────────
-      ctx.fillStyle = "#FFEE88";
-      ctx.shadowColor = "#FFCC44";
-      ctx.shadowBlur = 18;
-      ctx.beginPath();
-      ctx.ellipse(cx, topY + 2, 12, 5, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.shadowBlur = 0;
-      ctx.strokeStyle = "#888";
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.moveTo(cx, topY + 2);
-      ctx.lineTo(cx, 0);
-      ctx.stroke();
-      // ── Shipping label on ground ──────────────────
-      ctx.fillStyle = "rgba(255,255,255,0.06)";
-      rr(cx - 36, midY + 24, 72, 28, 2);
-      ctx.fill();
-      ctx.fillStyle = "#AAAAAA";
-      ctx.font = "bold 8px monospace";
-      ctx.textAlign = "center";
-      ctx.fillText("FRAGILE", cx, midY + 41);
     } else if (type === 15) {
       // POLICE STATION
       // ── Desk with evidence board (top) ───────────
