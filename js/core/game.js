@@ -7285,8 +7285,8 @@ class Game {
       } // end bank default
     } else if (type === 8) {
       // NIGHTCLUB
-      if (!!this.map?.config?.galactica) {
-        // ═══ GALACTICA: GALAXY CLUB ═══
+      if (!!this.map?.config?.galactica || !!this.map?.config?.blitz) {
+        // ═══ GALACTICA / BLITZ: GALAXY CLUB ═══
         const t = performance.now() / 1000;
         const PURP = "#CC44FF", PINK = "#FF44CC", CYAN = "#44DDFF",
               GOLD = "#FFDD44", HOT  = "#FF2299", BLUE = "#4455FF";
@@ -8856,7 +8856,7 @@ class Game {
         ctx.fillStyle="#140600"; rr(-40,-8,80,16,3); ctx.fill();
         ctx.strokeStyle="rgba(80,30,0,0.35)"; ctx.lineWidth=1; ctx.stroke();
         ctx.restore();
-      } else if (!this.map?.config?.galactica) {
+      } else if (!this.map?.config?.galactica && !this.map?.config?.blitz) {
         // ── Default Bar (other maps) ───────────────────
         ctx.fillStyle = "#2a1508";
         ctx.strokeStyle = "#7a4520";
@@ -12348,7 +12348,7 @@ class Game {
     const offX = (W - room.roomW) / 2,
       offY = (H - room.roomH) / 2;
     const S = room.S;
-    const isNeonCity = this.map.config.id === "neon_city";
+    const isNeonCity = this.map.config.id === "neon_city" || !!this.map.config.blitz;
     const isGalactica = !!this.map.config.galactica;
     const isWasteland = !!this.map.config.wasteland;
     const t = performance.now() / 1000;

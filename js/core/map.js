@@ -1540,9 +1540,9 @@ class GameMap {
               ctx.beginPath(); ctx.ellipse(wx + S*0.34, wy + S/2 - 9, S*0.045, S*0.065, 0.35, 0, Math.PI*2); ctx.fill();
               ctx.beginPath(); ctx.ellipse(wx + S*0.66, wy + S/2 + 11, S*0.040, S*0.055, -0.3, 0, Math.PI*2); ctx.fill();
             }
-          } else if (cfg.arena) {
+          } else if (cfg.arena || cfg.blitz) {
             // ═══════════════════════════════════════════════════════════════
-            //  ARENA ROADS: Very dark asphalt with clear lane markings
+            //  ARENA / BLITZ ROADS: Very dark asphalt with clear lane markings
             // ═══════════════════════════════════════════════════════════════
             const aseed = (x * 17 + y * 31) % 6;
 
@@ -1749,9 +1749,9 @@ class GameMap {
               ctx.fillStyle = 'rgba(130,8,8,0.20)';
               ctx.beginPath(); ctx.ellipse(wx + S * 0.62, wy + S * 0.40, S * 0.14, S * 0.09, -0.5, 0, Math.PI * 2); ctx.fill();
             }
-          } else if (cfg.arena) {
+          } else if (cfg.arena || cfg.blitz) {
             // ═══════════════════════════════════════════════════════════════
-            //  ARENA SIDEWALK: Thin strip (6px) + 1-2 MASSIVE buildings
+            //  ARENA / BLITZ SIDEWALK: Thin strip (6px) + 1-2 MASSIVE buildings
             // ═══════════════════════════════════════════════════════════════
             const ts = x * 41 + y * 59;
             const t = Date.now() * 0.001;
@@ -2867,9 +2867,9 @@ class GameMap {
                 }
               }
             }
-          } else if (cfg.arena) {
+          } else if (cfg.arena || cfg.blitz) {
             // ═══════════════════════════════════════════════════════════════
-            //  ARENA: 2-3 MASSIVE monolithic buildings per tile
+            //  ARENA / BLITZ: 2-3 MASSIVE monolithic buildings per tile
             // ═══════════════════════════════════════════════════════════════
             const t = Date.now() * 0.001;
             const ts = x * 41 + y * 59;
