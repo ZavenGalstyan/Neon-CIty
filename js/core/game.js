@@ -3330,8 +3330,8 @@ class Game {
         this.player.y = room.entryY;
 
         if (room.isDealership) {
-          const isNeonCity = this.map.config.id === "neon_city";
-          const isGalactica = !!this.map.config.galactica;
+          const isNeonCity  = this.map.config.id === "neon_city";
+          const isGalactica = !!this.map.config.galactica || !!this.map.config.blitz;
           const isWasteland = !!this.map.config.wasteland;
           if (isNeonCity) {
             // Neon City: One professional cyber salesperson behind the counter
@@ -3429,56 +3429,55 @@ class Game {
         ) {
           const bType =
             typeof room._buildingType === "number" ? room._buildingType : 0;
-          const isNeonCity = this.map?.config?.id === "neon_city";
+          const isNeonCity  = this.map?.config?.id === "neon_city";
           const isGalactica = !!this.map?.config?.galactica;
+          const isBlitz     = !!this.map?.config?.blitz;
           const isZombie    = !!this.map?.config?.zombie;
           const isWasteland = !!this.map?.config?.wasteland;
-          const isSpecialMap = isNeonCity || isGalactica || isWasteland;
-          // Special positioning for Neon City / Galactica / Wasteland / Zombie buildings
+          const isGalOrBlitz = isGalactica || isBlitz;
+          const isSpecialMap = isNeonCity || isGalactica || isWasteland || isBlitz;
+          // Special positioning for Neon City / Galactica / Blitz / Wasteland / Zombie buildings
           let npcX = room.entryX + 60;
           let npcY = room.entryY - 110;
           if ((isNeonCity || isWasteland) && bType === 12) {
-            // Pawnshop - position vendor near the counter
             npcX = room.roomW / 2;
             npcY = room.roomH * 0.48;
           } else if (isNeonCity && bType === 4) {
-            // Arcade - position attendant above prize counter
             npcX = room.roomW / 2;
             npcY = room.roomH * 0.3;
           } else if (isSpecialMap && bType === 11) {
             npcX = room.roomW / 2;
             npcY = room.roomH * 0.34;
-          } else if (isGalactica && bType === 3) {
+          } else if (isGalOrBlitz && bType === 3) {
             npcX = room.roomW / 2;
             npcY = room.roomH * 0.38;
-          } else if (isGalactica && bType === 8) {
-            // Galaxy Club: hostess near top, player-facing
+          } else if (isGalOrBlitz && bType === 8) {
             npcX = room.roomW / 2;
             npcY = room.roomH * 0.22;
-          } else if (isGalactica && bType === 0) {
-            // Nova Diner: chef/waiter behind service counter
+          } else if (isGalOrBlitz && bType === 0) {
             npcX = room.roomW / 2;
             npcY = room.roomH * 0.17;
-          } else if (isGalactica && bType === 5) {
-            // Galactica Pharmacy: pharmacist behind counter near top
+          } else if (isGalOrBlitz && bType === 5) {
             npcX = room.roomW / 2;
             npcY = room.roomH * 0.19;
-          } else if (isGalactica && bType === 22) {
-            // Galactica Radio Station: DJ/host behind broadcast desk
+          } else if (isGalOrBlitz && bType === 22) {
+            npcX = room.roomW / 2;
+            npcY = room.roomH * 0.20;
+          } else if (isBlitz) {
+            // Blitz: all other workers centered in large room
             npcX = room.roomW / 2;
             npcY = room.roomH * 0.20;
           } else if (isZombie) {
-            // Zombie map: all workers at top-center of the large room
             npcX = room.roomW / 2;
             npcY = room.roomH * 0.20;
           }
-          const useGirlRender  = isGalactica && bType === 8;
+          const useGirlRender = isGalOrBlitz && bType === 8;
           // Determine render type for BuildingNPC
           let npcRenderType = false;
           if (isWasteland) {
             npcRenderType = 'wasteland';
-          } else if (isNeonCity || isZombie || (isGalactica && (bType === 3 || bType === 8 || bType === 0 || bType === 5 || bType === 22))) {
-            npcRenderType = true; // neonCity style
+          } else if (isNeonCity || isZombie || isBlitz || (isGalactica && (bType === 3 || bType === 8 || bType === 0 || bType === 5 || bType === 22))) {
+            npcRenderType = true; // neonCity/galactica style
           }
           this._buildingNpcs = [new BuildingNPC(npcX, npcY, bType, npcRenderType, useGirlRender)];
         }
@@ -13566,9 +13565,9 @@ class Game {
       for (const p of this._portals) {
         const pulse = Math.sin(p._animT * 3.5) * 0.35 + 0.65;
         const near = Math.hypot(p.x - this.player.x, p.y - this.player.y) < 55;
-        const isNeonCity = this.map.config.id === "neon_city";
+        const isNeonCity  = this.map.config.id === "neon_city";
         const isWasteland = !!this.map.config.wasteland;
-        const isGalactica = !!this.map.config.galactica;
+        const isGalactica = !!this.map.config.galactica || !!this.map.config.blitz;
         ctx.save();
         ctx.translate(p.x, p.y);
 

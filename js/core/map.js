@@ -1540,9 +1540,53 @@ class GameMap {
               ctx.beginPath(); ctx.ellipse(wx + S*0.34, wy + S/2 - 9, S*0.045, S*0.065, 0.35, 0, Math.PI*2); ctx.fill();
               ctx.beginPath(); ctx.ellipse(wx + S*0.66, wy + S/2 + 11, S*0.040, S*0.055, -0.3, 0, Math.PI*2); ctx.fill();
             }
-          } else if (cfg.arena || cfg.blitz) {
+          } else if (cfg.blitz) {
             // ═══════════════════════════════════════════════════════════════
-            //  ARENA / BLITZ ROADS: Very dark asphalt with clear lane markings
+            //  BLITZ ROADS: Burning dark asphalt with speed lane markings
+            // ═══════════════════════════════════════════════════════════════
+            const bseed = (x * 13 + y * 23) % 4;
+            const bRoadCols = ['#060301','#070302','#050301','#060201'];
+            ctx.fillStyle = bRoadCols[bseed];
+            ctx.fillRect(wx, wy, S, S);
+            // Faint speed-scratch vertical texture
+            if ((x * 7 + y * 11) % 4 === 0) {
+              ctx.fillStyle = 'rgba(255,60,0,0.055)';
+              ctx.fillRect(wx + bseed * 8 + 5, wy, 1, S);
+            }
+            // Orange road edge borders
+            ctx.fillStyle = 'rgba(255,80,0,0.38)';
+            ctx.fillRect(wx, wy, S, 2);
+            ctx.fillRect(wx, wy + S - 2, S, 2);
+            ctx.fillRect(wx, wy, 2, S);
+            ctx.fillRect(wx + S - 2, wy, 2, S);
+            // Speed lane markings
+            if (isColR && !isRowR) {
+              ctx.fillStyle = 'rgba(255,180,0,0.33)';
+              for (let dash = 0; dash < 4; dash++) ctx.fillRect(wx + S/2 - 1, wy + dash*20 + 4, 2, 12);
+              ctx.fillStyle = 'rgba(255,60,0,0.13)';
+              ctx.fillRect(wx + 6, wy, 1, S);
+              ctx.fillRect(wx + S - 7, wy, 1, S);
+            }
+            if (isRowR && !isColR) {
+              ctx.fillStyle = 'rgba(255,180,0,0.33)';
+              for (let dash = 0; dash < 4; dash++) ctx.fillRect(wx + dash*20 + 4, wy + S/2 - 1, 12, 2);
+              ctx.fillStyle = 'rgba(255,60,0,0.13)';
+              ctx.fillRect(wx, wy + 6, S, 1);
+              ctx.fillRect(wx, wy + S - 7, S, 1);
+            }
+            if (isColR && isRowR) {
+              ctx.fillStyle = 'rgba(255,100,0,0.14)';
+              ctx.fillRect(wx + S/2 - 8, wy + S/2 - 1, 16, 2);
+              ctx.fillRect(wx + S/2 - 1, wy + S/2 - 8, 2, 16);
+            }
+            // Tyre skid marks
+            if ((x * 11 + y * 17) % 9 === 0) {
+              ctx.fillStyle = 'rgba(0,0,0,0.45)';
+              ctx.fillRect(wx + (bseed * 11 % 35) + 10, wy + 8, 2, S - 16);
+            }
+          } else if (cfg.arena) {
+            // ═══════════════════════════════════════════════════════════════
+            //  ARENA ROADS: Very dark asphalt with clear lane markings
             // ═══════════════════════════════════════════════════════════════
             const aseed = (x * 17 + y * 31) % 6;
 
@@ -1749,9 +1793,65 @@ class GameMap {
               ctx.fillStyle = 'rgba(130,8,8,0.20)';
               ctx.beginPath(); ctx.ellipse(wx + S * 0.62, wy + S * 0.40, S * 0.14, S * 0.09, -0.5, 0, Math.PI * 2); ctx.fill();
             }
-          } else if (cfg.arena || cfg.blitz) {
+          } else if (cfg.blitz) {
             // ═══════════════════════════════════════════════════════════════
-            //  ARENA / BLITZ SIDEWALK: Thin strip (6px) + 1-2 MASSIVE buildings
+            //  BLITZ SIDEWALK: Speed-zone dark buildings with fire neons
+            // ═══════════════════════════════════════════════════════════════
+            const ts = x * 41 + y * 59;
+            const t  = Date.now() * 0.001;
+            const neons = ['#FF4400','#FF2200','#FF6600','#FF0022','#FF8800'];
+            const signs = ['RUSH','BLITZ','SURGE','FIRE','SPEED','OVERDRIVE'];
+            const roadLeft2   = x > 0        && this.tiles[y][x-1] === TILE.ROAD;
+            const roadRight2  = x < this.W-1 && this.tiles[y][x+1] === TILE.ROAD;
+            const roadTop2    = y > 0        && this.tiles[y-1][x] === TILE.ROAD;
+            const roadBottom2 = y < this.H-1 && this.tiles[y+1][x] === TILE.ROAD;
+            const seed2 = ts * 7;
+            const neonCol2 = neons[seed2 % neons.length];
+            ctx.fillStyle = '#080302'; ctx.fillRect(wx, wy, S, S);
+            const sw2 = 6;
+            const bx2 = roadLeft2   ? wx + sw2 : wx;
+            const by2 = roadTop2    ? wy + sw2 : wy;
+            const bw2 = S - (roadLeft2 ? sw2 : 0) - (roadRight2 ? sw2 : 0);
+            const bh2 = S - (roadTop2  ? sw2 : 0) - (roadBottom2 ? sw2 : 0);
+            ctx.fillStyle = 'rgba(0,0,0,0.65)'; ctx.fillRect(bx2+3, by2+3, bw2, bh2);
+            ctx.fillStyle = '#0e0402'; ctx.fillRect(bx2, by2, bw2, bh2);
+            ctx.strokeStyle = neonCol2; ctx.lineWidth = 2.5;
+            ctx.strokeRect(bx2+2, by2+2, bw2-4, bh2-4);
+            ctx.fillStyle = '#0a0301'; ctx.fillRect(bx2+5, by2+5, bw2-10, bh2-10);
+            ctx.strokeStyle = neonCol2+'55'; ctx.lineWidth = 1;
+            ctx.strokeRect(bx2+8, by2+8, bw2-16, bh2-16);
+            // Speed stripes
+            for (let si = 0; si < 3; si++) {
+              ctx.fillStyle = si===1 ? neonCol2+'66' : neonCol2+'22';
+              ctx.fillRect(bx2+6, by2+Math.floor(bh2*(0.25+si*0.22)), bw2-12, si===1?2:1);
+            }
+            // Roof beacon
+            if (bw2 > 22) {
+              ctx.fillStyle = '#444'; ctx.fillRect(bx2+bw2/2-1, by2-8, 2, 14);
+              const blink2 = Math.sin(t*6+seed2) > 0;
+              ctx.fillStyle = blink2 ? neonCol2 : neonCol2+'30';
+              ctx.beginPath(); ctx.arc(bx2+bw2/2, by2-8, 3, 0, Math.PI*2); ctx.fill();
+              ctx.strokeStyle = neonCol2+'60'; ctx.lineWidth=1;
+              ctx.beginPath(); ctx.arc(bx2+bw2/2, by2-8, 5, 0, Math.PI*2); ctx.stroke();
+            }
+            // Neon sign
+            if (bw2 > 30 && bh2 > 28) {
+              const sgnText = signs[seed2 % signs.length];
+              const sgnW = Math.min(bw2-14, 48), sgnH = 11;
+              const sgnX = bx2+(bw2-sgnW)/2, sgnY = by2+bh2-16;
+              ctx.fillStyle='#060100'; ctx.fillRect(sgnX,sgnY,sgnW,sgnH);
+              ctx.strokeStyle=neonCol2; ctx.lineWidth=1.5; ctx.strokeRect(sgnX,sgnY,sgnW,sgnH);
+              ctx.fillStyle=neonCol2; ctx.font='bold 8px monospace';
+              ctx.fillText(sgnText, sgnX+4, sgnY+8);
+            }
+            ctx.fillStyle = '#060202';
+            if (roadLeft2)   ctx.fillRect(wx, wy, sw2, S);
+            if (roadRight2)  ctx.fillRect(wx+S-sw2, wy, sw2, S);
+            if (roadTop2)    ctx.fillRect(wx, wy, S, sw2);
+            if (roadBottom2) ctx.fillRect(wx, wy+S-sw2, S, sw2);
+          } else if (cfg.arena) {
+            // ═══════════════════════════════════════════════════════════════
+            //  ARENA SIDEWALK: Thin strip (6px) + 1-2 MASSIVE buildings
             // ═══════════════════════════════════════════════════════════════
             const ts = x * 41 + y * 59;
             const t = Date.now() * 0.001;
@@ -2867,9 +2967,77 @@ class GameMap {
                 }
               }
             }
-          } else if (cfg.arena || cfg.blitz) {
+          } else if (cfg.blitz) {
             // ═══════════════════════════════════════════════════════════════
-            //  ARENA / BLITZ: 2-3 MASSIVE monolithic buildings per tile
+            //  BLITZ: Massive speed-zone buildings with fire neon
+            // ═══════════════════════════════════════════════════════════════
+            const t  = Date.now() * 0.001;
+            const ts = x * 41 + y * 59;
+            const blNeons = ['#FF4400','#FF2200','#FF6600','#FF0022','#FF8800'];
+            const blSigns = ['RUSH','BLITZ','SURGE','SPEED','FIRE','OVERDRIVE','FLASH'];
+            ctx.fillStyle = '#070302'; ctx.fillRect(wx, wy, S, S);
+            const blLayout = ts % 3;
+            const blDefs = blLayout === 0
+              ? [{x:0,y:0,w:42,h:80},{x:44,y:0,w:36,h:80}]
+              : blLayout === 1
+              ? [{x:0,y:0,w:80,h:44},{x:0,y:46,w:80,h:34}]
+              : [{x:0,y:0,w:80,h:46},{x:0,y:48,w:38,h:32},{x:42,y:48,w:38,h:32}];
+            for (let i = 0; i < blDefs.length; i++) {
+              const bd = blDefs[i];
+              const bx = wx+bd.x, by = wy+bd.y, bw = bd.w, bh = bd.h;
+              const bseed = ts*7 + i*31;
+              const neonCol = blNeons[bseed % blNeons.length];
+              // Drop shadow
+              ctx.fillStyle='rgba(0,0,0,0.65)'; ctx.fillRect(bx+4,by+4,bw,bh);
+              // Body
+              ctx.fillStyle='#0d0402'; ctx.fillRect(bx,by,bw,bh);
+              // Outer border
+              ctx.strokeStyle=neonCol; ctx.lineWidth=3;
+              ctx.strokeRect(bx+2,by+2,bw-4,bh-4);
+              // Inner panel
+              ctx.fillStyle='#090301'; ctx.fillRect(bx+6,by+6,bw-12,bh-12);
+              // Secondary border
+              ctx.strokeStyle=neonCol+'55'; ctx.lineWidth=1;
+              ctx.strokeRect(bx+10,by+10,bw-20,bh-20);
+              // Speed stripe accents
+              for (let si=0;si<3;si++) {
+                ctx.fillStyle = si===1 ? neonCol+'70' : neonCol+'28';
+                ctx.fillRect(bx+12, by+Math.floor(bh*(0.20+si*0.24)), bw-24, si===1?2:1);
+              }
+              // Roof equipment
+              const roofType = (bseed+i)%3;
+              if (roofType===0) {
+                ctx.fillStyle='#444'; ctx.fillRect(bx+bw/2-2,by-10,4,20);
+                const blink3=Math.sin(t*6+bseed)>0;
+                ctx.fillStyle=blink3?neonCol:neonCol+'30';
+                ctx.beginPath(); ctx.arc(bx+bw/2,by-10,5,0,Math.PI*2); ctx.fill();
+                ctx.strokeStyle=neonCol+'60'; ctx.lineWidth=2;
+                ctx.beginPath(); ctx.arc(bx+bw/2,by-10,8+3*Math.sin(t*4+bseed),0,Math.PI*2); ctx.stroke();
+              } else if (roofType===1) {
+                ctx.fillStyle='#777'; ctx.fillRect(bx+bw/2-1,by-12,2,18); ctx.fillRect(bx+bw/2-6,by-2,12,3);
+                if (Math.sin(t*8+bseed)>0.5) {
+                  ctx.fillStyle='#FFEE44';
+                  ctx.beginPath(); ctx.arc(bx+bw/2,by-12,3,0,Math.PI*2); ctx.fill();
+                }
+              } else {
+                ctx.fillStyle='#333'; ctx.fillRect(bx+10,by+6,22,12); ctx.fillRect(bx+bw-32,by+8,20,10);
+                ctx.fillStyle=neonCol+'40'; ctx.fillRect(bx+11,by+8,20,2); ctx.fillRect(bx+11,by+13,20,2);
+              }
+              // Neon sign
+              if (bw>35) {
+                const sgnT=blSigns[bseed%blSigns.length];
+                const sgnW=Math.min(bw-20,52), sgnH=13;
+                const sgnX=bx+(bw-sgnW)/2, sgnY=by+bh-20;
+                ctx.fillStyle='#040100'; ctx.fillRect(sgnX,sgnY,sgnW,sgnH);
+                ctx.strokeStyle=neonCol; ctx.lineWidth=2; ctx.strokeRect(sgnX,sgnY,sgnW,sgnH);
+                ctx.fillStyle=neonCol; ctx.font='bold 9px monospace';
+                ctx.fillText(sgnT, sgnX+5, sgnY+10);
+              }
+              if (bh>40) { ctx.fillStyle=neonCol+'33'; ctx.fillRect(bx+12,by+Math.floor(bh*0.45),bw-24,2); }
+            }
+          } else if (cfg.arena) {
+            // ═══════════════════════════════════════════════════════════════
+            //  ARENA: 2-3 MASSIVE monolithic buildings per tile
             // ═══════════════════════════════════════════════════════════════
             const t = Date.now() * 0.001;
             const ts = x * 41 + y * 59;
@@ -3295,6 +3463,7 @@ class GameMap {
   getRoom(door) {
     const RS          = 60;  // indoor tile size (px)
     const isGalactica = !!this.config.galactica;
+    const isBlitz     = !!this.config.blitz;
     const isNeonDealer  = this.config.id === 'neon_city' && door.specialType === 'dealership';
     const isGalDealer   = isGalactica && door.specialType === 'dealership';
     const isWastelandDealer = !!this.config.wasteland && door.specialType === 'dealership';
@@ -3315,7 +3484,9 @@ class GameMap {
     const useLargeRadio  = isGalRadio;
     // All zombie buildings use the large arcade layout (1080×840)
     const useLargeZombie = isZombieMap;
-    const useLarge = useLargeDealer || useLargeArcade || useLargeMarket || useLargeClub || useLargeRest || useLargePharm || useLargeRadio || useLargeZombie;
+    // All blitz buildings use large rooms (same as galactica)
+    const useLargeBlitz  = isBlitz;
+    const useLarge = useLargeDealer || useLargeArcade || useLargeMarket || useLargeClub || useLargeRest || useLargePharm || useLargeRadio || useLargeZombie || useLargeBlitz;
     const layout = useLargeDealer ? ROOM_LAYOUT_DEALER_NEON
                  : useLargeArcade ? ROOM_LAYOUT_ARCADE_NEON
                  : useLargeMarket ? ROOM_LAYOUT_DEALER_NEON
@@ -3324,6 +3495,7 @@ class GameMap {
                  : useLargePharm  ? ROOM_LAYOUT_ARCADE_NEON
                  : useLargeRadio  ? ROOM_LAYOUT_ARCADE_NEON
                  : useLargeZombie ? ROOM_LAYOUT_ARCADE_NEON
+                 : useLargeBlitz  ? ROOM_LAYOUT_ARCADE_NEON
                  : door.type === 2 ? ROOM_LAYOUT_2 : ROOM_LAYOUT_1;
     const RH     = layout.length;
     const RW     = layout[0].length;
