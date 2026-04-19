@@ -3337,6 +3337,7 @@ class Game {
           const isGalactica = !!this.map.config.galactica;
           const isBlitz    = !!this.map.config.blitz;
           const isWasteland = !!this.map.config.wasteland;
+          const isHardcoreD = !!this.map.config.hardcore;
           if (isNeonCity) {
             // Neon City: One professional cyber salesperson behind the counter
             // Counter is at S * 1.8 + 35 height, salesperson stands in front of counter (facing customers)
@@ -3344,6 +3345,13 @@ class Game {
             const spY = room.roomH * 0.38; // Closer to the display cars
             this._salespersons = [
               new Salesperson(spX, spY, "#00FFFF", "SALES REP", true),
+            ];
+          } else if (isHardcoreD) {
+            // Hardcore: Fire-themed human dealer
+            const spX = room.roomW / 2;
+            const spY = room.roomH * 0.38;
+            this._salespersons = [
+              new Salesperson(spX, spY, "#FF8800", "DEALER", true),
             ];
           } else if (isRobot) {
             // Robot City: human-style dealer with teal-green robot-district color
@@ -3452,14 +3460,15 @@ class Game {
         ) {
           const bType =
             typeof room._buildingType === "number" ? room._buildingType : 0;
-          const isNeonCity  = this.map?.config?.id === "neon_city";
-          const isGalactica = !!this.map?.config?.galactica;
-          const isBlitz     = !!this.map?.config?.blitz;
-          const isRobotCity = !!this.map?.config?.robot;
-          const isZombie    = !!this.map?.config?.zombie;
-          const isWasteland = !!this.map?.config?.wasteland;
+          const isNeonCity   = this.map?.config?.id === "neon_city";
+          const isGalactica  = !!this.map?.config?.galactica;
+          const isBlitz      = !!this.map?.config?.blitz;
+          const isRobotCity  = !!this.map?.config?.robot;
+          const isZombie     = !!this.map?.config?.zombie;
+          const isWasteland  = !!this.map?.config?.wasteland;
+          const isHardcoreN  = !!this.map?.config?.hardcore;
           const isGalOrBlitz = isGalactica || isBlitz;
-          const isSpecialMap = isNeonCity || isGalactica || isWasteland || isBlitz || isRobotCity;
+          const isSpecialMap = isNeonCity || isGalactica || isWasteland || isBlitz || isRobotCity || isHardcoreN;
           // Special positioning for Neon City / Galactica / Blitz / Wasteland / Zombie buildings
           let npcX = room.entryX + 60;
           let npcY = room.entryY - 110;
@@ -3498,14 +3507,18 @@ class Game {
           } else if (isZombie) {
             npcX = room.roomW / 2;
             npcY = room.roomH * 0.20;
+          } else if (isHardcoreN) {
+            // Hardcore: all workers centered in large room
+            npcX = room.roomW / 2;
+            npcY = room.roomH * 0.20;
           }
           const useGirlRender = isGalOrBlitz && bType === 8;
           // Determine render type for BuildingNPC
           let npcRenderType = false;
           if (isWasteland) {
             npcRenderType = 'wasteland';
-          } else if (isNeonCity || isZombie || isBlitz || isRobotCity || (isGalactica && (bType === 3 || bType === 8 || bType === 0 || bType === 5 || bType === 22))) {
-            npcRenderType = true; // neonCity/robot city/galactica style
+          } else if (isNeonCity || isZombie || isBlitz || isRobotCity || isHardcoreN || (isGalactica && (bType === 3 || bType === 8 || bType === 0 || bType === 5 || bType === 22))) {
+            npcRenderType = true; // neonCity/robot city/hardcore/galactica style
           }
           this._buildingNpcs = [new BuildingNPC(npcX, npcY, bType, npcRenderType, useGirlRender)];
         }
@@ -8285,7 +8298,8 @@ class Game {
       }
     } else if (type === 11) {
       // BAR
-      const isNeonCityBar = this.map?.config?.id === "neon_city";
+      const isNeonCityBar  = this.map?.config?.id === "neon_city";
+      const isHardcoreBar  = !!this.map?.config?.hardcore;
 
       if (isNeonCityBar) {
         // ═══ NEON CITY CYBER LOUNGE ═══
@@ -9125,6 +9139,199 @@ class Game {
         ctx.font = "bold 5px monospace";
         ctx.textAlign = "center";
         ctx.fillText("JUKEBOX", cx + W * 0.3 + 18, topY + 44);
+      } else if (isHardcoreBar) {
+        // ═══ HARDCORE: HELLFIRE LOUNGE ═══
+        const t = performance.now() / 1000;
+        const EMBER = "#FF8800", FLAME = "#FF5500", CRIMSON = "#FF2200", AMBER = "#FFAA00";
+
+        // Title
+        ctx.save();
+        ctx.font = "bold 16px Orbitron, monospace"; ctx.textAlign = "center";
+        ctx.fillStyle = "#fff"; ctx.shadowColor = EMBER; ctx.shadowBlur = 22;
+        ctx.fillText("⚡ HELLFIRE LOUNGE ⚡", cx, topY - 50);
+        ctx.shadowBlur = 0; ctx.restore();
+
+        // ── FIRE BAR COUNTER ──
+        ctx.fillStyle = "#1a0400"; ctx.strokeStyle = EMBER; ctx.lineWidth = 2;
+        ctx.shadowColor = EMBER; ctx.shadowBlur = 14;
+        rr(cx - W*0.38, topY+6, W*0.76, 28, 6); ctx.fill(); ctx.stroke();
+        ctx.shadowBlur = 0;
+        const ctGradHC = ctx.createLinearGradient(cx - W*0.38, 0, cx + W*0.38, 0);
+        ctGradHC.addColorStop(0, "rgba(255,136,0,0)");
+        ctGradHC.addColorStop(0.5, "rgba(255,136,0,0.4)");
+        ctGradHC.addColorStop(1, "rgba(255,136,0,0)");
+        ctx.fillStyle = ctGradHC; ctx.fillRect(cx - W*0.38, topY+6, W*0.76, 5);
+
+        // ── FIRE DRINK BOTTLES ──
+        const hcDrinks = [
+          { col: EMBER,    symbol: "⚡", label: "BLAZE"   },
+          { col: CRIMSON,  symbol: "◆",  label: "INFERNO" },
+          { col: AMBER,    symbol: "★",  label: "AMBER"   },
+          { col: FLAME,    symbol: "◎",  label: "MAGMA"   },
+          { col: "#FFEE44",symbol: "✦",  label: "EMBER"   },
+        ];
+        for (let i = 0; i < hcDrinks.length; i++) {
+          const dd = hcDrinks[i];
+          const bx = cx - W*0.3 + i*(W*0.15), by = topY+2;
+          const lp = Math.sin(t*1.5+i*1.2)*0.3+0.7;
+          ctx.fillStyle = dd.col+"30"; ctx.strokeStyle = dd.col; ctx.lineWidth = 1.5;
+          ctx.shadowColor = dd.col; ctx.shadowBlur = 8*lp;
+          ctx.beginPath();
+          ctx.moveTo(bx-6,by+36); ctx.lineTo(bx-8,by+28); ctx.lineTo(bx-5,by+8);
+          ctx.lineTo(bx-3,by);    ctx.lineTo(bx+3,by);    ctx.lineTo(bx+5,by+8);
+          ctx.lineTo(bx+8,by+28); ctx.lineTo(bx+6,by+36); ctx.closePath();
+          ctx.fill(); ctx.stroke(); ctx.shadowBlur = 0;
+          ctx.fillStyle = dd.col+"70";
+          ctx.beginPath();
+          ctx.moveTo(bx-5.5,by+36); ctx.lineTo(bx-7,by+28); ctx.lineTo(bx-4,by+(8+(1-lp)*16));
+          ctx.lineTo(bx+4,by+(8+(1-lp)*16)); ctx.lineTo(bx+7,by+28); ctx.lineTo(bx+5.5,by+36);
+          ctx.closePath(); ctx.fill();
+          ctx.fillStyle = "#FFF"; ctx.shadowColor = dd.col; ctx.shadowBlur = 5;
+          ctx.font = "8px serif"; ctx.textAlign = "center";
+          ctx.fillText(dd.symbol, bx, by+22); ctx.shadowBlur = 0;
+          ctx.fillStyle = dd.col; ctx.font = "5px Orbitron, monospace";
+          ctx.fillText(dd.label, bx, by+42);
+        }
+
+        // ── BAR STOOLS ──
+        for (let si=0; si<5; si++) {
+          const bsx = cx - W*0.3 + si*(W*0.15), bsy = topY+56;
+          ctx.strokeStyle = EMBER+"77"; ctx.lineWidth = 1.5;
+          ctx.beginPath(); ctx.moveTo(bsx-6,bsy+6); ctx.lineTo(bsx-8,bsy+20); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(bsx+6,bsy+6); ctx.lineTo(bsx+8,bsy+20); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(bsx-6,bsy+14); ctx.lineTo(bsx+6,bsy+14); ctx.stroke();
+          ctx.fillStyle = "#2a0800"; ctx.strokeStyle = EMBER; ctx.lineWidth = 1.5;
+          ctx.shadowColor = EMBER; ctx.shadowBlur = 5;
+          ctx.beginPath(); ctx.ellipse(bsx, bsy, 11, 6, 0, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+          ctx.shadowBlur = 0;
+        }
+
+        // ── BAR PATRONS ──
+        const hcPatrons = [
+          { x:cx-W*0.3+0*(W*0.15), skin:"#FFDDBB", hair:"#1a1a2a", col:EMBER,    gender:"m", drink:EMBER    },
+          { x:cx-W*0.3+1*(W*0.15), skin:"#F0C080", hair:"#AA5522", col:FLAME,    gender:"f", drink:FLAME    },
+          { x:cx-W*0.3+2*(W*0.15), skin:"#D4956A", hair:"#2a1a00", col:AMBER,    gender:"m", drink:AMBER    },
+          { x:cx-W*0.3+3*(W*0.15), skin:"#EECCAA", hair:"#1a002a", col:CRIMSON,  gender:"f", drink:CRIMSON  },
+          { x:cx-W*0.3+4*(W*0.15), skin:"#DDBB99", hair:"#332211", col:"#FFEE44",gender:"m", drink:"#FFEE44"},
+        ];
+        for (const bp of hcPatrons) {
+          const bpx=bp.x, bpy=topY+36; ctx.save();
+          ctx.fillStyle=bp.col+"CC"; ctx.shadowColor=bp.col; ctx.shadowBlur=5;
+          rr(bpx-8,bpy-4,16,18,3); ctx.fill(); ctx.shadowBlur=0;
+          if (bp.gender==="f") {
+            ctx.fillStyle=bp.col+"55";
+            ctx.beginPath(); ctx.moveTo(bpx-8,bpy+10); ctx.lineTo(bpx-10,bpy+20); ctx.lineTo(bpx+10,bpy+20); ctx.lineTo(bpx+8,bpy+10); ctx.closePath(); ctx.fill();
+          }
+          ctx.fillStyle=bp.skin; ctx.fillRect(bpx-2,bpy-6,4,4);
+          ctx.beginPath(); ctx.arc(bpx,bpy-13,9,0,Math.PI*2); ctx.fill();
+          ctx.fillStyle=bp.hair;
+          if (bp.gender==="f") { ctx.beginPath(); ctx.arc(bpx,bpy-16,8,Math.PI,0); ctx.fill(); ctx.fillRect(bpx-8,bpy-18,4,12); ctx.fillRect(bpx+4,bpy-18,4,12); }
+          else { ctx.fillRect(bpx-7,bpy-19,14,7); }
+          ctx.fillStyle="#fff"; ctx.beginPath(); ctx.ellipse(bpx-3.5,bpy-14,2.2,1.8,0,0,Math.PI*2); ctx.ellipse(bpx+3.5,bpy-14,2.2,1.8,0,0,Math.PI*2); ctx.fill();
+          ctx.fillStyle=bp.col; ctx.shadowColor=bp.col; ctx.shadowBlur=3;
+          ctx.beginPath(); ctx.arc(bpx-3.5,bpy-14,1.2,0,Math.PI*2); ctx.fill();
+          ctx.beginPath(); ctx.arc(bpx+3.5,bpy-14,1.2,0,Math.PI*2); ctx.fill(); ctx.shadowBlur=0;
+          ctx.fillStyle="#000"; ctx.beginPath(); ctx.arc(bpx-3.5,bpy-14,0.5,0,Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(bpx+3.5,bpy-14,0.5,0,Math.PI*2); ctx.fill();
+          ctx.fillStyle="rgba(0,0,0,0.15)"; ctx.beginPath(); ctx.arc(bpx,bpy-11,1.2,0,Math.PI*2); ctx.fill();
+          ctx.strokeStyle=bp.gender==="f"?"#EE4466":"#AA6644"; ctx.lineWidth=1.2;
+          ctx.beginPath(); ctx.arc(bpx,bpy-8.5,3,0.1,Math.PI-0.1); ctx.stroke();
+          ctx.strokeStyle=bp.skin; ctx.lineWidth=3; ctx.lineCap="round";
+          ctx.beginPath(); ctx.moveTo(bpx+8,bpy+2); ctx.lineTo(bpx+16,bpy-4); ctx.stroke(); ctx.lineCap="butt";
+          ctx.fillStyle=bp.drink+"50"; ctx.strokeStyle=bp.drink; ctx.lineWidth=1;
+          ctx.shadowColor=bp.drink; ctx.shadowBlur=7;
+          ctx.beginPath(); ctx.moveTo(bpx+13,bpy-14); ctx.lineTo(bpx+11,bpy-6); ctx.lineTo(bpx+20,bpy-6); ctx.lineTo(bpx+18,bpy-14); ctx.closePath(); ctx.fill(); ctx.stroke();
+          ctx.shadowBlur=0; ctx.restore();
+        }
+
+        // ── 3 FIRE TABLES with seating ──
+        const hcTables = [
+          { x:cx-W*0.3, y:midY-8, col:EMBER  },
+          { x:cx,        y:midY+6, col:FLAME  },
+          { x:cx+W*0.28, y:midY-8, col:AMBER  },
+        ];
+        for (const td of hcTables) {
+          const hover = Math.sin(t*1.2+td.x*0.01)*2;
+          ctx.fillStyle="rgba(0,0,0,0.3)"; ctx.beginPath(); ctx.ellipse(td.x+2,td.y+16+hover,20,8,0,0,Math.PI*2); ctx.fill();
+          ctx.fillStyle="#1a0400"; ctx.strokeStyle=td.col; ctx.lineWidth=2;
+          ctx.shadowColor=td.col; ctx.shadowBlur=12;
+          ctx.beginPath(); ctx.arc(td.x,td.y+hover,22,0,Math.PI*2); ctx.fill(); ctx.stroke(); ctx.shadowBlur=0;
+          ctx.strokeStyle=td.col+"55"; ctx.lineWidth=1;
+          ctx.beginPath(); ctx.arc(td.x,td.y+hover,16,0,Math.PI*2); ctx.stroke();
+          const cp=Math.sin(t*3+td.x)*0.5+0.5;
+          ctx.fillStyle=`rgba(255,180,50,${0.5+cp*0.5})`; ctx.shadowColor=td.col; ctx.shadowBlur=8+cp*6;
+          ctx.beginPath(); ctx.arc(td.x,td.y+hover,3,0,Math.PI*2); ctx.fill(); ctx.shadowBlur=0;
+          for (let si=0;si<3;si++) {
+            const sa=(si/3)*Math.PI*2-Math.PI/2;
+            const sx=td.x+Math.cos(sa)*32, sy=td.y+hover+Math.sin(sa)*32;
+            ctx.fillStyle="#1a0400"; ctx.strokeStyle=td.col+"88"; ctx.lineWidth=1;
+            ctx.beginPath(); ctx.arc(sx,sy,7,0,Math.PI*2); ctx.fill(); ctx.stroke();
+          }
+        }
+
+        // ── TABLE PATRONS ──
+        const hcTPatrons = [
+          {tx:cx-W*0.3,    ty:midY-8,    skin:"#FFDDBB",hair:"#1a1a2a",col:EMBER,  gender:"m"},
+          {tx:cx-W*0.3+28, ty:midY-8-26, skin:"#F0C080", hair:"#AA5522",col:FLAME,  gender:"f"},
+          {tx:cx,           ty:midY+6,    skin:"#D4956A", hair:"#2a1a00",col:AMBER,  gender:"m"},
+          {tx:cx+28,        ty:midY+6-26, skin:"#EECCAA", hair:"#332211",col:CRIMSON,gender:"f"},
+          {tx:cx+W*0.28,    ty:midY-8,    skin:"#FFDDBB", hair:"#1a002a",col:AMBER,  gender:"f"},
+          {tx:cx+W*0.28-28, ty:midY-8-26, skin:"#DDBB99", hair:"#1a1a1a",col:EMBER,  gender:"m"},
+        ];
+        for (const p of hcTPatrons) {
+          const px2=p.tx, py2=p.ty; ctx.save();
+          ctx.fillStyle="rgba(0,0,0,0.2)"; ctx.beginPath(); ctx.ellipse(px2,py2+4,8,3,0,0,Math.PI*2); ctx.fill();
+          ctx.fillStyle=p.col+"CC"; ctx.shadowColor=p.col; ctx.shadowBlur=6;
+          rr(px2-8,py2-6,16,18,3); ctx.fill(); ctx.shadowBlur=0;
+          if (p.gender==="f") {
+            ctx.fillStyle=p.col+"66";
+            ctx.beginPath(); ctx.moveTo(px2-8,py2+8); ctx.lineTo(px2-11,py2+18); ctx.lineTo(px2+11,py2+18); ctx.lineTo(px2+8,py2+8); ctx.closePath(); ctx.fill();
+          }
+          ctx.fillStyle=p.skin; ctx.fillRect(px2-3,py2-8,6,4);
+          ctx.beginPath(); ctx.arc(px2,py2-15,9,0,Math.PI*2); ctx.fill();
+          ctx.fillStyle=p.hair;
+          if (p.gender==="f") { ctx.beginPath(); ctx.arc(px2,py2-18,8,Math.PI,0); ctx.fill(); ctx.fillRect(px2-9,py2-20,4,12); ctx.fillRect(px2+5,py2-20,4,12); }
+          else { ctx.fillRect(px2-7,py2-21,14,7); }
+          ctx.fillStyle="#fff"; ctx.beginPath(); ctx.ellipse(px2-3.5,py2-16,2.2,1.8,0,0,Math.PI*2); ctx.ellipse(px2+3.5,py2-16,2.2,1.8,0,0,Math.PI*2); ctx.fill();
+          ctx.fillStyle=p.col; ctx.shadowColor=p.col; ctx.shadowBlur=3;
+          ctx.beginPath(); ctx.arc(px2-3.5,py2-16,1.2,0,Math.PI*2); ctx.fill();
+          ctx.beginPath(); ctx.arc(px2+3.5,py2-16,1.2,0,Math.PI*2); ctx.fill(); ctx.shadowBlur=0;
+          ctx.fillStyle="#000"; ctx.beginPath(); ctx.arc(px2-3.5,py2-16,0.5,0,Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(px2+3.5,py2-16,0.5,0,Math.PI*2); ctx.fill();
+          ctx.fillStyle="rgba(0,0,0,0.15)"; ctx.beginPath(); ctx.arc(px2,py2-13,1.2,0,Math.PI*2); ctx.fill();
+          ctx.strokeStyle=p.gender==="f"?"#EE4466":"#AA6644"; ctx.lineWidth=1.2;
+          ctx.beginPath(); ctx.arc(px2,py2-10.5,3,0.1,Math.PI-0.1); ctx.stroke();
+          ctx.strokeStyle=p.skin; ctx.lineWidth=3; ctx.lineCap="round";
+          ctx.beginPath(); ctx.moveTo(px2+8,py2); ctx.lineTo(px2+16,py2-8); ctx.stroke(); ctx.lineCap="butt";
+          ctx.fillStyle=EMBER+"55"; ctx.strokeStyle=EMBER; ctx.lineWidth=1;
+          ctx.shadowColor=EMBER; ctx.shadowBlur=6;
+          ctx.beginPath(); ctx.moveTo(px2+12,py2-18); ctx.lineTo(px2+10,py2-10); ctx.lineTo(px2+20,py2-10); ctx.lineTo(px2+18,py2-18); ctx.closePath(); ctx.fill(); ctx.stroke();
+          ctx.shadowBlur=0; ctx.restore();
+        }
+
+        // ── FIRE JUKEBOX (right) ──
+        const jxHC=cx+W*0.3, jyHC=topY+10;
+        ctx.fillStyle="#1a0400"; ctx.strokeStyle=FLAME; ctx.lineWidth=2;
+        ctx.shadowColor=FLAME; ctx.shadowBlur=12;
+        rr(jxHC,jyHC,44,68,6); ctx.fill(); ctx.stroke(); ctx.shadowBlur=0;
+        ctx.save(); ctx.translate(jxHC+22,jyHC+30); ctx.rotate(t*0.5);
+        for (let ri=0;ri<6;ri++) {
+          const ra=(ri/6)*Math.PI*2;
+          const rp=Math.sin(t*2+ri)*0.5+0.5;
+          ctx.fillStyle=`rgba(255,100,0,${0.2+rp*0.4})`;
+          ctx.beginPath(); ctx.moveTo(0,0); ctx.arc(0,0,14,ra,ra+Math.PI/3); ctx.closePath(); ctx.fill();
+        }
+        ctx.restore();
+        ctx.fillStyle=FLAME; ctx.shadowColor=FLAME; ctx.shadowBlur=8;
+        ctx.font="5px monospace"; ctx.textAlign="center";
+        ctx.fillText("FIRE JUKEBOX",jxHC+22,jyHC+60); ctx.shadowBlur=0;
+
+        // Ember particle drift
+        for (let i=0;i<12;i++) {
+          const nx=(t*18+i*75)%W;
+          const ny=topY+40+Math.sin(t+i*0.8)*20+(i*(H*0.55))/12;
+          const na=Math.sin(t*1.5+i)*0.3+0.35;
+          ctx.fillStyle = i%3===0 ? `rgba(255,136,0,${na})` : i%3===1 ? `rgba(255,85,0,${na})` : `rgba(255,200,0,${na})`;
+          ctx.beginPath(); ctx.arc(nx,ny,i%4===0?2:1,0,Math.PI*2); ctx.fill();
+        }
       } else {
         // ═══ GALACTICA: NEBULA CANTINA ═══
         const t = performance.now() / 1000;
@@ -13195,14 +13402,15 @@ class Game {
     const offX = (W - room.roomW) / 2,
       offY = (H - room.roomH) / 2;
     const S = room.S;
-    const isNeonCity = this.map.config.id === "neon_city" || !!this.map.config.blitz || !!this.map.config.robot;
+    const isNeonCity = this.map.config.id === "neon_city" || !!this.map.config.blitz || !!this.map.config.robot || !!this.map.config.hardcore;
+    const isHardcore  = !!this.map.config.hardcore;
     const isGalactica = !!this.map.config.galactica;
     const isWasteland = !!this.map.config.wasteland;
     const t = performance.now() / 1000;
 
     // Background
     ctx.fillStyle = isNeonCity
-      ? "#020208"
+      ? (isHardcore ? "#090200" : "#020208")
       : isGalactica
         ? "#00000e"
         : isWasteland
@@ -13214,318 +13422,147 @@ class Game {
     ctx.translate(offX + shake.x, offY + shake.y);
 
     if (isNeonCity) {
-      // ═══ NEON CITY CYBERPUNK SHOWROOM ═══
+      // ═══ CYBERPUNK SHOWROOM (neon city / blitz / robot / hardcore) ═══
+      // Palette: swap to fire/ember for hardcore, keep cyan/magenta for others
+      const dA    = isHardcore ? "#FF8800" : "#00FFFF";  // primary accent
+      const dB    = isHardcore ? "#FF3300" : "#FF00FF";  // secondary accent
+      const dAr   = isHardcore ? "255,136,0" : "0,255,255";
+      const dBr   = isHardcore ? "255,51,0"  : "255,0,255";
+      const dWall = isHardcore ? "#14080a" : "#0a0a14";
+      const dFlr  = isHardcore ? "#0e0600" : "#08080e";
+      const dC1   = isHardcore ? "#2e1a0a" : "#1a1a2e";
+      const dC2   = isHardcore ? "#1e0e04" : "#12121e";
+      const dC3   = isHardcore ? "#140800" : "#0a0a14";
+      const dCTop = isHardcore ? "#3e2000" : "#2a2a3e";
+      const dTitleText = isHardcore ? "⚡ INFERNO MOTORS ⚡" : "◈ CYBER MOTORS ◈";
 
-      // Dark reflective floor base
+      // Floor + walls
       for (let ty = 0; ty < room.H; ty++) {
         for (let tx = 0; tx < room.W; tx++) {
-          const px = tx * S,
-            py = ty * S,
-            tile = room.layout[ty][tx];
+          const px = tx * S, py = ty * S, tile = room.layout[ty][tx];
           if (tile === 1) {
-            // Walls - dark cyber panels
-            ctx.fillStyle = "#0a0a14";
-            ctx.fillRect(px, py, S, S);
-            // Vertical neon strips on walls
+            ctx.fillStyle = dWall; ctx.fillRect(px, py, S, S);
             if ((tx + ty) % 3 === 0) {
-              ctx.fillStyle = "rgba(0,255,255,0.15)";
+              ctx.fillStyle = `rgba(${dAr},0.15)`;
               ctx.fillRect(px + S / 2 - 1, py, 2, S);
             }
           } else {
-            // Floor - dark with subtle grid
-            ctx.fillStyle = "#08080e";
-            ctx.fillRect(px, py, S, S);
-
-            // Neon grid lines
-            ctx.strokeStyle = "rgba(0,255,255,0.08)";
-            ctx.lineWidth = 1;
+            ctx.fillStyle = dFlr; ctx.fillRect(px, py, S, S);
+            ctx.strokeStyle = `rgba(${dAr},0.08)`; ctx.lineWidth = 1;
             ctx.strokeRect(px, py, S, S);
-
-            // Glowing floor tiles at intervals
             if ((tx + ty) % 4 === 0) {
               const pulse = Math.sin(t * 2 + tx + ty) * 0.5 + 0.5;
-              ctx.fillStyle = `rgba(0,255,255,${0.03 + pulse * 0.02})`;
+              ctx.fillStyle = `rgba(${dAr},${0.03 + pulse * 0.02})`;
               ctx.fillRect(px + 4, py + 4, S - 8, S - 8);
             }
           }
         }
       }
 
-      // Neon border around room
-      ctx.strokeStyle = "#00FFFF";
-      ctx.lineWidth = 2;
-      ctx.shadowColor = "#00FFFF";
-      ctx.shadowBlur = 15;
-      ctx.strokeRect(
-        S + 2,
-        S + 2,
-        room.roomW - S * 2 - 4,
-        room.roomH - S * 2 - 4,
-      );
+      // Room border
+      ctx.strokeStyle = dA; ctx.lineWidth = 2; ctx.shadowColor = dA; ctx.shadowBlur = 15;
+      ctx.strokeRect(S + 2, S + 2, room.roomW - S * 2 - 4, room.roomH - S * 2 - 4);
       ctx.shadowBlur = 0;
 
-      // Top accent bar with animated gradient
+      // Top accent bar
       const topGrad = ctx.createLinearGradient(0, S, room.roomW, S);
-      topGrad.addColorStop(0, "rgba(255,0,255,0.3)");
-      topGrad.addColorStop(0.5, "rgba(0,255,255,0.5)");
-      topGrad.addColorStop(1, "rgba(255,0,255,0.3)");
-      ctx.fillStyle = topGrad;
-      ctx.fillRect(S, S, room.roomW - S * 2, 4);
+      topGrad.addColorStop(0, `rgba(${dBr},0.3)`);
+      topGrad.addColorStop(0.5, `rgba(${dAr},0.5)`);
+      topGrad.addColorStop(1, `rgba(${dBr},0.3)`);
+      ctx.fillStyle = topGrad; ctx.fillRect(S, S, room.roomW - S * 2, 4);
 
-      // Showroom title (above the neon border)
+      // Showroom title
       ctx.save();
-      ctx.font = "bold 20px Orbitron, monospace";
-      ctx.textAlign = "center";
-      ctx.fillStyle = "#00FFFF";
-      ctx.shadowColor = "#00FFFF";
-      ctx.shadowBlur = 25;
-      ctx.fillText("◈ CYBER MOTORS ◈", room.roomW / 2, S - 20);
-      ctx.shadowBlur = 0;
-      ctx.restore();
+      ctx.font = "bold 20px Orbitron, monospace"; ctx.textAlign = "center";
+      ctx.fillStyle = dA; ctx.shadowColor = dA; ctx.shadowBlur = 25;
+      ctx.fillText(dTitleText, room.roomW / 2, S - 20);
+      ctx.shadowBlur = 0; ctx.restore();
 
-      // ═══ CASHIER COUNTER AREA ═══
-      const counterX = room.roomW / 2 - 75;
-      const counterY = S * 1.2;
-      const counterW = 150;
-      const counterH = 40;
-
-      // Counter shadow
+      // ═══ CASHIER COUNTER ═══
+      const counterX = room.roomW / 2 - 75, counterY = S * 1.2;
+      const counterW = 150, counterH = 40;
       ctx.fillStyle = "rgba(0,0,0,0.4)";
       ctx.fillRect(counterX + 4, counterY + counterH + 2, counterW, 6);
-
-      // Counter base (dark cyber desk)
-      const counterGrad = ctx.createLinearGradient(
-        counterX,
-        counterY,
-        counterX,
-        counterY + counterH,
-      );
-      counterGrad.addColorStop(0, "#1a1a2e");
-      counterGrad.addColorStop(0.5, "#12121e");
-      counterGrad.addColorStop(1, "#0a0a14");
-      ctx.fillStyle = counterGrad;
-      ctx.fillRect(counterX, counterY, counterW, counterH);
-
-      // Counter top surface
-      ctx.fillStyle = "#2a2a3e";
-      ctx.fillRect(counterX - 5, counterY, counterW + 10, 6);
-
-      // Neon edge on counter
-      ctx.strokeStyle = "#00FFFF";
-      ctx.lineWidth = 2;
-      ctx.shadowColor = "#00FFFF";
-      ctx.shadowBlur = 10;
-      ctx.beginPath();
-      ctx.moveTo(counterX - 5, counterY + 3);
-      ctx.lineTo(counterX + counterW + 5, counterY + 3);
-      ctx.stroke();
+      const counterGrad = ctx.createLinearGradient(counterX, counterY, counterX, counterY + counterH);
+      counterGrad.addColorStop(0, dC1); counterGrad.addColorStop(0.5, dC2); counterGrad.addColorStop(1, dC3);
+      ctx.fillStyle = counterGrad; ctx.fillRect(counterX, counterY, counterW, counterH);
+      ctx.fillStyle = dCTop; ctx.fillRect(counterX - 5, counterY, counterW + 10, 6);
+      ctx.strokeStyle = dA; ctx.lineWidth = 2; ctx.shadowColor = dA; ctx.shadowBlur = 10;
+      ctx.beginPath(); ctx.moveTo(counterX - 5, counterY + 3); ctx.lineTo(counterX + counterW + 5, counterY + 3); ctx.stroke();
       ctx.shadowBlur = 0;
-
-      // "SALES" sign on counter front
-      ctx.fillStyle = "#00FFFF";
-      ctx.shadowColor = "#00FFFF";
-      ctx.shadowBlur = 10;
-      ctx.font = "bold 12px Orbitron, monospace";
-      ctx.textAlign = "center";
+      ctx.fillStyle = dA; ctx.shadowColor = dA; ctx.shadowBlur = 10;
+      ctx.font = "bold 12px Orbitron, monospace"; ctx.textAlign = "center";
       ctx.fillText("SALES DESK", counterX + counterW / 2, counterY + 26);
       ctx.shadowBlur = 0;
 
       // ═══ DISPLAY CARS ON PLATFORMS ═══
       const carDisplays = [
-        // Front row
-        {
-          x: room.roomW * 0.18,
-          y: room.roomH * 0.45,
-          color: "#FF3333",
-          name: "SPORT",
-        },
-        {
-          x: room.roomW * 0.38,
-          y: room.roomH * 0.42,
-          color: "#3366FF",
-          name: "SEDAN",
-        },
-        {
-          x: room.roomW * 0.62,
-          y: room.roomH * 0.42,
-          color: "#FFAA00",
-          name: "MUSCLE",
-        },
-        {
-          x: room.roomW * 0.82,
-          y: room.roomH * 0.45,
-          color: "#33FF99",
-          name: "SUV",
-        },
-        // Back row
-        {
-          x: room.roomW * 0.28,
-          y: room.roomH * 0.58,
-          color: "#AA44FF",
-          name: "COUPE",
-        },
-        {
-          x: room.roomW * 0.72,
-          y: room.roomH * 0.58,
-          color: "#FF66AA",
-          name: "TURBO",
-        },
+        { x: room.roomW * 0.18, y: room.roomH * 0.45, color: "#FF3333", name: "SPORT"  },
+        { x: room.roomW * 0.38, y: room.roomH * 0.42, color: "#3366FF", name: "SEDAN"  },
+        { x: room.roomW * 0.62, y: room.roomH * 0.42, color: "#FFAA00", name: "MUSCLE" },
+        { x: room.roomW * 0.82, y: room.roomH * 0.45, color: "#33FF99", name: "SUV"    },
+        { x: room.roomW * 0.28, y: room.roomH * 0.58, color: "#AA44FF", name: "COUPE"  },
+        { x: room.roomW * 0.72, y: room.roomH * 0.58, color: "#FF66AA", name: "TURBO"  },
       ];
-
       for (const car of carDisplays) {
         const pulse = Math.sin(t * 1.5 + car.x * 0.01) * 0.3 + 0.7;
-        ctx.save();
-        ctx.translate(car.x, car.y);
-
-        // Platform base (circular with glow)
-        ctx.beginPath();
-        ctx.arc(0, 15, 45, 0, Math.PI * 2);
-        ctx.fillStyle = "rgba(0,255,255,0.06)";
-        ctx.fill();
-        ctx.strokeStyle = `rgba(0,255,255,${0.5 * pulse})`;
-        ctx.lineWidth = 2;
-        ctx.stroke();
-
-        // Inner platform ring
-        ctx.beginPath();
-        ctx.arc(0, 15, 35, 0, Math.PI * 2);
-        ctx.strokeStyle = `rgba(255,0,255,${0.3 * pulse})`;
-        ctx.lineWidth = 1;
-        ctx.stroke();
-
-        // Rotating light effect under car
-        ctx.save();
-        ctx.translate(0, 15);
-        ctx.rotate(t * 0.5);
+        ctx.save(); ctx.translate(car.x, car.y);
+        // Platform outer ring
+        ctx.beginPath(); ctx.arc(0, 15, 45, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${dAr},0.06)`; ctx.fill();
+        ctx.strokeStyle = `rgba(${dAr},${0.5 * pulse})`; ctx.lineWidth = 2; ctx.stroke();
+        // Inner ring
+        ctx.beginPath(); ctx.arc(0, 15, 35, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(${dBr},${0.3 * pulse})`; ctx.lineWidth = 1; ctx.stroke();
+        // Rotating light sweep
+        ctx.save(); ctx.translate(0, 15); ctx.rotate(t * 0.5);
         for (let i = 0; i < 4; i++) {
-          ctx.fillStyle = `rgba(0,255,255,${0.15 * pulse})`;
-          ctx.beginPath();
-          ctx.moveTo(0, 0);
+          ctx.fillStyle = `rgba(${dAr},${0.15 * pulse})`;
+          ctx.beginPath(); ctx.moveTo(0, 0);
           ctx.arc(0, 0, 40, (i * Math.PI) / 2, (i * Math.PI) / 2 + 0.4);
-          ctx.closePath();
-          ctx.fill();
+          ctx.closePath(); ctx.fill();
         }
         ctx.restore();
-
-        // ═══ DISPLAY CAR (top-down view) ═══
-        ctx.save();
-        // Car shadow
-        ctx.fillStyle = "rgba(0,0,0,0.4)";
-        ctx.beginPath();
-        ctx.ellipse(3, 18, 28, 12, 0, 0, Math.PI * 2);
-        ctx.fill();
-
         // Car body
+        ctx.save();
+        ctx.fillStyle = "rgba(0,0,0,0.4)"; ctx.beginPath(); ctx.ellipse(3, 18, 28, 12, 0, 0, Math.PI * 2); ctx.fill();
         const carGrad = ctx.createLinearGradient(-25, -15, 25, 15);
-        carGrad.addColorStop(0, car.color);
-        carGrad.addColorStop(0.5, car.color + "CC");
-        carGrad.addColorStop(1, car.color + "88");
+        carGrad.addColorStop(0, car.color); carGrad.addColorStop(0.5, car.color + "CC"); carGrad.addColorStop(1, car.color + "88");
         ctx.fillStyle = carGrad;
-
-        // Main body shape
-        ctx.beginPath();
-        ctx.moveTo(-22, -8);
-        ctx.lineTo(-25, 0);
-        ctx.lineTo(-22, 10);
-        ctx.lineTo(22, 10);
-        ctx.lineTo(25, 0);
-        ctx.lineTo(22, -8);
-        ctx.closePath();
-        ctx.fill();
-
-        // Roof/cabin
-        ctx.fillStyle = "#111122";
-        ctx.beginPath();
-        ctx.roundRect(-12, -5, 24, 12, 3);
-        ctx.fill();
-
-        // Windshield
+        ctx.beginPath(); ctx.moveTo(-22,-8); ctx.lineTo(-25,0); ctx.lineTo(-22,10); ctx.lineTo(22,10); ctx.lineTo(25,0); ctx.lineTo(22,-8); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = "#111122"; ctx.beginPath(); ctx.roundRect(-12,-5,24,12,3); ctx.fill();
         ctx.fillStyle = "rgba(100,200,255,0.4)";
-        ctx.beginPath();
-        ctx.moveTo(-12, -4);
-        ctx.lineTo(-8, -8);
-        ctx.lineTo(8, -8);
-        ctx.lineTo(12, -4);
-        ctx.closePath();
-        ctx.fill();
-
-        // Rear window
-        ctx.beginPath();
-        ctx.moveTo(-10, 6);
-        ctx.lineTo(-6, 10);
-        ctx.lineTo(6, 10);
-        ctx.lineTo(10, 6);
-        ctx.closePath();
-        ctx.fill();
-
-        // Headlights
-        ctx.fillStyle = "#FFFFFF";
-        ctx.shadowColor = "#FFFFFF";
-        ctx.shadowBlur = 6;
-        ctx.fillRect(-20, -6, 4, 3);
-        ctx.fillRect(16, -6, 4, 3);
-        ctx.shadowBlur = 0;
-
-        // Taillights
-        ctx.fillStyle = "#FF0000";
-        ctx.shadowColor = "#FF0000";
-        ctx.shadowBlur = 4;
-        ctx.fillRect(-20, 6, 4, 2);
-        ctx.fillRect(16, 6, 4, 2);
-        ctx.shadowBlur = 0;
-
-        // Wheels
+        ctx.beginPath(); ctx.moveTo(-12,-4); ctx.lineTo(-8,-8); ctx.lineTo(8,-8); ctx.lineTo(12,-4); ctx.closePath(); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(-10,6); ctx.lineTo(-6,10); ctx.lineTo(6,10); ctx.lineTo(10,6); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = "#FFF"; ctx.shadowColor = "#FFF"; ctx.shadowBlur = 6;
+        ctx.fillRect(-20,-6,4,3); ctx.fillRect(16,-6,4,3); ctx.shadowBlur = 0;
+        ctx.fillStyle = "#FF0000"; ctx.shadowColor = "#FF0000"; ctx.shadowBlur = 4;
+        ctx.fillRect(-20,6,4,2); ctx.fillRect(16,6,4,2); ctx.shadowBlur = 0;
         ctx.fillStyle = "#1a1a1a";
-        ctx.beginPath();
-        ctx.arc(-16, -10, 5, 0, Math.PI * 2);
-        ctx.arc(16, -10, 5, 0, Math.PI * 2);
-        ctx.arc(-16, 12, 5, 0, Math.PI * 2);
-        ctx.arc(16, 12, 5, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Wheel rims
+        ctx.beginPath(); ctx.arc(-16,-10,5,0,Math.PI*2); ctx.arc(16,-10,5,0,Math.PI*2); ctx.arc(-16,12,5,0,Math.PI*2); ctx.arc(16,12,5,0,Math.PI*2); ctx.fill();
         ctx.fillStyle = "#444455";
-        ctx.beginPath();
-        ctx.arc(-16, -10, 3, 0, Math.PI * 2);
-        ctx.arc(16, -10, 3, 0, Math.PI * 2);
-        ctx.arc(-16, 12, 3, 0, Math.PI * 2);
-        ctx.arc(16, 12, 3, 0, Math.PI * 2);
-        ctx.fill();
-
+        ctx.beginPath(); ctx.arc(-16,-10,3,0,Math.PI*2); ctx.arc(16,-10,3,0,Math.PI*2); ctx.arc(-16,12,3,0,Math.PI*2); ctx.arc(16,12,3,0,Math.PI*2); ctx.fill();
         ctx.restore();
-
-        // Car name label
-        ctx.fillStyle = "#FFFFFF";
-        ctx.shadowColor = car.color;
-        ctx.shadowBlur = 8;
-        ctx.font = "bold 8px Orbitron, monospace";
-        ctx.textAlign = "center";
-        ctx.fillText(car.name, 0, 45);
-        ctx.shadowBlur = 0;
-
-        // Price tag
-        ctx.fillStyle = "#00FF88";
-        ctx.font = "7px Orbitron, monospace";
+        // Car label
+        ctx.fillStyle = "#FFF"; ctx.shadowColor = car.color; ctx.shadowBlur = 8;
+        ctx.font = "bold 8px Orbitron, monospace"; ctx.textAlign = "center";
+        ctx.fillText(car.name, 0, 45); ctx.shadowBlur = 0;
+        ctx.fillStyle = dA; ctx.font = "7px Orbitron, monospace";
         ctx.fillText("ON DISPLAY", 0, 54);
-
         ctx.restore();
       }
 
       // Ambient particles
       for (let i = 0; i < 8; i++) {
         const px = (t * 30 + i * 100) % room.roomW;
-        const py =
-          S * 1.5 + Math.sin(t + i * 2) * 20 + (i * (room.roomH - S * 3)) / 8;
+        const py = S * 1.5 + Math.sin(t + i * 2) * 20 + (i * (room.roomH - S * 3)) / 8;
         const alpha = Math.sin(t * 2 + i) * 0.3 + 0.4;
-        ctx.fillStyle =
-          i % 2 === 0 ? `rgba(0,255,255,${alpha})` : `rgba(255,0,255,${alpha})`;
-        ctx.beginPath();
-        ctx.arc(px, py, 1.5, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.fillStyle = i % 2 === 0 ? `rgba(${dAr},${alpha})` : `rgba(${dBr},${alpha})`;
+        ctx.beginPath(); ctx.arc(px, py, 1.5, 0, Math.PI * 2); ctx.fill();
       }
 
       // Side neon strips
-      ctx.fillStyle = "rgba(255,0,255,0.2)";
+      ctx.fillStyle = `rgba(${dBr},0.2)`;
       ctx.fillRect(S, S * 1.5, 3, room.roomH - S * 3);
       ctx.fillRect(room.roomW - S - 3, S * 1.5, 3, room.roomH - S * 3);
     } else if (isGalactica) {

@@ -3108,6 +3108,65 @@ class GameMap {
                 }
               }
             }
+          } else if (cfg.hardcore) {
+            // ═══════════════════════════════════════════════════════════════
+            //  HARDCORE: Neon City shapes + fire/ember atmosphere
+            // ═══════════════════════════════════════════════════════════════
+            const bseed = (x * 41 + y * 59) % 8;
+            ctx.fillStyle = this.buildingColors[y][x];
+            if (bseed === 0) {
+              ctx.fillRect(wx + S*0.2, wy, S*0.6, S);
+              ctx.fillStyle = 'rgba(0,0,0,0.3)';
+              ctx.fillRect(wx + S*0.2, wy, S*0.6, S*0.1);
+            } else if (bseed === 1) {
+              ctx.fillRect(wx, wy, S*0.5, S);
+              ctx.fillRect(wx, wy + S*0.5, S, S*0.5);
+            } else if (bseed === 2) {
+              ctx.fillRect(wx + S*0.1, wy + S*0.6, S*0.8, S*0.4);
+              ctx.fillRect(wx + S*0.2, wy + S*0.3, S*0.6, S*0.7);
+              ctx.fillRect(wx + S*0.3, wy, S*0.4, S);
+            } else if (bseed === 3) {
+              ctx.fillRect(wx + S*0.05, wy, S*0.35, S);
+              ctx.fillRect(wx + S*0.6, wy, S*0.35, S);
+              ctx.fillRect(wx + S*0.2, wy + S*0.7, S*0.6, S*0.3);
+            } else if (bseed === 4) {
+              ctx.fillRect(wx + S*0.15, wy + S*0.3, S*0.7, S*0.7);
+              ctx.beginPath(); ctx.arc(wx + S*0.5, wy + S*0.35, S*0.35, Math.PI, 0); ctx.fill();
+            } else if (bseed === 5) {
+              ctx.beginPath();
+              const hcx2 = wx + S*0.5, hcy2 = wy + S*0.5;
+              for (let i = 0; i < 6; i++) {
+                const ang2 = (Math.PI / 3) * i - Math.PI / 2;
+                const hx = hcx2 + Math.cos(ang2) * S*0.42, hy = hcy2 + Math.sin(ang2) * S*0.42;
+                if (i === 0) ctx.moveTo(hx, hy); else ctx.lineTo(hx, hy);
+              }
+              ctx.closePath(); ctx.fill();
+            } else if (bseed === 6) {
+              ctx.beginPath();
+              ctx.moveTo(wx + S*0.2, wy); ctx.lineTo(wx + S*0.9, wy);
+              ctx.lineTo(wx + S*0.8, wy + S); ctx.lineTo(wx + S*0.1, wy + S);
+              ctx.closePath(); ctx.fill();
+            } else {
+              ctx.fillRect(wx + S*0.05, wy + S*0.4, S*0.9, S*0.6);
+              ctx.fillRect(wx + S*0.15, wy, S*0.7, S);
+            }
+            // Fire/ember neon edge glow
+            ctx.strokeStyle = cfg.neonColors[(x + y) % cfg.neonColors.length] + '77';
+            ctx.lineWidth = 1.5; ctx.strokeRect(wx + 2, wy + 2, S - 4, S - 4);
+            // Orange window glow dots
+            const winHC = cfg.windowColors[(x * 3 + y * 7) % cfg.windowColors.length];
+            ctx.fillStyle = winHC;
+            for (let wy2 = 0; wy2 < 3; wy2++) {
+              for (let wx2 = 0; wx2 < 3; wx2++) {
+                if (Math.sin(x * 5.7 + y * 3.3 + wx2 * 7 + wy2 * 11) > 0.1)
+                  ctx.fillRect(wx + 12 + wx2 * 22, wy + 12 + wy2 * 22, 8, 6);
+              }
+            }
+            // Blood-rain shadow strip on top face
+            if ((x * 13 + y * 17) % 4 === 0) {
+              ctx.fillStyle = 'rgba(180,20,0,0.13)';
+              ctx.fillRect(wx + S*0.15, wy, S*0.7, S*0.09);
+            }
           } else if (cfg.blitz) {
             // ═══════════════════════════════════════════════════════════════
             //  BLITZ: Massive speed-zone buildings with fire neon
@@ -3631,9 +3690,11 @@ class GameMap {
     const isGalactica = !!this.config.galactica;
     const isBlitz     = !!this.config.blitz;
     const isRobot     = !!this.config.robot;
+    const isHardcore  = !!this.config.hardcore;
     const isNeonDealer  = this.config.id === 'neon_city' && door.specialType === 'dealership';
     const isGalDealer   = isGalactica && door.specialType === 'dealership';
     const isWastelandDealer = !!this.config.wasteland && door.specialType === 'dealership';
+    const isHardcoreDealer  = isHardcore && door.specialType === 'dealership';
     const isNeonArcade  = this.config.id === 'neon_city' && door.bTypeIdx === 4;
     const isGalArcade   = isGalactica && door.bTypeIdx === 4;
     const isGalMarket   = isGalactica && door.bTypeIdx === 3;
@@ -3642,7 +3703,7 @@ class GameMap {
     const isGalPharmacy = isGalactica && door.bTypeIdx === 5;
     const isGalRadio    = isGalactica && door.bTypeIdx === 22;
     const isZombieMap   = !!this.config.zombie;
-    const useLargeDealer = isNeonDealer || isGalDealer || isWastelandDealer;
+    const useLargeDealer = isNeonDealer || isGalDealer || isWastelandDealer || isHardcoreDealer;
     const useLargeArcade = isNeonArcade || isGalArcade;
     const useLargeMarket = isGalMarket;
     const useLargeClub   = isGalClub;
@@ -3651,11 +3712,12 @@ class GameMap {
     const useLargeRadio  = isGalRadio;
     // All zombie buildings use the large arcade layout (1080×840)
     const useLargeZombie = isZombieMap;
-    // All blitz/robot buildings use large rooms (same as galactica)
-    const useLargeBlitz  = isBlitz;
-    const useLargeRobot  = isRobot;
+    // All blitz/robot/hardcore buildings use large rooms (same as galactica)
+    const useLargeBlitz    = isBlitz;
+    const useLargeRobot    = isRobot;
+    const useLargeHardcore = isHardcore;
     const useLargeUnderground = door.bTypeIdx === 23; // Underground Lab always large
-    const useLarge = useLargeDealer || useLargeArcade || useLargeMarket || useLargeClub || useLargeRest || useLargePharm || useLargeRadio || useLargeZombie || useLargeBlitz || useLargeRobot || useLargeUnderground;
+    const useLarge = useLargeDealer || useLargeArcade || useLargeMarket || useLargeClub || useLargeRest || useLargePharm || useLargeRadio || useLargeZombie || useLargeBlitz || useLargeRobot || useLargeHardcore || useLargeUnderground;
     const layout = useLargeDealer ? ROOM_LAYOUT_DEALER_NEON
                  : useLargeArcade ? ROOM_LAYOUT_ARCADE_NEON
                  : useLargeMarket ? ROOM_LAYOUT_DEALER_NEON
@@ -3666,6 +3728,7 @@ class GameMap {
                  : useLargeZombie ? ROOM_LAYOUT_ARCADE_NEON
                  : useLargeBlitz      ? ROOM_LAYOUT_ARCADE_NEON
                  : useLargeRobot      ? ROOM_LAYOUT_ARCADE_NEON
+                 : useLargeHardcore   ? ROOM_LAYOUT_ARCADE_NEON
                  : useLargeUnderground? ROOM_LAYOUT_ARCADE_NEON
                  : door.type === 2 ? ROOM_LAYOUT_2 : ROOM_LAYOUT_1;
     const RH     = layout.length;
