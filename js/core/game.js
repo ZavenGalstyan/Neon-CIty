@@ -3420,8 +3420,8 @@ class Game {
             // Officer standing guard next to the criminal's cell (top-right)
             { x: room.roomW * 0.68, y: room.roomH * 0.26, sitting: false, label: "SGT. KELLY" },
           ];
-        } else if (door.bTypeIdx === 13 && !!this.map?.config?.wasteland) {
-          // WASTELAND TECH LAB: Tech shop with vendor and customers, no enemies
+        } else if (door.bTypeIdx === 13 && (!!this.map?.config?.wasteland || !!this.map?.config?.robot)) {
+          // WASTELAND / ROBOT CITY TECH LAB: Tech shop with vendor and customers, no enemies
           room.isTechShop = true;
           this._techShopCustomers = [
             // Customer browsing gadgets
@@ -5138,6 +5138,138 @@ class Game {
       } // end default restaurant
     } else if (type === 1) {
       // OFFICE
+      if (!!this.map?.config?.robot) {
+        // ═══ ROBOT CITY: CORPORATE COMMAND CENTER ═══
+        const t1 = performance.now() / 1000;
+
+        // ── Sign (top-center) ─────────────────────────────────────────────
+        ctx.fillStyle = "#040c14"; rr(cx-110, topY+2, 220, 20, 3); ctx.fill();
+        ctx.strokeStyle = "#00CCFF"; ctx.lineWidth = 1.5; ctx.strokeRect(cx-110, topY+2, 220, 20);
+        ctx.fillStyle = "#00CCFF"; ctx.shadowColor = "#00CCFF"; ctx.shadowBlur = 12;
+        ctx.font = "bold 10px Orbitron, monospace"; ctx.textAlign = "center";
+        ctx.fillText("⬡  RCORP COMMAND NODE  ⬡", cx, topY + 15);
+        ctx.shadowBlur = 0;
+
+        // ── Hexagonal command table (center) ─────────────────────────────
+        ctx.fillStyle = "#0c1a26"; ctx.strokeStyle = "#00CCAA"; ctx.lineWidth = 2;
+        ctx.beginPath();
+        for (let i = 0; i < 6; i++) {
+          const a = (Math.PI/3)*i - Math.PI/6;
+          const hx = cx + Math.cos(a)*62, hy = midY + Math.sin(a)*38;
+          i===0 ? ctx.moveTo(hx,hy) : ctx.lineTo(hx,hy);
+        }
+        ctx.closePath(); ctx.fill(); ctx.stroke();
+        // Table surface glow
+        const tglow = Math.sin(t1*1.5)*0.5+0.5;
+        ctx.fillStyle = `rgba(0,200,180,${0.05+tglow*0.04})`;
+        ctx.beginPath();
+        for (let i = 0; i < 6; i++) {
+          const a = (Math.PI/3)*i - Math.PI/6;
+          ctx.lineTo(cx + Math.cos(a)*56, midY + Math.sin(a)*34);
+        }
+        ctx.closePath(); ctx.fill();
+        // Holographic display on table
+        ctx.strokeStyle = `rgba(0,220,255,${0.3+tglow*0.2})`; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.ellipse(cx, midY-8, 40, 22, 0, 0, Math.PI*2); ctx.stroke();
+        ctx.fillStyle = `rgba(0,180,220,${0.08+tglow*0.06})`;
+        ctx.beginPath(); ctx.ellipse(cx, midY-8, 40, 22, 0, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = `rgba(0,255,200,${0.4+tglow*0.3})`; ctx.font = "bold 6px monospace"; ctx.textAlign = "center";
+        ctx.fillText("SECTOR MAP", cx, midY-5);
+        // Seated executives around table — draw chair + person figure
+        for (let i = 0; i < 6; i++) {
+          const a = (Math.PI/3)*i;
+          const sx3 = cx + Math.cos(a)*80, sy3 = midY + Math.sin(a)*50;
+          // Chair seat
+          ctx.fillStyle = "#0e1c2c"; ctx.strokeStyle = "#00AACC"; ctx.lineWidth = 1;
+          rr(sx3-8, sy3, 16, 11, 3); ctx.fill(); ctx.stroke();
+          // Chair back
+          ctx.fillStyle = "#1a2c3c"; rr(sx3-6, sy3-10, 12, 10, 2); ctx.fill(); ctx.stroke();
+          // Person: legs
+          ctx.fillStyle = "#2a3a50";
+          ctx.fillRect(sx3-5, sy3+5, 4, 8);
+          ctx.fillRect(sx3+1, sy3+5, 4, 8);
+          // Body (suit jacket)
+          ctx.fillStyle = "#1e3050"; rr(sx3-6, sy3-8, 12, 10, 2); ctx.fill();
+          // Tie accent
+          ctx.fillStyle = "#00AACC"; ctx.fillRect(sx3-1, sy3-7, 2, 7);
+          // Head
+          ctx.fillStyle = "#DDBB99";
+          ctx.beginPath(); ctx.arc(sx3, sy3-13, 5, 0, Math.PI*2); ctx.fill();
+          // Hair
+          ctx.fillStyle = "#332211";
+          ctx.beginPath(); ctx.arc(sx3, sy3-15, 4, Math.PI, 0); ctx.fill();
+        }
+
+        // ── Left wall: data monitors array ────────────────────────────────
+        const monW = 44, monH = 30, monY = topY+30;
+        for (let m = 0; m < 3; m++) {
+          const mx = W*0.06 + m*(monW+8);
+          ctx.fillStyle = "#080e14"; rr(mx, monY, monW, monH, 2); ctx.fill();
+          ctx.strokeStyle = "#00CCAA"; ctx.lineWidth = 1; ctx.strokeRect(mx, monY, monW, monH);
+          // Animated scan line
+          const sl = ((t1*35 + m*25) % monH);
+          ctx.fillStyle = `rgba(0,220,180,0.15)`; ctx.fillRect(mx+1, monY+sl, monW-2, 2);
+          // Data bars
+          for (let b = 0; b < 5; b++) {
+            const bh = 6 + ((m*7+b*3) % 14);
+            ctx.fillStyle = b%2===0 ? `rgba(0,200,255,0.5)` : `rgba(0,255,160,0.4)`;
+            ctx.fillRect(mx+4+b*8, monY+monH-3-bh, 6, bh);
+          }
+        }
+        // Monitor stand
+        ctx.fillStyle = "#0c1820"; ctx.fillRect(W*0.06, monY+monH, (monW+8)*3-8, 6);
+        ctx.fillStyle = "#00CCAA"; ctx.font = "bold 7px monospace"; ctx.textAlign = "center";
+        ctx.fillText("SECTOR FEED", W*0.06+(monW+8)*1.5-4, monY+monH+14);
+
+        // ── Right wall: executive pod / server unit ────────────────────────
+        const execX = W*0.76, execY = topY+10;
+        ctx.fillStyle = "#0c1a24"; ctx.strokeStyle = "#00CCFF"; ctx.lineWidth = 1.5;
+        rr(execX, execY, 70, 90, 4); ctx.fill(); ctx.stroke();
+        // Server rows
+        for (let sr = 0; sr < 5; sr++) {
+          ctx.fillStyle = "#0a1620"; rr(execX+5, execY+8+sr*16, 60, 11, 2); ctx.fill();
+          // LED indicators
+          for (let led = 0; led < 4; led++) {
+            const on = (sr*11+led*7) % 3 !== 0;
+            ctx.fillStyle = on ? (led%2===0 ? '#00FF88':'#00AAFF') : '#0a1a24';
+            ctx.fillRect(execX+8+led*12, execY+12+sr*16, 7, 3);
+          }
+        }
+        ctx.fillStyle = "#00CCFF"; ctx.font = "bold 7px monospace"; ctx.textAlign = "center";
+        ctx.fillText("EXEC NODE", execX+35, execY+95);
+
+        // ── Bottom: document printers / terminals ─────────────────────────
+        for (let t2 = 0; t2 < 3; t2++) {
+          const tx2 = W*0.12 + t2*(W*0.24), ty2 = H*0.72;
+          ctx.fillStyle = "#0c1820"; rr(tx2, ty2, 54, 36, 3); ctx.fill();
+          ctx.strokeStyle = "#1a3040"; ctx.lineWidth = 1; ctx.strokeRect(tx2, ty2, 54, 36);
+          ctx.fillStyle = "#081220"; rr(tx2+4, ty2+4, 46, 20, 2); ctx.fill();
+          ctx.strokeStyle = "#00AACC"; ctx.lineWidth = 0.8; ctx.strokeRect(tx2+4, ty2+4, 46, 20);
+          // Paper output slot
+          ctx.fillStyle = "#EEEEFF"; ctx.fillRect(tx2+10, ty2+26, 24, 6);
+          ctx.fillStyle = "#AABBCC"; ctx.font = "5px monospace"; ctx.textAlign = "center";
+          ctx.fillText("OUTPUT", tx2+27, ty2+35);
+        }
+
+        // ── Plants (robot city: metal bonsai sculptures) ──────────────────
+        for (const [px2,py2] of [[W*0.06,H*0.66],[W*0.84,H*0.66]]) {
+          ctx.fillStyle = "#1a2830"; rr(px2-8, py2, 16, 12, 2); ctx.fill();
+          ctx.strokeStyle = "#2a3a4a"; ctx.lineWidth = 1; ctx.strokeRect(px2-8, py2, 16, 12);
+          // Chrome bonsai trunk
+          ctx.fillStyle = "#4a6a7a"; ctx.fillRect(px2-1, py2-18, 3, 18);
+          // Metallic branches
+          for (let br = 0; br < 4; br++) {
+            const ba = Math.PI*0.6 + br*Math.PI*0.25;
+            ctx.strokeStyle = "#5a8090"; ctx.lineWidth = 1;
+            ctx.beginPath(); ctx.moveTo(px2, py2-10); ctx.lineTo(px2+Math.cos(ba)*12, py2-10+Math.sin(ba)*8); ctx.stroke();
+          }
+          ctx.fillStyle = `rgba(0,220,180,${0.5+Math.sin(t1*2)*0.3})`; ctx.shadowColor="#00DDBB"; ctx.shadowBlur=4;
+          ctx.beginPath(); ctx.arc(px2, py2-20, 8, 0, Math.PI*2); ctx.fill();
+          ctx.shadowBlur = 0;
+        }
+
+      } else {
+      // OFFICE (default)
       // ── Meeting table (center) ───────────────────
       ctx.fillStyle = "#2a3a4a";
       ctx.strokeStyle = "#4a6a8a";
@@ -5239,6 +5371,7 @@ class Game {
         ctx.fill();
       }
       ctx.shadowBlur = 0;
+      } // end else (default office)
     } else if (type === 2) {
       // HOTEL
       // ── Reception desk ───────────────────────────
@@ -10721,6 +10854,154 @@ class Game {
       }
     } else if (type === 19) {
       // DOJO
+      if (!!this.map?.config?.robot) {
+        // ═══ ROBOT CITY: TRADITIONAL KARATE DOJO ═══
+
+        // ── Dojo sign (top-center) ─────────────────────────────────────────
+        ctx.fillStyle = "#1a0e06"; rr(cx-110, topY+2, 220, 20, 3); ctx.fill();
+        ctx.strokeStyle = "#CC4400"; ctx.lineWidth = 1.5; ctx.strokeRect(cx-110, topY+2, 220, 20);
+        ctx.fillStyle = "#FF8833"; ctx.shadowColor="#CC4400"; ctx.shadowBlur=8;
+        ctx.font = "bold 11px serif"; ctx.textAlign = "center";
+        ctx.fillText("⛩  IRON FIST DOJO  ⛩", cx, topY+15);
+        ctx.shadowBlur = 0;
+
+        // ── Large tatami mat floor (center) ───────────────────────────────
+        ctx.fillStyle = "#5a3d18"; rr(cx-W*0.38, midY-W*0.24, W*0.76, W*0.48, 4); ctx.fill();
+        ctx.strokeStyle = "#8a6040"; ctx.lineWidth = 2; ctx.strokeRect(cx-W*0.38, midY-W*0.24, W*0.76, W*0.48);
+        // Tatami grid lines
+        ctx.strokeStyle = "#7a5030"; ctx.lineWidth = 1;
+        for (let gi = -2; gi <= 2; gi++) {
+          ctx.beginPath(); ctx.moveTo(cx+gi*W*0.19, midY-W*0.24); ctx.lineTo(cx+gi*W*0.19, midY+W*0.24); ctx.stroke();
+        }
+        ctx.beginPath(); ctx.moveTo(cx-W*0.38, midY); ctx.lineTo(cx+W*0.38, midY); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(cx-W*0.38, midY-W*0.12); ctx.lineTo(cx+W*0.38, midY-W*0.12); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(cx-W*0.38, midY+W*0.12); ctx.lineTo(cx+W*0.38, midY+W*0.12); ctx.stroke();
+        // Center fighting circle
+        ctx.strokeStyle = "rgba(180,100,30,0.55)"; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(cx, midY, 52, 0, Math.PI*2); ctx.stroke();
+        // Tatami edge border
+        ctx.fillStyle = "#3a2008"; rr(cx-W*0.38, midY-W*0.24, W*0.76, 6, [4,4,0,0]); ctx.fill();
+        ctx.fillStyle = "#3a2008"; rr(cx-W*0.38, midY+W*0.24-6, W*0.76, 6, [0,0,4,4]); ctx.fill();
+
+        // ── Two sparring figures on the mat ───────────────────────────────
+        // Helper to draw a top-down karateka in kimono
+        const drawKarateka = (kx, ky, facingLeft, beltColor) => {
+          // Kimono body (white gi)
+          ctx.fillStyle = "#EEEEEE"; rr(kx-8, ky-10, 16, 20, 2); ctx.fill();
+          // Kimono lapels (V-neck overlap lines)
+          ctx.strokeStyle = "#CCCCCC"; ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.moveTo(kx-3, ky-10); ctx.lineTo(kx, ky-2); ctx.lineTo(kx+3, ky-10); ctx.stroke();
+          // Belt (obi)
+          ctx.fillStyle = beltColor; ctx.fillRect(kx-8, ky-2, 16, 4);
+          // Kimono sleeves (wide)
+          ctx.fillStyle = "#EEEEEE";
+          ctx.fillRect(kx + (facingLeft ? 7:  -15), ky-8, 8, 6);
+          ctx.fillRect(kx + (facingLeft ? 7: -15), ky+2, 8, 6);
+          // Head
+          ctx.fillStyle = "#DDBB88"; ctx.beginPath(); ctx.arc(kx, ky-16, 6, 0, Math.PI*2); ctx.fill();
+          // Hair (dark)
+          ctx.fillStyle = "#221100"; ctx.beginPath(); ctx.arc(kx, ky-18, 5, Math.PI, 0); ctx.fill();
+          // Headband
+          ctx.strokeStyle = "#CC2200"; ctx.lineWidth = 2;
+          ctx.beginPath(); ctx.moveTo(kx-5, ky-20); ctx.lineTo(kx+5, ky-20); ctx.stroke();
+          // Legs/pants
+          ctx.fillStyle = "#DDDDDD";
+          ctx.fillRect(kx-5, ky+10, 4, 10);
+          ctx.fillRect(kx+1, ky+10, 4, 10);
+        };
+        // Fighter 1 — left, facing right, black belt
+        drawKarateka(cx-30, midY, false, "#111111");
+        // Fighter 2 — right, facing left, red belt
+        drawKarateka(cx+30, midY, true, "#CC2200");
+
+        // ── Left wall: weapon rack (traditional) ──────────────────────────
+        ctx.fillStyle = "#2a1808"; rr(W*0.05, topY+26, 56, 110, 3); ctx.fill();
+        ctx.strokeStyle = "#8a5028"; ctx.lineWidth = 1.5; ctx.strokeRect(W*0.05, topY+26, 56, 110);
+        // Horizontal rack bars
+        ctx.fillStyle = "#5a3418";
+        for (let rb = 0; rb < 4; rb++) ctx.fillRect(W*0.05+5, topY+32+rb*26, 46, 4);
+        // Weapons hanging on rack: bo staff, katana, naginata, tonfa
+        // Bo staff (long vertical)
+        ctx.fillStyle = "#8B4513"; ctx.fillRect(W*0.05+10, topY+30, 5, 50);
+        ctx.fillStyle = "#6a3410"; ctx.fillRect(W*0.05+11, topY+30, 2, 50);
+        // Katana (diagonal)
+        ctx.save();
+        ctx.translate(W*0.05+30, topY+55);
+        ctx.rotate(0.15);
+        ctx.fillStyle = "#AAAAAA"; ctx.fillRect(-2, -24, 4, 48); // blade
+        ctx.fillStyle = "#8B4513"; ctx.fillRect(-3, 22, 6, 10);  // handle
+        ctx.fillStyle = "#FFD700"; ctx.fillRect(-4, 20, 8, 4);   // tsuba (guard)
+        ctx.restore();
+        // Naginata
+        ctx.fillStyle = "#8B4513"; ctx.fillRect(W*0.05+44, topY+30, 4, 60);
+        ctx.fillStyle = "#CCCCCC"; ctx.beginPath();
+        ctx.moveTo(W*0.05+44, topY+30); ctx.lineTo(W*0.05+48, topY+30); ctx.lineTo(W*0.05+46, topY+18); ctx.closePath(); ctx.fill();
+        // Tonfa pair
+        ctx.fillStyle = "#6B3410"; ctx.fillRect(W*0.05+10, topY+90, 4, 30); ctx.fillRect(W*0.05+40, topY+90, 4, 30);
+        ctx.fillStyle = "#7B4420"; ctx.fillRect(W*0.05+12, topY+98, 26, 4); // cross bar
+        // Sign
+        ctx.fillStyle = "#FF8833"; ctx.font = "bold 7px serif"; ctx.textAlign = "center";
+        ctx.fillText("武 ARMS", W*0.05+28, topY+143);
+
+        // ── Top-center-right: 3 calligraphy scrolls on wall ───────────────
+        const scrollTexts = [["武","道","士"],["力","強","心"],["礼","義","仁"]];
+        for (let sc = 0; sc < 3; sc++) {
+          const scx = cx+W*0.06 + sc*42, scy = topY+4;
+          ctx.fillStyle = "#F5E8D0"; rr(scx, scy, 28, 72, 3); ctx.fill();
+          ctx.strokeStyle = "#8a6040"; ctx.lineWidth = 1; ctx.strokeRect(scx, scy, 28, 72);
+          // Scroll rod tops/bottom
+          ctx.fillStyle = "#8B4513"; ctx.fillRect(scx-2, scy, 32, 5); ctx.fillRect(scx-2, scy+67, 32, 5);
+          // Kanji
+          ctx.fillStyle = "#1a0800"; ctx.font = "bold 14px serif"; ctx.textAlign = "center";
+          for (let k = 0; k < 3; k++) ctx.fillText(scrollTexts[sc][k], scx+14, scy+18+k*20);
+        }
+
+        // ── Right wall: punching bags + dummy ─────────────────────────────
+        // Heavy bag 1
+        const hbx1 = W*0.80, hby1 = topY+10;
+        ctx.fillStyle = "#883322"; rr(hbx1, hby1+4, 22, 46, 5); ctx.fill();
+        ctx.strokeStyle = "#AA4433"; ctx.lineWidth = 1.5; ctx.strokeRect(hbx1, hby1+4, 22, 46);
+        // Bag straps
+        ctx.strokeStyle = "#4a2010"; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(hbx1+11, hby1); ctx.lineTo(hbx1+11, hby1+4); ctx.stroke();
+        // Band seams on bag
+        ctx.strokeStyle = "#662211"; ctx.lineWidth = 1;
+        for (let bnd=0;bnd<3;bnd++) { ctx.beginPath(); ctx.moveTo(hbx1, hby1+14+bnd*12); ctx.lineTo(hbx1+22, hby1+14+bnd*12); ctx.stroke(); }
+
+        // Speed bag 2
+        const hbx2 = W*0.86, hby2 = topY+20;
+        ctx.fillStyle = "#AA4422"; ctx.beginPath(); ctx.ellipse(hbx2+9, hby2+16, 9, 16, 0, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = "#CC5533"; ctx.beginPath(); ctx.ellipse(hbx2+9, hby2+12, 7, 10, 0, 0, Math.PI*2); ctx.fill();
+        ctx.strokeStyle = "#4a1a00"; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(hbx2+9, hby2); ctx.lineTo(hbx2+9, hby2+4); ctx.stroke();
+
+        // Wooden dummy (mook jong)
+        const wdx = W*0.80, wdy = topY+65;
+        ctx.fillStyle = "#8B5A2B"; ctx.fillRect(wdx+8, wdy, 10, 50); // trunk
+        ctx.fillStyle = "#6B4520"; ctx.fillRect(wdx+4, wdy+12, 28, 5); // arm 1
+        ctx.fillRect(wdx+4, wdy+26, 28, 5); // arm 2
+        ctx.fillRect(wdx+10, wdy+40, 18, 5); // low arm
+        // Base
+        ctx.fillStyle = "#5a3a1a"; ctx.fillRect(wdx+2, wdy+48, 22, 8);
+        ctx.fillStyle = "#FF8833"; ctx.font = "bold 6px serif"; ctx.textAlign = "center";
+        ctx.fillText("MU JONG", wdx+13, wdy+64);
+
+        // ── Bottom: meditation cushions ────────────────────────────────────
+        for (let mc = 0; mc < 4; mc++) {
+          const mcx = W*0.14+mc*W*0.18, mcy = H*0.78;
+          // Zabuton (flat square cushion)
+          ctx.fillStyle = mc%2===0 ? "#8B1A1A" : "#1A3A8B";
+          ctx.strokeStyle = mc%2===0 ? "#AA2222" : "#2244AA";
+          ctx.lineWidth = 1; rr(mcx, mcy, 32, 22, 4); ctx.fill(); ctx.strokeRect(mcx, mcy, 32, 22);
+          // Cushion trim lines
+          ctx.strokeStyle = "rgba(255,255,255,0.2)"; ctx.lineWidth = 0.8;
+          ctx.strokeRect(mcx+3, mcy+3, 26, 16);
+          // Center button
+          ctx.fillStyle = "rgba(255,255,255,0.35)"; ctx.beginPath(); ctx.arc(mcx+16, mcy+11, 3, 0, Math.PI*2); ctx.fill();
+        }
+
+      } else {
+      // DOJO (default)
       // ── Tatami mat (center) ──────────────────────
       ctx.fillStyle = "#4a3820";
       ctx.strokeStyle = "#8a6840";
@@ -10790,6 +11071,7 @@ class Game {
       ctx.textAlign = "center";
       ctx.fillText("武", cx + W * 0.1 + 15, topY + 30);
       ctx.fillText("道", cx + W * 0.1 + 15, topY + 54);
+      } // end else (default dojo)
     } else if (type === 20) {
       // SAFEHOUSE
       // ── Bed (top-left) ────────────────────────────
@@ -10869,6 +11151,148 @@ class Game {
       }
     } else if (type === 21) {
       // CHOP SHOP
+      if (!!this.map?.config?.robot) {
+        // ═══ ROBOT CITY: CHOP SHOP ═══
+        const tcs = performance.now() / 1000;
+
+        // ── Sign ──────────────────────────────────────────────────────────
+        ctx.fillStyle = "#0e0a04"; rr(cx-130, topY+2, 260, 20, 3); ctx.fill();
+        ctx.strokeStyle = "#FF8800"; ctx.lineWidth = 1.5; ctx.strokeRect(cx-130, topY+2, 260, 20);
+        ctx.fillStyle = "#FFAA00"; ctx.shadowColor="#FF6600"; ctx.shadowBlur=10;
+        ctx.font = "bold 10px Orbitron, monospace"; ctx.textAlign = "center";
+        ctx.fillText("⚙  STEEL CIRCUIT CHOP SHOP  ⚙", cx, topY+15);
+        ctx.shadowBlur = 0;
+
+        // ── Main car body being stripped (center) ─────────────────────────
+        // Car shadow
+        ctx.fillStyle = "rgba(0,0,0,0.4)"; rr(cx-66, midY-18, 132, 44, 6); ctx.fill();
+        // Car body (partially stripped — dark metal)
+        ctx.fillStyle = "#2a3040"; ctx.strokeStyle = "#4a5060"; ctx.lineWidth = 2;
+        rr(cx-62, midY-16, 124, 38, 5); ctx.fill(); ctx.stroke();
+        // Roof/cabin section
+        ctx.fillStyle = "#222838"; rr(cx-38, midY-28, 76, 16, 4); ctx.fill(); ctx.stroke();
+        // Windshield — cracked
+        ctx.fillStyle = "#0a1420"; rr(cx-30, midY-26, 60, 12, 2); ctx.fill();
+        ctx.strokeStyle = "#AABBCC44"; ctx.lineWidth = 0.8;
+        ctx.beginPath(); ctx.moveTo(cx-10, midY-26); ctx.lineTo(cx+5, midY-14); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(cx+8, midY-26); ctx.lineTo(cx-2, midY-18); ctx.stroke();
+        // Wheel wells — stripped (bare axle circles)
+        ctx.strokeStyle = "#556677"; ctx.lineWidth = 2;
+        for (const wx2 of [cx-42, cx+42]) {
+          ctx.fillStyle = "#111820"; ctx.beginPath(); ctx.arc(wx2, midY+14, 14, 0, Math.PI*2); ctx.fill();
+          ctx.strokeStyle = "#3a4a5a"; ctx.beginPath(); ctx.arc(wx2, midY+14, 14, 0, Math.PI*2); ctx.stroke();
+          // Bare axle bolt
+          ctx.fillStyle = "#5a6a7a"; ctx.beginPath(); ctx.arc(wx2, midY+14, 5, 0, Math.PI*2); ctx.fill();
+        }
+        // Car body damage marks
+        ctx.strokeStyle = "rgba(255,140,0,0.25)"; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(cx-20, midY-12); ctx.lineTo(cx, midY+10); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(cx+18, midY-8); ctx.lineTo(cx+30, midY+8); ctx.stroke();
+        // Engine exposed (hood open, engine block visible)
+        ctx.fillStyle = "#3a2810"; rr(cx+30, midY-14, 32, 26, 2); ctx.fill();
+        ctx.strokeStyle = "#886633"; ctx.lineWidth = 1; ctx.strokeRect(cx+30, midY-14, 32, 26);
+        ctx.fillStyle = "#554422";
+        for (let eb=0;eb<3;eb++) ctx.fillRect(cx+33+eb*8, midY-10, 6, 18); // cylinders
+        ctx.fillStyle = "#FFAA00"; ctx.shadowColor="#FF6600"; ctx.shadowBlur=6;
+        ctx.beginPath(); ctx.arc(cx+60, midY-10, 4, 0, Math.PI*2); ctx.fill(); // spark
+        ctx.shadowBlur=0;
+
+        // ── Top-left: dismantled parts pile ───────────────────────────────
+        const partsX = W*0.05, partsY = topY+28;
+        ctx.fillStyle = "#1a2030"; rr(partsX, partsY, 72, 80, 3); ctx.fill();
+        ctx.strokeStyle = "#3a4050"; ctx.lineWidth = 1; ctx.strokeRect(partsX, partsY, 72, 80);
+        // Part items (door panel, bumper, tire rim, hood)
+        ctx.fillStyle = "#3a4555"; rr(partsX+4, partsY+4, 30, 18, 2); ctx.fill();    // door panel
+        ctx.fillStyle = "#2a3545"; rr(partsX+38, partsY+4, 28, 14, 2); ctx.fill();   // bumper
+        ctx.strokeStyle = "#4a5565"; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(partsX+18, partsY+40, 14, 0, Math.PI*2); ctx.stroke(); // rim
+        ctx.fillStyle = "#111820"; ctx.beginPath(); ctx.arc(partsX+18, partsY+40, 9, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = "#4a5565"; ctx.beginPath(); ctx.arc(partsX+18, partsY+40, 4, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = "#2a3040"; rr(partsX+36, partsY+24, 30, 10, 2); ctx.fill();  // exhaust pipe
+        ctx.fillStyle = "#3a4555"; rr(partsX+4, partsY+60, 64, 14, 2); ctx.fill();   // hood
+        ctx.strokeStyle = "#FFAA00"; ctx.lineWidth = 0.8;
+        ctx.strokeRect(partsX+4, partsY+60, 64, 14);
+        ctx.fillStyle = "#FFAA00"; ctx.font = "bold 7px monospace"; ctx.textAlign = "center";
+        ctx.fillText("PARTS BIN", partsX+36, partsY+90);
+
+        // ── Top-right: tool wall ───────────────────────────────────────────
+        const toolX = W*0.72, toolY = topY+18;
+        ctx.fillStyle = "#12180e"; rr(toolX, toolY, 80, 100, 3); ctx.fill();
+        ctx.strokeStyle = "#3a4a2a"; ctx.lineWidth = 1; ctx.strokeRect(toolX, toolY, 80, 100);
+        // Pegboard holes
+        for (let ph=0;ph<4;ph++) for (let pv=0;pv<5;pv++) {
+          ctx.fillStyle = "#0a100a"; ctx.beginPath(); ctx.arc(toolX+12+ph*18, toolY+14+pv*18, 2, 0, Math.PI*2); ctx.fill();
+        }
+        // Tools hanging: wrenches, socket sets, pliers, screwdrivers
+        const toolDefs = [
+          {x:toolX+8, y:toolY+22, w:6, h:24, c:"#8888AA"},  // wrench
+          {x:toolX+18, y:toolY+20, w:8, h:22, c:"#AAAACC"}, // large wrench
+          {x:toolX+30, y:toolY+24, w:5, h:18, c:"#8899AA"}, // screwdriver
+          {x:toolX+40, y:toolY+22, w:5, h:18, c:"#AABB88"}, // screwdriver 2
+          {x:toolX+50, y:toolY+20, w:10, h:14, c:"#8888AA"},// pliers
+          {x:toolX+64, y:toolY+18, w:8, h:28, c:"#CCAA66"}, // torque wrench
+          {x:toolX+8, y:toolY+54, w:12, h:8, c:"#FFAA00"},  // ratchet
+          {x:toolX+26, y:toolY+52, w:8, h:12, c:"#AAAAAA"}, // socket
+          {x:toolX+40, y:toolY+50, w:16, h:10, c:"#CCCCCC"},// breaker bar
+          {x:toolX+60, y:toolY+52, w:12, h:18, c:"#887766"},// impact driver
+        ];
+        for (const td of toolDefs) {
+          ctx.fillStyle = "#0a1008"; rr(td.x, td.y, td.w, td.h, 2); ctx.fill();
+          ctx.fillStyle = td.c; ctx.fillRect(td.x+1, td.y+1, td.w-2, td.h-2);
+        }
+        // Spark plug tray
+        ctx.fillStyle = "#1a2010"; rr(toolX+4, toolY+74, 72, 20, 2); ctx.fill();
+        ctx.strokeStyle = "#4a5030"; ctx.lineWidth = 1; ctx.strokeRect(toolX+4, toolY+74, 72, 20);
+        for (let sp=0;sp<6;sp++) {
+          ctx.fillStyle = "#778860"; ctx.beginPath(); ctx.arc(toolX+10+sp*11, toolY+84, 3, 0, Math.PI*2); ctx.fill();
+        }
+        ctx.fillStyle = "#FFAA00"; ctx.font = "bold 7px monospace"; ctx.textAlign = "center";
+        ctx.fillText("TOOLS", toolX+40, toolY+106);
+
+        // ── Hydraulic lift / jack (left of car) ───────────────────────────
+        ctx.fillStyle = "#2a3040"; rr(cx-W*0.42, midY+4, 18, 24, 2); ctx.fill();
+        ctx.strokeStyle = "#4a6080"; ctx.lineWidth = 1; ctx.strokeRect(cx-W*0.42, midY+4, 18, 24);
+        ctx.fillStyle = "#5a7090"; ctx.fillRect(cx-W*0.42+6, midY-12, 6, 18); // piston
+        // Hydraulic glow
+        ctx.fillStyle = "rgba(0,150,255,0.20)"; ctx.fillRect(cx-W*0.42+7, midY-10, 4, 16);
+
+        // ── Oil drum / waste barrel (bottom-left) ─────────────────────────
+        ctx.fillStyle = "#2a2010"; ctx.strokeStyle = "#4a4020"; ctx.lineWidth = 1.5;
+        rr(W*0.08, H*0.72, 24, 32, 3); ctx.fill(); ctx.stroke();
+        for (let bd=0;bd<3;bd++) ctx.fillRect(W*0.08+2, H*0.72+6+bd*10, 20, 3); // bands
+        // Oil spill
+        ctx.fillStyle = "rgba(20,10,0,0.55)";
+        ctx.beginPath(); ctx.ellipse(W*0.09+8, H*0.72+38, 18, 8, 0, 0, Math.PI*2); ctx.fill();
+
+        // ── Spray paint booth (bottom-right corner) ───────────────────────
+        ctx.fillStyle = "#0e1008"; rr(W*0.74, H*0.68, 54, 44, 3); ctx.fill();
+        ctx.strokeStyle = "#3a4a2a"; ctx.lineWidth = 1; ctx.strokeRect(W*0.74, H*0.68, 54, 44);
+        // Paint cans row
+        const paintCols = ["#FF2200","#0044FF","#22CC00","#FFCC00","#CC00FF","#FF8800"];
+        for (let pc=0;pc<6;pc++) {
+          ctx.fillStyle = paintCols[pc]; ctx.shadowColor=paintCols[pc]; ctx.shadowBlur=3;
+          rr(W*0.74+4+pc*8, H*0.68+6, 6, 16, [3,3,0,0]); ctx.fill();
+          ctx.shadowBlur=0;
+          // Cap
+          ctx.fillStyle = "rgba(255,255,255,0.3)"; ctx.fillRect(W*0.74+4+pc*8, H*0.68+4, 6, 4);
+        }
+        // Spray gun
+        ctx.fillStyle = "#3a3a3a"; rr(W*0.74+8, H*0.68+26, 34, 12, 3); ctx.fill();
+        ctx.fillStyle = "#555555"; ctx.fillRect(W*0.74+36, H*0.68+30, 16, 4);
+        ctx.fillStyle = "#FFAA00"; ctx.font = "bold 6px monospace"; ctx.textAlign = "center";
+        ctx.fillText("PAINT BOOTH", W*0.74+27, H*0.68+52);
+
+        // ── Animated welding sparks near engine ───────────────────────────
+        for (let ws2=0; ws2<5; ws2++) {
+          const spark = Math.sin(tcs*8+ws2*1.4)*0.5+0.5;
+          if (spark > 0.6) {
+            ctx.fillStyle = `rgba(255,${180+ws2*12},0,${spark})`;
+            ctx.beginPath(); ctx.arc(cx+30+(ws2%3)*8, midY-8+ws2*4, 2, 0, Math.PI*2); ctx.fill();
+          }
+        }
+
+      } else {
+      // CHOP SHOP (default)
       // ── Disassembled car parts (scattered) ───────
       const partPositions = [
         [cx - W * 0.4, topY + 8],
@@ -10926,6 +11350,7 @@ class Game {
           topY + 18 + Math.floor(i / 2) * 24,
         ),
       );
+      } // end else (default chop shop)
     } else if (type === 22) {
       // RADIO STATION
       if (!!this.map?.config?.galactica) {
