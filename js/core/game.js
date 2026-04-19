@@ -3331,6 +3331,7 @@ class Game {
 
         if (room.isDealership) {
           const isNeonCity  = this.map.config.id === "neon_city";
+          const isRobot     = !!this.map.config.robot;
           const isGalactica = !!this.map.config.galactica;
           const isBlitz    = !!this.map.config.blitz;
           const isWasteland = !!this.map.config.wasteland;
@@ -3341,6 +3342,13 @@ class Game {
             const spY = room.roomH * 0.38; // Closer to the display cars
             this._salespersons = [
               new Salesperson(spX, spY, "#00FFFF", "SALES REP", true),
+            ];
+          } else if (isRobot) {
+            // Robot City: human-style dealer with teal-green robot-district color
+            const spX = room.roomW / 2;
+            const spY = room.roomH * 0.38;
+            this._salespersons = [
+              new Salesperson(spX, spY, "#00FFB0", "UNIT-7", true),
             ];
           } else if (isBlitz) {
             // Blitz: Human-style dealer matching the bar worker look
@@ -3397,7 +3405,12 @@ class Game {
         } else if (door.bTypeIdx === 15) {
           // POLICE STATION: No enemies, spawn police officers instead
           room.isPoliceStation = true;
-          this._policeOfficers = [
+          const isRobotPolice = !!this.map.config.robot;
+          this._policeOfficers = isRobotPolice ? [
+            { x: room.roomW * 0.18, y: room.roomH * 0.50, sitting: false, label: "UNIT-R1" },
+            { x: room.roomW * 0.38, y: room.roomH * 0.68, sitting: true,  label: "UNIT-R2" },
+            { x: room.roomW * 0.66, y: room.roomH * 0.28, sitting: false, label: "UNIT-R3" },
+          ] : [
             // Officer standing near the first desk (left side)
             { x: room.roomW * 0.22, y: room.roomH * 0.46, sitting: false, label: "OFC. MARTINEZ" },
             // Officer sitting at the second desk
@@ -3440,10 +3453,11 @@ class Game {
           const isNeonCity  = this.map?.config?.id === "neon_city";
           const isGalactica = !!this.map?.config?.galactica;
           const isBlitz     = !!this.map?.config?.blitz;
+          const isRobotCity = !!this.map?.config?.robot;
           const isZombie    = !!this.map?.config?.zombie;
           const isWasteland = !!this.map?.config?.wasteland;
           const isGalOrBlitz = isGalactica || isBlitz;
-          const isSpecialMap = isNeonCity || isGalactica || isWasteland || isBlitz;
+          const isSpecialMap = isNeonCity || isGalactica || isWasteland || isBlitz || isRobotCity;
           // Special positioning for Neon City / Galactica / Blitz / Wasteland / Zombie buildings
           let npcX = room.entryX + 60;
           let npcY = room.entryY - 110;
@@ -3475,6 +3489,10 @@ class Game {
             // Blitz: all other workers centered in large room
             npcX = room.roomW / 2;
             npcY = room.roomH * 0.20;
+          } else if (isRobotCity) {
+            // Robot City: all workers centered in large room
+            npcX = room.roomW / 2;
+            npcY = room.roomH * 0.20;
           } else if (isZombie) {
             npcX = room.roomW / 2;
             npcY = room.roomH * 0.20;
@@ -3484,8 +3502,8 @@ class Game {
           let npcRenderType = false;
           if (isWasteland) {
             npcRenderType = 'wasteland';
-          } else if (isNeonCity || isZombie || isBlitz || (isGalactica && (bType === 3 || bType === 8 || bType === 0 || bType === 5 || bType === 22))) {
-            npcRenderType = true; // neonCity/galactica style
+          } else if (isNeonCity || isZombie || isBlitz || isRobotCity || (isGalactica && (bType === 3 || bType === 8 || bType === 0 || bType === 5 || bType === 22))) {
+            npcRenderType = true; // neonCity/robot city/galactica style
           }
           this._buildingNpcs = [new BuildingNPC(npcX, npcY, bType, npcRenderType, useGirlRender)];
         }
@@ -10132,6 +10150,123 @@ class Game {
         ctx.fillText("FRAGILE", cx, midY + 41);
       }
     } else if (type === 15) {
+      if (!!this.map?.config?.robot) {
+        // ════════════════════════════════════════════════════════════════════
+        //  ROBOT CITY: RCPD — Mech Enforcement Station
+        // ════════════════════════════════════════════════════════════════════
+        const t15 = performance.now() / 1000;
+
+        // ── RCPD badge and sign (top-left) ───────────────────────────────
+        ctx.fillStyle = "#00FFB0";
+        ctx.shadowColor = "#00FFB0"; ctx.shadowBlur = 14;
+        ctx.font = "bold 11px monospace";
+        ctx.textAlign = "center";
+        ctx.fillText("⬡", W * 0.12, topY + 20);
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = "#00CCAA";
+        ctx.font = "bold 9px monospace";
+        ctx.fillText("RCPD", W * 0.12, topY + 38);
+        ctx.fillStyle = "rgba(0,200,160,0.30)";
+        rr(W * 0.05, topY + 6, 50, 36, 3); ctx.fill();
+
+        // ── Threat analysis board (top-center) ───────────────────────────
+        ctx.fillStyle = "#080e14"; rr(cx - 58, topY + 4, 116, 42, 2); ctx.fill();
+        ctx.strokeStyle = "#00CCAA"; ctx.lineWidth = 1.5;
+        ctx.strokeRect(cx - 58, topY + 4, 116, 42);
+        // Scanlines
+        for (let sl = 0; sl < 3; sl++) {
+          ctx.fillStyle = "rgba(0,200,180,0.07)";
+          ctx.fillRect(cx - 56, topY + 10 + sl * 12, 112, 8);
+        }
+        // Target icons
+        for (let ti = 0; ti < 5; ti++) {
+          ctx.strokeStyle = ti % 2 === 0 ? "#FF4444" : "#00FF88";
+          ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.arc(cx - 40 + ti * 20, topY + 22, 5, 0, Math.PI * 2); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(cx-40+ti*20-7,topY+22); ctx.lineTo(cx-40+ti*20+7,topY+22); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(cx-40+ti*20,topY+22-7); ctx.lineTo(cx-40+ti*20,topY+22+7); ctx.stroke();
+        }
+        ctx.fillStyle = "#FF4444"; ctx.font = "bold 6px monospace"; ctx.textAlign = "center";
+        ctx.fillText("THREAT SCAN", cx, topY + 8);
+
+        // ── Containment pods — top-right (robots in custody) ─────────────
+        const podX = W * 0.76, podY = topY + 6, podW = 78, podH = 60;
+        ctx.fillStyle = "#081018"; rr(podX, podY, podW, podH, 3); ctx.fill();
+        ctx.strokeStyle = "#00CCAA"; ctx.lineWidth = 1.5; ctx.strokeRect(podX, podY, podW, podH);
+        // Pod divider
+        ctx.fillStyle = "#0c1820"; ctx.fillRect(podX + podW/2 - 1, podY, 2, podH);
+        // Left pod: detained bot (simple robot shape)
+        const p1cx = podX + podW*0.25, p1cy = podY + podH*0.55;
+        ctx.fillStyle = "#2a3a4a"; rr(p1cx-6, p1cy-8, 12, 14, 2); ctx.fill();  // body
+        ctx.fillStyle = "#3a4a5a"; rr(p1cx-5, p1cy-18, 10, 10, 2); ctx.fill(); // head
+        ctx.fillStyle = "#FF4444"; ctx.fillRect(p1cx-3, p1cy-15, 2, 4); ctx.fillRect(p1cx+1, p1cy-15, 2, 4); // eyes
+        // Energy cuffs
+        ctx.strokeStyle = "#00FFAA"; ctx.lineWidth = 1.5;
+        ctx.strokeRect(p1cx-9, p1cy-2, 5, 6); ctx.strokeRect(p1cx+4, p1cy-2, 5, 6);
+        // Right pod: empty (glowing containment field)
+        const p2cx = podX + podW*0.75, p2cy = podY + podH*0.55;
+        const podPulse = Math.sin(t15*3)*0.5+0.5;
+        ctx.fillStyle = `rgba(0,200,180,${0.04+podPulse*0.05})`;
+        ctx.beginPath(); ctx.ellipse(p2cx, p2cy, 14, 18, 0, 0, Math.PI*2); ctx.fill();
+        ctx.strokeStyle = `rgba(0,255,200,${0.2+podPulse*0.2})`; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.ellipse(p2cx, p2cy, 14, 18, 0, 0, Math.PI*2); ctx.stroke();
+        ctx.fillStyle = "rgba(0,200,180,0.18)"; ctx.font = "7px monospace"; ctx.textAlign = "center";
+        ctx.fillText("VACANT", p2cx, p2cy+3);
+        ctx.fillStyle = "#00CCAA"; ctx.font = "bold 6px monospace";
+        ctx.fillText("CONTAINMENT", podX+podW/2, podY+7);
+
+        // ── Enforcement console desk (left-center) ────────────────────────
+        const cdeskX = W * 0.08, cdeskY = H * 0.40;
+        ctx.fillStyle = "#101e2c"; ctx.strokeStyle = "#00CCAA"; ctx.lineWidth = 1.5;
+        rr(cdeskX, cdeskY, 90, 40, 3); ctx.fill(); ctx.stroke();
+        // Holographic display
+        ctx.fillStyle = "rgba(0,200,220,0.08)"; rr(cdeskX+48, cdeskY+5, 36, 22, 2); ctx.fill();
+        ctx.strokeStyle = "#00CCAA"; ctx.lineWidth = 1; ctx.strokeRect(cdeskX+48, cdeskY+5, 36, 22);
+        // Scan line sweep
+        const sweepY = ((t15*40) % 22);
+        ctx.fillStyle = "rgba(0,255,200,0.14)"; ctx.fillRect(cdeskX+49, cdeskY+6+sweepY, 34, 2);
+        // Data chips on desk
+        for (let dc = 0; dc < 3; dc++) {
+          ctx.fillStyle = "#1a2c3a"; rr(cdeskX+8+dc*12, cdeskY+8, 10, 7, 1); ctx.fill();
+          ctx.fillStyle = dc===1 ? "#00FF88" : "#00CCFF"; ctx.fillRect(cdeskX+10+dc*12, cdeskY+10, 6, 3);
+        }
+
+        // ── Weapon rack (bottom-left) ─────────────────────────────────────
+        ctx.fillStyle = "#0e1a24"; ctx.strokeStyle = "#2a3a4a"; ctx.lineWidth = 1;
+        rr(W*0.06, midY+28, 34, 52, 2); ctx.fill(); ctx.stroke();
+        // Rack bars
+        ctx.fillStyle = "#1c2c3c";
+        for (let rb = 0; rb < 4; rb++) ctx.fillRect(W*0.06+3, midY+34+rb*13, 28, 2);
+        // Weapons on rack
+        for (let rw = 0; rw < 3; rw++) {
+          ctx.fillStyle = "#2a3a4a"; ctx.fillRect(W*0.06+8+rw*8, midY+36+rw*13, 4, 8);
+          ctx.fillStyle = "#00CCFF"; ctx.fillRect(W*0.06+9+rw*8, midY+37+rw*13, 2, 2);
+        }
+
+        // ── Second console desk (center-bottom) ──────────────────────────
+        const desk2X2 = W*0.30, desk2Y2 = H*0.54;
+        ctx.fillStyle = "#101e2c"; ctx.strokeStyle = "#00CCAA"; ctx.lineWidth = 1.5;
+        rr(desk2X2, desk2Y2, 92, 40, 3); ctx.fill(); ctx.stroke();
+        // Monitor
+        ctx.fillStyle = "#080e14"; rr(desk2X2+52, desk2Y2+5, 32, 22, 2); ctx.fill();
+        ctx.strokeStyle = "#00CCAA"; ctx.lineWidth = 1; ctx.strokeRect(desk2X2+52, desk2Y2+5, 32, 22);
+        // Scrolling data lines
+        for (let dl = 0; dl < 3; dl++) {
+          ctx.fillStyle = `rgba(0,${180+dl*25},${180+dl*20},0.35)`;
+          ctx.fillRect(desk2X2+54, desk2Y2+9+dl*6, (16+dl*6+(rseed%8)), 2);
+        }
+        // Keyboard
+        ctx.fillStyle = "#1a2a3a"; rr(desk2X2+8, desk2Y2+10, 32, 18, 2); ctx.fill();
+        for (let kr = 0; kr < 2; kr++)
+          for (let kc = 0; kc < 5; kc++) {
+            ctx.fillStyle = "#0e1a26"; ctx.fillRect(desk2X2+10+kc*6, desk2Y2+13+kr*6, 4, 4);
+          }
+        // Chair
+        ctx.fillStyle = "#0e1a26"; ctx.strokeStyle = "#1a2a38"; ctx.lineWidth = 1;
+        rr(desk2X2+16, desk2Y2+44, 24, 18, 3); ctx.fill(); ctx.stroke();
+        rr(desk2X2+18, desk2Y2+24, 20, 22, 3); ctx.fill(); ctx.stroke();
+
+      } else {
       // POLICE STATION
       // ── Police badge and sign on wall (top-left corner) ──────────────────
       ctx.fillStyle = "#FFD700";
@@ -10373,6 +10508,7 @@ class Game {
       rr(chairX - 10, chairY - 20, 20, 22, 3);
       ctx.fill();
       ctx.stroke();
+      } // end else (standard NCPD)
     } else if (type === 16) {
       // TATTOO PARLOR
       // ── Reclining chair (center) ──────────────────
@@ -12355,7 +12491,7 @@ class Game {
     const offX = (W - room.roomW) / 2,
       offY = (H - room.roomH) / 2;
     const S = room.S;
-    const isNeonCity = this.map.config.id === "neon_city" || !!this.map.config.blitz;
+    const isNeonCity = this.map.config.id === "neon_city" || !!this.map.config.blitz || !!this.map.config.robot;
     const isGalactica = !!this.map.config.galactica;
     const isWasteland = !!this.map.config.wasteland;
     const t = performance.now() / 1000;

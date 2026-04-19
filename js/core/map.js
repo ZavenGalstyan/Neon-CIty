@@ -2478,25 +2478,166 @@ class GameMap {
               ctx.fillRect(wx+8, wy+8, 2, S-16); ctx.fillRect(wx+S-10, wy+8, 2, S-16);
             }
           } else if (cfg.robot) {
-            // Robot City: server tower / tech block
+            // ═══════════════════════════════════════════════════════════════
+            //  ROBOT CITY: Varied industrial tech structures
+            // ═══════════════════════════════════════════════════════════════
             const rseed = x * 41 + y * 59;
-            ctx.fillStyle = this.buildingColors[y][x];
+            const t = Date.now() * 0.001;
+            const structType = rseed % 6;
+            // Base steel colors — dark metal with slight teal tint
+            const steelBases = ['#0a1218','#0c1420','#08101a','#0e161e','#0b1319','#091118'];
+            ctx.fillStyle = steelBases[rseed % steelBases.length];
             ctx.fillRect(wx, wy, S, S);
-            // Metallic panel lines
-            ctx.fillStyle = 'rgba(0,200,255,0.06)';
-            ctx.fillRect(wx, wy, S, 2);
-            ctx.fillRect(wx, wy, 2, S);
-            ctx.fillRect(wx + S - 2, wy, 2, S);
-            // Vent slats on some blocks
-            if (rseed % 4 === 0) {
-              ctx.fillStyle = 'rgba(0,160,200,0.12)';
-              for (let sl = 0; sl < 4; sl++) {
-                ctx.fillRect(wx + 8, wy + 12 + sl * 14, S - 16, 3);
+
+            if (structType === 0) {
+              // === SERVER FARM BLOCK ===
+              ctx.fillStyle = '#111c28'; ctx.fillRect(wx+4, wy+4, S-8, S-8);
+              // Server rack rows
+              ctx.fillStyle = '#0a1520';
+              for (let rack = 0; rack < 4; rack++) {
+                ctx.fillRect(wx+6, wy+10+rack*16, S-12, 11);
+                // Drive status LEDs
+                for (let led = 0; led < 5; led++) {
+                  const ledOn = (rseed + rack * 7 + led * 3) % 4 !== 0;
+                  ctx.fillStyle = ledOn ? (led%2===0 ? '#00FF88' : '#00CCFF') : '#0a1520';
+                  ctx.fillRect(wx+9+led*9, wy+14+rack*16, 5, 3);
+                }
               }
+              // Top cable management bar
+              ctx.fillStyle = '#1a2a3a'; ctx.fillRect(wx+4, wy+4, S-8, 5);
+              ctx.fillStyle = 'rgba(0,200,255,0.22)'; ctx.fillRect(wx+4, wy+4, S-8, 2);
+
+            } else if (structType === 1) {
+              // === DRONE HANGAR ===
+              // Hangar bay (wide flat structure)
+              ctx.fillStyle = '#131e2c'; ctx.fillRect(wx+2, wy+18, S-4, S-20);
+              // Hangar doors (segmented)
+              ctx.fillStyle = '#0c1622';
+              for (let seg = 0; seg < 4; seg++) {
+                ctx.fillRect(wx+5+seg*18, wy+20, 14, S-24);
+                ctx.fillStyle = 'rgba(0,180,220,0.10)';
+                ctx.fillRect(wx+6+seg*18, wy+22, 12, S-28);
+                ctx.fillStyle = '#0c1622';
+              }
+              // Roof rail
+              ctx.fillStyle = '#1e2e3e'; ctx.fillRect(wx+2, wy+14, S-4, 6);
+              ctx.fillStyle = 'rgba(0,220,255,0.18)'; ctx.fillRect(wx+2, wy+14, S-4, 2);
+              // Landing lights
+              for (let ll = 0; ll < 3; ll++) {
+                const blink = Math.sin(t*4 + rseed + ll*1.3) > 0.4;
+                ctx.fillStyle = blink ? '#FFAA00' : '#2a1800';
+                ctx.fillRect(wx+12+ll*22, wy+16, 4, 4);
+              }
+
+            } else if (structType === 2) {
+              // === MECH ASSEMBLY PLANT ===
+              // Main factory body
+              ctx.fillStyle = '#0f1a26'; ctx.fillRect(wx+3, wy+8, S-6, S-10);
+              // Robotic arm mount (top)
+              ctx.fillStyle = '#1a2a3a'; ctx.fillRect(wx+S/2-8, wy+2, 16, 10);
+              ctx.fillStyle = '#2a3a4a'; ctx.fillRect(wx+S/2-4, wy, 8, 4);
+              // Assembly window strips
+              for (let ws = 0; ws < 3; ws++) {
+                ctx.fillStyle = 'rgba(0,200,255,0.07)';
+                ctx.fillRect(wx+5, wy+16+ws*18, S-10, 10);
+                // Moving part indicator
+                const pos = ((t*30 + rseed + ws*40) % (S-14));
+                ctx.fillStyle = 'rgba(0,255,180,0.25)';
+                ctx.fillRect(wx+5+pos, wy+18+ws*18, 6, 6);
+              }
+              // Exhaust vents (right side)
+              ctx.fillStyle = '#1a2030';
+              for (let ev = 0; ev < 3; ev++) {
+                ctx.fillRect(wx+S-8, wy+14+ev*18, 5, 10);
+                ctx.fillStyle = 'rgba(100,200,255,0.08)';
+                ctx.fillRect(wx+S-7, wy+15+ev*18, 3, 8);
+                ctx.fillStyle = '#1a2030';
+              }
+
+            } else if (structType === 3) {
+              // === POWER STATION ===
+              // Central reactor core
+              ctx.fillStyle = '#0e1c2a'; ctx.fillRect(wx+12, wy+10, S-24, S-14);
+              // Reactor glow
+              const pulse = Math.sin(t*2.5+rseed)*0.5+0.5;
+              ctx.fillStyle = `rgba(0,200,255,${0.06+pulse*0.08})`;
+              ctx.fillRect(wx+16, wy+14, S-32, S-22);
+              // Capacitor towers (corners)
+              ctx.fillStyle = '#152030';
+              ctx.fillRect(wx+2, wy+6, 10, S-8);
+              ctx.fillRect(wx+S-12, wy+6, 10, S-8);
+              // Power connector rings
+              for (let pr = 0; pr < 3; pr++) {
+                ctx.fillStyle = pr===1 ? `rgba(0,255,200,${0.15+pulse*0.12})` : 'rgba(0,180,220,0.08)';
+                ctx.fillRect(wx+14, wy+20+pr*16, S-28, 3);
+              }
+              // Warning stripe (base)
+              ctx.fillStyle = 'rgba(255,180,0,0.10)';
+              ctx.fillRect(wx+2, wy+S-10, S-4, 6);
+              ctx.fillStyle = 'rgba(0,0,0,0.4)';
+              for (let ws=0;ws<4;ws++) ctx.fillRect(wx+3+ws*18, wy+S-9, 8, 4);
+
+            } else if (structType === 4) {
+              // === CONTROL TOWER ===
+              // Narrow tall tower (top-down: square base)
+              ctx.fillStyle = '#101e2e'; ctx.fillRect(wx+S*0.25, wy+4, S*0.5, S-6);
+              // Observation ring
+              ctx.fillStyle = '#1a2c40'; ctx.fillRect(wx+S*0.15, wy+8, S*0.7, 14);
+              ctx.fillStyle = 'rgba(0,220,255,0.15)'; ctx.fillRect(wx+S*0.15, wy+8, S*0.7, 3);
+              // Scanning beam
+              const angle = (t * 1.5 + rseed) % (Math.PI * 2);
+              const bx2 = wx + S/2 + Math.cos(angle) * S*0.28;
+              const by2 = wy + S/2 + Math.sin(angle) * S*0.28;
+              ctx.fillStyle = 'rgba(0,255,180,0.12)';
+              ctx.beginPath(); ctx.moveTo(wx+S/2, wy+S/2); ctx.lineTo(bx2, by2); ctx.lineTo(bx2+2,by2+2); ctx.closePath(); ctx.fill();
+              // Antenna
+              ctx.fillStyle = '#2a3a4a'; ctx.fillRect(wx+S/2-1, wy, 2, 8);
+              const blinkA = Math.sin(t*5+rseed)>0;
+              ctx.fillStyle = blinkA ? '#FF4444' : '#330000';
+              ctx.beginPath(); ctx.arc(wx+S/2, wy+2, 3, 0, Math.PI*2); ctx.fill();
+
+            } else {
+              // === ROBOTIC DISTRICT BLOCK (varied neon city-inspired shapes with robot aesthetic) ===
+              const bshape = rseed % 4;
+              ctx.fillStyle = '#111e2c';
+              if (bshape === 0) {
+                // L-shaped facility
+                ctx.fillRect(wx+2, wy+2, S*0.5, S-4);
+                ctx.fillRect(wx+2, wy+S*0.5, S-4, S*0.5-2);
+              } else if (bshape === 1) {
+                // Stepped
+                ctx.fillRect(wx+S*0.15, wy+S*0.55, S*0.7, S*0.42);
+                ctx.fillRect(wx+S*0.25, wy+S*0.25, S*0.5, S*0.65);
+                ctx.fillRect(wx+S*0.35, wy+2, S*0.3, S);
+              } else if (bshape === 2) {
+                // Twin blocks
+                ctx.fillRect(wx+2, wy+2, S*0.4, S-4);
+                ctx.fillRect(wx+S*0.58, wy+2, S*0.4, S-4);
+                ctx.fillRect(wx+2, wy+S*0.68, S-4, S*0.3);
+              } else {
+                // Wide flat hub
+                ctx.fillRect(wx+2, wy+S*0.2, S-4, S*0.65);
+                ctx.fillRect(wx+S*0.2, wy+2, S*0.6, S*0.8);
+              }
+              // Circuit trace overlay
+              ctx.fillStyle = 'rgba(0,200,255,0.07)';
+              ctx.fillRect(wx+S*0.5-1, wy+6, 2, S-12);
+              ctx.fillRect(wx+6, wy+S*0.5-1, S-12, 2);
+              // Status LED array
+              for (let li = 0; li < 3; li++) {
+                const on2 = (rseed + li * 5) % 3 !== 0;
+                ctx.fillStyle = on2 ? (li===1?'#00FF88':'#00CCFF') : '#0a1520';
+                ctx.fillRect(wx+12+li*16, wy+8, 8, 4);
+              }
+              // Neon trim
+              ctx.strokeStyle = `rgba(0,${180+rseed%60},${200+rseed%55},0.20)`;
+              ctx.lineWidth = 1.5;
+              ctx.strokeRect(wx+3, wy+3, S-6, S-6);
             }
-            // LED status strip top
-            ctx.fillStyle = rseed % 3 === 0 ? 'rgba(0,255,200,0.18)' : 'rgba(0,200,255,0.12)';
-            ctx.fillRect(wx + 6, wy + 4, S - 12, 3);
+
+            // Shared: top LED status bar on all types
+            ctx.fillStyle = rseed % 3 === 0 ? 'rgba(0,255,180,0.14)' : 'rgba(0,200,255,0.10)';
+            ctx.fillRect(wx, wy, S, 2);
           } else if (cfg.galactica) {
             // Galactica: planet orb / space structure
             const pseed = (x * 41 + y * 59) % 5;
