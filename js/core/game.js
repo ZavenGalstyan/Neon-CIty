@@ -1748,8 +1748,8 @@ class Game {
     const oceanColors = ["#0077AA", "#005588", "#006699", "#008899", "#004466"];
     const isOcean = !!this.map.config.ocean;
     const isNeonCity = this.map.config.id === "neon_city";
-    // Robot City: no drivable cars — machines don't use human vehicles
-    if (!!this.map.config.robot) return;
+    // Robot City / Hardcore: no drivable cars
+    if (!!this.map.config.robot || !!this.map.config.hardcore) return;
 
     // Neon City: spawn 3 orange vehicles for the player (no other traffic)
     if (isNeonCity) {
@@ -2840,16 +2840,16 @@ class Game {
 
   _spawnAmbientTraffic() {
     if (this._arenaMode || this._zombieMode || this._towerMode) return;
-    // No ambient traffic on neon city, wasteland, or robot city maps
-    if (this.map.config.id === "neon_city" || this.map.config.wasteland || this.map.config.robot) return;
+    // No ambient traffic on neon city, wasteland, robot city, or hardcore maps
+    if (this.map.config.id === "neon_city" || this.map.config.wasteland || this.map.config.robot || this.map.config.hardcore) return;
     const base = this._metropolisMode ? 12 : 6;
     const count = base + Math.floor(Math.random() * 6);
     for (let i = 0; i < count; i++) this._respawnAmbientCar();
   }
 
   _respawnAmbientCar() {
-    // No ambient traffic on neon city, wasteland, or robot city maps
-    if (this.map.config.id === "neon_city" || this.map.config.wasteland || this.map.config.robot) return;
+    // No ambient traffic on neon city, wasteland, robot city, or hardcore maps
+    if (this.map.config.id === "neon_city" || this.map.config.wasteland || this.map.config.robot || this.map.config.hardcore) return;
     const maxCars = this._metropolisMode ? 22 : 14;
     if (this._ambientCars.length >= maxCars) return;
     // Spawn off-camera on a road tile
@@ -5061,6 +5061,141 @@ class Game {
         // Survivor message on wall
         ctx.fillStyle="rgba(200,80,0,0.7)"; ctx.font="bold 6px monospace"; ctx.textAlign="center";
         ctx.fillText("RUN. DO NOT EAT.", W/2, H*0.84);
+      } else if (!!this.map?.config?.hardcore) {
+        // ═══ HARDCORE: INFERNO KITCHEN ═══
+        const t = performance.now() / 1000;
+        const EMBER = "#FF8800"; const FLAME = "#FF5500"; const CRIMSON = "#FF2200"; const AMBER = "#FFAA00";
+        const EMBERr = "255,136,0"; const FLAMEr = "255,85,0"; const CRIMSONr = "255,34,0"; const AMBERr = "255,170,0";
+
+        // Background scorch pattern
+        ctx.fillStyle = "#0a0100"; ctx.fillRect(0,0,W,H);
+        for (let si=0;si<14;si++) {
+          const sx=50+si*72, sy=60+((si*37)%200);
+          const sg=ctx.createRadialGradient(sx,sy,0,sx,sy,32);
+          sg.addColorStop(0,`rgba(${FLAMEr},0.08)`); sg.addColorStop(1,"rgba(0,0,0,0)");
+          ctx.fillStyle=sg; ctx.beginPath(); ctx.arc(sx,sy,32,0,Math.PI*2); ctx.fill();
+        }
+
+        // Title
+        ctx.save(); ctx.font="bold 19px Orbitron, monospace"; ctx.textAlign="center";
+        ctx.fillStyle="#fff"; ctx.shadowColor=FLAME; ctx.shadowBlur=28;
+        ctx.fillText("🔥 INFERNO KITCHEN 🔥", cx, topY-10); ctx.shadowBlur=0; ctx.restore();
+
+        // ── Industrial grill bar (top center) ──
+        ctx.fillStyle="#1a0800"; ctx.strokeStyle=EMBER; ctx.lineWidth=2;
+        rr(cx-160,topY+8,320,28,4); ctx.fill(); ctx.stroke();
+        // Grill grates
+        for (let gi=0;gi<8;gi++) {
+          ctx.strokeStyle=`rgba(${EMBERr},0.5)`; ctx.lineWidth=1;
+          ctx.beginPath(); ctx.moveTo(cx-148+gi*40,topY+10); ctx.lineTo(cx-148+gi*40,topY+34); ctx.stroke();
+        }
+        for (let gi=0;gi<3;gi++) {
+          ctx.strokeStyle=`rgba(${FLAMEr},0.4)`; ctx.lineWidth=1;
+          ctx.beginPath(); ctx.moveTo(cx-156,topY+14+gi*8); ctx.lineTo(cx+156,topY+14+gi*8); ctx.stroke();
+        }
+        // Flames over grill (animated)
+        for (let fi=0;fi<7;fi++) {
+          const fx=cx-130+fi*44, fh=12+7*Math.sin(t*3+fi*0.9);
+          const fg=ctx.createLinearGradient(fx,topY+8,fx,topY+8-fh);
+          fg.addColorStop(0,`rgba(${FLAMEr},0.8)`); fg.addColorStop(1,"rgba(255,200,0,0)");
+          ctx.fillStyle=fg; ctx.beginPath(); ctx.ellipse(fx,topY+8,7,fh,0,0,Math.PI*2); ctx.fill();
+        }
+
+        // ── Prep counter (left side) ──
+        ctx.fillStyle="#150800"; ctx.strokeStyle=AMBER; ctx.lineWidth=1.5;
+        rr(40,topY+70,180,90,5); ctx.fill(); ctx.stroke();
+        ctx.fillStyle=`rgba(${AMBERr},0.06)`; ctx.fillRect(44,topY+74,172,82);
+        // Food items on counter
+        const foods=[{x:80,y:topY+100,col:"#CC2200",r:9},{x:110,y:topY+95,col:"#884400",r:7},{x:140,y:topY+108,col:"#FF6600",r:8},{x:170,y:topY+100,col:"#AA3300",r:6}];
+        foods.forEach(f=>{ctx.fillStyle=f.col; ctx.strokeStyle=EMBER; ctx.lineWidth=0.8; ctx.beginPath(); ctx.arc(f.x,f.y,f.r,0,Math.PI*2); ctx.fill(); ctx.stroke();});
+        ctx.fillStyle=`rgba(${EMBERr},0.7)`; ctx.font="bold 7px monospace"; ctx.textAlign="center";
+        ctx.fillText("PREP STATION", 130, topY+150);
+
+        // ── Oven bank (right side) ──
+        ctx.fillStyle="#120600"; ctx.strokeStyle=FLAME; ctx.lineWidth=1.5;
+        rr(W-230,topY+70,185,90,5); ctx.fill(); ctx.stroke();
+        // 3 ovens
+        for (let oi=0;oi<3;oi++) {
+          const ox=W-218+oi*60;
+          ctx.fillStyle="#0a0300"; ctx.strokeStyle=EMBER; ctx.lineWidth=1;
+          rr(ox,topY+80,48,64,4); ctx.fill(); ctx.stroke();
+          // Oven window
+          const og=ctx.createRadialGradient(ox+24,topY+104,0,ox+24,topY+104,16);
+          og.addColorStop(0,`rgba(${FLAMEr},${0.5+0.3*Math.sin(t*2+oi)})`); og.addColorStop(1,"rgba(0,0,0,0)");
+          ctx.fillStyle=og; rr(ox+8,topY+88,32,28,3); ctx.fill();
+          ctx.strokeStyle=`rgba(${EMBERr},0.6)`; ctx.lineWidth=0.8; ctx.stroke();
+          // Dials
+          ctx.fillStyle=EMBER; ctx.beginPath(); ctx.arc(ox+15,topY+122,4,0,Math.PI*2); ctx.fill();
+          ctx.fillStyle=FLAME; ctx.beginPath(); ctx.arc(ox+33,topY+122,4,0,Math.PI*2); ctx.fill();
+        }
+        ctx.fillStyle=`rgba(${FLAMEr},0.7)`; ctx.font="bold 7px monospace"; ctx.textAlign="center";
+        ctx.fillText("INFERNO OVENS", W-143, topY+150);
+
+        // ── 4 dining tables (2 rows × 2) ──
+        const tblPositions=[[cx-200,midY-40],[cx+50,midY-40],[cx-200,midY+100],[cx+50,midY+100]];
+        const tblCols=[EMBER,FLAME,CRIMSON,AMBER];
+        tblPositions.forEach(([tx,ty],i)=>{
+          ctx.fillStyle="#1a0800"; ctx.strokeStyle=tblCols[i]; ctx.lineWidth=1.5;
+          rr(tx,ty,140,80,6); ctx.fill(); ctx.stroke();
+          // Plates & cups
+          const cr=tblCols[i];
+          [[tx+25,ty+25],[tx+75,ty+25],[tx+115,ty+25],[tx+25,ty+55],[tx+75,ty+55],[tx+115,ty+55]].forEach(([px,py],pi)=>{
+            if(pi<4){ctx.fillStyle="#0a0200"; ctx.strokeStyle=cr; ctx.lineWidth=0.8; ctx.beginPath(); ctx.arc(px,py,9,0,Math.PI*2); ctx.fill(); ctx.stroke();}
+            else{ctx.fillStyle=cr+"44"; ctx.strokeStyle=cr; ctx.lineWidth=0.8; rr(px-5,py-7,10,14,2); ctx.fill(); ctx.stroke();}
+          });
+        });
+
+        // ── Seated diners (4 tables × 2 people) ──
+        const dinerSeats=[[cx-180,midY-60],[cx-150,midY-60],[cx+70,midY-60],[cx+100,midY-60],
+                          [cx-180,midY+90],[cx-150,midY+90],[cx+70,midY+90],[cx+100,midY+90]];
+        const dinerCols=["#8B1A00","#CC3300","#FF5500","#AA2200","#993300","#FF4400","#BB2200","#FF6600"];
+        dinerSeats.forEach(([dx,dy],di)=>{
+          ctx.fillStyle=dinerCols[di%dinerCols.length];
+          ctx.beginPath(); ctx.arc(dx,dy,8,0,Math.PI*2); ctx.fill(); // head
+          ctx.fillRect(dx-7,dy+6,14,16); // body
+          ctx.fillStyle="#1a0800"; ctx.beginPath(); ctx.arc(dx,dy,4,0,Math.PI*2); ctx.fill(); // hair
+        });
+
+        // ── Kitchen equipment (bottom row) ──
+        // Large pot
+        ctx.fillStyle="#1e0800"; ctx.strokeStyle=EMBER; ctx.lineWidth=1.5;
+        rr(cx-260,H*0.7,90,70,5); ctx.fill(); ctx.stroke();
+        const potG=ctx.createRadialGradient(cx-215,H*0.73,0,cx-215,H*0.73,30);
+        potG.addColorStop(0,`rgba(${FLAMEr},${0.4+0.2*Math.sin(t*2)})`); potG.addColorStop(1,"rgba(0,0,0,0)");
+        ctx.fillStyle=potG; ctx.beginPath(); ctx.ellipse(cx-215,H*0.73,28,18,0,0,Math.PI*2); ctx.fill();
+        ctx.fillStyle=`rgba(${AMBERr},0.7)`; ctx.font="bold 7px monospace"; ctx.textAlign="center"; ctx.fillText("CAULDRON",cx-215,H*0.78);
+
+        // Spice rack (wall)
+        ctx.fillStyle="#130600"; ctx.strokeStyle=AMBER; ctx.lineWidth=1;
+        rr(cx-80,H*0.7,160,65,4); ctx.fill(); ctx.stroke();
+        for (let si=0;si<6;si++) {
+          const scx=cx-65+si*26, sc=si%2===0?EMBER:FLAME;
+          ctx.fillStyle=sc+"44"; ctx.strokeStyle=sc; ctx.lineWidth=0.8;
+          rr(scx,H*0.73,18,38,2); ctx.fill(); ctx.stroke();
+          ctx.fillStyle=sc; ctx.font="bold 4px monospace"; ctx.textAlign="center";
+          const spices=["CHAR","BRIM","INFR","SCORCH","BLAZE","CINDER"];
+          ctx.fillText(spices[si],scx+9,H*0.73+46);
+        }
+
+        // Fryer station
+        ctx.fillStyle="#0e0400"; ctx.strokeStyle=CRIMSON; ctx.lineWidth=1.5;
+        rr(cx+160,H*0.7,100,70,5); ctx.fill(); ctx.stroke();
+        const fyG=ctx.createRadialGradient(cx+210,H*0.73,0,cx+210,H*0.73,24);
+        fyG.addColorStop(0,`rgba(${AMBERr},${0.5+0.2*Math.sin(t*3+1)})`); fyG.addColorStop(1,"rgba(0,0,0,0)");
+        ctx.fillStyle=fyG; ctx.beginPath(); ctx.ellipse(cx+210,H*0.73,22,14,0,0,Math.PI*2); ctx.fill();
+        ctx.fillStyle=`rgba(${CRIMSONr},0.7)`; ctx.font="bold 7px monospace"; ctx.textAlign="center"; ctx.fillText("LAVA FRYER",cx+210,H*0.78);
+
+        // Floor drain
+        ctx.fillStyle="#0a0100"; ctx.strokeStyle=`rgba(${FLAMEr},0.3)`; ctx.lineWidth=1;
+        ctx.beginPath(); ctx.arc(cx,H*0.88,16,0,Math.PI*2); ctx.fill(); ctx.stroke();
+        for(let di=0;di<4;di++){ctx.beginPath();ctx.moveTo(cx,H*0.88);ctx.lineTo(cx+Math.cos(di*Math.PI/2)*14,H*0.88+Math.sin(di*Math.PI/2)*14);ctx.stroke();}
+
+        // Ember drift particles (decorative)
+        for (let ei=0;ei<10;ei++) {
+          const ex=50+ei*102, ey=H*0.6+20*Math.sin(t*1.3+ei*0.8);
+          const ea=0.15+0.1*Math.sin(t*2+ei);
+          ctx.fillStyle=`rgba(${EMBERr},${ea})`; ctx.beginPath(); ctx.arc(ex,ey,2,0,Math.PI*2); ctx.fill();
+        }
       } else {
         // ── Default restaurant (non-galactica) ──────────
         // ── Bar counter (top) ────────────────────────
@@ -6349,6 +6484,91 @@ class Game {
         ctx.font = "bold 7px monospace";
         ctx.textAlign = "center";
         ctx.fillText("PRIZE COUNTER", cx, midY + 48);
+      } else if (!!this.map?.config?.hardcore) {
+        // ═══ HARDCORE: HELLFIRE ARCADE ═══
+        const t = performance.now() / 1000;
+        const EMBER="#FF8800"; const FLAME="#FF5500"; const CRIMSON="#FF2200"; const AMBER="#FFAA00";
+        const EMBERr="255,136,0"; const FLAMEr="255,85,0"; const CRIMSONr="255,34,0"; const AMBERr="255,170,0";
+
+        // Scorched floor
+        ctx.fillStyle="#080100"; ctx.fillRect(0,0,W,H);
+        for(let si=0;si<16;si++){
+          const sx=30+si*66,sy=H*0.15+((si*53)%Math.floor(H*0.7));
+          const sg=ctx.createRadialGradient(sx,sy,0,sx,sy,28);
+          sg.addColorStop(0,`rgba(${FLAMEr},0.07)`); sg.addColorStop(1,"rgba(0,0,0,0)");
+          ctx.fillStyle=sg; ctx.beginPath(); ctx.arc(sx,sy,28,0,Math.PI*2); ctx.fill();
+        }
+
+        // Title
+        ctx.save(); ctx.font="bold 19px Orbitron, monospace"; ctx.textAlign="center";
+        ctx.fillStyle="#fff"; ctx.shadowColor=FLAME; ctx.shadowBlur=28;
+        ctx.fillText("🔥 HELLFIRE ARCADE 🔥", cx, topY-10); ctx.shadowBlur=0; ctx.restore();
+
+        // ── 8 fire arcade cabinets (2 rows × 4) ──
+        const cabColors=[CRIMSON,FLAME,EMBER,AMBER];
+        const cabNames=["INFERNO FURY","LAVA BLAST","FIRE STORM","EMBER QUEST","MAGMA RACE","FLAME DUEL","SCORCH WARS","BLAZE RUN"];
+        let cabIdx=0;
+        for(let row=0;row<2;row++){
+          for(let col=0;col<4;col++){
+            const cx2=100+col*240, cy2=topY+12+row*138;
+            const cc=cabColors[col%4];
+            ctx.fillStyle="#120500"; ctx.strokeStyle=cc; ctx.lineWidth=1.5;
+            rr(cx2-42,cy2,84,110,5); ctx.fill(); ctx.stroke();
+            const sg=ctx.createLinearGradient(cx2-30,cy2+12,cx2+30,cy2+12);
+            sg.addColorStop(0,`rgba(${CRIMSONr},0.6)`); sg.addColorStop(0.5,`rgba(${AMBERr},0.8)`); sg.addColorStop(1,`rgba(${FLAMEr},0.6)`);
+            ctx.fillStyle=sg; rr(cx2-30,cy2+10,60,52,3); ctx.fill();
+            ctx.strokeStyle=cc; ctx.lineWidth=1; ctx.stroke();
+            const flk=0.3+0.2*Math.sin(t*4+col+row*2);
+            ctx.fillStyle=`rgba(${FLAMEr},${flk})`; rr(cx2-28,cy2+12,56,48,3); ctx.fill();
+            ctx.fillStyle=cc; ctx.beginPath(); ctx.arc(cx2-14,cy2+72,6,0,Math.PI*2); ctx.fill();
+            ctx.fillStyle=CRIMSON; ctx.beginPath(); ctx.arc(cx2+4,cy2+72,5,0,Math.PI*2); ctx.fill();
+            ctx.fillStyle=EMBER; ctx.beginPath(); ctx.arc(cx2+18,cy2+72,5,0,Math.PI*2); ctx.fill();
+            ctx.fillStyle="#0a0200"; ctx.strokeStyle=`rgba(${AMBERr},0.5)`; ctx.lineWidth=0.8;
+            rr(cx2-10,cy2+84,20,6,2); ctx.fill(); ctx.stroke();
+            ctx.fillStyle=cc; ctx.font="bold 5px monospace"; ctx.textAlign="center";
+            ctx.fillText(cabNames[cabIdx],cx2,cy2+100);
+            cabIdx++;
+          }
+        }
+
+        // ── High score board (back wall center) ──
+        ctx.fillStyle="#110400"; ctx.strokeStyle=AMBER; ctx.lineWidth=2;
+        rr(cx-130,topY+300,260,120,6); ctx.fill(); ctx.stroke();
+        ctx.fillStyle=AMBER; ctx.font="bold 10px monospace"; ctx.textAlign="center";
+        ctx.fillText("⚡ HIGH SCORES ⚡", cx, topY+320);
+        const scores=[["ZAV",9999],["ACE",8750],["REX",7420],["BLAZE",6100],["FURY",5880]];
+        scores.forEach(([nm,sc],si)=>{
+          ctx.fillStyle=si===0?CRIMSON:si===1?FLAME:EMBER;
+          ctx.font="bold 7px monospace"; ctx.textAlign="left";
+          ctx.fillText(`${si+1}. ${nm}`, cx-110, topY+340+si*16);
+          ctx.textAlign="right";
+          ctx.fillText(`${sc}`, cx+110, topY+340+si*16);
+        });
+
+        // ── Ticket redemption counter (bottom) ──
+        ctx.fillStyle="#150600"; ctx.strokeStyle=FLAME; ctx.lineWidth=1.5;
+        rr(cx-200,H*0.76,400,70,6); ctx.fill(); ctx.stroke();
+        ctx.fillStyle=AMBER; ctx.font="bold 9px monospace"; ctx.textAlign="center"; ctx.fillText("🎟 TICKET REDEMPTION 🎟", cx, H*0.76+20);
+        const prizes=[{x:cx-150,nm:"BLADE",col:CRIMSON},{x:cx-90,nm:"MASK",col:FLAME},{x:cx-30,nm:"BOMB",col:EMBER},{x:cx+30,nm:"TROPHY",col:AMBER},{x:cx+90,nm:"SKULL",col:CRIMSON},{x:cx+150,nm:"CROWN",col:FLAME}];
+        prizes.forEach(p=>{
+          ctx.fillStyle=p.col+"66"; ctx.strokeStyle=p.col; ctx.lineWidth=0.8;
+          rr(p.x-12,H*0.76+26,24,24,3); ctx.fill(); ctx.stroke();
+          ctx.fillStyle=p.col; ctx.font="bold 4px monospace"; ctx.textAlign="center"; ctx.fillText(p.nm,p.x,H*0.76+58);
+        });
+
+        // ── 6 players at cabinets ──
+        [[100,topY+128],[340,topY+128],[580,topY+128],[820,topY+128],[220,topY+268],[700,topY+268]].forEach(([px,py],pi)=>{
+          ctx.fillStyle=["#8B2000","#CC4400","#FF6600","#AA2200","#DD3300","#FF4400"][pi];
+          ctx.beginPath(); ctx.arc(px,py,8,0,Math.PI*2); ctx.fill();
+          ctx.fillRect(px-6,py+7,12,14);
+          ctx.fillStyle="#0a0200"; ctx.beginPath(); ctx.arc(px,py,4,0,Math.PI*2); ctx.fill();
+        });
+
+        // Ember drift
+        for(let ei=0;ei<12;ei++){
+          const ex=40+ei*85, ey=H*0.65+18*Math.sin(t*1.5+ei*0.7);
+          ctx.fillStyle=`rgba(${EMBERr},${0.13+0.09*Math.sin(t*2.2+ei)})`; ctx.beginPath(); ctx.arc(ex,ey,2,0,Math.PI*2); ctx.fill();
+        }
       } else {
         // ═══ GALACTICA: STAR GATE ARCADE ═══
         const t = performance.now() / 1000;
@@ -8015,6 +8235,117 @@ class Game {
           const lg=ctx.createRadialGradient(lx,topY+80,0,lx,topY+80,40);
           lg.addColorStop(0,`rgba(44,255,44,${la})`); lg.addColorStop(1,"rgba(0,0,0,0)");
           ctx.fillStyle=lg; ctx.beginPath(); ctx.arc(lx,topY+80,40,0,Math.PI*2); ctx.fill();
+        }
+      } else if (!!this.map?.config?.hardcore) {
+        // ═══ HARDCORE: INFERNO CLUB ═══
+        const t = performance.now() / 1000;
+        const EMBER="#FF8800"; const FLAME="#FF5500"; const CRIMSON="#FF2200"; const AMBER="#FFAA00";
+        const EMBERr="255,136,0"; const FLAMEr="255,85,0"; const CRIMSONr="255,34,0"; const AMBERr="255,170,0";
+
+        // Scorch background
+        ctx.fillStyle="#060000"; ctx.fillRect(0,0,W,H);
+
+        // Title
+        ctx.save(); ctx.font="bold 19px Orbitron, monospace"; ctx.textAlign="center";
+        ctx.fillStyle="#fff"; ctx.shadowColor=CRIMSON; ctx.shadowBlur=32;
+        ctx.fillText("🔥 INFERNO CLUB 🔥", cx, topY-10); ctx.shadowBlur=0; ctx.restore();
+
+        // ── Fire dance floor (center, animated tiles) ──
+        const tiles=6, tSize=110;
+        const dfX=cx-tiles*tSize/2, dfY=topY+20;
+        const fColors=[CRIMSON,FLAME,EMBER,AMBER,FLAME,CRIMSON];
+        for(let ty=0;ty<3;ty++) for(let tx=0;tx<tiles;tx++){
+          const fl=0.25+0.2*Math.sin(t*3+tx*0.7+ty*1.1);
+          const fc=fColors[(tx+ty)%fColors.length];
+          ctx.fillStyle=fc+Math.round(fl*255).toString(16).padStart(2,'0');
+          ctx.strokeStyle=fc+"AA"; ctx.lineWidth=1;
+          ctx.fillRect(dfX+tx*tSize,dfY+ty*tSize,tSize-2,tSize-2);
+          ctx.strokeRect(dfX+tx*tSize,dfY+ty*tSize,tSize-2,tSize-2);
+        }
+
+        // ── DJ booth (back center) ──
+        ctx.fillStyle="#130500"; ctx.strokeStyle=AMBER; ctx.lineWidth=2;
+        rr(cx-120,topY+380,240,80,6); ctx.fill(); ctx.stroke();
+        ctx.fillStyle="#0a0300"; rr(cx-100,topY+390,200,60,4); ctx.fill();
+        // Mixer
+        for(let mi=0;mi<6;mi++){
+          ctx.fillStyle=mi%2===0?EMBER:FLAME; ctx.strokeStyle=AMBER; ctx.lineWidth=0.8;
+          ctx.beginPath(); ctx.arc(cx-90+mi*36,topY+420,6,0,Math.PI*2); ctx.fill(); ctx.stroke();
+        }
+        // VU meters
+        for(let vi=0;vi<10;vi++){
+          const vh=8+20*Math.abs(Math.sin(t*5+vi*0.6));
+          ctx.fillStyle=vi<4?AMBER:vi<7?EMBER:CRIMSON;
+          ctx.fillRect(cx-80+vi*17,topY+430-vh,12,vh);
+        }
+        ctx.fillStyle=FLAME; ctx.font="bold 7px monospace"; ctx.textAlign="center"; ctx.fillText("⚡ DJ INFERNO ⚡",cx,topY+448);
+
+        // ── Bar (right side) ──
+        ctx.fillStyle="#120400"; ctx.strokeStyle=FLAME; ctx.lineWidth=1.5;
+        rr(W-210,topY+20,180,220,6); ctx.fill(); ctx.stroke();
+        ctx.fillStyle=FLAME; ctx.font="bold 8px monospace"; ctx.textAlign="center"; ctx.fillText("FIRE BAR",W-120,topY+40);
+        // Fire bottles
+        for(let bi=0;bi<5;bi++){
+          const bx=W-190+bi*36, bY=topY+60;
+          ctx.fillStyle=`rgba(${CRIMSONr},0.5)`; ctx.strokeStyle=EMBER; ctx.lineWidth=0.8;
+          rr(bx,bY,18,44,3); ctx.fill(); ctx.stroke();
+          const bg=ctx.createLinearGradient(bx,bY,bx,bY+44);
+          bg.addColorStop(0,`rgba(${AMBERr},0.4)`); bg.addColorStop(1,"rgba(0,0,0,0)");
+          ctx.fillStyle=bg; ctx.fillRect(bx,bY,18,44);
+        }
+        // Bar stools
+        for(let si=0;si<4;si++){
+          const sx=W-196+si*44;
+          ctx.fillStyle="#1a0600"; ctx.strokeStyle=EMBER; ctx.lineWidth=0.8;
+          ctx.beginPath(); ctx.arc(sx,topY+220,12,0,Math.PI*2); ctx.fill(); ctx.stroke();
+        }
+
+        // ── VIP lounge (left side) ──
+        ctx.fillStyle="#110500"; ctx.strokeStyle=CRIMSON; ctx.lineWidth=1.5;
+        rr(30,topY+20,180,220,6); ctx.fill(); ctx.stroke();
+        ctx.fillStyle=CRIMSON; ctx.font="bold 8px monospace"; ctx.textAlign="center"; ctx.fillText("VIP ZONE",120,topY+40);
+        // VIP couches
+        [[50,topY+60],[120,topY+60],[50,topY+150],[120,topY+150]].forEach(([vx,vy])=>{
+          ctx.fillStyle="#1e0800"; ctx.strokeStyle=AMBER; ctx.lineWidth=1;
+          rr(vx,vy,52,52,5); ctx.fill(); ctx.stroke();
+          ctx.fillStyle=`rgba(${AMBERr},0.08)`; ctx.fillRect(vx+4,vy+4,44,44);
+        });
+
+        // ── 20 fire-lit club patrons ──
+        const patronPositions=[];
+        for(let pi=0;pi<20;pi++){
+          const px=dfX+20+Math.floor(pi%6)*((tiles*tSize)/6), py=dfY+18+Math.floor(pi/6)*90;
+          patronPositions.push([px,py]);
+        }
+        const patCols=["#8B1A00","#CC3300","#FF5500","#AA2200","#993300","#FF4400","#BB2200","#FF6600","#DD2200","#EE4400"];
+        patronPositions.forEach(([px,py],pi)=>{
+          ctx.fillStyle=patCols[pi%patCols.length];
+          ctx.beginPath(); ctx.arc(px,py,8,0,Math.PI*2); ctx.fill();
+          ctx.fillRect(px-6,py+7,12,16);
+          ctx.fillStyle="#0a0200"; ctx.beginPath(); ctx.arc(px,py,4,0,Math.PI*2); ctx.fill();
+          // Dance motion arm
+          const armA=Math.sin(t*4+pi*0.6)*0.6;
+          ctx.strokeStyle=patCols[pi%patCols.length]; ctx.lineWidth=2;
+          ctx.beginPath(); ctx.moveTo(px-6,py+12); ctx.lineTo(px-14+Math.cos(armA)*6,py+8+Math.sin(armA)*6); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(px+6,py+12); ctx.lineTo(px+14+Math.cos(-armA)*6,py+8+Math.sin(-armA)*6); ctx.stroke();
+        });
+
+        // ── Fire spotlights from ceiling ──
+        for(let li=0;li<5;li++){
+          const lx=cx-320+li*160, la=0.22+0.18*Math.sin(t*2.5+li*1.3);
+          const lg=ctx.createRadialGradient(lx,topY+50,0,lx,topY+50+120,80);
+          lg.addColorStop(0,`rgba(${FLAMEr},${la})`); lg.addColorStop(1,"rgba(0,0,0,0)");
+          ctx.fillStyle=lg; ctx.beginPath(); ctx.arc(lx,topY+50,80,0,Math.PI*2); ctx.fill();
+        }
+
+        // ── Fire cage (bottom decor) ──
+        for(let ci=0;ci<5;ci++){
+          const fcx=120+ci*200, fcy=H*0.82;
+          ctx.strokeStyle=`rgba(${EMBERr},0.4)`; ctx.lineWidth=1.2;
+          ctx.strokeRect(fcx-14,fcy-14,28,28);
+          const fcg=ctx.createRadialGradient(fcx,fcy,0,fcx,fcy,14);
+          fcg.addColorStop(0,`rgba(${FLAMEr},${0.35+0.2*Math.sin(t*3+ci)})`); fcg.addColorStop(1,"rgba(0,0,0,0)");
+          ctx.fillStyle=fcg; ctx.beginPath(); ctx.arc(fcx,fcy,14,0,Math.PI*2); ctx.fill();
         }
       } else {
         // ── DEFAULT NIGHTCLUB (other maps) ──────────
@@ -9883,6 +10214,112 @@ class Game {
         ctx.fillRect(cx + W * 0.38, topY - 5, 8, 10);
         ctx.fillRect(cx + W * 0.44, topY - 10, 10, 15);
 
+      } else if (!!this.map?.config?.hardcore) {
+        // ═══ HARDCORE: INFERNO PAWNSHOP ═══
+        const t = performance.now() / 1000;
+        const EMBER="#FF8800"; const FLAME="#FF5500"; const CRIMSON="#FF2200"; const AMBER="#FFAA00";
+        const EMBERr="255,136,0"; const FLAMEr="255,85,0"; const CRIMSONr="255,34,0"; const AMBERr="255,170,0";
+
+        ctx.fillStyle="#070200"; ctx.fillRect(0,0,W,H);
+
+        // Title
+        ctx.save(); ctx.font="bold 17px Orbitron, monospace"; ctx.textAlign="center";
+        ctx.fillStyle="#fff"; ctx.shadowColor=EMBER; ctx.shadowBlur=24;
+        ctx.fillText("⚡ INFERNO PAWN ⚡", cx, topY-10); ctx.shadowBlur=0; ctx.restore();
+
+        // ── Display case (front counter) ──
+        ctx.fillStyle="#140600"; ctx.strokeStyle=AMBER; ctx.lineWidth=2;
+        rr(cx-280,topY+10,560,75,6); ctx.fill(); ctx.stroke();
+        ctx.fillStyle=`rgba(${AMBERr},0.06)`; ctx.fillRect(cx-276,topY+14,552,67);
+        // Items in display case
+        const displayItems=[
+          {x:cx-240,col:CRIMSON,nm:"WEAPON"},{x:cx-170,col:FLAME,nm:"ARMOR"},{x:cx-100,col:EMBER,nm:"JEWELS"},
+          {x:cx-30,col:AMBER,nm:"MASK"},{x:cx+40,col:CRIMSON,nm:"BLADE"},{x:cx+110,col:FLAME,nm:"BOMB"},
+          {x:cx+180,col:EMBER,nm:"RELIC"},{x:cx+240,col:AMBER,nm:"SKULL"}
+        ];
+        displayItems.forEach(item=>{
+          ctx.fillStyle=item.col+"55"; ctx.strokeStyle=item.col; ctx.lineWidth=0.8;
+          rr(item.x-15,topY+22,30,36,3); ctx.fill(); ctx.stroke();
+          ctx.fillStyle=item.col; ctx.font="bold 4px monospace"; ctx.textAlign="center";
+          ctx.fillText(item.nm,item.x,topY+68);
+        });
+
+        // ── Wall shelves left ──
+        for(let si=0;si<3;si++){
+          const sy=topY+110+si*90;
+          ctx.fillStyle="#110500"; ctx.strokeStyle=FLAME; ctx.lineWidth=1;
+          rr(40,sy,230,72,4); ctx.fill(); ctx.stroke();
+          ctx.fillStyle=FLAME; ctx.font="bold 7px monospace"; ctx.textAlign="center";
+          const shelfNames=["WEAPONS RACK","ARMOR DISPLAY","CONTRABAND"];
+          ctx.fillText(shelfNames[si],155,sy+14);
+          // Items on shelf
+          for(let ii=0;ii<6;ii++){
+            const ic=ii%2===0?EMBER:CRIMSON;
+            ctx.fillStyle=ic+"44"; ctx.strokeStyle=ic; ctx.lineWidth=0.7;
+            rr(55+ii*33,sy+20,26,36,3); ctx.fill(); ctx.stroke();
+            ctx.fillStyle=ic; ctx.beginPath(); ctx.arc(68+ii*33,sy+34,5,0,Math.PI*2); ctx.fill();
+          }
+        }
+
+        // ── Wall shelves right ──
+        for(let si=0;si<3;si++){
+          const sy=topY+110+si*90;
+          ctx.fillStyle="#110500"; ctx.strokeStyle=EMBER; ctx.lineWidth=1;
+          rr(W-270,sy,230,72,4); ctx.fill(); ctx.stroke();
+          ctx.fillStyle=EMBER; ctx.font="bold 7px monospace"; ctx.textAlign="center";
+          const shelfNames2=["RARE LOOT","FIRE RELICS","DARK ARTS"];
+          ctx.fillText(shelfNames2[si],W-155,sy+14);
+          for(let ii=0;ii<6;ii++){
+            const ic=ii%2===0?AMBER:FLAME;
+            ctx.fillStyle=ic+"44"; ctx.strokeStyle=ic; ctx.lineWidth=0.7;
+            rr(W-258+ii*33,sy+20,26,36,3); ctx.fill(); ctx.stroke();
+            ctx.fillStyle=ic; ctx.beginPath(); ctx.arc(W-245+ii*33,sy+34,5,0,Math.PI*2); ctx.fill();
+          }
+        }
+
+        // ── Pawnbroker desk (back center) ──
+        ctx.fillStyle="#170700"; ctx.strokeStyle=CRIMSON; ctx.lineWidth=1.5;
+        rr(cx-130,topY+380,260,90,6); ctx.fill(); ctx.stroke();
+        // Scale
+        ctx.strokeStyle=AMBER; ctx.lineWidth=1;
+        ctx.beginPath(); ctx.moveTo(cx,topY+390); ctx.lineTo(cx,topY+420); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(cx-30,topY+412); ctx.lineTo(cx+30,topY+412); ctx.stroke();
+        ctx.fillStyle=EMBER; ctx.beginPath(); ctx.arc(cx-24,topY+418,10,0,Math.PI*2); ctx.fill();
+        ctx.fillStyle=FLAME; ctx.beginPath(); ctx.arc(cx+24,topY+418,10,0,Math.PI*2); ctx.fill();
+        // Register
+        ctx.fillStyle="#0a0300"; ctx.strokeStyle=AMBER; ctx.lineWidth=1;
+        rr(cx+60,topY+388,70,46,3); ctx.fill(); ctx.stroke();
+        for(let ri=0;ri<3;ri++) for(let rj=0;rj<4;rj++){
+          ctx.fillStyle=ri===0&&rj===0?EMBER:FLAME+"44"; ctx.strokeStyle=`rgba(${EMBERr},0.4)`; ctx.lineWidth=0.5;
+          rr(cx+65+rj*16,topY+392+ri*14,13,11,2); ctx.fill(); ctx.stroke();
+        }
+        ctx.fillStyle=AMBER; ctx.font="bold 7px monospace"; ctx.textAlign="center"; ctx.fillText("PAWNBROKER",cx,topY+458);
+
+        // ── 4 browsing customers ──
+        [[cx-200,topY+130],[cx+200,topY+130],[cx-200,topY+290],[cx+200,topY+290]].forEach(([px,py],pi)=>{
+          ctx.fillStyle=["#882000","#CC4400","#FF5500","#993300"][pi];
+          ctx.beginPath(); ctx.arc(px,py,8,0,Math.PI*2); ctx.fill();
+          ctx.fillRect(px-6,py+7,12,15);
+          ctx.fillStyle="#0a0200"; ctx.beginPath(); ctx.arc(px,py,4,0,Math.PI*2); ctx.fill();
+        });
+
+        // ── Vault door (far back) ──
+        ctx.fillStyle="#0e0400"; ctx.strokeStyle=CRIMSON; ctx.lineWidth=2;
+        rr(cx-55,topY+490,110,90,5); ctx.fill(); ctx.stroke();
+        // Vault wheel
+        ctx.strokeStyle=EMBER; ctx.lineWidth=2;
+        ctx.beginPath(); ctx.arc(cx,topY+530,28,0,Math.PI*2); ctx.stroke();
+        for(let sp=0;sp<8;sp++){
+          const sa=sp*Math.PI/4+t*0.3;
+          ctx.beginPath(); ctx.moveTo(cx,topY+530); ctx.lineTo(cx+Math.cos(sa)*26,topY+530+Math.sin(sa)*26); ctx.stroke();
+        }
+        ctx.fillStyle=CRIMSON; ctx.font="bold 7px monospace"; ctx.textAlign="center"; ctx.fillText("VAULT",cx,topY+573);
+
+        // Ember drift
+        for(let ei=0;ei<10;ei++){
+          const ex=50+ei*105, ey=H*0.55+15*Math.sin(t*1.6+ei*0.8);
+          ctx.fillStyle=`rgba(${EMBERr},${0.12+0.08*Math.sin(t*2+ei)})`; ctx.beginPath(); ctx.arc(ex,ey,2,0,Math.PI*2); ctx.fill();
+        }
       } else {
         // ═══ CYBER PAWNSHOP - NEON CITY STYLE ═══
 
@@ -12092,6 +12529,116 @@ class Game {
         // Red emergency strobe
         const strA=0.06+0.05*Math.sin(t*5);
         ctx.fillStyle=`rgba(200,0,0,${strA})`; ctx.fillRect(0,0,W,H);
+      } else if (!!this.map?.config?.hardcore) {
+        // ═══ HARDCORE: HELLFIRE RADIO ═══
+        const t = performance.now() / 1000;
+        const EMBER="#FF8800"; const FLAME="#FF5500"; const CRIMSON="#FF2200"; const AMBER="#FFAA00";
+        const EMBERr="255,136,0"; const FLAMEr="255,85,0"; const CRIMSONr="255,34,0"; const AMBERr="255,170,0";
+
+        ctx.fillStyle="#060100"; ctx.fillRect(0,0,W,H);
+
+        // Title
+        ctx.save(); ctx.font="bold 17px Orbitron, monospace"; ctx.textAlign="center";
+        ctx.fillStyle="#fff"; ctx.shadowColor=FLAME; ctx.shadowBlur=28;
+        ctx.fillText("📻 HELLFIRE RADIO 📻", cx, topY-10); ctx.shadowBlur=0; ctx.restore();
+
+        // ── Main broadcast desk ──
+        ctx.fillStyle="#140600"; ctx.strokeStyle=AMBER; ctx.lineWidth=2;
+        rr(cx-260,topY+8,520,90,6); ctx.fill(); ctx.stroke();
+        ctx.fillStyle=`rgba(${AMBERr},0.05)`; ctx.fillRect(cx-256,topY+12,512,82);
+        // Mixing console
+        for(let ci=0;ci<14;ci++){
+          const ch=10+25*Math.abs(Math.sin(t*4+ci*0.5));
+          ctx.fillStyle=ci<5?CRIMSON:ci<9?FLAME:EMBER;
+          ctx.fillRect(cx-245+ci*37,topY+80-ch,28,ch);
+          ctx.fillStyle=ci%3===0?AMBER:FLAME; ctx.beginPath(); ctx.arc(cx-231+ci*37,topY+68,5,0,Math.PI*2); ctx.fill();
+        }
+        // VU meter bar
+        for(let vi=0;vi<20;vi++){
+          ctx.fillStyle=vi<8?AMBER:vi<14?EMBER:CRIMSON;
+          ctx.fillRect(cx-248+vi*26,topY+14,22,8);
+        }
+        ctx.fillStyle=FLAME; ctx.font="bold 8px monospace"; ctx.textAlign="center"; ctx.fillText("⚡ ON AIR ⚡",cx,topY+105);
+
+        // ── 3 broadcast towers (left) ──
+        for(let ti=0;ti<3;ti++){
+          const tx=80+ti*120, ty=topY+140;
+          ctx.strokeStyle=EMBER; ctx.lineWidth=1.5;
+          ctx.beginPath(); ctx.moveTo(tx,ty); ctx.lineTo(tx-20,ty+80); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(tx,ty); ctx.lineTo(tx+20,ty+80); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(tx-15,ty+30); ctx.lineTo(tx+15,ty+30); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(tx-18,ty+55); ctx.lineTo(tx+18,ty+55); ctx.stroke();
+          // Signal waves
+          for(let wi=0;wi<3;wi++){
+            const wa=0.2+0.15*Math.sin(t*3+ti+wi);
+            ctx.strokeStyle=`rgba(${FLAMEr},${wa})`; ctx.lineWidth=1;
+            ctx.beginPath(); ctx.arc(tx,ty-10,10+wi*10,Math.PI*1.2,Math.PI*1.8); ctx.stroke();
+          }
+          ctx.fillStyle=CRIMSON; ctx.beginPath(); ctx.arc(tx,ty-4,4,0,Math.PI*2); ctx.fill();
+          const blink=Math.sin(t*4+ti)>0;
+          if(blink){ctx.fillStyle=`rgba(${CRIMSONr},0.8)`; ctx.beginPath(); ctx.arc(tx,ty-4,6,0,Math.PI*2); ctx.fill();}
+        }
+
+        // ── Reel-to-reel recorders (right) ──
+        for(let ri=0;ri<3;ri++){
+          const rx=W-310+ri*90, ry=topY+140;
+          ctx.fillStyle="#120600"; ctx.strokeStyle=EMBER; ctx.lineWidth=1;
+          rr(rx,ry,75,90,4); ctx.fill(); ctx.stroke();
+          // Two reels
+          [[rx+18,ry+25],[rx+58,ry+25]].forEach(([rx2,ry2])=>{
+            ctx.strokeStyle=FLAME; ctx.lineWidth=1.5;
+            ctx.beginPath(); ctx.arc(rx2,ry2,14,0,Math.PI*2); ctx.stroke();
+            // Spokes
+            for(let sp=0;sp<4;sp++){
+              const sa=sp*Math.PI/2+t*(ri%2===0?1.5:-1.5);
+              ctx.beginPath(); ctx.moveTo(rx2,ry2); ctx.lineTo(rx2+Math.cos(sa)*12,ry2+Math.sin(sa)*12); ctx.stroke();
+            }
+            ctx.fillStyle=`rgba(${EMBERr},0.2)`; ctx.beginPath(); ctx.arc(rx2,ry2,14,0,Math.PI*2); ctx.fill();
+          });
+          // Play head
+          ctx.fillStyle=AMBER; ctx.strokeStyle=EMBER; ctx.lineWidth=0.8;
+          rr(rx+28,ry+48,20,10,2); ctx.fill(); ctx.stroke();
+          ctx.fillStyle=FLAME; ctx.font="bold 5px monospace"; ctx.textAlign="center"; ctx.fillText(`REC ${ri+1}`,rx+38,ry+80);
+        }
+
+        // ── Sound-proof booths (bottom) ──
+        for(let bi=0;bi<3;bi++){
+          const bx=40+bi*340, by=H*0.66;
+          ctx.fillStyle="#0f0500"; ctx.strokeStyle=bi===1?CRIMSON:FLAME; ctx.lineWidth=1.5;
+          rr(bx,by,300,100,5); ctx.fill(); ctx.stroke();
+          ctx.fillStyle=bi===1?CRIMSON:EMBER; ctx.font="bold 7px monospace"; ctx.textAlign="center";
+          ctx.fillText(bi===0?"STUDIO A":bi===1?"MAIN BOOTH":"STUDIO B",bx+150,by+15);
+          // Microphone
+          ctx.strokeStyle=AMBER; ctx.lineWidth=1.5;
+          ctx.beginPath(); ctx.moveTo(bx+150,by+30); ctx.lineTo(bx+150,by+65); ctx.stroke();
+          ctx.fillStyle="#1a0800"; ctx.strokeStyle=EMBER; ctx.lineWidth=1;
+          rr(bx+138,by+22,24,18,4); ctx.fill(); ctx.stroke();
+          // Pop filter
+          ctx.strokeStyle=`rgba(${AMBERr},0.5)`; ctx.lineWidth=0.8;
+          ctx.beginPath(); ctx.arc(bx+160,by+32,10,0,Math.PI*2); ctx.stroke();
+          // Headphones on desk
+          ctx.fillStyle="#160600"; ctx.strokeStyle=FLAME; ctx.lineWidth=0.8;
+          rr(bx+80,by+60,40,24,3); ctx.fill(); ctx.stroke();
+        }
+
+        // ── Broadcaster (seated at desk) ──
+        const bcastX=cx, bcastY=topY+108;
+        ctx.fillStyle="#993300";
+        ctx.beginPath(); ctx.arc(bcastX,bcastY,9,0,Math.PI*2); ctx.fill();
+        ctx.fillRect(bcastX-7,bcastY+8,14,16);
+        ctx.fillStyle="#0a0200"; ctx.beginPath(); ctx.arc(bcastX,bcastY,4,0,Math.PI*2); ctx.fill();
+        // Headphone arc
+        ctx.strokeStyle=EMBER; ctx.lineWidth=2;
+        ctx.beginPath(); ctx.arc(bcastX,bcastY-1,10,Math.PI,0); ctx.stroke();
+        ctx.fillStyle=EMBER; ctx.beginPath(); ctx.arc(bcastX-10,bcastY-1,4,0,Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(bcastX+10,bcastY-1,4,0,Math.PI*2); ctx.fill();
+
+        // Signal beam from antenna
+        for(let sb=0;sb<4;sb++){
+          const sw=sb*80+40*(Math.sin(t*2+sb));
+          ctx.strokeStyle=`rgba(${EMBERr},${0.1-sb*0.022})`; ctx.lineWidth=1;
+          ctx.beginPath(); ctx.arc(W-240,topY+150,sw,Math.PI*1.1,Math.PI*1.9); ctx.stroke();
+        }
       } else {
         // ── Default radio station (non-galactica) ───────
         // ── Broadcast desk (center) ───────────────────
@@ -14454,10 +15001,102 @@ class Game {
         const isWasteland = !!this.map.config.wasteland;
         const isRobotCity = !!this.map.config.robot;
         const isGalactica = !!this.map.config.galactica || !!this.map.config.blitz;
+        const isHardcoreP = !!this.map.config.hardcore;
         ctx.save();
         ctx.translate(p.x, p.y);
 
-        if (isNeonCity || isWasteland || isRobotCity) {
+        if (isHardcoreP) {
+          // ── HARDCORE: Fire portal — ember / crimson rings ──────────
+          const t = p._animT;
+          const pulse2 = Math.sin(t * 2) * 0.3 + 0.7;
+          const pulse3 = Math.sin(t * 4) * 0.2 + 0.8;
+
+          // Outer rotating ring (ember dashes)
+          ctx.save();
+          ctx.rotate(t * 0.5);
+          ctx.strokeStyle = `rgba(255,136,0,${pulse * 0.7})`;
+          ctx.lineWidth = 2;
+          ctx.setLineDash([8, 12]);
+          ctx.beginPath();
+          ctx.arc(0, 0, 38, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.restore();
+
+          // Middle counter-rotating ring (crimson dashes)
+          ctx.save();
+          ctx.rotate(-t * 0.8);
+          ctx.strokeStyle = `rgba(255,34,0,${pulse2 * 0.6})`;
+          ctx.lineWidth = 1.5;
+          ctx.setLineDash([5, 8]);
+          ctx.beginPath();
+          ctx.arc(0, 0, 30, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.restore();
+
+          // Inner fire glow core
+          const coreGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, 24);
+          coreGrad.addColorStop(0, `rgba(255,200,0,${pulse3 * 0.9})`);
+          coreGrad.addColorStop(0.3, `rgba(255,85,0,${pulse2 * 0.6})`);
+          coreGrad.addColorStop(0.7, `rgba(200,0,0,${pulse * 0.3})`);
+          coreGrad.addColorStop(1, "rgba(0,0,0,0)");
+          ctx.fillStyle = coreGrad;
+          ctx.beginPath();
+          ctx.arc(0, 0, 24, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Fire particles orbiting
+          for (let i = 0; i < 6; i++) {
+            const angle = t * 2 + (i * Math.PI) / 3;
+            const dist = 20 + Math.sin(t * 3 + i) * 5;
+            const px2 = Math.cos(angle) * dist;
+            const py2 = Math.sin(angle) * dist;
+            ctx.fillStyle = i % 2 === 0
+              ? `rgba(255,136,0,${pulse})`
+              : `rgba(255,34,0,${pulse})`;
+            ctx.beginPath();
+            ctx.arc(px2, py2, 2, 0, Math.PI * 2);
+            ctx.fill();
+          }
+
+          // Central bright core
+          ctx.shadowColor = "#FF8800";
+          ctx.shadowBlur = 20 * pulse;
+          ctx.fillStyle = `rgba(255,220,100,${pulse3})`;
+          ctx.beginPath();
+          ctx.arc(0, 0, 6, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Hexagon frame (fire-colored)
+          ctx.shadowBlur = 15 * pulse;
+          ctx.strokeStyle = `rgba(255,136,0,${pulse})`;
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          for (let i = 0; i < 6; i++) {
+            const angle = (Math.PI / 3) * i - Math.PI / 2;
+            const hx = Math.cos(angle) * 26;
+            const hy = Math.sin(angle) * 26;
+            if (i === 0) ctx.moveTo(hx, hy);
+            else ctx.lineTo(hx, hy);
+          }
+          ctx.closePath();
+          ctx.stroke();
+
+          ctx.shadowBlur = 0;
+          ctx.fillStyle = near ? "#FFEEAA" : "#FF8800";
+          ctx.font = "bold 9px Orbitron, monospace";
+          ctx.textAlign = "center";
+          ctx.shadowColor = "#FF8800";
+          ctx.shadowBlur = 10;
+          ctx.fillText("⚡ PORTAL ⚡", 0, -48);
+          if (near) {
+            ctx.fillStyle = "#FFEEAA";
+            ctx.shadowColor = "#FFAA00";
+            ctx.shadowBlur = 12;
+            ctx.fillText("[E] TELEPORT", 0, -62);
+          }
+        } else if (isNeonCity || isWasteland || isRobotCity) {
           // ── NEON CITY: Cyber portal — cyan / magenta rings ────────
           const t = p._animT;
           const pulse2 = Math.sin(t * 2) * 0.3 + 0.7;
