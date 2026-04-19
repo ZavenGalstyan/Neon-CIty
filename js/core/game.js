@@ -3331,7 +3331,8 @@ class Game {
 
         if (room.isDealership) {
           const isNeonCity  = this.map.config.id === "neon_city";
-          const isGalactica = !!this.map.config.galactica || !!this.map.config.blitz;
+          const isGalactica = !!this.map.config.galactica;
+          const isBlitz    = !!this.map.config.blitz;
           const isWasteland = !!this.map.config.wasteland;
           if (isNeonCity) {
             // Neon City: One professional cyber salesperson behind the counter
@@ -3340,6 +3341,13 @@ class Game {
             const spY = room.roomH * 0.38; // Closer to the display cars
             this._salespersons = [
               new Salesperson(spX, spY, "#00FFFF", "SALES REP", true),
+            ];
+          } else if (isBlitz) {
+            // Blitz: Human-style dealer matching the bar worker look
+            const spX = room.roomW / 2;
+            const spY = room.roomH * 0.38;
+            this._salespersons = [
+              new Salesperson(spX, spY, "#00FFFF", "DEALER", true),
             ];
           } else if (isGalactica) {
             // Galactica: Cosmic COMMANDER salesperson
