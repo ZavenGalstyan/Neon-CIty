@@ -1748,6 +1748,8 @@ class Game {
     const oceanColors = ["#0077AA", "#005588", "#006699", "#008899", "#004466"];
     const isOcean = !!this.map.config.ocean;
     const isNeonCity = this.map.config.id === "neon_city";
+    // Robot City: no drivable cars — machines don't use human vehicles
+    if (!!this.map.config.robot) return;
 
     // Neon City: spawn 3 orange vehicles for the player (no other traffic)
     if (isNeonCity) {
@@ -2838,16 +2840,16 @@ class Game {
 
   _spawnAmbientTraffic() {
     if (this._arenaMode || this._zombieMode || this._towerMode) return;
-    // No ambient traffic on neon city or wasteland maps
-    if (this.map.config.id === "neon_city" || this.map.config.wasteland) return;
+    // No ambient traffic on neon city, wasteland, or robot city maps
+    if (this.map.config.id === "neon_city" || this.map.config.wasteland || this.map.config.robot) return;
     const base = this._metropolisMode ? 12 : 6;
     const count = base + Math.floor(Math.random() * 6);
     for (let i = 0; i < count; i++) this._respawnAmbientCar();
   }
 
   _respawnAmbientCar() {
-    // No ambient traffic on neon city or wasteland maps
-    if (this.map.config.id === "neon_city" || this.map.config.wasteland) return;
+    // No ambient traffic on neon city, wasteland, or robot city maps
+    if (this.map.config.id === "neon_city" || this.map.config.wasteland || this.map.config.robot) return;
     const maxCars = this._metropolisMode ? 22 : 14;
     if (this._ambientCars.length >= maxCars) return;
     // Spawn off-camera on a road tile
@@ -11783,17 +11785,23 @@ class Game {
       offY = (H - room.roomH) / 2;
     const S = room.S;
     const T = Date.now() / 1000;
+    const isRobotCity = !!this.map?.config?.robot;
 
     // ── Sky/background ─────────────────────────────────────────
-    ctx.fillStyle = "#020308";
+    ctx.fillStyle = isRobotCity ? "#010810" : "#020308";
     ctx.fillRect(0, 0, W, H);
     ctx.save();
     ctx.translate(offX + shake.x, offY + shake.y);
 
     // ── Ambient underground glow ───────────────────────────────
     const ambientGrad = ctx.createRadialGradient(room.roomW / 2, room.roomH / 2, 0, room.roomW / 2, room.roomH / 2, room.roomW * 0.7);
-    ambientGrad.addColorStop(0, 'rgba(30,50,80,0.06)');
-    ambientGrad.addColorStop(1, 'rgba(0,0,0,0)');
+    if (isRobotCity) {
+      ambientGrad.addColorStop(0, 'rgba(0,60,80,0.10)');
+      ambientGrad.addColorStop(1, 'rgba(0,0,0,0)');
+    } else {
+      ambientGrad.addColorStop(0, 'rgba(30,50,80,0.06)');
+      ambientGrad.addColorStop(1, 'rgba(0,0,0,0)');
+    }
     ctx.fillStyle = ambientGrad;
     ctx.fillRect(0, 0, room.roomW, room.roomH);
 
@@ -12413,28 +12421,33 @@ class Game {
     ctx.stroke();
 
     // ── Overhead METRO sign ────────────────────────────────────
-    ctx.fillStyle = "#001408";
-    ctx.strokeStyle = "#22FF66";
+    const metroAccent  = isRobotCity ? "#00CCFF" : "#22FF66";
+    const metroAccent2 = isRobotCity ? "#00AAEE" : "#22FF44";
+    const metroBg      = isRobotCity ? "#00080e" : "#001408";
+    const metroBg2     = isRobotCity ? "#00060c" : "#001808";
+    const metroLabel   = isRobotCity ? "⬡  TRANSIT GRID  LINE 1  ⬡" : "◉  METRO  LINE 1  ◉";
+    ctx.fillStyle = metroBg;
+    ctx.strokeStyle = metroAccent;
     ctx.lineWidth = 2;
-    ctx.fillRect(room.roomW / 2 - 82, 0, 164, 23);
-    ctx.strokeRect(room.roomW / 2 - 82, 0, 164, 23);
-    ctx.fillStyle = "#22FF66";
-    ctx.shadowColor = "#22FF66";
+    ctx.fillRect(room.roomW / 2 - 92, 0, 184, 23);
+    ctx.strokeRect(room.roomW / 2 - 92, 0, 184, 23);
+    ctx.fillStyle = metroAccent;
+    ctx.shadowColor = metroAccent;
     ctx.shadowBlur = 18;
     ctx.font = "bold 13px Orbitron, monospace";
     ctx.textAlign = "center";
-    ctx.fillText("◉  METRO  LINE 1  ◉", room.roomW / 2, 17);
+    ctx.fillText(metroLabel, room.roomW / 2, 17);
     ctx.shadowBlur = 0;
 
     // EXIT signs
     for (const sx2 of [30, room.roomW - 30]) {
-      ctx.fillStyle = "#001808";
+      ctx.fillStyle = metroBg2;
       ctx.fillRect(sx2 - 24, platEdge + 5, 48, 19);
-      ctx.strokeStyle = "#22FF44";
+      ctx.strokeStyle = metroAccent2;
       ctx.lineWidth = 1;
       ctx.strokeRect(sx2 - 24, platEdge + 5, 48, 19);
-      ctx.fillStyle = "#22FF44";
-      ctx.shadowColor = "#22FF44";
+      ctx.fillStyle = metroAccent2;
+      ctx.shadowColor = metroAccent2;
       ctx.shadowBlur = 12;
       ctx.font = "bold 9px monospace";
       ctx.textAlign = "center";
@@ -12444,12 +12457,12 @@ class Game {
 
     // ── Wave counter ───────────────────────────────────────────
     const aliveCnt = this._indoorBots.filter((b) => !b.dead && !b.dying).length;
-    ctx.fillStyle = "#44FF88";
+    ctx.fillStyle = isRobotCity ? "#44DDFF" : "#44FF88";
     ctx.font = "bold 11px Orbitron, monospace";
     ctx.textAlign = "right";
-    ctx.shadowColor = "#22FF44";
+    ctx.shadowColor = metroAccent2;
     ctx.shadowBlur = 10;
-    ctx.fillText(`METRO WAVE ${this._metroWave}`, room.roomW - 10, 17);
+    ctx.fillText(`${isRobotCity ? "TRANSIT WAVE" : "METRO WAVE"} ${this._metroWave}`, room.roomW - 10, 17);
     if (aliveCnt > 0) {
       ctx.fillStyle = "#FF4444";
       ctx.shadowColor = "#FF0000";
@@ -12459,7 +12472,7 @@ class Game {
       ctx.shadowColor = "#FFAA00";
       ctx.fillText(`NEXT WAVE ${Math.ceil(this._metroWaveTimer)}s`, room.roomW - 10, 32);
     } else {
-      ctx.fillStyle = "#44FF88";
+      ctx.fillStyle = isRobotCity ? "#44DDFF" : "#44FF88";
       ctx.fillText("SECTOR CLEAR", room.roomW - 10, 32);
     }
     ctx.shadowBlur = 0;
@@ -13711,11 +13724,12 @@ class Game {
         const near = Math.hypot(p.x - this.player.x, p.y - this.player.y) < 55;
         const isNeonCity  = this.map.config.id === "neon_city";
         const isWasteland = !!this.map.config.wasteland;
+        const isRobotCity = !!this.map.config.robot;
         const isGalactica = !!this.map.config.galactica || !!this.map.config.blitz;
         ctx.save();
         ctx.translate(p.x, p.y);
 
-        if (isNeonCity || isWasteland) {
+        if (isNeonCity || isWasteland || isRobotCity) {
           // ── NEON CITY: Cyber portal — cyan / magenta rings ────────
           const t = p._animT;
           const pulse2 = Math.sin(t * 2) * 0.3 + 0.7;
@@ -14047,13 +14061,14 @@ class Game {
         if (this.map.metroEntrance) {
           const me = this.map.metroEntrance;
           if (Math.hypot(me.wx - this.player.x, me.wy - this.player.y) < 70) {
+            const isRobotHint = !!this.map.config.robot;
             ctx.save();
             ctx.font = "bold 11px Orbitron, monospace";
             ctx.textAlign = "center";
-            ctx.fillStyle = "#44FF88";
-            ctx.shadowColor = "#22FF66";
+            ctx.fillStyle = isRobotHint ? "#44DDFF" : "#44FF88";
+            ctx.shadowColor = isRobotHint ? "#00CCFF" : "#22FF66";
             ctx.shadowBlur = 14;
-            ctx.fillText("[E] METRO", me.wx, me.wy - 40);
+            ctx.fillText(isRobotHint ? "[E] TRANSIT" : "[E] METRO", me.wx, me.wy - 40);
             ctx.restore();
           }
         }

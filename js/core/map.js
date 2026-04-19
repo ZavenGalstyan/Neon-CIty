@@ -3583,19 +3583,44 @@ class GameMap {
     if (!this.metroEntrance) return;
     const { wx, wy } = this.metroEntrance;
     const S = this.S;
-    // ctx is already in world-space (translated by -camX,-camY by the caller)
-    // so render directly at world coordinates wx, wy
+    const isRobot = !!this.config.robot;
     ctx.save();
-    ctx.fillStyle = '#060e06';
-    ctx.fillRect(wx - S * 0.5, wy - S * 0.5, S, S);
-    for (let i = 0; i < 4; i++) {
-      ctx.fillStyle = `rgba(34,255,100,${0.38 - i * 0.08})`;
-      ctx.fillRect(wx - S * 0.5 + i * 5, wy + S * 0.5 - (i + 1) * 9, S - i * 10, 5);
+    if (isRobot) {
+      // Robot City: teal/cyan transit node
+      ctx.fillStyle = '#040e14';
+      ctx.fillRect(wx - S * 0.5, wy - S * 0.5, S, S);
+      // Circuit corner pads
+      ctx.fillStyle = 'rgba(0,220,255,0.18)';
+      ctx.fillRect(wx - S*0.5 + 3, wy - S*0.5 + 3, 8, 8);
+      ctx.fillRect(wx + S*0.5 - 11, wy - S*0.5 + 3, 8, 8);
+      ctx.fillRect(wx - S*0.5 + 3, wy + S*0.5 - 11, 8, 8);
+      ctx.fillRect(wx + S*0.5 - 11, wy + S*0.5 - 11, 8, 8);
+      // Bottom step bars
+      for (let i = 0; i < 4; i++) {
+        ctx.fillStyle = `rgba(0,200,255,${0.35 - i * 0.07})`;
+        ctx.fillRect(wx - S * 0.5 + i * 5, wy + S * 0.5 - (i + 1) * 9, S - i * 10, 5);
+      }
+      // Outer border
+      ctx.strokeStyle = 'rgba(0,200,255,0.35)'; ctx.lineWidth = 1.5;
+      ctx.strokeRect(wx - S*0.5 + 2, wy - S*0.5 + 2, S-4, S-4);
+      // T label
+      ctx.font = 'bold 26px monospace';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillStyle = '#00CCFF'; ctx.shadowColor = '#00CCFF'; ctx.shadowBlur = 22;
+      ctx.fillText('T', wx, wy);
+    } else {
+      // Standard: green metro M
+      ctx.fillStyle = '#060e06';
+      ctx.fillRect(wx - S * 0.5, wy - S * 0.5, S, S);
+      for (let i = 0; i < 4; i++) {
+        ctx.fillStyle = `rgba(34,255,100,${0.38 - i * 0.08})`;
+        ctx.fillRect(wx - S * 0.5 + i * 5, wy + S * 0.5 - (i + 1) * 9, S - i * 10, 5);
+      }
+      ctx.font = 'bold 26px monospace';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillStyle = '#22FF66'; ctx.shadowColor = '#22FF66'; ctx.shadowBlur = 20;
+      ctx.fillText('M', wx, wy);
     }
-    ctx.font = 'bold 26px monospace';
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillStyle = '#22FF66'; ctx.shadowColor = '#22FF66'; ctx.shadowBlur = 20;
-    ctx.fillText('M', wx, wy);
     ctx.shadowBlur = 0; ctx.textBaseline = 'alphabetic';
     ctx.restore();
   }
