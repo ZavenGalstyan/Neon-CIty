@@ -9471,197 +9471,339 @@ class Game {
         ctx.textAlign = "center";
         ctx.fillText("JUKEBOX", cx + W * 0.3 + 18, topY + 44);
       } else if (isHardcoreBar) {
-        // ═══ HARDCORE: HELLFIRE LOUNGE ═══
+        // ═══ HARDCORE: HELLFIRE LOUNGE ═══ (exact mirror of galactica bar, fire colors)
         const t = performance.now() / 1000;
-        const EMBER = "#FF8800", FLAME = "#FF5500", CRIMSON = "#FF2200", AMBER = "#FFAA00";
+        // Fire palette (replaces galactica PURP/GOLD/CYAN/PINK)
+        const PURP = "#FF8800";   // EMBER  (was purple)
+        const GOLD = "#FFAA00";   // AMBER  (was gold)
+        const CYAN = "#FF5500";   // FLAME  (was cyan)
+        const PINK = "#FF2200";   // CRIMSON(was pink)
+        // background tint
+        ctx.fillStyle = "rgba(20,4,0,0.55)"; ctx.fillRect(0, 0, W, H);
 
         // Title
         ctx.save();
-        ctx.font = "bold 16px Orbitron, monospace"; ctx.textAlign = "center";
-        ctx.fillStyle = "#fff"; ctx.shadowColor = EMBER; ctx.shadowBlur = 22;
+        ctx.font = "bold 16px Orbitron, monospace";
+        ctx.textAlign = "center";
+        ctx.fillStyle = "#fff";
+        ctx.shadowColor = PURP;
+        ctx.shadowBlur = 22;
         ctx.fillText("⚡ HELLFIRE LOUNGE ⚡", cx, topY - 50);
-        ctx.shadowBlur = 0; ctx.restore();
-
-        // ── FIRE BAR COUNTER ──
-        ctx.fillStyle = "#1a0400"; ctx.strokeStyle = EMBER; ctx.lineWidth = 2;
-        ctx.shadowColor = EMBER; ctx.shadowBlur = 14;
-        rr(cx - W*0.38, topY+6, W*0.76, 28, 6); ctx.fill(); ctx.stroke();
         ctx.shadowBlur = 0;
-        const ctGradHC = ctx.createLinearGradient(cx - W*0.38, 0, cx + W*0.38, 0);
+        ctx.restore();
+
+        // ── FIRE BAR COUNTER (curved top) ──
+        ctx.fillStyle = "#1a0400";
+        ctx.strokeStyle = PURP;
+        ctx.lineWidth = 2;
+        ctx.shadowColor = PURP;
+        ctx.shadowBlur = 14;
+        rr(cx - W * 0.38, topY + 6, W * 0.76, 28, 6);
+        ctx.fill();
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+        // Counter top surface glow
+        const ctGradHC = ctx.createLinearGradient(cx - W * 0.38, 0, cx + W * 0.38, 0);
         ctGradHC.addColorStop(0, "rgba(255,136,0,0)");
         ctGradHC.addColorStop(0.5, "rgba(255,136,0,0.4)");
         ctGradHC.addColorStop(1, "rgba(255,136,0,0)");
-        ctx.fillStyle = ctGradHC; ctx.fillRect(cx - W*0.38, topY+6, W*0.76, 5);
+        ctx.fillStyle = ctGradHC;
+        ctx.fillRect(cx - W * 0.38, topY + 6, W * 0.76, 5);
 
-        // ── FIRE DRINK BOTTLES ──
+        // ── FIRE DRINK BOTTLES (on counter shelf) ──
         const hcDrinks = [
-          { col: EMBER,    symbol: "⚡", label: "BLAZE"   },
-          { col: CRIMSON,  symbol: "◆",  label: "INFERNO" },
-          { col: AMBER,    symbol: "★",  label: "AMBER"   },
-          { col: FLAME,    symbol: "◎",  label: "MAGMA"   },
-          { col: "#FFEE44",symbol: "✦",  label: "EMBER"   },
+          { col: PURP, symbol: "⚡", label: "BLAZE"   },
+          { col: CYAN, symbol: "◆",  label: "INFERNO" },
+          { col: PINK, symbol: "✦",  label: "MAGMA"   },
+          { col: GOLD, symbol: "⬢",  label: "AMBER"   },
+          { col: "#FFEE44", symbol: "◎", label: "EMBER" },
         ];
         for (let i = 0; i < hcDrinks.length; i++) {
           const dd = hcDrinks[i];
-          const bx = cx - W*0.3 + i*(W*0.15), by = topY+2;
-          const lp = Math.sin(t*1.5+i*1.2)*0.3+0.7;
-          ctx.fillStyle = dd.col+"30"; ctx.strokeStyle = dd.col; ctx.lineWidth = 1.5;
-          ctx.shadowColor = dd.col; ctx.shadowBlur = 8*lp;
+          const bx = cx - W * 0.3 + i * (W * 0.15);
+          const by = topY + 2;
+          const lp = Math.sin(t * 1.5 + i * 1.2) * 0.3 + 0.7;
+          // Bottle body — tall fire vial
+          ctx.fillStyle = dd.col + "30";
+          ctx.strokeStyle = dd.col;
+          ctx.lineWidth = 1.5;
+          ctx.shadowColor = dd.col;
+          ctx.shadowBlur = 8 * lp;
           ctx.beginPath();
-          ctx.moveTo(bx-6,by+36); ctx.lineTo(bx-8,by+28); ctx.lineTo(bx-5,by+8);
-          ctx.lineTo(bx-3,by);    ctx.lineTo(bx+3,by);    ctx.lineTo(bx+5,by+8);
-          ctx.lineTo(bx+8,by+28); ctx.lineTo(bx+6,by+36); ctx.closePath();
-          ctx.fill(); ctx.stroke(); ctx.shadowBlur = 0;
-          ctx.fillStyle = dd.col+"70";
+          ctx.moveTo(bx - 6, by + 36);
+          ctx.lineTo(bx - 8, by + 28);
+          ctx.lineTo(bx - 5, by + 8);
+          ctx.lineTo(bx - 3, by);
+          ctx.lineTo(bx + 3, by);
+          ctx.lineTo(bx + 5, by + 8);
+          ctx.lineTo(bx + 8, by + 28);
+          ctx.lineTo(bx + 6, by + 36);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          ctx.shadowBlur = 0;
+          // Liquid fill
+          ctx.fillStyle = dd.col + "70";
           ctx.beginPath();
-          ctx.moveTo(bx-5.5,by+36); ctx.lineTo(bx-7,by+28); ctx.lineTo(bx-4,by+(8+(1-lp)*16));
-          ctx.lineTo(bx+4,by+(8+(1-lp)*16)); ctx.lineTo(bx+7,by+28); ctx.lineTo(bx+5.5,by+36);
-          ctx.closePath(); ctx.fill();
-          ctx.fillStyle = "#FFF"; ctx.shadowColor = dd.col; ctx.shadowBlur = 5;
-          ctx.font = "8px serif"; ctx.textAlign = "center";
-          ctx.fillText(dd.symbol, bx, by+22); ctx.shadowBlur = 0;
-          ctx.fillStyle = dd.col; ctx.font = "5px Orbitron, monospace";
-          ctx.fillText(dd.label, bx, by+42);
+          ctx.moveTo(bx - 5.5, by + 36);
+          ctx.lineTo(bx - 7, by + 28);
+          ctx.lineTo(bx - 4, by + (8 + (1 - lp) * 16));
+          ctx.lineTo(bx + 4, by + (8 + (1 - lp) * 16));
+          ctx.lineTo(bx + 7, by + 28);
+          ctx.lineTo(bx + 5.5, by + 36);
+          ctx.closePath();
+          ctx.fill();
+          // Symbol
+          ctx.fillStyle = "#FFF";
+          ctx.shadowColor = dd.col;
+          ctx.shadowBlur = 5;
+          ctx.font = "8px serif";
+          ctx.textAlign = "center";
+          ctx.fillText(dd.symbol, bx, by + 22);
+          ctx.shadowBlur = 0;
+          // Label
+          ctx.fillStyle = dd.col;
+          ctx.font = "5px Orbitron, monospace";
+          ctx.fillText(dd.label, bx, by + 42);
         }
 
-        // ── BAR STOOLS ──
-        for (let si=0; si<5; si++) {
-          const bsx = cx - W*0.3 + si*(W*0.15), bsy = topY+56;
-          ctx.strokeStyle = EMBER+"77"; ctx.lineWidth = 1.5;
-          ctx.beginPath(); ctx.moveTo(bsx-6,bsy+6); ctx.lineTo(bsx-8,bsy+20); ctx.stroke();
-          ctx.beginPath(); ctx.moveTo(bsx+6,bsy+6); ctx.lineTo(bsx+8,bsy+20); ctx.stroke();
-          ctx.beginPath(); ctx.moveTo(bsx-6,bsy+14); ctx.lineTo(bsx+6,bsy+14); ctx.stroke();
-          ctx.fillStyle = "#2a0800"; ctx.strokeStyle = EMBER; ctx.lineWidth = 1.5;
-          ctx.shadowColor = EMBER; ctx.shadowBlur = 5;
-          ctx.beginPath(); ctx.ellipse(bsx, bsy, 11, 6, 0, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+        // ── BAR STOOLS along counter ──
+        for (let si = 0; si < 5; si++) {
+          const bsx = cx - W * 0.3 + si * (W * 0.15);
+          const bsy = topY + 56;
+          // Stool legs
+          ctx.strokeStyle = PURP + "77"; ctx.lineWidth = 1.5;
+          ctx.beginPath(); ctx.moveTo(bsx - 6, bsy + 6); ctx.lineTo(bsx - 8, bsy + 20); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(bsx + 6, bsy + 6); ctx.lineTo(bsx + 8, bsy + 20); ctx.stroke();
+          // Cross bar
+          ctx.beginPath(); ctx.moveTo(bsx - 6, bsy + 14); ctx.lineTo(bsx + 6, bsy + 14); ctx.stroke();
+          // Seat
+          ctx.fillStyle = "#1a0400"; ctx.strokeStyle = PURP; ctx.lineWidth = 1.5;
+          ctx.shadowColor = PURP; ctx.shadowBlur = 5;
+          ctx.beginPath(); ctx.ellipse(bsx, bsy, 11, 6, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
           ctx.shadowBlur = 0;
         }
 
-        // ── BAR PATRONS ──
-        const hcPatrons = [
-          { x:cx-W*0.3+0*(W*0.15), skin:"#FFDDBB", hair:"#1a1a2a", col:EMBER,    gender:"m", drink:EMBER    },
-          { x:cx-W*0.3+1*(W*0.15), skin:"#F0C080", hair:"#AA5522", col:FLAME,    gender:"f", drink:FLAME    },
-          { x:cx-W*0.3+2*(W*0.15), skin:"#D4956A", hair:"#2a1a00", col:AMBER,    gender:"m", drink:AMBER    },
-          { x:cx-W*0.3+3*(W*0.15), skin:"#EECCAA", hair:"#1a002a", col:CRIMSON,  gender:"f", drink:CRIMSON  },
-          { x:cx-W*0.3+4*(W*0.15), skin:"#DDBB99", hair:"#332211", col:"#FFEE44",gender:"m", drink:"#FFEE44"},
+        // ── BAR PATRONS on stools ──
+        const hcBarPatrons = [
+          { x: cx - W * 0.3 + 0 * (W * 0.15), skin: "#FFDDBB", hair: "#1a1a2a", col: PURP,      gender: "m", drink: PURP      },
+          { x: cx - W * 0.3 + 1 * (W * 0.15), skin: "#F0C080", hair: "#AA5522", col: PINK,      gender: "f", drink: PINK      },
+          { x: cx - W * 0.3 + 2 * (W * 0.15), skin: "#D4956A", hair: "#2a1a00", col: CYAN,      gender: "m", drink: CYAN      },
+          { x: cx - W * 0.3 + 3 * (W * 0.15), skin: "#EECCAA", hair: "#1a002a", col: GOLD,      gender: "f", drink: GOLD      },
+          { x: cx - W * 0.3 + 4 * (W * 0.15), skin: "#DDBB99", hair: "#332211", col: "#FFEE44", gender: "m", drink: "#FFEE44" },
         ];
-        for (const bp of hcPatrons) {
-          const bpx=bp.x, bpy=topY+36; ctx.save();
-          ctx.fillStyle=bp.col+"CC"; ctx.shadowColor=bp.col; ctx.shadowBlur=5;
-          rr(bpx-8,bpy-4,16,18,3); ctx.fill(); ctx.shadowBlur=0;
-          if (bp.gender==="f") {
-            ctx.fillStyle=bp.col+"55";
+        for (const bp of hcBarPatrons) {
+          const bpx = bp.x, bpy = topY + 36;
+          ctx.save();
+          // Body
+          ctx.fillStyle = bp.col + "CC"; ctx.shadowColor = bp.col; ctx.shadowBlur = 5;
+          rr(bpx - 8, bpy - 4, 16, 18, 3); ctx.fill(); ctx.shadowBlur = 0;
+          if (bp.gender === "f") {
+            ctx.fillStyle = bp.col + "55";
             ctx.beginPath(); ctx.moveTo(bpx-8,bpy+10); ctx.lineTo(bpx-10,bpy+20); ctx.lineTo(bpx+10,bpy+20); ctx.lineTo(bpx+8,bpy+10); ctx.closePath(); ctx.fill();
           }
-          ctx.fillStyle=bp.skin; ctx.fillRect(bpx-2,bpy-6,4,4);
-          ctx.beginPath(); ctx.arc(bpx,bpy-13,9,0,Math.PI*2); ctx.fill();
-          ctx.fillStyle=bp.hair;
-          if (bp.gender==="f") { ctx.beginPath(); ctx.arc(bpx,bpy-16,8,Math.PI,0); ctx.fill(); ctx.fillRect(bpx-8,bpy-18,4,12); ctx.fillRect(bpx+4,bpy-18,4,12); }
-          else { ctx.fillRect(bpx-7,bpy-19,14,7); }
-          ctx.fillStyle="#fff"; ctx.beginPath(); ctx.ellipse(bpx-3.5,bpy-14,2.2,1.8,0,0,Math.PI*2); ctx.ellipse(bpx+3.5,bpy-14,2.2,1.8,0,0,Math.PI*2); ctx.fill();
-          ctx.fillStyle=bp.col; ctx.shadowColor=bp.col; ctx.shadowBlur=3;
-          ctx.beginPath(); ctx.arc(bpx-3.5,bpy-14,1.2,0,Math.PI*2); ctx.fill();
-          ctx.beginPath(); ctx.arc(bpx+3.5,bpy-14,1.2,0,Math.PI*2); ctx.fill(); ctx.shadowBlur=0;
-          ctx.fillStyle="#000"; ctx.beginPath(); ctx.arc(bpx-3.5,bpy-14,0.5,0,Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(bpx+3.5,bpy-14,0.5,0,Math.PI*2); ctx.fill();
-          ctx.fillStyle="rgba(0,0,0,0.15)"; ctx.beginPath(); ctx.arc(bpx,bpy-11,1.2,0,Math.PI*2); ctx.fill();
-          ctx.strokeStyle=bp.gender==="f"?"#EE4466":"#AA6644"; ctx.lineWidth=1.2;
-          ctx.beginPath(); ctx.arc(bpx,bpy-8.5,3,0.1,Math.PI-0.1); ctx.stroke();
-          ctx.strokeStyle=bp.skin; ctx.lineWidth=3; ctx.lineCap="round";
-          ctx.beginPath(); ctx.moveTo(bpx+8,bpy+2); ctx.lineTo(bpx+16,bpy-4); ctx.stroke(); ctx.lineCap="butt";
-          ctx.fillStyle=bp.drink+"50"; ctx.strokeStyle=bp.drink; ctx.lineWidth=1;
-          ctx.shadowColor=bp.drink; ctx.shadowBlur=7;
-          ctx.beginPath(); ctx.moveTo(bpx+13,bpy-14); ctx.lineTo(bpx+11,bpy-6); ctx.lineTo(bpx+20,bpy-6); ctx.lineTo(bpx+18,bpy-14); ctx.closePath(); ctx.fill(); ctx.stroke();
-          ctx.shadowBlur=0; ctx.restore();
+          // Neck
+          ctx.fillStyle = bp.skin; ctx.fillRect(bpx-2, bpy-6, 4, 4);
+          // Head
+          ctx.beginPath(); ctx.arc(bpx, bpy-13, 9, 0, Math.PI*2); ctx.fill();
+          // Hair
+          ctx.fillStyle = bp.hair;
+          if (bp.gender === "f") {
+            ctx.beginPath(); ctx.arc(bpx, bpy-16, 8, Math.PI, 0); ctx.fill();
+            ctx.fillRect(bpx-8, bpy-18, 4, 12); ctx.fillRect(bpx+4, bpy-18, 4, 12);
+          } else {
+            ctx.fillRect(bpx-7, bpy-19, 14, 7);
+          }
+          // Eyes
+          ctx.fillStyle = "#fff";
+          ctx.beginPath();
+          ctx.ellipse(bpx-3.5, bpy-14, 2.2, 1.8, 0, 0, Math.PI*2);
+          ctx.ellipse(bpx+3.5, bpy-14, 2.2, 1.8, 0, 0, Math.PI*2); ctx.fill();
+          ctx.fillStyle = bp.col; ctx.shadowColor = bp.col; ctx.shadowBlur = 3;
+          ctx.beginPath(); ctx.arc(bpx-3.5, bpy-14, 1.2, 0, Math.PI*2); ctx.fill();
+          ctx.beginPath(); ctx.arc(bpx+3.5, bpy-14, 1.2, 0, Math.PI*2); ctx.fill();
+          ctx.shadowBlur = 0;
+          ctx.fillStyle = "#000";
+          ctx.beginPath(); ctx.arc(bpx-3.5, bpy-14, 0.5, 0, Math.PI*2); ctx.fill();
+          ctx.beginPath(); ctx.arc(bpx+3.5, bpy-14, 0.5, 0, Math.PI*2); ctx.fill();
+          // Nose
+          ctx.fillStyle = "rgba(0,0,0,0.15)"; ctx.beginPath(); ctx.arc(bpx, bpy-11, 1.2, 0, Math.PI*2); ctx.fill();
+          // Mouth
+          ctx.strokeStyle = bp.gender==="f" ? "#EE4466" : "#AA6644"; ctx.lineWidth = 1.2;
+          ctx.beginPath(); ctx.arc(bpx, bpy-8.5, 3, 0.1, Math.PI-0.1); ctx.stroke();
+          // Arm holding drink at counter
+          ctx.strokeStyle = bp.skin; ctx.lineWidth = 3; ctx.lineCap = "round";
+          ctx.beginPath(); ctx.moveTo(bpx+8, bpy+2); ctx.lineTo(bpx+16, bpy-4); ctx.stroke();
+          ctx.lineCap = "butt";
+          // Drink
+          ctx.fillStyle = bp.drink + "50"; ctx.strokeStyle = bp.drink; ctx.lineWidth = 1;
+          ctx.shadowColor = bp.drink; ctx.shadowBlur = 7;
+          ctx.beginPath();
+          ctx.moveTo(bpx+13, bpy-14); ctx.lineTo(bpx+11, bpy-6); ctx.lineTo(bpx+20, bpy-6); ctx.lineTo(bpx+18, bpy-14);
+          ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.shadowBlur = 0;
+          ctx.restore();
         }
 
-        // ── 3 FIRE TABLES with seating ──
-        const hcTables = [
-          { x:cx-W*0.3, y:midY-8, col:EMBER  },
-          { x:cx,        y:midY+6, col:FLAME  },
-          { x:cx+W*0.28, y:midY-8, col:AMBER  },
+        // ── 3 CIRCULAR FIRE TABLES with seating ──
+        const hcTableData = [
+          { x: cx - W * 0.3, y: midY - 8, col: PURP },
+          { x: cx,            y: midY + 6, col: CYAN },
+          { x: cx + W * 0.28, y: midY - 8, col: GOLD },
         ];
-        for (const td of hcTables) {
-          const hover = Math.sin(t*1.2+td.x*0.01)*2;
-          ctx.fillStyle="rgba(0,0,0,0.3)"; ctx.beginPath(); ctx.ellipse(td.x+2,td.y+16+hover,20,8,0,0,Math.PI*2); ctx.fill();
-          ctx.fillStyle="#1a0400"; ctx.strokeStyle=td.col; ctx.lineWidth=2;
-          ctx.shadowColor=td.col; ctx.shadowBlur=12;
-          ctx.beginPath(); ctx.arc(td.x,td.y+hover,22,0,Math.PI*2); ctx.fill(); ctx.stroke(); ctx.shadowBlur=0;
-          ctx.strokeStyle=td.col+"55"; ctx.lineWidth=1;
-          ctx.beginPath(); ctx.arc(td.x,td.y+hover,16,0,Math.PI*2); ctx.stroke();
-          const cp=Math.sin(t*3+td.x)*0.5+0.5;
-          ctx.fillStyle=`rgba(255,180,50,${0.5+cp*0.5})`; ctx.shadowColor=td.col; ctx.shadowBlur=8+cp*6;
-          ctx.beginPath(); ctx.arc(td.x,td.y+hover,3,0,Math.PI*2); ctx.fill(); ctx.shadowBlur=0;
-          for (let si=0;si<3;si++) {
-            const sa=(si/3)*Math.PI*2-Math.PI/2;
-            const sx=td.x+Math.cos(sa)*32, sy=td.y+hover+Math.sin(sa)*32;
-            ctx.fillStyle="#1a0400"; ctx.strokeStyle=td.col+"88"; ctx.lineWidth=1;
-            ctx.beginPath(); ctx.arc(sx,sy,7,0,Math.PI*2); ctx.fill(); ctx.stroke();
+        for (const td of hcTableData) {
+          const hover = Math.sin(t * 1.2 + td.x * 0.01) * 2;
+          // Table hover shadow
+          ctx.fillStyle = "rgba(0,0,0,0.3)";
+          ctx.beginPath();
+          ctx.ellipse(td.x + 2, td.y + 16 + hover, 20, 8, 0, 0, Math.PI * 2);
+          ctx.fill();
+          // Table surface
+          ctx.fillStyle = "#1a0400";
+          ctx.strokeStyle = td.col;
+          ctx.lineWidth = 2;
+          ctx.shadowColor = td.col;
+          ctx.shadowBlur = 12;
+          ctx.beginPath();
+          ctx.arc(td.x, td.y + hover, 22, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+          ctx.shadowBlur = 0;
+          // Inner ring
+          ctx.strokeStyle = td.col + "55";
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.arc(td.x, td.y + hover, 16, 0, Math.PI * 2);
+          ctx.stroke();
+          // Center fire-candle glow
+          const cp = Math.sin(t * 3 + td.x) * 0.5 + 0.5;
+          ctx.fillStyle = `rgba(255,180,50,${0.5 + cp * 0.5})`;
+          ctx.shadowColor = td.col;
+          ctx.shadowBlur = 8 + cp * 6;
+          ctx.beginPath();
+          ctx.arc(td.x, td.y + hover, 3, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.shadowBlur = 0;
+          // 3 stools around table
+          for (let si = 0; si < 3; si++) {
+            const sa = (si / 3) * Math.PI * 2 - Math.PI / 2;
+            const sx = td.x + Math.cos(sa) * 32;
+            const sy = td.y + hover + Math.sin(sa) * 32;
+            ctx.fillStyle = "#1a0400";
+            ctx.strokeStyle = td.col + "88";
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.arc(sx, sy, 7, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
           }
         }
 
-        // ── TABLE PATRONS ──
-        const hcTPatrons = [
-          {tx:cx-W*0.3,    ty:midY-8,    skin:"#FFDDBB",hair:"#1a1a2a",col:EMBER,  gender:"m"},
-          {tx:cx-W*0.3+28, ty:midY-8-26, skin:"#F0C080", hair:"#AA5522",col:FLAME,  gender:"f"},
-          {tx:cx,           ty:midY+6,    skin:"#D4956A", hair:"#2a1a00",col:AMBER,  gender:"m"},
-          {tx:cx+28,        ty:midY+6-26, skin:"#EECCAA", hair:"#332211",col:CRIMSON,gender:"f"},
-          {tx:cx+W*0.28,    ty:midY-8,    skin:"#FFDDBB", hair:"#1a002a",col:AMBER,  gender:"f"},
-          {tx:cx+W*0.28-28, ty:midY-8-26, skin:"#DDBB99", hair:"#1a1a1a",col:EMBER,  gender:"m"},
+        // ── PATRONS at tables ──
+        const hcTablePatrons = [
+          { tx: cx - W * 0.3,      ty: midY - 8,      skin: "#FFDDBB", hair: "#1a1a2a", col: PURP, gender: "m" },
+          { tx: cx - W * 0.3 + 28, ty: midY - 8 - 26, skin: "#F0C080", hair: "#AA5522", col: PINK, gender: "f" },
+          { tx: cx,                 ty: midY + 6,       skin: "#D4956A", hair: "#2a1a00", col: CYAN, gender: "m" },
+          { tx: cx + 28,            ty: midY + 6 - 26,  skin: "#EECCAA", hair: "#332211", col: GOLD, gender: "f" },
+          { tx: cx + W * 0.28,      ty: midY - 8,       skin: "#FFDDBB", hair: "#1a002a", col: GOLD, gender: "f" },
+          { tx: cx + W * 0.28 - 28, ty: midY - 8 - 26,  skin: "#DDBB99", hair: "#1a1a1a", col: PURP, gender: "m" },
         ];
-        for (const p of hcTPatrons) {
-          const px2=p.tx, py2=p.ty; ctx.save();
-          ctx.fillStyle="rgba(0,0,0,0.2)"; ctx.beginPath(); ctx.ellipse(px2,py2+4,8,3,0,0,Math.PI*2); ctx.fill();
-          ctx.fillStyle=p.col+"CC"; ctx.shadowColor=p.col; ctx.shadowBlur=6;
-          rr(px2-8,py2-6,16,18,3); ctx.fill(); ctx.shadowBlur=0;
-          if (p.gender==="f") {
-            ctx.fillStyle=p.col+"66";
+        for (const p of hcTablePatrons) {
+          const px2 = p.tx, py2 = p.ty;
+          ctx.save();
+          // Shadow
+          ctx.fillStyle = "rgba(0,0,0,0.2)";
+          ctx.beginPath(); ctx.ellipse(px2, py2 + 4, 8, 3, 0, 0, Math.PI*2); ctx.fill();
+          // Body
+          ctx.fillStyle = p.col + "CC"; ctx.shadowColor = p.col; ctx.shadowBlur = 6;
+          rr(px2 - 8, py2 - 6, 16, 18, 3); ctx.fill(); ctx.shadowBlur = 0;
+          if (p.gender === "f") {
+            ctx.fillStyle = p.col + "66";
             ctx.beginPath(); ctx.moveTo(px2-8,py2+8); ctx.lineTo(px2-11,py2+18); ctx.lineTo(px2+11,py2+18); ctx.lineTo(px2+8,py2+8); ctx.closePath(); ctx.fill();
           }
-          ctx.fillStyle=p.skin; ctx.fillRect(px2-3,py2-8,6,4);
-          ctx.beginPath(); ctx.arc(px2,py2-15,9,0,Math.PI*2); ctx.fill();
-          ctx.fillStyle=p.hair;
-          if (p.gender==="f") { ctx.beginPath(); ctx.arc(px2,py2-18,8,Math.PI,0); ctx.fill(); ctx.fillRect(px2-9,py2-20,4,12); ctx.fillRect(px2+5,py2-20,4,12); }
-          else { ctx.fillRect(px2-7,py2-21,14,7); }
-          ctx.fillStyle="#fff"; ctx.beginPath(); ctx.ellipse(px2-3.5,py2-16,2.2,1.8,0,0,Math.PI*2); ctx.ellipse(px2+3.5,py2-16,2.2,1.8,0,0,Math.PI*2); ctx.fill();
-          ctx.fillStyle=p.col; ctx.shadowColor=p.col; ctx.shadowBlur=3;
-          ctx.beginPath(); ctx.arc(px2-3.5,py2-16,1.2,0,Math.PI*2); ctx.fill();
-          ctx.beginPath(); ctx.arc(px2+3.5,py2-16,1.2,0,Math.PI*2); ctx.fill(); ctx.shadowBlur=0;
-          ctx.fillStyle="#000"; ctx.beginPath(); ctx.arc(px2-3.5,py2-16,0.5,0,Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(px2+3.5,py2-16,0.5,0,Math.PI*2); ctx.fill();
-          ctx.fillStyle="rgba(0,0,0,0.15)"; ctx.beginPath(); ctx.arc(px2,py2-13,1.2,0,Math.PI*2); ctx.fill();
-          ctx.strokeStyle=p.gender==="f"?"#EE4466":"#AA6644"; ctx.lineWidth=1.2;
-          ctx.beginPath(); ctx.arc(px2,py2-10.5,3,0.1,Math.PI-0.1); ctx.stroke();
-          ctx.strokeStyle=p.skin; ctx.lineWidth=3; ctx.lineCap="round";
-          ctx.beginPath(); ctx.moveTo(px2+8,py2); ctx.lineTo(px2+16,py2-8); ctx.stroke(); ctx.lineCap="butt";
-          ctx.fillStyle=EMBER+"55"; ctx.strokeStyle=EMBER; ctx.lineWidth=1;
-          ctx.shadowColor=EMBER; ctx.shadowBlur=6;
-          ctx.beginPath(); ctx.moveTo(px2+12,py2-18); ctx.lineTo(px2+10,py2-10); ctx.lineTo(px2+20,py2-10); ctx.lineTo(px2+18,py2-18); ctx.closePath(); ctx.fill(); ctx.stroke();
-          ctx.shadowBlur=0; ctx.restore();
+          // Neck
+          ctx.fillStyle = p.skin; ctx.fillRect(px2 - 3, py2 - 8, 6, 4);
+          // Head
+          ctx.beginPath(); ctx.arc(px2, py2 - 15, 9, 0, Math.PI*2); ctx.fill();
+          // Hair
+          ctx.fillStyle = p.hair;
+          if (p.gender === "f") {
+            ctx.beginPath(); ctx.arc(px2, py2 - 18, 8, Math.PI, 0); ctx.fill();
+            ctx.fillRect(px2 - 9, py2 - 20, 4, 12);
+            ctx.fillRect(px2 + 5, py2 - 20, 4, 12);
+          } else {
+            ctx.fillRect(px2 - 7, py2 - 21, 14, 7);
+          }
+          // Eyes
+          ctx.fillStyle = "#fff";
+          ctx.beginPath();
+          ctx.ellipse(px2-3.5, py2-16, 2.2, 1.8, 0, 0, Math.PI*2);
+          ctx.ellipse(px2+3.5, py2-16, 2.2, 1.8, 0, 0, Math.PI*2); ctx.fill();
+          ctx.fillStyle = p.col; ctx.shadowColor = p.col; ctx.shadowBlur = 3;
+          ctx.beginPath(); ctx.arc(px2-3.5, py2-16, 1.2, 0, Math.PI*2); ctx.fill();
+          ctx.beginPath(); ctx.arc(px2+3.5, py2-16, 1.2, 0, Math.PI*2); ctx.fill();
+          ctx.shadowBlur = 0;
+          ctx.fillStyle = "#000";
+          ctx.beginPath(); ctx.arc(px2-3.5, py2-16, 0.5, 0, Math.PI*2); ctx.fill();
+          ctx.beginPath(); ctx.arc(px2+3.5, py2-16, 0.5, 0, Math.PI*2); ctx.fill();
+          // Nose
+          ctx.fillStyle = "rgba(0,0,0,0.15)"; ctx.beginPath(); ctx.arc(px2, py2-13, 1.2, 0, Math.PI*2); ctx.fill();
+          // Mouth (smiling)
+          ctx.strokeStyle = p.gender==="f" ? "#EE4466" : "#AA6644"; ctx.lineWidth = 1.2;
+          ctx.beginPath(); ctx.arc(px2, py2-10.5, 3, 0.1, Math.PI-0.1); ctx.stroke();
+          // Arm holding drink
+          ctx.strokeStyle = p.skin; ctx.lineWidth = 3; ctx.lineCap = "round";
+          ctx.beginPath(); ctx.moveTo(px2+8, py2); ctx.lineTo(px2+16, py2-8); ctx.stroke();
+          ctx.lineCap = "butt";
+          // Drink in hand
+          const drinkC = p.col;
+          ctx.fillStyle = drinkC + "55"; ctx.strokeStyle = drinkC; ctx.lineWidth = 1;
+          ctx.shadowColor = drinkC; ctx.shadowBlur = 6;
+          ctx.beginPath(); ctx.moveTo(px2+12, py2-18); ctx.lineTo(px2+10, py2-10); ctx.lineTo(px2+20, py2-10); ctx.lineTo(px2+18, py2-18); ctx.closePath(); ctx.fill(); ctx.stroke();
+          ctx.shadowBlur = 0;
+          ctx.restore();
         }
 
         // ── FIRE JUKEBOX (right) ──
-        const jxHC=cx+W*0.3, jyHC=topY+10;
-        ctx.fillStyle="#1a0400"; ctx.strokeStyle=FLAME; ctx.lineWidth=2;
-        ctx.shadowColor=FLAME; ctx.shadowBlur=12;
-        rr(jxHC,jyHC,44,68,6); ctx.fill(); ctx.stroke(); ctx.shadowBlur=0;
-        ctx.save(); ctx.translate(jxHC+22,jyHC+30); ctx.rotate(t*0.5);
-        for (let ri=0;ri<6;ri++) {
-          const ra=(ri/6)*Math.PI*2;
-          const rp=Math.sin(t*2+ri)*0.5+0.5;
-          ctx.fillStyle=`rgba(255,100,0,${0.2+rp*0.4})`;
-          ctx.beginPath(); ctx.moveTo(0,0); ctx.arc(0,0,14,ra,ra+Math.PI/3); ctx.closePath(); ctx.fill();
+        const jxHC = cx + W * 0.3, jyHC = topY + 10;
+        ctx.fillStyle = "#1a0400";
+        ctx.strokeStyle = PINK;
+        ctx.lineWidth = 2;
+        ctx.shadowColor = PINK;
+        ctx.shadowBlur = 12;
+        rr(jxHC, jyHC, 44, 68, 6);
+        ctx.fill();
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+        // Rotating fire hologram inside
+        ctx.save();
+        ctx.translate(jxHC + 22, jyHC + 30);
+        ctx.rotate(t * 0.5);
+        for (let ri = 0; ri < 6; ri++) {
+          const ra = (ri / 6) * Math.PI * 2;
+          const rp = Math.sin(t * 2 + ri) * 0.5 + 0.5;
+          ctx.fillStyle = `rgba(255,100,0,${0.2 + rp * 0.4})`;
+          ctx.beginPath();
+          ctx.moveTo(0, 0);
+          ctx.arc(0, 0, 14, ra, ra + Math.PI / 3);
+          ctx.closePath();
+          ctx.fill();
         }
         ctx.restore();
-        ctx.fillStyle=FLAME; ctx.shadowColor=FLAME; ctx.shadowBlur=8;
-        ctx.font="5px monospace"; ctx.textAlign="center";
-        ctx.fillText("FIRE JUKEBOX",jxHC+22,jyHC+60); ctx.shadowBlur=0;
+        ctx.fillStyle = PINK;
+        ctx.shadowColor = PINK;
+        ctx.shadowBlur = 8;
+        ctx.font = "5px monospace";
+        ctx.textAlign = "center";
+        ctx.fillText("FIRE JUKEBOX", jxHC + 22, jyHC + 60);
+        ctx.shadowBlur = 0;
 
-        // Ember particle drift
-        for (let i=0;i<12;i++) {
-          const nx=(t*18+i*75)%W;
-          const ny=topY+40+Math.sin(t+i*0.8)*20+(i*(H*0.55))/12;
-          const na=Math.sin(t*1.5+i)*0.3+0.35;
-          ctx.fillStyle = i%3===0 ? `rgba(255,136,0,${na})` : i%3===1 ? `rgba(255,85,0,${na})` : `rgba(255,200,0,${na})`;
-          ctx.beginPath(); ctx.arc(nx,ny,i%4===0?2:1,0,Math.PI*2); ctx.fill();
+        // Ember particles
+        for (let i = 0; i < 12; i++) {
+          const nx = (t * 18 + i * 75) % W;
+          const ny = topY + 40 + Math.sin(t + i * 0.8) * 20 + (i * (H * 0.55)) / 12;
+          const na = Math.sin(t * 1.5 + i) * 0.3 + 0.35;
+          ctx.fillStyle = i % 3 === 0 ? `rgba(255,136,0,${na})` : i % 3 === 1 ? `rgba(255,85,0,${na})` : `rgba(255,200,0,${na})`;
+          ctx.beginPath(); ctx.arc(nx, ny, i % 4 === 0 ? 2 : 1, 0, Math.PI * 2); ctx.fill();
         }
       } else {
         // ═══ GALACTICA: NEBULA CANTINA ═══
