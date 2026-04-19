@@ -11960,295 +11960,371 @@ class Game {
       } // end default radio station
     } else if (type === 23) {
       // ════════════════════════════════════════════════════════════════════
-      //  UNDERGROUND LAB — Deep Research Facility
+      //  UNDERGROUND LAB — Subterranean Research Complex (Spaced Layout)
+      //  Zone A (y≈148): specimen tanks   Zone B (y≈258): pipe network
+      //  Zone C (y≈294): workstations | DNA | cryo pods
+      //  Zone D (y≈499): synthesis | hazmat | rad-monitor
+      //  Zone E (y≈650): floor drain, alarms
       // ════════════════════════════════════════════════════════════════════
       const tul = performance.now() / 1000;
+      const labCx = W / 2;
 
-      // ── Atmospheric floor glow (green bioluminescence) ────────────────
-      const floorGrad = ctx.createRadialGradient(cx, midY, 0, cx, midY, W * 0.6);
+      // ── Atmospheric floor glow ────────────────────────────────────────
+      const floorGrad = ctx.createRadialGradient(labCx, H*0.55, 0, labCx, H*0.55, W*0.65);
       floorGrad.addColorStop(0, 'rgba(0,60,20,0.18)');
       floorGrad.addColorStop(0.5, 'rgba(0,30,10,0.10)');
       floorGrad.addColorStop(1, 'rgba(0,0,0,0)');
       ctx.fillStyle = floorGrad; ctx.fillRect(0, 0, W, H);
 
-      // ── Ceiling light strips (top band across full width) ─────────────
+      // ── Ceiling light strips ──────────────────────────────────────────
       const ceilPulse = Math.sin(tul * 0.8) * 0.08 + 0.92;
       ctx.fillStyle = `rgba(0,255,120,${0.07 * ceilPulse})`; ctx.fillRect(0, 0, W, topY + 10);
-      for (let cl = 0; cl < 5; cl++) {
-        const clx = W * 0.08 + cl * W * 0.19;
-        ctx.fillStyle = `rgba(0,255,150,${0.25 * ceilPulse})`; ctx.fillRect(clx, 0, W * 0.12, 5);
-        ctx.fillStyle = `rgba(0,255,150,${0.10 * ceilPulse})`; ctx.fillRect(clx, 5, W * 0.12, 6);
+      for (let cl = 0; cl < 6; cl++) {
+        const clx = W * 0.06 + cl * W * 0.165;
+        ctx.fillStyle = `rgba(0,255,150,${0.26 * ceilPulse})`; ctx.fillRect(clx, 0, W * 0.10, 5);
+        ctx.fillStyle = `rgba(0,255,150,${0.10 * ceilPulse})`; ctx.fillRect(clx, 5, W * 0.10, 6);
       }
 
-      // ── Lab sign (top-center) ─────────────────────────────────────────
-      ctx.fillStyle = "#020a04"; rr(cx - 130, topY + 2, 260, 22, 4); ctx.fill();
+      // ── Lab sign ─────────────────────────────────────────────────────
+      ctx.fillStyle = "#020a04"; rr(labCx - 145, topY + 4, 290, 24, 4); ctx.fill();
       ctx.strokeStyle = `rgba(0,255,120,${0.6 + 0.3 * Math.sin(tul * 1.8)})`; ctx.lineWidth = 1.5; ctx.stroke();
       ctx.fillStyle = "#44FF99"; ctx.shadowColor = "#00FF88"; ctx.shadowBlur = 14;
       ctx.font = "bold 11px Orbitron, monospace"; ctx.textAlign = "center";
-      ctx.fillText("☢  SUBTERRANEAN RESEARCH COMPLEX — LEVEL B4  ☢", cx, topY + 17);
+      ctx.fillText("☢  SUBTERRANEAN RESEARCH COMPLEX — LEVEL B4  ☢", labCx, topY + 20);
       ctx.shadowBlur = 0;
 
-      // ── Four large specimen tanks across the top ───────────────────────
+      // ════════════════════════════════════════════════════════════════════
+      // ZONE A — Four specimen tanks (y ≈ 148–238)
+      // Tanks evenly spaced: left edges at x = 80, 340, 600, 860
+      // Each tank: 80px wide × 90px tall  — 180px+ between right/left edges
+      // ════════════════════════════════════════════════════════════════════
+      const tankTY = topY + 30;  // ≈ 148
+      const tankW2 = 80, tankH2 = 90;
+      const tankXs = [80, 340, 600, 860];
       const tankColors = ["#00FF88", "#FF00CC", "#00CCFF", "#FFCC00"];
+      const tankRGB   = ["0,255,136", "255,0,204", "0,204,255", "255,204,0"];
       const tankCreatures = ["humanoid", "blob", "fish", "crystal"];
+
       for (let ti = 0; ti < 4; ti++) {
-        const tx2 = W * 0.06 + ti * W * 0.235;
-        const ty2 = topY + 28;
+        const tx2 = tankXs[ti];
+        const ty2 = tankTY;
         const tc  = tankColors[ti];
+        const tRGB = tankRGB[ti];
+        const tcx  = tx2 + tankW2 / 2;  // horizontal center of this tank
 
-        // Tank shadow
-        ctx.fillStyle = "rgba(0,0,0,0.5)"; rr(tx2+4, ty2+4, 52, 72, 6); ctx.fill();
-        // Tank body
+        // Shadow + body
+        ctx.fillStyle = "rgba(0,0,0,0.45)"; rr(tx2+5, ty2+5, tankW2, tankH2, 8); ctx.fill();
         ctx.fillStyle = "#030d06"; ctx.strokeStyle = tc; ctx.lineWidth = 2;
-        rr(tx2, ty2, 52, 72, 6); ctx.fill(); ctx.stroke();
-        // Liquid fill (bubbling)
-        const bubH = 60 + Math.sin(tul * 1.2 + ti) * 4;
-        ctx.fillStyle = tc + "18"; rr(tx2 + 2, ty2 + 4, 48, bubH, 5); ctx.fill();
-        // Liquid surface shimmer
-        ctx.fillStyle = tc + "30"; rr(tx2 + 2, ty2 + 4, 48, 8, [5,5,0,0]); ctx.fill();
+        rr(tx2, ty2, tankW2, tankH2, 8); ctx.fill(); ctx.stroke();
+        // Liquid fill
+        const bubH2 = tankH2 - 14 + Math.sin(tul * 1.2 + ti) * 4;
+        ctx.fillStyle = tc + "18"; rr(tx2+3, ty2+6, tankW2-6, bubH2, 5); ctx.fill();
+        ctx.fillStyle = tc + "32"; rr(tx2+3, ty2+6, tankW2-6, 10, [5,5,0,0]); ctx.fill();
 
-        // Creature inside tank
+        // Creature
         const cPulse = Math.sin(tul * 2 + ti * 1.3) * 0.5 + 0.5;
         ctx.fillStyle = tc; ctx.shadowColor = tc; ctx.shadowBlur = 10 * cPulse;
+        const creatureY = ty2 + tankH2 * 0.4;
         if (tankCreatures[ti] === "humanoid") {
-          // Floating humanoid silhouette
-          const fy = ty2 + 22 + Math.sin(tul * 0.8 + ti) * 5;
-          ctx.fillStyle = tc + "88"; ctx.beginPath(); ctx.ellipse(tx2+26, fy-10, 7, 8, 0, 0, Math.PI*2); ctx.fill(); // head
-          ctx.fillStyle = tc + "66"; rr(tx2+20, fy+0, 12, 18, 2); ctx.fill(); // torso
-          ctx.fillRect(tx2+18, fy+6, 3, 14); ctx.fillRect(tx2+31, fy+6, 3, 14); // arms
-          ctx.fillRect(tx2+21, fy+18, 4, 12); ctx.fillRect(tx2+27, fy+18, 4, 12); // legs
+          const fy = creatureY + Math.sin(tul * 0.8 + ti) * 5;
+          ctx.fillStyle = tc + "88"; ctx.beginPath(); ctx.ellipse(tcx, fy-13, 8, 9, 0, 0, Math.PI*2); ctx.fill();
+          ctx.fillStyle = tc + "66"; rr(tcx-8, fy, 16, 20, 2); ctx.fill();
+          ctx.fillRect(tcx-13, fy+4, 4, 16); ctx.fillRect(tcx+9, fy+4, 4, 16);
+          ctx.fillRect(tcx-6, fy+20, 5, 14); ctx.fillRect(tcx+1, fy+20, 5, 14);
         } else if (tankCreatures[ti] === "blob") {
-          // Amorphous pulsing blob
-          const br = 16 + Math.sin(tul * 3 + ti) * 4;
+          const br = 19 + Math.sin(tul * 3 + ti) * 5;
           ctx.fillStyle = tc + "55";
-          ctx.beginPath(); ctx.ellipse(tx2+26, ty2+38, br, br*0.7, tul*0.5, 0, Math.PI*2); ctx.fill();
-          ctx.beginPath(); ctx.ellipse(tx2+26, ty2+38, br*0.5, br*0.4, tul*0.8, 0, Math.PI*2); ctx.fill();
-          // Nucleus
-          ctx.fillStyle = tc; ctx.beginPath(); ctx.arc(tx2+26, ty2+38, 5, 0, Math.PI*2); ctx.fill();
+          ctx.beginPath(); ctx.ellipse(tcx, creatureY, br, br*0.7, tul*0.5, 0, Math.PI*2); ctx.fill();
+          ctx.beginPath(); ctx.ellipse(tcx, creatureY, br*0.5, br*0.4, tul*0.8, 0, Math.PI*2); ctx.fill();
+          ctx.fillStyle = tc; ctx.beginPath(); ctx.arc(tcx, creatureY, 6, 0, Math.PI*2); ctx.fill();
         } else if (tankCreatures[ti] === "fish") {
-          // Deep sea creature
-          const ffy = ty2 + 30 + Math.sin(tul * 1.5 + ti) * 8;
+          const ffy = creatureY + Math.sin(tul * 1.5 + ti) * 8;
           ctx.fillStyle = tc + "66";
-          ctx.beginPath(); ctx.ellipse(tx2+26, ffy, 16, 8, Math.sin(tul*0.6)*0.3, 0, Math.PI*2); ctx.fill();
-          ctx.beginPath(); ctx.moveTo(tx2+10, ffy); ctx.lineTo(tx2+4, ffy-8); ctx.lineTo(tx2+4, ffy+8); ctx.closePath(); ctx.fill(); // tail
-          ctx.fillStyle = tc; ctx.beginPath(); ctx.arc(tx2+32, ffy-2, 3, 0, Math.PI*2); ctx.fill(); // eye
+          ctx.beginPath(); ctx.ellipse(tcx, ffy, 19, 9, Math.sin(tul*0.6)*0.3, 0, Math.PI*2); ctx.fill();
+          ctx.beginPath(); ctx.moveTo(tcx-19, ffy); ctx.lineTo(tcx-30, ffy-10); ctx.lineTo(tcx-30, ffy+10); ctx.closePath(); ctx.fill();
+          ctx.fillStyle = tc; ctx.beginPath(); ctx.arc(tcx+8, ffy-2, 3.5, 0, Math.PI*2); ctx.fill();
         } else {
-          // Crystal formation
-          for (let cr=0;cr<5;cr++) {
-            const ca = cr * Math.PI * 0.4;
-            const cx3 = tx2+26+Math.cos(ca)*10, cy3 = ty2+42+Math.sin(ca)*8;
-            const ch = 12+cr*3;
-            ctx.fillStyle = tc + "55"; ctx.save(); ctx.translate(cx3, cy3); ctx.rotate(ca);
-            ctx.beginPath(); ctx.moveTo(-3,0); ctx.lineTo(3,0); ctx.lineTo(1,-ch); ctx.lineTo(-1,-ch); ctx.closePath(); ctx.fill();
+          for (let cr=0; cr<6; cr++) {
+            const ca = cr * Math.PI / 3;
+            const crx2 = tcx + Math.cos(ca)*13, cry2 = creatureY + Math.sin(ca)*10;
+            const ch = 14 + cr * 2;
+            ctx.fillStyle = tc + "55"; ctx.save(); ctx.translate(crx2, cry2); ctx.rotate(ca);
+            ctx.beginPath(); ctx.moveTo(-3,0); ctx.lineTo(3,0); ctx.lineTo(1.5,-ch); ctx.lineTo(-1.5,-ch); ctx.closePath(); ctx.fill();
             ctx.restore();
           }
         }
         ctx.shadowBlur = 0;
 
-        // Tank serial number
-        ctx.fillStyle = tc + "88"; ctx.font = "bold 6px monospace"; ctx.textAlign = "center";
-        ctx.fillText(`SPEC-${(ti+1).toString().padStart(2,'0')}`, tx2+26, ty2+76);
+        // Serial label below tank
+        ctx.fillStyle = tc + "88"; ctx.font = "bold 7px monospace"; ctx.textAlign = "center";
+        ctx.fillText(`SPEC-${(ti+1).toString().padStart(2,'0')}`, tcx, ty2 + tankH2 + 13);
 
-        // Bubbles rising
-        for (let b2 = 0; b2 < 3; b2++) {
-          const bphase = (tul * 0.6 + b2 * 0.4 + ti * 0.7) % 1;
-          const bx3 = tx2 + 12 + b2 * 14;
-          const by3 = ty2 + 68 - bphase * 60;
-          const bAlpha = bphase < 0.85 ? 0.4 : (1 - bphase) * 2.7;
-          ctx.fillStyle = `rgba(${tc.startsWith('#00FF') ? '0,255,150' : tc.startsWith('#FF00') ? '255,0,200' : tc.startsWith('#00CC') ? '0,200,255' : '255,200,0'},${bAlpha * 0.5})`;
+        // Rising bubbles
+        for (let b2=0; b2<4; b2++) {
+          const bphase = (tul * 0.6 + b2 * 0.33 + ti * 0.7) % 1;
+          const bx3 = tx2 + 16 + b2 * 15;
+          const by3 = ty2 + tankH2 - 8 - bphase * (tankH2 - 14);
+          const bAlpha = Math.max(0, bphase < 0.85 ? 0.4 : (1 - bphase) * 2.7) * 0.5;
+          ctx.fillStyle = `rgba(${tRGB},${bAlpha})`;
           ctx.beginPath(); ctx.arc(bx3, by3, 2.5, 0, Math.PI*2); ctx.fill();
         }
 
-        // Pipe connections on sides
+        // Side pipe stubs
         ctx.strokeStyle = tc + "55"; ctx.lineWidth = 3;
-        ctx.beginPath(); ctx.moveTo(tx2, ty2+36); ctx.lineTo(tx2-8, ty2+36); ctx.lineTo(tx2-8, ty2+52); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(tx2+52, ty2+42); ctx.lineTo(tx2+60, ty2+42); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(tx2, ty2+50); ctx.lineTo(tx2-10, ty2+50); ctx.lineTo(tx2-10, ty2+66); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(tx2+tankW2, ty2+55); ctx.lineTo(tx2+tankW2+10, ty2+55); ctx.stroke();
       }
 
-      // ── Pipe network connecting tanks (horizontal top run) ────────────
-      ctx.strokeStyle = "rgba(0,200,100,0.20)"; ctx.lineWidth = 4;
-      ctx.beginPath(); ctx.moveTo(W*0.06, topY+64); ctx.lineTo(W*0.94, topY+64); ctx.stroke();
-      ctx.strokeStyle = "rgba(0,200,100,0.10)"; ctx.lineWidth = 8;
-      ctx.beginPath(); ctx.moveTo(W*0.06, topY+64); ctx.lineTo(W*0.94, topY+64); ctx.stroke();
-      // Pipe joints
-      for (let pj=0;pj<5;pj++) {
-        ctx.fillStyle = "#1a3a22"; ctx.beginPath(); ctx.arc(W*0.12+pj*W*0.18, topY+64, 5, 0, Math.PI*2); ctx.fill();
-        ctx.strokeStyle = "#44FF88"; ctx.lineWidth=1; ctx.beginPath(); ctx.arc(W*0.12+pj*W*0.18, topY+64, 5, 0, Math.PI*2); ctx.stroke();
+      // ════════════════════════════════════════════════════════════════════
+      // ZONE B — Pipe network (y ≈ 258)
+      // ════════════════════════════════════════════════════════════════════
+      const pipeY = tankTY + tankH2 + 28;  // ≈ 266
+      ctx.strokeStyle = "rgba(0,200,100,0.22)"; ctx.lineWidth = 5;
+      ctx.beginPath(); ctx.moveTo(W*0.05, pipeY); ctx.lineTo(W*0.95, pipeY); ctx.stroke();
+      ctx.strokeStyle = "rgba(0,200,100,0.09)"; ctx.lineWidth = 11;
+      ctx.beginPath(); ctx.moveTo(W*0.05, pipeY); ctx.lineTo(W*0.95, pipeY); ctx.stroke();
+      // Joints
+      for (let pj=0; pj<5; pj++) {
+        ctx.fillStyle = "#1a3a22"; ctx.beginPath(); ctx.arc(W*0.10+pj*W*0.20, pipeY, 6, 0, Math.PI*2); ctx.fill();
+        ctx.strokeStyle = "#44FF88"; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.arc(W*0.10+pj*W*0.20, pipeY, 6, 0, Math.PI*2); ctx.stroke();
       }
 
-      // ── Central holographic DNA display ───────────────────────────────
-      const dnaX = cx, dnaY = midY - 10;
-      // Glow halo
-      const dnaGrad = ctx.createRadialGradient(dnaX, dnaY, 0, dnaX, dnaY, 50);
-      dnaGrad.addColorStop(0, `rgba(0,255,120,${0.12 + Math.sin(tul*1.5)*0.04})`);
+      // ════════════════════════════════════════════════════════════════════
+      // ZONE C — Three-column mid section (y ≈ 294 – 480)
+      //   Left  (x 40–150): 2 research workstations
+      //   Center (x 480–600): holographic DNA display
+      //   Right  (x 920–1010): 2 cryo pods
+      // ════════════════════════════════════════════════════════════════════
+      const zC = pipeY + 28;  // ≈ 294  — Zone C top
+
+      // ── Left: research workstations ──────────────────────────────────
+      for (let ws3=0; ws3<2; ws3++) {
+        const wsx = 40, wsy = zC + ws3 * 86;
+        ctx.fillStyle = "#050e08"; ctx.strokeStyle = "#226633"; ctx.lineWidth = 1.5;
+        rr(wsx, wsy, 100, 66, 4); ctx.fill(); ctx.stroke();
+        // Monitor
+        ctx.fillStyle = "#020a04"; rr(wsx+5, wsy+5, 66, 42, 2); ctx.fill();
+        ctx.strokeStyle = "#44FF88"; ctx.lineWidth = 1; ctx.strokeRect(wsx+5, wsy+5, 66, 42);
+        // Scanline
+        const slY = ((tul * 30 + ws3 * 22) % 40);
+        ctx.fillStyle = "rgba(0,255,120,0.12)"; ctx.fillRect(wsx+6, wsy+6+slY, 64, 3);
+        // Data bars
+        for (let dl2=0; dl2<5; dl2++) {
+          ctx.fillStyle = dl2%2===0 ? "rgba(0,255,100,0.40)" : "rgba(0,180,255,0.30)";
+          ctx.fillRect(wsx+7, wsy+9+dl2*7, 18+(dl2*12)%38, 5);
+        }
+        // Keyboard
+        ctx.fillStyle = "#0a1a0e"; rr(wsx+5, wsy+50, 66, 12, 2); ctx.fill();
+        for (let k2=0; k2<8; k2++) { ctx.fillStyle="#0e200e"; ctx.fillRect(wsx+7+k2*8, wsy+52, 6, 8); }
+        // Status LED
+        const stOn = Math.sin(tul*3 + ws3*2) > 0;
+        ctx.fillStyle = stOn ? "#00FF88" : "#004422";
+        ctx.beginPath(); ctx.arc(wsx+91, wsy+9, 5, 0, Math.PI*2); ctx.fill();
+      }
+      ctx.fillStyle = "#44FF88"; ctx.font = "bold 7px monospace"; ctx.textAlign = "center";
+      ctx.fillText("RESEARCH STATIONS", 90, zC + 2*86 + 22);
+
+      // ── Center: DNA holographic display ──────────────────────────────
+      const dnaX = labCx, dnaY = zC + 96;  // ≈ y 390 — center of zone C
+      // Outer glow
+      const dnaGrad = ctx.createRadialGradient(dnaX, dnaY, 0, dnaX, dnaY, 65);
+      dnaGrad.addColorStop(0, `rgba(0,255,120,${0.14 + Math.sin(tul*1.5)*0.05})`);
       dnaGrad.addColorStop(1, 'rgba(0,0,0,0)');
-      ctx.fillStyle = dnaGrad; ctx.beginPath(); ctx.arc(dnaX, dnaY, 50, 0, Math.PI*2); ctx.fill();
-      // DNA helix strands
-      for (let dna=0;dna<20;dna++) {
-        const dp = dna / 20;
+      ctx.fillStyle = dnaGrad; ctx.beginPath(); ctx.arc(dnaX, dnaY, 65, 0, Math.PI*2); ctx.fill();
+      // Platform base
+      ctx.fillStyle="#050e06"; ctx.strokeStyle="#226633"; ctx.lineWidth=1.5;
+      rr(dnaX-44, dnaY+60, 88, 14, 3); ctx.fill(); ctx.stroke();
+      // DNA helix (26 nodes, spanning 104px tall)
+      for (let dna=0; dna<26; dna++) {
+        const dp = dna / 26;
         const ang = dp * Math.PI * 4 + tul * 1.2;
-        const dx1 = dnaX + Math.cos(ang) * 18;
-        const dx2 = dnaX + Math.cos(ang + Math.PI) * 18;
-        const dy2 = dnaY - 40 + dna * 4;
-        // Strand 1
+        const dx1 = dnaX + Math.cos(ang) * 22;
+        const dx2 = dnaX + Math.cos(ang + Math.PI) * 22;
+        const dy2 = dnaY - 52 + dna * 4;
         ctx.fillStyle = `rgba(0,255,130,${0.55 + Math.cos(ang)*0.3})`;
-        ctx.beginPath(); ctx.arc(dx1, dy2, 3, 0, Math.PI*2); ctx.fill();
-        // Strand 2
+        ctx.beginPath(); ctx.arc(dx1, dy2, 3.5, 0, Math.PI*2); ctx.fill();
         ctx.fillStyle = `rgba(0,180,255,${0.55 + Math.cos(ang+Math.PI)*0.3})`;
-        ctx.beginPath(); ctx.arc(dx2, dy2, 3, 0, Math.PI*2); ctx.fill();
-        // Bridge rungs every 3 nodes
+        ctx.beginPath(); ctx.arc(dx2, dy2, 3.5, 0, Math.PI*2); ctx.fill();
         if (dna % 3 === 0) {
-          ctx.strokeStyle = "rgba(0,255,150,0.20)"; ctx.lineWidth = 1;
+          ctx.strokeStyle = "rgba(0,255,150,0.22)"; ctx.lineWidth = 1;
           ctx.beginPath(); ctx.moveTo(dx1, dy2); ctx.lineTo(dx2, dy2); ctx.stroke();
         }
       }
-      // DNA label
-      ctx.fillStyle = "#44FF88"; ctx.shadowColor="#00FF88"; ctx.shadowBlur=8;
-      ctx.font = "bold 7px Orbitron, monospace"; ctx.textAlign = "center";
-      ctx.fillText("DNA SCAN ACTIVE", dnaX, dnaY + 50);
+      ctx.fillStyle = "#44FF88"; ctx.shadowColor = "#00FF88"; ctx.shadowBlur = 8;
+      ctx.font = "bold 8px Orbitron, monospace"; ctx.textAlign = "center";
+      ctx.fillText("DNA SCAN ACTIVE", dnaX, dnaY + 78);
       ctx.shadowBlur = 0;
 
-      // ── Left wall: research workstations ─────────────────────────────
-      for (let ws3 = 0; ws3 < 2; ws3++) {
-        const wsx = W * 0.05, wsy = midY - 30 + ws3 * 68;
-        ctx.fillStyle = "#050e08"; ctx.strokeStyle = "#226633"; ctx.lineWidth = 1.5;
-        rr(wsx, wsy, 80, 54, 3); ctx.fill(); ctx.stroke();
-        // Monitor screen
-        ctx.fillStyle = "#020a04"; rr(wsx+4, wsy+4, 52, 34, 2); ctx.fill();
-        ctx.strokeStyle = "#44FF88"; ctx.lineWidth = 1; ctx.strokeRect(wsx+4, wsy+4, 52, 34);
-        // Animated scanlines
-        const slY = ((tul * 28 + ws3 * 20) % 34);
-        ctx.fillStyle = "rgba(0,255,120,0.12)"; ctx.fillRect(wsx+5, wsy+5+slY, 50, 2);
-        // Screen data
-        for (let dl2 = 0; dl2 < 4; dl2++) {
-          ctx.fillStyle = dl2 % 2 === 0 ? "rgba(0,255,100,0.4)" : "rgba(0,180,255,0.3)";
-          ctx.fillRect(wsx+6, wsy+8+dl2*7, 20+(dl2*9)%28, 4);
-        }
-        // Keyboard
-        ctx.fillStyle = "#0a1a0e"; rr(wsx+4, wsy+40, 52, 10, 2); ctx.fill();
-        for (let k2=0;k2<7;k2++) ctx.fillStyle="#0e200e", ctx.fillRect(wsx+6+k2*7, wsy+42, 5, 6);
-        // Status light
-        const stOn = Math.sin(tul*3+ws3*2)>0;
-        ctx.fillStyle = stOn ? "#00FF88" : "#004422"; ctx.beginPath(); ctx.arc(wsx+72, wsy+6, 4, 0, Math.PI*2); ctx.fill();
-      }
-      ctx.fillStyle = "#44FF88"; ctx.font="bold 7px monospace"; ctx.textAlign="center";
-      ctx.fillText("RESEARCH STATIONS", W*0.05+40, midY+96);
-
-      // ── Right wall: cryogenic freeze pods ────────────────────────────
-      for (let cp = 0; cp < 2; cp++) {
-        const cpx = W * 0.78, cpy = midY - 40 + cp * 78;
-        // Pod shadow
-        ctx.fillStyle = "rgba(0,0,0,0.5)"; rr(cpx+3, cpy+3, 68, 62, 8); ctx.fill();
-        // Pod body
+      // ── Right: cryogenic freeze pods ─────────────────────────────────
+      for (let cp=0; cp<2; cp++) {
+        const cpx = W - 155, cpy = zC + cp * 92;
+        ctx.fillStyle = "rgba(0,0,0,0.45)"; rr(cpx+4, cpy+4, 80, 74, 9); ctx.fill();
         ctx.fillStyle = "#04101a"; ctx.strokeStyle = "#0088CC"; ctx.lineWidth = 2;
-        rr(cpx, cpy, 68, 62, 8); ctx.fill(); ctx.stroke();
-        // Frosted glass panel
-        ctx.fillStyle = "rgba(0,100,180,0.12)"; rr(cpx+6, cpy+6, 56, 42, 5); ctx.fill();
-        ctx.strokeStyle = "rgba(100,200,255,0.25)"; ctx.lineWidth=1; ctx.strokeRect(cpx+6, cpy+6, 56, 42);
-        // Frozen person inside
-        const fpx = cpx + 34, fpy = cpy + 16;
+        rr(cpx, cpy, 80, 74, 9); ctx.fill(); ctx.stroke();
+        // Frosted glass
+        ctx.fillStyle = "rgba(0,100,180,0.12)"; rr(cpx+8, cpy+8, 64, 50, 5); ctx.fill();
+        ctx.strokeStyle = "rgba(100,200,255,0.25)"; ctx.lineWidth = 1;
+        ctx.strokeRect(cpx+8, cpy+8, 64, 50);
+        // Frozen person
+        const fpx = cpx + 40, fpy = cpy + 18;
         ctx.fillStyle = "rgba(180,220,255,0.30)";
-        ctx.beginPath(); ctx.ellipse(fpx, fpy-8, 7, 8, 0, 0, Math.PI*2); ctx.fill(); // head
-        rr(fpx-8, fpy, 16, 22, 2); ctx.fill(); // body
-        ctx.fillRect(fpx-11, fpy+4, 4, 16); ctx.fillRect(fpx+7, fpy+4, 4, 16); // arms
-        ctx.fillRect(fpx-5, fpy+22, 4, 10); ctx.fillRect(fpx+1, fpy+22, 4, 10); // legs
-        // Ice frost effect
-        ctx.strokeStyle = "rgba(150,200,255,0.15)"; ctx.lineWidth = 0.8;
-        for (let ic=0;ic<6;ic++) {
-          ctx.beginPath(); ctx.moveTo(cpx+8+ic*9, cpy+6); ctx.lineTo(cpx+8+ic*9, cpy+48); ctx.stroke();
+        ctx.beginPath(); ctx.ellipse(fpx, fpy-10, 9, 10, 0, 0, Math.PI*2); ctx.fill();
+        rr(fpx-10, fpy, 20, 26, 2); ctx.fill();
+        ctx.fillRect(fpx-15, fpy+6, 5, 19); ctx.fillRect(fpx+10, fpy+6, 5, 19);
+        ctx.fillRect(fpx-7, fpy+26, 6, 12); ctx.fillRect(fpx+1, fpy+26, 6, 12);
+        // Ice frost lines
+        ctx.strokeStyle = "rgba(150,200,255,0.14)"; ctx.lineWidth = 0.8;
+        for (let ic=0; ic<8; ic++) {
+          ctx.beginPath(); ctx.moveTo(cpx+9+ic*8, cpy+8); ctx.lineTo(cpx+9+ic*8, cpy+58); ctx.stroke();
         }
-        // Cryo temperature gauge
+        // Temp gauge
         const cTemp = -180 + Math.sin(tul*0.4+cp)*5;
-        ctx.fillStyle = "#0066AA"; rr(cpx+6, cpy+50, 56, 8, 3); ctx.fill();
-        ctx.fillStyle = "#00AAFF"; rr(cpx+6, cpy+50, 56*(0.3+cp*0.2), 8, 3); ctx.fill();
-        ctx.fillStyle = "#88DDFF"; ctx.font="bold 6px monospace"; ctx.textAlign="center";
-        ctx.fillText(`${Math.round(cTemp)}°C`, cpx+34, cpy+57);
-        // Status ring
+        ctx.fillStyle = "#0066AA"; rr(cpx+8, cpy+62, 64, 9, 3); ctx.fill();
+        ctx.fillStyle = "#00AAFF"; rr(cpx+8, cpy+62, 64*(0.25+cp*0.25), 9, 3); ctx.fill();
+        ctx.fillStyle = "#88DDFF"; ctx.font = "bold 6px monospace"; ctx.textAlign = "center";
+        ctx.fillText(`${Math.round(cTemp)}°C`, fpx, cpy+69);
+        // Pulse ring
         const cpPulse = Math.sin(tul*2+cp*1.5)*0.5+0.5;
-        ctx.strokeStyle = `rgba(0,150,255,${0.3+cpPulse*0.3})`; ctx.lineWidth=2;
-        ctx.strokeRect(cpx+1, cpy+1, 66, 60);
+        ctx.strokeStyle = `rgba(0,150,255,${0.28+cpPulse*0.32})`; ctx.lineWidth = 2;
+        ctx.strokeRect(cpx+1, cpy+1, 78, 72);
       }
-      ctx.fillStyle = "#0088CC"; ctx.font="bold 7px monospace"; ctx.textAlign="center";
-      ctx.fillText("CRYO UNITS", W*0.78+34, midY+100);
+      ctx.fillStyle = "#0088CC"; ctx.font = "bold 7px monospace"; ctx.textAlign = "center";
+      ctx.fillText("CRYO UNITS", W-155+40, zC + 2*92 + 20);
 
-      // ── Center-left: chemical synthesis array ─────────────────────────
-      const csX = W*0.20, csY = midY + 20;
-      ctx.fillStyle = "#050e06"; ctx.strokeStyle = "#226633"; ctx.lineWidth = 1;
-      rr(csX, csY, 110, 58, 3); ctx.fill(); ctx.strokeRect(csX, csY, 110, 58);
-      // Flask row
-      const flaskCols = ["#FF4444","#44FFCC","#FFCC00","#FF44AA","#44AAFF"];
-      for (let f=0;f<5;f++) {
-        const fx3 = csX+8+f*20, fy3 = csY+8;
-        const fc = flaskCols[f];
-        // Flask body
-        ctx.fillStyle = "#0a180a"; rr(fx3, fy3+8, 14, 22, [2,2,6,6]); ctx.fill();
-        ctx.strokeStyle = fc+"88"; ctx.lineWidth=1; ctx.strokeRect(fx3, fy3+8, 14, 22);
-        // Flask neck
-        ctx.fillStyle = "#0a180a"; ctx.fillRect(fx3+4, fy3, 6, 10);
-        // Liquid level (animated bubble)
-        const lvl = 10 + ((f*7+Math.floor(tul*0.5+f*0.3))%12);
-        ctx.fillStyle = fc+"55"; ctx.fillRect(fx3+1, fy3+8+(30-lvl), 12, lvl);
-        // Flask glow
-        ctx.fillStyle = fc; ctx.shadowColor=fc; ctx.shadowBlur=6;
-        ctx.beginPath(); ctx.arc(fx3+7, fy3+20, 4, 0, Math.PI*2); ctx.fill();
-        ctx.shadowBlur=0;
-        // Bubbles
-        if (Math.sin(tul*4+f)>0.5) {
-          ctx.fillStyle = fc+"66"; ctx.beginPath(); ctx.arc(fx3+5, fy3+12, 2, 0, Math.PI*2); ctx.fill();
-          ctx.beginPath(); ctx.arc(fx3+10, fy3+8, 1.5, 0, Math.PI*2); ctx.fill();
+      // ════════════════════════════════════════════════════════════════════
+      // ZONE D — Lower instrument row (y ≈ 499 – 595)
+      //   Left  (x  50–249): chemical synthesis array   (200px wide)
+      //   Center (x 430–609): hazmat containment vault  (180px wide)
+      //   Right  (x 790–989): radiation monitor panel   (200px wide)
+      //   Gaps between panels: ~180px each
+      // ════════════════════════════════════════════════════════════════════
+      const zD = zC + 205;  // ≈ 499
+
+      // ── Left: chemical synthesis array ───────────────────────────────
+      {
+        const csX = 50, csY = zD, csW = 200, csH = 96;
+        ctx.fillStyle = "#050e06"; ctx.strokeStyle = "#226633"; ctx.lineWidth = 1;
+        rr(csX, csY, csW, csH, 4); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = "#44FF88"; ctx.font = "bold 7px monospace"; ctx.textAlign = "center";
+        ctx.fillText("— SYNTHESIS ARRAY —", csX+csW/2, csY+13);
+        const flaskCols = ["#FF4444","#44FFCC","#FFCC00","#FF44AA","#44AAFF"];
+        for (let f=0; f<5; f++) {
+          const fx3 = csX+12+f*36, fy3 = csY+20;
+          const fc = flaskCols[f];
+          // Flask body + neck
+          ctx.fillStyle = "#0a180a"; rr(fx3, fy3+12, 20, 30, [2,2,8,8]); ctx.fill();
+          ctx.strokeStyle = fc+"88"; ctx.lineWidth=1; ctx.strokeRect(fx3, fy3+12, 20, 30);
+          ctx.fillStyle = "#0a180a"; ctx.fillRect(fx3+6, fy3, 8, 14);
+          // Liquid level
+          const lvl = 12 + ((f*7 + Math.floor(tul*0.5+f*0.3)) % 16);
+          ctx.fillStyle = fc+"55"; ctx.fillRect(fx3+1, fy3+12+(30-lvl), 18, lvl);
+          // Glow dot
+          ctx.fillStyle = fc; ctx.shadowColor = fc; ctx.shadowBlur = 7;
+          ctx.beginPath(); ctx.arc(fx3+10, fy3+28, 5, 0, Math.PI*2); ctx.fill();
+          ctx.shadowBlur = 0;
+          // Bubbles
+          if (Math.sin(tul*4+f) > 0.5) {
+            ctx.fillStyle = fc+"66";
+            ctx.beginPath(); ctx.arc(fx3+7, fy3+15, 3, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(fx3+13, fy3+10, 2, 0, Math.PI*2); ctx.fill();
+          }
         }
+        // Bunsen burner
+        ctx.fillStyle = "rgba(0,200,255,0.18)";
+        ctx.beginPath(); ctx.ellipse(csX+csW-18, csY+csH-20, 14, 7, 0, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = "#00CCFF"; ctx.shadowColor = "#00CCFF"; ctx.shadowBlur = 10;
+        ctx.beginPath(); ctx.arc(csX+csW-18, csY+csH-30, 5, 0, Math.PI*2); ctx.fill();
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = "#44FF88"; ctx.font = "bold 6px monospace"; ctx.textAlign = "center";
+        ctx.fillText("SYNTHESIS LAB", csX+csW/2, csY+csH+12);
       }
-      // Bunsen burner glow
-      ctx.fillStyle = "rgba(0,200,255,0.15)";
-      ctx.beginPath(); ctx.ellipse(csX+95, csY+46, 12, 6, 0, 0, Math.PI*2); ctx.fill();
-      ctx.fillStyle = "#00CCFF"; ctx.shadowColor="#00CCFF"; ctx.shadowBlur=8;
-      ctx.beginPath(); ctx.arc(csX+95, csY+40, 4, 0, Math.PI*2); ctx.fill();
-      ctx.shadowBlur=0;
-      ctx.fillStyle = "#44FF88"; ctx.font="bold 6px monospace"; ctx.textAlign="center";
-      ctx.fillText("SYNTHESIS LAB", csX+55, csY+66);
 
-      // ── Hazmat containment vault (bottom-right of center) ─────────────
-      const hvX = W*0.50, hvY = midY + 20;
-      ctx.fillStyle = "#070e04"; ctx.strokeStyle = "#88FF22"; ctx.lineWidth = 1.5;
-      rr(hvX, hvY, 80, 58, 4); ctx.fill(); ctx.stroke();
-      // Biohazard symbol (drawn, no emoji)
-      const bhcx = hvX+40, bhcy = hvY+22;
-      ctx.strokeStyle = "#88FF22"; ctx.lineWidth = 2;
-      ctx.beginPath(); ctx.arc(bhcx, bhcy, 14, 0, Math.PI*2); ctx.stroke();
-      ctx.beginPath(); ctx.arc(bhcx, bhcy, 5, 0, Math.PI*2); ctx.stroke();
-      for (let bh2=0;bh2<3;bh2++) {
-        const ba2 = (Math.PI/1.5)*bh2 - Math.PI/2;
-        ctx.strokeStyle = "#070e04"; ctx.lineWidth=3;
-        ctx.beginPath(); ctx.moveTo(bhcx+Math.cos(ba2)*5, bhcy+Math.sin(ba2)*5); ctx.lineTo(bhcx+Math.cos(ba2)*14, bhcy+Math.sin(ba2)*14); ctx.stroke();
+      // ── Center: hazmat containment vault ─────────────────────────────
+      {
+        const hvX = labCx - 90, hvY = zD, hvW = 180, hvH = 96;
+        ctx.fillStyle = "#070e04"; ctx.strokeStyle = "#88FF22"; ctx.lineWidth = 1.5;
+        rr(hvX, hvY, hvW, hvH, 5); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = "#AAFF44"; ctx.font = "bold 7px monospace"; ctx.textAlign = "center";
+        ctx.fillText("— CONTAINMENT VAULT —", hvX+hvW/2, hvY+13);
+        // Biohazard symbol (drawn)
+        const bhcx = hvX+hvW/2, bhcy = hvY+54;
+        ctx.strokeStyle = "#88FF22"; ctx.lineWidth = 2.5;
+        ctx.beginPath(); ctx.arc(bhcx, bhcy, 22, 0, Math.PI*2); ctx.stroke();
+        ctx.beginPath(); ctx.arc(bhcx, bhcy, 8, 0, Math.PI*2); ctx.stroke();
+        for (let bh2=0; bh2<3; bh2++) {
+          const ba2 = (Math.PI/1.5)*bh2 - Math.PI/2;
+          ctx.strokeStyle = "#070e04"; ctx.lineWidth = 5;
+          ctx.beginPath();
+          ctx.moveTo(bhcx+Math.cos(ba2)*8, bhcy+Math.sin(ba2)*8);
+          ctx.lineTo(bhcx+Math.cos(ba2)*22, bhcy+Math.sin(ba2)*22);
+          ctx.stroke();
+        }
+        // Hazard stripes
+        ctx.save(); ctx.translate(bhcx, hvY+hvH-12); ctx.rotate(Math.PI/4);
+        for (let hs=0; hs<8; hs++) {
+          ctx.fillStyle = hs%2===0 ? "rgba(255,200,0,0.18)" : "rgba(0,0,0,0.10)";
+          ctx.fillRect(hs*10-40, -9, 10, 18);
+        }
+        ctx.restore();
+        ctx.fillStyle = "#AAFF44"; ctx.font = "bold 6px monospace"; ctx.textAlign = "center";
+        ctx.fillText("BIO-CONTAINMENT ACTIVE", hvX+hvW/2, hvY+hvH+12);
       }
-      // Warning hazard stripes on floor below vault
-      ctx.save(); ctx.translate(hvX+40, hvY+48); ctx.rotate(Math.PI/4);
-      for (let hs=0;hs<5;hs++) {
-        ctx.fillStyle = hs%2===0 ? "rgba(255,200,0,0.16)" : "rgba(0,0,0,0.10)";
-        ctx.fillRect(hs*8-20, -16, 8, 32);
+
+      // ── Right: radiation monitor panel ───────────────────────────────
+      {
+        const rmX = W - 250, rmY = zD, rmW = 200, rmH = 96;
+        ctx.fillStyle = "#050806"; ctx.strokeStyle = "#FF6622"; ctx.lineWidth = 1;
+        rr(rmX, rmY, rmW, rmH, 4); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = "#FF8844"; ctx.font = "bold 7px monospace"; ctx.textAlign = "center";
+        ctx.fillText("— RADIATION MONITOR —", rmX+rmW/2, rmY+13);
+        // 4 level gauges
+        for (let rg=0; rg<4; rg++) {
+          const rgx = rmX+12+rg*47, rgy = rmY+20;
+          ctx.fillStyle = "#0a0800"; rr(rgx, rgy, 40, 60, 3); ctx.fill();
+          ctx.strokeStyle = "#884400"; ctx.lineWidth = 1; ctx.strokeRect(rgx, rgy, 40, 60);
+          const lvlRad = 20 + ((rg*17 + Math.floor(tul*0.3+rg*0.6)) % 38);
+          const radColor = lvlRad > 47 ? "#FF2200" : lvlRad > 32 ? "#FFAA00" : "#44FF88";
+          ctx.fillStyle = radColor + "33"; ctx.fillRect(rgx+5, rgy+5+(55-lvlRad), 30, lvlRad);
+          ctx.fillStyle = radColor; ctx.shadowColor = radColor; ctx.shadowBlur = 6;
+          ctx.fillRect(rgx+5, rgy+5+(55-lvlRad), 30, 3);
+          ctx.shadowBlur = 0;
+          ctx.fillStyle = radColor; ctx.font = "bold 6px monospace"; ctx.textAlign = "center";
+          ctx.fillText(`${lvlRad}mSv`, rgx+20, rgy+56);
+        }
+        ctx.fillStyle = "#FF6622"; ctx.font = "bold 6px monospace"; ctx.textAlign = "center";
+        ctx.fillText("ZONE READINGS", rmX+rmW/2, rmY+rmH+12);
       }
-      ctx.restore();
-      ctx.fillStyle = "#AAFF44"; ctx.font="bold 6px monospace"; ctx.textAlign="center";
-      ctx.fillText("CONTAINMENT", hvX+40, hvY+54);
 
-      // ── Floor drain/grate (center bottom) ────────────────────────────
-      ctx.fillStyle = "#0a140a"; ctx.strokeStyle = "#224422"; ctx.lineWidth=1;
-      rr(cx-20, H*0.86, 40, 28, 3); ctx.fill(); ctx.strokeRect(cx-20, H*0.86, 40, 28);
-      for (let gr=0;gr<4;gr++) ctx.fillStyle="#0d160d", ctx.fillRect(cx-18, H*0.86+4+gr*6, 36, 3);
-      // Glowing liquid in drain
-      ctx.fillStyle = `rgba(0,255,100,${0.15+Math.sin(tul*2)*0.05})`;
-      ctx.beginPath(); ctx.ellipse(cx, H*0.86+20, 14, 6, 0, 0, Math.PI*2); ctx.fill();
+      // ════════════════════════════════════════════════════════════════════
+      // ZONE E — Floor elements (y ≈ 650–730)
+      // ════════════════════════════════════════════════════════════════════
 
-      // ── Corner emergency buttons ──────────────────────────────────────
-      for (const [ex2,ey2] of [[W*0.05,H*0.82],[W*0.87,H*0.82]]) {
-        ctx.fillStyle = "#2a0000"; rr(ex2, ey2, 26, 18, 3); ctx.fill();
-        ctx.strokeStyle = "#FF4400"; ctx.lineWidth=1; ctx.strokeRect(ex2, ey2, 26, 18);
-        const eblink = Math.sin(tul*4+ex2)>0.4;
-        ctx.fillStyle = eblink ? "#FF2200" : "#440000"; ctx.shadowColor="#FF2200"; ctx.shadowBlur = eblink?10:0;
-        ctx.beginPath(); ctx.arc(ex2+13, ey2+9, 6, 0, Math.PI*2); ctx.fill();
-        ctx.shadowBlur=0;
-        ctx.fillStyle="#FF4400"; ctx.font="bold 5px monospace"; ctx.textAlign="center";
-        ctx.fillText("ALARM", ex2+13, ey2+22);
+      // Warning stripe band
+      for (let ws=0; ws < W/24; ws++) {
+        ctx.fillStyle = ws%2===0 ? "rgba(255,200,0,0.07)" : "rgba(0,0,0,0)";
+        ctx.fillRect(ws*24, H*0.78, 24, 12);
+      }
+
+      // Floor drain/grate
+      const drainY = H * 0.82;
+      ctx.fillStyle = "#0a140a"; ctx.strokeStyle = "#224422"; ctx.lineWidth = 1;
+      rr(labCx-28, drainY, 56, 36, 4); ctx.fill(); ctx.strokeRect(labCx-28, drainY, 56, 36);
+      for (let gr=0; gr<5; gr++) { ctx.fillStyle="#0d160d"; ctx.fillRect(labCx-26, drainY+4+gr*6, 52, 3); }
+      ctx.fillStyle = `rgba(0,255,100,${0.15 + Math.sin(tul*2)*0.06})`;
+      ctx.beginPath(); ctx.ellipse(labCx, drainY+24, 20, 8, 0, 0, Math.PI*2); ctx.fill();
+
+      // Emergency alarm buttons (corners)
+      for (const [ex2,ey2] of [[W*0.04, H*0.85],[W*0.88, H*0.85]]) {
+        ctx.fillStyle = "#2a0000"; rr(ex2, ey2, 32, 24, 3); ctx.fill();
+        ctx.strokeStyle = "#FF4400"; ctx.lineWidth = 1.5; ctx.strokeRect(ex2, ey2, 32, 24);
+        const eblink = Math.sin(tul*4 + ex2) > 0.4;
+        ctx.fillStyle = eblink ? "#FF2200" : "#440000";
+        ctx.shadowColor = "#FF2200"; ctx.shadowBlur = eblink ? 12 : 0;
+        ctx.beginPath(); ctx.arc(ex2+16, ey2+12, 7, 0, Math.PI*2); ctx.fill();
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = "#FF4400"; ctx.font = "bold 5px monospace"; ctx.textAlign = "center";
+        ctx.fillText("ALARM", ex2+16, ey2+28);
       }
     }
 
