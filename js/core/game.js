@@ -11959,106 +11959,296 @@ class Game {
         ctx.stroke();
       } // end default radio station
     } else if (type === 23) {
-      // UNDERGROUND LAB
-      // ── Experiment pods (top) ────────────────────
-      for (let pi = 0; pi < 3; pi++) {
-        const px2 = cx - W * 0.34 + pi * W * 0.34,
-          py2 = topY + 4;
-        ctx.fillStyle = "#0a1a0e";
-        ctx.strokeStyle = "#44FF88";
-        ctx.lineWidth = 1.5;
-        rr(px2 - 20, py2, 40, 52, 5);
-        ctx.fill();
-        ctx.stroke();
-        // Glowing liquid
-        const liqColors = ["#00FF88", "#FF00CC", "#FFCC00"];
-        ctx.fillStyle = liqColors[pi] + "44";
-        rr(px2 - 18, py2 + 2, 36, 48, 4);
-        ctx.fill();
-        ctx.fillStyle = liqColors[pi];
-        ctx.shadowColor = liqColors[pi];
-        ctx.shadowBlur = 12;
-        ctx.beginPath();
-        ctx.ellipse(px2, py2 + 26, 10, 14, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.shadowBlur = 0;
-        // Tube lines
-        ctx.strokeStyle = liqColors[pi] + "88";
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(px2 - 20, py2 + 26);
-        ctx.lineTo(px2 - 32, py2 + 26);
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.moveTo(px2 + 20, py2 + 26);
-        ctx.lineTo(px2 + 32, py2 + 26);
-        ctx.stroke();
+      // ════════════════════════════════════════════════════════════════════
+      //  UNDERGROUND LAB — Deep Research Facility
+      // ════════════════════════════════════════════════════════════════════
+      const tul = performance.now() / 1000;
+
+      // ── Atmospheric floor glow (green bioluminescence) ────────────────
+      const floorGrad = ctx.createRadialGradient(cx, midY, 0, cx, midY, W * 0.6);
+      floorGrad.addColorStop(0, 'rgba(0,60,20,0.18)');
+      floorGrad.addColorStop(0.5, 'rgba(0,30,10,0.10)');
+      floorGrad.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = floorGrad; ctx.fillRect(0, 0, W, H);
+
+      // ── Ceiling light strips (top band across full width) ─────────────
+      const ceilPulse = Math.sin(tul * 0.8) * 0.08 + 0.92;
+      ctx.fillStyle = `rgba(0,255,120,${0.07 * ceilPulse})`; ctx.fillRect(0, 0, W, topY + 10);
+      for (let cl = 0; cl < 5; cl++) {
+        const clx = W * 0.08 + cl * W * 0.19;
+        ctx.fillStyle = `rgba(0,255,150,${0.25 * ceilPulse})`; ctx.fillRect(clx, 0, W * 0.12, 5);
+        ctx.fillStyle = `rgba(0,255,150,${0.10 * ceilPulse})`; ctx.fillRect(clx, 5, W * 0.12, 6);
       }
-      // ── Control console (center) ──────────────────
-      ctx.fillStyle = "#050810";
-      ctx.strokeStyle = "#55FF99";
-      ctx.lineWidth = 2;
-      rr(cx - 48, midY - 14, 96, 40, 5);
-      ctx.fill();
-      ctx.stroke();
-      // Danger indicators
-      for (let di = 0; di < 6; di++) {
-        const dc = [
-          "#FF4400",
-          "#FFCC00",
-          "#44FF88",
-          "#44FF88",
-          "#FFCC00",
-          "#FF4400",
-        ][di];
-        ctx.fillStyle = dc;
-        ctx.shadowColor = dc;
-        ctx.shadowBlur = 6;
-        ctx.beginPath();
-        ctx.arc(cx - 38 + di * 15, midY - 6, 5, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.shadowBlur = 0;
-      }
-      ctx.fillStyle = "#002a10";
-      rr(cx - 42, midY + 2, 84, 18, 2);
-      ctx.fill();
-      ctx.strokeStyle = "#44FF88";
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.moveTo(cx - 40, midY + 10);
-      ctx.lineTo(cx - 28, midY + 10);
-      ctx.lineTo(cx - 20, midY + 2);
-      ctx.lineTo(cx - 12, midY + 18);
-      ctx.lineTo(cx - 4, midY + 10);
-      ctx.lineTo(cx + 8, midY + 10);
-      ctx.lineTo(cx + 14, midY + 4);
-      ctx.lineTo(cx + 20, midY + 16);
-      ctx.lineTo(cx + 32, midY + 10);
-      ctx.lineTo(cx + 40, midY + 10);
-      ctx.stroke();
-      // ── Hazmat barrel (left) ─────────────────────
-      ctx.fillStyle = "#1a2a0a";
-      ctx.strokeStyle = "#88FF22";
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.ellipse(cx - W * 0.34, midY + 22, 18, 14, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.stroke();
-      ctx.fillStyle = "#44FF00";
-      ctx.shadowColor = "#22FF00";
-      ctx.shadowBlur = 8;
-      ctx.font = "12px serif";
-      ctx.textAlign = "center";
-      ctx.fillText("☢", cx - W * 0.34, midY + 27);
+
+      // ── Lab sign (top-center) ─────────────────────────────────────────
+      ctx.fillStyle = "#020a04"; rr(cx - 130, topY + 2, 260, 22, 4); ctx.fill();
+      ctx.strokeStyle = `rgba(0,255,120,${0.6 + 0.3 * Math.sin(tul * 1.8)})`; ctx.lineWidth = 1.5; ctx.stroke();
+      ctx.fillStyle = "#44FF99"; ctx.shadowColor = "#00FF88"; ctx.shadowBlur = 14;
+      ctx.font = "bold 11px Orbitron, monospace"; ctx.textAlign = "center";
+      ctx.fillText("☢  SUBTERRANEAN RESEARCH COMPLEX — LEVEL B4  ☢", cx, topY + 17);
       ctx.shadowBlur = 0;
-      // Warning stripes on floor
-      ctx.fillStyle = "rgba(255,200,0,0.12)";
-      for (let ws = 0; ws < 5; ws++) {
-        ctx.save();
-        ctx.translate(cx + W * 0.12, midY + 14);
-        ctx.rotate(Math.PI / 4);
-        ctx.fillRect(ws * 10 - 20, -30, 6, 60);
-        ctx.restore();
+
+      // ── Four large specimen tanks across the top ───────────────────────
+      const tankColors = ["#00FF88", "#FF00CC", "#00CCFF", "#FFCC00"];
+      const tankCreatures = ["humanoid", "blob", "fish", "crystal"];
+      for (let ti = 0; ti < 4; ti++) {
+        const tx2 = W * 0.06 + ti * W * 0.235;
+        const ty2 = topY + 28;
+        const tc  = tankColors[ti];
+
+        // Tank shadow
+        ctx.fillStyle = "rgba(0,0,0,0.5)"; rr(tx2+4, ty2+4, 52, 72, 6); ctx.fill();
+        // Tank body
+        ctx.fillStyle = "#030d06"; ctx.strokeStyle = tc; ctx.lineWidth = 2;
+        rr(tx2, ty2, 52, 72, 6); ctx.fill(); ctx.stroke();
+        // Liquid fill (bubbling)
+        const bubH = 60 + Math.sin(tul * 1.2 + ti) * 4;
+        ctx.fillStyle = tc + "18"; rr(tx2 + 2, ty2 + 4, 48, bubH, 5); ctx.fill();
+        // Liquid surface shimmer
+        ctx.fillStyle = tc + "30"; rr(tx2 + 2, ty2 + 4, 48, 8, [5,5,0,0]); ctx.fill();
+
+        // Creature inside tank
+        const cPulse = Math.sin(tul * 2 + ti * 1.3) * 0.5 + 0.5;
+        ctx.fillStyle = tc; ctx.shadowColor = tc; ctx.shadowBlur = 10 * cPulse;
+        if (tankCreatures[ti] === "humanoid") {
+          // Floating humanoid silhouette
+          const fy = ty2 + 22 + Math.sin(tul * 0.8 + ti) * 5;
+          ctx.fillStyle = tc + "88"; ctx.beginPath(); ctx.ellipse(tx2+26, fy-10, 7, 8, 0, 0, Math.PI*2); ctx.fill(); // head
+          ctx.fillStyle = tc + "66"; rr(tx2+20, fy+0, 12, 18, 2); ctx.fill(); // torso
+          ctx.fillRect(tx2+18, fy+6, 3, 14); ctx.fillRect(tx2+31, fy+6, 3, 14); // arms
+          ctx.fillRect(tx2+21, fy+18, 4, 12); ctx.fillRect(tx2+27, fy+18, 4, 12); // legs
+        } else if (tankCreatures[ti] === "blob") {
+          // Amorphous pulsing blob
+          const br = 16 + Math.sin(tul * 3 + ti) * 4;
+          ctx.fillStyle = tc + "55";
+          ctx.beginPath(); ctx.ellipse(tx2+26, ty2+38, br, br*0.7, tul*0.5, 0, Math.PI*2); ctx.fill();
+          ctx.beginPath(); ctx.ellipse(tx2+26, ty2+38, br*0.5, br*0.4, tul*0.8, 0, Math.PI*2); ctx.fill();
+          // Nucleus
+          ctx.fillStyle = tc; ctx.beginPath(); ctx.arc(tx2+26, ty2+38, 5, 0, Math.PI*2); ctx.fill();
+        } else if (tankCreatures[ti] === "fish") {
+          // Deep sea creature
+          const ffy = ty2 + 30 + Math.sin(tul * 1.5 + ti) * 8;
+          ctx.fillStyle = tc + "66";
+          ctx.beginPath(); ctx.ellipse(tx2+26, ffy, 16, 8, Math.sin(tul*0.6)*0.3, 0, Math.PI*2); ctx.fill();
+          ctx.beginPath(); ctx.moveTo(tx2+10, ffy); ctx.lineTo(tx2+4, ffy-8); ctx.lineTo(tx2+4, ffy+8); ctx.closePath(); ctx.fill(); // tail
+          ctx.fillStyle = tc; ctx.beginPath(); ctx.arc(tx2+32, ffy-2, 3, 0, Math.PI*2); ctx.fill(); // eye
+        } else {
+          // Crystal formation
+          for (let cr=0;cr<5;cr++) {
+            const ca = cr * Math.PI * 0.4;
+            const cx3 = tx2+26+Math.cos(ca)*10, cy3 = ty2+42+Math.sin(ca)*8;
+            const ch = 12+cr*3;
+            ctx.fillStyle = tc + "55"; ctx.save(); ctx.translate(cx3, cy3); ctx.rotate(ca);
+            ctx.beginPath(); ctx.moveTo(-3,0); ctx.lineTo(3,0); ctx.lineTo(1,-ch); ctx.lineTo(-1,-ch); ctx.closePath(); ctx.fill();
+            ctx.restore();
+          }
+        }
+        ctx.shadowBlur = 0;
+
+        // Tank serial number
+        ctx.fillStyle = tc + "88"; ctx.font = "bold 6px monospace"; ctx.textAlign = "center";
+        ctx.fillText(`SPEC-${(ti+1).toString().padStart(2,'0')}`, tx2+26, ty2+76);
+
+        // Bubbles rising
+        for (let b2 = 0; b2 < 3; b2++) {
+          const bphase = (tul * 0.6 + b2 * 0.4 + ti * 0.7) % 1;
+          const bx3 = tx2 + 12 + b2 * 14;
+          const by3 = ty2 + 68 - bphase * 60;
+          const bAlpha = bphase < 0.85 ? 0.4 : (1 - bphase) * 2.7;
+          ctx.fillStyle = `rgba(${tc.startsWith('#00FF') ? '0,255,150' : tc.startsWith('#FF00') ? '255,0,200' : tc.startsWith('#00CC') ? '0,200,255' : '255,200,0'},${bAlpha * 0.5})`;
+          ctx.beginPath(); ctx.arc(bx3, by3, 2.5, 0, Math.PI*2); ctx.fill();
+        }
+
+        // Pipe connections on sides
+        ctx.strokeStyle = tc + "55"; ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.moveTo(tx2, ty2+36); ctx.lineTo(tx2-8, ty2+36); ctx.lineTo(tx2-8, ty2+52); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(tx2+52, ty2+42); ctx.lineTo(tx2+60, ty2+42); ctx.stroke();
+      }
+
+      // ── Pipe network connecting tanks (horizontal top run) ────────────
+      ctx.strokeStyle = "rgba(0,200,100,0.20)"; ctx.lineWidth = 4;
+      ctx.beginPath(); ctx.moveTo(W*0.06, topY+64); ctx.lineTo(W*0.94, topY+64); ctx.stroke();
+      ctx.strokeStyle = "rgba(0,200,100,0.10)"; ctx.lineWidth = 8;
+      ctx.beginPath(); ctx.moveTo(W*0.06, topY+64); ctx.lineTo(W*0.94, topY+64); ctx.stroke();
+      // Pipe joints
+      for (let pj=0;pj<5;pj++) {
+        ctx.fillStyle = "#1a3a22"; ctx.beginPath(); ctx.arc(W*0.12+pj*W*0.18, topY+64, 5, 0, Math.PI*2); ctx.fill();
+        ctx.strokeStyle = "#44FF88"; ctx.lineWidth=1; ctx.beginPath(); ctx.arc(W*0.12+pj*W*0.18, topY+64, 5, 0, Math.PI*2); ctx.stroke();
+      }
+
+      // ── Central holographic DNA display ───────────────────────────────
+      const dnaX = cx, dnaY = midY - 10;
+      // Glow halo
+      const dnaGrad = ctx.createRadialGradient(dnaX, dnaY, 0, dnaX, dnaY, 50);
+      dnaGrad.addColorStop(0, `rgba(0,255,120,${0.12 + Math.sin(tul*1.5)*0.04})`);
+      dnaGrad.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = dnaGrad; ctx.beginPath(); ctx.arc(dnaX, dnaY, 50, 0, Math.PI*2); ctx.fill();
+      // DNA helix strands
+      for (let dna=0;dna<20;dna++) {
+        const dp = dna / 20;
+        const ang = dp * Math.PI * 4 + tul * 1.2;
+        const dx1 = dnaX + Math.cos(ang) * 18;
+        const dx2 = dnaX + Math.cos(ang + Math.PI) * 18;
+        const dy2 = dnaY - 40 + dna * 4;
+        // Strand 1
+        ctx.fillStyle = `rgba(0,255,130,${0.55 + Math.cos(ang)*0.3})`;
+        ctx.beginPath(); ctx.arc(dx1, dy2, 3, 0, Math.PI*2); ctx.fill();
+        // Strand 2
+        ctx.fillStyle = `rgba(0,180,255,${0.55 + Math.cos(ang+Math.PI)*0.3})`;
+        ctx.beginPath(); ctx.arc(dx2, dy2, 3, 0, Math.PI*2); ctx.fill();
+        // Bridge rungs every 3 nodes
+        if (dna % 3 === 0) {
+          ctx.strokeStyle = "rgba(0,255,150,0.20)"; ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.moveTo(dx1, dy2); ctx.lineTo(dx2, dy2); ctx.stroke();
+        }
+      }
+      // DNA label
+      ctx.fillStyle = "#44FF88"; ctx.shadowColor="#00FF88"; ctx.shadowBlur=8;
+      ctx.font = "bold 7px Orbitron, monospace"; ctx.textAlign = "center";
+      ctx.fillText("DNA SCAN ACTIVE", dnaX, dnaY + 50);
+      ctx.shadowBlur = 0;
+
+      // ── Left wall: research workstations ─────────────────────────────
+      for (let ws3 = 0; ws3 < 2; ws3++) {
+        const wsx = W * 0.05, wsy = midY - 30 + ws3 * 68;
+        ctx.fillStyle = "#050e08"; ctx.strokeStyle = "#226633"; ctx.lineWidth = 1.5;
+        rr(wsx, wsy, 80, 54, 3); ctx.fill(); ctx.stroke();
+        // Monitor screen
+        ctx.fillStyle = "#020a04"; rr(wsx+4, wsy+4, 52, 34, 2); ctx.fill();
+        ctx.strokeStyle = "#44FF88"; ctx.lineWidth = 1; ctx.strokeRect(wsx+4, wsy+4, 52, 34);
+        // Animated scanlines
+        const slY = ((tul * 28 + ws3 * 20) % 34);
+        ctx.fillStyle = "rgba(0,255,120,0.12)"; ctx.fillRect(wsx+5, wsy+5+slY, 50, 2);
+        // Screen data
+        for (let dl2 = 0; dl2 < 4; dl2++) {
+          ctx.fillStyle = dl2 % 2 === 0 ? "rgba(0,255,100,0.4)" : "rgba(0,180,255,0.3)";
+          ctx.fillRect(wsx+6, wsy+8+dl2*7, 20+(dl2*9)%28, 4);
+        }
+        // Keyboard
+        ctx.fillStyle = "#0a1a0e"; rr(wsx+4, wsy+40, 52, 10, 2); ctx.fill();
+        for (let k2=0;k2<7;k2++) ctx.fillStyle="#0e200e", ctx.fillRect(wsx+6+k2*7, wsy+42, 5, 6);
+        // Status light
+        const stOn = Math.sin(tul*3+ws3*2)>0;
+        ctx.fillStyle = stOn ? "#00FF88" : "#004422"; ctx.beginPath(); ctx.arc(wsx+72, wsy+6, 4, 0, Math.PI*2); ctx.fill();
+      }
+      ctx.fillStyle = "#44FF88"; ctx.font="bold 7px monospace"; ctx.textAlign="center";
+      ctx.fillText("RESEARCH STATIONS", W*0.05+40, midY+96);
+
+      // ── Right wall: cryogenic freeze pods ────────────────────────────
+      for (let cp = 0; cp < 2; cp++) {
+        const cpx = W * 0.78, cpy = midY - 40 + cp * 78;
+        // Pod shadow
+        ctx.fillStyle = "rgba(0,0,0,0.5)"; rr(cpx+3, cpy+3, 68, 62, 8); ctx.fill();
+        // Pod body
+        ctx.fillStyle = "#04101a"; ctx.strokeStyle = "#0088CC"; ctx.lineWidth = 2;
+        rr(cpx, cpy, 68, 62, 8); ctx.fill(); ctx.stroke();
+        // Frosted glass panel
+        ctx.fillStyle = "rgba(0,100,180,0.12)"; rr(cpx+6, cpy+6, 56, 42, 5); ctx.fill();
+        ctx.strokeStyle = "rgba(100,200,255,0.25)"; ctx.lineWidth=1; ctx.strokeRect(cpx+6, cpy+6, 56, 42);
+        // Frozen person inside
+        const fpx = cpx + 34, fpy = cpy + 16;
+        ctx.fillStyle = "rgba(180,220,255,0.30)";
+        ctx.beginPath(); ctx.ellipse(fpx, fpy-8, 7, 8, 0, 0, Math.PI*2); ctx.fill(); // head
+        rr(fpx-8, fpy, 16, 22, 2); ctx.fill(); // body
+        ctx.fillRect(fpx-11, fpy+4, 4, 16); ctx.fillRect(fpx+7, fpy+4, 4, 16); // arms
+        ctx.fillRect(fpx-5, fpy+22, 4, 10); ctx.fillRect(fpx+1, fpy+22, 4, 10); // legs
+        // Ice frost effect
+        ctx.strokeStyle = "rgba(150,200,255,0.15)"; ctx.lineWidth = 0.8;
+        for (let ic=0;ic<6;ic++) {
+          ctx.beginPath(); ctx.moveTo(cpx+8+ic*9, cpy+6); ctx.lineTo(cpx+8+ic*9, cpy+48); ctx.stroke();
+        }
+        // Cryo temperature gauge
+        const cTemp = -180 + Math.sin(tul*0.4+cp)*5;
+        ctx.fillStyle = "#0066AA"; rr(cpx+6, cpy+50, 56, 8, 3); ctx.fill();
+        ctx.fillStyle = "#00AAFF"; rr(cpx+6, cpy+50, 56*(0.3+cp*0.2), 8, 3); ctx.fill();
+        ctx.fillStyle = "#88DDFF"; ctx.font="bold 6px monospace"; ctx.textAlign="center";
+        ctx.fillText(`${Math.round(cTemp)}°C`, cpx+34, cpy+57);
+        // Status ring
+        const cpPulse = Math.sin(tul*2+cp*1.5)*0.5+0.5;
+        ctx.strokeStyle = `rgba(0,150,255,${0.3+cpPulse*0.3})`; ctx.lineWidth=2;
+        ctx.strokeRect(cpx+1, cpy+1, 66, 60);
+      }
+      ctx.fillStyle = "#0088CC"; ctx.font="bold 7px monospace"; ctx.textAlign="center";
+      ctx.fillText("CRYO UNITS", W*0.78+34, midY+100);
+
+      // ── Center-left: chemical synthesis array ─────────────────────────
+      const csX = W*0.20, csY = midY + 20;
+      ctx.fillStyle = "#050e06"; ctx.strokeStyle = "#226633"; ctx.lineWidth = 1;
+      rr(csX, csY, 110, 58, 3); ctx.fill(); ctx.strokeRect(csX, csY, 110, 58);
+      // Flask row
+      const flaskCols = ["#FF4444","#44FFCC","#FFCC00","#FF44AA","#44AAFF"];
+      for (let f=0;f<5;f++) {
+        const fx3 = csX+8+f*20, fy3 = csY+8;
+        const fc = flaskCols[f];
+        // Flask body
+        ctx.fillStyle = "#0a180a"; rr(fx3, fy3+8, 14, 22, [2,2,6,6]); ctx.fill();
+        ctx.strokeStyle = fc+"88"; ctx.lineWidth=1; ctx.strokeRect(fx3, fy3+8, 14, 22);
+        // Flask neck
+        ctx.fillStyle = "#0a180a"; ctx.fillRect(fx3+4, fy3, 6, 10);
+        // Liquid level (animated bubble)
+        const lvl = 10 + ((f*7+Math.floor(tul*0.5+f*0.3))%12);
+        ctx.fillStyle = fc+"55"; ctx.fillRect(fx3+1, fy3+8+(30-lvl), 12, lvl);
+        // Flask glow
+        ctx.fillStyle = fc; ctx.shadowColor=fc; ctx.shadowBlur=6;
+        ctx.beginPath(); ctx.arc(fx3+7, fy3+20, 4, 0, Math.PI*2); ctx.fill();
+        ctx.shadowBlur=0;
+        // Bubbles
+        if (Math.sin(tul*4+f)>0.5) {
+          ctx.fillStyle = fc+"66"; ctx.beginPath(); ctx.arc(fx3+5, fy3+12, 2, 0, Math.PI*2); ctx.fill();
+          ctx.beginPath(); ctx.arc(fx3+10, fy3+8, 1.5, 0, Math.PI*2); ctx.fill();
+        }
+      }
+      // Bunsen burner glow
+      ctx.fillStyle = "rgba(0,200,255,0.15)";
+      ctx.beginPath(); ctx.ellipse(csX+95, csY+46, 12, 6, 0, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = "#00CCFF"; ctx.shadowColor="#00CCFF"; ctx.shadowBlur=8;
+      ctx.beginPath(); ctx.arc(csX+95, csY+40, 4, 0, Math.PI*2); ctx.fill();
+      ctx.shadowBlur=0;
+      ctx.fillStyle = "#44FF88"; ctx.font="bold 6px monospace"; ctx.textAlign="center";
+      ctx.fillText("SYNTHESIS LAB", csX+55, csY+66);
+
+      // ── Hazmat containment vault (bottom-right of center) ─────────────
+      const hvX = W*0.50, hvY = midY + 20;
+      ctx.fillStyle = "#070e04"; ctx.strokeStyle = "#88FF22"; ctx.lineWidth = 1.5;
+      rr(hvX, hvY, 80, 58, 4); ctx.fill(); ctx.stroke();
+      // Biohazard symbol (drawn, no emoji)
+      const bhcx = hvX+40, bhcy = hvY+22;
+      ctx.strokeStyle = "#88FF22"; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(bhcx, bhcy, 14, 0, Math.PI*2); ctx.stroke();
+      ctx.beginPath(); ctx.arc(bhcx, bhcy, 5, 0, Math.PI*2); ctx.stroke();
+      for (let bh2=0;bh2<3;bh2++) {
+        const ba2 = (Math.PI/1.5)*bh2 - Math.PI/2;
+        ctx.strokeStyle = "#070e04"; ctx.lineWidth=3;
+        ctx.beginPath(); ctx.moveTo(bhcx+Math.cos(ba2)*5, bhcy+Math.sin(ba2)*5); ctx.lineTo(bhcx+Math.cos(ba2)*14, bhcy+Math.sin(ba2)*14); ctx.stroke();
+      }
+      // Warning hazard stripes on floor below vault
+      ctx.save(); ctx.translate(hvX+40, hvY+48); ctx.rotate(Math.PI/4);
+      for (let hs=0;hs<5;hs++) {
+        ctx.fillStyle = hs%2===0 ? "rgba(255,200,0,0.16)" : "rgba(0,0,0,0.10)";
+        ctx.fillRect(hs*8-20, -16, 8, 32);
+      }
+      ctx.restore();
+      ctx.fillStyle = "#AAFF44"; ctx.font="bold 6px monospace"; ctx.textAlign="center";
+      ctx.fillText("CONTAINMENT", hvX+40, hvY+54);
+
+      // ── Floor drain/grate (center bottom) ────────────────────────────
+      ctx.fillStyle = "#0a140a"; ctx.strokeStyle = "#224422"; ctx.lineWidth=1;
+      rr(cx-20, H*0.86, 40, 28, 3); ctx.fill(); ctx.strokeRect(cx-20, H*0.86, 40, 28);
+      for (let gr=0;gr<4;gr++) ctx.fillStyle="#0d160d", ctx.fillRect(cx-18, H*0.86+4+gr*6, 36, 3);
+      // Glowing liquid in drain
+      ctx.fillStyle = `rgba(0,255,100,${0.15+Math.sin(tul*2)*0.05})`;
+      ctx.beginPath(); ctx.ellipse(cx, H*0.86+20, 14, 6, 0, 0, Math.PI*2); ctx.fill();
+
+      // ── Corner emergency buttons ──────────────────────────────────────
+      for (const [ex2,ey2] of [[W*0.05,H*0.82],[W*0.87,H*0.82]]) {
+        ctx.fillStyle = "#2a0000"; rr(ex2, ey2, 26, 18, 3); ctx.fill();
+        ctx.strokeStyle = "#FF4400"; ctx.lineWidth=1; ctx.strokeRect(ex2, ey2, 26, 18);
+        const eblink = Math.sin(tul*4+ex2)>0.4;
+        ctx.fillStyle = eblink ? "#FF2200" : "#440000"; ctx.shadowColor="#FF2200"; ctx.shadowBlur = eblink?10:0;
+        ctx.beginPath(); ctx.arc(ex2+13, ey2+9, 6, 0, Math.PI*2); ctx.fill();
+        ctx.shadowBlur=0;
+        ctx.fillStyle="#FF4400"; ctx.font="bold 5px monospace"; ctx.textAlign="center";
+        ctx.fillText("ALARM", ex2+13, ey2+22);
       }
     }
 

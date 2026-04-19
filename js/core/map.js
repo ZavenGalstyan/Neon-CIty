@@ -3654,7 +3654,8 @@ class GameMap {
     // All blitz/robot buildings use large rooms (same as galactica)
     const useLargeBlitz  = isBlitz;
     const useLargeRobot  = isRobot;
-    const useLarge = useLargeDealer || useLargeArcade || useLargeMarket || useLargeClub || useLargeRest || useLargePharm || useLargeRadio || useLargeZombie || useLargeBlitz || useLargeRobot;
+    const useLargeUnderground = door.bTypeIdx === 23; // Underground Lab always large
+    const useLarge = useLargeDealer || useLargeArcade || useLargeMarket || useLargeClub || useLargeRest || useLargePharm || useLargeRadio || useLargeZombie || useLargeBlitz || useLargeRobot || useLargeUnderground;
     const layout = useLargeDealer ? ROOM_LAYOUT_DEALER_NEON
                  : useLargeArcade ? ROOM_LAYOUT_ARCADE_NEON
                  : useLargeMarket ? ROOM_LAYOUT_DEALER_NEON
@@ -3663,8 +3664,9 @@ class GameMap {
                  : useLargePharm  ? ROOM_LAYOUT_ARCADE_NEON
                  : useLargeRadio  ? ROOM_LAYOUT_ARCADE_NEON
                  : useLargeZombie ? ROOM_LAYOUT_ARCADE_NEON
-                 : useLargeBlitz  ? ROOM_LAYOUT_ARCADE_NEON
-                 : useLargeRobot  ? ROOM_LAYOUT_ARCADE_NEON
+                 : useLargeBlitz      ? ROOM_LAYOUT_ARCADE_NEON
+                 : useLargeRobot      ? ROOM_LAYOUT_ARCADE_NEON
+                 : useLargeUnderground? ROOM_LAYOUT_ARCADE_NEON
                  : door.type === 2 ? ROOM_LAYOUT_2 : ROOM_LAYOUT_1;
     const RH     = layout.length;
     const RW     = layout[0].length;
