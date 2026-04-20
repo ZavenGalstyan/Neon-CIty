@@ -21,7 +21,8 @@
       "Bash(awk -F: 'int\\($1\\)>7286 && int\\($1\\)<7360')",
       "Bash(awk -F: '$2>12060 && $2<12120{print}')",
       "Bash(awk -F: '$2>12100{print}')",
-      "Bash(awk -F: '$2 > 9670 && $2 < 9700 {print}')"
+      "Bash(awk -F: '$2 > 9670 && $2 < 9700 {print}')",
+      "Bash(sort -t'.' -k2)"
     ]
   }
 }
