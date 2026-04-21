@@ -10448,6 +10448,7 @@ class BuildingNPC {
   update(dt) { this._waveT += dt * 1.2; }
 
   render(ctx) {
+    if (this._hidden) return;
     if (this._isGirl) {
       this._renderGirl(ctx);
     } else if (this._isWasteland) {

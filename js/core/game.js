@@ -3373,6 +3373,22 @@ class Game {
             npcRenderType = true; // neonCity/robot city/hardcore/galactica style
           }
           this._buildingNpcs = [new BuildingNPC(npcX, npcY, bType, npcRenderType, useGirlRender)];
+          // For campaign map: hide the NPC circle on rooms that have drawn people,
+          // and reposition so the [T] TALK trigger sits on the drawn person
+          if (!!this.map?.config?.campaign) {
+            const npc = this._buildingNpcs[0];
+            if (bType === 17) {
+              // Ammo Dealer drawn at (W*0.55, H*0.44+20) ≈ (roomW*0.55, roomH*0.50)
+              npc.x = room.roomW * 0.55;
+              npc.y = room.roomH * 0.50;
+              npc._hidden = true;
+            } else if (bType === 23) {
+              // Dr. Chaos drawn at (W/2+20, H*0.55)
+              npc.x = room.roomW / 2 + 20;
+              npc.y = room.roomH * 0.55;
+              npc._hidden = true;
+            }
+          }
         }
         return;
       }

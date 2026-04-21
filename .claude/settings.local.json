@@ -26,7 +26,13 @@
       "Bash(awk NR>=12857 && NR<=12870 {print NR\": \"$0}:*)",
       "Bash(awk -F: '$1>=12857 && $1<=14000 {print}')",
       "Bash(awk -F: '$1>=12140 && $1<=12860 {print}')",
-      "Bash(awk 'NR>=12845 && NR<=13213' \"C:/Users/Zav/Desktop/Z-Gta/js/core/game.js\")"
+      "Bash(awk 'NR>=12845 && NR<=13213' \"C:/Users/Zav/Desktop/Z-Gta/js/core/game.js\")",
+      "Bash(awk NR>=1118 && NR<=1150:*)",
+      "Bash(awk NR>=11420 && NR<=11460:*)",
+      "Bash(awk NR>=11405 && NR<=11425:*)",
+      "Bash(awk -F: '$2 >= 11350 && $2 <= 11600 {print}')",
+      "Bash(awk NR>=11465 && NR<=11490:*)",
+      "Bash(awk -F: '$2 >= 11340 && $2 <= 11380 {print}')"
     ]
   }
 }
