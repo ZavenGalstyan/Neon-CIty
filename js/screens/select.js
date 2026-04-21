@@ -117,6 +117,10 @@
 
   allMapCards.forEach(card => {
     card.addEventListener('click', () => {
+      if (card.dataset.comingSoon === 'true') {
+        _showComingSoonToast();
+        return;
+      }
       allMapCards.forEach(c => c.classList.remove('selected'));
       card.classList.add('selected');
       selectedMapId = card.dataset.map;
