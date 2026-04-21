@@ -3246,6 +3246,136 @@ class GameMap {
               ctx.fillStyle = campNeon + '44';
               ctx.fillRect(wx + 4, wy + S - 14, S - 8, 3);
             }
+          } else if (cfg.dino) {
+            // ═══════════════════════════════════════════════════════════════
+            //  DINO WORLD: Jungle/prehistoric overgrown structures
+            // ═══════════════════════════════════════════════════════════════
+            const ts = x * 41 + y * 59;
+            const bseed = ts % 8;
+            const t = Date.now() * 0.001;
+
+            // Mossy stone/bark base — dark jungle greens
+            const dinoBases = ['#1a3410','#1e3c14','#162e0c','#223a10','#183214','#1c3812','#14280a','#203616'];
+            ctx.fillStyle = dinoBases[bseed];
+
+            // Varied prehistoric structure shapes
+            if (bseed === 0) {
+              // Stepped pyramid structure
+              ctx.fillRect(wx + S*0.08, wy + S*0.55, S*0.84, S*0.45);
+              ctx.fillStyle = '#1e3c14';
+              ctx.fillRect(wx + S*0.18, wy + S*0.30, S*0.64, S*0.28);
+              ctx.fillStyle = '#223a10';
+              ctx.fillRect(wx + S*0.28, wy + S*0.05, S*0.44, S*0.28);
+            } else if (bseed === 1) {
+              // Overgrown ruins — irregular shape
+              ctx.beginPath();
+              ctx.moveTo(wx, wy + S*0.18);
+              ctx.lineTo(wx + S*0.14, wy);
+              ctx.lineTo(wx + S*0.78, wy);
+              ctx.lineTo(wx + S, wy + S*0.22);
+              ctx.lineTo(wx + S, wy + S);
+              ctx.lineTo(wx, wy + S);
+              ctx.closePath(); ctx.fill();
+              // Crumbled top-right corner
+              ctx.fillStyle = 'rgba(0,0,0,0.22)';
+              ctx.fillRect(wx + S*0.72, wy, S*0.28, S*0.22);
+            } else if (bseed === 2) {
+              // Wide squat temple base
+              ctx.fillRect(wx + S*0.04, wy + S*0.42, S*0.92, S*0.58);
+              ctx.fillStyle = '#162e0c';
+              ctx.fillRect(wx + S*0.14, wy + S*0.18, S*0.72, S*0.26);
+            } else if (bseed === 3) {
+              // Twin stone pillars
+              ctx.fillRect(wx + S*0.04, wy + S*0.04, S*0.34, S*0.94);
+              ctx.fillRect(wx + S*0.62, wy + S*0.04, S*0.34, S*0.94);
+              ctx.fillStyle = '#14280a';
+              ctx.fillRect(wx + S*0.04, wy + S*0.62, S*0.92, S*0.22);
+            } else if (bseed === 4) {
+              // Rounded stone hut
+              ctx.fillRect(wx + S*0.14, wy + S*0.32, S*0.72, S*0.68);
+              ctx.beginPath();
+              ctx.arc(wx + S*0.5, wy + S*0.36, S*0.36, Math.PI, 0);
+              ctx.fill();
+            } else if (bseed === 5) {
+              // Crumbled fortification
+              ctx.fillRect(wx + S*0.08, wy + S*0.38, S*0.84, S*0.62);
+              ctx.fillStyle = '#1c3812';
+              ctx.fillRect(wx + S*0.08, wy + S*0.10, S*0.24, S*0.32);
+              ctx.fillRect(wx + S*0.68, wy + S*0.10, S*0.24, S*0.32);
+            } else if (bseed === 6) {
+              // Organic-edged overgrown block
+              ctx.beginPath();
+              ctx.moveTo(wx + S*0.12, wy);
+              ctx.lineTo(wx + S*0.88, wy + S*0.04);
+              ctx.lineTo(wx + S, wy + S*0.10);
+              ctx.lineTo(wx + S*0.96, wy + S);
+              ctx.lineTo(wx + S*0.04, wy + S);
+              ctx.lineTo(wx, wy + S*0.08);
+              ctx.closePath(); ctx.fill();
+            } else {
+              // Standard recessed mossy block
+              ctx.fillRect(wx + S*0.06, wy + S*0.38, S*0.88, S*0.62);
+              ctx.fillStyle = '#162e0c';
+              ctx.fillRect(wx + S*0.16, wy, S*0.68, S*0.42);
+            }
+
+            // Cracked stone / bark texture lines
+            ctx.strokeStyle = 'rgba(0,0,0,0.42)';
+            ctx.lineWidth = 1;
+            if (ts % 3 === 0) {
+              ctx.beginPath(); ctx.moveTo(wx + S*0.22, wy + S*0.12); ctx.lineTo(wx + S*0.30, wy + S*0.48); ctx.lineTo(wx + S*0.26, wy + S*0.66); ctx.stroke();
+            }
+            if (ts % 5 === 0) {
+              ctx.beginPath(); ctx.moveTo(wx + S*0.60, wy + S*0.08); ctx.lineTo(wx + S*0.70, wy + S*0.38); ctx.stroke();
+            }
+            if (ts % 7 === 0) {
+              ctx.beginPath(); ctx.moveTo(wx + S*0.10, wy + S*0.55); ctx.lineTo(wx + S*0.42, wy + S*0.60); ctx.stroke();
+            }
+
+            // Hanging vines from top — sinuous green lines
+            ctx.strokeStyle = '#44AA22';
+            ctx.lineWidth = 2;
+            const vineCount = 2 + (ts % 3);
+            for (let vi = 0; vi < vineCount; vi++) {
+              const vx = wx + S*(0.15 + vi * 0.28 + (ts % 11)*0.01);
+              const vLen = S*(0.30 + (ts*3+vi*7)%10 * 0.04);
+              ctx.beginPath();
+              ctx.moveTo(vx, wy);
+              ctx.bezierCurveTo(vx - 5, wy + vLen*0.3, vx + 5, wy + vLen*0.6, vx - 3, wy + vLen);
+              ctx.stroke();
+              // Leaf nub
+              ctx.fillStyle = '#55CC22';
+              ctx.beginPath(); ctx.ellipse(vx - 3, wy + vLen, 4, 3, 0.5, 0, Math.PI*2); ctx.fill();
+            }
+
+            // Bone/ivory corner decorative elements
+            ctx.fillStyle = '#F0E8C0';
+            const boneCorners = [[wx+4,wy+4],[wx+S-14,wy+4],[wx+4,wy+S-14],[wx+S-14,wy+S-14]];
+            for (const [bcx, bcy] of boneCorners) {
+              if (Math.sin(x*3.1+y*7.3+(bcx+bcy)*0.1) > 0.2) {
+                ctx.fillRect(bcx, bcy, 10, 3);
+                ctx.fillRect(bcx, bcy, 3, 10);
+              }
+            }
+
+            // Bioluminescent windows — green glow
+            const winCol = cfg.windowColors[(x * 3 + y * 7) % cfg.windowColors.length];
+            ctx.fillStyle = winCol;
+            ctx.shadowColor = '#66DD44'; ctx.shadowBlur = 8;
+            for (let wy2 = 0; wy2 < 2; wy2++) {
+              for (let wx2 = 0; wx2 < 2; wx2++) {
+                if (Math.sin(x * 5.7 + y * 3.3 + wx2 * 7 + wy2 * 11) > 0.15) {
+                  ctx.fillRect(wx + 12 + wx2 * 26, wy + 14 + wy2 * 26, 9, 7);
+                }
+              }
+            }
+            ctx.shadowBlur = 0;
+
+            // Faint amber/bioluminescent edge glow
+            ctx.strokeStyle = cfg.neonColors[(x + y) % cfg.neonColors.length] + '55';
+            ctx.lineWidth = 1.5;
+            ctx.strokeRect(wx + 2, wy + 2, S - 4, S - 4);
+
           } else if (cfg.hardcore) {
             // ═══════════════════════════════════════════════════════════════
             //  HARDCORE: Neon City shapes + fire/ember atmosphere
@@ -3577,9 +3707,9 @@ class GameMap {
             }
           }
 
-          // Windows (not in robot/jungle/desert/neon_city) — no shadowBlur for performance
-          // Neon City has custom windows in the building shapes above
-          if (!cfg.robot && !cfg.jungle && !cfg.desert && !cfg.galactica && !cfg.zombie && cfg.id !== 'neon_city' && this.buildingWindows[y][x]) {
+          // Windows (not in robot/jungle/desert/neon_city/dino) — no shadowBlur for performance
+          // Neon City / dino have custom windows in the building shapes above
+          if (!cfg.robot && !cfg.jungle && !cfg.desert && !cfg.galactica && !cfg.zombie && !cfg.dino && cfg.id !== 'neon_city' && this.buildingWindows[y][x]) {
             const wc = cfg.windowColors[(Math.floor(x/2) + Math.floor(y/2)) % cfg.windowColors.length];
             ctx.fillStyle = wc + 'CC';
             for (let wy2 = 0; wy2 < 2; wy2++) {
@@ -3590,9 +3720,9 @@ class GameMap {
               }
             }
           }
-          // Neon sign strips (not in robot/jungle/desert/neon_city) — no shadowBlur for performance
-          // Neon City has custom neon effects in building shapes
-          if (!cfg.robot && !cfg.jungle && !cfg.desert && !cfg.galactica && !cfg.zombie && cfg.id !== 'neon_city' && (x + y) % cfg.neonFreq === 0) {
+          // Neon sign strips (not in robot/jungle/desert/neon_city/dino) — no shadowBlur for performance
+          // Neon City / dino have custom neon effects in building shapes
+          if (!cfg.robot && !cfg.jungle && !cfg.desert && !cfg.galactica && !cfg.zombie && !cfg.dino && cfg.id !== 'neon_city' && (x + y) % cfg.neonFreq === 0) {
             const nc = cfg.neonColors[(x * 3 + y) % cfg.neonColors.length];
             ctx.globalAlpha = 0.65;
             ctx.strokeStyle = nc; ctx.lineWidth = 2;
@@ -3776,6 +3906,32 @@ class GameMap {
         // Bottom-edge ambient occlusion
         ctx.fillStyle = 'rgba(0,0,0,0.22)';
         ctx.fillRect(wx2, wy2 + S + wallH - 3, S, 3);
+        // Dino south-wall: dark moss with bioluminescent window slits
+        if (cfg.dino) {
+          ctx.fillStyle = '#1a2810';
+          ctx.fillRect(wx2, wy2 + S, S, wallH);
+          ctx.fillStyle = 'rgba(0,0,0,0.52)';
+          ctx.fillRect(wx2, wy2 + S, S, 3);
+          ctx.fillStyle = 'rgba(0,0,0,0.22)';
+          ctx.fillRect(wx2, wy2 + S + wallH - 3, S, 3);
+          // Hanging vine fringe on south wall
+          ctx.strokeStyle = '#33881A';
+          ctx.lineWidth = 1;
+          for (let vi = 0; vi < 4; vi++) {
+            const vxw = wx2 + 8 + vi * Math.floor((S-8)/4);
+            ctx.beginPath(); ctx.moveTo(vxw, wy2 + S); ctx.lineTo(vxw - 1, wy2 + S + wallH); ctx.stroke();
+          }
+          if (this.buildingWindows[y][x]) {
+            ctx.fillStyle = '#66DD44AA';
+            const wW = 9, wHh = 6;
+            for (let wi = 0; wi < 3; wi++) {
+              const wx3 = wx2 + 8 + wi * Math.floor((S - 16) / 3);
+              if (wx3 + wW < wx2 + S - 6)
+                ctx.fillRect(wx3, wy2 + S + 3, wW, wHh);
+            }
+          }
+          continue;
+        }
         // Window slots on the wall face — no shadowBlur for performance
         if (this.buildingWindows[y][x]) {
           const wc = _wallIsBar ? '#88EEFFAA' : cfg.windowColors[(Math.floor(x/2) + Math.floor(y/2)) % cfg.windowColors.length] + 'AA';
@@ -3845,10 +4001,12 @@ class GameMap {
     const isBlitz     = !!this.config.blitz;
     const isRobot     = !!this.config.robot;
     const isHardcore  = !!this.config.hardcore;
+    const isDino        = !!this.config.dino;
     const isNeonDealer  = this.config.id === 'neon_city' && door.specialType === 'dealership';
     const isGalDealer   = isGalactica && door.specialType === 'dealership';
     const isWastelandDealer = !!this.config.wasteland && door.specialType === 'dealership';
     const isHardcoreDealer  = isHardcore && door.specialType === 'dealership';
+    const isDinoDealer  = isDino && door.specialType === 'dealership';
     const isNeonArcade  = this.config.id === 'neon_city' && door.bTypeIdx === 4;
     const isGalArcade   = isGalactica && door.bTypeIdx === 4;
     const isGalMarket   = isGalactica && door.bTypeIdx === 3;
@@ -3857,7 +4015,7 @@ class GameMap {
     const isGalPharmacy = isGalactica && door.bTypeIdx === 5;
     const isGalRadio    = isGalactica && door.bTypeIdx === 22;
     const isZombieMap   = !!this.config.zombie;
-    const useLargeDealer = isNeonDealer || isGalDealer || isWastelandDealer || isHardcoreDealer;
+    const useLargeDealer = isNeonDealer || isGalDealer || isWastelandDealer || isHardcoreDealer || isDinoDealer;
     const useLargeArcade = isNeonArcade || isGalArcade;
     const useLargeMarket = isGalMarket;
     const useLargeClub   = isGalClub;
@@ -3871,7 +4029,8 @@ class GameMap {
     const useLargeRobot    = isRobot;
     const useLargeHardcore = isHardcore;
     const useLargeUnderground = door.bTypeIdx === 23; // Underground Lab always large
-    const useLarge = useLargeDealer || useLargeArcade || useLargeMarket || useLargeClub || useLargeRest || useLargePharm || useLargeRadio || useLargeZombie || useLargeBlitz || useLargeRobot || useLargeHardcore || useLargeUnderground;
+    const useLargeDino  = isDino;
+    const useLarge = useLargeDealer || useLargeArcade || useLargeMarket || useLargeClub || useLargeRest || useLargePharm || useLargeRadio || useLargeZombie || useLargeBlitz || useLargeRobot || useLargeHardcore || useLargeUnderground || useLargeDino;
     const layout = useLargeDealer ? ROOM_LAYOUT_DEALER_NEON
                  : useLargeArcade ? ROOM_LAYOUT_ARCADE_NEON
                  : useLargeMarket ? ROOM_LAYOUT_DEALER_NEON
@@ -3884,6 +4043,7 @@ class GameMap {
                  : useLargeRobot      ? ROOM_LAYOUT_ARCADE_NEON
                  : useLargeHardcore   ? ROOM_LAYOUT_ARCADE_NEON
                  : useLargeUnderground? ROOM_LAYOUT_ARCADE_NEON
+                 : useLargeDino       ? ROOM_LAYOUT_ARCADE_NEON
                  : door.type === 2 ? ROOM_LAYOUT_2 : ROOM_LAYOUT_1;
     const RH     = layout.length;
     const RW     = layout[0].length;
