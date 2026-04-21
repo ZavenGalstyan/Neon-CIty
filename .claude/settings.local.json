@@ -25,7 +25,8 @@
       "Bash(sort -t'.' -k2)",
       "Bash(awk NR>=12857 && NR<=12870 {print NR\": \"$0}:*)",
       "Bash(awk -F: '$1>=12857 && $1<=14000 {print}')",
-      "Bash(awk -F: '$1>=12140 && $1<=12860 {print}')"
+      "Bash(awk -F: '$1>=12140 && $1<=12860 {print}')",
+      "Bash(awk 'NR>=12845 && NR<=13213' \"C:/Users/Zav/Desktop/Z-Gta/js/core/game.js\")"
     ]
   }
 }

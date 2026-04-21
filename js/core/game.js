@@ -11360,26 +11360,49 @@ class Game {
 
       // ── Worker helper (top-down person) ──────────────────────────
       const drawWorker = (px, py, uniform, skinColor) => {
-        // Shadow
-        ctx.fillStyle = 'rgba(0,0,0,0.25)';
-        ctx.beginPath(); ctx.ellipse(px, py + 2, 9, 5, 0, 0, Math.PI * 2); ctx.fill();
+        // Ground shadow
+        ctx.fillStyle = 'rgba(0,0,0,0.28)';
+        ctx.beginPath(); ctx.ellipse(px, py + 8, 13, 6, 0, 0, Math.PI * 2); ctx.fill();
+        // Legs (two rectangles)
+        ctx.fillStyle = '#1a2010';
+        ctx.fillRect(px - 6, py + 2, 5, 14);
+        ctx.fillRect(px + 1, py + 2, 5, 14);
+        // Boots
+        ctx.fillStyle = '#1a1200';
+        ctx.fillRect(px - 7, py + 13, 7, 5);
+        ctx.fillRect(px, py + 13, 7, 5);
         // Body (uniform)
         ctx.fillStyle = uniform;
-        rr(px - 7, py - 8, 14, 18, 3); ctx.fill();
-        // Left arm
-        ctx.strokeStyle = uniform; ctx.lineWidth = 4; ctx.lineCap = 'round';
-        ctx.beginPath(); ctx.moveTo(px - 7, py - 4); ctx.lineTo(px - 14, py + 2); ctx.stroke();
-        // Right arm
-        ctx.beginPath(); ctx.moveTo(px + 7, py - 4); ctx.lineTo(px + 14, py + 2); ctx.stroke();
+        rr(px - 9, py - 12, 18, 22, 3); ctx.fill();
+        // Chest stripe
+        ctx.strokeStyle = 'rgba(255,255,100,0.35)'; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.moveTo(px - 6, py - 6); ctx.lineTo(px + 6, py - 6); ctx.stroke();
+        // Arms
+        ctx.strokeStyle = uniform; ctx.lineWidth = 6; ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.moveTo(px - 9, py - 6); ctx.lineTo(px - 18, py + 3); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(px + 9, py - 6); ctx.lineTo(px + 18, py + 3); ctx.stroke();
         ctx.lineCap = 'butt';
+        // Hands (skin)
+        ctx.fillStyle = skinColor;
+        ctx.beginPath(); ctx.arc(px - 18, py + 3, 4, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(px + 18, py + 3, 4, 0, Math.PI * 2); ctx.fill();
         // Neck
-        ctx.fillStyle = skinColor; ctx.fillRect(px - 3, py - 10, 6, 4);
-        // Head
-        ctx.beginPath(); ctx.arc(px, py - 16, 9, 0, Math.PI * 2); ctx.fill();
-        // Helmet / hair
-        ctx.fillStyle = '#2a2a00';
-        ctx.beginPath(); ctx.arc(px, py - 18, 8, Math.PI, 0); ctx.fill();
-        ctx.fillRect(px - 8, py - 20, 16, 5);
+        ctx.fillStyle = skinColor; ctx.fillRect(px - 3, py - 14, 6, 4);
+        // Head (skin)
+        ctx.beginPath(); ctx.arc(px, py - 20, 8, 0, Math.PI * 2); ctx.fill();
+        // Eyes
+        ctx.fillStyle = '#fff';
+        ctx.beginPath(); ctx.ellipse(px - 3, py - 21, 2, 1.5, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(px + 3, py - 21, 2, 1.5, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#222';
+        ctx.beginPath(); ctx.arc(px - 3, py - 21, 1, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(px + 3, py - 21, 1, 0, Math.PI * 2); ctx.fill();
+        // Military helmet (top half arc + brim)
+        ctx.fillStyle = '#2a3a10';
+        ctx.beginPath(); ctx.arc(px, py - 22, 9, Math.PI, 0); ctx.fill();
+        ctx.fillRect(px - 10, py - 23, 20, 5);
+        ctx.strokeStyle = '#1a2808'; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.moveTo(px - 11, py - 22); ctx.lineTo(px + 11, py - 22); ctx.stroke();
       };
 
       // ── 1. Military-green checkered floor ────────────────────────
@@ -13210,6 +13233,69 @@ class Game {
         ctx.fillStyle = "#FF4400"; ctx.font = "bold 5px monospace"; ctx.textAlign = "center";
         ctx.fillText("ALARM", ex2+16, ey2+28);
       }
+
+      // ── Lab scientists (fully drawn top-down people, not circles) ──
+      const drawScientist = (px, py, coatCol, skinCol, hairCol) => {
+        // Ground shadow
+        ctx.fillStyle = 'rgba(0,0,0,0.22)';
+        ctx.beginPath(); ctx.ellipse(px, py + 8, 13, 6, 0, 0, Math.PI * 2); ctx.fill();
+        // Legs (trousers)
+        ctx.fillStyle = '#1a2a3a';
+        ctx.fillRect(px - 6, py + 2, 5, 13);
+        ctx.fillRect(px + 1, py + 2, 5, 13);
+        // Shoes
+        ctx.fillStyle = '#0a0a10';
+        ctx.fillRect(px - 7, py + 12, 7, 5);
+        ctx.fillRect(px, py + 12, 7, 5);
+        // Lab coat body
+        ctx.fillStyle = coatCol;
+        rr(px - 10, py - 14, 20, 24, 3); ctx.fill();
+        // Coat lapels
+        ctx.fillStyle = 'rgba(200,230,255,0.18)';
+        ctx.beginPath(); ctx.moveTo(px - 4, py - 14); ctx.lineTo(px, py - 8); ctx.lineTo(px + 4, py - 14); ctx.closePath(); ctx.fill();
+        // Breast pocket
+        ctx.strokeStyle = 'rgba(0,180,120,0.5)'; ctx.lineWidth = 1;
+        rr(px + 2, py - 10, 7, 6, 1); ctx.stroke();
+        // Arms
+        ctx.strokeStyle = coatCol; ctx.lineWidth = 6; ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.moveTo(px - 10, py - 8); ctx.lineTo(px - 19, py + 2); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(px + 10, py - 8); ctx.lineTo(px + 19, py + 2); ctx.stroke();
+        ctx.lineCap = 'butt';
+        // Hands
+        ctx.fillStyle = skinCol;
+        ctx.beginPath(); ctx.arc(px - 19, py + 2, 4, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(px + 19, py + 2, 4, 0, Math.PI * 2); ctx.fill();
+        // Neck
+        ctx.fillStyle = skinCol; ctx.fillRect(px - 3, py - 16, 6, 4);
+        // Head
+        ctx.beginPath(); ctx.arc(px, py - 22, 9, 0, Math.PI * 2); ctx.fill();
+        // Hair
+        ctx.fillStyle = hairCol;
+        ctx.beginPath(); ctx.arc(px, py - 25, 8, Math.PI, 0); ctx.fill();
+        ctx.fillRect(px - 8, py - 26, 16, 6);
+        // Eyes (white + pupil)
+        ctx.fillStyle = '#fff';
+        ctx.beginPath(); ctx.ellipse(px - 3.5, py - 23, 2.2, 1.6, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(px + 3.5, py - 23, 2.2, 1.6, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#1a3a60';
+        ctx.beginPath(); ctx.arc(px - 3.5, py - 23, 1.1, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(px + 3.5, py - 23, 1.1, 0, Math.PI * 2); ctx.fill();
+        // Tiny nose
+        ctx.fillStyle = 'rgba(0,0,0,0.18)';
+        ctx.beginPath(); ctx.arc(px, py - 20, 1, 0, Math.PI * 2); ctx.fill();
+        // Mouth
+        ctx.strokeStyle = 'rgba(120,60,40,0.7)'; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.arc(px, py - 17.5, 2.5, 0.15, Math.PI - 0.15); ctx.stroke();
+      };
+
+      // Scientist 1 — near specimen tanks, checking readings (left side)
+      drawScientist(tankXs[0] + tankW2 + 30, tankTY + tankH2 * 0.5, '#e8eef4', '#f0c890', '#3a2810');
+      // Scientist 2 — at workstation zone B (center)
+      drawScientist(labCx - 80, H * 0.42, '#dce8f0', '#e8b070', '#1a1a2a');
+      // Scientist 3 — near synthesis array (zone D, left side)
+      drawScientist(50 + 100, H * 0.60, '#eaf2f8', '#c8905a', '#2a1a00');
+      // Scientist 4 — near cryo pods (right side)
+      drawScientist(W - 155 + 40, H * 0.52, '#dce8f0', '#ddb080', '#111');
     }
 
     // ── ZOMBIE MAP: atmospheric decay overlay ──────────────
