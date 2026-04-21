@@ -11574,6 +11574,94 @@ class Game {
       // Worker 2: near ammo crates — organizing
       drawWorker(cx - W * 0.10, crateY + 70, '#3a4e20', '#c09060');
 
+      // ── AMMO DEALER — Arms dealer NPC (center counter) ──────────────
+      {
+        const adx = cx + W * 0.05, ady = midY + 20;
+        // Shadow
+        ctx.fillStyle = 'rgba(0,0,0,0.30)';
+        ctx.beginPath(); ctx.ellipse(adx, ady + 10, 15, 6, 0, 0, Math.PI * 2); ctx.fill();
+        // Legs (cargo pants, dark olive)
+        ctx.fillStyle = '#3a3820';
+        ctx.fillRect(adx - 6, ady + 2, 5, 14);
+        ctx.fillRect(adx + 1, ady + 2, 5, 14);
+        // Cargo pockets on legs
+        ctx.fillStyle = '#2a2a14';
+        ctx.fillRect(adx - 7, ady + 6, 4, 5);
+        ctx.fillRect(adx + 3, ady + 6, 4, 5);
+        // Combat boots
+        ctx.fillStyle = '#1c1408';
+        ctx.fillRect(adx - 8, ady + 13, 8, 6);
+        ctx.fillRect(adx, ady + 13, 8, 6);
+        // Tactical vest body
+        ctx.fillStyle = '#5a4a20';
+        rr(adx - 11, ady - 14, 22, 26, 3); ctx.fill();
+        // Vest pouches (front)
+        ctx.fillStyle = '#4a3c18';
+        ctx.fillRect(adx - 9, ady - 10, 6, 5);
+        ctx.fillRect(adx + 3, ady - 10, 6, 5);
+        ctx.fillRect(adx - 9, ady - 2, 6, 5);
+        ctx.fillRect(adx + 3, ady - 2, 6, 5);
+        // Buckle (center)
+        ctx.fillStyle = '#c8a020';
+        ctx.fillRect(adx - 2, ady - 8, 4, 4);
+        // Arms (rolled-up sleeves showing skin)
+        ctx.strokeStyle = '#5a4a20'; ctx.lineWidth = 7; ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.moveTo(adx - 11, ady - 6); ctx.lineTo(adx - 20, ady + 5); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(adx + 11, ady - 6); ctx.lineTo(adx + 20, ady + 5); ctx.stroke();
+        ctx.lineCap = 'butt';
+        // Forearms (skin tone)
+        ctx.strokeStyle = '#c8906a'; ctx.lineWidth = 6; ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.moveTo(adx - 18, ady + 3); ctx.lineTo(adx - 22, ady + 10); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(adx + 18, ady + 3); ctx.lineTo(adx + 22, ady + 10); ctx.stroke();
+        ctx.lineCap = 'butt';
+        // Hands (skin)
+        ctx.fillStyle = '#c8906a';
+        ctx.beginPath(); ctx.arc(adx - 22, ady + 11, 4, 0, Math.PI * 2); ctx.fill();
+        // Right hand holds ammo clip
+        ctx.beginPath(); ctx.arc(adx + 22, ady + 11, 4, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#888';
+        ctx.fillRect(adx + 19, ady + 7, 6, 10);
+        // Neck
+        ctx.fillStyle = '#c8906a';
+        ctx.fillRect(adx - 3, ady - 16, 6, 5);
+        // Head
+        ctx.beginPath(); ctx.arc(adx, ady - 23, 10, 0, Math.PI * 2); ctx.fill();
+        // Short dark hair (buzzcut)
+        ctx.fillStyle = '#1a1008';
+        ctx.beginPath(); ctx.arc(adx, ady - 26, 9, Math.PI, 0); ctx.fill();
+        ctx.fillRect(adx - 9, ady - 27, 18, 6);
+        // Stubble shadow on jaw
+        ctx.fillStyle = 'rgba(0,0,0,0.15)';
+        ctx.beginPath(); ctx.arc(adx, ady - 20, 6, 0, Math.PI); ctx.fill();
+        // Eyes (squinting, tough look)
+        ctx.fillStyle = '#fff';
+        ctx.beginPath(); ctx.ellipse(adx - 3.5, ady - 24, 2.5, 1.4, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(adx + 3.5, ady - 24, 2.5, 1.4, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#3a2800';
+        ctx.beginPath(); ctx.arc(adx - 3.5, ady - 24, 1.1, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(adx + 3.5, ady - 24, 1.1, 0, Math.PI * 2); ctx.fill();
+        // Nose (broad)
+        ctx.fillStyle = 'rgba(0,0,0,0.2)';
+        ctx.beginPath(); ctx.arc(adx, ady - 21, 1.5, 0, Math.PI * 2); ctx.fill();
+        // Flat mouth (dealer expression)
+        ctx.strokeStyle = 'rgba(80,40,20,0.8)'; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.moveTo(adx - 3, ady - 18); ctx.lineTo(adx + 3, ady - 18); ctx.stroke();
+        // Cigar stub in mouth
+        ctx.strokeStyle = '#c8a060'; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(adx + 2, ady - 18); ctx.lineTo(adx + 8, ady - 20); ctx.stroke();
+        ctx.fillStyle = '#FF6020';
+        ctx.shadowColor = '#FF6020'; ctx.shadowBlur = 4;
+        ctx.beginPath(); ctx.arc(adx + 9, ady - 20, 2, 0, Math.PI * 2); ctx.fill();
+        ctx.shadowBlur = 0;
+        // Name label
+        ctx.shadowColor = '#FFD700'; ctx.shadowBlur = 8;
+        ctx.fillStyle = '#FFD700';
+        ctx.font = 'bold 8px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText('AMMO DEALER', adx, ady - 37);
+        ctx.shadowBlur = 0;
+      }
+
     } else if (type === 18) {
       // HACKER DEN
       // ── Monitor wall (top) ───────────────────────
@@ -13296,6 +13384,96 @@ class Game {
       drawScientist(50 + 100, H * 0.60, '#eaf2f8', '#c8905a', '#2a1a00');
       // Scientist 4 — near cryo pods (right side)
       drawScientist(W - 155 + 40, H * 0.52, '#dce8f0', '#ddb080', '#111');
+
+      // ── DR CHAOS — Evil scientist boss (center of lab) ──────────────
+      {
+        const dx = labCx + 20, dy = H * 0.55;
+        // Shadow
+        ctx.fillStyle = 'rgba(0,0,0,0.35)';
+        ctx.beginPath(); ctx.ellipse(dx, dy + 10, 17, 7, 0, 0, Math.PI * 2); ctx.fill();
+        // Legs (dark trousers)
+        ctx.fillStyle = '#0a0a0a';
+        ctx.fillRect(dx - 7, dy + 2, 6, 15);
+        ctx.fillRect(dx + 1, dy + 2, 6, 15);
+        // Boots (pointed, black)
+        ctx.fillStyle = '#050505';
+        ctx.fillRect(dx - 9, dy + 14, 9, 6);
+        ctx.fillRect(dx, dy + 14, 9, 6);
+        // Long dark coat body
+        ctx.fillStyle = '#1a0a2a';
+        rr(dx - 12, dy - 16, 24, 28, 3); ctx.fill();
+        // Coat inner lining (red)
+        ctx.fillStyle = 'rgba(200,0,0,0.5)';
+        ctx.beginPath(); ctx.moveTo(dx - 5, dy - 16); ctx.lineTo(dx, dy - 7); ctx.lineTo(dx + 5, dy - 16); ctx.closePath(); ctx.fill();
+        // Coat collar (upturned, dark purple)
+        ctx.fillStyle = '#2a1040';
+        ctx.fillRect(dx - 9, dy - 20, 18, 7);
+        // Chest device (glowing red)
+        ctx.fillStyle = '#FF0020';
+        ctx.shadowColor = '#FF0020'; ctx.shadowBlur = 8;
+        rr(dx - 5, dy - 12, 10, 8, 2); ctx.fill();
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = 'rgba(255,80,80,0.8)';
+        ctx.beginPath(); ctx.arc(dx, dy - 8, 2, 0, Math.PI * 2); ctx.fill();
+        // Arms (long coat arms)
+        ctx.strokeStyle = '#1a0a2a'; ctx.lineWidth = 8; ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.moveTo(dx - 12, dy - 8); ctx.lineTo(dx - 22, dy + 6); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(dx + 12, dy - 8); ctx.lineTo(dx + 22, dy + 6); ctx.stroke();
+        ctx.lineCap = 'butt';
+        // Gloved hands (black)
+        ctx.fillStyle = '#0a0a0a';
+        ctx.beginPath(); ctx.arc(dx - 22, dy + 6, 5, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(dx + 22, dy + 6, 5, 0, Math.PI * 2); ctx.fill();
+        // Right hand holds beaker (glowing green)
+        ctx.fillStyle = 'rgba(0,255,100,0.9)';
+        ctx.shadowColor = '#00FF64'; ctx.shadowBlur = 6;
+        ctx.fillRect(dx + 20, dy, 6, 10);
+        ctx.fillStyle = '#00FF64';
+        ctx.beginPath(); ctx.arc(dx + 23, dy, 4, Math.PI, 0); ctx.fill();
+        ctx.shadowBlur = 0;
+        // Neck (pale skin)
+        ctx.fillStyle = '#c8b0d0';
+        ctx.fillRect(dx - 4, dy - 18, 8, 5);
+        // Head (larger, menacing)
+        ctx.fillStyle = '#c8b0d0';
+        ctx.beginPath(); ctx.arc(dx, dy - 26, 11, 0, Math.PI * 2); ctx.fill();
+        // Wild dark hair (messy, spiked)
+        ctx.fillStyle = '#0a0a10';
+        ctx.beginPath(); ctx.arc(dx, dy - 30, 10, Math.PI, 0); ctx.fill();
+        ctx.fillRect(dx - 10, dy - 31, 20, 7);
+        // Hair spikes (jagged top)
+        ctx.beginPath();
+        ctx.moveTo(dx - 10, dy - 30);
+        ctx.lineTo(dx - 14, dy - 38); ctx.lineTo(dx - 7, dy - 32);
+        ctx.lineTo(dx - 2, dy - 40); ctx.lineTo(dx + 4, dy - 32);
+        ctx.lineTo(dx + 9, dy - 38); ctx.lineTo(dx + 10, dy - 30);
+        ctx.closePath(); ctx.fill();
+        // Goggles strap
+        ctx.strokeStyle = '#222'; ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.moveTo(dx - 11, dy - 26); ctx.lineTo(dx + 11, dy - 26); ctx.stroke();
+        // Goggles (red lenses)
+        ctx.fillStyle = 'rgba(200,0,0,0.85)';
+        ctx.shadowColor = '#FF0000'; ctx.shadowBlur = 8;
+        ctx.beginPath(); ctx.ellipse(dx - 4, dy - 27, 4, 3, -0.2, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(dx + 4, dy - 27, 4, 3, 0.2, 0, Math.PI * 2); ctx.fill();
+        ctx.shadowBlur = 0;
+        ctx.strokeStyle = '#111'; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.ellipse(dx - 4, dy - 27, 4, 3, -0.2, 0, Math.PI * 2); ctx.stroke();
+        ctx.beginPath(); ctx.ellipse(dx + 4, dy - 27, 4, 3, 0.2, 0, Math.PI * 2); ctx.stroke();
+        // Nose (sharp)
+        ctx.fillStyle = 'rgba(0,0,0,0.25)';
+        ctx.beginPath(); ctx.arc(dx, dy - 23, 1.5, 0, Math.PI * 2); ctx.fill();
+        // Sinister grin
+        ctx.strokeStyle = '#8a1a1a'; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.arc(dx, dy - 20.5, 4, 0.3, Math.PI - 0.3); ctx.stroke();
+        // Name label
+        ctx.shadowColor = '#FF0020'; ctx.shadowBlur = 10;
+        ctx.fillStyle = '#FF4040';
+        ctx.font = 'bold 8px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText('DR. CHAOS', dx, dy - 40);
+        ctx.shadowBlur = 0;
+      }
     }
 
     // ── ZOMBIE MAP: atmospheric decay overlay ──────────────
@@ -15308,6 +15486,94 @@ class Game {
           ctx.fillText("⚡ PORTAL ⚡", 0, -48);
           if (near) {
             ctx.fillStyle = "#FFEEAA";
+            ctx.shadowColor = "#FFAA00";
+            ctx.shadowBlur = 12;
+            ctx.fillText("[E] TELEPORT", 0, -62);
+          }
+        } else if (!!this.map?.config?.campaign) {
+          // ── CAMPAIGN: Gold war-gate portal — gold / amber rings ────
+          const t = p._animT;
+          const pulse2 = Math.sin(t * 2) * 0.3 + 0.7;
+          const pulse3 = Math.sin(t * 4) * 0.2 + 0.8;
+
+          // Outer soft gold halo
+          const haloG = ctx.createRadialGradient(0, 0, 8, 0, 0, 52);
+          haloG.addColorStop(0, `rgba(255,221,0,${pulse * 0.18})`);
+          haloG.addColorStop(0.5, `rgba(200,120,0,${pulse * 0.10})`);
+          haloG.addColorStop(1, "rgba(0,0,0,0)");
+          ctx.fillStyle = haloG;
+          ctx.beginPath(); ctx.arc(0, 0, 52, 0, Math.PI * 2); ctx.fill();
+
+          // Outer rotating ring (gold dashes)
+          ctx.save();
+          ctx.rotate(t * 0.5);
+          ctx.strokeStyle = `rgba(255,221,0,${pulse * 0.65})`;
+          ctx.lineWidth = 2;
+          ctx.setLineDash([8, 12]);
+          ctx.beginPath(); ctx.arc(0, 0, 38, 0, Math.PI * 2); ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.restore();
+
+          // Middle counter-rotating ring (amber dashes)
+          ctx.save();
+          ctx.rotate(-t * 0.8);
+          ctx.strokeStyle = `rgba(255,170,0,${pulse2 * 0.55})`;
+          ctx.lineWidth = 1.5;
+          ctx.setLineDash([5, 8]);
+          ctx.beginPath(); ctx.arc(0, 0, 30, 0, Math.PI * 2); ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.restore();
+
+          // Inner glow core (gold → amber → orange)
+          const coreGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, 24);
+          coreGrad.addColorStop(0, `rgba(255,240,80,${pulse3 * 0.85})`);
+          coreGrad.addColorStop(0.3, `rgba(255,170,0,${pulse2 * 0.55})`);
+          coreGrad.addColorStop(0.7, `rgba(200,80,0,${pulse * 0.3})`);
+          coreGrad.addColorStop(1, "rgba(0,0,0,0)");
+          ctx.fillStyle = coreGrad;
+          ctx.beginPath(); ctx.arc(0, 0, 24, 0, Math.PI * 2); ctx.fill();
+
+          // Orbiting energy particles (gold / amber alternating)
+          for (let i = 0; i < 6; i++) {
+            const angle = t * 2 + (i * Math.PI) / 3;
+            const dist = 20 + Math.sin(t * 3 + i) * 5;
+            const px2 = Math.cos(angle) * dist;
+            const py2 = Math.sin(angle) * dist;
+            ctx.fillStyle = i % 2 === 0
+              ? `rgba(255,221,0,${pulse})`
+              : `rgba(255,136,0,${pulse})`;
+            ctx.beginPath(); ctx.arc(px2, py2, 2.5, 0, Math.PI * 2); ctx.fill();
+          }
+
+          // Central bright core
+          ctx.shadowColor = "#FFDD00";
+          ctx.shadowBlur = 22 * pulse;
+          ctx.fillStyle = `rgba(255,250,180,${pulse3})`;
+          ctx.beginPath(); ctx.arc(0, 0, 6, 0, Math.PI * 2); ctx.fill();
+
+          // Hexagon frame (gold)
+          ctx.shadowBlur = 16 * pulse;
+          ctx.strokeStyle = `rgba(255,221,0,${pulse})`;
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          for (let i = 0; i < 6; i++) {
+            const angle = (Math.PI / 3) * i - Math.PI / 2;
+            const hx2 = Math.cos(angle) * 26;
+            const hy2 = Math.sin(angle) * 26;
+            if (i === 0) ctx.moveTo(hx2, hy2);
+            else ctx.lineTo(hx2, hy2);
+          }
+          ctx.closePath(); ctx.stroke();
+
+          ctx.shadowBlur = 0;
+          ctx.fillStyle = near ? "#FFF8AA" : "#FFDD00";
+          ctx.font = "bold 9px Orbitron, monospace";
+          ctx.textAlign = "center";
+          ctx.shadowColor = "#FFDD00";
+          ctx.shadowBlur = 10;
+          ctx.fillText("◈ PORTAL ◈", 0, -48);
+          if (near) {
+            ctx.fillStyle = "#FFF8AA";
             ctx.shadowColor = "#FFAA00";
             ctx.shadowBlur = 12;
             ctx.fillText("[E] TELEPORT", 0, -62);
