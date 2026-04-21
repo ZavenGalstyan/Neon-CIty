@@ -3111,9 +3111,14 @@ class GameMap {
           } else if (cfg.hardcore) {
             // ═══════════════════════════════════════════════════════════════
             //  HARDCORE: Neon City shapes + fire/ember atmosphere
+            //  BAR blocks (bTypeIdx 10) use full neon-city style (blue/cyan)
             // ═══════════════════════════════════════════════════════════════
             const bseed = (x * 41 + y * 59) % 8;
-            ctx.fillStyle = this.buildingColors[y][x];
+            const _hcKey = `${Math.floor(x / this.ROAD_EVERY)},${Math.floor(y / this.ROAD_EVERY)}`;
+            const _hcType = this._blockTypes[_hcKey];
+            const isHCBar = _hcType === 10; // BAR = index 10 in BUILDING_TYPES
+            const _hcNeonCityBldg = ['#1a1a2e','#16213e','#0f3460','#12212e','#1e1e30','#151530','#1c1c2e','#0f2040'];
+            ctx.fillStyle = isHCBar ? _hcNeonCityBldg[bseed] : this.buildingColors[y][x];
             if (bseed === 0) {
               ctx.fillRect(wx + S*0.2, wy, S*0.6, S);
               ctx.fillStyle = 'rgba(0,0,0,0.3)';
@@ -3150,11 +3155,19 @@ class GameMap {
               ctx.fillRect(wx + S*0.05, wy + S*0.4, S*0.9, S*0.6);
               ctx.fillRect(wx + S*0.15, wy, S*0.7, S);
             }
-            // Fire/ember neon edge glow
-            ctx.strokeStyle = cfg.neonColors[(x + y) % cfg.neonColors.length] + '77';
-            ctx.lineWidth = 1.5; ctx.strokeRect(wx + 2, wy + 2, S - 4, S - 4);
-            // Orange window glow dots
-            const winHC = cfg.windowColors[(x * 3 + y * 7) % cfg.windowColors.length];
+            // Neon edge glow — cyan for BAR, fire/ember for all others
+            const _hcNeonEdge = isHCBar ? ['#44EEFF','#00FFCC','#66FFFF','#00DDEE'][bseed % 4] : cfg.neonColors[(x + y) % cfg.neonColors.length];
+            ctx.strokeStyle = _hcNeonEdge + (isHCBar ? '99' : '77');
+            ctx.lineWidth = isHCBar ? 2 : 1.5; ctx.strokeRect(wx + 2, wy + 2, S - 4, S - 4);
+            // Extra inner glow ring for BAR (makes it unmistakably distinct)
+            if (isHCBar) {
+              ctx.strokeStyle = '#44EEFF44';
+              ctx.lineWidth = 1; ctx.strokeRect(wx + 6, wy + 6, S - 12, S - 12);
+            }
+            // Window glow dots — cyan for BAR, orange for others
+            const winHC = isHCBar
+              ? ['#88EEFF','#AAFFFF','#66DDFF','#CCFFFF'][(x * 3 + y * 7) % 4]
+              : cfg.windowColors[(x * 3 + y * 7) % cfg.windowColors.length];
             ctx.fillStyle = winHC;
             for (let wy2 = 0; wy2 < 3; wy2++) {
               for (let wx2 = 0; wx2 < 3; wx2++) {
@@ -3162,8 +3175,8 @@ class GameMap {
                   ctx.fillRect(wx + 12 + wx2 * 22, wy + 12 + wy2 * 22, 8, 6);
               }
             }
-            // Blood-rain shadow strip on top face
-            if ((x * 13 + y * 17) % 4 === 0) {
+            // Blood-rain shadow strip on top face (skip for BAR — keep it clean)
+            if (!isHCBar && (x * 13 + y * 17) % 4 === 0) {
               ctx.fillStyle = 'rgba(180,20,0,0.13)';
               ctx.fillRect(wx + S*0.15, wy, S*0.7, S*0.09);
             }
@@ -3609,7 +3622,10 @@ class GameMap {
         const below = (y + 1 < this.H) ? this.tiles[y + 1][x] : TILE.ROAD;
         if (below === TILE.BUILDING) continue;
         const wx2 = x * S, wy2 = y * S;
-        const bc = this.buildingColors[y][x];
+        // For hardcore BAR blocks, use neon-city blue as the wall base color
+        const _wallHCKey = cfg.hardcore ? `${Math.floor(x/this.ROAD_EVERY)},${Math.floor(y/this.ROAD_EVERY)}` : null;
+        const _wallIsBar = cfg.hardcore && this._blockTypes[_wallHCKey] === 10;
+        const bc = _wallIsBar ? '#1a1a2e' : this.buildingColors[y][x];
         // Darken building colour ~55% for south-facing wall
         const rr = Math.round(parseInt(bc.slice(1,3),16) * 0.55);
         const gg = Math.round(parseInt(bc.slice(3,5),16) * 0.55);
@@ -3624,8 +3640,8 @@ class GameMap {
         ctx.fillRect(wx2, wy2 + S + wallH - 3, S, 3);
         // Window slots on the wall face — no shadowBlur for performance
         if (this.buildingWindows[y][x]) {
-          const wc = cfg.windowColors[(Math.floor(x/2) + Math.floor(y/2)) % cfg.windowColors.length];
-          ctx.fillStyle = wc + 'AA';
+          const wc = _wallIsBar ? '#88EEFFAA' : cfg.windowColors[(Math.floor(x/2) + Math.floor(y/2)) % cfg.windowColors.length] + 'AA';
+          ctx.fillStyle = wc;
           const wW = 10, wHh = 7;
           for (let wi = 0; wi < 3; wi++) {
             const wx3 = wx2 + 8 + wi * Math.floor((S - 16) / 3);

@@ -8632,8 +8632,8 @@ class Game {
       const isNeonCityBar  = this.map?.config?.id === "neon_city";
       const isHardcoreBar  = !!this.map?.config?.hardcore;
 
-      if (isNeonCityBar) {
-        // ═══ NEON CITY CYBER LOUNGE ═══
+      if (isNeonCityBar || isHardcoreBar) {
+        // ═══ NEON CITY CYBER LOUNGE (also used for HARDCORE) ═══
         const t = performance.now() / 1000;
 
         // Neon City colors
