@@ -16207,13 +16207,6 @@ class Game {
           this._currentDistrict,
           this._shopDiscount,
         );
-        // Neon City & Wasteland: skip the center screen district entry notification
-        if (this._districtTimer > 0 && this.map.config.id !== "neon_city" && !this.map.config.wasteland) {
-          this.hud.renderDistrictEntry(
-            this._currentDistrict,
-            this._districtTimer,
-          );
-        }
       }
       if (this.boss && !this.boss.dead && !this.boss.dying) {
         this.hud.renderBossBar(this.boss);

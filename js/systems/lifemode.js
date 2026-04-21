@@ -16,7 +16,7 @@ class LifeModeSystem {
     this.energy  = parseFloat(localStorage.getItem('lm_energy')  || '90');
     this.hygiene = parseFloat(localStorage.getItem('lm_hygiene') || '100');
     this.fun     = parseFloat(localStorage.getItem('lm_fun')     || '70');
-
+da
     // ── Owned Assets ──────────────────────────────────────────────────────────
     this.ownedProperties = JSON.parse(localStorage.getItem('lm_properties') || '[]');
     this.ownedCars       = JSON.parse(localStorage.getItem('lm_cars')       || '[]');
