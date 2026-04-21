@@ -3108,6 +3108,144 @@ class GameMap {
                 }
               }
             }
+          } else if (cfg.campaign) {
+            // ═══════════════════════════════════════════════════════════════
+            //  CAMPAIGN: War-torn concrete/brick bunkers with golden neon
+            // ═══════════════════════════════════════════════════════════════
+            const ts = x * 41 + y * 59;
+            const bseed = ts % 8;
+            const t = Date.now() * 0.001;
+
+            // Concrete base colors — rough weathered look
+            const concreteBases = ['#2c2820','#262218','#30281e','#2a2416','#322c22','#24201a','#2e281c','#283020'];
+            ctx.fillStyle = concreteBases[bseed];
+            ctx.fillRect(wx, wy, S, S);
+
+            // Varied blocky building shapes
+            if (bseed === 0) {
+              // Squat fortified block
+              ctx.fillStyle = '#38322a';
+              ctx.fillRect(wx + 4, wy + 18, S - 8, S - 20);
+              ctx.fillStyle = '#42382e';
+              ctx.fillRect(wx + 4, wy + 8, S - 8, 14);
+              // Battlements (crenellations)
+              ctx.fillStyle = '#3c3028';
+              for (let ci = 0; ci < 4; ci++) ctx.fillRect(wx + 6 + ci * 18, wy + 2, 10, 10);
+            } else if (bseed === 1) {
+              // L-shaped barracks
+              ctx.fillStyle = '#3e3428';
+              ctx.fillRect(wx, wy + 10, S * 0.55, S - 10);
+              ctx.fillRect(wx, wy + 10, S, S * 0.45);
+              ctx.fillStyle = '#2a2218';
+              ctx.fillRect(wx + 4, wy + 14, 16, 20);
+              ctx.fillRect(wx + 28, wy + 14, 16, 20);
+            } else if (bseed === 2) {
+              // Stepped bunker
+              ctx.fillStyle = '#303030';
+              ctx.fillRect(wx + 8, wy + 30, S - 16, S - 32);
+              ctx.fillStyle = '#383428';
+              ctx.fillRect(wx + 16, wy + 14, S - 32, S - 16);
+              ctx.fillStyle = '#404040';
+              ctx.fillRect(wx + 24, wy + 4, S - 48, 14);
+            } else if (bseed === 3) {
+              // Twin guard towers
+              ctx.fillStyle = '#34302a';
+              ctx.fillRect(wx + 2, wy + 4, S * 0.38, S - 4);
+              ctx.fillRect(wx + S * 0.62, wy + 4, S * 0.36, S - 4);
+              // Connecting wall
+              ctx.fillStyle = '#2e2820';
+              ctx.fillRect(wx + S * 0.38, wy + S * 0.6, S * 0.24, S * 0.4);
+            } else if (bseed === 4) {
+              // Command center — solid rectangular block
+              ctx.fillStyle = '#3a3628';
+              ctx.fillRect(wx + 6, wy + 6, S - 12, S - 8);
+              // Roof antenna platform
+              ctx.fillStyle = '#484036';
+              ctx.fillRect(wx + S * 0.3, wy + 2, S * 0.4, 8);
+            } else if (bseed === 5) {
+              // Reinforced warehouse
+              ctx.fillStyle = '#2e2c22';
+              ctx.fillRect(wx + 2, wy + 10, S - 4, S - 10);
+              // Corrugated roof lines
+              ctx.strokeStyle = '#262018';
+              ctx.lineWidth = 2;
+              for (let ri = 0; ri < 5; ri++) {
+                ctx.beginPath();
+                ctx.moveTo(wx + 2, wy + 10 + ri * 8);
+                ctx.lineTo(wx + S - 2, wy + 10 + ri * 8);
+                ctx.stroke();
+              }
+            } else if (bseed === 6) {
+              // Destroyed wall — jagged top
+              ctx.fillStyle = '#383028';
+              ctx.beginPath();
+              ctx.moveTo(wx, wy + S);
+              ctx.lineTo(wx, wy + 22);
+              ctx.lineTo(wx + 14, wy + 10);
+              ctx.lineTo(wx + 28, wy + 18);
+              ctx.lineTo(wx + 42, wy + 6);
+              ctx.lineTo(wx + 56, wy + 16);
+              ctx.lineTo(wx + S, wy + 8);
+              ctx.lineTo(wx + S, wy + S);
+              ctx.closePath();
+              ctx.fill();
+            } else {
+              // Standard recessed block
+              ctx.fillStyle = '#36302a';
+              ctx.fillRect(wx + 4, wy + 4, S - 8, S - 6);
+              ctx.fillStyle = '#2c2820';
+              ctx.fillRect(wx + 10, wy, S - 20, 8);
+            }
+
+            // Crumble / crack marks
+            if ((ts * 7 + 3) % 4 === 0) {
+              ctx.strokeStyle = 'rgba(0,0,0,0.55)';
+              ctx.lineWidth = 1;
+              ctx.beginPath();
+              ctx.moveTo(wx + 18, wy + 12);
+              ctx.lineTo(wx + 24, wy + 28);
+              ctx.lineTo(wx + 20, wy + 36);
+              ctx.stroke();
+            }
+            if ((ts * 13 + 5) % 5 === 0) {
+              ctx.strokeStyle = 'rgba(0,0,0,0.40)';
+              ctx.lineWidth = 1;
+              ctx.beginPath();
+              ctx.moveTo(wx + S - 20, wy + 20);
+              ctx.lineTo(wx + S - 14, wy + 38);
+              ctx.stroke();
+            }
+
+            // Rubble debris scatter
+            if ((ts * 3 + 1) % 3 === 0) {
+              ctx.fillStyle = 'rgba(80,65,48,0.55)';
+              ctx.fillRect(wx + 4, wy + S - 10, 8, 6);
+              ctx.fillRect(wx + S - 14, wy + S - 8, 6, 4);
+            }
+
+            // Golden neon edge glow (campaign accent)
+            const campNeon = cfg.neonColors[(x + y) % cfg.neonColors.length];
+            ctx.strokeStyle = campNeon + '55';
+            ctx.lineWidth = 1.5;
+            ctx.strokeRect(wx + 2, wy + 2, S - 4, S - 4);
+
+            // Amber/gold windows — narrow slits
+            const winCol = cfg.windowColors[(x * 3 + y * 7) % cfg.windowColors.length];
+            ctx.fillStyle = winCol + 'cc';
+            for (let wy2 = 0; wy2 < 3; wy2++) {
+              for (let wx2 = 0; wx2 < 3; wx2++) {
+                if (Math.sin(x * 6.1 + y * 3.7 + wx2 * 8 + wy2 * 12) > 0.2) {
+                  // Narrow horizontal slit window
+                  ctx.fillRect(wx + 10 + wx2 * 22, wy + 14 + wy2 * 20, 10, 4);
+                }
+              }
+            }
+
+            // Occasional neon accent stripe (battle command markings)
+            if ((ts * 11 + 7) % 6 === 0) {
+              ctx.fillStyle = campNeon + '44';
+              ctx.fillRect(wx + 4, wy + S - 14, S - 8, 3);
+            }
           } else if (cfg.hardcore) {
             // ═══════════════════════════════════════════════════════════════
             //  HARDCORE: Neon City shapes + fire/ember atmosphere

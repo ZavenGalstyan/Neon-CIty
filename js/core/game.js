@@ -286,7 +286,7 @@ class Game {
     ]);
     this._vehiclesUsed = new Set();
     this._sessionSaved = false;
-    // ── Ambient Traffic ────────────────────────────────────────
+    // ── Ambient Traffic (disabled) ────────────────────────────
     this._ambientCars = [];
     this._ambientSpawnT = 0;
     // ── Teleport Portals ───────────────────────────────────────
@@ -927,20 +927,7 @@ class Game {
     }
 
     // ── Ambient traffic ────────────────────────────────────
-    if (
-      !this._indoor &&
-      !this._arenaMode &&
-      !this._zombieMode &&
-      !this._towerMode
-    ) {
-      this._ambientSpawnT -= dt;
-      if (this._ambientSpawnT <= 0) {
-        this._respawnAmbientCar();
-        this._ambientSpawnT = 4.0;
-      }
-      for (const c of this._ambientCars) c.update(dt, this.map);
-      this._ambientCars = this._ambientCars.filter((c) => !c.dead);
-    }
+    // Ambient traffic removed — AmbientCar class kept but not spawned/updated
 
     // ── Map portals cooldown & teleport check ──────────────
     if (this._portalCooldown > 0) this._portalCooldown -= dt;
@@ -2839,153 +2826,11 @@ class Game {
   }
 
   _spawnAmbientTraffic() {
-    if (this._arenaMode || this._zombieMode || this._towerMode) return;
-    // No ambient traffic on neon city, wasteland, robot city, or hardcore maps
-    if (this.map.config.id === "neon_city" || this.map.config.wasteland || this.map.config.robot || this.map.config.hardcore) return;
-    const base = this._metropolisMode ? 12 : 6;
-    const count = base + Math.floor(Math.random() * 6);
-    for (let i = 0; i < count; i++) this._respawnAmbientCar();
+    // Ambient traffic disabled — non-driveable cars removed
   }
 
   _respawnAmbientCar() {
-    // No ambient traffic on neon city, wasteland, robot city, or hardcore maps
-    if (this.map.config.id === "neon_city" || this.map.config.wasteland || this.map.config.robot || this.map.config.hardcore) return;
-    const maxCars = this._metropolisMode ? 22 : 14;
-    if (this._ambientCars.length >= maxCars) return;
-    // Spawn off-camera on a road tile
-    const margin = 200;
-    const W = this.canvas.width,
-      H = this.canvas.height;
-    let pos;
-    for (let t = 0; t < 15; t++) {
-      let sx, sy;
-      const side = Math.floor(Math.random() * 4);
-      if (side === 0) {
-        sx = this.camX + rnd(0, W);
-        sy = this.camY - margin;
-      } else if (side === 1) {
-        sx = this.camX + W + margin;
-        sy = this.camY + rnd(0, H);
-      } else if (side === 2) {
-        sx = this.camX + rnd(0, W);
-        sy = this.camY + H + margin;
-      } else {
-        sx = this.camX - margin;
-        sy = this.camY + rnd(0, H);
-      }
-      sx = clamp(sx, 0, this.map.W * this.map.S);
-      sy = clamp(sy, 0, this.map.H * this.map.S);
-      if (!this.map.isBlocked(sx, sy)) {
-        pos = { x: sx, y: sy };
-        break;
-      }
-    }
-    if (!pos) {
-      try {
-        pos = this.map.randomRoadPos();
-      } catch (e) {
-        return;
-      }
-    }
-    const angles = [0, Math.PI / 2, Math.PI, -Math.PI / 2];
-    const carColors = [
-      "#CC3333",
-      "#3366BB",
-      "#CC9900",
-      "#339944",
-      "#AA33AA",
-      "#336688",
-      "#CC6633",
-      "#55AACC",
-    ];
-    const angle = angles[Math.floor(Math.random() * angles.length)];
-    const isJungle = !!this.map.config.jungle;
-    const isDesert = !!this.map.config.desert;
-    const isGalactica = !!this.map.config.galactica;
-    const isDino = !!this.map.config.dino;
-    const isSky = !!this._skyMode;
-
-    // Sky realm: spawn airplanes and bird flocks from map edges
-    if (isSky) {
-      const maxSky = 6; // keep low for perf
-      if (this._ambientCars.length >= maxSky) return;
-      const mapW = this.map.W * this.map.S;
-      const mapH = this.map.H * this.map.S;
-      const side = Math.floor(Math.random() * 4);
-      const isBirdFlock = Math.random() < 0.65;
-      const count = isBirdFlock ? 2 + Math.floor(Math.random() * 2) : 1; // flock 2-3
-      // Edge spawn position and direction angle
-      let ex, ey, flyAngle;
-      if (side === 0) {
-        ex = rnd(0, mapW);
-        ey = -80;
-        flyAngle = Math.PI * 0.5;
-      } // top → down
-      else if (side === 1) {
-        ex = mapW + 80;
-        ey = rnd(0, mapH);
-        flyAngle = Math.PI;
-      } // right → left
-      else if (side === 2) {
-        ex = rnd(0, mapW);
-        ey = mapH + 80;
-        flyAngle = -Math.PI * 0.5;
-      } // bottom → up
-      else {
-        ex = -80;
-        ey = rnd(0, mapH);
-        flyAngle = 0;
-      } // left → right
-      // Give planes/birds a realistic traversal speed (map takes ~15-20s to cross)
-      const flySpeed = isBirdFlock ? rnd(180, 240) : rnd(300, 420);
-      for (let i = 0; i < count; i++) {
-        if (this._ambientCars.length >= maxSky) break;
-        const spread = isBirdFlock ? rnd(-60, 60) : 0;
-        const px = ex + Math.cos(flyAngle + Math.PI * 0.5) * spread;
-        const py = ey + Math.sin(flyAngle + Math.PI * 0.5) * spread;
-        const col = isBirdFlock
-          ? ["#FFFFFF", "#F5F5F5", "#E8E8E8", "#DDDDFF", "#EEEEFF"][
-              Math.floor(Math.random() * 5)
-            ]
-          : ["#C0C8D8", "#D0D8E8", "#B8C4D4", "#A8B8CC"][
-              Math.floor(Math.random() * 4)
-            ];
-        const car = new AmbientCar(px, py, flyAngle, col, 0);
-        car.speed = flySpeed;
-        if (isBirdFlock) {
-          car.isBird = true;
-        } else {
-          car.isAirplane = true;
-        }
-        this._ambientCars.push(car);
-      }
-      return;
-    }
-
-    const color = isJungle
-      ? ["#8B4513", "#6B3410", "#A0522D", "#704214", "#5C3317"][
-          Math.floor(Math.random() * 5)
-        ]
-      : isDesert
-        ? ["#C8A050", "#B08828", "#D4AA60", "#A07830", "#C09040"][
-            Math.floor(Math.random() * 5)
-          ]
-        : isGalactica
-          ? ["#AA44FF", "#FF44AA", "#44AAFF", "#44FFAA", "#FFAA44"][
-              Math.floor(Math.random() * 5)
-            ]
-          : isDino
-            ? ["#66AA33", "#44AA22", "#88CC44", "#4a8820", "#77BB55"][
-                Math.floor(Math.random() * 5)
-              ]
-            : carColors[Math.floor(Math.random() * carColors.length)];
-    const style = Math.floor(Math.random() * 5);
-    const car = new AmbientCar(pos.x, pos.y, angle, color, style);
-    if (isJungle) car.isHorse = true;
-    if (isDesert) car.isCamel = true;
-    if (isGalactica) car.isUFO = true;
-    if (isDino) car.isDino = true;
-    this._ambientCars.push(car);
+    // Ambient traffic disabled — non-driveable cars removed
   }
 
   _explodeGrenade(g) {
@@ -3380,6 +3225,13 @@ class Game {
             const spY = room.roomH * 0.38;
             this._salespersons = [
               new Salesperson(spX, spY, "#a08060", "MECHANIC", "wasteland"),
+            ];
+          } else if (!!this.map.config.campaign) {
+            // Campaign: Golden-accented military dealer
+            const spX = room.roomW / 2;
+            const spY = room.roomH * 0.38;
+            this._salespersons = [
+              new Salesperson(spX, spY, "#FFDD00", "DEALER", true),
             ];
           } else {
             this._salespersons = [
@@ -11502,67 +11354,203 @@ class Game {
       ctx.fillText("INK CITY", cx - W * 0.1, midY + 30);
       ctx.shadowBlur = 0;
     } else if (type === 17) {
-      // AMMO DEPOT
-      // ── Ammo crate wall (top + right) ────────────
-      const ammoColors = ["#664422", "#553311", "#776633", "#443311"];
-      for (let row = 0; row < 2; row++)
-        for (let col = 0; col < 6; col++) {
-          const ax = cx - W * 0.42 + col * W * 0.14,
-            ay = topY + 4 + row * 26;
-          ctx.fillStyle = ammoColors[(row + col) % 4];
-          ctx.strokeStyle = "#FFAA44";
-          ctx.lineWidth = 0.7;
-          rr(ax, ay, W * 0.12, 22, 2);
-          ctx.fill();
-          ctx.stroke();
-          ctx.fillStyle = "#FFAA44";
-          ctx.font = "bold 5px monospace";
-          ctx.textAlign = "center";
-          ctx.fillText("AMMO", ax + W * 0.06, ay + 14);
+      // ════════════════════════════════════════════════════════════════
+      //  AMMO DEPOT — Military Grade Storage & Range
+      // ════════════════════════════════════════════════════════════════
+
+      // ── Worker helper (top-down person) ──────────────────────────
+      const drawWorker = (px, py, uniform, skinColor) => {
+        // Shadow
+        ctx.fillStyle = 'rgba(0,0,0,0.25)';
+        ctx.beginPath(); ctx.ellipse(px, py + 2, 9, 5, 0, 0, Math.PI * 2); ctx.fill();
+        // Body (uniform)
+        ctx.fillStyle = uniform;
+        rr(px - 7, py - 8, 14, 18, 3); ctx.fill();
+        // Left arm
+        ctx.strokeStyle = uniform; ctx.lineWidth = 4; ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.moveTo(px - 7, py - 4); ctx.lineTo(px - 14, py + 2); ctx.stroke();
+        // Right arm
+        ctx.beginPath(); ctx.moveTo(px + 7, py - 4); ctx.lineTo(px + 14, py + 2); ctx.stroke();
+        ctx.lineCap = 'butt';
+        // Neck
+        ctx.fillStyle = skinColor; ctx.fillRect(px - 3, py - 10, 6, 4);
+        // Head
+        ctx.beginPath(); ctx.arc(px, py - 16, 9, 0, Math.PI * 2); ctx.fill();
+        // Helmet / hair
+        ctx.fillStyle = '#2a2a00';
+        ctx.beginPath(); ctx.arc(px, py - 18, 8, Math.PI, 0); ctx.fill();
+        ctx.fillRect(px - 8, py - 20, 16, 5);
+      };
+
+      // ── 1. Military-green checkered floor ────────────────────────
+      const tileW = Math.floor(W / 10), tileH = Math.floor(H / 10);
+      for (let ty = 0; ty < 10; ty++) {
+        for (let tx2 = 0; tx2 < 10; tx2++) {
+          ctx.fillStyle = (tx2 + ty) % 2 === 0 ? '#1a2218' : '#161e14';
+          ctx.fillRect(tx2 * tileW, ty * tileH, tileW, tileH);
         }
-      // ── Weapon rack (center) ──────────────────────
-      ctx.fillStyle = "#1a1410";
-      ctx.strokeStyle = "#886644";
-      ctx.lineWidth = 1.5;
-      rr(cx - W * 0.3, midY - 10, W * 0.6, 36, 3);
-      ctx.fill();
-      ctx.stroke();
-      ctx.strokeStyle = "#664422";
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.moveTo(cx - W * 0.28, midY - 10);
-      ctx.lineTo(cx - W * 0.28, midY + 26);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(cx - W * 0.28, midY + 4);
-      ctx.lineTo(cx + W * 0.28, midY + 4);
-      ctx.stroke();
-      const weaponIcons = ["🔫", "⚙", "🔩", "🔫", "⚙"];
-      ctx.font = "15px serif";
-      ctx.textAlign = "center";
-      for (let wi = 0; wi < 5; wi++)
-        ctx.fillText(weaponIcons[wi], cx - W * 0.22 + wi * W * 0.11, midY + 1);
-      // ── Target range (back) ───────────────────────
-      for (let ti = 0; ti < 3; ti++) {
-        const tx2 = cx - W * 0.28 + ti * W * 0.28;
-        ctx.fillStyle = "#EEDDCC";
-        ctx.strokeStyle = "#AA4422";
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.ellipse(tx2, topY + 26, 14, 18, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.stroke();
-        ctx.strokeStyle = "#FF4422";
-        ctx.lineWidth = 0.8;
-        ctx.beginPath();
-        ctx.ellipse(tx2, topY + 26, 9, 12, 0, 0, Math.PI * 2);
-        ctx.stroke();
-        ctx.strokeStyle = "#FF2222";
-        ctx.lineWidth = 0.8;
-        ctx.beginPath();
-        ctx.ellipse(tx2, topY + 26, 4, 5, 0, 0, Math.PI * 2);
-        ctx.stroke();
       }
+      // Floor border
+      ctx.strokeStyle = '#2a3828';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(1, 1, W - 2, H - 2);
+
+      // ── 2. Stacked ammo crates (top wall) ────────────────────────
+      const crateY = topY + 2;
+      const crateW = W * 0.13, crateH = 28;
+      const crateColors = ['#6b4d22', '#5a3e1a', '#7a5828', '#634412'];
+      for (let row2 = 0; row2 < 2; row2++) {
+        for (let col2 = 0; col2 < 6; col2++) {
+          const ax = cx - W * 0.42 + col2 * W * 0.14;
+          const ay = crateY + row2 * (crateH + 3);
+          const cc = crateColors[(row2 + col2) % 4];
+          // Crate shadow
+          ctx.fillStyle = 'rgba(0,0,0,0.35)';
+          ctx.fillRect(ax + 3, ay + 3, crateW, crateH);
+          // Crate body (wooden)
+          ctx.fillStyle = cc;
+          rr(ax, ay, crateW, crateH, 2); ctx.fill();
+          // Plank lines
+          ctx.strokeStyle = 'rgba(0,0,0,0.35)'; ctx.lineWidth = 0.8;
+          ctx.beginPath(); ctx.moveTo(ax + crateW * 0.33, ay); ctx.lineTo(ax + crateW * 0.33, ay + crateH); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(ax + crateW * 0.67, ay); ctx.lineTo(ax + crateW * 0.67, ay + crateH); ctx.stroke();
+          // Metal band
+          ctx.strokeStyle = '#4a3010'; ctx.lineWidth = 1.5;
+          ctx.beginPath(); ctx.moveTo(ax, ay + crateH / 2); ctx.lineTo(ax + crateW, ay + crateH / 2); ctx.stroke();
+          // Hazard stripe top bar
+          ctx.fillStyle = '#FFD700';
+          ctx.fillRect(ax, ay, crateW, 4);
+          const stripeCount = Math.floor(crateW / 5);
+          ctx.fillStyle = '#1a1a00';
+          for (let si = 0; si < stripeCount; si += 2) ctx.fillRect(ax + si * 5, ay, 5, 4);
+          // AMMO stencil
+          ctx.fillStyle = '#FFCC44';
+          ctx.font = 'bold 6px monospace';
+          ctx.textAlign = 'center';
+          ctx.fillText('AMMO', ax + crateW / 2, ay + crateH - 7);
+          // Crate number
+          ctx.fillStyle = 'rgba(255,200,80,0.55)';
+          ctx.font = '4px monospace';
+          ctx.fillText('#' + (row2 * 6 + col2 + 1).toString().padStart(2, '0'), ax + crateW / 2, ay + crateH - 2);
+        }
+      }
+
+      // ── 3. Weapon racks (left side) ──────────────────────────────
+      const rackX = cx - W * 0.44;
+      const rackY = midY - 40;
+      const rackH = 90;
+      // Rack backing plate
+      ctx.fillStyle = '#0e1008';
+      ctx.strokeStyle = '#556644';
+      ctx.lineWidth = 1.5;
+      rr(rackX, rackY, W * 0.22, rackH, 3); ctx.fill(); ctx.stroke();
+      // Horizontal rail bars
+      ctx.strokeStyle = '#445533'; ctx.lineWidth = 2;
+      for (let rb = 0; rb < 3; rb++) {
+        const ry2 = rackY + 12 + rb * 26;
+        ctx.beginPath(); ctx.moveTo(rackX + 4, ry2); ctx.lineTo(rackX + W * 0.22 - 4, ry2); ctx.stroke();
+      }
+      // Rifle silhouettes (simplified rectangles + barrel lines)
+      const rifleX = [rackX + 14, rackX + W * 0.11 - 4];
+      for (let ri2 = 0; ri2 < 2; ri2++) {
+        const rrx = rifleX[ri2], rry2 = rackY + 20;
+        // Stock
+        ctx.fillStyle = '#6b4422'; ctx.fillRect(rrx, rry2, 6, 48);
+        // Receiver
+        ctx.fillStyle = '#4a4a4a'; ctx.fillRect(rrx - 2, rry2 + 8, 10, 20);
+        // Barrel (thin line up)
+        ctx.strokeStyle = '#6a6a6a'; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(rrx + 3, rry2 - 2); ctx.lineTo(rrx + 3, rry2 + 14); ctx.stroke();
+        // Grip
+        ctx.fillStyle = '#3a2810'; ctx.fillRect(rrx, rry2 + 28, 6, 16);
+      }
+      // RACK label
+      ctx.fillStyle = '#88AA66';
+      ctx.font = 'bold 7px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText('WEAPON RACK', rackX + W * 0.11, rackY + rackH + 12);
+
+      // ── 4. Shooting lane + bullseye targets (right side) ─────────
+      const laneX = cx + W * 0.18;
+      const laneW = W * 0.26;
+      // Lane floor strip
+      ctx.fillStyle = 'rgba(40,50,30,0.60)';
+      ctx.fillRect(laneX, topY + 4, laneW, H * 0.55);
+      // Lane divider lines
+      ctx.strokeStyle = 'rgba(255,255,100,0.30)'; ctx.lineWidth = 1;
+      ctx.setLineDash([6, 4]);
+      ctx.beginPath(); ctx.moveTo(laneX + laneW / 2, topY + 4); ctx.lineTo(laneX + laneW / 2, topY + H * 0.55); ctx.stroke();
+      ctx.setLineDash([]);
+      // 3 bullseye targets on stands
+      for (let ti = 0; ti < 3; ti++) {
+        const tx3 = laneX + laneW * 0.18 + ti * laneW * 0.32;
+        const ty3 = topY + 26;
+        // Stand pole
+        ctx.strokeStyle = '#5a5a40'; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(tx3, ty3 + 28); ctx.lineTo(tx3, ty3 + 45); ctx.stroke();
+        // Stand base
+        ctx.fillStyle = '#4a4a30'; ctx.fillRect(tx3 - 8, ty3 + 43, 16, 4);
+        // Target rings (outer to inner)
+        const tColors = ['#EEDDCC', '#AA4422', '#FF2222'];
+        const tRadii = [16, 10, 5];
+        for (let ri3 = 0; ri3 < 3; ri3++) {
+          ctx.fillStyle = tColors[ri3];
+          ctx.beginPath(); ctx.arc(tx3, ty3 + 14, tRadii[ri3], 0, Math.PI * 2); ctx.fill();
+        }
+        // X center dot
+        ctx.fillStyle = '#111';
+        ctx.beginPath(); ctx.arc(tx3, ty3 + 14, 2, 0, Math.PI * 2); ctx.fill();
+      }
+
+      // ── 5. Workbench ─────────────────────────────────────────────
+      const wbX = cx - W * 0.12, wbY = midY + 28;
+      ctx.fillStyle = '#2a2010';
+      ctx.strokeStyle = '#665540';
+      ctx.lineWidth = 1.5;
+      rr(wbX, wbY, W * 0.26, 28, 3); ctx.fill(); ctx.stroke();
+      // Tools on bench
+      ctx.fillStyle = '#888870';
+      ctx.fillRect(wbX + 8, wbY + 6, 18, 5);   // wrench body
+      ctx.fillRect(wbX + 6, wbY + 4, 4, 10);    // wrench head
+      ctx.fillStyle = '#556655';
+      ctx.fillRect(wbX + 34, wbY + 8, 12, 4);   // pliers
+      ctx.fillRect(wbX + 52, wbY + 5, 5, 16);   // screwdriver
+      ctx.fillRect(wbX + 52, wbY + 3, 8, 4);
+      // Bench label
+      ctx.fillStyle = '#BBAA88';
+      ctx.font = '6px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText('WORKBENCH', wbX + W * 0.13, wbY + 38);
+
+      // ── 6. Warning hazard diamonds ────────────────────────────────
+      const hazardPositions = [
+        { x: cx - W * 0.46, y: midY - 60 },
+        { x: cx + W * 0.40, y: midY - 60 },
+      ];
+      for (const hpos of hazardPositions) {
+        const hx = hpos.x, hy = hpos.y, hr = 14;
+        // Diamond background
+        ctx.fillStyle = '#cc2200';
+        ctx.beginPath();
+        ctx.moveTo(hx, hy - hr); ctx.lineTo(hx + hr, hy);
+        ctx.lineTo(hx, hy + hr); ctx.lineTo(hx - hr, hy);
+        ctx.closePath(); ctx.fill();
+        // Yellow border
+        ctx.strokeStyle = '#FFD700'; ctx.lineWidth = 1.5;
+        ctx.stroke();
+        // Exclamation mark
+        ctx.fillStyle = '#FFD700';
+        ctx.font = 'bold 13px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText('!', hx, hy + 5);
+      }
+
+      // ── 7. Worker people (top-down military personnel) ────────────
+      // Worker 1: near weapon rack — maintaining weapons
+      drawWorker(rackX + W * 0.11, midY - 2, '#4a5c2a', '#c8a070');
+      // Worker 2: near ammo crates — organizing
+      drawWorker(cx - W * 0.10, crateY + 70, '#3a4e20', '#c09060');
+
     } else if (type === 18) {
       // HACKER DEN
       // ── Monitor wall (top) ───────────────────────
@@ -13372,7 +13360,7 @@ class Game {
       offY = (H - room.roomH) / 2;
     const S = room.S;
     const T = Date.now() / 1000;
-    const isRobotCity = !!this.map?.config?.robot;
+    const isRobotCity = !!this.map?.config?.robot || !!this.map?.config?.campaign;
 
     // ── Sky/background ─────────────────────────────────────────
     ctx.fillStyle = isRobotCity ? "#010810" : "#020308";
@@ -14091,7 +14079,7 @@ class Game {
     const offX = (W - room.roomW) / 2,
       offY = (H - room.roomH) / 2;
     const S = room.S;
-    const isNeonCity = this.map.config.id === "neon_city" || !!this.map.config.blitz || !!this.map.config.robot || !!this.map.config.hardcore;
+    const isNeonCity = this.map.config.id === "neon_city" || !!this.map.config.blitz || !!this.map.config.robot || !!this.map.config.hardcore || !!this.map.config.campaign;
     const isHardcore  = !!this.map.config.hardcore;
     const isGalactica = !!this.map.config.galactica;
     const isWasteland = !!this.map.config.wasteland;
@@ -15081,7 +15069,7 @@ class Game {
         }
       }
       for (const npc of this._cityNpcs) npc.render(ctx);
-      for (const c of this._ambientCars) c.render(ctx);
+      // Ambient car render removed (non-driveable cars disabled)
       if (this.boss && !this.boss.dead) {
         try {
           this.boss.render(ctx);
