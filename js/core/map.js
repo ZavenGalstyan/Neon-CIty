@@ -318,11 +318,42 @@ class GameMap {
         this._blockTypes[`${bx2},${by2}`] = ((bx2 * 1531 + by2 * 743) >>> 0) % BL;
       }
     }
+    // Track tech lab positions for Frozen Tundra spacing
+    const techLabPositions = [];
+    const minTechLabDistance = this.config.snow ? 12 : 0; // Minimum blocks apart for snow maps
+
     for (const door of this.doors) {
       const R2 = this.ROAD_EVERY;
-      const key = `${Math.floor(door.tx/R2)},${Math.floor(door.ty/R2)}`;
+      const bx = Math.floor(door.tx/R2);
+      const by = Math.floor(door.ty/R2);
+      const key = `${bx},${by}`;
       if (door.specialType) this._blockTypes[key] = door.specialType;
       door.bTypeIdx = (this._blockTypes[key] >= 0) ? this._blockTypes[key] : 0;
+
+      // Frozen Tundra: Replace chop shop (21) with office (1)
+      if (this.config.snow && door.bTypeIdx === 21) {
+        door.bTypeIdx = 1;
+        this._blockTypes[key] = 1;
+      }
+
+      // Frozen Tundra: Ensure tech labs (13) are spread apart
+      if (this.config.snow && door.bTypeIdx === 13) {
+        let tooClose = false;
+        for (const pos of techLabPositions) {
+          const dist = Math.abs(bx - pos.bx) + Math.abs(by - pos.by);
+          if (dist < minTechLabDistance) {
+            tooClose = true;
+            break;
+          }
+        }
+        if (tooClose) {
+          // Change to pharmacy (5) instead
+          door.bTypeIdx = 5;
+          this._blockTypes[key] = 5;
+        } else {
+          techLabPositions.push({ bx, by });
+        }
+      }
     }
 
     // ── Teleport Portals (normal maps only, not arena/zombie/life) ──
@@ -550,11 +581,42 @@ class GameMap {
         this._blockTypes[`${bx2},${by2}`] = ((bx2 * 1531 + by2 * 743) >>> 0) % BL;
       }
     }
+
+    // Track tech lab positions for Frozen Tundra spacing
+    const techLabPositions2 = [];
+    const minTechLabDist2 = this.config.snow ? 12 : 0;
+
     for (const door of this.doors) {
       const R2 = this.ROAD_EVERY;
-      const key = `${Math.floor(door.tx/R2)},${Math.floor(door.ty/R2)}`;
+      const bx = Math.floor(door.tx/R2);
+      const by = Math.floor(door.ty/R2);
+      const key = `${bx},${by}`;
       if (door.specialType) this._blockTypes[key] = door.specialType;
       door.bTypeIdx = (this._blockTypes[key] >= 0) ? this._blockTypes[key] : 0;
+
+      // Frozen Tundra: Replace chop shop (21) with office (1)
+      if (this.config.snow && door.bTypeIdx === 21) {
+        door.bTypeIdx = 1;
+        this._blockTypes[key] = 1;
+      }
+
+      // Frozen Tundra: Ensure tech labs (13) are spread apart
+      if (this.config.snow && door.bTypeIdx === 13) {
+        let tooClose = false;
+        for (const pos of techLabPositions2) {
+          const dist = Math.abs(bx - pos.bx) + Math.abs(by - pos.by);
+          if (dist < minTechLabDist2) {
+            tooClose = true;
+            break;
+          }
+        }
+        if (tooClose) {
+          door.bTypeIdx = 5;
+          this._blockTypes[key] = 5;
+        } else {
+          techLabPositions2.push({ bx, by });
+        }
+      }
     }
 
     // ── Portals at well-separated road intersections ──────────
@@ -3672,6 +3734,143 @@ class GameMap {
               }
             }
 
+          } else if (cfg.snow) {
+            // ═══ FROZEN TUNDRA: ICE BUILDINGS ═══
+            const bseed = (x * 41 + y * 59) % 7;
+            const baseCol = this.buildingColors[y][x];
+            ctx.fillStyle = baseCol;
+
+            // Different winter building shapes
+            if (bseed === 0) {
+              // Ice tower with snow cap
+              ctx.fillRect(wx + S*0.2, wy + S*0.15, S*0.6, S*0.85);
+              // Snow on top
+              ctx.fillStyle = 'rgba(220,240,255,0.85)';
+              ctx.beginPath();
+              ctx.moveTo(wx + S*0.15, wy + S*0.15);
+              ctx.lineTo(wx + S*0.5, wy);
+              ctx.lineTo(wx + S*0.85, wy + S*0.15);
+              ctx.closePath();
+              ctx.fill();
+              // Icicles
+              ctx.fillStyle = 'rgba(180,220,255,0.7)';
+              for (let ic = 0; ic < 4; ic++) {
+                ctx.beginPath();
+                ctx.moveTo(wx + S*0.25 + ic*S*0.15, wy + S*0.15);
+                ctx.lineTo(wx + S*0.28 + ic*S*0.15, wy + S*0.28 + (ic % 2) * S*0.05);
+                ctx.lineTo(wx + S*0.31 + ic*S*0.15, wy + S*0.15);
+                ctx.closePath();
+                ctx.fill();
+              }
+            } else if (bseed === 1) {
+              // Frozen warehouse with snow drift
+              ctx.fillRect(wx + S*0.08, wy + S*0.25, S*0.84, S*0.75);
+              // Snow on roof
+              ctx.fillStyle = 'rgba(220,240,255,0.8)';
+              ctx.fillRect(wx + S*0.05, wy + S*0.22, S*0.9, S*0.08);
+              // Snow drift at base
+              ctx.fillStyle = 'rgba(200,230,255,0.6)';
+              ctx.beginPath();
+              ctx.ellipse(wx + S*0.25, wy + S*0.95, S*0.18, S*0.08, 0, 0, Math.PI * 2);
+              ctx.fill();
+            } else if (bseed === 2) {
+              // Frosted spire
+              ctx.beginPath();
+              ctx.moveTo(wx + S*0.5, wy);
+              ctx.lineTo(wx + S*0.8, wy + S);
+              ctx.lineTo(wx + S*0.2, wy + S);
+              ctx.closePath();
+              ctx.fill();
+              // Frost crystals on top
+              ctx.fillStyle = 'rgba(180,220,255,0.6)';
+              ctx.beginPath();
+              ctx.moveTo(wx + S*0.5, wy);
+              ctx.lineTo(wx + S*0.4, wy + S*0.15);
+              ctx.lineTo(wx + S*0.6, wy + S*0.15);
+              ctx.closePath();
+              ctx.fill();
+            } else if (bseed === 3) {
+              // Ice dome structure
+              ctx.fillRect(wx + S*0.1, wy + S*0.45, S*0.8, S*0.55);
+              ctx.beginPath();
+              ctx.arc(wx + S*0.5, wy + S*0.48, S*0.38, Math.PI, 0);
+              ctx.fill();
+              // Snow cap on dome
+              ctx.fillStyle = 'rgba(220,240,255,0.75)';
+              ctx.beginPath();
+              ctx.arc(wx + S*0.5, wy + S*0.48, S*0.38, Math.PI + 0.5, -0.5);
+              ctx.fill();
+            } else if (bseed === 4) {
+              // Frozen factory
+              ctx.fillRect(wx + S*0.05, wy + S*0.35, S*0.65, S*0.65);
+              // Smokestack
+              ctx.fillRect(wx + S*0.72, wy + S*0.15, S*0.18, S*0.85);
+              // Snow on structures
+              ctx.fillStyle = 'rgba(220,240,255,0.8)';
+              ctx.fillRect(wx + S*0.02, wy + S*0.32, S*0.71, S*0.06);
+              ctx.fillRect(wx + S*0.70, wy + S*0.12, S*0.22, S*0.06);
+            } else if (bseed === 5) {
+              // Ice crystal building
+              const hcx = wx + S*0.5, hcy = wy + S*0.5;
+              ctx.beginPath();
+              for (let i = 0; i < 6; i++) {
+                const angle = (Math.PI / 3) * i - Math.PI / 2;
+                const hx = hcx + Math.cos(angle) * S*0.40;
+                const hy = hcy + Math.sin(angle) * S*0.40;
+                if (i === 0) ctx.moveTo(hx, hy);
+                else ctx.lineTo(hx, hy);
+              }
+              ctx.closePath();
+              ctx.fill();
+              // Ice crystal highlight
+              ctx.fillStyle = 'rgba(180,220,255,0.4)';
+              ctx.beginPath();
+              for (let i = 0; i < 6; i++) {
+                const angle = (Math.PI / 3) * i - Math.PI / 2;
+                const hx = hcx + Math.cos(angle) * S*0.25;
+                const hy = hcy + Math.sin(angle) * S*0.25;
+                if (i === 0) ctx.moveTo(hx, hy);
+                else ctx.lineTo(hx, hy);
+              }
+              ctx.closePath();
+              ctx.fill();
+            } else {
+              // Standard with snow layer
+              ctx.fillRect(wx + S*0.08, wy + S*0.2, S*0.84, S*0.8);
+              // Snow on roof
+              ctx.fillStyle = 'rgba(220,240,255,0.8)';
+              ctx.fillRect(wx + S*0.05, wy + S*0.17, S*0.9, S*0.08);
+              // Icicles hanging
+              ctx.fillStyle = 'rgba(180,220,255,0.65)';
+              for (let ic = 0; ic < 5; ic++) {
+                ctx.beginPath();
+                ctx.moveTo(wx + S*0.12 + ic*S*0.17, wy + S*0.25);
+                ctx.lineTo(wx + S*0.14 + ic*S*0.17, wy + S*0.35 + (ic % 2) * S*0.04);
+                ctx.lineTo(wx + S*0.16 + ic*S*0.17, wy + S*0.25);
+                ctx.closePath();
+                ctx.fill();
+              }
+            }
+
+            // Frost crystal edge glow
+            ctx.strokeStyle = 'rgba(150,200,255,0.35)';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(wx + 3, wy + 3, S - 6, S - 6);
+
+            // Ice blue neon accent
+            ctx.strokeStyle = cfg.neonColors[(x + y) % cfg.neonColors.length] + '55';
+            ctx.lineWidth = 1.5;
+            ctx.strokeRect(wx + 6, wy + 6, S - 12, S - 12);
+
+            // Frost windows
+            if ((x + y) % 2 === 0) {
+              ctx.fillStyle = 'rgba(150,200,255,0.5)';
+              ctx.fillRect(wx + S*0.2, wy + S*0.4, S*0.18, S*0.12);
+              ctx.fillRect(wx + S*0.62, wy + S*0.4, S*0.18, S*0.12);
+              ctx.fillRect(wx + S*0.2, wy + S*0.6, S*0.18, S*0.12);
+              ctx.fillRect(wx + S*0.62, wy + S*0.6, S*0.18, S*0.12);
+            }
+
           } else {
             ctx.fillStyle = this.buildingColors[y][x];
             ctx.fillRect(wx, wy, S, S);
@@ -3952,6 +4151,26 @@ class GameMap {
     if (!this.metroEntrance) return;
     const { wx, wy } = this.metroEntrance;
     const S = this.S;
+    const isWasteland = !!this.config?.wasteland;
+
+    // Color scheme based on map type
+    const bgColor = isWasteland ? '#0e0806' : '#060e06';
+    const stepColor = isWasteland ? 'rgba(255,136,68,' : 'rgba(34,255,100,';
+    const textColor = isWasteland ? '#FF8844' : '#22FF66';
+
+    // ctx is already in world-space (translated by -camX,-camY by the caller)
+    // so render directly at world coordinates wx, wy
+    ctx.save();
+    ctx.fillStyle = bgColor;
+    ctx.fillRect(wx - S * 0.5, wy - S * 0.5, S, S);
+    for (let i = 0; i < 4; i++) {
+      ctx.fillStyle = stepColor + `${0.38 - i * 0.08})`;
+      ctx.fillRect(wx - S * 0.5 + i * 5, wy + S * 0.5 - (i + 1) * 9, S - i * 10, 5);
+    }
+    ctx.font = 'bold 26px monospace';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = textColor; ctx.shadowColor = textColor; ctx.shadowBlur = 20;
+    ctx.fillText('M', wx, wy);
     const isRobot = !!this.config.robot;
     ctx.save();
     if (isRobot) {
