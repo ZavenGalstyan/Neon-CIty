@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════
-   NEON CITY — Social CSS  v5  · PREMIUM REDESIGN
+   DASH DREAD — Social CSS  v6  · PREMIUM REDESIGN
    Friends · Chat · Clans · Profile · Ranks
    ═══════════════════════════════════════════════════════════ */
 
@@ -736,22 +736,179 @@
 .ncs-toast-msg { font-family: 'Rajdhani',sans-serif; font-size: 13px; font-weight: 500; color: var(--nc-text); line-height: 1.45; word-break: break-word; }
 
 /* ═══════════════════════════════════════════════════════════
-   RESPONSIVE
+   RESPONSIVE  — Notebook · Tablet · Phone
+   Breakpoints: 1200 · 1024 · 768 · 640 · 480 · 360
    ═══════════════════════════════════════════════════════════ */
-@media (max-width: 900px) { .ncs-friends-right{width:300px} .ncs-clan-sidenav{width:170px} .ncs-stats-grid{grid-template-columns:repeat(2,1fr)} }
-@media (max-width: 640px) {
-  .ncs-topbar{padding:0 18px;height:58px} .ncs-topbar-title{font-size:14px;letter-spacing:.14em}
-  .ncs-page-body{flex-direction:column}
-  .ncs-sidebar{width:100%;max-height:40vh;border-right:none;border-bottom:1px solid rgba(255,255,255,.05)}
-  .ncs-friends-right{width:100%;border-left:none;border-top:1px solid rgba(255,255,255,.05)}
-  .ncs-clan-sidenav{width:100%;flex-direction:row;overflow-x:auto;padding:10px;border-right:none;border-bottom:1px solid rgba(255,255,255,.05);height:auto;flex-shrink:0}
-  .ncs-sidenav-btn{min-width:max-content}
-  .ncs-clan-content,.ncs-profile-wrap,.ncs-ranks-table{padding:18px}
-  .ncs-fab{bottom:18px;right:18px;width:54px;height:54px}
-  .ncs-messages-area{padding:16px}
-  .ncs-podium{gap:8px} .ncs-podium-base{width:100px} .ncs-stats-grid{grid-template-columns:repeat(2,1fr)}
-  .ncs-profile-hero{flex-direction:column;text-align:center} .ncs-profile-name{font-size:22px}
-  .ncs-rank-bar-wrap{display:none}
+
+/* ── Notebook (1025–1200px) ─────────────────────────────── */
+@media (max-width: 1200px) {
+  .ncs-sidebar        { width: 260px; }
+  .ncs-friends-right  { width: 320px; }
+  .ncs-stats-grid     { grid-template-columns: repeat(4,1fr); gap: 10px; }
+  .ncs-podium-base    { width: 120px; }
+}
+
+/* ── Small notebook / large tablet (769–1024px) ─────────── */
+@media (max-width: 1024px) {
+  .ncs-topbar          { padding: 0 24px; height: 64px; }
+  .ncs-topbar-title    { font-size: 16px; letter-spacing: 0.18em; }
+  .ncs-sidebar         { width: 240px; }
+  .ncs-friends-right   { width: 280px; }
+  .ncs-clan-sidenav    { width: 160px; }
+  .ncs-stats-grid      { grid-template-columns: repeat(2,1fr); gap: 12px; }
+  .ncs-profile-hero    { padding: 26px; gap: 22px; }
+  .ncs-profile-name    { font-size: 24px; }
+  .ncs-podium          { padding: 24px 20px 0; gap: 12px; }
+  .ncs-podium-base     { width: 110px; }
+  .ncs-clan-content    { padding: 22px; }
+  .ncs-profile-wrap    { padding: 28px; }
+  .ncs-rank-tabs       { padding: 12px 20px 0; }
+  .ncs-ranks-table     { padding: 16px 20px 22px; }
+}
+
+/* ── Tablet (481–768px) ─────────────────────────────────── */
+@media (max-width: 768px) {
+  /* Topbar */
+  .ncs-topbar          { padding: 0 18px; height: 58px; }
+  .ncs-topbar-title    { font-size: 15px; letter-spacing: 0.14em; }
+  .ncs-topbar-sub      { display: none; }
+  .ncs-topbar-icon     { font-size: 22px; }
+
+  /* Page layout: stack sidebar on top */
+  .ncs-page-body       { flex-direction: column; }
+  .ncs-sidebar         { width: 100%; max-height: 38vh; border-right: none; border-bottom: 1px solid rgba(255,255,255,0.05); }
+  .ncs-main            { flex: 1; min-height: 0; }
+  .ncs-friends-right   { width: 100%; border-left: none; border-top: 1px solid rgba(255,255,255,0.05); max-height: 50vh; }
+
+  /* Clan sidenav: horizontal scroll */
+  .ncs-clan-sidenav    { width: 100%; flex-direction: row; overflow-x: auto; padding: 10px 12px; border-right: none; border-bottom: 1px solid rgba(255,255,255,0.05); height: auto; flex-shrink: 0; gap: 6px; }
+  .ncs-sidenav-btn     { min-width: max-content; padding: 10px 14px; }
+  .ncs-clan-content    { padding: 18px; gap: 16px; }
+
+  /* Profile */
+  .ncs-profile-wrap    { padding: 20px; gap: 20px; }
+  .ncs-profile-hero    { flex-direction: row; padding: 22px; gap: 18px; }
+  .ncs-profile-name    { font-size: 22px; letter-spacing: 0.06em; }
+  .ncs-stats-grid      { grid-template-columns: repeat(2,1fr); gap: 10px; }
+  .ncs-stat-num        { font-size: 22px; }
+  .ncs-av-xxl          { width: 80px; height: 80px; font-size: 28px; }
+
+  /* Ranks */
+  .ncs-rank-tabs       { padding: 10px 16px 0; gap: 4px; }
+  .ncs-rank-tab        { padding: 8px 14px; font-size: 8px; letter-spacing: 0.08em; }
+  .ncs-ranks-table     { padding: 12px 16px 20px; }
+  .ncs-rank-bar-wrap   { display: none; }
+  .ncs-podium          { padding: 20px 16px 0; gap: 8px; }
+  .ncs-podium-base     { width: 100px; }
+  .ncs-podium-slot-1 .ncs-podium-base { width: 120px; }
+
+  /* Chat */
+  .ncs-messages-area   { padding: 16px 18px; }
+  .ncs-input-bar       { padding: 10px 14px; }
+  .ncs-chat-header     { padding: 12px 18px; }
+
+  /* FAB */
+  .ncs-fab             { bottom: 16px; right: 16px; width: 54px; height: 54px; }
+
+  /* Person rows */
+  .ncs-person-row      { padding: 8px 12px; }
+  .ncs-conv-row        { padding: 9px 12px; }
+  .ncs-member-row      { padding: 10px 14px; }
+}
+
+/* ── Phone (≤ 480px) ────────────────────────────────────── */
+@media (max-width: 480px) {
+  /* Topbar */
+  .ncs-topbar          { padding: 0 14px; height: 52px; gap: 10px; }
+  .ncs-topbar-title    { font-size: 13px; letter-spacing: 0.1em; }
+  .ncs-topbar-icon     { font-size: 20px; }
+  .ncs-close-btn       { width: 36px; height: 36px; font-size: 14px; }
+
+  /* Sidebar: short list panel */
+  .ncs-sidebar         { max-height: 35vh; }
+
+  /* Friends right panel */
+  .ncs-friends-right   { max-height: 55vh; }
+  .ncs-panel-section   { padding: 16px 16px 14px; }
+  .ncs-search-results  { max-height: 160px; }
+
+  /* Clan */
+  .ncs-clan-sidenav    { padding: 8px; }
+  .ncs-sidenav-btn     { padding: 8px 10px; font-size: 12px; gap: 7px; }
+  .ncs-sidenav-icon    { font-size: 15px; }
+  .ncs-clan-content    { padding: 12px; gap: 12px; }
+  .ncs-clan-grid       { grid-template-columns: 1fr; }
+  .ncs-clan-card       { padding: 16px; }
+  .ncs-myclan-hero     { flex-direction: column; padding: 20px; gap: 14px; text-align: center; }
+  .ncs-myclan-emblem   { font-size: 48px; }
+  .ncs-myclan-name     { font-size: 18px; }
+  .ncs-myclan-actions  { flex-direction: row; flex-wrap: wrap; justify-content: center; }
+  .ncs-myclan-stats    { justify-content: center; }
+
+  /* Profile */
+  .ncs-profile-wrap    { padding: 14px; gap: 16px; }
+  .ncs-profile-hero    { flex-direction: column; text-align: center; padding: 20px 16px; gap: 16px; align-items: center; }
+  .ncs-profile-name    { font-size: 20px; }
+  .ncs-profile-clan-row { justify-content: center; }
+  .ncs-profile-level-ring { display: none; }
+  .ncs-stats-grid      { grid-template-columns: repeat(2,1fr); gap: 8px; }
+  .ncs-stat-card       { padding: 16px 12px; }
+  .ncs-stat-num        { font-size: 20px; }
+  .ncs-stat-label      { font-size: 7px; }
+  .ncs-av-xxl          { width: 70px; height: 70px; font-size: 24px; }
+  .ncs-strip-row       { gap: 10px; }
+
+  /* Ranks */
+  .ncs-rank-tabs       { padding: 8px 12px 0; flex-wrap: wrap; }
+  .ncs-rank-tab        { padding: 7px 10px; font-size: 7px; }
+  .ncs-ranks-table     { padding: 10px 12px 16px; gap: 3px; }
+  .ncs-rank-row        { padding: 10px 12px; gap: 10px; }
+  .ncs-rank-num        { font-size: 11px; width: 22px; }
+  .ncs-rank-score      { font-size: 12px; }
+  .ncs-rank-name       { font-size: 13px; }
+  .ncs-rank-sub        { display: none; }
+  .ncs-podium          { padding: 16px 12px 0; gap: 6px; }
+  .ncs-podium-name     { font-size: 9px; max-width: 90px; }
+  .ncs-podium-base     { width: 80px; }
+  .ncs-podium-slot-1 .ncs-podium-base { width: 96px; height: 90px; }
+  .ncs-podium-slot-2 .ncs-podium-base { height: 64px; }
+  .ncs-podium-slot-3 .ncs-podium-base { height: 50px; }
+  .ncs-podium-crown    { font-size: 20px; }
+
+  /* Chat */
+  .ncs-chat-header     { padding: 10px 14px; gap: 10px; }
+  .ncs-chat-hdr-name   { font-size: 12px; }
+  .ncs-messages-area   { padding: 12px 14px; gap: 3px; }
+  .ncs-msg             { max-width: 82%; }
+  .ncs-msg-bubble      { padding: 9px 12px; font-size: 13px; }
+  .ncs-input-bar       { padding: 8px 12px; gap: 8px; }
+  .ncs-msg-input       { padding: 10px 14px; font-size: 13px; }
+  .ncs-send-btn        { width: 42px; height: 42px; border-radius: 12px; }
+
+  /* FAB */
+  .ncs-fab             { bottom: 14px; right: 14px; width: 50px; height: 50px; }
+  .ncs-fab-badge       { width: 18px; height: 18px; font-size: 8px; }
+
+  /* Nav buttons */
+  .ncs-nav-btn         { padding: 7px 12px; font-size: 9px; }
+  .ncs-btn             { padding: 8px 14px; font-size: 9px; }
+
+  /* Toast */
+  .ncs-toast-container { right: 10px; max-width: calc(100vw - 20px); }
+}
+
+/* ── Very small phone (≤ 360px) ─────────────────────────── */
+@media (max-width: 360px) {
+  .ncs-topbar          { padding: 0 10px; height: 48px; }
+  .ncs-topbar-title    { font-size: 12px; }
+  .ncs-topbar-icon     { display: none; }
+  .ncs-stats-grid      { grid-template-columns: 1fr 1fr; gap: 6px; }
+  .ncs-podium          { flex-direction: column; align-items: center; padding: 12px; }
+  .ncs-podium-slot     { order: unset !important; width: 100%; }
+  .ncs-podium-base     { width: 100% !important; height: 48px !important; border-radius: 10px; }
+  .ncs-profile-hero    { padding: 14px; }
+  .ncs-profile-name    { font-size: 18px; }
+  .ncs-clan-content    { padding: 10px; }
 }
 
 /* ═══════════════════════════════════════════════════════════

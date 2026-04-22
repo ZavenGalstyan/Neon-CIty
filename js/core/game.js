@@ -14478,7 +14478,7 @@ class Game {
     // Car number
     ctx.fillStyle = "#FFFFFF";
     ctx.font = "bold 11px monospace";
-    ctx.fillText("LINE 1 · NEON CITY METRO", room.roomW / 2, trainTop + trainH - 3);
+    ctx.fillText("LINE 1 · DASH DREAD METRO", room.roomW / 2, trainTop + trainH - 3);
 
     // ── Platform edge safety stripe ────────────────────────────
     ctx.fillStyle = "#FFCC00";
