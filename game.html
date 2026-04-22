@@ -2,8 +2,13 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#06060e">
   <title>DASH DREAD</title>
+  <link rel="manifest" href="manifest.json">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body class="game-body">
@@ -116,28 +121,92 @@
       const btn          = document.getElementById('fsBtn');
       const iconExpand   = document.getElementById('fsIconExpand');
       const iconCompress = document.getElementById('fsIconCompress');
-      const el           = document.body;
+      const el           = document.documentElement; // <html> — most reliable cross-browser
+
+      // iOS Safari does not support the Fullscreen API; detect it separately
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+      // Standalone = opened via "Add to Home Screen" → already truly fullscreen
+      const isStandalone = navigator.standalone === true ||
+                           window.matchMedia('(display-mode: standalone)').matches;
 
       function isFS() {
-        return !!(document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement);
+        return !!(document.fullscreenElement ||
+                  document.webkitFullscreenElement ||
+                  document.msFullscreenElement);
+      }
+
+      function lockOrientation() {
+        try {
+          if (screen.orientation && screen.orientation.lock) {
+            screen.orientation.lock('landscape').catch(() => {});
+          }
+        } catch (_) {}
+      }
+
+      function unlockOrientation() {
+        try {
+          if (screen.orientation && screen.orientation.unlock) {
+            screen.orientation.unlock();
+          }
+        } catch (_) {}
+      }
+
+      function iosScrollHide() {
+        // Trick the iOS browser into hiding its chrome by scrolling 1px
+        document.body.style.minHeight = (window.screen.height + 1) + 'px';
+        setTimeout(() => {
+          window.scrollTo(0, 1);
+          document.body.style.minHeight = '';
+        }, 80);
       }
 
       function enter() {
-        if      (el.requestFullscreen)       el.requestFullscreen({ navigationUI: 'hide' });
-        else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
-        else if (el.msRequestFullscreen)     el.msRequestFullscreen();
+        if (el.requestFullscreen) {
+          el.requestFullscreen({ navigationUI: 'hide' })
+            .then(lockOrientation)
+            .catch(() => {});
+        } else if (el.webkitRequestFullscreen) {
+          el.webkitRequestFullscreen();
+          lockOrientation();
+        } else if (el.msRequestFullscreen) {
+          el.msRequestFullscreen();
+        } else if (isIOS) {
+          // iOS fallback: scroll to hide address bar + show compress icon manually
+          iosScrollHide();
+          iconExpand.style.display   = 'none';
+          iconCompress.style.display = 'block';
+          lockOrientation();
+        }
       }
 
       function exit() {
-        if      (document.exitFullscreen)       document.exitFullscreen();
-        else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
-        else if (document.msExitFullscreen)     document.msExitFullscreen();
+        if (document.exitFullscreen) {
+          document.exitFullscreen().then(unlockOrientation).catch(() => {});
+        } else if (document.webkitExitFullscreen) {
+          document.webkitExitFullscreen();
+          unlockOrientation();
+        } else if (document.msExitFullscreen) {
+          document.msExitFullscreen();
+        } else if (isIOS) {
+          // iOS fallback: scroll back to top
+          window.scrollTo(0, 0);
+          iconExpand.style.display   = 'block';
+          iconCompress.style.display = 'none';
+          unlockOrientation();
+        }
       }
 
       function updateIcon() {
         const fs = isFS();
         iconExpand.style.display   = fs ? 'none'  : 'block';
         iconCompress.style.display = fs ? 'block' : 'none';
+      }
+
+      // If launched as PWA (standalone), reflect that in the icon immediately
+      if (isStandalone) {
+        iconExpand.style.display   = 'none';
+        iconCompress.style.display = 'block';
+        btn.style.display = 'none'; // already fullscreen — hide the button
       }
 
       btn.addEventListener('click', () => { isFS() ? exit() : enter(); });
