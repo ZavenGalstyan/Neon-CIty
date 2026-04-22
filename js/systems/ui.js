@@ -2029,6 +2029,98 @@ class HUD {
       }
     }
 
+    // ── Metro marker ────────────────────────────────────────────────────────
+    let hoveredMetro = null;
+    if (gameMap.metroEntrance) {
+      const me = gameMap.metroEntrance;
+      const sx = ox + me.wx * scX;
+      const sy = oy + me.wy * scY;
+      if (sx >= ox && sx <= ox + mapW && sy >= oy && sy <= oy + mapH) {
+        const metroColor = gameMap.config?.wasteland ? '#FF8844' : '#22FF66';
+        const metroName = gameMap.config?.wasteland ? 'WASTELAND METRO' : 'METRO';
+
+        // Check if metro is waypoint or hovered
+        const isMetroWP = waypointDoor && waypointDoor.isMetro === true;
+        const hover = Math.hypot(mx - sx, my - sy) < 18;
+        if (hover) hoveredMetro = { ...me, isMetro: true, _metroColor: metroColor, _metroName: metroName };
+
+        const baseR = isMetroWP || hover ? 10 : 8;
+        const pulse = Math.sin(t * 3 + 100) * 0.2 + 0.8;
+        const r = baseR * (isMetroWP || hover ? 1.2 : pulse);
+
+        ctx.save();
+        // Outer glow ring
+        ctx.shadowColor = metroColor;
+        ctx.shadowBlur = isMetroWP ? 25 : hover ? 20 : 14;
+        ctx.strokeStyle = metroColor + (isMetroWP || hover ? 'AA' : '88');
+        ctx.lineWidth = isMetroWP || hover ? 2.5 : 2;
+        ctx.beginPath(); ctx.arc(sx, sy, r + 4, 0, Math.PI * 2); ctx.stroke();
+
+        // Main circle background
+        const grad = ctx.createRadialGradient(sx - r * 0.3, sy - r * 0.3, 0, sx, sy, r);
+        grad.addColorStop(0, metroColor);
+        grad.addColorStop(0.7, metroColor + 'DD');
+        grad.addColorStop(1, metroColor + '88');
+        ctx.fillStyle = grad;
+        ctx.shadowBlur = isMetroWP ? 20 : hover ? 15 : 10;
+        ctx.beginPath(); ctx.arc(sx, sy, r, 0, Math.PI * 2); ctx.fill();
+
+        // Inner highlight
+        ctx.fillStyle = 'rgba(255,255,255,0.4)';
+        ctx.shadowBlur = 0;
+        ctx.beginPath(); ctx.arc(sx - r * 0.25, sy - r * 0.3, r * 0.4, 0, Math.PI * 2); ctx.fill();
+
+        // Metro icon (train symbol)
+        ctx.font = `${Math.round(r * 1.2)}px sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = '#FFFFFF';
+        ctx.shadowColor = 'rgba(0,0,0,0.8)';
+        ctx.shadowBlur = 3;
+        ctx.fillText('🚇', sx, sy + 1);
+
+        // Label below marker
+        ctx.shadowBlur = 0;
+        ctx.font = 'bold 8px Orbitron, monospace';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+        const labelW = ctx.measureText(metroName).width + 10;
+        const labelH = isMetroWP || hover ? 16 : 14;
+        ctx.fillStyle = 'rgba(0,0,0,0.9)';
+        ctx.beginPath();
+        ctx.roundRect(sx - labelW/2, sy + r + 6, labelW, labelH, 4);
+        ctx.fill();
+        ctx.strokeStyle = metroColor + (isMetroWP || hover ? 'DD' : 'AA'); ctx.lineWidth = isMetroWP || hover ? 1.5 : 1;
+        ctx.stroke();
+        ctx.fillStyle = metroColor;
+        ctx.shadowColor = metroColor; ctx.shadowBlur = isMetroWP || hover ? 10 : 4;
+        ctx.fillText(metroName, sx, sy + r + (isMetroWP || hover ? 9 : 8));
+
+        ctx.restore();
+
+        // Waypoint pin for metro - enhanced
+        if (isMetroWP) {
+          const wpPulse = Math.sin(t * 4) * 0.4 + 0.6;
+          ctx.save();
+          ctx.strokeStyle = metroColor; ctx.lineWidth = 2.5;
+          ctx.shadowColor = metroColor; ctx.shadowBlur = 15 * wpPulse;
+          // Pole
+          ctx.beginPath(); ctx.moveTo(sx, sy - r - 2); ctx.lineTo(sx, sy - r - 24); ctx.stroke();
+          // Flag
+          ctx.fillStyle = metroColor;
+          ctx.beginPath(); ctx.moveTo(sx, sy - r - 24); ctx.lineTo(sx + 14, sy - r - 17); ctx.lineTo(sx, sy - r - 10); ctx.closePath(); ctx.fill();
+          // Animated pulsing rings
+          for (let i = 0; i < 2; i++) {
+            const ringPulse = ((t * 2 + i * 0.5) % 1);
+            ctx.globalAlpha = (1 - ringPulse) * 0.4;
+            ctx.beginPath(); ctx.arc(sx, sy, r + 8 + ringPulse * 15, 0, Math.PI * 2); ctx.stroke();
+          }
+          ctx.globalAlpha = 1;
+          ctx.restore();
+        }
+      }
+    }
+
     // Player marker - enhanced
     {
       const px = ox + player.x * scX;
@@ -2105,12 +2197,55 @@ class HUD {
       ctx.restore();
     }
 
+    // Hover tooltip for Metro
+    if (hoveredMetro && !hoveredDoor) {
+      const metroColor = hoveredMetro._metroColor;
+      const metroName = hoveredMetro._metroName;
+      const sx   = ox + hoveredMetro.wx * scX;
+      const sy   = oy + hoveredMetro.wy * scY;
+      const ttW  = 180, ttH = 48;
+      const ttX  = Math.min(sx + 18, W - ttW - 15);
+      const ttY  = Math.max(sy - 54, oy + 8);
+      const isMetroWP = waypointDoor && waypointDoor.isMetro === true;
+      ctx.save();
+      // Tooltip background with gradient
+      const ttGrad = ctx.createLinearGradient(ttX, ttY, ttX, ttY + ttH);
+      ttGrad.addColorStop(0, 'rgba(8,15,30,0.98)');
+      ttGrad.addColorStop(1, 'rgba(2,4,14,0.98)');
+      ctx.fillStyle = ttGrad;
+      ctx.strokeStyle = metroColor; ctx.lineWidth = 1.5;
+      ctx.shadowColor = metroColor; ctx.shadowBlur = 15;
+      ctx.beginPath(); ctx.roundRect(ttX, ttY, ttW, ttH, 8); ctx.fill(); ctx.stroke();
+      // Icon
+      ctx.font = '20px sans-serif';
+      ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+      ctx.shadowBlur = 0;
+      ctx.fillText('🚇', ttX + 12, ttY + ttH/2);
+      // Name
+      ctx.font = 'bold 11px Orbitron, monospace';
+      ctx.fillStyle = metroColor;
+      ctx.fillText(metroName, ttX + 40, ttY + 16);
+      // Instructions
+      ctx.fillStyle = 'rgba(255,255,255,0.6)';
+      ctx.font = '8px Orbitron, monospace';
+      ctx.fillText(isMetroWP ? '📍 DESTINATION SET' : '🖱️ Click to set destination', ttX + 40, ttY + 32);
+      ctx.fillStyle = 'rgba(255,255,255,0.4)';
+      ctx.fillText(isMetroWP ? 'Click again to clear' : '', ttX + 40, ttY + 42);
+      ctx.restore();
+    }
+
     // ── Legend row - enhanced ────────────────────────────────────────────
     const legY   = oy + mapH + 26;
     const seen   = new Map();
     for (const door of doors) {
       const info = this._doorInfo(door, gameMap);
       if (!seen.has(info.name)) seen.set(info.name, { color: info.color, icon: info.icon });
+    }
+    // Add metro to legend if it exists
+    if (gameMap.metroEntrance) {
+      const metroColor = gameMap.config?.wasteland ? '#FF8844' : '#22FF66';
+      const metroName = gameMap.config?.wasteland ? 'METRO' : 'METRO';
+      if (!seen.has(metroName)) seen.set(metroName, { color: metroColor, icon: '🚇' });
     }
     const entries = [...seen.entries()];
 
@@ -2148,7 +2283,8 @@ class HUD {
     }
     ctx.restore();
 
-    return hoveredDoor;
+    // Return hovered door, or hovered metro if no door is hovered
+    return hoveredDoor || hoveredMetro;
   }
 
   // ── Waypoint navigation overlay on minimap ────────────────────────────────
@@ -2162,7 +2298,10 @@ class HUD {
     const mmH  = HUD_MM_H;
     const sx   = gameMap.mmScaleX;
     const sy   = gameMap.mmScaleY;
-    const info = this._doorInfo(waypointDoor, gameMap);
+    // Handle metro waypoints
+    const info = waypointDoor.isMetro
+      ? { name: waypointDoor._metroName || 'METRO', color: waypointDoor._metroColor || '#22FF66', icon: '🚇' }
+      : this._doorInfo(waypointDoor, gameMap);
     const t    = performance.now() / 1000;
     const pulse = Math.sin(t * 4) * 0.4 + 0.6;
 

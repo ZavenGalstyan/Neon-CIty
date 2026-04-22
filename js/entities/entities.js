@@ -10059,10 +10059,11 @@ class Grenade {
 class Salesperson {
   constructor(x, y, color = '#FFAA55', label = 'DEALER', mapType = false) {
     this.x = x; this.y = y; this.color = color; this.label = label; this.radius = 16;
-    // mapType can be: true (neonCity), 'galactica', 'wasteland', or false (default)
+    // mapType can be: true (neonCity), 'galactica', 'wasteland', 'snow', or false (default)
     this.isNeonCity = mapType === true || mapType === 'neonCity';
     this.isGalactica = mapType === 'galactica';
     this.isWasteland = mapType === 'wasteland';
+    this.isSnow = mapType === 'snow';
     this._waveT = 0;
   }
   update(dt) { this._waveT += dt * 1.4; }
@@ -10401,6 +10402,178 @@ class Salesperson {
       ctx.font = 'bold 8px Orbitron, monospace';
       ctx.textAlign = 'center';
       ctx.fillText(this.label, 0, -76 + breathe);
+      ctx.shadowBlur = 0;
+
+    } else if (this.isSnow) {
+      // ═══ FROZEN TUNDRA: Winter-dressed salesperson ═══
+      const breathe = Math.sin(this._waveT * 0.8) * 1;
+
+      // Shadow
+      ctx.globalAlpha = 0.3;
+      ctx.fillStyle = '#000';
+      ctx.beginPath();
+      ctx.ellipse(2, 4, 14, 5, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+
+      // Legs (warm winter pants)
+      ctx.fillStyle = '#2a3a4a';
+      ctx.fillRect(-6, -8, 5, 12);
+      ctx.fillRect(1, -8, 5, 12);
+
+      // Winter boots (insulated, furry top)
+      ctx.fillStyle = '#1a2530';
+      ctx.fillRect(-8, 2, 7, 6);
+      ctx.fillRect(1, 2, 7, 6);
+      // Fur trim on boots
+      ctx.fillStyle = '#CCDDEE';
+      ctx.fillRect(-8, 1, 7, 3);
+      ctx.fillRect(1, 1, 7, 3);
+
+      // Body (thick winter parka)
+      const parkaGrad = ctx.createLinearGradient(-14, -42, 14, -8);
+      parkaGrad.addColorStop(0, '#3a5a7a');
+      parkaGrad.addColorStop(0.5, '#2a4a6a');
+      parkaGrad.addColorStop(1, '#1a3a5a');
+      ctx.fillStyle = parkaGrad;
+      ctx.beginPath();
+      ctx.moveTo(-13, -8);
+      ctx.lineTo(-15, -38 + breathe);
+      ctx.lineTo(-10, -44 + breathe);
+      ctx.lineTo(10, -44 + breathe);
+      ctx.lineTo(15, -38 + breathe);
+      ctx.lineTo(13, -8);
+      ctx.closePath();
+      ctx.fill();
+
+      // Parka fur-lined hood (down)
+      ctx.fillStyle = '#DDEEFF';
+      ctx.beginPath();
+      ctx.ellipse(0, -44 + breathe, 12, 5, 0, Math.PI, 0);
+      ctx.fill();
+
+      // Parka zipper
+      ctx.fillStyle = '#88AACC';
+      ctx.fillRect(-1, -42 + breathe, 2, 34);
+      // Zipper teeth
+      ctx.fillStyle = '#AACCDD';
+      for (let z = 0; z < 8; z++) {
+        ctx.fillRect(-2, -40 + z * 4 + breathe, 4, 2);
+      }
+
+      // Fur collar
+      ctx.fillStyle = '#EEFFFF';
+      ctx.beginPath();
+      ctx.ellipse(0, -42 + breathe, 10, 4, 0, 0, Math.PI);
+      ctx.fill();
+
+      // Neck (warm scarf showing)
+      ctx.fillStyle = '#88BBDD';
+      ctx.fillRect(-4, -48 + breathe, 8, 6);
+
+      // Head
+      const headGrad = ctx.createRadialGradient(-2, -56 + breathe, 2, 0, -54 + breathe, 11);
+      headGrad.addColorStop(0, '#FFDDCC');
+      headGrad.addColorStop(1, '#E8C8B8');
+      ctx.fillStyle = headGrad;
+      ctx.beginPath();
+      ctx.ellipse(0, -56 + breathe, 10, 11, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Rosy cheeks (cold weather)
+      ctx.fillStyle = 'rgba(255,150,150,0.35)';
+      ctx.beginPath();
+      ctx.ellipse(-6, -53 + breathe, 3, 2, 0, 0, Math.PI * 2);
+      ctx.ellipse(6, -53 + breathe, 3, 2, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Winter hat (beanie)
+      ctx.fillStyle = '#4477AA';
+      ctx.beginPath();
+      ctx.ellipse(0, -64 + breathe, 11, 6, 0, Math.PI, 0);
+      ctx.fill();
+      ctx.fillRect(-11, -64 + breathe, 22, 6);
+      // Hat fold
+      ctx.fillStyle = '#5588BB';
+      ctx.fillRect(-10, -60 + breathe, 20, 3);
+      // Pom pom
+      ctx.fillStyle = '#FFFFFF';
+      ctx.beginPath();
+      ctx.arc(0, -70 + breathe, 4, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Eyes (friendly)
+      ctx.fillStyle = '#FFFFFF';
+      ctx.beginPath();
+      ctx.ellipse(-4, -56 + breathe, 2.5, 2, 0, 0, Math.PI * 2);
+      ctx.ellipse(4, -56 + breathe, 2.5, 2, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#3355AA';
+      ctx.beginPath();
+      ctx.arc(-4, -56 + breathe, 1.3, 0, Math.PI * 2);
+      ctx.arc(4, -56 + breathe, 1.3, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Friendly smile
+      ctx.strokeStyle = '#AA7766';
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.arc(0, -52 + breathe, 4, 0.2, Math.PI - 0.2);
+      ctx.stroke();
+
+      // Arms (thick parka sleeves)
+      ctx.fillStyle = '#2a4a6a';
+      ctx.beginPath();
+      ctx.moveTo(-15, -38 + breathe);
+      ctx.lineTo(-18, -22);
+      ctx.lineTo(-16, -10);
+      ctx.lineTo(-12, -10);
+      ctx.lineTo(-13, -36 + breathe);
+      ctx.closePath();
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(15, -38 + breathe);
+      ctx.lineTo(18, -22);
+      ctx.lineTo(16, -10);
+      ctx.lineTo(12, -10);
+      ctx.lineTo(13, -36 + breathe);
+      ctx.closePath();
+      ctx.fill();
+
+      // Winter gloves
+      ctx.fillStyle = '#4488BB';
+      ctx.beginPath();
+      ctx.arc(-17, -8, 5, 0, Math.PI * 2);
+      ctx.arc(17, -8, 5, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Clipboard in hand
+      ctx.fillStyle = '#2a3a4a';
+      ctx.fillRect(-22, -16, 10, 14);
+      ctx.fillStyle = '#EEFFFF';
+      ctx.fillRect(-21, -15, 8, 11);
+      ctx.fillStyle = '#88AACC';
+      ctx.fillRect(-20, -13, 6, 1);
+      ctx.fillRect(-20, -10, 6, 1);
+      ctx.fillRect(-20, -7, 4, 1);
+
+      // Name badge
+      ctx.fillStyle = '#3a5a7a';
+      ctx.fillRect(4, -34 + breathe, 14, 10);
+      ctx.fillStyle = '#EEFFFF';
+      ctx.fillRect(5, -33 + breathe, 12, 8);
+      ctx.fillStyle = '#2a4a6a';
+      ctx.font = 'bold 4px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText('FROST', 11, -27 + breathe);
+
+      // Label above head
+      ctx.fillStyle = '#AADDFF';
+      ctx.shadowColor = '#66BBFF';
+      ctx.shadowBlur = 10;
+      ctx.font = 'bold 8px Orbitron, monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText(this.label, 0, -82 + breathe);
       ctx.shadowBlur = 0;
 
     } else {

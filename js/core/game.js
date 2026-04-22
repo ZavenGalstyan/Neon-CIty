@@ -234,6 +234,11 @@ class Game {
     this._policeOfficers = [];
     // ── Tech Shop (Wasteland) ─────────────────────────────────
     this._techShopCustomers = [];
+    // ── Cryo Lab (Frozen Tundra) ─────────────────────────────
+    this._cryoLabVendor = null;
+    this._cryoLabCustomers = [];
+    // ── Radio Station (Wasteland) ─────────────────────────────
+    this._radioWorkers = [];
     // ── Building NPC Shop ─────────────────────────────────────
     this._buildingNpcs = [];
     this._nearBuildingNpc = false;
@@ -1746,8 +1751,48 @@ class Game {
       "#336688",
     ];
     const oceanColors = ["#0077AA", "#005588", "#006699", "#008899", "#004466"];
+    const snowColors = ["#4488AA", "#336688", "#5599BB", "#447799", "#3388AA"];
     const isOcean = !!this.map.config.ocean;
     const isNeonCity = this.map.config.id === "neon_city";
+    const isSnow = !!this.map.config.snow;
+
+    // Frozen Tundra: spawn 3 ice-themed vehicles for the player (no NPC traffic)
+    if (isSnow) {
+      const avoidPositions = [];
+      const avoidRadius = 100;
+
+      if (this.map.portals) {
+        for (const portal of this.map.portals) {
+          if (portal && portal.wx !== undefined) {
+            avoidPositions.push({ x: portal.wx, y: portal.wy });
+          }
+        }
+      }
+      if (this.map.metroEntrance) {
+        const me = this.map.metroEntrance;
+        avoidPositions.push({ x: me.wx, y: me.wy });
+      }
+
+      const isTooCloseToAvoid = (x, y) => {
+        for (const pos of avoidPositions) {
+          if (Math.hypot(x - pos.x, y - pos.y) < avoidRadius) return true;
+        }
+        return false;
+      };
+
+      // Spawn 3 ice-themed drivable vehicles
+      for (let i = 0; i < 3; i++) {
+        let rp;
+        for (let t = 0; t < 25; t++) {
+          rp = this.map.randomRoadPos();
+          const distFromPlayer = Math.hypot(rp.x - this.player.x, rp.y - this.player.y);
+          if (distFromPlayer > 150 && distFromPlayer < 550 && !isTooCloseToAvoid(rp.x, rp.y)) break;
+        }
+        const v = new Vehicle(rp.x, rp.y, snowColors[i % snowColors.length], this.map.config);
+        this.vehicles.push(v);
+      }
+      return;
+    }
 
     // Neon City: spawn 3 orange vehicles for the player (no other traffic)
     if (isNeonCity) {
@@ -1813,13 +1858,51 @@ class Game {
       return;
     }
 
+    // Collect positions to avoid (metro entrance, portals, doors)
+    const avoidPositions = [];
+    const avoidRadius = 100;
+
+    // Add metro entrance to avoid list
+    if (this.map.metroEntrance) {
+      const me = this.map.metroEntrance;
+      avoidPositions.push({ x: me.wx, y: me.wy });
+    }
+
+    // Add portals to avoid list
+    if (this.map.portals) {
+      for (const portal of this.map.portals) {
+        if (portal && portal.wx !== undefined) {
+          avoidPositions.push({ x: portal.wx, y: portal.wy });
+        }
+      }
+    }
+
+    // Helper to check if position is too close to any avoid position
+    const isTooCloseToAvoid = (x, y) => {
+      for (const pos of avoidPositions) {
+        if (Math.hypot(x - pos.x, y - pos.y) < avoidRadius) return true;
+      }
+      return false;
+    };
+
     const count = 3 + Math.floor(Math.random() * 2);
     for (let i = 0; i < count; i++) {
       let rp;
-      // Try to find a road position (not near buildings)
-      for (let t = 0; t < 12; t++) {
+      let validPosition = false;
+      // Try to find a road position (not near buildings or metro)
+      for (let t = 0; t < 15; t++) {
         rp = this.map.randomRoadPos();
-        if (Math.hypot(rp.x - this.player.x, rp.y - this.player.y) > 220) break;
+        if (Math.hypot(rp.x - this.player.x, rp.y - this.player.y) > 220 && !isTooCloseToAvoid(rp.x, rp.y)) {
+          validPosition = true;
+          break;
+        }
+      }
+      // Fallback: try to at least avoid metro
+      if (!validPosition) {
+        for (let t = 0; t < 10; t++) {
+          rp = this.map.randomRoadPos();
+          if (!isTooCloseToAvoid(rp.x, rp.y)) break;
+        }
       }
       const isPoliceVehicle = i === 0; // First vehicle is always police/coast guard
       const isMiniBoat = isOcean && i >= 2; // On ocean, vehicles after first 2 are mini boats
@@ -3179,8 +3262,10 @@ class Game {
   }
 
   _buildDistrictLayout() {
-    // No districts for arena, zombie, life modes
+    // No districts for arena, zombie, life modes, or frozen tundra
     if (this._arenaMode || this._zombieMode || this._lifeMode) return null;
+    // No districts for Frozen Tundra
+    if (this.map?.config?.snow) return null;
     const types = ["dangerous", "rich", "industrial"];
     for (let i = types.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
@@ -3287,6 +3372,13 @@ class Game {
       if (this._indoor.isTechShop) {
         this._techShopCustomers = [];
       }
+      if (this._indoor.isCryoLab) {
+        this._cryoLabVendor = null;
+        this._cryoLabCustomers = [];
+      }
+      if (this._indoor.isRadioStation) {
+        this._radioWorkers = [];
+      }
       if (this._indoor.isMetro) {
         this._metroWaveTimer = undefined;
       }
@@ -3355,6 +3447,13 @@ class Game {
             this._salespersons = [
               new Salesperson(spX, spY, "#a08060", "MECHANIC", "wasteland"),
             ];
+          } else if (!!this.map.config.snow) {
+            // Frozen Tundra: Winter-dressed sales rep
+            const spX = room.roomW / 2;
+            const spY = room.roomH * 0.38;
+            this._salespersons = [
+              new Salesperson(spX, spY, "#88DDFF", "FROST DEALER", "snow"),
+            ];
           } else {
             this._salespersons = [
               new Salesperson(
@@ -3406,6 +3505,35 @@ class Game {
             // Customer at counter
             { x: room.roomW * 0.55, y: room.roomH * 0.28, atCounter: true },
           ];
+        } else if (door.bTypeIdx === 13 && !!this.map?.config?.snow) {
+          // FROZEN TUNDRA CRYO LAB: Tech vendor with customers, no enemies
+          room.isCryoLab = true;
+          this._cryoLabVendor = {
+            x: room.roomW * 0.5,
+            y: room.roomH * 0.26,
+            label: "DR. FROST"
+          };
+          this._cryoLabCustomers = [
+            // Scientist examining samples
+            { x: room.roomW * 0.25, y: room.roomH * 0.50, examining: true },
+            // Customer at workstation
+            { x: room.roomW * 0.70, y: room.roomH * 0.45, atWorkstation: true },
+          ];
+        } else if (door.bTypeIdx === 22 && !!this.map?.config?.wasteland) {
+          // WASTELAND RADIO STATION: Radio workers, no enemies
+          room.isRadioStation = true;
+          this._radioWorkers = [
+            // Technician at left desk
+            { x: room.roomW * 0.18, y: room.roomH * 0.52, role: "TECH", sitting: true },
+            // Producer at right desk
+            { x: room.roomW * 0.72, y: room.roomH * 0.52, role: "PRODUCER", sitting: true },
+          ];
+        } else if (door.bTypeIdx === 1 && !!this.map?.config?.snow) {
+          // FROZEN TUNDRA OFFICE: Workers already rendered as furniture, no NPC needed
+          room.isSnowOffice = true;
+        } else if (door.bTypeIdx === 5 && !!this.map?.config?.snow) {
+          // FROZEN TUNDRA PHARMACY: Pharmacist already rendered as furniture, no NPC needed
+          room.isSnowPharmacy = true;
         } else if (!this._lifeMode) {
           const key = `${door.tx},${door.ty}`;
           if (!this._visitedRooms.has(key)) {
@@ -3425,7 +3553,12 @@ class Game {
           !room.isCasino &&
           !room.isHome &&
           !room.isMetro &&
-          !room.isPoliceStation
+          !room.isPoliceStation &&
+          !room.isCryoLab &&
+          !room.isTechShop &&
+          !room.isRadioStation &&
+          !room.isSnowOffice &&
+          !room.isSnowPharmacy
         ) {
           const bType =
             typeof room._buildingType === "number" ? room._buildingType : 0;
@@ -3783,6 +3916,7 @@ class Game {
     const S = room.S;
     const _isGalactica = !!this.map.config.galactica;
     const _isZombie    = !!this.map.config.zombie;
+    const _isWasteland = !!this.map.config.wasteland;
     const _t = performance.now() / 1000;
     ctx.fillStyle = _isGalactica ? "#00000e" : _isZombie ? "#030803" : "#050508";
     ctx.fillRect(0, 0, W, H);
@@ -3998,13 +4132,20 @@ class Game {
     for (const customer of this._techShopCustomers) {
       this._renderTechShopCustomer(ctx, customer);
     }
+    // Render radio station workers
+    for (const worker of this._radioWorkers) {
+      this._renderRadioWorker(ctx, worker);
+    }
+    // Render cryo lab vendor and customers
+    if (this._cryoLabVendor) {
+      this._renderCryoLabVendor(ctx, this._cryoLabVendor);
+    }
+    for (const customer of this._cryoLabCustomers) {
+      this._renderCryoLabCustomer(ctx, customer);
+    }
     ctx.save();
     ctx.font = "bold 11px Orbitron, monospace";
     ctx.textAlign = "center";
-    ctx.fillStyle = "#FFFFAA";
-    ctx.shadowColor = "#FFFF00";
-    ctx.shadowBlur = 10;
-    ctx.fillText("[E] EXIT", room.roomW / 2, room.roomH - 8);
     if (_isGalactica) {
       ctx.fillStyle = "#CC99FF";
       ctx.shadowColor = "#AA88FF";
@@ -4013,6 +4154,10 @@ class Game {
       ctx.fillStyle = "#88FF88";
       ctx.shadowColor = "#44FF44";
       ctx.shadowBlur = 10;
+    } else if (_isWasteland) {
+      ctx.fillStyle = "#c0a080";
+      ctx.shadowColor = "#8a6040";
+      ctx.shadowBlur = 8;
     } else {
       ctx.fillStyle = "#FFFFAA";
       ctx.shadowColor = "#FFFF00";
@@ -4362,6 +4507,356 @@ class Game {
     ctx.moveTo(-2, headY + 5 + breathe * 0.2);
     ctx.lineTo(2, headY + 5 + breathe * 0.2);
     ctx.stroke();
+
+    ctx.restore();
+  }
+
+  _renderRadioWorker(ctx, worker) {
+    const { x, y, role, sitting } = worker;
+    const t = performance.now() / 1000;
+    const breathe = Math.sin(t * 1.4 + x * 0.1) * 1;
+    const sway = Math.sin(t * 0.7 + y * 0.1) * 1;
+
+    ctx.save();
+    ctx.translate(x + sway, y);
+
+    // Shadow
+    ctx.globalAlpha = 0.35;
+    ctx.fillStyle = "#000";
+    ctx.beginPath();
+    ctx.ellipse(2, sitting ? 16 : 28, 11, 4, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+
+    if (sitting) {
+      // Sitting pose
+      ctx.fillStyle = "#3a3530";
+      ctx.fillRect(-7, 4, 5, 10);
+      ctx.fillRect(2, 4, 5, 10);
+
+      // Body (casual clothes)
+      const bodyColor = role === "DJ" ? "#2a4a6a" : role === "TECH" ? "#4a3a2a" : "#3a2a4a";
+      ctx.fillStyle = bodyColor;
+      ctx.beginPath();
+      ctx.roundRect(-9, -16 + breathe * 0.3, 18, 22, 3);
+      ctx.fill();
+
+      // Arms on desk
+      ctx.fillRect(-13, -6 + breathe * 0.3, 5, 12);
+      ctx.fillRect(8, -6 + breathe * 0.3, 5, 12);
+
+      // Hands
+      ctx.fillStyle = "#CCAA88";
+      ctx.beginPath();
+      ctx.arc(-10.5, 8 + breathe * 0.3, 3, 0, Math.PI * 2);
+      ctx.arc(10.5, 8 + breathe * 0.3, 3, 0, Math.PI * 2);
+      ctx.fill();
+    } else {
+      // Standing pose
+      ctx.fillStyle = "#3a3530";
+      ctx.fillRect(-6, 8, 5, 18);
+      ctx.fillRect(1, 8, 5, 18);
+
+      ctx.fillStyle = "#2a2520";
+      ctx.fillRect(-7, 24, 7, 5);
+      ctx.fillRect(0, 24, 7, 5);
+
+      const bodyColor = role === "DJ" ? "#2a4a6a" : role === "TECH" ? "#4a3a2a" : "#3a2a4a";
+      ctx.fillStyle = bodyColor;
+      ctx.beginPath();
+      ctx.roundRect(-10, -20 + breathe * 0.3, 20, 30, 3);
+      ctx.fill();
+
+      ctx.fillRect(-14, -14 + breathe * 0.3, 5, 16);
+      ctx.fillRect(9, -14 + breathe * 0.3, 5, 16);
+
+      ctx.fillStyle = "#CCAA88";
+      ctx.beginPath();
+      ctx.arc(-11.5, 4 + breathe * 0.3, 3, 0, Math.PI * 2);
+      ctx.arc(11.5, 4 + breathe * 0.3, 3, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Neck
+    ctx.fillStyle = "#CCAA88";
+    ctx.fillRect(-3, sitting ? -20 : -24, 6, 5);
+
+    // Head
+    const headY = sitting ? -28 : -32;
+    ctx.fillStyle = "#DDBB99";
+    ctx.beginPath();
+    ctx.ellipse(0, headY + breathe * 0.2, 9, 10, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Hair
+    const hairColor = role === "DJ" ? "#1a1a2a" : role === "TECH" ? "#4a3a2a" : "#2a2a3a";
+    ctx.fillStyle = hairColor;
+    ctx.beginPath();
+    ctx.ellipse(0, headY - 5 + breathe * 0.2, 8, 5, 0, Math.PI, 0);
+    ctx.fill();
+    ctx.fillRect(-8, headY - 3 + breathe * 0.2, 16, 5);
+
+    // Headphones for DJ
+    if (role === "DJ") {
+      ctx.fillStyle = "#2a2a30";
+      ctx.strokeStyle = "#4a4a50";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(0, headY - 4 + breathe * 0.2, 11, Math.PI, 0);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.ellipse(-11, headY + breathe * 0.2, 4, 6, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.ellipse(11, headY + breathe * 0.2, 4, 6, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Eyes
+    ctx.fillStyle = "#FFFFFF";
+    ctx.beginPath();
+    ctx.ellipse(-3, headY + breathe * 0.2, 2, 1.8, 0, 0, Math.PI * 2);
+    ctx.ellipse(3, headY + breathe * 0.2, 2, 1.8, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#3a3020";
+    ctx.beginPath();
+    ctx.arc(-3, headY + breathe * 0.2, 1, 0, Math.PI * 2);
+    ctx.arc(3, headY + breathe * 0.2, 1, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Mouth
+    ctx.strokeStyle = "#AA8877";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(-2, headY + 5 + breathe * 0.2);
+    ctx.lineTo(2, headY + 5 + breathe * 0.2);
+    ctx.stroke();
+
+    // Role label
+    ctx.fillStyle = "#FF88CC";
+    ctx.shadowColor = "#FF88CC";
+    ctx.shadowBlur = 5;
+    ctx.font = "bold 6px Orbitron, monospace";
+    ctx.textAlign = "center";
+    ctx.fillText(role, 0, sitting ? 26 : 42);
+    ctx.shadowBlur = 0;
+
+    ctx.restore();
+  }
+
+  _renderCryoLabVendor(ctx, vendor) {
+    const { x, y, label } = vendor;
+    const t = performance.now() / 1000;
+    const breathe = Math.sin(t * 1.2) * 1;
+    const sway = Math.sin(t * 0.6) * 1;
+
+    ctx.save();
+    ctx.translate(x + sway, y);
+
+    // Shadow
+    ctx.globalAlpha = 0.3;
+    ctx.fillStyle = "#000";
+    ctx.beginPath();
+    ctx.ellipse(2, 30, 12, 4, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+
+    // Legs (winter pants)
+    ctx.fillStyle = "#2a3a4a";
+    ctx.fillRect(-6, 10, 5, 18);
+    ctx.fillRect(1, 10, 5, 18);
+
+    // Winter boots
+    ctx.fillStyle = "#1a2530";
+    ctx.fillRect(-8, 26, 7, 5);
+    ctx.fillRect(1, 26, 7, 5);
+    ctx.fillStyle = "#CCDDEE";
+    ctx.fillRect(-8, 25, 7, 2);
+    ctx.fillRect(1, 25, 7, 2);
+
+    // Body (lab coat over winter sweater)
+    ctx.fillStyle = "#EEFFFF";
+    ctx.beginPath();
+    ctx.roundRect(-12, -18 + breathe * 0.3, 24, 30, 3);
+    ctx.fill();
+    // Lab coat collar
+    ctx.fillStyle = "#DDEEFF";
+    ctx.beginPath();
+    ctx.moveTo(-8, -16 + breathe * 0.3);
+    ctx.lineTo(0, -10 + breathe * 0.3);
+    ctx.lineTo(8, -16 + breathe * 0.3);
+    ctx.closePath();
+    ctx.fill();
+
+    // Arms (lab coat sleeves)
+    ctx.fillStyle = "#EEFFFF";
+    ctx.fillRect(-16, -12 + breathe * 0.3, 5, 16);
+    ctx.fillRect(11, -12 + breathe * 0.3, 5, 16);
+
+    // Gloved hands
+    ctx.fillStyle = "#88BBDD";
+    ctx.beginPath();
+    ctx.arc(-13.5, 6 + breathe * 0.3, 4, 0, Math.PI * 2);
+    ctx.arc(13.5, 6 + breathe * 0.3, 4, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Neck
+    ctx.fillStyle = "#DDCCBB";
+    ctx.fillRect(-3, -22, 6, 5);
+
+    // Head
+    ctx.fillStyle = "#EEDDCC";
+    ctx.beginPath();
+    ctx.ellipse(0, -30 + breathe * 0.2, 10, 11, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Safety goggles
+    ctx.fillStyle = "#88DDFF";
+    ctx.strokeStyle = "#4488AA";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.ellipse(-4, -30 + breathe * 0.2, 4, 3, 0, 0, Math.PI * 2);
+    ctx.ellipse(4, -30 + breathe * 0.2, 4, 3, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    // Goggle band
+    ctx.strokeStyle = "#4488AA";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(0, -32 + breathe * 0.2, 11, Math.PI + 0.3, -0.3);
+    ctx.stroke();
+
+    // Hair (neat, professional)
+    ctx.fillStyle = "#554433";
+    ctx.beginPath();
+    ctx.ellipse(0, -38 + breathe * 0.2, 9, 5, 0, Math.PI, 0);
+    ctx.fill();
+    ctx.fillRect(-9, -36 + breathe * 0.2, 18, 4);
+
+    // Slight smile
+    ctx.strokeStyle = "#AA8877";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.arc(0, -26 + breathe * 0.2, 3, 0.2, Math.PI - 0.2);
+    ctx.stroke();
+
+    // Clipboard
+    ctx.fillStyle = "#2a3a4a";
+    ctx.fillRect(-18, -4 + breathe * 0.3, 8, 12);
+    ctx.fillStyle = "#EEFFFF";
+    ctx.fillRect(-17, -3 + breathe * 0.3, 6, 9);
+    ctx.fillStyle = "#88AACC";
+    ctx.fillRect(-16, -1 + breathe * 0.3, 4, 1);
+    ctx.fillRect(-16, 2 + breathe * 0.3, 4, 1);
+
+    // Name badge
+    ctx.fillStyle = "#4477AA";
+    ctx.fillRect(6, -14 + breathe * 0.3, 12, 8);
+    ctx.fillStyle = "#EEFFFF";
+    ctx.font = "bold 4px monospace";
+    ctx.textAlign = "center";
+    ctx.fillText("DR", 12, -9 + breathe * 0.3);
+
+    // Label
+    ctx.fillStyle = "#AADDFF";
+    ctx.shadowColor = "#66BBFF";
+    ctx.shadowBlur = 8;
+    ctx.font = "bold 7px Orbitron, monospace";
+    ctx.textAlign = "center";
+    ctx.fillText(label, 0, -48 + breathe * 0.2);
+    ctx.shadowBlur = 0;
+
+    ctx.restore();
+  }
+
+  _renderCryoLabCustomer(ctx, customer) {
+    const { x, y, examining, atWorkstation } = customer;
+    const t = performance.now() / 1000;
+    const breathe = Math.sin(t * 1.3 + x * 0.1) * 1;
+    const sway = Math.sin(t * 0.7 + y * 0.1) * 1;
+
+    ctx.save();
+    ctx.translate(x + sway, y);
+
+    // Shadow
+    ctx.globalAlpha = 0.3;
+    ctx.fillStyle = "#000";
+    ctx.beginPath();
+    ctx.ellipse(2, 28, 10, 3, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+
+    // Legs (winter pants)
+    ctx.fillStyle = "#2a3a4a";
+    ctx.fillRect(-5, 8, 4, 16);
+    ctx.fillRect(1, 8, 4, 16);
+
+    // Winter boots
+    ctx.fillStyle = "#1a2530";
+    ctx.fillRect(-6, 22, 6, 5);
+    ctx.fillRect(0, 22, 6, 5);
+
+    // Body (winter jacket)
+    const jacketColor = examining ? "#3a6688" : "#4a5868";
+    ctx.fillStyle = jacketColor;
+    ctx.beginPath();
+    ctx.roundRect(-10, -16 + breathe * 0.3, 20, 26, 3);
+    ctx.fill();
+
+    // Arms
+    ctx.fillRect(-14, -10 + breathe * 0.3, 5, 14);
+    ctx.fillRect(9, -10 + breathe * 0.3, 5, 14);
+
+    // Gloves
+    ctx.fillStyle = "#4488BB";
+    ctx.beginPath();
+    ctx.arc(-11.5, 6 + breathe * 0.3, 3, 0, Math.PI * 2);
+    ctx.arc(11.5, 6 + breathe * 0.3, 3, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Neck with scarf
+    ctx.fillStyle = "#88BBDD";
+    ctx.fillRect(-4, -20, 8, 5);
+
+    // Head
+    ctx.fillStyle = "#EEDDCC";
+    ctx.beginPath();
+    ctx.ellipse(0, -26 + breathe * 0.2, 8, 9, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Beanie
+    ctx.fillStyle = examining ? "#4477AA" : "#5588BB";
+    ctx.beginPath();
+    ctx.ellipse(0, -32 + breathe * 0.2, 9, 5, 0, Math.PI, 0);
+    ctx.fill();
+    ctx.fillRect(-9, -32 + breathe * 0.2, 18, 4);
+
+    // Eyes
+    ctx.fillStyle = "#FFFFFF";
+    ctx.beginPath();
+    ctx.ellipse(-3, -26 + breathe * 0.2, 2, 1.5, 0, 0, Math.PI * 2);
+    ctx.ellipse(3, -26 + breathe * 0.2, 2, 1.5, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#3355AA";
+    ctx.beginPath();
+    ctx.arc(-3, -26 + breathe * 0.2, 0.8, 0, Math.PI * 2);
+    ctx.arc(3, -26 + breathe * 0.2, 0.8, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Activity indicator
+    if (examining) {
+      // Holding sample tube
+      ctx.fillStyle = "#88DDFF";
+      ctx.fillRect(-14, -2 + breathe * 0.3, 4, 10);
+      ctx.fillStyle = "#AAEEFF";
+      ctx.fillRect(-13, 0 + breathe * 0.3, 2, 6);
+    } else if (atWorkstation) {
+      // Looking at screen
+      ctx.fillStyle = "#66BBFF";
+      ctx.font = "bold 5px monospace";
+      ctx.textAlign = "center";
+      ctx.fillText("▪▪▪", 0, -44 + breathe * 0.2);
+    }
 
     ctx.restore();
   }
@@ -5111,107 +5606,480 @@ class Game {
       } // end default restaurant
     } else if (type === 1) {
       // OFFICE
-      // ── Meeting table (center) ───────────────────
-      ctx.fillStyle = "#2a3a4a";
-      ctx.strokeStyle = "#4a6a8a";
-      ctx.lineWidth = 1.5;
-      rr(cx - 58, midY - 26, 116, 52, 4);
-      ctx.fill();
-      ctx.stroke();
-      ctx.fillStyle = "#1a2a3a";
-      rr(cx - 54, midY - 22, 108, 44, 2);
-      ctx.fill();
-      ctx.fillStyle = "#334455";
-      ctx.strokeStyle = "#4466AA";
-      ctx.lineWidth = 1;
-      for (const [ox, oy] of [
-        [-68, -16],
-        [-68, 6],
-        [68, -16],
-        [68, 6],
-        [-24, -34],
-        [24, -34],
-        [-24, 32],
-        [24, 32],
-      ]) {
-        ctx.beginPath();
-        ctx.arc(cx + ox, midY + oy, 9, 0, Math.PI * 2);
+      const isSnowOffice = !!this.map?.config?.snow;
+      const t = performance.now() / 1000;
+
+      if (isSnowOffice) {
+        // ═══ FROZEN TUNDRA: WINTER CORPORATE OFFICE ═══
+
+        // ── Office sign ───────────────────
+        ctx.fillStyle = "#AADDFF";
+        ctx.shadowColor = "#66BBFF";
+        ctx.shadowBlur = 12;
+        ctx.font = "bold 10px Orbitron, monospace";
+        ctx.textAlign = "center";
+        ctx.fillText("❄ FROST CORP OFFICE ❄", cx, topY - 2);
+        ctx.shadowBlur = 0;
+
+        // ── Row of desks with workers (top row) ───────────────────
+        for (let di = 0; di < 3; di++) {
+          const deskX = cx - W * 0.35 + di * W * 0.3;
+          const deskY = topY + 8;
+
+          // Desk
+          ctx.fillStyle = "#1a2a3a";
+          ctx.strokeStyle = "#3a5a7a";
+          ctx.lineWidth = 1.5;
+          rr(deskX - 30, deskY, 60, 32, 3);
+          ctx.fill();
+          ctx.stroke();
+
+          // Computer monitor
+          ctx.fillStyle = "#0a1520";
+          ctx.strokeStyle = "#66BBFF";
+          ctx.lineWidth = 1;
+          rr(deskX - 18, deskY + 2, 36, 24, 2);
+          ctx.fill();
+          ctx.stroke();
+          // Screen glow
+          const screenPulse = Math.sin(t * 2 + di) * 0.2 + 0.8;
+          ctx.fillStyle = `rgba(100,180,255,${0.3 * screenPulse})`;
+          ctx.fillRect(deskX - 16, deskY + 4, 32, 18);
+          // Data on screen
+          ctx.fillStyle = "#88DDFF";
+          ctx.font = "4px monospace";
+          ctx.textAlign = "center";
+          for (let li = 0; li < 3; li++) {
+            ctx.fillText("▓▓▓▓▓▓", deskX, deskY + 8 + li * 5);
+          }
+
+          // Keyboard
+          ctx.fillStyle = "#0c1820";
+          rr(deskX - 14, deskY + 28, 28, 8, 1);
+          ctx.fill();
+          for (let ki = 0; ki < 5; ki++) {
+            ctx.fillStyle = `rgba(100,180,255,${0.25 + Math.sin(t + ki + di) * 0.1})`;
+            ctx.fillRect(deskX - 12 + ki * 5, deskY + 30, 4, 4);
+          }
+
+          // Office chair behind desk
+          ctx.fillStyle = "#2a4050";
+          ctx.strokeStyle = "#4a6070";
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.arc(deskX, deskY + 48, 12, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+          // Chair back
+          ctx.fillStyle = "#3a5060";
+          rr(deskX - 10, deskY + 38, 20, 12, 2);
+          ctx.fill();
+
+          // Worker sitting at desk - more realistic rendering
+          const bobY = Math.sin(t * 0.8 + di * 2) * 1;
+          const breathe = Math.sin(t * 1.2 + di) * 0.5;
+          const workerColors = [
+            { suit: "#3355AA", shirt: "#DDEEFF", hair: "#443322", skin: "#E8D4C4" },
+            { suit: "#4466BB", shirt: "#EEFFEE", hair: "#2a1a10", skin: "#D4C4B4" },
+            { suit: "#5577CC", shirt: "#FFEEDD", hair: "#554433", skin: "#F0E0D0" }
+          ][di];
+
+          // Arms resting on desk
+          ctx.fillStyle = workerColors.suit;
+          ctx.fillRect(deskX - 18, deskY + 26 + bobY, 8, 10);
+          ctx.fillRect(deskX + 10, deskY + 26 + bobY, 8, 10);
+          // Hands on keyboard
+          ctx.fillStyle = workerColors.skin;
+          ctx.beginPath();
+          ctx.arc(deskX - 10, deskY + 32 + bobY, 3, 0, Math.PI * 2);
+          ctx.arc(deskX + 10, deskY + 32 + bobY, 3, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Body/torso (business attire)
+          ctx.fillStyle = workerColors.suit;
+          ctx.beginPath();
+          ctx.moveTo(deskX - 10, deskY + 56 + bobY);
+          ctx.lineTo(deskX - 12, deskY + 40 + breathe);
+          ctx.lineTo(deskX - 8, deskY + 36 + breathe);
+          ctx.lineTo(deskX + 8, deskY + 36 + breathe);
+          ctx.lineTo(deskX + 12, deskY + 40 + breathe);
+          ctx.lineTo(deskX + 10, deskY + 56 + bobY);
+          ctx.closePath();
+          ctx.fill();
+
+          // Collar/shirt visible
+          ctx.fillStyle = workerColors.shirt;
+          ctx.beginPath();
+          ctx.moveTo(deskX - 4, deskY + 38 + breathe);
+          ctx.lineTo(deskX, deskY + 42 + breathe);
+          ctx.lineTo(deskX + 4, deskY + 38 + breathe);
+          ctx.closePath();
+          ctx.fill();
+
+          // Neck
+          ctx.fillStyle = workerColors.skin;
+          ctx.fillRect(deskX - 3, deskY + 32 + bobY, 6, 6);
+
+          // Head - more detailed
+          ctx.fillStyle = workerColors.skin;
+          ctx.beginPath();
+          ctx.ellipse(deskX, deskY + 28 + bobY, 8, 9, 0, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Ears
+          ctx.beginPath();
+          ctx.ellipse(deskX - 8, deskY + 28 + bobY, 2, 3, 0, 0, Math.PI * 2);
+          ctx.ellipse(deskX + 8, deskY + 28 + bobY, 2, 3, 0, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Hair - varied styles
+          ctx.fillStyle = workerColors.hair;
+          if (di === 0) {
+            // Short neat hair
+            ctx.beginPath();
+            ctx.ellipse(deskX, deskY + 22 + bobY, 8, 5, 0, Math.PI, 0);
+            ctx.fill();
+            ctx.fillRect(deskX - 7, deskY + 20 + bobY, 14, 5);
+          } else if (di === 1) {
+            // Side-parted hair
+            ctx.beginPath();
+            ctx.ellipse(deskX + 1, deskY + 21 + bobY, 9, 6, 0.1, Math.PI, 0);
+            ctx.fill();
+            ctx.fillRect(deskX - 7, deskY + 21 + bobY, 15, 4);
+          } else {
+            // Longer hair
+            ctx.beginPath();
+            ctx.ellipse(deskX, deskY + 21 + bobY, 9, 6, 0, Math.PI, 0);
+            ctx.fill();
+            ctx.fillRect(deskX - 8, deskY + 21 + bobY, 16, 6);
+            // Side hair
+            ctx.fillRect(deskX - 9, deskY + 25 + bobY, 3, 6);
+            ctx.fillRect(deskX + 6, deskY + 25 + bobY, 3, 6);
+          }
+
+          // Eyes
+          ctx.fillStyle = "#FFFFFF";
+          ctx.beginPath();
+          ctx.ellipse(deskX - 3, deskY + 27 + bobY, 2.5, 2, 0, 0, Math.PI * 2);
+          ctx.ellipse(deskX + 3, deskY + 27 + bobY, 2.5, 2, 0, 0, Math.PI * 2);
+          ctx.fill();
+          // Pupils - looking at screen
+          ctx.fillStyle = "#3a4a5a";
+          ctx.beginPath();
+          ctx.arc(deskX - 3, deskY + 27 + bobY, 1, 0, Math.PI * 2);
+          ctx.arc(deskX + 3, deskY + 27 + bobY, 1, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Eyebrows
+          ctx.strokeStyle = workerColors.hair;
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(deskX - 5, deskY + 24 + bobY);
+          ctx.lineTo(deskX - 1, deskY + 23 + bobY);
+          ctx.moveTo(deskX + 1, deskY + 23 + bobY);
+          ctx.lineTo(deskX + 5, deskY + 24 + bobY);
+          ctx.stroke();
+
+          // Nose (subtle)
+          ctx.strokeStyle = "rgba(150,120,100,0.4)";
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(deskX, deskY + 28 + bobY);
+          ctx.lineTo(deskX, deskY + 31 + bobY);
+          ctx.stroke();
+
+          // Mouth - focused expression
+          ctx.strokeStyle = "#AA8877";
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(deskX - 2, deskY + 33 + bobY);
+          ctx.lineTo(deskX + 2, deskY + 33 + bobY);
+          ctx.stroke();
+        }
+
+        // ── Central meeting area with workers ───────────────────
+        // Table
+        ctx.fillStyle = "#1a2838";
+        ctx.strokeStyle = "#3a5868";
+        ctx.lineWidth = 1.5;
+        rr(cx - 50, midY - 12, 100, 40, 4);
         ctx.fill();
         ctx.stroke();
-      }
-      for (let li = 0; li < 3; li++) {
-        ctx.fillStyle = "#223344";
-        ctx.fillRect(cx - 42 + li * 44, midY - 14, 26, 20);
-        ctx.fillStyle = "#1155AA";
-        ctx.fillRect(cx - 40 + li * 44, midY - 12, 22, 16);
-      }
 
-      // ── Whiteboard (top wall) ────────────────────
-      ctx.fillStyle = "#EEFFEE";
-      ctx.strokeStyle = "#44AA44";
-      ctx.lineWidth = 1.5;
-      rr(cx - 46, topY + 4, 92, 44, 2);
-      ctx.fill();
-      ctx.stroke();
-      ctx.fillStyle = "#225522";
-      ctx.font = "bold 6px monospace";
-      ctx.textAlign = "center";
-      ctx.fillText("QUARTERLY REPORT", cx, topY + 14);
-      ctx.strokeStyle = "#338833";
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(cx - 38, topY + 20);
-      ctx.lineTo(cx + 38, topY + 20);
-      ctx.stroke();
-      ctx.strokeStyle = "#66AA66";
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.moveTo(cx - 32, topY + 42);
-      ctx.lineTo(cx - 18, topY + 30);
-      ctx.lineTo(cx - 4, topY + 36);
-      ctx.lineTo(cx + 12, topY + 26);
-      ctx.lineTo(cx + 28, topY + 20);
-      ctx.stroke();
+        // Documents on table
+        ctx.fillStyle = "#EEFFFF";
+        ctx.fillRect(cx - 30, midY - 6, 18, 24);
+        ctx.fillRect(cx + 10, midY - 4, 18, 24);
 
-      // ── Corner desk + monitor ────────────────────
-      ctx.fillStyle = "#2a3a4a";
-      ctx.strokeStyle = "#4a5a6a";
-      ctx.lineWidth = 1;
-      rr(cx + W * 0.3, topY + 86, 46, 40, 3);
-      ctx.fill();
-      ctx.stroke();
-      ctx.fillStyle = "#111118";
-      ctx.strokeStyle = "#44EEFF";
-      ctx.lineWidth = 1;
-      rr(cx + W * 0.3 + 7, topY + 88, 32, 22, 2);
-      ctx.fill();
-      ctx.stroke();
-      ctx.fillStyle = "#002244";
-      ctx.fillRect(cx + W * 0.3 + 9, topY + 90, 28, 18);
-      ctx.fillStyle = "#0055FF";
-      ctx.fillRect(cx + W * 0.3 + 11, topY + 92, 24, 7);
+        // Workers around meeting table - more realistic
+        const meetingWorkers = [
+          { x: cx - 60, y: midY + 6, suit: "#4477AA", shirt: "#DDEEFF", hair: "#3a2a1a", skin: "#E8D4C4", isWoman: false },
+          { x: cx + 60, y: midY + 6, suit: "#5588BB", shirt: "#EEDDFF", hair: "#554433", skin: "#D4C4B4", isWoman: true },
+          { x: cx - 20, y: midY + 38, suit: "#3366AA", shirt: "#EEFFEE", hair: "#2a2a2a", skin: "#F0E0D0", isWoman: false },
+          { x: cx + 20, y: midY + 38, suit: "#4477BB", shirt: "#FFEEDD", hair: "#443322", skin: "#E0D0C0", isWoman: true },
+        ];
+        for (let wi = 0; wi < meetingWorkers.length; wi++) {
+          const w = meetingWorkers[wi];
+          const wb = Math.sin(t * 1.1 + wi * 1.5) * 0.5;
 
-      // Plant corner
-      ctx.fillStyle = "#3a2810";
-      ctx.fillRect(cx - W * 0.37, topY + 90, 14, 10);
-      ctx.fillStyle = "#225522";
-      ctx.shadowColor = "#44FF44";
-      ctx.shadowBlur = 4;
-      for (let li = 0; li < 4; li++) {
-        const la = (li / 4) * Math.PI * 2;
-        ctx.beginPath();
-        ctx.ellipse(
-          cx - W * 0.37 + 7 + Math.cos(la) * 9,
-          topY + 88 + Math.sin(la) * 4,
-          7,
-          4,
-          la,
-          0,
-          Math.PI * 2,
-        );
+          // Chair
+          ctx.fillStyle = "#2a4050";
+          ctx.beginPath();
+          ctx.arc(w.x, w.y + 4, 10, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#3a5060";
+          rr(w.x - 8, w.y - 4, 16, 10, 2);
+          ctx.fill();
+
+          // Arms on table
+          ctx.fillStyle = w.suit;
+          ctx.fillRect(w.x - 14, w.y - 10 + wb, 6, 8);
+          ctx.fillRect(w.x + 8, w.y - 10 + wb, 6, 8);
+          // Hands
+          ctx.fillStyle = w.skin;
+          ctx.beginPath();
+          ctx.arc(w.x - 8, w.y - 6 + wb, 3, 0, Math.PI * 2);
+          ctx.arc(w.x + 8, w.y - 6 + wb, 3, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Body
+          ctx.fillStyle = w.suit;
+          ctx.beginPath();
+          ctx.moveTo(w.x - 8, w.y + 4);
+          ctx.lineTo(w.x - 10, w.y - 12 + wb);
+          ctx.lineTo(w.x - 6, w.y - 16 + wb);
+          ctx.lineTo(w.x + 6, w.y - 16 + wb);
+          ctx.lineTo(w.x + 10, w.y - 12 + wb);
+          ctx.lineTo(w.x + 8, w.y + 4);
+          ctx.closePath();
+          ctx.fill();
+
+          // Collar
+          ctx.fillStyle = w.shirt;
+          ctx.beginPath();
+          ctx.moveTo(w.x - 3, w.y - 14 + wb);
+          ctx.lineTo(w.x, w.y - 10 + wb);
+          ctx.lineTo(w.x + 3, w.y - 14 + wb);
+          ctx.closePath();
+          ctx.fill();
+
+          // Neck
+          ctx.fillStyle = w.skin;
+          ctx.fillRect(w.x - 2, w.y - 20 + wb, 4, 5);
+
+          // Head
+          ctx.beginPath();
+          ctx.ellipse(w.x, w.y - 26 + wb, 7, 8, 0, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Hair
+          ctx.fillStyle = w.hair;
+          if (w.isWoman) {
+            // Longer hair for women
+            ctx.beginPath();
+            ctx.ellipse(w.x, w.y - 31 + wb, 8, 5, 0, Math.PI, 0);
+            ctx.fill();
+            ctx.fillRect(w.x - 8, w.y - 31 + wb, 16, 8);
+            // Side hair
+            ctx.fillRect(w.x - 9, w.y - 26 + wb, 3, 10);
+            ctx.fillRect(w.x + 6, w.y - 26 + wb, 3, 10);
+          } else {
+            // Short hair for men
+            ctx.beginPath();
+            ctx.ellipse(w.x, w.y - 31 + wb, 7, 4, 0, Math.PI, 0);
+            ctx.fill();
+            ctx.fillRect(w.x - 6, w.y - 30 + wb, 12, 4);
+          }
+
+          // Eyes
+          ctx.fillStyle = "#FFFFFF";
+          ctx.beginPath();
+          ctx.ellipse(w.x - 2.5, w.y - 26 + wb, 2, 1.5, 0, 0, Math.PI * 2);
+          ctx.ellipse(w.x + 2.5, w.y - 26 + wb, 2, 1.5, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#3a4a5a";
+          ctx.beginPath();
+          ctx.arc(w.x - 2.5, w.y - 26 + wb, 0.8, 0, Math.PI * 2);
+          ctx.arc(w.x + 2.5, w.y - 26 + wb, 0.8, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Mouth
+          ctx.strokeStyle = "#AA8877";
+          ctx.lineWidth = 0.8;
+          ctx.beginPath();
+          if (wi % 2 === 0) {
+            // Slight smile
+            ctx.arc(w.x, w.y - 21 + wb, 2, 0.2, Math.PI - 0.2);
+          } else {
+            // Neutral
+            ctx.moveTo(w.x - 2, w.y - 21 + wb);
+            ctx.lineTo(w.x + 2, w.y - 21 + wb);
+          }
+          ctx.stroke();
+        }
+
+        // ── Whiteboard (top wall - ice themed) ───────────────────
+        ctx.fillStyle = "#DDEEFF";
+        ctx.strokeStyle = "#66AACC";
+        ctx.lineWidth = 1.5;
+        rr(cx + W * 0.25, topY + 4, 60, 50, 2);
         ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = "#446688";
+        ctx.font = "bold 5px monospace";
+        ctx.textAlign = "center";
+        ctx.fillText("Q4 TARGETS", cx + W * 0.25 + 30, topY + 14);
+        // Chart
+        ctx.strokeStyle = "#5588AA";
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(cx + W * 0.25 + 8, topY + 46);
+        ctx.lineTo(cx + W * 0.25 + 18, topY + 32);
+        ctx.lineTo(cx + W * 0.25 + 30, topY + 38);
+        ctx.lineTo(cx + W * 0.25 + 42, topY + 24);
+        ctx.lineTo(cx + W * 0.25 + 52, topY + 20);
+        ctx.stroke();
+
+        // ── Water cooler (left corner) ───────────────────
+        ctx.fillStyle = "#88CCFF";
+        ctx.strokeStyle = "#66AADD";
+        ctx.lineWidth = 1;
+        rr(cx - W * 0.42, topY + 10, 20, 36, 3);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = "#AADDFF";
+        ctx.beginPath();
+        ctx.ellipse(cx - W * 0.42 + 10, topY + 8, 8, 4, 0, 0, Math.PI * 2);
+        ctx.fill();
+        // Water inside
+        ctx.fillStyle = "rgba(100,200,255,0.4)";
+        ctx.fillRect(cx - W * 0.42 + 3, topY + 20, 14, 22);
+
+        // ── Coffee mug on desk (detail) ───────────────────
+        ctx.fillStyle = "#FFFFFF";
+        ctx.beginPath();
+        ctx.arc(cx - W * 0.35 + 20, topY + 26, 5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#6B4423";
+        ctx.beginPath();
+        ctx.arc(cx - W * 0.35 + 20, topY + 26, 3, 0, Math.PI * 2);
+        ctx.fill();
+
+        // ── Snowflake particles ───────────────────
+        for (let i = 0; i < 6; i++) {
+          const px2 = W * 0.15 + (t * 12 + i * 45) % (W * 0.7);
+          const py2 = topY + 20 + Math.sin(t * 0.6 + i * 2) * 25 + i * 12;
+          const alpha = Math.sin(t * 1.5 + i) * 0.25 + 0.35;
+          ctx.fillStyle = `rgba(200,230,255,${alpha})`;
+          ctx.beginPath();
+          ctx.arc(px2, py2, 1.5, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+      } else {
+        // ═══ DEFAULT OFFICE ═══
+        // ── Meeting table (center) ───────────────────
+        ctx.fillStyle = "#2a3a4a";
+        ctx.strokeStyle = "#4a6a8a";
+        ctx.lineWidth = 1.5;
+        rr(cx - 58, midY - 26, 116, 52, 4);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = "#1a2a3a";
+        rr(cx - 54, midY - 22, 108, 44, 2);
+        ctx.fill();
+        ctx.fillStyle = "#334455";
+        ctx.strokeStyle = "#4466AA";
+        ctx.lineWidth = 1;
+        for (const [ox, oy] of [
+          [-68, -16],
+          [-68, 6],
+          [68, -16],
+          [68, 6],
+          [-24, -34],
+          [24, -34],
+          [-24, 32],
+          [24, 32],
+        ]) {
+          ctx.beginPath();
+          ctx.arc(cx + ox, midY + oy, 9, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+        }
+        for (let li = 0; li < 3; li++) {
+          ctx.fillStyle = "#223344";
+          ctx.fillRect(cx - 42 + li * 44, midY - 14, 26, 20);
+          ctx.fillStyle = "#1155AA";
+          ctx.fillRect(cx - 40 + li * 44, midY - 12, 22, 16);
+        }
+
+        // ── Whiteboard (top wall) ────────────────────
+        ctx.fillStyle = "#EEFFEE";
+        ctx.strokeStyle = "#44AA44";
+        ctx.lineWidth = 1.5;
+        rr(cx - 46, topY + 4, 92, 44, 2);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = "#225522";
+        ctx.font = "bold 6px monospace";
+        ctx.textAlign = "center";
+        ctx.fillText("QUARTERLY REPORT", cx, topY + 14);
+        ctx.strokeStyle = "#338833";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(cx - 38, topY + 20);
+        ctx.lineTo(cx + 38, topY + 20);
+        ctx.stroke();
+        ctx.strokeStyle = "#66AA66";
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(cx - 32, topY + 42);
+        ctx.lineTo(cx - 18, topY + 30);
+        ctx.lineTo(cx - 4, topY + 36);
+        ctx.lineTo(cx + 12, topY + 26);
+        ctx.lineTo(cx + 28, topY + 20);
+        ctx.stroke();
+
+        // ── Corner desk + monitor ────────────────────
+        ctx.fillStyle = "#2a3a4a";
+        ctx.strokeStyle = "#4a5a6a";
+        ctx.lineWidth = 1;
+        rr(cx + W * 0.3, topY + 86, 46, 40, 3);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = "#111118";
+        ctx.strokeStyle = "#44EEFF";
+        ctx.lineWidth = 1;
+        rr(cx + W * 0.3 + 7, topY + 88, 32, 22, 2);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = "#002244";
+        ctx.fillRect(cx + W * 0.3 + 9, topY + 90, 28, 18);
+        ctx.fillStyle = "#0055FF";
+        ctx.fillRect(cx + W * 0.3 + 11, topY + 92, 24, 7);
+
+        // Plant corner
+        ctx.fillStyle = "#3a2810";
+        ctx.fillRect(cx - W * 0.37, topY + 90, 14, 10);
+        ctx.fillStyle = "#225522";
+        ctx.shadowColor = "#44FF44";
+        ctx.shadowBlur = 4;
+        for (let li = 0; li < 4; li++) {
+          const la = (li / 4) * Math.PI * 2;
+          ctx.beginPath();
+          ctx.ellipse(
+            cx - W * 0.37 + 7 + Math.cos(la) * 9,
+            topY + 88 + Math.sin(la) * 4,
+            7,
+            4,
+            la,
+            0,
+            Math.PI * 2,
+          );
+          ctx.fill();
+        }
+        ctx.shadowBlur = 0;
       }
-      ctx.shadowBlur = 0;
     } else if (type === 2) {
       // HOTEL
       // ── Reception desk ───────────────────────────
@@ -6972,6 +7840,357 @@ class Game {
         ctx.fillRect(cx-60, 4, 120, 6);
         ctx.strokeStyle = "#aaaaaa"; ctx.lineWidth = 1;
         ctx.strokeRect(cx-60, 4, 120, 6);
+
+      } else if (!!this.map?.config?.snow) {
+        // ═══ FROZEN TUNDRA: FROST PHARMACY ═══
+        const t = performance.now() / 1000;
+
+        // ── Room sign (top) ──────────────────────────────
+        ctx.fillStyle = "#AADDFF";
+        ctx.shadowColor = "#66BBFF";
+        ctx.shadowBlur = 12;
+        ctx.font = "bold 11px Orbitron, monospace";
+        ctx.textAlign = "center";
+        ctx.fillText("❄ FROST PHARMACY ❄", cx, topY - 4);
+        ctx.shadowBlur = 0;
+
+        // ── Medicine shelves (left side) ────────────────
+        for (let row = 0; row < 3; row++) {
+          const shelfY = topY + 8 + row * 36;
+          const shelfX = W * 0.05;
+          const shelfW = W * 0.35;
+
+          // Shelf backing (frosted white)
+          ctx.fillStyle = "#E8F4FF";
+          ctx.strokeStyle = "#AACCDD";
+          ctx.lineWidth = 1.5;
+          rr(shelfX, shelfY, shelfW, 30, 3);
+          ctx.fill();
+          ctx.stroke();
+
+          // Shelf dividers
+          ctx.fillStyle = "#CCDDEE";
+          ctx.fillRect(shelfX + 2, shelfY + 14, shelfW - 4, 2);
+
+          // Medicine bottles on shelf
+          const medicineColors = ["#FF6666", "#6688FF", "#66CC88", "#FFAA55", "#AA66FF", "#66DDDD"];
+          for (let mi = 0; mi < 6; mi++) {
+            const mx = shelfX + 8 + mi * (shelfW - 16) / 6;
+            const mc = medicineColors[(row + mi) % medicineColors.length];
+
+            // Bottle body
+            ctx.fillStyle = mc;
+            const bH = 8 + (mi % 3) * 3;
+            ctx.beginPath();
+            ctx.roundRect(mx, shelfY + 2, 12, bH, 2);
+            ctx.fill();
+            // Bottle cap
+            ctx.fillStyle = "#FFFFFF";
+            ctx.fillRect(mx + 2, shelfY + 1, 8, 3);
+            // Label
+            ctx.fillStyle = "#FFFFFF";
+            ctx.fillRect(mx + 1, shelfY + bH - 4, 10, 4);
+
+            // Lower shelf: pill boxes
+            ctx.fillStyle = mc;
+            ctx.globalAlpha = 0.8;
+            rr(mx, shelfY + 17, 14, 10, 2);
+            ctx.fill();
+            ctx.globalAlpha = 1;
+            // Cross on box
+            ctx.fillStyle = "#FFFFFF";
+            ctx.fillRect(mx + 5, shelfY + 19, 4, 1);
+            ctx.fillRect(mx + 6, shelfY + 18, 2, 3);
+          }
+        }
+
+        // ── Pharmacy counter (center) ───────────────────
+        ctx.fillStyle = "#E0F0FF";
+        ctx.strokeStyle = "#88AACC";
+        ctx.lineWidth = 2;
+        rr(cx - 60, midY - 10, 120, 36, 4);
+        ctx.fill();
+        ctx.stroke();
+
+        // Counter top (clean white)
+        ctx.fillStyle = "#F8FCFF";
+        ctx.fillRect(cx - 58, midY - 8, 116, 8);
+
+        // Cash register
+        ctx.fillStyle = "#2a3a4a";
+        rr(cx + 20, midY - 6, 28, 20, 2);
+        ctx.fill();
+        ctx.fillStyle = "#66BBFF";
+        ctx.fillRect(cx + 24, midY - 2, 20, 10);
+        ctx.fillStyle = "#AADDFF";
+        ctx.font = "bold 5px monospace";
+        ctx.textAlign = "center";
+        ctx.fillText("$$$", cx + 34, midY + 4);
+
+        // Prescription pad on counter
+        ctx.fillStyle = "#FFFFFF";
+        ctx.fillRect(cx - 40, midY - 4, 24, 18);
+        ctx.fillStyle = "#88AACC";
+        for (let li = 0; li < 4; li++) {
+          ctx.fillRect(cx - 38, midY + li * 4, 20, 1);
+        }
+        ctx.fillStyle = "#6688AA";
+        ctx.font = "bold 4px monospace";
+        ctx.fillText("Rx", cx - 28, midY + 2);
+
+        // ── Pharmacist in white lab coat ────────────────
+        const pharmacistX = cx;
+        const pharmacistY = midY - 40;
+        const breathe = Math.sin(t * 1.2) * 1;
+        const sway = Math.sin(t * 0.5) * 0.5;
+
+        ctx.save();
+        ctx.translate(pharmacistX + sway, pharmacistY);
+
+        // Shadow
+        ctx.globalAlpha = 0.25;
+        ctx.fillStyle = "#000";
+        ctx.beginPath();
+        ctx.ellipse(2, 50, 14, 4, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+
+        // Legs (dark pants)
+        ctx.fillStyle = "#2a3a4a";
+        ctx.fillRect(-6, 32, 5, 16);
+        ctx.fillRect(1, 32, 5, 16);
+
+        // Shoes
+        ctx.fillStyle = "#1a2530";
+        ctx.fillRect(-8, 46, 7, 5);
+        ctx.fillRect(1, 46, 7, 5);
+
+        // Body (white lab coat)
+        ctx.fillStyle = "#FFFFFF";
+        ctx.beginPath();
+        ctx.roundRect(-14, 2 + breathe * 0.3, 28, 32, 3);
+        ctx.fill();
+        // Coat buttons
+        ctx.fillStyle = "#CCDDEE";
+        ctx.beginPath();
+        ctx.arc(0, 12 + breathe * 0.3, 2, 0, Math.PI * 2);
+        ctx.arc(0, 20 + breathe * 0.3, 2, 0, Math.PI * 2);
+        ctx.arc(0, 28 + breathe * 0.3, 2, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Lab coat collar
+        ctx.fillStyle = "#EEFFFF";
+        ctx.beginPath();
+        ctx.moveTo(-10, 4 + breathe * 0.3);
+        ctx.lineTo(0, 10 + breathe * 0.3);
+        ctx.lineTo(10, 4 + breathe * 0.3);
+        ctx.lineTo(8, 2 + breathe * 0.3);
+        ctx.lineTo(0, 6 + breathe * 0.3);
+        ctx.lineTo(-8, 2 + breathe * 0.3);
+        ctx.closePath();
+        ctx.fill();
+
+        // Shirt underneath (light blue)
+        ctx.fillStyle = "#DDEEFF";
+        ctx.beginPath();
+        ctx.moveTo(-4, 6 + breathe * 0.3);
+        ctx.lineTo(0, 12 + breathe * 0.3);
+        ctx.lineTo(4, 6 + breathe * 0.3);
+        ctx.closePath();
+        ctx.fill();
+
+        // Arms (lab coat sleeves)
+        ctx.fillStyle = "#FFFFFF";
+        ctx.fillRect(-18, 6 + breathe * 0.3, 5, 18);
+        ctx.fillRect(13, 6 + breathe * 0.3, 5, 18);
+
+        // Hands (holding clipboard)
+        ctx.fillStyle = "#E8D4C4";
+        ctx.beginPath();
+        ctx.arc(-15.5, 26 + breathe * 0.3, 4, 0, Math.PI * 2);
+        ctx.arc(15.5, 26 + breathe * 0.3, 4, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Clipboard in left hand
+        ctx.fillStyle = "#3a4a5a";
+        ctx.fillRect(-22, 18 + breathe * 0.3, 10, 14);
+        ctx.fillStyle = "#FFFFFF";
+        ctx.fillRect(-21, 19 + breathe * 0.3, 8, 11);
+        ctx.fillStyle = "#88AACC";
+        ctx.fillRect(-20, 21 + breathe * 0.3, 6, 1);
+        ctx.fillRect(-20, 24 + breathe * 0.3, 6, 1);
+        ctx.fillRect(-20, 27 + breathe * 0.3, 4, 1);
+
+        // Neck
+        ctx.fillStyle = "#E8D4C4";
+        ctx.fillRect(-3, -4, 6, 7);
+
+        // Head
+        ctx.fillStyle = "#EEDDCC";
+        ctx.beginPath();
+        ctx.ellipse(0, -12 + breathe * 0.2, 10, 11, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Ears
+        ctx.beginPath();
+        ctx.ellipse(-10, -12 + breathe * 0.2, 2, 3, 0, 0, Math.PI * 2);
+        ctx.ellipse(10, -12 + breathe * 0.2, 2, 3, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Hair (professional, neat)
+        ctx.fillStyle = "#554433";
+        ctx.beginPath();
+        ctx.ellipse(0, -20 + breathe * 0.2, 9, 5, 0, Math.PI, 0);
+        ctx.fill();
+        ctx.fillRect(-9, -18 + breathe * 0.2, 18, 5);
+
+        // Eyes
+        ctx.fillStyle = "#FFFFFF";
+        ctx.beginPath();
+        ctx.ellipse(-4, -12 + breathe * 0.2, 3, 2.5, 0, 0, Math.PI * 2);
+        ctx.ellipse(4, -12 + breathe * 0.2, 3, 2.5, 0, 0, Math.PI * 2);
+        ctx.fill();
+        // Pupils
+        ctx.fillStyle = "#4477AA";
+        ctx.beginPath();
+        ctx.arc(-4, -12 + breathe * 0.2, 1.2, 0, Math.PI * 2);
+        ctx.arc(4, -12 + breathe * 0.2, 1.2, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Glasses
+        ctx.strokeStyle = "#6688AA";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.ellipse(-4, -12 + breathe * 0.2, 4.5, 3.5, 0, 0, Math.PI * 2);
+        ctx.ellipse(4, -12 + breathe * 0.2, 4.5, 3.5, 0, 0, Math.PI * 2);
+        ctx.stroke();
+        // Bridge
+        ctx.beginPath();
+        ctx.moveTo(-0.5, -12 + breathe * 0.2);
+        ctx.lineTo(0.5, -12 + breathe * 0.2);
+        ctx.stroke();
+
+        // Nose (subtle)
+        ctx.strokeStyle = "rgba(0,0,0,0.15)";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(0, -10 + breathe * 0.2);
+        ctx.lineTo(0, -6 + breathe * 0.2);
+        ctx.stroke();
+
+        // Friendly smile
+        ctx.strokeStyle = "#AA8877";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.arc(0, -6 + breathe * 0.2, 3, 0.2, Math.PI - 0.2);
+        ctx.stroke();
+
+        // Name badge
+        ctx.fillStyle = "#4488AA";
+        ctx.fillRect(8, 8 + breathe * 0.3, 14, 10);
+        ctx.fillStyle = "#FFFFFF";
+        ctx.font = "bold 4px monospace";
+        ctx.textAlign = "center";
+        ctx.fillText("DR.", 15, 13 + breathe * 0.3);
+        ctx.fillText("SNOW", 15, 17 + breathe * 0.3);
+
+        // Stethoscope around neck
+        ctx.strokeStyle = "#333";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(0, 6 + breathe * 0.3, 8, 0.3, Math.PI - 0.3);
+        ctx.stroke();
+        // Stethoscope ends
+        ctx.fillStyle = "#444";
+        ctx.beginPath();
+        ctx.arc(-6, 10 + breathe * 0.3, 3, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Label above
+        ctx.fillStyle = "#AADDFF";
+        ctx.shadowColor = "#66BBFF";
+        ctx.shadowBlur = 8;
+        ctx.font = "bold 7px Orbitron, monospace";
+        ctx.textAlign = "center";
+        ctx.fillText("DR. SNOW", 0, -30 + breathe * 0.2);
+        ctx.shadowBlur = 0;
+
+        ctx.restore();
+
+        // ── Display cases (right side) ──────────────────
+        const displayItems = [
+          { x: W * 0.68, y: topY + 24, label: "COLD MEDS", color: "#66BBFF" },
+          { x: W * 0.84, y: topY + 24, label: "VITAMINS", color: "#FFAA55" },
+          { x: W * 0.68, y: topY + 68, label: "BANDAGES", color: "#FFFFFF" },
+          { x: W * 0.84, y: topY + 68, label: "FIRST AID", color: "#FF6666" },
+        ];
+        for (const item of displayItems) {
+          ctx.fillStyle = "#E8F4FF";
+          ctx.strokeStyle = "#AACCDD";
+          ctx.lineWidth = 1.5;
+          rr(item.x - 26, item.y - 14, 52, 36, 4);
+          ctx.fill();
+          ctx.stroke();
+
+          // Item inside
+          ctx.fillStyle = item.color;
+          ctx.globalAlpha = 0.9;
+          ctx.beginPath();
+          ctx.ellipse(item.x, item.y + 2, 14, 10, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.globalAlpha = 1;
+
+          // Cross on medical items
+          if (item.label === "FIRST AID") {
+            ctx.fillStyle = "#FFFFFF";
+            ctx.fillRect(item.x - 1, item.y - 3, 2, 10);
+            ctx.fillRect(item.x - 4, item.y, 8, 2);
+          }
+
+          // Label
+          ctx.fillStyle = "#446688";
+          ctx.font = "bold 5px monospace";
+          ctx.textAlign = "center";
+          ctx.fillText(item.label, item.x, item.y + 18);
+        }
+
+        // ── Pharmacy cross emblem (wall) ────────────────
+        const crossX2 = W * 0.76;
+        const crossY2 = midY + 30;
+        ctx.fillStyle = "#22AA66";
+        ctx.shadowColor = "#44DD88";
+        ctx.shadowBlur = 12;
+        ctx.fillRect(crossX2 - 3, crossY2 - 12, 6, 24);
+        ctx.fillRect(crossX2 - 12, crossY2 - 3, 24, 6);
+        ctx.shadowBlur = 0;
+
+        // ── Waiting chairs (bottom) ─────────────────────
+        for (let ci = 0; ci < 3; ci++) {
+          const chairX = cx - 60 + ci * 60;
+          const chairY = midY + 50;
+          ctx.fillStyle = "#DDEEFF";
+          ctx.strokeStyle = "#AABBCC";
+          ctx.lineWidth = 1;
+          rr(chairX - 12, chairY, 24, 16, 3);
+          ctx.fill();
+          ctx.stroke();
+          // Back
+          ctx.fillStyle = "#CCDDEF";
+          rr(chairX - 10, chairY - 12, 20, 14, 3);
+          ctx.fill();
+          ctx.stroke();
+        }
+
+        // ── Ice/frost particles ─────────────────────────
+        for (let pi = 0; pi < 6; pi++) {
+          const px2 = W * 0.15 + (t * 10 + pi * 55) % (W * 0.7);
+          const py2 = topY + 30 + Math.sin(t * 0.8 + pi * 2) * 25 + pi * 10;
+          const alpha = Math.sin(t * 1.5 + pi) * 0.2 + 0.35;
+          ctx.fillStyle = `rgba(180,220,255,${alpha})`;
+          ctx.beginPath();
+          ctx.arc(px2, py2, 1.5, 0, Math.PI * 2);
+          ctx.fill();
+        }
 
       } else {
         // ── Default pharmacy (non-galactica) ────────────
@@ -9716,10 +10935,174 @@ class Game {
       ctx.restore();
       }
     } else if (type === 13) {
-      // TECH LAB / WASTELAND TECH SHOP
+      // TECH LAB / WASTELAND TECH SHOP / FROZEN TUNDRA CRYO LAB
       const isTechShop = room.isTechShop;
+      const isSnowTech = !!this.map?.config?.snow;
 
-      if (isTechShop) {
+      if (isSnowTech) {
+        // ═══ FROZEN TUNDRA: CRYO RESEARCH LAB ═══
+        const t = performance.now() / 1000;
+
+        // ── Lab sign ───────────────────
+        ctx.fillStyle = "#AADDFF";
+        ctx.shadowColor = "#66BBFF";
+        ctx.shadowBlur = 15;
+        ctx.font = "bold 12px Orbitron, monospace";
+        ctx.textAlign = "center";
+        ctx.fillText("❄ CRYO RESEARCH LAB ❄", cx, topY - 4);
+        ctx.shadowBlur = 0;
+
+        // ── Main cryo chamber bank (top) ───────────────────
+        ctx.fillStyle = "#081420";
+        ctx.strokeStyle = "#66BBFF";
+        ctx.lineWidth = 1.5;
+        rr(cx - W * 0.44, topY + 4, W * 0.88, 44, 3);
+        ctx.fill();
+        ctx.stroke();
+        // Cryo units
+        for (let si = 0; si < 5; si++) {
+          const sx2 = cx - W * 0.4 + si * ((W * 0.8) / 4.5);
+          ctx.fillStyle = "#0c1825";
+          rr(sx2 - 14, topY + 6, 28, 40, 2);
+          ctx.fill();
+          // Ice frost lines
+          const pulse = Math.sin(t * 1.5 + si) * 0.3 + 0.7;
+          ctx.fillStyle = `rgba(100,180,255,${0.2 * pulse})`;
+          ctx.fillRect(sx2 - 12, topY + 8, 24, 4);
+          ctx.fillRect(sx2 - 12, topY + 16, 24, 4);
+          ctx.fillRect(sx2 - 12, topY + 24, 24, 4);
+          // Status lights - ice blue
+          ctx.fillStyle = ["#66BBFF", "#88DDFF", "#AADDFF", "#66CCFF", "#88EEFF"][si];
+          ctx.shadowColor = ctx.fillStyle;
+          ctx.shadowBlur = 6;
+          ctx.beginPath();
+          ctx.arc(sx2 + 10, topY + 40, 3, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.shadowBlur = 0;
+        }
+
+        // ── Holographic ice workstation (center) ─────────
+        ctx.fillStyle = "#081015";
+        ctx.strokeStyle = "#4488BB";
+        ctx.lineWidth = 1.5;
+        rr(cx - 36, midY - 14, 72, 36, 4);
+        ctx.fill();
+        ctx.stroke();
+        // Hologram display - ice crystal projection
+        ctx.fillStyle = "rgba(100,180,255,0.12)";
+        ctx.strokeStyle = "#66BBFF88";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(cx - 20, midY - 10);
+        ctx.lineTo(cx + 20, midY - 10);
+        ctx.lineTo(cx + 28, midY - 28);
+        ctx.lineTo(cx - 28, midY - 28);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        // Snowflake hologram
+        ctx.fillStyle = "#88DDFF";
+        ctx.shadowColor = "#66BBFF";
+        ctx.shadowBlur = 12;
+        ctx.font = "14px sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText("❄", cx, midY - 16);
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = "#AADDFF";
+        ctx.font = "bold 6px Orbitron, monospace";
+        ctx.fillText("CRYO ONLINE", cx, midY - 6);
+        // Frozen keyboard
+        ctx.fillStyle = "#0c1820";
+        rr(cx - 28, midY - 2, 56, 12, 2);
+        ctx.fill();
+        for (let ki = 0; ki < 8; ki++) {
+          ctx.fillStyle = `rgba(100,180,255,${0.3 + Math.sin(t * 2 + ki) * 0.1})`;
+          ctx.fillRect(cx - 26 + ki * 7, midY, 5, 8);
+        }
+
+        // ── Cryo sample station (left) ───────────────────
+        ctx.fillStyle = "#0a1418";
+        ctx.strokeStyle = "#4488AA";
+        ctx.lineWidth = 1;
+        rr(cx - W * 0.44, midY - 8, 52, 48, 3);
+        ctx.fill();
+        ctx.stroke();
+        // Ice sample tubes
+        const sColors = ["#88DDFF", "#66BBFF", "#AAEEFF", "#55AACC"];
+        for (let fi = 0; fi < 4; fi++) {
+          ctx.fillStyle = sColors[fi];
+          ctx.shadowColor = sColors[fi];
+          ctx.shadowBlur = 6;
+          ctx.beginPath();
+          ctx.roundRect(cx - W * 0.42 + fi * 12, midY - 4, 9, 22, [3, 3, 0, 0]);
+          ctx.fill();
+          ctx.shadowBlur = 0;
+        }
+        ctx.fillStyle = "#AADDFF";
+        ctx.font = "bold 5px monospace";
+        ctx.textAlign = "center";
+        ctx.fillText("SAMPLES", cx - W * 0.42 + 20, midY + 24);
+
+        // ── Frozen storage rack (right) ───────────────────
+        ctx.fillStyle = "#0a1420";
+        ctx.strokeStyle = "#5599BB";
+        ctx.lineWidth = 1.5;
+        rr(W * 0.72, topY + 8, 56, 70, 3);
+        ctx.fill();
+        ctx.stroke();
+        // Shelves
+        ctx.fillStyle = "#1a2a3a";
+        ctx.fillRect(W * 0.74, topY + 24, 48, 3);
+        ctx.fillRect(W * 0.74, topY + 44, 48, 3);
+        // Ice containers
+        for (let ci = 0; ci < 3; ci++) {
+          for (let ri = 0; ri < 2; ri++) {
+            ctx.fillStyle = "#0c1825";
+            ctx.strokeStyle = "#4488AA";
+            ctx.lineWidth = 0.5;
+            rr(W * 0.74 + 4 + ci * 16, topY + 10 + ri * 24, 12, 12, 2);
+            ctx.fill();
+            ctx.stroke();
+            // Frost effect
+            ctx.fillStyle = `rgba(150,200,255,${0.3 + Math.sin(t + ci + ri) * 0.1})`;
+            ctx.fillRect(W * 0.74 + 6 + ci * 16, topY + 12 + ri * 24, 8, 8);
+          }
+        }
+        ctx.fillStyle = "#88CCFF";
+        ctx.font = "bold 6px monospace";
+        ctx.textAlign = "center";
+        ctx.fillText("STORAGE", W * 0.72 + 28, topY + 82);
+
+        // ── Frozen specimen pod (bottom) ───────────────────
+        ctx.fillStyle = "#081520";
+        ctx.strokeStyle = "#66BBFF";
+        ctx.lineWidth = 1.5;
+        rr(cx - 30, midY + 20, 60, 40, 4);
+        ctx.fill();
+        ctx.stroke();
+        // Specimen inside
+        const specPulse = Math.sin(t * 0.8) * 0.2 + 0.8;
+        ctx.fillStyle = `rgba(100,180,255,${0.15 * specPulse})`;
+        ctx.beginPath();
+        ctx.ellipse(cx, midY + 38, 20, 12, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#AADDFF";
+        ctx.font = "bold 5px monospace";
+        ctx.textAlign = "center";
+        ctx.fillText("SPECIMEN A-7", cx, midY + 66);
+
+        // ── Ice particles ───────────────────
+        for (let i = 0; i < 8; i++) {
+          const px2 = W * 0.1 + (t * 15 + i * 50) % (W * 0.8);
+          const py2 = topY + 10 + Math.sin(t + i * 2) * 30 + i * 8;
+          const alpha = Math.sin(t * 2 + i) * 0.3 + 0.4;
+          ctx.fillStyle = `rgba(180,220,255,${alpha})`;
+          ctx.beginPath();
+          ctx.arc(px2, py2, 1.5, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+      } else if (isTechShop) {
         // ═══ WASTELAND TECH SHOP ═══
         // ── Sales counter (top center) ───────────────────
         ctx.fillStyle = "#3a3530";
@@ -10724,63 +12107,307 @@ class Game {
       }
     } else if (type === 21) {
       // CHOP SHOP
-      // ── Disassembled car parts (scattered) ───────
-      const partPositions = [
-        [cx - W * 0.4, topY + 8],
-        [cx - W * 0.18, topY + 12],
-        [cx + W * 0.1, topY + 6],
-        [cx + W * 0.3, topY + 10],
-      ];
-      const partIcons = ["🔧", "⚙", "🔩", "🪛"];
-      ctx.font = "14px serif";
-      ctx.textAlign = "center";
-      partPositions.forEach(([px2, py2], i) => {
-        ctx.fillText(partIcons[i], px2, py2 + 14);
-      });
-      // Car body (partially stripped)
-      ctx.fillStyle = "#1a2030";
-      ctx.strokeStyle = "#3a4050";
-      ctx.lineWidth = 1.5;
-      rr(cx - 52, midY - 14, 104, 34, 4);
-      ctx.fill();
-      ctx.stroke();
-      rr(cx - 36, midY - 26, 72, 14, 4);
-      ctx.fill();
-      ctx.stroke();
-      // Missing wheel areas (stripped)
-      for (const wx of [cx - 34, cx + 24]) {
-        ctx.strokeStyle = "#666";
+      const isSnowChop = !!this.map?.config?.snow;
+      const t = performance.now() / 1000;
+
+      if (isSnowChop) {
+        // ═══ FROZEN TUNDRA: ICE CHOP SHOP ═══
+
+        // ── Shop sign ───────────────────
+        ctx.fillStyle = "#AADDFF";
+        ctx.shadowColor = "#66BBFF";
+        ctx.shadowBlur = 12;
+        ctx.font = "bold 10px Orbitron, monospace";
+        ctx.textAlign = "center";
+        ctx.fillText("❄ FROST CHOP SHOP ❄", cx, topY - 4);
+        ctx.shadowBlur = 0;
+
+        // ── Car lift with stripped vehicle (center) ───────────────────
+        // Lift platform
+        ctx.fillStyle = "#1a2830";
+        ctx.strokeStyle = "#3a5868";
         ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.arc(wx, midY + 12, 10, 0, Math.PI * 2);
+        rr(cx - 60, midY - 20, 120, 50, 4);
+        ctx.fill();
         ctx.stroke();
-      }
-      // ── Spray paint cans ─────────────────────────
-      for (let si = 0; si < 4; si++) {
-        ctx.fillStyle = ["#FF3344", "#3344FF", "#33FF44", "#FFCC33"][si];
-        ctx.shadowColor = ctx.fillStyle;
+        // Lift hydraulics
+        ctx.fillStyle = "#4a6878";
+        ctx.fillRect(cx - 55, midY + 30, 10, 25);
+        ctx.fillRect(cx + 45, midY + 30, 10, 25);
+
+        // Stripped car body on lift
+        ctx.fillStyle = "#2a4050";
+        ctx.strokeStyle = "#4a6878";
+        ctx.lineWidth = 1.5;
+        rr(cx - 45, midY - 15, 90, 30, 4);
+        ctx.fill();
+        ctx.stroke();
+        // Car roof cutaway
+        ctx.fillStyle = "#1a3040";
+        rr(cx - 30, midY - 20, 60, 12, 3);
+        ctx.fill();
+        // Missing parts (holes)
+        ctx.fillStyle = "#0a1520";
+        ctx.beginPath();
+        ctx.arc(cx - 30, midY + 8, 12, 0, Math.PI * 2);
+        ctx.arc(cx + 30, midY + 8, 12, 0, Math.PI * 2);
+        ctx.fill();
+        // Sparks from cutting
+        const sparkPulse = Math.sin(t * 6) * 0.5 + 0.5;
+        if (sparkPulse > 0.6) {
+          ctx.fillStyle = "#FFAA44";
+          ctx.shadowColor = "#FF8800";
+          ctx.shadowBlur = 8;
+          for (let sp = 0; sp < 5; sp++) {
+            const sx = cx - 20 + Math.random() * 40;
+            const sy = midY - 10 + Math.random() * 20;
+            ctx.beginPath();
+            ctx.arc(sx, sy, 1.5, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          ctx.shadowBlur = 0;
+        }
+
+        // ── Tool wall (left) ───────────────────
+        ctx.fillStyle = "#0c1820";
+        ctx.strokeStyle = "#3a5868";
+        ctx.lineWidth = 1.5;
+        rr(cx - W * 0.44, topY + 6, 55, 80, 2);
+        ctx.fill();
+        ctx.stroke();
+        // Tools on pegboard
+        const tools = [
+          { x: 10, y: 12, icon: "🔧", size: 14 },
+          { x: 30, y: 14, icon: "⚙", size: 14 },
+          { x: 10, y: 34, icon: "🔩", size: 12 },
+          { x: 30, y: 32, icon: "🪛", size: 14 },
+          { x: 10, y: 54, icon: "🔨", size: 14 },
+          { x: 30, y: 56, icon: "🪚", size: 14 },
+        ];
+        tools.forEach(tool => {
+          ctx.font = `${tool.size}px serif`;
+          ctx.fillText(tool.icon, cx - W * 0.44 + tool.x, topY + 6 + tool.y);
+        });
+
+        // ── Parts shelf (right) ───────────────────
+        ctx.fillStyle = "#0c1820";
+        ctx.strokeStyle = "#3a5868";
+        ctx.lineWidth = 1.5;
+        rr(cx + W * 0.2, topY + 6, 60, 75, 2);
+        ctx.fill();
+        ctx.stroke();
+        // Shelf dividers
+        ctx.fillStyle = "#2a4050";
+        ctx.fillRect(cx + W * 0.2, topY + 30, 60, 3);
+        ctx.fillRect(cx + W * 0.2, topY + 54, 60, 3);
+        // Car parts on shelves
+        const parts = [
+          { x: 8, y: 10, w: 18, h: 14, color: "#4a6878" },
+          { x: 32, y: 12, w: 22, h: 12, color: "#3a5868" },
+          { x: 10, y: 36, w: 20, h: 14, color: "#5a7888" },
+          { x: 36, y: 34, w: 16, h: 16, color: "#4a6070" },
+          { x: 12, y: 60, w: 16, h: 12, color: "#3a5060" },
+          { x: 34, y: 58, w: 20, h: 14, color: "#4a6878" },
+        ];
+        for (const part of parts) {
+          ctx.fillStyle = part.color;
+          rr(cx + W * 0.2 + part.x, topY + 6 + part.y, part.w, part.h, 2);
+          ctx.fill();
+        }
+
+        // ── Tire stack (bottom left) ───────────────────
+        for (let ti = 0; ti < 3; ti++) {
+          ctx.fillStyle = "#1a1a1a";
+          ctx.strokeStyle = "#3a3a3a";
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.ellipse(cx - W * 0.38 + ti * 6, midY + 40 + ti * 2, 16, 10, 0.2, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+          // Tire rim
+          ctx.fillStyle = "#4a6070";
+          ctx.beginPath();
+          ctx.arc(cx - W * 0.38 + ti * 6, midY + 40 + ti * 2, 6, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // ── Oil barrel (bottom right) ───────────────────
+        ctx.fillStyle = "#2a4050";
+        ctx.strokeStyle = "#4a6878";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.ellipse(cx + W * 0.32, midY + 44, 18, 10, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = "#1a3040";
+        ctx.fillRect(cx + W * 0.32 - 16, midY + 44, 32, 18);
+        ctx.fillStyle = "#66BBFF";
+        ctx.font = "bold 6px monospace";
+        ctx.textAlign = "center";
+        ctx.fillText("OIL", cx + W * 0.32, midY + 56);
+
+        // ── Ice particles ───────────────────
+        for (let i = 0; i < 6; i++) {
+          const px2 = W * 0.1 + (t * 10 + i * 50) % (W * 0.8);
+          const py2 = topY + 15 + Math.sin(t * 0.7 + i * 2) * 20 + i * 10;
+          const alpha = Math.sin(t * 1.5 + i) * 0.25 + 0.3;
+          ctx.fillStyle = `rgba(180,220,255,${alpha})`;
+          ctx.beginPath();
+          ctx.arc(px2, py2, 1.5, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+      } else {
+        // ═══ DEFAULT CHOP SHOP (ENHANCED) ═══
+
+        // ── Shop sign ───────────────────
+        ctx.fillStyle = "#FF6633";
+        ctx.shadowColor = "#FF4400";
+        ctx.shadowBlur = 10;
+        ctx.font = "bold 10px Orbitron, monospace";
+        ctx.textAlign = "center";
+        ctx.fillText("⚙ CHOP SHOP ⚙", cx, topY - 2);
+        ctx.shadowBlur = 0;
+
+        // ── Car lift with stripped vehicle (center) ───────────────────
+        // Lift platform
+        ctx.fillStyle = "#2a2a2a";
+        ctx.strokeStyle = "#555555";
+        ctx.lineWidth = 2;
+        rr(cx - 60, midY - 20, 120, 50, 4);
+        ctx.fill();
+        ctx.stroke();
+        // Yellow safety stripes
+        ctx.fillStyle = "#FFCC00";
+        for (let si = 0; si < 8; si++) {
+          ctx.fillRect(cx - 58 + si * 15, midY - 18, 8, 4);
+        }
+        // Lift hydraulics
+        ctx.fillStyle = "#666666";
+        ctx.fillRect(cx - 55, midY + 30, 10, 25);
+        ctx.fillRect(cx + 45, midY + 30, 10, 25);
+
+        // Stripped car body on lift
+        ctx.fillStyle = "#3a3a4a";
+        ctx.strokeStyle = "#5a5a6a";
+        ctx.lineWidth = 1.5;
+        rr(cx - 45, midY - 15, 90, 30, 4);
+        ctx.fill();
+        ctx.stroke();
+        // Car roof (partially cut)
+        ctx.fillStyle = "#2a2a3a";
+        rr(cx - 30, midY - 22, 60, 12, 3);
+        ctx.fill();
+        // Missing wheel areas
+        ctx.fillStyle = "#1a1a1a";
+        ctx.beginPath();
+        ctx.arc(cx - 30, midY + 8, 12, 0, Math.PI * 2);
+        ctx.arc(cx + 30, midY + 8, 12, 0, Math.PI * 2);
+        ctx.fill();
+        // Exposed engine
+        ctx.fillStyle = "#444455";
+        rr(cx - 10, midY - 8, 20, 16, 2);
+        ctx.fill();
+        ctx.fillStyle = "#FF6600";
+        ctx.shadowColor = "#FF6600";
         ctx.shadowBlur = 4;
         ctx.beginPath();
-        ctx.roundRect(cx - W * 0.42 + si * 18, midY + 24, 10, 22, [4, 4, 0, 0]);
+        ctx.arc(cx, midY, 4, 0, Math.PI * 2);
         ctx.fill();
         ctx.shadowBlur = 0;
+
+        // ── Tool wall (left) ───────────────────
+        ctx.fillStyle = "#1a1408";
+        ctx.strokeStyle = "#556644";
+        ctx.lineWidth = 1.5;
+        rr(cx - W * 0.44, topY + 4, 55, 85, 2);
+        ctx.fill();
+        ctx.stroke();
+        // Tool pegboard holes
+        for (let row = 0; row < 4; row++) {
+          for (let col = 0; col < 3; col++) {
+            ctx.fillStyle = "#0a0804";
+            ctx.beginPath();
+            ctx.arc(cx - W * 0.44 + 12 + col * 16, topY + 20 + row * 18, 3, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+        // Tools hanging
+        const chopTools = ["🔨", "🪚", "⛏", "🔧", "🪛", "🔩"];
+        ctx.font = "14px serif";
+        ctx.textAlign = "center";
+        chopTools.forEach((tool, i) =>
+          ctx.fillText(
+            tool,
+            cx - W * 0.44 + 14 + (i % 2) * 24,
+            topY + 22 + Math.floor(i / 2) * 26,
+          ),
+        );
+
+        // ── Parts shelf (right) ───────────────────
+        ctx.fillStyle = "#2a2a20";
+        ctx.strokeStyle = "#5a5a48";
+        ctx.lineWidth = 1.5;
+        rr(cx + W * 0.2, topY + 4, 62, 80, 2);
+        ctx.fill();
+        ctx.stroke();
+        // Shelves
+        ctx.fillStyle = "#3a3a30";
+        ctx.fillRect(cx + W * 0.2, topY + 30, 62, 4);
+        ctx.fillRect(cx + W * 0.2, topY + 56, 62, 4);
+        // Parts on shelves
+        const partColors = ["#666677", "#555566", "#777788", "#888899"];
+        for (let si = 0; si < 3; si++) {
+          for (let pi = 0; pi < 2; pi++) {
+            ctx.fillStyle = partColors[(si + pi) % partColors.length];
+            rr(cx + W * 0.2 + 8 + pi * 28, topY + 10 + si * 26, 22, 16, 2);
+            ctx.fill();
+          }
+        }
+
+        // ── Tire stack (bottom left) ───────────────────
+        for (let ti = 0; ti < 4; ti++) {
+          ctx.fillStyle = "#1a1a1a";
+          ctx.strokeStyle = "#333333";
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.ellipse(cx - W * 0.36 + ti * 5, midY + 42 + ti * 2, 15, 9, 0.15, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#666666";
+          ctx.beginPath();
+          ctx.arc(cx - W * 0.36 + ti * 5, midY + 42 + ti * 2, 5, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // ── Oil barrels (bottom right) ───────────────────
+        for (let bi = 0; bi < 2; bi++) {
+          ctx.fillStyle = "#333344";
+          ctx.strokeStyle = "#555566";
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.ellipse(cx + W * 0.28 + bi * 26, midY + 46, 14, 8, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#222233";
+          ctx.fillRect(cx + W * 0.28 + bi * 26 - 12, midY + 46, 24, 16);
+          ctx.fillStyle = bi === 0 ? "#FF4400" : "#00AAFF";
+          ctx.font = "bold 5px monospace";
+          ctx.textAlign = "center";
+          ctx.fillText(bi === 0 ? "OIL" : "COOL", cx + W * 0.28 + bi * 26, midY + 58);
+        }
+
+        // ── Spray paint cans (floor) ───────────────────
+        for (let si = 0; si < 4; si++) {
+          ctx.fillStyle = ["#FF3344", "#3344FF", "#33FF44", "#FFCC33"][si];
+          ctx.shadowColor = ctx.fillStyle;
+          ctx.shadowBlur = 4;
+          ctx.beginPath();
+          ctx.roundRect(cx - 20 + si * 14, midY + 36, 10, 18, [4, 4, 0, 0]);
+          ctx.fill();
+          ctx.shadowBlur = 0;
+        }
       }
-      // ── Tool pegboard (right) ─────────────────────
-      ctx.fillStyle = "#1a1408";
-      ctx.strokeStyle = "#556644";
-      ctx.lineWidth = 1;
-      rr(cx + W * 0.24, topY + 4, 50, 82, 2);
-      ctx.fill();
-      ctx.stroke();
-      const chopTools = ["🔨", "🪚", "⛏", "🔧", "🪛", "🔩"];
-      ctx.font = "13px serif";
-      chopTools.forEach((t, i) =>
-        ctx.fillText(
-          t,
-          cx + W * 0.24 + 14 + (i % 2) * 22,
-          topY + 18 + Math.floor(i / 2) * 24,
-        ),
-      );
     } else if (type === 22) {
       // RADIO STATION
       if (!!this.map?.config?.galactica) {
@@ -11315,8 +12942,438 @@ class Game {
         // Red emergency strobe
         const strA=0.06+0.05*Math.sin(t*5);
         ctx.fillStyle=`rgba(200,0,0,${strA})`; ctx.fillRect(0,0,W,H);
+      } else if (!!this.map?.config?.wasteland) {
+        // ═══ WASTELAND: RADIO STATION ═══
+        const t = performance.now() / 1000;
+
+        // ── ON AIR sign (blinking) ──────────────────
+        const onAirAlpha = 0.6 + 0.4 * Math.sin(t * 3);
+        ctx.fillStyle = `rgba(255,40,60,${onAirAlpha})`;
+        ctx.shadowColor = "#FF0040";
+        ctx.shadowBlur = 12 * onAirAlpha;
+        rr(cx - 38, topY + 8, 76, 22, 4);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        ctx.strokeStyle = `rgba(255,80,100,${onAirAlpha})`;
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        ctx.fillStyle = "#FFFFFF";
+        ctx.font = "bold 10px monospace";
+        ctx.textAlign = "center";
+        ctx.fillText("● ON AIR", cx, topY + 23);
+
+        // ── Soundproof panels (top wall - fixed alignment) ──────
+        const panelCount = 4;
+        const panelGap = 8;
+        const totalPanelWidth = W - 40;
+        const panelW = (totalPanelWidth - (panelCount - 1) * panelGap) / panelCount;
+        for (let pi = 0; pi < panelCount; pi++) {
+          const px = 20 + pi * (panelW + panelGap);
+          ctx.fillStyle = "#2a1a28";
+          ctx.strokeStyle = "#5a3a58";
+          ctx.lineWidth = 1;
+          rr(px, topY + 34, panelW, 32, 3);
+          ctx.fill();
+          ctx.stroke();
+          // Foam wedge pattern
+          ctx.fillStyle = "#3a2a38";
+          const cols = Math.floor(panelW / 14);
+          for (let ri = 0; ri < 2; ri++) {
+            for (let ci = 0; ci < cols; ci++) {
+              ctx.beginPath();
+              ctx.moveTo(px + 4 + ci * 14, topY + 38 + ri * 14 + 12);
+              ctx.lineTo(px + 4 + ci * 14 + 12, topY + 38 + ri * 14 + 12);
+              ctx.lineTo(px + 4 + ci * 14 + 6, topY + 38 + ri * 14);
+              ctx.closePath();
+              ctx.fill();
+            }
+          }
+        }
+
+        // ── Main broadcast desk (center-top) ──────────────
+        const deskX = cx - 80;
+        const deskY = topY + 74;
+        ctx.fillStyle = "#3a3530";
+        ctx.strokeStyle = "#5a5048";
+        ctx.lineWidth = 2;
+        rr(deskX, deskY, 160, 38, 4);
+        ctx.fill();
+        ctx.stroke();
+
+        // Mixing board on desk
+        ctx.fillStyle = "#1a1a20";
+        rr(deskX + 10, deskY + 4, 100, 28, 2);
+        ctx.fill();
+        // Faders
+        for (let fi = 0; fi < 8; fi++) {
+          const fx = deskX + 16 + fi * 12;
+          ctx.fillStyle = "#2a2a30";
+          ctx.fillRect(fx, deskY + 8, 8, 18);
+          const fPos = 4 + 8 * (0.5 + 0.5 * Math.sin(t * (0.7 + fi * 0.12) + fi));
+          ctx.fillStyle = fi % 2 === 0 ? "#FF88CC" : "#88CCFF";
+          ctx.fillRect(fx + 1, deskY + 8 + fPos, 6, 4);
+        }
+
+        // VU meters
+        ctx.fillStyle = "#44FF88";
+        ctx.shadowColor = "#44FF88";
+        ctx.shadowBlur = 4;
+        ctx.fillRect(deskX + 118, deskY + 8, 12, 5);
+        ctx.fillRect(deskX + 118, deskY + 15, 10, 4);
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = "#FFCC00";
+        ctx.fillRect(deskX + 118, deskY + 21, 8, 3);
+        ctx.fillStyle = "#FF4400";
+        ctx.fillRect(deskX + 118, deskY + 26, 5, 3);
+
+        // Microphone on desk
+        ctx.fillStyle = "#4a4a50";
+        ctx.beginPath();
+        ctx.ellipse(deskX + 145, deskY + 10, 6, 10, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = "#6a6a70";
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        // Mic stand
+        ctx.strokeStyle = "#5a5a60";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(deskX + 145, deskY + 20);
+        ctx.lineTo(deskX + 145, deskY + 32);
+        ctx.stroke();
+
+        // ── Worker desk 1 (left side) ──────────────
+        const desk1X = W * 0.10;
+        const desk1Y = H * 0.42;
+        ctx.fillStyle = "#3a3028";
+        ctx.strokeStyle = "#5a4a38";
+        ctx.lineWidth = 1.5;
+        rr(desk1X, desk1Y, 70, 34, 3);
+        ctx.fill();
+        ctx.stroke();
+        // Computer/equipment on desk
+        ctx.fillStyle = "#1a1a20";
+        rr(desk1X + 8, desk1Y + 4, 28, 20, 2);
+        ctx.fill();
+        ctx.fillStyle = "#00AAFF";
+        ctx.fillRect(desk1X + 10, desk1Y + 6, 24, 14);
+        // Papers
+        ctx.fillStyle = "#EEDDCC";
+        ctx.fillRect(desk1X + 42, desk1Y + 8, 20, 16);
+
+        // ── Worker desk 2 (right side) ──────────────
+        const desk2X = W * 0.62;
+        const desk2Y = H * 0.42;
+        ctx.fillStyle = "#3a3028";
+        ctx.strokeStyle = "#5a4a38";
+        ctx.lineWidth = 1.5;
+        rr(desk2X, desk2Y, 75, 34, 3);
+        ctx.fill();
+        ctx.stroke();
+        // Equipment
+        ctx.fillStyle = "#2a2a30";
+        rr(desk2X + 6, desk2Y + 4, 32, 22, 2);
+        ctx.fill();
+        ctx.fillStyle = "#FF88CC";
+        ctx.shadowColor = "#FF88CC";
+        ctx.shadowBlur = 4;
+        ctx.fillRect(desk2X + 10, desk2Y + 8, 24, 14);
+        ctx.shadowBlur = 0;
+        // Headphones
+        ctx.fillStyle = "#2a2a30";
+        ctx.beginPath();
+        ctx.arc(desk2X + 55, desk2Y + 12, 8, Math.PI, 0);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.ellipse(desk2X + 47, desk2Y + 12, 4, 6, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(desk2X + 63, desk2Y + 12, 4, 6, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // ── Speaker monitors (left wall) ──────────────
+        for (let si = 0; si < 2; si++) {
+          const spX = 16;
+          const spY = H * 0.58 + si * 50;
+          ctx.fillStyle = "#2a2520";
+          ctx.strokeStyle = "#4a4540";
+          ctx.lineWidth = 1.5;
+          rr(spX, spY, 44, 40, 4);
+          ctx.fill();
+          ctx.stroke();
+          // Speaker cone
+          ctx.fillStyle = "#1a1a18";
+          ctx.beginPath();
+          ctx.arc(spX + 22, spY + 20, 14, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.strokeStyle = "#3a3a38";
+          ctx.lineWidth = 1;
+          for (let ri = 1; ri <= 2; ri++) {
+            ctx.beginPath();
+            ctx.arc(spX + 22, spY + 20, 5 * ri, 0, Math.PI * 2);
+            ctx.stroke();
+          }
+        }
+
+        // ── Equipment rack (right wall) ──────────────
+        const rackX = W - 70;
+        const rackY = H * 0.34;
+        ctx.fillStyle = "#2a2a28";
+        ctx.strokeStyle = "#4a4a48";
+        ctx.lineWidth = 1.5;
+        rr(rackX, rackY, 52, 90, 3);
+        ctx.fill();
+        ctx.stroke();
+        // Rack units with lights and labels
+        const rackUnits = [
+          { col: "#FF88CC", label: "AMP" },
+          { col: "#44FF88", label: "EQ" },
+          { col: "#FFAA00", label: "COMP" },
+          { col: "#44AAFF", label: "OUT" },
+        ];
+        for (let ri = 0; ri < rackUnits.length; ri++) {
+          const ru = rackUnits[ri];
+          const ruy = rackY + 8 + ri * 20;
+          ctx.fillStyle = "#1a1a1a";
+          ctx.strokeStyle = ru.col + "44";
+          ctx.lineWidth = 1;
+          rr(rackX + 4, ruy, 44, 16, 2);
+          ctx.fill();
+          ctx.stroke();
+          // LED strip
+          ctx.fillStyle = ru.col;
+          ctx.shadowColor = ru.col;
+          ctx.shadowBlur = 4;
+          ctx.fillRect(rackX + 8, ruy + 5, 6, 6);
+          ctx.shadowBlur = 0;
+          // Knob
+          ctx.fillStyle = "#3a3a3a";
+          ctx.beginPath();
+          ctx.arc(rackX + 38, ruy + 8, 4, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.strokeStyle = ru.col + "66";
+          ctx.lineWidth = 1;
+          ctx.stroke();
+          // Label
+          ctx.fillStyle = ru.col;
+          ctx.font = "3px monospace";
+          ctx.textAlign = "center";
+          ctx.fillText(ru.label, rackX + 24, ruy + 10);
+        }
+        // Rack label at bottom
+        ctx.fillStyle = "rgba(255,136,204,0.5)";
+        ctx.font = "bold 4px monospace";
+        ctx.textAlign = "center";
+        ctx.fillText("RACK", rackX + 26, rackY + 86);
+
+        // ── Chairs for workers ──────────────
+        // Chair 1 (near desk 1)
+        ctx.fillStyle = "#3a3530";
+        ctx.strokeStyle = "#5a5048";
+        ctx.lineWidth = 1;
+        rr(desk1X + 20, desk1Y + 38, 26, 18, 3);
+        ctx.fill();
+        ctx.stroke();
+        rr(desk1X + 22, desk1Y + 22, 22, 18, 3);
+        ctx.fill();
+        ctx.stroke();
+
+        // Chair 2 (near desk 2)
+        rr(desk2X + 22, desk2Y + 38, 26, 18, 3);
+        ctx.fill();
+        ctx.stroke();
+        rr(desk2X + 24, desk2Y + 22, 22, 18, 3);
+        ctx.fill();
+        ctx.stroke();
+
+        // ── Waveform display screen (left wall, below speakers) ──────────────
+        const scrX = 16, scrY = H * 0.36, scrW = 52, scrH = 38;
+        ctx.fillStyle = "#1a1815";
+        ctx.strokeStyle = "#4a4540";
+        ctx.lineWidth = 1.5;
+        rr(scrX, scrY, scrW, scrH, 4);
+        ctx.fill();
+        ctx.stroke();
+        // Screen inner
+        ctx.fillStyle = "#0a0808";
+        rr(scrX + 3, scrY + 3, scrW - 6, scrH - 6, 2);
+        ctx.fill();
+        // Waveform animation
+        ctx.strokeStyle = `rgba(255,100,140,0.9)`;
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        for (let wx = 0; wx < scrW - 12; wx += 2) {
+          const amp = 6 + 5 * Math.sin(t * 3 + wx * 0.18);
+          const wy = scrY + scrH / 2 + amp * Math.sin(t * 8 + wx * 0.22);
+          wx === 0 ? ctx.moveTo(scrX + 6 + wx, wy) : ctx.lineTo(scrX + 6 + wx, wy);
+        }
+        ctx.stroke();
+        // Screen label
+        ctx.fillStyle = "rgba(255,140,180,0.7)";
+        ctx.font = "4px monospace";
+        ctx.textAlign = "center";
+        ctx.fillText("LIVE SIGNAL", scrX + scrW / 2, scrY + scrH - 4);
+
+        // ── Playlist / track display (right wall, below rack) ──────────────
+        const plX = W - 70, plY = H * 0.58, plW = 52, plH = 62;
+        ctx.fillStyle = "#1a1815";
+        ctx.strokeStyle = "#5a4a38";
+        ctx.lineWidth = 1.5;
+        rr(plX, plY, plW, plH, 4);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = "#FF88CC";
+        ctx.font = "bold 4px monospace";
+        ctx.textAlign = "center";
+        ctx.fillText("▶ NOW PLAYING", plX + plW / 2, plY + 10);
+        ctx.strokeStyle = "rgba(255,136,204,0.3)";
+        ctx.lineWidth = 0.5;
+        ctx.beginPath();
+        ctx.moveTo(plX + 4, plY + 13);
+        ctx.lineTo(plX + plW - 4, plY + 13);
+        ctx.stroke();
+        const tracks = ["DUST STORM","DESERT ECHO","NEON DRIFT","RUST WAVE"];
+        tracks.forEach((tr, ti) => {
+          const isActive = ti === Math.floor(t * 0.4) % tracks.length;
+          ctx.fillStyle = isActive ? "#FF88CC" : "rgba(200,160,180,0.6)";
+          ctx.font = isActive ? "bold 4px monospace" : "4px monospace";
+          ctx.textAlign = "left";
+          ctx.fillText((isActive ? "▶ " : "  ") + tr, plX + 5, plY + 24 + ti * 10);
+        });
+
+        // ── Coffee mug on main desk ──────────────
+        const mugX = deskX + 132, mugY = deskY + 8;
+        ctx.fillStyle = "#3a3028";
+        ctx.strokeStyle = "#5a4a38";
+        ctx.lineWidth = 1;
+        rr(mugX - 6, mugY, 12, 16, 2);
+        ctx.fill();
+        ctx.stroke();
+        // Coffee liquid
+        ctx.fillStyle = "rgba(60,30,10,0.8)";
+        ctx.fillRect(mugX - 4, mugY + 2, 8, 10);
+        // Steam
+        for (let si = 0; si < 2; si++) {
+          const sx2 = mugX - 2 + si * 4;
+          const sa = Math.sin(t * 2 + si * 1.2) * 2;
+          ctx.strokeStyle = `rgba(200,180,160,${0.3 + 0.15 * Math.sin(t * 1.5 + si)})`;
+          ctx.lineWidth = 1;
+          ctx.lineCap = "round";
+          ctx.beginPath();
+          ctx.moveTo(sx2 + sa, mugY);
+          ctx.lineTo(sx2 - sa, mugY - 6);
+          ctx.stroke();
+          ctx.lineCap = "butt";
+        }
+        // Handle
+        ctx.strokeStyle = "#5a4a38";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.arc(mugX + 8, mugY + 8, 4, -Math.PI / 2, Math.PI / 2);
+        ctx.stroke();
+
+        // ── Note papers on main desk ──────────────
+        const noteX = deskX + 4, noteY = deskY + 6;
+        ctx.fillStyle = "rgba(220,210,190,0.85)";
+        ctx.save();
+        ctx.rotate(-0.06);
+        ctx.fillRect(noteX, noteY, 18, 14);
+        ctx.restore();
+        ctx.fillStyle = "rgba(180,140,120,0.85)";
+        ctx.save();
+        ctx.translate(noteX + 10, noteY);
+        ctx.rotate(0.1);
+        ctx.fillRect(0, 0, 16, 12);
+        ctx.restore();
+        // Lines on notes
+        ctx.strokeStyle = "rgba(80,60,40,0.4)";
+        ctx.lineWidth = 0.5;
+        for (let li = 0; li < 2; li++) {
+          ctx.beginPath();
+          ctx.moveTo(noteX + 2, noteY + 4 + li * 4);
+          ctx.lineTo(noteX + 14, noteY + 4 + li * 4);
+          ctx.stroke();
+        }
+
+        // ── Microphone stand (center, in front of main desk) ──────────────
+        const micX = cx, micY = deskY + 60;
+        // Stand base
+        ctx.fillStyle = "#2a2520";
+        ctx.strokeStyle = "#4a4540";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.ellipse(micX, micY + 10, 12, 4, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        // Stand pole
+        ctx.strokeStyle = "#5a5550";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(micX, micY + 10);
+        ctx.lineTo(micX, micY - 12);
+        ctx.stroke();
+        // Arm
+        ctx.beginPath();
+        ctx.moveTo(micX, micY - 6);
+        ctx.lineTo(micX + 14, micY - 14);
+        ctx.stroke();
+        // Mic capsule
+        ctx.fillStyle = "#3a3530";
+        ctx.strokeStyle = "#5a5550";
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.ellipse(micX + 14, micY - 18, 7, 11, -0.3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        // Mesh grid on mic
+        ctx.strokeStyle = "rgba(255,136,204,0.25)";
+        ctx.lineWidth = 0.5;
+        for (let mg = 0; mg < 3; mg++) {
+          ctx.beginPath();
+          ctx.ellipse(micX + 14, micY - 18, 7, 11 - mg * 2.5, -0.3, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+        // Mic glow
+        const micGlow = ctx.createRadialGradient(micX + 14, micY - 18, 0, micX + 14, micY - 18, 14);
+        micGlow.addColorStop(0, `rgba(255,136,204,${0.2 + 0.12 * Math.sin(t * 3)})`);
+        micGlow.addColorStop(1, "rgba(0,0,0,0)");
+        ctx.fillStyle = micGlow;
+        ctx.beginPath();
+        ctx.arc(micX + 14, micY - 18, 14, 0, Math.PI * 2);
+        ctx.fill();
+
+        // ── Sound wave rings (around mic) ──────────────
+        for (let ri = 1; ri <= 2; ri++) {
+          const rr2 = ri * 20 + 8 * Math.sin(t * 2 - ri);
+          const alpha = (0.15 - ri * 0.04) * (0.5 + 0.5 * Math.sin(t * 2 + ri));
+          ctx.strokeStyle = `rgba(255,136,204,${alpha})`;
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.arc(micX + 14, micY - 18, rr2, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+
+        // ── Ambient particles ──────────────
+        for (let pi = 0; pi < 5; pi++) {
+          const px = (Math.sin(pi * 2.5 + t * 0.45) * 0.36 + 0.5) * W;
+          const py = (Math.cos(pi * 1.8 + t * 0.3) * 0.30 + 0.5) * H;
+          ctx.fillStyle = `rgba(255,136,204,${0.18 + 0.1 * Math.sin(t * 1.6 + pi)})`;
+          ctx.beginPath();
+          ctx.arc(px, py, 1.2, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // ── Station sign ──────────────
+        ctx.fillStyle = "#FF88CC";
+        ctx.shadowColor = "#FF88CC";
+        ctx.shadowBlur = 8;
+        ctx.font = "bold 9px Orbitron, monospace";
+        ctx.textAlign = "center";
+        ctx.fillText("WASTELAND RADIO", cx, H - 20);
+        ctx.shadowBlur = 0;
+
       } else {
-        // ── Default radio station (non-galactica) ───────
+        // ── Default radio station (non-galactica, non-wasteland) ───────
         // ── Broadcast desk (center) ───────────────────
         ctx.fillStyle = "#0a0a18";
         ctx.strokeStyle = "#FF88CC";
@@ -11343,12 +13400,15 @@ class Game {
         ctx.fillRect(cx + 26, midY + 4, 10, 3);
         ctx.fillStyle = "#FF4400";
         ctx.fillRect(cx + 26, midY + 9, 6, 3);
+        // Soundproof panels (fixed alignment)
         ctx.fillStyle = "#1a1228";
         ctx.strokeStyle = "#442266";
         ctx.lineWidth = 1;
-        for (let pi = 0; pi < 5; pi++) {
-          const px2 = cx - W * 0.44 + pi * ((W * 0.88) / 4);
-          rr(px2, topY + 4, (W * 0.88) / 4 - 3, 44, 4);
+        const defPanelCount = 4;
+        const defPanelW = (W - 40) / defPanelCount - 4;
+        for (let pi = 0; pi < defPanelCount; pi++) {
+          const px2 = 20 + pi * ((W - 40) / defPanelCount);
+          rr(px2, topY + 4, defPanelW, 44, 4);
           ctx.fill();
           ctx.stroke();
           ctx.fillStyle = "#2a1a38";
@@ -11641,15 +13701,165 @@ class Game {
     const S = room.S;
     const T = Date.now() / 1000;
 
+    // Map type detection
+    const isWasteland = !!this.map?.config?.wasteland;
+    const isGalactica = !!this.map?.config?.galactica;
+
+    // Color schemes based on map type
+    const colors = isWasteland ? {
+      bg: "#0a0806",
+      ambient1: 'rgba(60,40,20,0.06)',
+      wall: "#1a1410",
+      wallHighlight: 'rgba(255,200,150,0.012)',
+      wallEdge: 'rgba(255,180,120,0.022)',
+      bench: "#1a1612",
+      benchLeg: "#4a3a28",
+      benchLegHighlight: "#5a4a38",
+      benchSeat: "#3a2a1a",
+      benchSeatHighlight: "#4a3a2a",
+      trackBase: "#080604",
+      trackGravel: "#100c08",
+      tie: "#2a1a08",
+      tieHighlight: "#3a2a10",
+      tieShadow: "#0a0804",
+      rail: "#3a3020",
+      railMid: "#4a4030",
+      railTop: "#5a5040",
+      thirdRail: "#1a1810",
+      thirdRailGlow: "rgba(255,140,80,0.25)",
+      thirdRailColor: "#FF8844",
+      floor: "#161410",
+      floorAlt: "#121010",
+      tactile: "#4a4028",
+      neon: "rgba(255,136,100,0.45)",
+      neonColor: "#FF8866",
+      trainBody1: "#3a2a1a",
+      trainBody2: "#2a1a0a",
+      trainBody3: "#1a1008",
+      trainPanel: "#3a2818",
+      trainRoof: "#1a1408",
+      trainWindow: "#2a1810",
+      trainWindowInner: "#1a1008",
+      trainWindowLight: "rgba(255,180,100,0.75)",
+      trainStripe: "#AA5500",
+      trainStripeGlow: "#FF8800",
+      trainDoor: "#0a0804",
+      trainDoorInner: "rgba(255,160,80,0.08)",
+      trainDoorStroke: "#4a3a28",
+      trainHandle: "#6a5a4a",
+      destSign: "#0a0600",
+      destText: "#FF8800",
+      destGlow: "#FF6600",
+      carNum: "#FFDDAA",
+      safety: "#FFAA00",
+      safetyGlow: "#FF8800",
+      safetyStripe: "#1a0800",
+      caution: "#1a0800",
+      lightBox: "#100c08",
+      lightGlow: "rgba(255,220,180,0.95)",
+      lightGlowColor: "#FFDDAA",
+      pillar: "#1a1410",
+      pillarHighlight: "#2a2418",
+      pillarCap: "#2a2418",
+      pillarBase: "#1a1410",
+      pillarStripe: "rgba(255,120,60,0.85)",
+      pillarStripeGlow: "#FF6633",
+      signBg: "#100800",
+      signStroke: "#FF8844",
+      signText: "#FF8844",
+      signGlow: "#FF8844",
+      exitBg: "#100800",
+      exitStroke: "#FF8844",
+      exitText: "#FF8844",
+      exitGlow: "#FF8844",
+      waveText: "#FF8844",
+      waveGlow: "#FF6622",
+      exitHint: "#FFDDAA",
+      exitHintGlow: "#FFAA00"
+    } : {
+      bg: "#020308",
+      ambient1: 'rgba(30,50,80,0.06)',
+      wall: "#0d0d18",
+      wallHighlight: 'rgba(255,255,255,0.012)',
+      wallEdge: 'rgba(255,255,255,0.022)',
+      bench: "#12121c",
+      benchLeg: "#3a3a4a",
+      benchLegHighlight: "#4a4a5a",
+      benchSeat: "#1a4a6a",
+      benchSeatHighlight: "#2a6a9a",
+      trackBase: "#030308",
+      trackGravel: "#080810",
+      tie: "#1a1408",
+      tieHighlight: "#231a0c",
+      tieShadow: "#0a0804",
+      rail: "#2a2a40",
+      railMid: "#4a4a60",
+      railTop: "#6a6a80",
+      thirdRail: "#1a1a28",
+      thirdRailGlow: "rgba(80,160,255,0.25)",
+      thirdRailColor: "#4488FF",
+      floor: "#16161f",
+      floorAlt: "#121218",
+      tactile: "#4a4a30",
+      neon: "rgba(68,238,255,0.45)",
+      neonColor: "#44EEFF",
+      trainBody1: "#2a3d4e",
+      trainBody2: "#1c2d3e",
+      trainBody3: "#14222e",
+      trainPanel: "#253848",
+      trainRoof: "#1a2838",
+      trainWindow: "#1a2028",
+      trainWindowInner: "#3a2a10",
+      trainWindowLight: "rgba(255,215,100,0.75)",
+      trainStripe: "#0055CC",
+      trainStripeGlow: "#0088FF",
+      trainDoor: "#060a10",
+      trainDoorInner: "rgba(255,200,100,0.08)",
+      trainDoorStroke: "#3a5570",
+      trainHandle: "#5a6a7a",
+      destSign: "#000a10",
+      destText: "#FF8800",
+      destGlow: "#FF6600",
+      carNum: "#FFFFFF",
+      safety: "#FFCC00",
+      safetyGlow: "#FFAA00",
+      safetyStripe: "#1a0a00",
+      caution: "#1a0800",
+      lightBox: "#080810",
+      lightGlow: "rgba(220,240,255,0.95)",
+      lightGlowColor: "#AADDFF",
+      pillar: "#181828",
+      pillarHighlight: "#222236",
+      pillarCap: "#242438",
+      pillarBase: "#1a1a2a",
+      pillarStripe: "rgba(0,100,255,0.85)",
+      pillarStripeGlow: "#0066FF",
+      signBg: "#001408",
+      signStroke: "#22FF66",
+      signText: "#22FF66",
+      signGlow: "#22FF66",
+      exitBg: "#001808",
+      exitStroke: "#22FF44",
+      exitText: "#22FF44",
+      exitGlow: "#22FF44",
+      waveText: "#44FF88",
+      waveGlow: "#22FF44",
+      exitHint: "#FFFFAA",
+      exitHintGlow: "#FFFF00"
+    };
+
+    const metroName = isWasteland ? "WASTELAND METRO" : "NEON CITY METRO";
+    const lineName = isWasteland ? "◉  METRO  LINE W  ◉" : "◉  METRO  LINE 1  ◉";
+
     // ── Sky/background ─────────────────────────────────────────
-    ctx.fillStyle = "#020308";
+    ctx.fillStyle = colors.bg;
     ctx.fillRect(0, 0, W, H);
     ctx.save();
     ctx.translate(offX + shake.x, offY + shake.y);
 
     // ── Ambient underground glow ───────────────────────────────
     const ambientGrad = ctx.createRadialGradient(room.roomW / 2, room.roomH / 2, 0, room.roomW / 2, room.roomH / 2, room.roomW * 0.7);
-    ambientGrad.addColorStop(0, 'rgba(30,50,80,0.06)');
+    ambientGrad.addColorStop(0, colors.ambient1);
     ambientGrad.addColorStop(1, 'rgba(0,0,0,0)');
     ctx.fillStyle = ambientGrad;
     ctx.fillRect(0, 0, room.roomW, room.roomH);
@@ -11664,11 +13874,11 @@ class Game {
           py = ty * S;
         if (tile === 1) {
           // Concrete wall / ceiling with panel texture
-          ctx.fillStyle = "#0d0d18";
+          ctx.fillStyle = colors.wall;
           ctx.fillRect(px, py, S, S);
-          ctx.fillStyle = "rgba(255,255,255,0.012)";
+          ctx.fillStyle = colors.wallHighlight;
           ctx.fillRect(px + 2, py + 2, S - 4, S - 4);
-          ctx.fillStyle = "rgba(255,255,255,0.022)";
+          ctx.fillStyle = colors.wallEdge;
           ctx.fillRect(px, py, S, 2);
           ctx.fillRect(px, py, 2, S);
           // Vertical groove on walls
@@ -11678,74 +13888,74 @@ class Game {
           }
         } else if (tile === 2) {
           // Enhanced bench with metal frame
-          ctx.fillStyle = "#12121c";
+          ctx.fillStyle = colors.bench;
           ctx.fillRect(px, py, S, S);
           // Bench legs (chrome)
-          ctx.fillStyle = "#3a3a4a";
+          ctx.fillStyle = colors.benchLeg;
           ctx.fillRect(px + 8, py + S * 0.48, 5, S * 0.42);
           ctx.fillRect(px + S - 13, py + S * 0.48, 5, S * 0.42);
-          ctx.fillStyle = "#4a4a5a";
+          ctx.fillStyle = colors.benchLegHighlight;
           ctx.fillRect(px + 9, py + S * 0.48, 2, S * 0.42);
           ctx.fillRect(px + S - 12, py + S * 0.48, 2, S * 0.42);
-          // Seat (blue plastic)
-          ctx.fillStyle = "#1a4a6a";
+          // Seat
+          ctx.fillStyle = colors.benchSeat;
           ctx.fillRect(px + 4, py + S * 0.38, S - 8, 14);
-          ctx.fillStyle = "#2a6a9a";
+          ctx.fillStyle = colors.benchSeatHighlight;
           ctx.fillRect(px + 4, py + S * 0.38, S - 8, 4);
           // Backrest
-          ctx.fillStyle = "#1a4a6a";
+          ctx.fillStyle = colors.benchSeat;
           ctx.fillRect(px + 4, py + S * 0.15, S - 8, 12);
-          ctx.fillStyle = "#2a6a9a";
+          ctx.fillStyle = colors.benchSeatHighlight;
           ctx.fillRect(px + 4, py + S * 0.15, S - 8, 3);
           // Armrests
-          ctx.fillStyle = "#3a4a5a";
+          ctx.fillStyle = colors.benchLeg;
           ctx.fillRect(px + 2, py + S * 0.32, 7, 18);
           ctx.fillRect(px + S - 9, py + S * 0.32, 7, 18);
           // Floor under bench
-          ctx.fillStyle = (tx + ty) % 2 === 0 ? "#14141f" : "#111019";
+          ctx.fillStyle = (tx + ty) % 2 === 0 ? colors.floor : colors.floorAlt;
           ctx.fillRect(px, py + S * 0.9, S, S * 0.1);
         } else if (tile === 3) {
           // Enhanced train tracks / pit with depth
-          ctx.fillStyle = "#030308";
+          ctx.fillStyle = colors.trackBase;
           ctx.fillRect(px, py, S, S);
           // Gravel bed texture
-          ctx.fillStyle = "#080810";
+          ctx.fillStyle = colors.trackGravel;
           ctx.fillRect(px, py, S, S);
           for (let gi = 0; gi < 8; gi++) {
-            ctx.fillStyle = `rgba(20,20,30,${0.3 + Math.random() * 0.2})`;
+            ctx.fillStyle = isWasteland ? `rgba(30,20,10,${0.3 + Math.random() * 0.2})` : `rgba(20,20,30,${0.3 + Math.random() * 0.2})`;
             ctx.fillRect(px + Math.random() * S, py + Math.random() * S, 3, 3);
           }
           // Cross ties (wooden sleepers) with detail
           for (let ci = 0; ci < 3; ci++) {
             const tieY = py + ci * (S / 3) + 4;
-            ctx.fillStyle = "#1a1408";
+            ctx.fillStyle = colors.tie;
             ctx.fillRect(px, tieY, S, 9);
-            ctx.fillStyle = "#231a0c";
+            ctx.fillStyle = colors.tieHighlight;
             ctx.fillRect(px, tieY, S, 2);
-            ctx.fillStyle = "#0a0804";
+            ctx.fillStyle = colors.tieShadow;
             ctx.fillRect(px, tieY + 7, S, 2);
             // Bolt marks
-            ctx.fillStyle = "#2a2010";
+            ctx.fillStyle = colors.tieHighlight;
             ctx.fillRect(px + 10, tieY + 3, 3, 3);
             ctx.fillRect(px + S - 13, tieY + 3, 3, 3);
           }
           // Rails with 3D effect
-          ctx.fillStyle = "#2a2a40";
+          ctx.fillStyle = colors.rail;
           ctx.fillRect(px + 5, py, 8, S);
           ctx.fillRect(px + S - 13, py, 8, S);
-          ctx.fillStyle = "#4a4a60";
+          ctx.fillStyle = colors.railMid;
           ctx.fillRect(px + 6, py, 5, S);
           ctx.fillRect(px + S - 12, py, 5, S);
-          ctx.fillStyle = "#6a6a80";
+          ctx.fillStyle = colors.railTop;
           ctx.fillRect(px + 7, py, 3, S);
           ctx.fillRect(px + S - 11, py, 3, S);
           // Third rail (electric) with glow
           if (ty === 2) {
-            ctx.fillStyle = "#1a1a28";
+            ctx.fillStyle = colors.thirdRail;
             ctx.fillRect(px + S / 2 - 4, py + S - 10, 8, 8);
             const pulse = Math.sin(T * 3 + tx * 0.5) * 0.3 + 0.7;
-            ctx.fillStyle = `rgba(80,160,255,${0.25 * pulse})`;
-            ctx.shadowColor = "#4488FF";
+            ctx.fillStyle = colors.thirdRailGlow.replace('0.25', (0.25 * pulse).toFixed(2));
+            ctx.shadowColor = colors.thirdRailColor;
             ctx.shadowBlur = 8 * pulse;
             ctx.fillRect(px + S / 2 - 3, py + S - 9, 6, 6);
             ctx.shadowBlur = 0;
@@ -11753,7 +13963,7 @@ class Game {
         } else {
           // Platform floor — polished tile pattern
           const isDark = (tx + ty) % 2 === 0;
-          ctx.fillStyle = isDark ? "#16161f" : "#121218";
+          ctx.fillStyle = isDark ? colors.floor : colors.floorAlt;
           ctx.fillRect(px, py, S, S);
           // Tile edge highlights
           ctx.fillStyle = "rgba(255,255,255,0.025)";
@@ -11764,7 +13974,7 @@ class Game {
           ctx.fillRect(px, py + S - 1, S, 1);
           // Tactile safety strips near edge
           if (ty === 3 && tx > 0 && tx < room.W - 1) {
-            ctx.fillStyle = "#4a4a30";
+            ctx.fillStyle = colors.tactile;
             for (let dot = 0; dot < 4; dot++) {
               ctx.fillRect(px + 6 + dot * 11, py + S - 9, 7, 7);
             }
@@ -11775,7 +13985,7 @@ class Game {
 
     // ── Floor guide lines (walking paths) ──────────────────────
     ctx.save();
-    ctx.strokeStyle = "rgba(68,238,255,0.06)";
+    ctx.strokeStyle = isWasteland ? "rgba(255,136,100,0.06)" : "rgba(68,238,255,0.06)";
     ctx.lineWidth = 2;
     ctx.setLineDash([20, 12]);
     for (const lineX of [S * 4.5, S * 10, S * 15.5]) {
@@ -11790,7 +14000,7 @@ class Game {
     // ── Subtle floor glow strips ───────────────────────────────
     for (let stripX = S * 2; stripX < room.roomW - S * 2; stripX += S * 3.5) {
       const glowPulse = Math.sin(T * 1.2 + stripX * 0.008) * 0.3 + 0.7;
-      ctx.fillStyle = `rgba(68,238,255,${0.025 * glowPulse})`;
+      ctx.fillStyle = isWasteland ? `rgba(255,136,100,${0.025 * glowPulse})` : `rgba(68,238,255,${0.025 * glowPulse})`;
       ctx.fillRect(stripX - 25, room.roomH - S - 5, 50, 4);
     }
 
@@ -11799,27 +14009,27 @@ class Game {
       trainH = S * 2;
     // Car shell gradient
     const trainGrad = ctx.createLinearGradient(0, trainTop, 0, trainTop + trainH);
-    trainGrad.addColorStop(0, "#2a3d4e");
-    trainGrad.addColorStop(0.3, "#1c2d3e");
-    trainGrad.addColorStop(1, "#14222e");
+    trainGrad.addColorStop(0, colors.trainBody1);
+    trainGrad.addColorStop(0.3, colors.trainBody2);
+    trainGrad.addColorStop(1, colors.trainBody3);
     ctx.fillStyle = trainGrad;
     ctx.fillRect(0, trainTop, room.roomW, trainH);
     // Body panel
-    ctx.fillStyle = "#253848";
+    ctx.fillStyle = colors.trainPanel;
     ctx.fillRect(3, trainTop + 5, room.roomW - 6, trainH - 12);
     // Roof detail
-    ctx.fillStyle = "#1a2838";
+    ctx.fillStyle = colors.trainRoof;
     ctx.fillRect(0, trainTop, room.roomW, 6);
     // Windows with interior
     const numWin = Math.floor(room.roomW / 78);
     for (let wi = 0; wi < numWin; wi++) {
       const wx2 = 18 + wi * 78;
-      ctx.fillStyle = "#1a2028";
+      ctx.fillStyle = colors.trainWindow;
       ctx.fillRect(wx2 - 2, trainTop + 7, 50, 30);
-      ctx.fillStyle = "#3a2a10";
+      ctx.fillStyle = colors.trainWindowInner;
       ctx.fillRect(wx2, trainTop + 9, 46, 26);
       const winFlick = Math.sin(T * 0.4 + wi * 0.7) > -0.2 ? 1 : 0.8;
-      ctx.fillStyle = `rgba(255,215,100,${0.75 * winFlick})`;
+      ctx.fillStyle = colors.trainWindowLight.replace('0.75', (0.75 * winFlick).toFixed(2));
       ctx.fillRect(wx2 + 2, trainTop + 11, 42, 22);
       ctx.fillStyle = "rgba(255,255,255,0.12)";
       ctx.fillRect(wx2 + 2, trainTop + 11, 14, 10);
@@ -11828,55 +14038,55 @@ class Game {
       ctx.fillRect(wx2 + 20, trainTop + 18, 8, 12);
       if (wi % 2 === 0) ctx.fillRect(wx2 + 32, trainTop + 16, 6, 14);
     }
-    // Blue stripe with glow
-    ctx.fillStyle = "#0055CC";
-    ctx.shadowColor = "#0088FF";
+    // Color stripe with glow
+    ctx.fillStyle = colors.trainStripe;
+    ctx.shadowColor = colors.trainStripeGlow;
     ctx.shadowBlur = 10;
     ctx.fillRect(0, trainTop + trainH - 14, room.roomW, 8);
     ctx.shadowBlur = 0;
     // Door openings
     for (const dx of [room.roomW * 0.22, room.roomW * 0.5, room.roomW * 0.78]) {
-      ctx.fillStyle = "#060a10";
+      ctx.fillStyle = colors.trainDoor;
       ctx.fillRect(dx - 20, trainTop + 4, 40, trainH - 8);
-      ctx.fillStyle = "rgba(255,200,100,0.08)";
+      ctx.fillStyle = colors.trainDoorInner;
       ctx.fillRect(dx - 18, trainTop + 6, 36, trainH - 12);
-      ctx.strokeStyle = "#3a5570";
+      ctx.strokeStyle = colors.trainDoorStroke;
       ctx.lineWidth = 2;
       ctx.strokeRect(dx - 20, trainTop + 4, 40, trainH - 8);
       // Door handles
-      ctx.fillStyle = "#5a6a7a";
+      ctx.fillStyle = colors.trainHandle;
       ctx.fillRect(dx - 3, trainTop + trainH / 2, 6, 14);
     }
     // Headlight flicker
     const flickOn = Math.sin(T * 2.4) > 0.3;
     if (flickOn) {
-      ctx.fillStyle = "rgba(180,220,255,0.12)";
+      ctx.fillStyle = isWasteland ? "rgba(255,200,150,0.12)" : "rgba(180,220,255,0.12)";
       ctx.fillRect(0, trainTop, room.roomW * 0.08, trainH);
       ctx.fillRect(room.roomW * 0.92, trainTop, room.roomW * 0.08, trainH);
     }
     // Destination sign
-    ctx.fillStyle = "#000a10";
+    ctx.fillStyle = colors.destSign;
     ctx.fillRect(room.roomW / 2 - 58, trainTop + 2, 116, 17);
-    ctx.fillStyle = "#FF8800";
-    ctx.shadowColor = "#FF6600";
+    ctx.fillStyle = colors.destText;
+    ctx.shadowColor = colors.destGlow;
     ctx.shadowBlur = 8;
     ctx.font = "bold 10px Orbitron, monospace";
     ctx.textAlign = "center";
-    ctx.fillText("DOWNTOWN EXPRESS", room.roomW / 2, trainTop + 14);
+    ctx.fillText(isWasteland ? "DESERT EXPRESS" : "DOWNTOWN EXPRESS", room.roomW / 2, trainTop + 14);
     ctx.shadowBlur = 0;
     // Car number
-    ctx.fillStyle = "#FFFFFF";
+    ctx.fillStyle = colors.carNum;
     ctx.font = "bold 11px monospace";
-    ctx.fillText("LINE 1 · NEON CITY METRO", room.roomW / 2, trainTop + trainH - 3);
+    ctx.fillText(isWasteland ? "LINE W · " + metroName : "LINE 1 · " + metroName, room.roomW / 2, trainTop + trainH - 3);
 
     // ── Platform edge safety stripe ────────────────────────────
-    ctx.fillStyle = "#FFCC00";
-    ctx.shadowColor = "#FFAA00";
+    ctx.fillStyle = colors.safety;
+    ctx.shadowColor = colors.safetyGlow;
     ctx.shadowBlur = 14;
     ctx.fillRect(0, platEdge - 8, room.roomW, 8);
     ctx.shadowBlur = 0;
     // Hazard diagonal stripes
-    ctx.fillStyle = "#1a0a00";
+    ctx.fillStyle = colors.safetyStripe;
     for (let hx = -8; hx < room.roomW; hx += 16) {
       ctx.beginPath();
       ctx.moveTo(hx, platEdge - 8);
@@ -11887,7 +14097,7 @@ class Game {
       ctx.fill();
     }
     // Caution text
-    ctx.fillStyle = "#1a0800";
+    ctx.fillStyle = colors.caution;
     ctx.font = "bold 5px monospace";
     ctx.textAlign = "left";
     for (let xi = 0; xi < 8; xi++)
@@ -11896,18 +14106,24 @@ class Game {
     // ── Ceiling fluorescent lights ─────────────────────────────
     for (const lx of [room.roomW * 0.12, room.roomW * 0.32, room.roomW * 0.5, room.roomW * 0.68, room.roomW * 0.88]) {
       const flick = Math.sin(T * 50 + lx * 0.08) > 0.96 ? 0.35 : 1;
-      ctx.fillStyle = "#080810";
+      ctx.fillStyle = colors.lightBox;
       ctx.fillRect(lx - 30, 2, 60, 11);
-      ctx.fillStyle = `rgba(220,240,255,${0.95 * flick})`;
-      ctx.shadowColor = "#AADDFF";
+      ctx.fillStyle = colors.lightGlow.replace('0.95', (0.95 * flick).toFixed(2));
+      ctx.shadowColor = colors.lightGlowColor;
       ctx.shadowBlur = 22 * flick;
       ctx.fillRect(lx - 26, 4, 52, 7);
       ctx.shadowBlur = 0;
       // Light cone
       const cone = ctx.createLinearGradient(0, 14, 0, platEdge + 60);
-      cone.addColorStop(0, `rgba(180,210,255,${0.055 * flick})`);
-      cone.addColorStop(0.6, `rgba(160,200,255,${0.02 * flick})`);
-      cone.addColorStop(1, "rgba(160,200,255,0)");
+      if (isWasteland) {
+        cone.addColorStop(0, `rgba(255,200,150,${0.055 * flick})`);
+        cone.addColorStop(0.6, `rgba(255,180,120,${0.02 * flick})`);
+        cone.addColorStop(1, "rgba(255,180,120,0)");
+      } else {
+        cone.addColorStop(0, `rgba(180,210,255,${0.055 * flick})`);
+        cone.addColorStop(0.6, `rgba(160,200,255,${0.02 * flick})`);
+        cone.addColorStop(1, "rgba(160,200,255,0)");
+      }
       ctx.fillStyle = cone;
       ctx.beginPath();
       ctx.moveTo(lx - 26, 14);
@@ -11920,8 +14136,8 @@ class Game {
 
     // ── Wall neon accent strips ────────────────────────────────
     const neonPulse = Math.sin(T * 1.8) * 0.25 + 0.75;
-    ctx.fillStyle = `rgba(68,238,255,${0.45 * neonPulse})`;
-    ctx.shadowColor = "#44EEFF";
+    ctx.fillStyle = isWasteland ? `rgba(255,136,100,${0.45 * neonPulse})` : `rgba(68,238,255,${0.45 * neonPulse})`;
+    ctx.shadowColor = colors.neonColor;
     ctx.shadowBlur = 12;
     ctx.fillRect(3, platEdge + 25, 3, room.roomH - platEdge - S - 35);
     ctx.fillRect(room.roomW - 6, platEdge + 25, 3, room.roomH - platEdge - S - 35);
@@ -11933,31 +14149,40 @@ class Game {
       const pilH = room.roomH - platEdge - S;
       ctx.fillStyle = "rgba(0,0,0,0.25)";
       ctx.fillRect(pilX - 5, platEdge - 4, 18, pilH);
-      ctx.fillStyle = "#181828";
+      ctx.fillStyle = colors.pillar;
       ctx.fillRect(pilX - 8, platEdge - 6, 16, pilH);
-      ctx.fillStyle = "#222236";
+      ctx.fillStyle = colors.pillarHighlight;
       ctx.fillRect(pilX - 8, platEdge - 6, 5, pilH);
-      ctx.fillStyle = "#242438";
+      ctx.fillStyle = colors.pillarCap;
       ctx.fillRect(pilX - 12, platEdge - 10, 24, 8);
-      ctx.fillStyle = "#1a1a2a";
+      ctx.fillStyle = colors.pillarBase;
       ctx.fillRect(pilX - 10, room.roomH - S - 6, 20, 6);
-      // Blue neon stripe
+      // Neon stripe
       const stripPulse = Math.sin(T * 2.2 + pi * 0.8) * 0.25 + 0.75;
-      ctx.fillStyle = `rgba(0,100,255,${0.85 * stripPulse})`;
-      ctx.shadowColor = "#0066FF";
+      ctx.fillStyle = colors.pillarStripe.replace('0.85', (0.85 * stripPulse).toFixed(2));
+      ctx.shadowColor = colors.pillarStripeGlow;
       ctx.shadowBlur = 14 * stripPulse;
       ctx.fillRect(pilX - 2, platEdge + 12, 4, pilH - 35);
       ctx.shadowBlur = 0;
     }
 
     // ── Metro passengers (waiting NPCs) ─────────────────────────
-    const passengers = [
-      // Sitting passengers with varied poses
+    const passengers = isWasteland ? [
+      // Wasteland passengers with warm/dusty colors
+      { x: S * 2.5, y: S * 4.5, pose: 'sit_phone', color: '#AA6633', accent: '#FF8844', id: 1 },
+      { x: S * 5.5, y: S * 4.5, pose: 'sit_relaxed', color: '#886644', accent: '#FFAA66', id: 2 },
+      { x: S * 12.5, y: S * 7.5, pose: 'sit_leaning', color: '#996644', accent: '#FFCC88', id: 3 },
+      { x: S * 15.5, y: S * 7.5, pose: 'sit_looking', color: '#774422', accent: '#FF8866', id: 4 },
+      { x: S * 8, y: platEdge + 38, pose: 'stand_phone', color: '#885533', accent: '#FFAA44', id: 5 },
+      { x: S * 11, y: platEdge + 55, pose: 'stand_crossed', color: '#AA7744', accent: '#FF9966', id: 6 },
+      { x: S * 16, y: platEdge + 42, pose: 'stand_looking', color: '#775533', accent: '#FFBB77', id: 7 },
+      { x: S * 3.5, y: platEdge + 60, pose: 'stand_waiting', color: '#996655', accent: '#FFCC99', id: 8 },
+    ] : [
+      // Neon City passengers with neon colors
       { x: S * 2.5, y: S * 4.5, pose: 'sit_phone', color: '#FF4488', accent: '#44EEFF', id: 1 },
       { x: S * 5.5, y: S * 4.5, pose: 'sit_relaxed', color: '#44EEFF', accent: '#FF8844', id: 2 },
       { x: S * 12.5, y: S * 7.5, pose: 'sit_leaning', color: '#AA88FF', accent: '#44FF88', id: 3 },
       { x: S * 15.5, y: S * 7.5, pose: 'sit_looking', color: '#FFAA44', accent: '#FF4488', id: 4 },
-      // Standing passengers with varied poses
       { x: S * 8, y: platEdge + 38, pose: 'stand_phone', color: '#44FF88', accent: '#FF4488', id: 5 },
       { x: S * 11, y: platEdge + 55, pose: 'stand_crossed', color: '#FF4488', accent: '#44EEFF', id: 6 },
       { x: S * 16, y: platEdge + 42, pose: 'stand_looking', color: '#44EEFF', accent: '#AA88FF', id: 7 },
@@ -12190,7 +14415,12 @@ class Game {
     }
 
     // ── Advertisement panels (small posters) ────────────────────
-    const ads = [
+    const ads = isWasteland ? [
+      { x: S * 1.5, text: "SALVAGE", color: "#FF8844" },
+      { x: S * 6.5, text: "HYDRATE", color: "#FFAA66" },
+      { x: S * 13.5, text: "SCRAP", color: "#CC8833" },
+      { x: S * 18.5, text: "TRADER", color: "#FFCC88" }
+    ] : [
       { x: S * 1.5, text: "CYBER", color: "#FF4488" },
       { x: S * 6.5, text: "NEURO", color: "#44FFAA" },
       { x: S * 13.5, text: "HOLO", color: "#FF8844" },
@@ -12200,7 +14430,7 @@ class Game {
       const adY = platEdge + 42;
       const adW = 28;
       const adH = 22;
-      ctx.fillStyle = "#06080c";
+      ctx.fillStyle = isWasteland ? "#0c0806" : "#06080c";
       ctx.fillRect(ad.x - adW / 2, adY, adW, adH);
       ctx.strokeStyle = ad.color;
       ctx.lineWidth = 1;
@@ -12218,9 +14448,9 @@ class Game {
     // ── Destination board (compact) ─────────────────────────────
     const boardX = room.roomW / 2;
     const boardY = platEdge + 32;
-    ctx.fillStyle = "#000810";
+    ctx.fillStyle = isWasteland ? "#100800" : "#000810";
     ctx.fillRect(boardX - 65, boardY, 130, 28);
-    ctx.strokeStyle = "#224466";
+    ctx.strokeStyle = isWasteland ? "#443322" : "#224466";
     ctx.lineWidth = 1;
     ctx.strokeRect(boardX - 65, boardY, 130, 28);
     ctx.fillStyle = "#FFAA00";
@@ -12228,9 +14458,9 @@ class Game {
     ctx.shadowBlur = 6;
     ctx.font = "bold 8px Orbitron, monospace";
     ctx.textAlign = "center";
-    ctx.fillText("NEXT: CENTRAL", boardX, boardY + 11);
-    ctx.fillStyle = "#44FF88";
-    ctx.shadowColor = "#22FF44";
+    ctx.fillText(isWasteland ? "NEXT: OUTPOST" : "NEXT: CENTRAL", boardX, boardY + 11);
+    ctx.fillStyle = isWasteland ? "#FF8844" : "#44FF88";
+    ctx.shadowColor = isWasteland ? "#FF6622" : "#22FF44";
     ctx.font = "7px Orbitron, monospace";
     ctx.fillText("2 MIN", boardX, boardY + 22);
     ctx.shadowBlur = 0;
@@ -12238,60 +14468,60 @@ class Game {
     // ── Map panel (compact) ────────────────────────────────────
     const mapX = S * 4.5;
     const mapY = platEdge + 75;
-    ctx.fillStyle = "#080c18";
+    ctx.fillStyle = isWasteland ? "#100c08" : "#080c18";
     ctx.fillRect(mapX - 28, mapY, 56, 38);
-    ctx.strokeStyle = "#44EEFF";
+    ctx.strokeStyle = isWasteland ? "#FF8844" : "#44EEFF";
     ctx.lineWidth = 1;
     ctx.strokeRect(mapX - 28, mapY, 56, 38);
-    ctx.fillStyle = "#44EEFF";
+    ctx.fillStyle = isWasteland ? "#FF8844" : "#44EEFF";
     ctx.font = "bold 5px monospace";
     ctx.textAlign = "center";
     ctx.fillText("MAP", mapX, mapY + 9);
     // Line representation
-    ctx.strokeStyle = "#FF4466";
+    ctx.strokeStyle = isWasteland ? "#FFAA44" : "#FF4466";
     ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.moveTo(mapX - 20, mapY + 20);
     ctx.lineTo(mapX + 20, mapY + 20);
     ctx.stroke();
-    ctx.fillStyle = "#FF4466";
+    ctx.fillStyle = isWasteland ? "#FFAA44" : "#FF4466";
     ctx.beginPath();
     ctx.arc(mapX - 12, mapY + 20, 3, 0, Math.PI * 2);
     ctx.arc(mapX, mapY + 20, 3, 0, Math.PI * 2);
     ctx.arc(mapX + 12, mapY + 20, 3, 0, Math.PI * 2);
     ctx.fill();
-    ctx.fillStyle = "#44FF88";
+    ctx.fillStyle = isWasteland ? "#FF8844" : "#44FF88";
     ctx.font = "4px monospace";
     ctx.fillText("HERE", mapX, mapY + 32);
-    ctx.strokeStyle = "#44FF88";
+    ctx.strokeStyle = isWasteland ? "#FF8844" : "#44FF88";
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.arc(mapX, mapY + 20, 5, 0, Math.PI * 2);
     ctx.stroke();
 
     // ── Overhead METRO sign ────────────────────────────────────
-    ctx.fillStyle = "#001408";
-    ctx.strokeStyle = "#22FF66";
+    ctx.fillStyle = colors.signBg;
+    ctx.strokeStyle = colors.signStroke;
     ctx.lineWidth = 2;
     ctx.fillRect(room.roomW / 2 - 82, 0, 164, 23);
     ctx.strokeRect(room.roomW / 2 - 82, 0, 164, 23);
-    ctx.fillStyle = "#22FF66";
-    ctx.shadowColor = "#22FF66";
+    ctx.fillStyle = colors.signText;
+    ctx.shadowColor = colors.signGlow;
     ctx.shadowBlur = 18;
     ctx.font = "bold 13px Orbitron, monospace";
     ctx.textAlign = "center";
-    ctx.fillText("◉  METRO  LINE 1  ◉", room.roomW / 2, 17);
+    ctx.fillText(lineName, room.roomW / 2, 17);
     ctx.shadowBlur = 0;
 
     // EXIT signs
     for (const sx2 of [30, room.roomW - 30]) {
-      ctx.fillStyle = "#001808";
+      ctx.fillStyle = colors.exitBg;
       ctx.fillRect(sx2 - 24, platEdge + 5, 48, 19);
-      ctx.strokeStyle = "#22FF44";
+      ctx.strokeStyle = colors.exitStroke;
       ctx.lineWidth = 1;
       ctx.strokeRect(sx2 - 24, platEdge + 5, 48, 19);
-      ctx.fillStyle = "#22FF44";
-      ctx.shadowColor = "#22FF44";
+      ctx.fillStyle = colors.exitText;
+      ctx.shadowColor = colors.exitGlow;
       ctx.shadowBlur = 12;
       ctx.font = "bold 9px monospace";
       ctx.textAlign = "center";
@@ -12301,10 +14531,10 @@ class Game {
 
     // ── Wave counter ───────────────────────────────────────────
     const aliveCnt = this._indoorBots.filter((b) => !b.dead && !b.dying).length;
-    ctx.fillStyle = "#44FF88";
+    ctx.fillStyle = colors.waveText;
     ctx.font = "bold 11px Orbitron, monospace";
     ctx.textAlign = "right";
-    ctx.shadowColor = "#22FF44";
+    ctx.shadowColor = colors.waveGlow;
     ctx.shadowBlur = 10;
     ctx.fillText(`METRO WAVE ${this._metroWave}`, room.roomW - 10, 17);
     if (aliveCnt > 0) {
@@ -12316,7 +14546,7 @@ class Game {
       ctx.shadowColor = "#FFAA00";
       ctx.fillText(`NEXT WAVE ${Math.ceil(this._metroWaveTimer)}s`, room.roomW - 10, 32);
     } else {
-      ctx.fillStyle = "#44FF88";
+      ctx.fillStyle = colors.waveText;
       ctx.fillText("SECTOR CLEAR", room.roomW - 10, 32);
     }
     ctx.shadowBlur = 0;
@@ -12334,8 +14564,8 @@ class Game {
     ctx.save();
     ctx.font = "bold 12px Orbitron, monospace";
     ctx.textAlign = "center";
-    ctx.fillStyle = "#FFFFAA";
-    ctx.shadowColor = "#FFFF00";
+    ctx.fillStyle = colors.exitHint;
+    ctx.shadowColor = colors.exitHintGlow;
     ctx.shadowBlur = 12;
     ctx.fillText("[E] EXIT METRO", room.roomW / 2, room.roomH - 10);
     ctx.restore();
@@ -12351,6 +14581,7 @@ class Game {
     const isNeonCity = this.map.config.id === "neon_city";
     const isGalactica = !!this.map.config.galactica;
     const isWasteland = !!this.map.config.wasteland;
+    const isSnow = !!this.map.config.snow;
     const t = performance.now() / 1000;
 
     // Background
@@ -12360,7 +14591,9 @@ class Game {
         ? "#00000e"
         : isWasteland
           ? "#0c0a08"
-          : "#06060a";
+          : isSnow
+            ? "#050810"
+            : "#06060a";
     ctx.fillRect(0, 0, W, H);
 
     ctx.save();
@@ -13266,6 +15499,388 @@ class Game {
       ctx.fill();
       ctx.fillStyle = "#5a5550";
       ctx.fillRect(room.roomW - S - 48, S * 2.5, 36, 3);
+    } else if (isSnow) {
+      // ═══ FROZEN TUNDRA: ICE CRYSTAL SHOWROOM ═══
+
+      // Frozen floor base with ice patterns
+      for (let ty = 0; ty < room.H; ty++) {
+        for (let tx = 0; tx < room.W; tx++) {
+          const px = tx * S,
+            py = ty * S,
+            tile = room.layout[ty][tx];
+          if (tile === 1) {
+            // Ice walls - frozen blue panels
+            ctx.fillStyle = "#0a1520";
+            ctx.fillRect(px, py, S, S);
+            // Frost crystal strips on walls
+            if ((tx + ty) % 3 === 0) {
+              ctx.fillStyle = "rgba(100,180,255,0.15)";
+              ctx.fillRect(px + S / 2 - 1, py, 2, S);
+            }
+            // Ice crystals on walls
+            if ((tx * 3 + ty * 5) % 7 === 0) {
+              ctx.fillStyle = "rgba(180,220,255,0.2)";
+              ctx.beginPath();
+              ctx.moveTo(px + S/2, py + 5);
+              ctx.lineTo(px + S/2 - 5, py + 15);
+              ctx.lineTo(px + S/2 + 5, py + 15);
+              ctx.closePath();
+              ctx.fill();
+            }
+          } else {
+            // Frozen floor - ice blue with subtle pattern
+            const floorSeed = tx * 17 + ty * 31;
+            ctx.fillStyle = floorSeed % 2 === 0 ? "#0c1825" : "#081420";
+            ctx.fillRect(px, py, S, S);
+
+            // Ice grid lines
+            ctx.strokeStyle = "rgba(100,180,255,0.08)";
+            ctx.lineWidth = 1;
+            ctx.strokeRect(px, py, S, S);
+
+            // Frost patches
+            if (floorSeed % 9 === 0) {
+              const pulse = Math.sin(t * 1.5 + tx + ty) * 0.3 + 0.7;
+              ctx.fillStyle = `rgba(150,200,255,${0.04 * pulse})`;
+              ctx.fillRect(px + 2, py + 2, S - 4, S - 4);
+            }
+
+            // Ice cracks
+            if (floorSeed % 11 === 0) {
+              ctx.strokeStyle = "rgba(180,220,255,0.12)";
+              ctx.lineWidth = 1;
+              ctx.beginPath();
+              ctx.moveTo(px + 3, py + S/2);
+              ctx.lineTo(px + S - 5, py + S/3);
+              ctx.stroke();
+            }
+          }
+        }
+      }
+
+      // Ice crystal border around room
+      ctx.strokeStyle = "#66BBFF";
+      ctx.lineWidth = 2;
+      ctx.shadowColor = "#66BBFF";
+      ctx.shadowBlur = 15;
+      ctx.strokeRect(
+        S + 2,
+        S + 2,
+        room.roomW - S * 2 - 4,
+        room.roomH - S * 2 - 4,
+      );
+      ctx.shadowBlur = 0;
+
+      // Top frost accent bar with animated shimmer
+      const topGrad = ctx.createLinearGradient(0, S, room.roomW, S);
+      topGrad.addColorStop(0, "rgba(100,180,255,0.2)");
+      topGrad.addColorStop(0.5, "rgba(180,220,255,0.5)");
+      topGrad.addColorStop(1, "rgba(100,180,255,0.2)");
+      ctx.fillStyle = topGrad;
+      ctx.fillRect(S, S, room.roomW - S * 2, 4);
+
+      // Showroom title with ice theme
+      ctx.save();
+      ctx.font = "bold 20px Orbitron, monospace";
+      ctx.textAlign = "center";
+      ctx.fillStyle = "#AADDFF";
+      ctx.shadowColor = "#66BBFF";
+      ctx.shadowBlur = 25;
+      ctx.fillText("❄ FROST MOTORS ❄", room.roomW / 2, S - 20);
+      ctx.shadowBlur = 0;
+      ctx.restore();
+
+      // ═══ ICE COUNTER AREA ═══
+      const counterX = room.roomW / 2 - 75;
+      const counterY = S * 1.2;
+      const counterW = 150;
+      const counterH = 40;
+
+      // Counter shadow
+      ctx.fillStyle = "rgba(0,0,0,0.4)";
+      ctx.fillRect(counterX + 4, counterY + counterH + 2, counterW, 6);
+
+      // Counter base (frozen ice desk)
+      const counterGrad = ctx.createLinearGradient(
+        counterX,
+        counterY,
+        counterX,
+        counterY + counterH,
+      );
+      counterGrad.addColorStop(0, "#1a2a3e");
+      counterGrad.addColorStop(0.5, "#12202e");
+      counterGrad.addColorStop(1, "#0a1820");
+      ctx.fillStyle = counterGrad;
+      ctx.fillRect(counterX, counterY, counterW, counterH);
+
+      // Counter top surface - frosted
+      ctx.fillStyle = "#2a3a4e";
+      ctx.fillRect(counterX - 5, counterY, counterW + 10, 6);
+
+      // Ice edge glow on counter
+      ctx.strokeStyle = "#66BBFF";
+      ctx.lineWidth = 2;
+      ctx.shadowColor = "#66BBFF";
+      ctx.shadowBlur = 10;
+      ctx.beginPath();
+      ctx.moveTo(counterX - 5, counterY + 3);
+      ctx.lineTo(counterX + counterW + 5, counterY + 3);
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+
+      // "SALES" sign on counter front
+      ctx.fillStyle = "#88CCFF";
+      ctx.shadowColor = "#66BBFF";
+      ctx.shadowBlur = 10;
+      ctx.font = "bold 12px Orbitron, monospace";
+      ctx.textAlign = "center";
+      ctx.fillText("FROST SALES", counterX + counterW / 2, counterY + 26);
+      ctx.shadowBlur = 0;
+
+      // ═══ DISPLAY VEHICLES ON ICE PLATFORMS ═══
+      const carDisplays = [
+        // Front row
+        {
+          x: room.roomW * 0.18,
+          y: room.roomH * 0.45,
+          color: "#4488BB",
+          name: "ICE RUNNER",
+        },
+        {
+          x: room.roomW * 0.38,
+          y: room.roomH * 0.42,
+          color: "#5599CC",
+          name: "BLIZZARD",
+        },
+        {
+          x: room.roomW * 0.62,
+          y: room.roomH * 0.42,
+          color: "#6699AA",
+          name: "FROSTBITE",
+        },
+        {
+          x: room.roomW * 0.82,
+          y: room.roomH * 0.45,
+          color: "#77AACC",
+          name: "AVALANCHE",
+        },
+        // Back row
+        {
+          x: room.roomW * 0.28,
+          y: room.roomH * 0.58,
+          color: "#3388AA",
+          name: "GLACIER",
+        },
+        {
+          x: room.roomW * 0.72,
+          y: room.roomH * 0.58,
+          color: "#66BBDD",
+          name: "SNOWSTORM",
+        },
+      ];
+
+      for (const car of carDisplays) {
+        const pulse = Math.sin(t * 1.5 + car.x * 0.01) * 0.3 + 0.7;
+        ctx.save();
+        ctx.translate(car.x, car.y);
+
+        // Platform base (ice circle with frost glow)
+        ctx.beginPath();
+        ctx.arc(0, 15, 45, 0, Math.PI * 2);
+        ctx.fillStyle = "rgba(100,180,255,0.06)";
+        ctx.fill();
+        ctx.strokeStyle = `rgba(100,180,255,${0.5 * pulse})`;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Inner ice ring
+        ctx.beginPath();
+        ctx.arc(0, 15, 35, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(150,200,255,${0.3 * pulse})`;
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        // Rotating snowflake pattern under vehicle
+        ctx.save();
+        ctx.translate(0, 15);
+        ctx.rotate(t * 0.3);
+        for (let i = 0; i < 6; i++) {
+          ctx.fillStyle = `rgba(150,200,255,${0.12 * pulse})`;
+          ctx.beginPath();
+          ctx.moveTo(0, 0);
+          ctx.arc(0, 0, 40, (i * Math.PI) / 3, (i * Math.PI) / 3 + 0.3);
+          ctx.closePath();
+          ctx.fill();
+        }
+        ctx.restore();
+
+        // ═══ WINTER VEHICLE (top-down view) ═══
+        ctx.save();
+        // Vehicle shadow
+        ctx.fillStyle = "rgba(0,0,0,0.35)";
+        ctx.beginPath();
+        ctx.ellipse(3, 18, 28, 12, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Vehicle body with frost coating
+        const carGrad = ctx.createLinearGradient(-25, -15, 25, 15);
+        carGrad.addColorStop(0, car.color);
+        carGrad.addColorStop(0.5, car.color + "DD");
+        carGrad.addColorStop(1, car.color + "AA");
+        ctx.fillStyle = carGrad;
+
+        // Main body shape
+        ctx.beginPath();
+        ctx.moveTo(-22, -8);
+        ctx.lineTo(-25, 0);
+        ctx.lineTo(-22, 10);
+        ctx.lineTo(22, 10);
+        ctx.lineTo(25, 0);
+        ctx.lineTo(22, -8);
+        ctx.closePath();
+        ctx.fill();
+
+        // Snow on roof
+        ctx.fillStyle = "rgba(220,240,255,0.6)";
+        ctx.beginPath();
+        ctx.roundRect(-14, -7, 28, 4, 2);
+        ctx.fill();
+
+        // Roof/cabin
+        ctx.fillStyle = "#152030";
+        ctx.beginPath();
+        ctx.roundRect(-12, -5, 24, 12, 3);
+        ctx.fill();
+
+        // Windshield with frost
+        ctx.fillStyle = "rgba(150,200,255,0.4)";
+        ctx.beginPath();
+        ctx.moveTo(-12, -4);
+        ctx.lineTo(-8, -8);
+        ctx.lineTo(8, -8);
+        ctx.lineTo(12, -4);
+        ctx.closePath();
+        ctx.fill();
+
+        // Frost crystals on windshield
+        ctx.fillStyle = "rgba(220,240,255,0.3)";
+        ctx.fillRect(-10, -7, 4, 2);
+        ctx.fillRect(6, -7, 4, 2);
+
+        // Rear window
+        ctx.fillStyle = "rgba(150,200,255,0.35)";
+        ctx.beginPath();
+        ctx.moveTo(-10, 6);
+        ctx.lineTo(-6, 10);
+        ctx.lineTo(6, 10);
+        ctx.lineTo(10, 6);
+        ctx.closePath();
+        ctx.fill();
+
+        // Headlights - bright ice blue
+        ctx.fillStyle = "#FFFFFF";
+        ctx.shadowColor = "#88DDFF";
+        ctx.shadowBlur = 6;
+        ctx.fillRect(-20, -6, 4, 3);
+        ctx.fillRect(16, -6, 4, 3);
+        ctx.shadowBlur = 0;
+
+        // Taillights - cold red
+        ctx.fillStyle = "#CC4444";
+        ctx.shadowColor = "#CC4444";
+        ctx.shadowBlur = 4;
+        ctx.fillRect(-20, 6, 4, 2);
+        ctx.fillRect(16, 6, 4, 2);
+        ctx.shadowBlur = 0;
+
+        // Winter tires
+        ctx.fillStyle = "#1a1a1a";
+        ctx.beginPath();
+        ctx.arc(-16, -10, 5, 0, Math.PI * 2);
+        ctx.arc(16, -10, 5, 0, Math.PI * 2);
+        ctx.arc(-16, 12, 5, 0, Math.PI * 2);
+        ctx.arc(16, 12, 5, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Wheel rims - chrome/silver
+        ctx.fillStyle = "#667788";
+        ctx.beginPath();
+        ctx.arc(-16, -10, 3, 0, Math.PI * 2);
+        ctx.arc(16, -10, 3, 0, Math.PI * 2);
+        ctx.arc(-16, 12, 3, 0, Math.PI * 2);
+        ctx.arc(16, 12, 3, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.restore();
+
+        // Car name label
+        ctx.fillStyle = "#FFFFFF";
+        ctx.shadowColor = car.color;
+        ctx.shadowBlur = 8;
+        ctx.font = "bold 8px Orbitron, monospace";
+        ctx.textAlign = "center";
+        ctx.fillText(car.name, 0, 45);
+        ctx.shadowBlur = 0;
+
+        // Price tag
+        ctx.fillStyle = "#88CCFF";
+        ctx.font = "7px Orbitron, monospace";
+        ctx.fillText("ON DISPLAY", 0, 54);
+
+        ctx.restore();
+      }
+
+      // Snowflake particles
+      for (let i = 0; i < 10; i++) {
+        const px = (t * 20 + i * 90) % room.roomW;
+        const py =
+          S * 1.5 + Math.sin(t * 0.8 + i * 1.5) * 25 + (i * (room.roomH - S * 3)) / 10;
+        const alpha = Math.sin(t * 2 + i) * 0.3 + 0.4;
+        const size = (i % 3) + 1;
+        ctx.fillStyle = `rgba(200,230,255,${alpha})`;
+        ctx.beginPath();
+        ctx.arc(px, py, size, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Side ice crystal strips
+      ctx.fillStyle = "rgba(100,180,255,0.15)";
+      ctx.fillRect(S, S * 1.5, 3, room.roomH - S * 3);
+      ctx.fillRect(room.roomW - S - 3, S * 1.5, 3, room.roomH - S * 3);
+
+      // Ice stalactites on ceiling (left)
+      for (let i = 0; i < 4; i++) {
+        const ix = S + 30 + i * 35;
+        const ih = 15 + (i % 2) * 10;
+        ctx.fillStyle = "rgba(150,200,255,0.25)";
+        ctx.beginPath();
+        ctx.moveTo(ix - 6, S);
+        ctx.lineTo(ix, S + ih);
+        ctx.lineTo(ix + 6, S);
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      // Ice stalactites on ceiling (right)
+      for (let i = 0; i < 4; i++) {
+        const ix = room.roomW - S - 30 - i * 35;
+        const ih = 12 + (i % 2) * 8;
+        ctx.fillStyle = "rgba(150,200,255,0.25)";
+        ctx.beginPath();
+        ctx.moveTo(ix - 5, S);
+        ctx.lineTo(ix, S + ih);
+        ctx.lineTo(ix + 5, S);
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      // Frozen barrel/container on right
+      ctx.fillStyle = "#2a3a4a";
+      ctx.beginPath();
+      ctx.ellipse(room.roomW - S - 30, S * 2.5, 18, 12, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "rgba(150,200,255,0.3)";
+      ctx.fillRect(room.roomW - S - 48, S * 2.5, 36, 3);
     } else {
       // ═══ DEFAULT SHOWROOM (other maps) ═══
       for (let ty = 0; ty < room.H; ty++) {
@@ -13320,6 +15935,11 @@ class Game {
           ctx.shadowColor = "#8a6040";
           ctx.shadowBlur = 8;
           ctx.fillText("[T] OPEN SHOP", nearSp.x, nearSp.y - 102);
+        } else if (isSnow) {
+          ctx.fillStyle = "#AADDFF";
+          ctx.shadowColor = "#66BBFF";
+          ctx.shadowBlur = 12;
+          ctx.fillText("[T] OPEN SHOP", nearSp.x, nearSp.y - 102);
         } else {
           ctx.fillStyle = "#FFFFAA";
           ctx.shadowColor = "#FFFF00";
@@ -13349,6 +15969,11 @@ class Game {
       ctx.fillStyle = "#c0a080";
       ctx.shadowColor = "#8a6040";
       ctx.shadowBlur = 8;
+      ctx.fillText("[E] EXIT", room.entryX, room.roomH - 25);
+    } else if (isSnow) {
+      ctx.fillStyle = "#AADDFF";
+      ctx.shadowColor = "#66BBFF";
+      ctx.shadowBlur = 10;
       ctx.fillText("[E] EXIT", room.entryX, room.roomH - 25);
     } else {
       ctx.fillStyle = "#FFFFAA";
@@ -13569,10 +16194,133 @@ class Game {
         const isNeonCity = this.map.config.id === "neon_city";
         const isWasteland = !!this.map.config.wasteland;
         const isGalactica = !!this.map.config.galactica;
+        const isSnow = !!this.map.config.snow;
         ctx.save();
         ctx.translate(p.x, p.y);
 
-        if (isNeonCity || isWasteland) {
+        if (isSnow) {
+          // ── FROZEN TUNDRA: Ice crystal portal — ice blue / white snowflakes ─
+          const t = p._animT;
+          const pulse2 = Math.sin(t * 2) * 0.3 + 0.7;
+          const pulse3 = Math.sin(t * 3.5) * 0.25 + 0.75;
+
+          // Frosty halo mist
+          const haloG = ctx.createRadialGradient(0, 0, 8, 0, 0, 52);
+          haloG.addColorStop(0, `rgba(200,240,255,${pulse * 0.2})`);
+          haloG.addColorStop(0.5, `rgba(100,180,220,${pulse * 0.12})`);
+          haloG.addColorStop(1, "rgba(0,0,0,0)");
+          ctx.fillStyle = haloG;
+          ctx.beginPath();
+          ctx.arc(0, 0, 52, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Outer rotating ice ring
+          ctx.save();
+          ctx.rotate(t * 0.35);
+          ctx.strokeStyle = `rgba(136,221,255,${pulse * 0.65})`;
+          ctx.lineWidth = 2.5;
+          ctx.setLineDash([12, 6]);
+          ctx.beginPath();
+          ctx.arc(0, 0, 38, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.restore();
+
+          // Middle counter-rotating frost ring
+          ctx.save();
+          ctx.rotate(-t * 0.6);
+          ctx.strokeStyle = `rgba(220,240,255,${pulse2 * 0.55})`;
+          ctx.lineWidth = 1.5;
+          ctx.setLineDash([6, 10]);
+          ctx.beginPath();
+          ctx.arc(0, 0, 30, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.restore();
+
+          // Inner fast ring — icy shimmer
+          ctx.save();
+          ctx.rotate(t * 1.1);
+          ctx.strokeStyle = `rgba(180,220,240,${pulse3 * 0.35})`;
+          ctx.lineWidth = 1;
+          ctx.setLineDash([4, 6]);
+          ctx.beginPath();
+          ctx.arc(0, 0, 21, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.restore();
+
+          // Ice crystal core gradient
+          const coreG = ctx.createRadialGradient(0, 0, 0, 0, 0, 24);
+          coreG.addColorStop(0, `rgba(255,255,255,${pulse3 * 0.95})`);
+          coreG.addColorStop(0.25, `rgba(180,220,255,${pulse2 * 0.75})`);
+          coreG.addColorStop(0.6, `rgba(100,160,200,${pulse * 0.45})`);
+          coreG.addColorStop(1, "rgba(0,0,0,0)");
+          ctx.fillStyle = coreG;
+          ctx.beginPath();
+          ctx.arc(0, 0, 24, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Orbiting snowflake particles
+          for (let i = 0; i < 8; i++) {
+            const angle = t * 1.5 + (i * Math.PI) / 4;
+            const dist = 22 + Math.sin(t * 2.5 + i * 1.3) * 5;
+            const px = Math.cos(angle) * dist;
+            const py = Math.sin(angle) * dist;
+            const r = i % 3 === 0 ? 3 : 2;
+            ctx.fillStyle = i % 2 === 0
+              ? `rgba(200,240,255,${pulse})`
+              : `rgba(255,255,255,${pulse2})`;
+            ctx.beginPath();
+            ctx.arc(px, py, r, 0, Math.PI * 2);
+            ctx.fill();
+          }
+
+          // Bright central ice core
+          ctx.shadowColor = "#88DDFF";
+          ctx.shadowBlur = 22 * pulse;
+          ctx.fillStyle = `rgba(255,255,255,${pulse3})`;
+          ctx.beginPath();
+          ctx.arc(0, 0, 7, 0, Math.PI * 2);
+          ctx.fill();
+
+          // 6-point snowflake/ice crystal frame
+          ctx.shadowBlur = 14 * pulse;
+          ctx.strokeStyle = `rgba(136,221,255,${pulse})`;
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          for (let i = 0; i < 12; i++) {
+            const ang = (Math.PI / 6) * i - Math.PI / 2;
+            const r = i % 2 === 0 ? 28 : 18;
+            const fx = Math.cos(ang) * r;
+            const fy = Math.sin(ang) * r;
+            i === 0 ? ctx.moveTo(fx, fy) : ctx.lineTo(fx, fy);
+          }
+          ctx.closePath();
+          ctx.stroke();
+
+          // Ice accent inner ring
+          ctx.shadowBlur = 6 * pulse2;
+          ctx.strokeStyle = `rgba(200,240,255,${pulse2 * 0.4})`;
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.arc(0, 0, 15, 0, Math.PI * 2);
+          ctx.stroke();
+
+          ctx.shadowBlur = 0;
+          ctx.fillStyle = near ? "#FFFFEE" : "#AAEEFF";
+          ctx.font = "bold 9px Orbitron, monospace";
+          ctx.textAlign = "center";
+          ctx.shadowColor = "#88DDFF";
+          ctx.shadowBlur = 12;
+          ctx.fillText("❄ ICE PORTAL ❄", 0, -50);
+          if (near) {
+            ctx.fillStyle = "#FFFFEE";
+            ctx.shadowColor = "#FFFF88";
+            ctx.shadowBlur = 14;
+            ctx.fillText("[E] TELEPORT", 0, -64);
+          }
+        } else if (isNeonCity || isWasteland) {
           // ── NEON CITY: Cyber portal — cyan / magenta rings ────────
           const t = p._animT;
           const pulse2 = Math.sin(t * 2) * 0.3 + 0.7;
@@ -13907,8 +16655,9 @@ class Game {
             ctx.save();
             ctx.font = "bold 11px Orbitron, monospace";
             ctx.textAlign = "center";
-            ctx.fillStyle = "#44FF88";
-            ctx.shadowColor = "#22FF66";
+            const isWasteland = !!this.map.config.wasteland;
+            ctx.fillStyle = isWasteland ? "#FF8844" : "#44FF88";
+            ctx.shadowColor = isWasteland ? "#FF6622" : "#22FF66";
             ctx.shadowBlur = 14;
             ctx.fillText("[E] METRO", me.wx, me.wy - 40);
             ctx.restore();
@@ -14499,11 +17248,18 @@ class Game {
       );
       if (this.input.mouseJustDown) {
         if (hoveredDoor) {
-          // Toggle: click same door again clears waypoint, otherwise set it
-          const same =
-            this._waypointDoor &&
-            this._waypointDoor.tx === hoveredDoor.tx &&
-            this._waypointDoor.ty === hoveredDoor.ty;
+          // Toggle: click same door/metro again clears waypoint, otherwise set it
+          let same = false;
+          if (this._waypointDoor) {
+            if (hoveredDoor.isMetro && this._waypointDoor.isMetro) {
+              // Both are metro
+              same = true;
+            } else if (!hoveredDoor.isMetro && !this._waypointDoor.isMetro) {
+              // Both are doors
+              same = this._waypointDoor.tx === hoveredDoor.tx &&
+                     this._waypointDoor.ty === hoveredDoor.ty;
+            }
+          }
           this._waypointDoor = same ? null : hoveredDoor;
           this.state = "playing";
         } else {
