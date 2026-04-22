@@ -1312,7 +1312,12 @@ body {
   position: fixed; inset: 0; pointer-events: none; z-index: 100;
   display: none;
 }
+/* Show touch controls only on tablet/phone — never on wide screens regardless of touch capability */
 #touchControls.active { display: block; }
+@media (min-width: 1025px) {
+  #touchControls,
+  #touchControls.active { display: none !important; }
+}
 
 /* Left joystick zone */
 #joystickZone {
@@ -2902,4 +2907,145 @@ body {
   #joystickKnob  { width: 38px; height: 38px; }
   #touchButtons  { grid-template-columns: 36px 36px; grid-template-rows: 36px 36px 36px; gap: 5px; bottom: 12px; right: 10px; }
   .touch-btn.btn-fire { width: 44px; height: 44px; font-size: 13px; }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   RESPONSIVE SUPPLEMENTS
+   Touch usability · nav-aware padding · 360px ultra-small
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── Minimum 44 × 44 px touch targets ───────────────────── */
+@media (pointer: coarse) {
+  .page-tab        { min-height: 44px; display: flex; align-items: center; justify-content: center; }
+  .step-nav-btn    { min-height: 44px; }
+  .cust-btn        { min-height: 44px; padding-top: 12px; padding-bottom: 12px; }
+  .color-swatch    { width: 32px; height: 32px; }
+  .neon-theme-btn,
+  .wasteland-theme-btn { width: 44px; height: 44px; }
+  .nav-mobile-item { min-height: 52px; }
+  .start-btn       { min-height: 52px; }
+  .auth-submit     { min-height: 52px; }
+  .shop-tab        { min-height: 44px; }
+  .lb-tab          { min-height: 44px; }
+  .nav-btn, .nav-shop-btn, .nav-account-btn { min-height: 44px; }
+}
+
+/* ── Match top offset to actual nav height ───────────────── */
+/* At ≤ 768px the nav shrinks to 56px — use 68px for breathing room */
+@media (max-width: 768px) {
+  .select-screen { padding-top: 68px; }
+  .shop-page     { padding-top: 68px; }
+  .profile-page  { padding-top: 68px; }
+  .auth-screen   { padding-top: 68px; }
+}
+/* At ≤ 480px the nav shrinks to 52px — use 62px */
+@media (max-width: 480px) {
+  .select-screen { padding-top: 62px; }
+  .shop-page     { padding-top: 62px; }
+  .profile-page  { padding-top: 62px; }
+  .auth-screen   { padding-top: 62px; }
+}
+
+/* ── Ultra-small phones (≤ 360px) ───────────────────────── */
+@media (max-width: 360px) {
+  /* Navbar */
+  .site-nav              { height: 48px; padding: 0 10px; }
+  .site-nav__logo        { font-size: 11px; }
+  .site-nav__logo .logo-sep { display: none; }
+  .nav-burger            { width: 34px; height: 34px; gap: 4px; }
+  .nav-mobile-menu       { top: 48px; height: calc(100svh - 48px); width: min(280px, 90vw); padding: 18px 12px 28px; }
+  .nav-mobile-backdrop   { top: 48px; }
+
+  /* Page top-offset */
+  .select-screen, .shop-page, .profile-page, .auth-screen { padding-top: 58px; }
+
+  /* Containers */
+  .select-container      { padding: 0 6px; gap: 5px; }
+
+  /* Logo */
+  .logo-text             { font-size: clamp(14px, 9vw, 22px); }
+  .logo-text .logo-mid-sep { margin: 0 4px; font-size: 10px; }
+
+  /* Page tabs */
+  .page-nav              { gap: 3px; }
+  .page-tab              { font-size: 7px; padding: 5px 4px; letter-spacing: 0.06em; }
+
+  /* Character cards */
+  .char-card             { height: 80px; }
+  .char-avatar           { width: 46px; min-width: 46px; }
+  .char-figure           { width: 28px; height: 38px; }
+  .char-info             { padding: 6px 7px; }
+  .char-info h3          { font-size: 7px; letter-spacing: 0.06em; }
+  .char-lore             { font-size: 7px; }
+  .stat span             { width: 28px; font-size: 6px; }
+  .char-number           { font-size: 7px; }
+
+  /* Map cards */
+  .map-card              { height: 88px; }
+  .map-preview           { height: 38px; }
+  .map-name              { font-size: 9px; }
+  .map-desc              { font-size: 8px; }
+  .map-info              { padding: 5px 7px 5px; gap: 3px; }
+
+  /* Wide map cards (neon-city, wasteland, etc.) */
+  .map-card--neon-city,
+  .map-card--wasteland,
+  .map-card--jungle,
+  .map-card--robot-city,
+  .map-card--desert      { padding: 10px; gap: 10px; }
+  .map-card--neon-city .map-name,
+  .map-card--wasteland .map-name,
+  .map-card--jungle .map-name,
+  .map-card--robot-city .map-name,
+  .map-card--desert .map-name { font-size: 17px; }
+
+  /* Step navigation */
+  .step-nav              { gap: 10px; }
+  .step-nav-btn          { font-size: 9px; padding: 8px 12px; }
+  .step-dots             { gap: 7px; }
+  .step-dot              { width: 7px; height: 7px; }
+
+  /* Start button */
+  .start-btn             { font-size: 11px; letter-spacing: 0.1em; padding: 14px 12px; }
+
+  /* Customization */
+  .color-swatch          { width: 24px; height: 24px; }
+  .cust-btn              { font-size: 7px; padding: 5px 7px; }
+  .customize-panel       { padding: 14px 14px; gap: 14px; }
+
+  /* Section labels */
+  .section-label         { font-size: 7px; letter-spacing: 0.16em; }
+
+  /* Auth */
+  .auth-card             { padding: 20px 12px 18px; }
+  .auth-card__title      { font-size: 15px; }
+  .auth-input            { padding: 10px 12px; font-size: 13px; }
+  .auth-submit           { font-size: 11px; }
+
+  /* Profile */
+  .profile-layout        { padding: 12px 10px 40px; }
+  .profile-hero-card     { padding: 14px 12px; flex-direction: column; align-items: flex-start; gap: 12px; }
+  .profile-hero-left     { gap: 12px; }
+  .profile-avatar-inner  { width: 56px; height: 56px; font-size: 22px; }
+  .profile-avatar-wrap   { width: 56px; height: 56px; }
+  .profile-avatar-ring   { inset: -2px; }
+  .profile-username      { font-size: 15px; }
+  .profile-badge         { font-size: 8px; padding: 3px 7px; }
+  .profile-logout-btn    { width: 100%; text-align: center; }
+  .profile-stats-row     { grid-template-columns: 1fr; }
+
+  /* Battle pass */
+  .bp-section            { padding: 14px 10px 18px; }
+  .bp-grid               { gap: 3px; }
+  .bp-level              { padding: 5px 2px 4px; border-radius: 7px; }
+  .bp-tier-label         { font-size: 5px; }
+  .bp-lv-num             { font-size: 16px; }
+  .bp-xp-row             { gap: 6px; }
+  .bp-xp-lv-pill         { padding: 4px 7px; min-width: 40px; }
+  .bp-xp-lv-num          { font-size: 14px; }
+
+  /* Modal */
+  .modal-panel           { padding: 22px 16px; }
+  .modal-title           { font-size: 16px; }
+  .modal-grid            { grid-template-columns: 1fr; }
 }
