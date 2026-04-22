@@ -11907,7 +11907,7 @@ class Game {
         ctx.shadowColor = "#66BBFF";
         ctx.shadowBlur = 15;
         ctx.font = "bold 12px Orbitron, monospace";
-      if (isDino) {
+      } else if (isDino) {
         // ═══ DINO WORLD: ANCIENT RESEARCH HUT ═══
         const t13=performance.now()/1000;
         const LEAF="#66DD44",AMBER="#FFCC44",BONE="#F0E8C0",MOSS="#33881A";
@@ -13969,7 +13969,7 @@ class Game {
         // Lift platform
         ctx.fillStyle = "#1a2830";
         ctx.strokeStyle = "#3a5868";
-      if (!!this.map?.config?.robot) {
+      } else if (!!this.map?.config?.robot) {
         // ═══ ROBOT CITY: CHOP SHOP ═══
         const tcs = performance.now() / 1000;
 
@@ -14135,46 +14135,45 @@ class Game {
       ctx.fill();
       ctx.stroke();
       // Missing wheel areas (stripped)
-      for (const wx of [cx - 34, cx + 24]) {
-        ctx.strokeStyle = "#666";
-        ctx.lineWidth = 2;
-        rr(cx - 60, midY - 20, 120, 50, 4);
-        ctx.fill();
-        ctx.stroke();
-        // Lift hydraulics
-        ctx.fillStyle = "#4a6878";
-        ctx.fillRect(cx - 55, midY + 30, 10, 25);
-        ctx.fillRect(cx + 45, midY + 30, 10, 25);
-
-        // Stripped car body on lift
-        ctx.fillStyle = "#2a4050";
-        ctx.strokeStyle = "#4a6878";
-        ctx.lineWidth = 1.5;
-        rr(cx - 45, midY - 15, 90, 30, 4);
-        ctx.fill();
-        ctx.stroke();
-        // Car roof cutaway
-        ctx.fillStyle = "#1a3040";
-        rr(cx - 30, midY - 20, 60, 12, 3);
-        ctx.fill();
-        // Missing parts (holes)
-        ctx.fillStyle = "#0a1520";
-        ctx.beginPath();
-        ctx.arc(cx - 30, midY + 8, 12, 0, Math.PI * 2);
-        ctx.arc(cx + 30, midY + 8, 12, 0, Math.PI * 2);
-        ctx.fill();
-        // Sparks from cutting
-        const sparkPulse = Math.sin(t * 6) * 0.5 + 0.5;
-        if (sparkPulse > 0.6) {
-          ctx.fillStyle = "#FFAA44";
-          ctx.shadowColor = "#FF8800";
-          ctx.shadowBlur = 8;
-          for (let sp = 0; sp < 5; sp++) {
-            const sx = cx - 20 + Math.random() * 40;
-            const sy = midY - 10 + Math.random() * 20;
-            ctx.beginPath();
-            ctx.arc(sx, sy, 1.5, 0, Math.PI * 2);
-            ctx.fill();
+      ctx.strokeStyle = "#666";
+      ctx.lineWidth = 2;
+      rr(cx - 60, midY - 20, 120, 50, 4);
+      ctx.fill();
+      ctx.stroke();
+      // Lift hydraulics
+      ctx.fillStyle = "#4a6878";
+      ctx.fillRect(cx - 55, midY + 30, 10, 25);
+      ctx.fillRect(cx + 45, midY + 30, 10, 25);
+      // Stripped car body on lift
+      ctx.fillStyle = "#2a4050";
+      ctx.strokeStyle = "#4a6878";
+      ctx.lineWidth = 1.5;
+      rr(cx - 45, midY - 15, 90, 30, 4);
+      ctx.fill();
+      ctx.stroke();
+      // Car roof cutaway
+      ctx.fillStyle = "#1a3040";
+      rr(cx - 30, midY - 20, 60, 12, 3);
+      ctx.fill();
+      // Missing parts (holes)
+      ctx.fillStyle = "#0a1520";
+      ctx.beginPath();
+      ctx.arc(cx - 30, midY + 8, 12, 0, Math.PI * 2);
+      ctx.arc(cx + 30, midY + 8, 12, 0, Math.PI * 2);
+      ctx.fill();
+      // Sparks from cutting
+      const sparkPulse = Math.sin(t * 6) * 0.5 + 0.5;
+      if (sparkPulse > 0.6) {
+        ctx.fillStyle = "#FFAA44";
+        ctx.shadowColor = "#FF8800";
+        ctx.shadowBlur = 8;
+        for (let sp = 0; sp < 5; sp++) {
+          const sx = cx - 20 + Math.random() * 40;
+          const sy = midY - 10 + Math.random() * 20;
+          ctx.beginPath();
+          ctx.arc(sx, sy, 1.5, 0, Math.PI * 2);
+          ctx.fill();
+        }
         ctx.shadowBlur = 0;
       }
       // ── Tool pegboard (right) ─────────────────────
@@ -15136,16 +15135,6 @@ class Game {
         // Red emergency strobe
         const strA=0.06+0.05*Math.sin(t*5);
         ctx.fillStyle=`rgba(200,0,0,${strA})`; ctx.fillRect(0,0,W,H);
-      } else if (!!this.map?.config?.wasteland) {
-        // ═══ WASTELAND: RADIO STATION ═══
-        const t = performance.now() / 1000;
-
-        // ── ON AIR sign (blinking) ──────────────────
-        const onAirAlpha = 0.6 + 0.4 * Math.sin(t * 3);
-        ctx.fillStyle = `rgba(255,40,60,${onAirAlpha})`;
-        ctx.shadowColor = "#FF0040";
-        ctx.shadowBlur = 12 * onAirAlpha;
-        rr(cx - 38, topY + 8, 76, 22, 4);
       } else if (!!this.map?.config?.hardcore) {
         // ═══ HARDCORE: HELLFIRE RADIO ═══
         const t = performance.now() / 1000;
@@ -15256,8 +15245,14 @@ class Game {
           ctx.strokeStyle=`rgba(${EMBERr},${0.1-sb*0.022})`; ctx.lineWidth=1;
           ctx.beginPath(); ctx.arc(W-240,topY+150,sw,Math.PI*1.1,Math.PI*1.9); ctx.stroke();
         }
-      } else {
-        // ── Default radio station (non-galactica) ───────
+      } else if (!!this.map?.config?.wasteland) {
+        // ═══ WASTELAND: RADIO STATION ═══
+        const t = performance.now() / 1000;
+        const onAirAlpha = 0.6 + 0.4 * Math.sin(t * 3);
+        ctx.fillStyle = `rgba(255,40,60,${onAirAlpha})`;
+        ctx.shadowColor = "#FF0040";
+        ctx.shadowBlur = 12 * onAirAlpha;
+        rr(cx - 38, topY + 8, 76, 22, 4);
         // ── Broadcast desk (center) ───────────────────
         ctx.fillStyle = "#0a0a18";
         ctx.strokeStyle = "#FF88CC";
@@ -19059,13 +19054,13 @@ class Game {
           ctx.strokeStyle = `rgba(136,221,255,${pulse * 0.65})`;
           ctx.lineWidth = 2.5;
           ctx.setLineDash([12, 6]);
-        const isRobotCity = !!this.map.config.robot;
-        const isGalactica = !!this.map.config.galactica || !!this.map.config.blitz;
-        const isHardcoreP = !!this.map.config.hardcore;
-        ctx.save();
-        ctx.translate(p.x, p.y);
-
-        if (isHardcoreP) {
+          ctx.beginPath();
+          ctx.arc(0, 0, 38, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.restore();
+        } else if (!!this.map.config.hardcore) {
+        const isHardcoreP = true;
           // ── HARDCORE: Fire portal — ember / crimson rings ──────────
           const t = p._animT;
           const pulse2 = Math.sin(t * 2) * 0.3 + 0.7;
@@ -19165,6 +19160,10 @@ class Game {
             const fx = Math.cos(ang) * r;
             const fy = Math.sin(ang) * r;
             i === 0 ? ctx.moveTo(fx, fy) : ctx.lineTo(fx, fy);
+          }
+          ctx.closePath();
+          ctx.stroke();
+
           // Fire particles orbiting
           for (let i = 0; i < 6; i++) {
             const angle = t * 2 + (i * Math.PI) / 3;
