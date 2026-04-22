@@ -2,15 +2,20 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>NEON CITY</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#06060e">
+  <title>DASH DREAD</title>
+  <link rel="manifest" href="manifest.json">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body class="game-body">
 
   <!-- Loading screen -->
   <div class="loading-overlay" id="loadingOverlay">
-    <div class="loading-title">NEON CITY</div>
+    <div class="loading-title"><span class="logo-dash">DASH</span> <span class="logo-dread">DREAD</span></div>
     <div class="loading-bar-wrap">
       <div class="loading-bar-fill"></div>
     </div>
@@ -18,6 +23,16 @@
 
   <!-- Game canvas -->
   <canvas id="gameCanvas"></canvas>
+
+  <!-- Fullscreen toggle button -->
+  <button id="fsBtn" aria-label="Toggle fullscreen">
+    <svg id="fsIconExpand" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M3 8V3H8M16 3H21V8M21 16V21H16M8 21H3V16" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <svg id="fsIconCompress" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:none">
+      <path d="M8 3V8H3M21 8H16V3M3 16H8V21M16 21V16H21" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </button>
 
   <!-- Mobile touch controls (shown on touch devices) -->
   <div id="touchControls">
@@ -76,30 +91,138 @@
       const tc = document.getElementById('touchControls');
       if (tc) tc.classList.add('active');
 
-      // Wire action buttons to virtual key injection (after InputManager is created)
-      window.addEventListener('gameStarted', () => {
-        const input = window._gameInstance && window._gameInstance.input;
-        if (!input) return;
-        const btnMap = [
-          ['tbEnter',  'KeyE'],
-          ['tbSprint', 'ShiftLeft'],
-          ['tbGren',   'KeyG'],
-          ['tbCar',    'KeyF'],
-        ];
-        btnMap.forEach(([id, code]) => {
-          const btn = document.getElementById(id);
-          if (!btn) return;
-          btn.addEventListener('touchstart', e => { input._virtualKeys.add(code); e.preventDefault(); }, { passive:false });
-          btn.addEventListener('touchend',   e => { input._virtualKeys.delete(code); e.preventDefault(); }, { passive:false });
-        });
-        // Fire button: mouseDown simulation
-        const fbtn = document.getElementById('tbFire');
-        if (fbtn) {
-          fbtn.addEventListener('touchstart', e => { input.mouseDown = true; input.mouseJustDown = true; e.preventDefault(); }, { passive:false });
-          fbtn.addEventListener('touchend',   e => { input.mouseDown = false; e.preventDefault(); }, { passive:false });
-        }
+      // Lazy input lookup — works regardless of when the game initialises
+      function getInput() {
+        return window._gameInstance && window._gameInstance.input;
+      }
+
+      const btnMap = [
+        ['tbEnter',  'KeyE'],
+        ['tbSprint', 'ShiftLeft'],
+        ['tbGren',   'KeyG'],
+        ['tbCar',    'KeyF'],
+      ];
+      btnMap.forEach(([id, code]) => {
+        const btn = document.getElementById(id);
+        if (!btn) return;
+        btn.addEventListener('touchstart', e => { const inp = getInput(); if (inp) inp._virtualKeys.add(code);    e.preventDefault(); }, { passive: false });
+        btn.addEventListener('touchend',   e => { const inp = getInput(); if (inp) inp._virtualKeys.delete(code); e.preventDefault(); }, { passive: false });
       });
+
+      const fbtn = document.getElementById('tbFire');
+      if (fbtn) {
+        fbtn.addEventListener('touchstart', e => { const inp = getInput(); if (inp) { inp.mouseDown = true; inp.mouseJustDown = true; } e.preventDefault(); }, { passive: false });
+        fbtn.addEventListener('touchend',   e => { const inp = getInput(); if (inp) inp.mouseDown = false; e.preventDefault(); }, { passive: false });
+      }
     }
+
+    // ── Fullscreen toggle ──────────────────────────────────────
+    (function () {
+      const btn          = document.getElementById('fsBtn');
+      const iconExpand   = document.getElementById('fsIconExpand');
+      const iconCompress = document.getElementById('fsIconCompress');
+      const el           = document.documentElement; // <html> — most reliable cross-browser
+
+      // iOS Safari does not support the Fullscreen API; detect it separately
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+      // Standalone = opened via "Add to Home Screen" → already truly fullscreen
+      const isStandalone = navigator.standalone === true ||
+                           window.matchMedia('(display-mode: standalone)').matches;
+
+      function isFS() {
+        return !!(document.fullscreenElement ||
+                  document.webkitFullscreenElement ||
+                  document.msFullscreenElement);
+      }
+
+      function lockOrientation() {
+        try {
+          if (screen.orientation && screen.orientation.lock) {
+            screen.orientation.lock('landscape').catch(() => {});
+          }
+        } catch (_) {}
+      }
+
+      function unlockOrientation() {
+        try {
+          if (screen.orientation && screen.orientation.unlock) {
+            screen.orientation.unlock();
+          }
+        } catch (_) {}
+      }
+
+      function iosScrollHide() {
+        // Trick the iOS browser into hiding its chrome by scrolling 1px
+        document.body.style.minHeight = (window.screen.height + 1) + 'px';
+        setTimeout(() => {
+          window.scrollTo(0, 1);
+          document.body.style.minHeight = '';
+        }, 80);
+      }
+
+      function enter() {
+        if (el.requestFullscreen) {
+          el.requestFullscreen({ navigationUI: 'hide' })
+            .then(lockOrientation)
+            .catch(() => {});
+        } else if (el.webkitRequestFullscreen) {
+          el.webkitRequestFullscreen();
+          lockOrientation();
+        } else if (el.msRequestFullscreen) {
+          el.msRequestFullscreen();
+        } else if (isIOS) {
+          // iOS fallback: scroll to hide address bar + show compress icon manually
+          iosScrollHide();
+          iconExpand.style.display   = 'none';
+          iconCompress.style.display = 'block';
+          lockOrientation();
+        }
+      }
+
+      function exit() {
+        if (document.exitFullscreen) {
+          document.exitFullscreen().then(unlockOrientation).catch(() => {});
+        } else if (document.webkitExitFullscreen) {
+          document.webkitExitFullscreen();
+          unlockOrientation();
+        } else if (document.msExitFullscreen) {
+          document.msExitFullscreen();
+        } else if (isIOS) {
+          // iOS fallback: scroll back to top
+          window.scrollTo(0, 0);
+          iconExpand.style.display   = 'block';
+          iconCompress.style.display = 'none';
+          unlockOrientation();
+        }
+      }
+
+      function updateIcon() {
+        const fs = isFS();
+        iconExpand.style.display   = fs ? 'none'  : 'block';
+        iconCompress.style.display = fs ? 'block' : 'none';
+      }
+
+      // If launched as PWA (standalone), reflect that in the icon immediately
+      if (isStandalone) {
+        iconExpand.style.display   = 'none';
+        iconCompress.style.display = 'block';
+        btn.style.display = 'none'; // already fullscreen — hide the button
+      }
+
+      // touchend fires immediately (no 300ms delay); flag prevents the ghost click
+      let _fsTouchFired = false;
+      btn.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        _fsTouchFired = true;
+        isFS() ? exit() : enter();
+        setTimeout(() => { _fsTouchFired = false; }, 600);
+      });
+      btn.addEventListener('click', () => { if (!_fsTouchFired) { isFS() ? exit() : enter(); } });
+
+      document.addEventListener('fullscreenchange',       updateIcon);
+      document.addEventListener('webkitfullscreenchange', updateIcon);
+      document.addEventListener('MSFullscreenChange',     updateIcon);
+    })();
 
     // Hide loading overlay after short delay, then start game
     window.addEventListener('load', () => {

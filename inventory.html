@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>NEON CITY — Inventory</title>
+  <title>DASH DREAD — Inventory</title>
   <link rel="stylesheet" href="css/style.css">
   <style>
   /* ═══════════════════════════════════════════════════════════
@@ -551,6 +551,26 @@
   @media (max-width: 430px) {
     .shop-grid { grid-template-columns: 1fr; }
   }
+  @media (max-width: 360px) {
+    .shop-wrap          { padding: 0 12px 80px; }
+    .shop-header        { padding: 24px 0 20px; gap: 14px; }
+    .shop-title__main   { font-size: clamp(22px, 9vw, 38px); }
+    .shop-title__sub    { font-size: 10px; letter-spacing: 0.2em; }
+    .shop-balance       { padding: 12px 16px; gap: 12px; border-radius: 14px; }
+    .shop-balance__icon { font-size: 22px; }
+    .shop-balance__value { font-size: 20px; }
+    .shop-tabs          { gap: 4px; padding-top: 22px; padding-bottom: 28px; }
+    .shop-tab           { padding: 8px 14px; font-size: 8px; letter-spacing: 0.14em; }
+    .shop-grid          { gap: 10px; }
+    .shop-card__body    { padding: 14px 12px 10px; gap: 10px; }
+    .shop-card__icon    { width: 44px; height: 44px; font-size: 22px; border-radius: 10px; }
+    .shop-card__name    { font-size: 11px; }
+    .shop-card__desc    { font-size: 12px; }
+    .shop-card__footer  { padding: 10px 12px 14px; }
+    .shop-card__price   { font-size: 14px; }
+    .shop-card__btn     { padding: 8px 14px; font-size: 8px; letter-spacing: 0.14em; }
+    .shop-toast         { font-size: 9px; padding: 10px 20px; white-space: normal; text-align: center; max-width: calc(100vw - 24px); }
+  }
   </style>
 </head>
 <body class="select-screen shop-page">
@@ -559,7 +579,7 @@
 
   <!-- ── Navbar ───────────────────────────────────────────── -->
   <nav class="site-nav">
-    <a href="index.html" class="site-nav__logo">NEON CITY</a>
+    <a href="index.html" class="site-nav__logo"><span class="logo-dash">DASH</span><span class="logo-sep">✦</span><span class="logo-dread">DREAD</span></a>
     <div id="siteNav" class="site-nav__controls"></div>
   </nav>
 

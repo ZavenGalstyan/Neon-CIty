@@ -1602,6 +1602,50 @@ class GameMap {
               ctx.beginPath(); ctx.ellipse(wx + S*0.34, wy + S/2 - 9, S*0.045, S*0.065, 0.35, 0, Math.PI*2); ctx.fill();
               ctx.beginPath(); ctx.ellipse(wx + S*0.66, wy + S/2 + 11, S*0.040, S*0.055, -0.3, 0, Math.PI*2); ctx.fill();
             }
+          } else if (cfg.blitz) {
+            // ═══════════════════════════════════════════════════════════════
+            //  BLITZ ROADS: Burning dark asphalt with speed lane markings
+            // ═══════════════════════════════════════════════════════════════
+            const bseed = (x * 13 + y * 23) % 4;
+            const bRoadCols = ['#060301','#070302','#050301','#060201'];
+            ctx.fillStyle = bRoadCols[bseed];
+            ctx.fillRect(wx, wy, S, S);
+            // Faint speed-scratch vertical texture
+            if ((x * 7 + y * 11) % 4 === 0) {
+              ctx.fillStyle = 'rgba(255,60,0,0.055)';
+              ctx.fillRect(wx + bseed * 8 + 5, wy, 1, S);
+            }
+            // Orange road edge borders
+            ctx.fillStyle = 'rgba(255,80,0,0.38)';
+            ctx.fillRect(wx, wy, S, 2);
+            ctx.fillRect(wx, wy + S - 2, S, 2);
+            ctx.fillRect(wx, wy, 2, S);
+            ctx.fillRect(wx + S - 2, wy, 2, S);
+            // Speed lane markings
+            if (isColR && !isRowR) {
+              ctx.fillStyle = 'rgba(255,180,0,0.33)';
+              for (let dash = 0; dash < 4; dash++) ctx.fillRect(wx + S/2 - 1, wy + dash*20 + 4, 2, 12);
+              ctx.fillStyle = 'rgba(255,60,0,0.13)';
+              ctx.fillRect(wx + 6, wy, 1, S);
+              ctx.fillRect(wx + S - 7, wy, 1, S);
+            }
+            if (isRowR && !isColR) {
+              ctx.fillStyle = 'rgba(255,180,0,0.33)';
+              for (let dash = 0; dash < 4; dash++) ctx.fillRect(wx + dash*20 + 4, wy + S/2 - 1, 12, 2);
+              ctx.fillStyle = 'rgba(255,60,0,0.13)';
+              ctx.fillRect(wx, wy + 6, S, 1);
+              ctx.fillRect(wx, wy + S - 7, S, 1);
+            }
+            if (isColR && isRowR) {
+              ctx.fillStyle = 'rgba(255,100,0,0.14)';
+              ctx.fillRect(wx + S/2 - 8, wy + S/2 - 1, 16, 2);
+              ctx.fillRect(wx + S/2 - 1, wy + S/2 - 8, 2, 16);
+            }
+            // Tyre skid marks
+            if ((x * 11 + y * 17) % 9 === 0) {
+              ctx.fillStyle = 'rgba(0,0,0,0.45)';
+              ctx.fillRect(wx + (bseed * 11 % 35) + 10, wy + 8, 2, S - 16);
+            }
           } else if (cfg.arena) {
             // ═══════════════════════════════════════════════════════════════
             //  ARENA ROADS: Very dark asphalt with clear lane markings
@@ -1811,6 +1855,62 @@ class GameMap {
               ctx.fillStyle = 'rgba(130,8,8,0.20)';
               ctx.beginPath(); ctx.ellipse(wx + S * 0.62, wy + S * 0.40, S * 0.14, S * 0.09, -0.5, 0, Math.PI * 2); ctx.fill();
             }
+          } else if (cfg.blitz) {
+            // ═══════════════════════════════════════════════════════════════
+            //  BLITZ SIDEWALK: Speed-zone dark buildings with fire neons
+            // ═══════════════════════════════════════════════════════════════
+            const ts = x * 41 + y * 59;
+            const t  = Date.now() * 0.001;
+            const neons = ['#FF4400','#FF2200','#FF6600','#FF0022','#FF8800'];
+            const signs = ['RUSH','BLITZ','SURGE','FIRE','SPEED','OVERDRIVE'];
+            const roadLeft2   = x > 0        && this.tiles[y][x-1] === TILE.ROAD;
+            const roadRight2  = x < this.W-1 && this.tiles[y][x+1] === TILE.ROAD;
+            const roadTop2    = y > 0        && this.tiles[y-1][x] === TILE.ROAD;
+            const roadBottom2 = y < this.H-1 && this.tiles[y+1][x] === TILE.ROAD;
+            const seed2 = ts * 7;
+            const neonCol2 = neons[seed2 % neons.length];
+            ctx.fillStyle = '#080302'; ctx.fillRect(wx, wy, S, S);
+            const sw2 = 6;
+            const bx2 = roadLeft2   ? wx + sw2 : wx;
+            const by2 = roadTop2    ? wy + sw2 : wy;
+            const bw2 = S - (roadLeft2 ? sw2 : 0) - (roadRight2 ? sw2 : 0);
+            const bh2 = S - (roadTop2  ? sw2 : 0) - (roadBottom2 ? sw2 : 0);
+            ctx.fillStyle = 'rgba(0,0,0,0.65)'; ctx.fillRect(bx2+3, by2+3, bw2, bh2);
+            ctx.fillStyle = '#0e0402'; ctx.fillRect(bx2, by2, bw2, bh2);
+            ctx.strokeStyle = neonCol2; ctx.lineWidth = 2.5;
+            ctx.strokeRect(bx2+2, by2+2, bw2-4, bh2-4);
+            ctx.fillStyle = '#0a0301'; ctx.fillRect(bx2+5, by2+5, bw2-10, bh2-10);
+            ctx.strokeStyle = neonCol2+'55'; ctx.lineWidth = 1;
+            ctx.strokeRect(bx2+8, by2+8, bw2-16, bh2-16);
+            // Speed stripes
+            for (let si = 0; si < 3; si++) {
+              ctx.fillStyle = si===1 ? neonCol2+'66' : neonCol2+'22';
+              ctx.fillRect(bx2+6, by2+Math.floor(bh2*(0.25+si*0.22)), bw2-12, si===1?2:1);
+            }
+            // Roof beacon
+            if (bw2 > 22) {
+              ctx.fillStyle = '#444'; ctx.fillRect(bx2+bw2/2-1, by2-8, 2, 14);
+              const blink2 = Math.sin(t*6+seed2) > 0;
+              ctx.fillStyle = blink2 ? neonCol2 : neonCol2+'30';
+              ctx.beginPath(); ctx.arc(bx2+bw2/2, by2-8, 3, 0, Math.PI*2); ctx.fill();
+              ctx.strokeStyle = neonCol2+'60'; ctx.lineWidth=1;
+              ctx.beginPath(); ctx.arc(bx2+bw2/2, by2-8, 5, 0, Math.PI*2); ctx.stroke();
+            }
+            // Neon sign
+            if (bw2 > 30 && bh2 > 28) {
+              const sgnText = signs[seed2 % signs.length];
+              const sgnW = Math.min(bw2-14, 48), sgnH = 11;
+              const sgnX = bx2+(bw2-sgnW)/2, sgnY = by2+bh2-16;
+              ctx.fillStyle='#060100'; ctx.fillRect(sgnX,sgnY,sgnW,sgnH);
+              ctx.strokeStyle=neonCol2; ctx.lineWidth=1.5; ctx.strokeRect(sgnX,sgnY,sgnW,sgnH);
+              ctx.fillStyle=neonCol2; ctx.font='bold 8px monospace';
+              ctx.fillText(sgnText, sgnX+4, sgnY+8);
+            }
+            ctx.fillStyle = '#060202';
+            if (roadLeft2)   ctx.fillRect(wx, wy, sw2, S);
+            if (roadRight2)  ctx.fillRect(wx+S-sw2, wy, sw2, S);
+            if (roadTop2)    ctx.fillRect(wx, wy, S, sw2);
+            if (roadBottom2) ctx.fillRect(wx, wy+S-sw2, S, sw2);
           } else if (cfg.arena) {
             // ═══════════════════════════════════════════════════════════════
             //  ARENA SIDEWALK: Thin strip (6px) + 1-2 MASSIVE buildings
@@ -2440,25 +2540,166 @@ class GameMap {
               ctx.fillRect(wx+8, wy+8, 2, S-16); ctx.fillRect(wx+S-10, wy+8, 2, S-16);
             }
           } else if (cfg.robot) {
-            // Robot City: server tower / tech block
+            // ═══════════════════════════════════════════════════════════════
+            //  ROBOT CITY: Varied industrial tech structures
+            // ═══════════════════════════════════════════════════════════════
             const rseed = x * 41 + y * 59;
-            ctx.fillStyle = this.buildingColors[y][x];
+            const t = Date.now() * 0.001;
+            const structType = rseed % 6;
+            // Base steel colors — dark metal with slight teal tint
+            const steelBases = ['#0a1218','#0c1420','#08101a','#0e161e','#0b1319','#091118'];
+            ctx.fillStyle = steelBases[rseed % steelBases.length];
             ctx.fillRect(wx, wy, S, S);
-            // Metallic panel lines
-            ctx.fillStyle = 'rgba(0,200,255,0.06)';
-            ctx.fillRect(wx, wy, S, 2);
-            ctx.fillRect(wx, wy, 2, S);
-            ctx.fillRect(wx + S - 2, wy, 2, S);
-            // Vent slats on some blocks
-            if (rseed % 4 === 0) {
-              ctx.fillStyle = 'rgba(0,160,200,0.12)';
-              for (let sl = 0; sl < 4; sl++) {
-                ctx.fillRect(wx + 8, wy + 12 + sl * 14, S - 16, 3);
+
+            if (structType === 0) {
+              // === SERVER FARM BLOCK ===
+              ctx.fillStyle = '#111c28'; ctx.fillRect(wx+4, wy+4, S-8, S-8);
+              // Server rack rows
+              ctx.fillStyle = '#0a1520';
+              for (let rack = 0; rack < 4; rack++) {
+                ctx.fillRect(wx+6, wy+10+rack*16, S-12, 11);
+                // Drive status LEDs
+                for (let led = 0; led < 5; led++) {
+                  const ledOn = (rseed + rack * 7 + led * 3) % 4 !== 0;
+                  ctx.fillStyle = ledOn ? (led%2===0 ? '#00FF88' : '#00CCFF') : '#0a1520';
+                  ctx.fillRect(wx+9+led*9, wy+14+rack*16, 5, 3);
+                }
               }
+              // Top cable management bar
+              ctx.fillStyle = '#1a2a3a'; ctx.fillRect(wx+4, wy+4, S-8, 5);
+              ctx.fillStyle = 'rgba(0,200,255,0.22)'; ctx.fillRect(wx+4, wy+4, S-8, 2);
+
+            } else if (structType === 1) {
+              // === DRONE HANGAR ===
+              // Hangar bay (wide flat structure)
+              ctx.fillStyle = '#131e2c'; ctx.fillRect(wx+2, wy+18, S-4, S-20);
+              // Hangar doors (segmented)
+              ctx.fillStyle = '#0c1622';
+              for (let seg = 0; seg < 4; seg++) {
+                ctx.fillRect(wx+5+seg*18, wy+20, 14, S-24);
+                ctx.fillStyle = 'rgba(0,180,220,0.10)';
+                ctx.fillRect(wx+6+seg*18, wy+22, 12, S-28);
+                ctx.fillStyle = '#0c1622';
+              }
+              // Roof rail
+              ctx.fillStyle = '#1e2e3e'; ctx.fillRect(wx+2, wy+14, S-4, 6);
+              ctx.fillStyle = 'rgba(0,220,255,0.18)'; ctx.fillRect(wx+2, wy+14, S-4, 2);
+              // Landing lights
+              for (let ll = 0; ll < 3; ll++) {
+                const blink = Math.sin(t*4 + rseed + ll*1.3) > 0.4;
+                ctx.fillStyle = blink ? '#FFAA00' : '#2a1800';
+                ctx.fillRect(wx+12+ll*22, wy+16, 4, 4);
+              }
+
+            } else if (structType === 2) {
+              // === MECH ASSEMBLY PLANT ===
+              // Main factory body
+              ctx.fillStyle = '#0f1a26'; ctx.fillRect(wx+3, wy+8, S-6, S-10);
+              // Robotic arm mount (top)
+              ctx.fillStyle = '#1a2a3a'; ctx.fillRect(wx+S/2-8, wy+2, 16, 10);
+              ctx.fillStyle = '#2a3a4a'; ctx.fillRect(wx+S/2-4, wy, 8, 4);
+              // Assembly window strips
+              for (let ws = 0; ws < 3; ws++) {
+                ctx.fillStyle = 'rgba(0,200,255,0.07)';
+                ctx.fillRect(wx+5, wy+16+ws*18, S-10, 10);
+                // Moving part indicator
+                const pos = ((t*30 + rseed + ws*40) % (S-14));
+                ctx.fillStyle = 'rgba(0,255,180,0.25)';
+                ctx.fillRect(wx+5+pos, wy+18+ws*18, 6, 6);
+              }
+              // Exhaust vents (right side)
+              ctx.fillStyle = '#1a2030';
+              for (let ev = 0; ev < 3; ev++) {
+                ctx.fillRect(wx+S-8, wy+14+ev*18, 5, 10);
+                ctx.fillStyle = 'rgba(100,200,255,0.08)';
+                ctx.fillRect(wx+S-7, wy+15+ev*18, 3, 8);
+                ctx.fillStyle = '#1a2030';
+              }
+
+            } else if (structType === 3) {
+              // === POWER STATION ===
+              // Central reactor core
+              ctx.fillStyle = '#0e1c2a'; ctx.fillRect(wx+12, wy+10, S-24, S-14);
+              // Reactor glow
+              const pulse = Math.sin(t*2.5+rseed)*0.5+0.5;
+              ctx.fillStyle = `rgba(0,200,255,${0.06+pulse*0.08})`;
+              ctx.fillRect(wx+16, wy+14, S-32, S-22);
+              // Capacitor towers (corners)
+              ctx.fillStyle = '#152030';
+              ctx.fillRect(wx+2, wy+6, 10, S-8);
+              ctx.fillRect(wx+S-12, wy+6, 10, S-8);
+              // Power connector rings
+              for (let pr = 0; pr < 3; pr++) {
+                ctx.fillStyle = pr===1 ? `rgba(0,255,200,${0.15+pulse*0.12})` : 'rgba(0,180,220,0.08)';
+                ctx.fillRect(wx+14, wy+20+pr*16, S-28, 3);
+              }
+              // Warning stripe (base)
+              ctx.fillStyle = 'rgba(255,180,0,0.10)';
+              ctx.fillRect(wx+2, wy+S-10, S-4, 6);
+              ctx.fillStyle = 'rgba(0,0,0,0.4)';
+              for (let ws=0;ws<4;ws++) ctx.fillRect(wx+3+ws*18, wy+S-9, 8, 4);
+
+            } else if (structType === 4) {
+              // === CONTROL TOWER ===
+              // Narrow tall tower (top-down: square base)
+              ctx.fillStyle = '#101e2e'; ctx.fillRect(wx+S*0.25, wy+4, S*0.5, S-6);
+              // Observation ring
+              ctx.fillStyle = '#1a2c40'; ctx.fillRect(wx+S*0.15, wy+8, S*0.7, 14);
+              ctx.fillStyle = 'rgba(0,220,255,0.15)'; ctx.fillRect(wx+S*0.15, wy+8, S*0.7, 3);
+              // Scanning beam
+              const angle = (t * 1.5 + rseed) % (Math.PI * 2);
+              const bx2 = wx + S/2 + Math.cos(angle) * S*0.28;
+              const by2 = wy + S/2 + Math.sin(angle) * S*0.28;
+              ctx.fillStyle = 'rgba(0,255,180,0.12)';
+              ctx.beginPath(); ctx.moveTo(wx+S/2, wy+S/2); ctx.lineTo(bx2, by2); ctx.lineTo(bx2+2,by2+2); ctx.closePath(); ctx.fill();
+              // Antenna
+              ctx.fillStyle = '#2a3a4a'; ctx.fillRect(wx+S/2-1, wy, 2, 8);
+              const blinkA = Math.sin(t*5+rseed)>0;
+              ctx.fillStyle = blinkA ? '#FF4444' : '#330000';
+              ctx.beginPath(); ctx.arc(wx+S/2, wy+2, 3, 0, Math.PI*2); ctx.fill();
+
+            } else {
+              // === ROBOTIC DISTRICT BLOCK (varied neon city-inspired shapes with robot aesthetic) ===
+              const bshape = rseed % 4;
+              ctx.fillStyle = '#111e2c';
+              if (bshape === 0) {
+                // L-shaped facility
+                ctx.fillRect(wx+2, wy+2, S*0.5, S-4);
+                ctx.fillRect(wx+2, wy+S*0.5, S-4, S*0.5-2);
+              } else if (bshape === 1) {
+                // Stepped
+                ctx.fillRect(wx+S*0.15, wy+S*0.55, S*0.7, S*0.42);
+                ctx.fillRect(wx+S*0.25, wy+S*0.25, S*0.5, S*0.65);
+                ctx.fillRect(wx+S*0.35, wy+2, S*0.3, S);
+              } else if (bshape === 2) {
+                // Twin blocks
+                ctx.fillRect(wx+2, wy+2, S*0.4, S-4);
+                ctx.fillRect(wx+S*0.58, wy+2, S*0.4, S-4);
+                ctx.fillRect(wx+2, wy+S*0.68, S-4, S*0.3);
+              } else {
+                // Wide flat hub
+                ctx.fillRect(wx+2, wy+S*0.2, S-4, S*0.65);
+                ctx.fillRect(wx+S*0.2, wy+2, S*0.6, S*0.8);
+              }
+              // Circuit trace overlay
+              ctx.fillStyle = 'rgba(0,200,255,0.07)';
+              ctx.fillRect(wx+S*0.5-1, wy+6, 2, S-12);
+              ctx.fillRect(wx+6, wy+S*0.5-1, S-12, 2);
+              // Status LED array
+              for (let li = 0; li < 3; li++) {
+                const on2 = (rseed + li * 5) % 3 !== 0;
+                ctx.fillStyle = on2 ? (li===1?'#00FF88':'#00CCFF') : '#0a1520';
+                ctx.fillRect(wx+12+li*16, wy+8, 8, 4);
+              }
+              // Neon trim
+              ctx.strokeStyle = `rgba(0,${180+rseed%60},${200+rseed%55},0.20)`;
+              ctx.lineWidth = 1.5;
+              ctx.strokeRect(wx+3, wy+3, S-6, S-6);
             }
-            // LED status strip top
-            ctx.fillStyle = rseed % 3 === 0 ? 'rgba(0,255,200,0.18)' : 'rgba(0,200,255,0.12)';
-            ctx.fillRect(wx + 6, wy + 4, S - 12, 3);
+
+            // Shared: top LED status bar on all types
+            ctx.fillStyle = rseed % 3 === 0 ? 'rgba(0,255,180,0.14)' : 'rgba(0,200,255,0.10)';
+            ctx.fillRect(wx, wy, S, 2);
           } else if (cfg.galactica) {
             // Galactica: planet orb / space structure
             const pseed = (x * 41 + y * 59) % 5;
@@ -2929,6 +3170,414 @@ class GameMap {
                 }
               }
             }
+          } else if (cfg.campaign) {
+            // ═══════════════════════════════════════════════════════════════
+            //  CAMPAIGN: War-torn concrete/brick bunkers with golden neon
+            // ═══════════════════════════════════════════════════════════════
+            const ts = x * 41 + y * 59;
+            const bseed = ts % 8;
+            const t = Date.now() * 0.001;
+
+            // Concrete base colors — rough weathered look
+            const concreteBases = ['#2c2820','#262218','#30281e','#2a2416','#322c22','#24201a','#2e281c','#283020'];
+            ctx.fillStyle = concreteBases[bseed];
+            ctx.fillRect(wx, wy, S, S);
+
+            // Varied blocky building shapes
+            if (bseed === 0) {
+              // Squat fortified block
+              ctx.fillStyle = '#38322a';
+              ctx.fillRect(wx + 4, wy + 18, S - 8, S - 20);
+              ctx.fillStyle = '#42382e';
+              ctx.fillRect(wx + 4, wy + 8, S - 8, 14);
+              // Battlements (crenellations)
+              ctx.fillStyle = '#3c3028';
+              for (let ci = 0; ci < 4; ci++) ctx.fillRect(wx + 6 + ci * 18, wy + 2, 10, 10);
+            } else if (bseed === 1) {
+              // L-shaped barracks
+              ctx.fillStyle = '#3e3428';
+              ctx.fillRect(wx, wy + 10, S * 0.55, S - 10);
+              ctx.fillRect(wx, wy + 10, S, S * 0.45);
+              ctx.fillStyle = '#2a2218';
+              ctx.fillRect(wx + 4, wy + 14, 16, 20);
+              ctx.fillRect(wx + 28, wy + 14, 16, 20);
+            } else if (bseed === 2) {
+              // Stepped bunker
+              ctx.fillStyle = '#303030';
+              ctx.fillRect(wx + 8, wy + 30, S - 16, S - 32);
+              ctx.fillStyle = '#383428';
+              ctx.fillRect(wx + 16, wy + 14, S - 32, S - 16);
+              ctx.fillStyle = '#404040';
+              ctx.fillRect(wx + 24, wy + 4, S - 48, 14);
+            } else if (bseed === 3) {
+              // Twin guard towers
+              ctx.fillStyle = '#34302a';
+              ctx.fillRect(wx + 2, wy + 4, S * 0.38, S - 4);
+              ctx.fillRect(wx + S * 0.62, wy + 4, S * 0.36, S - 4);
+              // Connecting wall
+              ctx.fillStyle = '#2e2820';
+              ctx.fillRect(wx + S * 0.38, wy + S * 0.6, S * 0.24, S * 0.4);
+            } else if (bseed === 4) {
+              // Command center — solid rectangular block
+              ctx.fillStyle = '#3a3628';
+              ctx.fillRect(wx + 6, wy + 6, S - 12, S - 8);
+              // Roof antenna platform
+              ctx.fillStyle = '#484036';
+              ctx.fillRect(wx + S * 0.3, wy + 2, S * 0.4, 8);
+            } else if (bseed === 5) {
+              // Reinforced warehouse
+              ctx.fillStyle = '#2e2c22';
+              ctx.fillRect(wx + 2, wy + 10, S - 4, S - 10);
+              // Corrugated roof lines
+              ctx.strokeStyle = '#262018';
+              ctx.lineWidth = 2;
+              for (let ri = 0; ri < 5; ri++) {
+                ctx.beginPath();
+                ctx.moveTo(wx + 2, wy + 10 + ri * 8);
+                ctx.lineTo(wx + S - 2, wy + 10 + ri * 8);
+                ctx.stroke();
+              }
+            } else if (bseed === 6) {
+              // Destroyed wall — jagged top
+              ctx.fillStyle = '#383028';
+              ctx.beginPath();
+              ctx.moveTo(wx, wy + S);
+              ctx.lineTo(wx, wy + 22);
+              ctx.lineTo(wx + 14, wy + 10);
+              ctx.lineTo(wx + 28, wy + 18);
+              ctx.lineTo(wx + 42, wy + 6);
+              ctx.lineTo(wx + 56, wy + 16);
+              ctx.lineTo(wx + S, wy + 8);
+              ctx.lineTo(wx + S, wy + S);
+              ctx.closePath();
+              ctx.fill();
+            } else {
+              // Standard recessed block
+              ctx.fillStyle = '#36302a';
+              ctx.fillRect(wx + 4, wy + 4, S - 8, S - 6);
+              ctx.fillStyle = '#2c2820';
+              ctx.fillRect(wx + 10, wy, S - 20, 8);
+            }
+
+            // Crumble / crack marks
+            if ((ts * 7 + 3) % 4 === 0) {
+              ctx.strokeStyle = 'rgba(0,0,0,0.55)';
+              ctx.lineWidth = 1;
+              ctx.beginPath();
+              ctx.moveTo(wx + 18, wy + 12);
+              ctx.lineTo(wx + 24, wy + 28);
+              ctx.lineTo(wx + 20, wy + 36);
+              ctx.stroke();
+            }
+            if ((ts * 13 + 5) % 5 === 0) {
+              ctx.strokeStyle = 'rgba(0,0,0,0.40)';
+              ctx.lineWidth = 1;
+              ctx.beginPath();
+              ctx.moveTo(wx + S - 20, wy + 20);
+              ctx.lineTo(wx + S - 14, wy + 38);
+              ctx.stroke();
+            }
+
+            // Rubble debris scatter
+            if ((ts * 3 + 1) % 3 === 0) {
+              ctx.fillStyle = 'rgba(80,65,48,0.55)';
+              ctx.fillRect(wx + 4, wy + S - 10, 8, 6);
+              ctx.fillRect(wx + S - 14, wy + S - 8, 6, 4);
+            }
+
+            // Golden neon edge glow (campaign accent)
+            const campNeon = cfg.neonColors[(x + y) % cfg.neonColors.length];
+            ctx.strokeStyle = campNeon + '55';
+            ctx.lineWidth = 1.5;
+            ctx.strokeRect(wx + 2, wy + 2, S - 4, S - 4);
+
+            // Amber/gold windows — narrow slits
+            const winCol = cfg.windowColors[(x * 3 + y * 7) % cfg.windowColors.length];
+            ctx.fillStyle = winCol + 'cc';
+            for (let wy2 = 0; wy2 < 3; wy2++) {
+              for (let wx2 = 0; wx2 < 3; wx2++) {
+                if (Math.sin(x * 6.1 + y * 3.7 + wx2 * 8 + wy2 * 12) > 0.2) {
+                  // Narrow horizontal slit window
+                  ctx.fillRect(wx + 10 + wx2 * 22, wy + 14 + wy2 * 20, 10, 4);
+                }
+              }
+            }
+
+            // Occasional neon accent stripe (battle command markings)
+            if ((ts * 11 + 7) % 6 === 0) {
+              ctx.fillStyle = campNeon + '44';
+              ctx.fillRect(wx + 4, wy + S - 14, S - 8, 3);
+            }
+          } else if (cfg.dino) {
+            // ═══════════════════════════════════════════════════════════════
+            //  DINO WORLD: Jungle/prehistoric overgrown structures
+            // ═══════════════════════════════════════════════════════════════
+            const ts = x * 41 + y * 59;
+            const bseed = ts % 8;
+            const t = Date.now() * 0.001;
+
+            // Mossy stone/bark base — dark jungle greens
+            const dinoBases = ['#1a3410','#1e3c14','#162e0c','#223a10','#183214','#1c3812','#14280a','#203616'];
+            ctx.fillStyle = dinoBases[bseed];
+
+            // Varied prehistoric structure shapes
+            if (bseed === 0) {
+              // Stepped pyramid structure
+              ctx.fillRect(wx + S*0.08, wy + S*0.55, S*0.84, S*0.45);
+              ctx.fillStyle = '#1e3c14';
+              ctx.fillRect(wx + S*0.18, wy + S*0.30, S*0.64, S*0.28);
+              ctx.fillStyle = '#223a10';
+              ctx.fillRect(wx + S*0.28, wy + S*0.05, S*0.44, S*0.28);
+            } else if (bseed === 1) {
+              // Overgrown ruins — irregular shape
+              ctx.beginPath();
+              ctx.moveTo(wx, wy + S*0.18);
+              ctx.lineTo(wx + S*0.14, wy);
+              ctx.lineTo(wx + S*0.78, wy);
+              ctx.lineTo(wx + S, wy + S*0.22);
+              ctx.lineTo(wx + S, wy + S);
+              ctx.lineTo(wx, wy + S);
+              ctx.closePath(); ctx.fill();
+              // Crumbled top-right corner
+              ctx.fillStyle = 'rgba(0,0,0,0.22)';
+              ctx.fillRect(wx + S*0.72, wy, S*0.28, S*0.22);
+            } else if (bseed === 2) {
+              // Wide squat temple base
+              ctx.fillRect(wx + S*0.04, wy + S*0.42, S*0.92, S*0.58);
+              ctx.fillStyle = '#162e0c';
+              ctx.fillRect(wx + S*0.14, wy + S*0.18, S*0.72, S*0.26);
+            } else if (bseed === 3) {
+              // Twin stone pillars
+              ctx.fillRect(wx + S*0.04, wy + S*0.04, S*0.34, S*0.94);
+              ctx.fillRect(wx + S*0.62, wy + S*0.04, S*0.34, S*0.94);
+              ctx.fillStyle = '#14280a';
+              ctx.fillRect(wx + S*0.04, wy + S*0.62, S*0.92, S*0.22);
+            } else if (bseed === 4) {
+              // Rounded stone hut
+              ctx.fillRect(wx + S*0.14, wy + S*0.32, S*0.72, S*0.68);
+              ctx.beginPath();
+              ctx.arc(wx + S*0.5, wy + S*0.36, S*0.36, Math.PI, 0);
+              ctx.fill();
+            } else if (bseed === 5) {
+              // Crumbled fortification
+              ctx.fillRect(wx + S*0.08, wy + S*0.38, S*0.84, S*0.62);
+              ctx.fillStyle = '#1c3812';
+              ctx.fillRect(wx + S*0.08, wy + S*0.10, S*0.24, S*0.32);
+              ctx.fillRect(wx + S*0.68, wy + S*0.10, S*0.24, S*0.32);
+            } else if (bseed === 6) {
+              // Organic-edged overgrown block
+              ctx.beginPath();
+              ctx.moveTo(wx + S*0.12, wy);
+              ctx.lineTo(wx + S*0.88, wy + S*0.04);
+              ctx.lineTo(wx + S, wy + S*0.10);
+              ctx.lineTo(wx + S*0.96, wy + S);
+              ctx.lineTo(wx + S*0.04, wy + S);
+              ctx.lineTo(wx, wy + S*0.08);
+              ctx.closePath(); ctx.fill();
+            } else {
+              // Standard recessed mossy block
+              ctx.fillRect(wx + S*0.06, wy + S*0.38, S*0.88, S*0.62);
+              ctx.fillStyle = '#162e0c';
+              ctx.fillRect(wx + S*0.16, wy, S*0.68, S*0.42);
+            }
+
+            // Cracked stone / bark texture lines
+            ctx.strokeStyle = 'rgba(0,0,0,0.42)';
+            ctx.lineWidth = 1;
+            if (ts % 3 === 0) {
+              ctx.beginPath(); ctx.moveTo(wx + S*0.22, wy + S*0.12); ctx.lineTo(wx + S*0.30, wy + S*0.48); ctx.lineTo(wx + S*0.26, wy + S*0.66); ctx.stroke();
+            }
+            if (ts % 5 === 0) {
+              ctx.beginPath(); ctx.moveTo(wx + S*0.60, wy + S*0.08); ctx.lineTo(wx + S*0.70, wy + S*0.38); ctx.stroke();
+            }
+            if (ts % 7 === 0) {
+              ctx.beginPath(); ctx.moveTo(wx + S*0.10, wy + S*0.55); ctx.lineTo(wx + S*0.42, wy + S*0.60); ctx.stroke();
+            }
+
+            // Hanging vines from top — sinuous green lines
+            ctx.strokeStyle = '#44AA22';
+            ctx.lineWidth = 2;
+            const vineCount = 2 + (ts % 3);
+            for (let vi = 0; vi < vineCount; vi++) {
+              const vx = wx + S*(0.15 + vi * 0.28 + (ts % 11)*0.01);
+              const vLen = S*(0.30 + (ts*3+vi*7)%10 * 0.04);
+              ctx.beginPath();
+              ctx.moveTo(vx, wy);
+              ctx.bezierCurveTo(vx - 5, wy + vLen*0.3, vx + 5, wy + vLen*0.6, vx - 3, wy + vLen);
+              ctx.stroke();
+              // Leaf nub
+              ctx.fillStyle = '#55CC22';
+              ctx.beginPath(); ctx.ellipse(vx - 3, wy + vLen, 4, 3, 0.5, 0, Math.PI*2); ctx.fill();
+            }
+
+            // Bone/ivory corner decorative elements
+            ctx.fillStyle = '#F0E8C0';
+            const boneCorners = [[wx+4,wy+4],[wx+S-14,wy+4],[wx+4,wy+S-14],[wx+S-14,wy+S-14]];
+            for (const [bcx, bcy] of boneCorners) {
+              if (Math.sin(x*3.1+y*7.3+(bcx+bcy)*0.1) > 0.2) {
+                ctx.fillRect(bcx, bcy, 10, 3);
+                ctx.fillRect(bcx, bcy, 3, 10);
+              }
+            }
+
+            // Bioluminescent windows — green glow
+            const winCol = cfg.windowColors[(x * 3 + y * 7) % cfg.windowColors.length];
+            ctx.fillStyle = winCol;
+            ctx.shadowColor = '#66DD44'; ctx.shadowBlur = 8;
+            for (let wy2 = 0; wy2 < 2; wy2++) {
+              for (let wx2 = 0; wx2 < 2; wx2++) {
+                if (Math.sin(x * 5.7 + y * 3.3 + wx2 * 7 + wy2 * 11) > 0.15) {
+                  ctx.fillRect(wx + 12 + wx2 * 26, wy + 14 + wy2 * 26, 9, 7);
+                }
+              }
+            }
+            ctx.shadowBlur = 0;
+
+            // Faint amber/bioluminescent edge glow
+            ctx.strokeStyle = cfg.neonColors[(x + y) % cfg.neonColors.length] + '55';
+            ctx.lineWidth = 1.5;
+            ctx.strokeRect(wx + 2, wy + 2, S - 4, S - 4);
+
+          } else if (cfg.hardcore) {
+            // ═══════════════════════════════════════════════════════════════
+            //  HARDCORE: Neon City shapes + fire/ember atmosphere
+            //  BAR blocks (bTypeIdx 10) use full neon-city style (blue/cyan)
+            // ═══════════════════════════════════════════════════════════════
+            const bseed = (x * 41 + y * 59) % 8;
+            const _hcKey = `${Math.floor(x / this.ROAD_EVERY)},${Math.floor(y / this.ROAD_EVERY)}`;
+            const _hcType = this._blockTypes[_hcKey];
+            const isHCBar = _hcType === 10; // BAR = index 10 in BUILDING_TYPES
+            const _hcNeonCityBldg = ['#1a1a2e','#16213e','#0f3460','#12212e','#1e1e30','#151530','#1c1c2e','#0f2040'];
+            ctx.fillStyle = isHCBar ? _hcNeonCityBldg[bseed] : this.buildingColors[y][x];
+            if (bseed === 0) {
+              ctx.fillRect(wx + S*0.2, wy, S*0.6, S);
+              ctx.fillStyle = 'rgba(0,0,0,0.3)';
+              ctx.fillRect(wx + S*0.2, wy, S*0.6, S*0.1);
+            } else if (bseed === 1) {
+              ctx.fillRect(wx, wy, S*0.5, S);
+              ctx.fillRect(wx, wy + S*0.5, S, S*0.5);
+            } else if (bseed === 2) {
+              ctx.fillRect(wx + S*0.1, wy + S*0.6, S*0.8, S*0.4);
+              ctx.fillRect(wx + S*0.2, wy + S*0.3, S*0.6, S*0.7);
+              ctx.fillRect(wx + S*0.3, wy, S*0.4, S);
+            } else if (bseed === 3) {
+              ctx.fillRect(wx + S*0.05, wy, S*0.35, S);
+              ctx.fillRect(wx + S*0.6, wy, S*0.35, S);
+              ctx.fillRect(wx + S*0.2, wy + S*0.7, S*0.6, S*0.3);
+            } else if (bseed === 4) {
+              ctx.fillRect(wx + S*0.15, wy + S*0.3, S*0.7, S*0.7);
+              ctx.beginPath(); ctx.arc(wx + S*0.5, wy + S*0.35, S*0.35, Math.PI, 0); ctx.fill();
+            } else if (bseed === 5) {
+              ctx.beginPath();
+              const hcx2 = wx + S*0.5, hcy2 = wy + S*0.5;
+              for (let i = 0; i < 6; i++) {
+                const ang2 = (Math.PI / 3) * i - Math.PI / 2;
+                const hx = hcx2 + Math.cos(ang2) * S*0.42, hy = hcy2 + Math.sin(ang2) * S*0.42;
+                if (i === 0) ctx.moveTo(hx, hy); else ctx.lineTo(hx, hy);
+              }
+              ctx.closePath(); ctx.fill();
+            } else if (bseed === 6) {
+              ctx.beginPath();
+              ctx.moveTo(wx + S*0.2, wy); ctx.lineTo(wx + S*0.9, wy);
+              ctx.lineTo(wx + S*0.8, wy + S); ctx.lineTo(wx + S*0.1, wy + S);
+              ctx.closePath(); ctx.fill();
+            } else {
+              ctx.fillRect(wx + S*0.05, wy + S*0.4, S*0.9, S*0.6);
+              ctx.fillRect(wx + S*0.15, wy, S*0.7, S);
+            }
+            // Neon edge glow — cyan for BAR, fire/ember for all others
+            const _hcNeonEdge = isHCBar ? ['#44EEFF','#00FFCC','#66FFFF','#00DDEE'][bseed % 4] : cfg.neonColors[(x + y) % cfg.neonColors.length];
+            ctx.strokeStyle = _hcNeonEdge + (isHCBar ? '99' : '77');
+            ctx.lineWidth = isHCBar ? 2 : 1.5; ctx.strokeRect(wx + 2, wy + 2, S - 4, S - 4);
+            // Extra inner glow ring for BAR (makes it unmistakably distinct)
+            if (isHCBar) {
+              ctx.strokeStyle = '#44EEFF44';
+              ctx.lineWidth = 1; ctx.strokeRect(wx + 6, wy + 6, S - 12, S - 12);
+            }
+            // Window glow dots — cyan for BAR, orange for others
+            const winHC = isHCBar
+              ? ['#88EEFF','#AAFFFF','#66DDFF','#CCFFFF'][(x * 3 + y * 7) % 4]
+              : cfg.windowColors[(x * 3 + y * 7) % cfg.windowColors.length];
+            ctx.fillStyle = winHC;
+            for (let wy2 = 0; wy2 < 3; wy2++) {
+              for (let wx2 = 0; wx2 < 3; wx2++) {
+                if (Math.sin(x * 5.7 + y * 3.3 + wx2 * 7 + wy2 * 11) > 0.1)
+                  ctx.fillRect(wx + 12 + wx2 * 22, wy + 12 + wy2 * 22, 8, 6);
+              }
+            }
+            // Blood-rain shadow strip on top face (skip for BAR — keep it clean)
+            if (!isHCBar && (x * 13 + y * 17) % 4 === 0) {
+              ctx.fillStyle = 'rgba(180,20,0,0.13)';
+              ctx.fillRect(wx + S*0.15, wy, S*0.7, S*0.09);
+            }
+          } else if (cfg.blitz) {
+            // ═══════════════════════════════════════════════════════════════
+            //  BLITZ: Massive speed-zone buildings with fire neon
+            // ═══════════════════════════════════════════════════════════════
+            const t  = Date.now() * 0.001;
+            const ts = x * 41 + y * 59;
+            const blNeons = ['#FF4400','#FF2200','#FF6600','#FF0022','#FF8800'];
+            const blSigns = ['RUSH','BLITZ','SURGE','SPEED','FIRE','OVERDRIVE','FLASH'];
+            ctx.fillStyle = '#070302'; ctx.fillRect(wx, wy, S, S);
+            const blLayout = ts % 3;
+            const blDefs = blLayout === 0
+              ? [{x:0,y:0,w:42,h:80},{x:44,y:0,w:36,h:80}]
+              : blLayout === 1
+              ? [{x:0,y:0,w:80,h:44},{x:0,y:46,w:80,h:34}]
+              : [{x:0,y:0,w:80,h:46},{x:0,y:48,w:38,h:32},{x:42,y:48,w:38,h:32}];
+            for (let i = 0; i < blDefs.length; i++) {
+              const bd = blDefs[i];
+              const bx = wx+bd.x, by = wy+bd.y, bw = bd.w, bh = bd.h;
+              const bseed = ts*7 + i*31;
+              const neonCol = blNeons[bseed % blNeons.length];
+              // Drop shadow
+              ctx.fillStyle='rgba(0,0,0,0.65)'; ctx.fillRect(bx+4,by+4,bw,bh);
+              // Body
+              ctx.fillStyle='#0d0402'; ctx.fillRect(bx,by,bw,bh);
+              // Outer border
+              ctx.strokeStyle=neonCol; ctx.lineWidth=3;
+              ctx.strokeRect(bx+2,by+2,bw-4,bh-4);
+              // Inner panel
+              ctx.fillStyle='#090301'; ctx.fillRect(bx+6,by+6,bw-12,bh-12);
+              // Secondary border
+              ctx.strokeStyle=neonCol+'55'; ctx.lineWidth=1;
+              ctx.strokeRect(bx+10,by+10,bw-20,bh-20);
+              // Speed stripe accents
+              for (let si=0;si<3;si++) {
+                ctx.fillStyle = si===1 ? neonCol+'70' : neonCol+'28';
+                ctx.fillRect(bx+12, by+Math.floor(bh*(0.20+si*0.24)), bw-24, si===1?2:1);
+              }
+              // Roof equipment
+              const roofType = (bseed+i)%3;
+              if (roofType===0) {
+                ctx.fillStyle='#444'; ctx.fillRect(bx+bw/2-2,by-10,4,20);
+                const blink3=Math.sin(t*6+bseed)>0;
+                ctx.fillStyle=blink3?neonCol:neonCol+'30';
+                ctx.beginPath(); ctx.arc(bx+bw/2,by-10,5,0,Math.PI*2); ctx.fill();
+                ctx.strokeStyle=neonCol+'60'; ctx.lineWidth=2;
+                ctx.beginPath(); ctx.arc(bx+bw/2,by-10,8+3*Math.sin(t*4+bseed),0,Math.PI*2); ctx.stroke();
+              } else if (roofType===1) {
+                ctx.fillStyle='#777'; ctx.fillRect(bx+bw/2-1,by-12,2,18); ctx.fillRect(bx+bw/2-6,by-2,12,3);
+                if (Math.sin(t*8+bseed)>0.5) {
+                  ctx.fillStyle='#FFEE44';
+                  ctx.beginPath(); ctx.arc(bx+bw/2,by-12,3,0,Math.PI*2); ctx.fill();
+                }
+              } else {
+                ctx.fillStyle='#333'; ctx.fillRect(bx+10,by+6,22,12); ctx.fillRect(bx+bw-32,by+8,20,10);
+                ctx.fillStyle=neonCol+'40'; ctx.fillRect(bx+11,by+8,20,2); ctx.fillRect(bx+11,by+13,20,2);
+              }
+              // Neon sign
+              if (bw>35) {
+                const sgnT=blSigns[bseed%blSigns.length];
+                const sgnW=Math.min(bw-20,52), sgnH=13;
+                const sgnX=bx+(bw-sgnW)/2, sgnY=by+bh-20;
+                ctx.fillStyle='#040100'; ctx.fillRect(sgnX,sgnY,sgnW,sgnH);
+                ctx.strokeStyle=neonCol; ctx.lineWidth=2; ctx.strokeRect(sgnX,sgnY,sgnW,sgnH);
+                ctx.fillStyle=neonCol; ctx.font='bold 9px monospace';
+                ctx.fillText(sgnT, sgnX+5, sgnY+10);
+              }
+              if (bh>40) { ctx.fillStyle=neonCol+'33'; ctx.fillRect(bx+12,by+Math.floor(bh*0.45),bw-24,2); }
+            }
           } else if (cfg.arena) {
             // ═══════════════════════════════════════════════════════════════
             //  ARENA: 2-3 MASSIVE monolithic buildings per tile
@@ -3257,9 +3906,9 @@ class GameMap {
             }
           }
 
-          // Windows (not in robot/jungle/desert/neon_city/snow) — no shadowBlur for performance
-          // Neon City and Frozen Tundra have custom windows in the building shapes above
-          if (!cfg.robot && !cfg.jungle && !cfg.desert && !cfg.galactica && !cfg.zombie && !cfg.snow && cfg.id !== 'neon_city' && this.buildingWindows[y][x]) {
+          // Windows (not in robot/jungle/desert/neon_city/dino) — no shadowBlur for performance
+          // Neon City / dino have custom windows in the building shapes above
+          if (!cfg.robot && !cfg.jungle && !cfg.desert && !cfg.galactica && !cfg.zombie && !cfg.dino && cfg.id !== 'neon_city' && this.buildingWindows[y][x]) {
             const wc = cfg.windowColors[(Math.floor(x/2) + Math.floor(y/2)) % cfg.windowColors.length];
             ctx.fillStyle = wc + 'CC';
             for (let wy2 = 0; wy2 < 2; wy2++) {
@@ -3270,9 +3919,9 @@ class GameMap {
               }
             }
           }
-          // Neon sign strips (not in robot/jungle/desert/neon_city/snow) — no shadowBlur for performance
-          // Neon City and Frozen Tundra have custom neon effects in building shapes
-          if (!cfg.robot && !cfg.jungle && !cfg.desert && !cfg.galactica && !cfg.zombie && !cfg.snow && cfg.id !== 'neon_city' && (x + y) % cfg.neonFreq === 0) {
+          // Neon sign strips (not in robot/jungle/desert/neon_city/dino) — no shadowBlur for performance
+          // Neon City / dino have custom neon effects in building shapes
+          if (!cfg.robot && !cfg.jungle && !cfg.desert && !cfg.galactica && !cfg.zombie && !cfg.dino && cfg.id !== 'neon_city' && (x + y) % cfg.neonFreq === 0) {
             const nc = cfg.neonColors[(x * 3 + y) % cfg.neonColors.length];
             ctx.globalAlpha = 0.65;
             ctx.strokeStyle = nc; ctx.lineWidth = 2;
@@ -3440,7 +4089,10 @@ class GameMap {
         const below = (y + 1 < this.H) ? this.tiles[y + 1][x] : TILE.ROAD;
         if (below === TILE.BUILDING) continue;
         const wx2 = x * S, wy2 = y * S;
-        const bc = this.buildingColors[y][x];
+        // For hardcore BAR blocks, use neon-city blue as the wall base color
+        const _wallHCKey = cfg.hardcore ? `${Math.floor(x/this.ROAD_EVERY)},${Math.floor(y/this.ROAD_EVERY)}` : null;
+        const _wallIsBar = cfg.hardcore && this._blockTypes[_wallHCKey] === 10;
+        const bc = _wallIsBar ? '#1a1a2e' : this.buildingColors[y][x];
         // Darken building colour ~55% for south-facing wall
         const rr = Math.round(parseInt(bc.slice(1,3),16) * 0.55);
         const gg = Math.round(parseInt(bc.slice(3,5),16) * 0.55);
@@ -3453,10 +4105,36 @@ class GameMap {
         // Bottom-edge ambient occlusion
         ctx.fillStyle = 'rgba(0,0,0,0.22)';
         ctx.fillRect(wx2, wy2 + S + wallH - 3, S, 3);
+        // Dino south-wall: dark moss with bioluminescent window slits
+        if (cfg.dino) {
+          ctx.fillStyle = '#1a2810';
+          ctx.fillRect(wx2, wy2 + S, S, wallH);
+          ctx.fillStyle = 'rgba(0,0,0,0.52)';
+          ctx.fillRect(wx2, wy2 + S, S, 3);
+          ctx.fillStyle = 'rgba(0,0,0,0.22)';
+          ctx.fillRect(wx2, wy2 + S + wallH - 3, S, 3);
+          // Hanging vine fringe on south wall
+          ctx.strokeStyle = '#33881A';
+          ctx.lineWidth = 1;
+          for (let vi = 0; vi < 4; vi++) {
+            const vxw = wx2 + 8 + vi * Math.floor((S-8)/4);
+            ctx.beginPath(); ctx.moveTo(vxw, wy2 + S); ctx.lineTo(vxw - 1, wy2 + S + wallH); ctx.stroke();
+          }
+          if (this.buildingWindows[y][x]) {
+            ctx.fillStyle = '#66DD44AA';
+            const wW = 9, wHh = 6;
+            for (let wi = 0; wi < 3; wi++) {
+              const wx3 = wx2 + 8 + wi * Math.floor((S - 16) / 3);
+              if (wx3 + wW < wx2 + S - 6)
+                ctx.fillRect(wx3, wy2 + S + 3, wW, wHh);
+            }
+          }
+          continue;
+        }
         // Window slots on the wall face — no shadowBlur for performance
         if (this.buildingWindows[y][x]) {
-          const wc = cfg.windowColors[(Math.floor(x/2) + Math.floor(y/2)) % cfg.windowColors.length];
-          ctx.fillStyle = wc + 'AA';
+          const wc = _wallIsBar ? '#88EEFFAA' : cfg.windowColors[(Math.floor(x/2) + Math.floor(y/2)) % cfg.windowColors.length] + 'AA';
+          ctx.fillStyle = wc;
           const wW = 10, wHh = 7;
           for (let wi = 0; wi < 3; wi++) {
             const wx3 = wx2 + 8 + wi * Math.floor((S - 16) / 3);
@@ -3493,6 +4171,44 @@ class GameMap {
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillStyle = textColor; ctx.shadowColor = textColor; ctx.shadowBlur = 20;
     ctx.fillText('M', wx, wy);
+    const isRobot = !!this.config.robot;
+    ctx.save();
+    if (isRobot) {
+      // Robot City: teal/cyan transit node
+      ctx.fillStyle = '#040e14';
+      ctx.fillRect(wx - S * 0.5, wy - S * 0.5, S, S);
+      // Circuit corner pads
+      ctx.fillStyle = 'rgba(0,220,255,0.18)';
+      ctx.fillRect(wx - S*0.5 + 3, wy - S*0.5 + 3, 8, 8);
+      ctx.fillRect(wx + S*0.5 - 11, wy - S*0.5 + 3, 8, 8);
+      ctx.fillRect(wx - S*0.5 + 3, wy + S*0.5 - 11, 8, 8);
+      ctx.fillRect(wx + S*0.5 - 11, wy + S*0.5 - 11, 8, 8);
+      // Bottom step bars
+      for (let i = 0; i < 4; i++) {
+        ctx.fillStyle = `rgba(0,200,255,${0.35 - i * 0.07})`;
+        ctx.fillRect(wx - S * 0.5 + i * 5, wy + S * 0.5 - (i + 1) * 9, S - i * 10, 5);
+      }
+      // Outer border
+      ctx.strokeStyle = 'rgba(0,200,255,0.35)'; ctx.lineWidth = 1.5;
+      ctx.strokeRect(wx - S*0.5 + 2, wy - S*0.5 + 2, S-4, S-4);
+      // T label
+      ctx.font = 'bold 26px monospace';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillStyle = '#00CCFF'; ctx.shadowColor = '#00CCFF'; ctx.shadowBlur = 22;
+      ctx.fillText('T', wx, wy);
+    } else {
+      // Standard: green metro M
+      ctx.fillStyle = '#060e06';
+      ctx.fillRect(wx - S * 0.5, wy - S * 0.5, S, S);
+      for (let i = 0; i < 4; i++) {
+        ctx.fillStyle = `rgba(34,255,100,${0.38 - i * 0.08})`;
+        ctx.fillRect(wx - S * 0.5 + i * 5, wy + S * 0.5 - (i + 1) * 9, S - i * 10, 5);
+      }
+      ctx.font = 'bold 26px monospace';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillStyle = '#22FF66'; ctx.shadowColor = '#22FF66'; ctx.shadowBlur = 20;
+      ctx.fillText('M', wx, wy);
+    }
     ctx.shadowBlur = 0; ctx.textBaseline = 'alphabetic';
     ctx.restore();
   }
@@ -3501,9 +4217,15 @@ class GameMap {
   getRoom(door) {
     const RS          = 60;  // indoor tile size (px)
     const isGalactica = !!this.config.galactica;
+    const isBlitz     = !!this.config.blitz;
+    const isRobot     = !!this.config.robot;
+    const isHardcore  = !!this.config.hardcore;
+    const isDino        = !!this.config.dino;
     const isNeonDealer  = this.config.id === 'neon_city' && door.specialType === 'dealership';
     const isGalDealer   = isGalactica && door.specialType === 'dealership';
     const isWastelandDealer = !!this.config.wasteland && door.specialType === 'dealership';
+    const isHardcoreDealer  = isHardcore && door.specialType === 'dealership';
+    const isDinoDealer  = isDino && door.specialType === 'dealership';
     const isNeonArcade  = this.config.id === 'neon_city' && door.bTypeIdx === 4;
     const isGalArcade   = isGalactica && door.bTypeIdx === 4;
     const isGalMarket   = isGalactica && door.bTypeIdx === 3;
@@ -3512,7 +4234,7 @@ class GameMap {
     const isGalPharmacy = isGalactica && door.bTypeIdx === 5;
     const isGalRadio    = isGalactica && door.bTypeIdx === 22;
     const isZombieMap   = !!this.config.zombie;
-    const useLargeDealer = isNeonDealer || isGalDealer || isWastelandDealer;
+    const useLargeDealer = isNeonDealer || isGalDealer || isWastelandDealer || isHardcoreDealer || isDinoDealer;
     const useLargeArcade = isNeonArcade || isGalArcade;
     const useLargeMarket = isGalMarket;
     const useLargeClub   = isGalClub;
@@ -3521,7 +4243,13 @@ class GameMap {
     const useLargeRadio  = isGalRadio;
     // All zombie buildings use the large arcade layout (1080×840)
     const useLargeZombie = isZombieMap;
-    const useLarge = useLargeDealer || useLargeArcade || useLargeMarket || useLargeClub || useLargeRest || useLargePharm || useLargeRadio || useLargeZombie;
+    // All blitz/robot/hardcore buildings use large rooms (same as galactica)
+    const useLargeBlitz    = isBlitz;
+    const useLargeRobot    = isRobot;
+    const useLargeHardcore = isHardcore;
+    const useLargeUnderground = door.bTypeIdx === 23; // Underground Lab always large
+    const useLargeDino  = isDino;
+    const useLarge = useLargeDealer || useLargeArcade || useLargeMarket || useLargeClub || useLargeRest || useLargePharm || useLargeRadio || useLargeZombie || useLargeBlitz || useLargeRobot || useLargeHardcore || useLargeUnderground || useLargeDino;
     const layout = useLargeDealer ? ROOM_LAYOUT_DEALER_NEON
                  : useLargeArcade ? ROOM_LAYOUT_ARCADE_NEON
                  : useLargeMarket ? ROOM_LAYOUT_DEALER_NEON
@@ -3530,6 +4258,11 @@ class GameMap {
                  : useLargePharm  ? ROOM_LAYOUT_ARCADE_NEON
                  : useLargeRadio  ? ROOM_LAYOUT_ARCADE_NEON
                  : useLargeZombie ? ROOM_LAYOUT_ARCADE_NEON
+                 : useLargeBlitz      ? ROOM_LAYOUT_ARCADE_NEON
+                 : useLargeRobot      ? ROOM_LAYOUT_ARCADE_NEON
+                 : useLargeHardcore   ? ROOM_LAYOUT_ARCADE_NEON
+                 : useLargeUnderground? ROOM_LAYOUT_ARCADE_NEON
+                 : useLargeDino       ? ROOM_LAYOUT_ARCADE_NEON
                  : door.type === 2 ? ROOM_LAYOUT_2 : ROOM_LAYOUT_1;
     const RH     = layout.length;
     const RW     = layout[0].length;

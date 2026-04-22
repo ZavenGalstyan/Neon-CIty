@@ -174,6 +174,95 @@ const Auth = (() => {
           <a href="register.html" class="nav-btn nav-btn--primary">REGISTER</a>
         </div>`;
     }
+
+    // ── Burger menu (injected outside #siteNav into the nav element) ──
+    _mountBurger(session);
+  }
+
+  function _mountBurger(session) {
+    // Remove any existing burger/menu to avoid duplicates
+    document.getElementById('navBurger')?.remove();
+    document.getElementById('navMobileMenu')?.remove();
+    document.getElementById('navMobileBackdrop')?.remove();
+
+    const navEl = document.querySelector('.site-nav');
+    if (!navEl) return;
+
+    // Burger button
+    const burger = document.createElement('button');
+    burger.id = 'navBurger';
+    burger.className = 'nav-burger';
+    burger.setAttribute('aria-label', 'Open menu');
+    burger.innerHTML = '<span></span><span></span><span></span>';
+    navEl.appendChild(burger);
+
+    // Backdrop
+    const backdrop = document.createElement('div');
+    backdrop.id = 'navMobileBackdrop';
+    backdrop.className = 'nav-mobile-backdrop';
+    document.body.appendChild(backdrop);
+
+    // Mobile menu panel
+    const menu = document.createElement('nav');
+    menu.id = 'navMobileMenu';
+    menu.className = 'nav-mobile-menu';
+
+    if (session && session.name) {
+      const initial = _esc(session.name.charAt(0).toUpperCase());
+      menu.innerHTML = `
+        <a href="profile.html" class="nav-mobile-account">
+          <div class="nav-mobile-account-avatar">${initial}</div>
+          <div>
+            <div class="nav-mobile-account-name">${_esc(session.name)}</div>
+            <div class="nav-mobile-account-sub">View Profile →</div>
+          </div>
+        </a>
+        <div class="nav-mobile-section">NAVIGATE</div>
+        <a href="index.html"       class="nav-mobile-item"><span class="nav-mobile-item-icon">⬡</span>HOME</a>
+        <a href="shop.html"        class="nav-mobile-item gold"><span class="nav-mobile-item-icon">⬡</span>ITEM SHOP</a>
+        <a href="inventory.html"   class="nav-mobile-item"><span class="nav-mobile-item-icon">▦</span>INVENTORY</a>
+        <a href="leaderboard.html" class="nav-mobile-item pink"><span class="nav-mobile-item-icon">▲</span>LEADERBOARDS</a>
+        <div class="nav-mobile-section">ACCOUNT</div>
+        <button class="nav-mobile-item pink" id="navMobileLogout"><span class="nav-mobile-item-icon">⏻</span>LOGOUT</button>`;
+    } else {
+      menu.innerHTML = `
+        <div class="nav-mobile-section">NAVIGATE</div>
+        <a href="index.html"       class="nav-mobile-item"><span class="nav-mobile-item-icon">⬡</span>HOME</a>
+        <a href="shop.html"        class="nav-mobile-item gold"><span class="nav-mobile-item-icon">⬡</span>ITEM SHOP</a>
+        <a href="inventory.html"   class="nav-mobile-item"><span class="nav-mobile-item-icon">▦</span>INVENTORY</a>
+        <a href="leaderboard.html" class="nav-mobile-item pink"><span class="nav-mobile-item-icon">▲</span>LEADERBOARDS</a>
+        <div class="nav-mobile-section">ACCOUNT</div>
+        <a href="login.html"    class="nav-mobile-item"><span class="nav-mobile-item-icon">◈</span>LOGIN</a>
+        <a href="register.html" class="nav-mobile-item green"><span class="nav-mobile-item-icon">✦</span>REGISTER</a>`;
+    }
+
+    document.body.appendChild(menu);
+
+    // Toggle logic
+    function openMenu() {
+      burger.classList.add('open');
+      menu.classList.add('open');
+      backdrop.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeMenu() {
+      burger.classList.remove('open');
+      menu.classList.remove('open');
+      backdrop.classList.remove('open');
+      document.body.style.overflow = '';
+    }
+
+    burger.addEventListener('click', () => {
+      burger.classList.contains('open') ? closeMenu() : openMenu();
+    });
+    backdrop.addEventListener('click', closeMenu);
+
+    // Close on nav link click
+    menu.querySelectorAll('a').forEach(a => a.addEventListener('click', closeMenu));
+
+    // Logout inside mobile menu
+    const mobileLogout = document.getElementById('navMobileLogout');
+    if (mobileLogout) mobileLogout.addEventListener('click', logout);
   }
 
   /* Minimal HTML-escape to prevent XSS when injecting a username */

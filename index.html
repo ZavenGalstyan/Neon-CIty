@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>NEON CITY — Choose Your Identity</title>
+  <title>DASH DREAD — Choose Your Identity</title>
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/social.css">
 </head>
@@ -11,9 +11,16 @@
   <div class="bg-grid"></div>
   <div class="scanlines"></div>
 
+  <!-- ── Small-screen recommendation banner (hidden on ≥1025px) ── -->
+  <div class="mobile-warning-banner" id="mobileWarningBanner">
+    <span class="mobile-warning-icon">💻</span>
+    <span class="mobile-warning-text">For the best experience, play on a <strong>computer</strong>. Mobile is supported but some features may be limited.</span>
+    <button class="mobile-warning-close" onclick="this.parentElement.style.display='none'" aria-label="Dismiss">✕</button>
+  </div>
+
   <!-- ── Site Navbar ───────────────────────────────────────── -->
   <nav class="site-nav">
-    <a href="index.html" class="site-nav__logo">NEON CITY</a>
+    <a href="index.html" class="site-nav__logo"><span class="logo-dash">DASH</span><span class="logo-sep">✦</span><span class="logo-dread">DREAD</span></a>
     <div id="siteNav" class="site-nav__controls"></div>
   </nav>
 
@@ -21,7 +28,7 @@
 
     <!-- Logo -->
     <div class="game-logo">
-      <h1 class="logo-text">NEON CITY</h1>
+      <h1 class="logo-text"><span class="logo-dash">DASH</span><span class="logo-mid-sep">⬡</span><span class="logo-dread">DREAD</span></h1>
       <p class="logo-sub">⬡ CHOOSE YOUR IDENTITY ⬡</p>
     </div>
 
@@ -1338,9 +1345,13 @@
       <!-- Life Mode + Arena + Zombie — all in one row -->
       <div class="special-maps-row">
 
-        <!-- Life Mode -->
-        <div class="map-card map-card--life" data-map="lifemode">
-          <div class="experimental-badge" style="background:#88DDFF;box-shadow:0 0 14px rgba(136,221,255,0.7);color:#000">🏙 SANDBOX</div>
+        <!-- Life Mode — COMING SOON -->
+        <div class="map-card map-card--life char-card-locked" data-map="lifemode" data-coming-soon="true" style="cursor:default;">
+          <div class="char-coming-soon-overlay">
+            <span style="font-size:28px;margin-bottom:4px">🏙</span>
+            <span class="cs-badge" style="font-size:13px;letter-spacing:0.2em">COMING SOON</span>
+            <span style="font-family:'Orbitron',sans-serif;font-size:9px;color:rgba(136,221,255,0.6);letter-spacing:0.1em;margin-top:6px">LIFE MODE</span>
+          </div>
           <div class="map-preview" style="--mg:14px;--mbg:#04090d;--mr:rgba(136,221,255,0.38);">
             <div class="map-preview-inner">
               <div class="road-dot" style="top:20%;left:20%;background:#88DDFF;box-shadow:0 0 6px #88DDFF"></div>
