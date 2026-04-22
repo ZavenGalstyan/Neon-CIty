@@ -91,29 +91,29 @@
       const tc = document.getElementById('touchControls');
       if (tc) tc.classList.add('active');
 
-      // Wire action buttons to virtual key injection (after InputManager is created)
-      window.addEventListener('gameStarted', () => {
-        const input = window._gameInstance && window._gameInstance.input;
-        if (!input) return;
-        const btnMap = [
-          ['tbEnter',  'KeyE'],
-          ['tbSprint', 'ShiftLeft'],
-          ['tbGren',   'KeyG'],
-          ['tbCar',    'KeyF'],
-        ];
-        btnMap.forEach(([id, code]) => {
-          const btn = document.getElementById(id);
-          if (!btn) return;
-          btn.addEventListener('touchstart', e => { input._virtualKeys.add(code); e.preventDefault(); }, { passive:false });
-          btn.addEventListener('touchend',   e => { input._virtualKeys.delete(code); e.preventDefault(); }, { passive:false });
-        });
-        // Fire button: mouseDown simulation
-        const fbtn = document.getElementById('tbFire');
-        if (fbtn) {
-          fbtn.addEventListener('touchstart', e => { input.mouseDown = true; input.mouseJustDown = true; e.preventDefault(); }, { passive:false });
-          fbtn.addEventListener('touchend',   e => { input.mouseDown = false; e.preventDefault(); }, { passive:false });
-        }
+      // Lazy input lookup — works regardless of when the game initialises
+      function getInput() {
+        return window._gameInstance && window._gameInstance.input;
+      }
+
+      const btnMap = [
+        ['tbEnter',  'KeyE'],
+        ['tbSprint', 'ShiftLeft'],
+        ['tbGren',   'KeyG'],
+        ['tbCar',    'KeyF'],
+      ];
+      btnMap.forEach(([id, code]) => {
+        const btn = document.getElementById(id);
+        if (!btn) return;
+        btn.addEventListener('touchstart', e => { const inp = getInput(); if (inp) inp._virtualKeys.add(code);    e.preventDefault(); }, { passive: false });
+        btn.addEventListener('touchend',   e => { const inp = getInput(); if (inp) inp._virtualKeys.delete(code); e.preventDefault(); }, { passive: false });
       });
+
+      const fbtn = document.getElementById('tbFire');
+      if (fbtn) {
+        fbtn.addEventListener('touchstart', e => { const inp = getInput(); if (inp) { inp.mouseDown = true; inp.mouseJustDown = true; } e.preventDefault(); }, { passive: false });
+        fbtn.addEventListener('touchend',   e => { const inp = getInput(); if (inp) inp.mouseDown = false; e.preventDefault(); }, { passive: false });
+      }
     }
 
     // ── Fullscreen toggle ──────────────────────────────────────
@@ -209,7 +209,16 @@
         btn.style.display = 'none'; // already fullscreen — hide the button
       }
 
-      btn.addEventListener('click', () => { isFS() ? exit() : enter(); });
+      // touchend fires immediately (no 300ms delay); flag prevents the ghost click
+      let _fsTouchFired = false;
+      btn.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        _fsTouchFired = true;
+        isFS() ? exit() : enter();
+        setTimeout(() => { _fsTouchFired = false; }, 600);
+      });
+      btn.addEventListener('click', () => { if (!_fsTouchFired) { isFS() ? exit() : enter(); } });
+
       document.addEventListener('fullscreenchange',       updateIcon);
       document.addEventListener('webkitfullscreenchange', updateIcon);
       document.addEventListener('MSFullscreenChange',     updateIcon);

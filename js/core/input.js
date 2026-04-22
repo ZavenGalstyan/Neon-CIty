@@ -137,10 +137,12 @@ class InputManager {
       e.preventDefault();
     };
 
+    // touchstart on zone only; move/end on document so tracking never breaks
+    // when the finger drifts outside the zone boundary
     zone.addEventListener('touchstart', onStart, { passive: false });
-    zone.addEventListener('touchmove',  onMove,  { passive: false });
-    zone.addEventListener('touchend',   onEnd,   { passive: false });
-    zone.addEventListener('touchcancel',onEnd,   { passive: false });
+    document.addEventListener('touchmove',   onMove, { passive: false });
+    document.addEventListener('touchend',    onEnd,  { passive: false });
+    document.addEventListener('touchcancel', onEnd,  { passive: false });
   }
 
   isDown(code) { return this.keys.has(code) || this._virtualKeys.has(code); }

@@ -11,6 +11,13 @@
   <div class="bg-grid"></div>
   <div class="scanlines"></div>
 
+  <!-- ── Small-screen recommendation banner (hidden on ≥1025px) ── -->
+  <div class="mobile-warning-banner" id="mobileWarningBanner">
+    <span class="mobile-warning-icon">💻</span>
+    <span class="mobile-warning-text">For the best experience, play on a <strong>computer</strong>. Mobile is supported but some features may be limited.</span>
+    <button class="mobile-warning-close" onclick="this.parentElement.style.display='none'" aria-label="Dismiss">✕</button>
+  </div>
+
   <!-- ── Site Navbar ───────────────────────────────────────── -->
   <nav class="site-nav">
     <a href="index.html" class="site-nav__logo"><span class="logo-dash">DASH</span><span class="logo-sep">✦</span><span class="logo-dread">DREAD</span></a>
