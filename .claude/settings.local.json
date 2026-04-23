@@ -33,7 +33,8 @@
       "Bash(awk -F: '$2 >= 11350 && $2 <= 11600 {print}')",
       "Bash(awk NR>=11465 && NR<=11490:*)",
       "Bash(awk -F: '$2 >= 11340 && $2 <= 11380 {print}')",
-      "Bash(awk NR>=981 && NR<=1020:*)"
+      "Bash(awk NR>=981 && NR<=1020:*)",
+      "Bash(echo \"Exit code: $?\")"
     ]
   }
 }
