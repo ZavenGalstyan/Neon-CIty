@@ -1886,5 +1886,29 @@
     Auth.mountNavbar();
     if (Auth.isLoggedIn()) SocialUI.init();
   </script>
+
+  <!-- Online player count -->
+  <div id="onlineWidget">
+    <span class="online-dot"></span>
+    <span id="onlineCount">···</span>
+    <span class="online-label">online</span>
+  </div>
+
+  <script>
+    (function() {
+      const el = document.getElementById('onlineCount');
+      async function update() {
+        try {
+          const res = await fetch('https://game-backend-wfmf.onrender.com/players/online');
+          const { online } = await res.json();
+          el.textContent = online.toLocaleString();
+        } catch (_) {
+          el.textContent = '—';
+        }
+      }
+      update();
+      setInterval(update, 30000);
+    })();
+  </script>
 </body>
 </html>
