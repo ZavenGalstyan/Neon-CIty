@@ -10912,6 +10912,285 @@ Game.prototype._renderIndoorFurniture = function(ctx, room) {
         ctx.fillText("WASTELAND RADIO", cx, H - 20);
         ctx.shadowBlur = 0;
 
+      } else if (!!this.map?.config?.desert) {
+        // ═══ DESERT SANDS: PYRAMID RADIO — VOICE OF THE SANDS ═══
+        const t = performance.now() / 1000;
+        const GOLD="#FFD060"; const AMBER="#FF9900"; const SAND="#E8C060"; const TERRA="#C06010";
+        const GOLDr="255,208,96"; const AMBERr="255,153,0"; const SANDr="232,192,96";
+
+        // ── Sandstone tile floor ──────────────────────────────────────
+        const tileSize = 48;
+        for (let gy = 0; gy < Math.ceil(H / tileSize) + 1; gy++) {
+          for (let gx = 0; gx < Math.ceil(W / tileSize) + 1; gx++) {
+            const tx = gx * tileSize, ty = gy * tileSize;
+            const seed = gx * 17 + gy * 11;
+            ctx.fillStyle = seed % 3 === 0 ? "rgba(28,18,4,0.92)"
+                          : seed % 3 === 1 ? "rgba(22,14,2,0.90)"
+                          : "rgba(32,20,6,0.90)";
+            ctx.fillRect(tx, ty, tileSize, tileSize);
+            ctx.strokeStyle = `rgba(${GOLDr},0.08)`;
+            ctx.lineWidth = 0.5;
+            ctx.strokeRect(tx, ty, tileSize, tileSize);
+            // Subtle hieroglyph marks on floor
+            if (seed % 7 === 0) {
+              ctx.fillStyle = `rgba(${AMBERr},0.10)`;
+              ctx.fillRect(tx + 12, ty + 20, 8, 2);
+              ctx.fillRect(tx + 20, ty + 14, 2, 8);
+            }
+          }
+        }
+
+        // ── Room border — golden sandstone ───────────────────────────
+        ctx.strokeStyle = `rgba(${GOLDr},0.6)`;
+        ctx.lineWidth = 3;
+        ctx.strokeRect(2, 2, W - 4, H - 4);
+        ctx.strokeStyle = `rgba(${AMBERr},0.2)`;
+        ctx.lineWidth = 1;
+        ctx.strokeRect(6, 6, W - 12, H - 12);
+
+        // ── Title sign — VOICE OF THE SANDS ──────────────────────────
+        const signW = 360, signH = 30;
+        const signX = W / 2 - signW / 2, signY = room.S - 26;
+        const signGrad = ctx.createLinearGradient(signX, signY, signX + signW, signY);
+        signGrad.addColorStop(0, "rgba(60,30,0,0.92)");
+        signGrad.addColorStop(0.5, "rgba(140,80,0,0.98)");
+        signGrad.addColorStop(1, "rgba(60,30,0,0.92)");
+        ctx.fillStyle = signGrad;
+        rr(signX, signY, signW, signH, 7);
+        ctx.fill();
+        ctx.strokeStyle = `rgba(${GOLDr},${0.7 + 0.3 * Math.sin(t * 2.4)})`;
+        ctx.lineWidth = 1.5; ctx.stroke();
+        ctx.fillStyle = GOLD;
+        ctx.font = "bold 13px monospace";
+        ctx.textAlign = "center";
+        ctx.fillText("⬡  VOICE OF THE SANDS  ⬡", W / 2, signY + 20);
+
+        // ── ON AIR blinking sign ──────────────────────────────────────
+        const onAirA = 0.7 + 0.3 * Math.sin(t * 4);
+        ctx.fillStyle = `rgba(200,80,0,${onAirA})`;
+        ctx.shadowColor = "#CC5500"; ctx.shadowBlur = 14 * onAirA;
+        rr(W / 2 - 46, topY + 34, 92, 22, 5); ctx.fill(); ctx.shadowBlur = 0;
+        ctx.strokeStyle = `rgba(${AMBERr},${onAirA})`; ctx.lineWidth = 1.5; ctx.stroke();
+        ctx.fillStyle = "#FFFFFF";
+        ctx.font = "bold 11px monospace"; ctx.textAlign = "center";
+        ctx.fillText("● ON AIR", W / 2, topY + 49);
+
+        // ── Main broadcast desk — wide stone slab ─────────────────────
+        const deskW = Math.floor(W * 0.65), deskH = 40;
+        const deskX = cx - deskW / 2, deskY = topY + 64;
+        const deskGrad = ctx.createLinearGradient(deskX, deskY, deskX + deskW, deskY);
+        deskGrad.addColorStop(0, "#2a1800"); deskGrad.addColorStop(0.5, "#3c2400"); deskGrad.addColorStop(1, "#2a1800");
+        ctx.fillStyle = deskGrad; rr(deskX, deskY, deskW, deskH, 6); ctx.fill();
+        ctx.strokeStyle = GOLD; ctx.lineWidth = 2;
+        ctx.shadowColor = GOLD; ctx.shadowBlur = 8; ctx.stroke(); ctx.shadowBlur = 0;
+
+        // Mixing console faders (14 channels)
+        for (let ci = 0; ci < 14; ci++) {
+          const ch = 8 + 20 * Math.abs(Math.sin(t * 3.5 + ci * 0.6));
+          ctx.fillStyle = ci < 5 ? TERRA : ci < 9 ? AMBER : GOLD;
+          ctx.fillRect(deskX + 10 + ci * (Math.floor((deskW - 20) / 14)), deskY + 36 - ch, Math.floor((deskW - 20) / 14) - 2, ch);
+          // Knob
+          ctx.fillStyle = ci % 3 === 0 ? GOLD : AMBER;
+          ctx.beginPath();
+          ctx.arc(deskX + 10 + ci * (Math.floor((deskW - 20) / 14)) + 6, deskY + 22, 4, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        // VU bar
+        for (let vi = 0; vi < 18; vi++) {
+          ctx.fillStyle = vi < 7 ? GOLD : vi < 12 ? AMBER : TERRA;
+          ctx.fillRect(deskX + 10 + vi * (Math.floor((deskW - 20) / 18)), deskY + 6, Math.floor((deskW - 20) / 18) - 1, 8);
+        }
+
+        // ── Obelisk broadcast tower (left) ───────────────────────────
+        const towerX = 80, towerBaseY = H * 0.78;
+        ctx.strokeStyle = AMBER; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(towerX, towerBaseY); ctx.lineTo(towerX - 22, towerBaseY - 90); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(towerX, towerBaseY); ctx.lineTo(towerX + 22, towerBaseY - 90); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(towerX - 14, towerBaseY - 35); ctx.lineTo(towerX + 14, towerBaseY - 35); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(towerX - 18, towerBaseY - 65); ctx.lineTo(towerX + 18, towerBaseY - 65); ctx.stroke();
+        // Signal waves
+        for (let wi = 0; wi < 4; wi++) {
+          const wa = 0.18 + 0.12 * Math.sin(t * 3 + wi);
+          ctx.strokeStyle = `rgba(${GOLDr},${wa})`; ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.arc(towerX, towerBaseY - 94, 12 + wi * 14, Math.PI * 1.1, Math.PI * 1.9); ctx.stroke();
+        }
+        // Blinking tip
+        const blink = Math.sin(t * 4) > 0;
+        ctx.fillStyle = blink ? `rgba(${AMBERr},0.9)` : TERRA;
+        ctx.shadowColor = AMBER; ctx.shadowBlur = blink ? 12 : 4;
+        ctx.beginPath(); ctx.arc(towerX, towerBaseY - 94, 5, 0, Math.PI * 2); ctx.fill();
+        ctx.shadowBlur = 0;
+
+        // ── Reel-to-reel recorders (right side) ─────────────────────
+        for (let ri = 0; ri < 3; ri++) {
+          const rx = W - 310 + ri * 90, ry = topY + 118;
+          ctx.fillStyle = "#1e1004"; ctx.strokeStyle = AMBER; ctx.lineWidth = 1;
+          rr(rx, ry, 76, 86, 5); ctx.fill(); ctx.stroke();
+          // Reels
+          [[rx + 18, ry + 24], [rx + 58, ry + 24]].forEach(([rx2, ry2]) => {
+            ctx.strokeStyle = GOLD; ctx.lineWidth = 1.5;
+            ctx.beginPath(); ctx.arc(rx2, ry2, 14, 0, Math.PI * 2); ctx.stroke();
+            for (let sp = 0; sp < 4; sp++) {
+              const sa = sp * Math.PI / 2 + t * (ri % 2 === 0 ? 1.2 : -1.2);
+              ctx.beginPath(); ctx.moveTo(rx2, ry2); ctx.lineTo(rx2 + Math.cos(sa) * 12, ry2 + Math.sin(sa) * 12); ctx.stroke();
+            }
+            ctx.fillStyle = `rgba(${GOLDr},0.15)`; ctx.beginPath(); ctx.arc(rx2, ry2, 14, 0, Math.PI * 2); ctx.fill();
+          });
+          ctx.fillStyle = AMBER; ctx.strokeStyle = TERRA; ctx.lineWidth = 0.8;
+          rr(rx + 28, ry + 48, 20, 10, 2); ctx.fill(); ctx.stroke();
+          ctx.fillStyle = GOLD; ctx.font = "bold 5px monospace"; ctx.textAlign = "center";
+          ctx.fillText(`TAPE ${ri + 1}`, rx + 38, ry + 76);
+        }
+
+        // ── Soundproof panels (top wall — sand-foam wedges) ──────────
+        const panelCount = 5, panelGap = 6;
+        const totalPanelW = W - 36;
+        const panelW = (totalPanelW - (panelCount - 1) * panelGap) / panelCount;
+        for (let pi = 0; pi < panelCount; pi++) {
+          const px = 18 + pi * (panelW + panelGap);
+          ctx.fillStyle = "#1c1004"; ctx.strokeStyle = `rgba(${AMBERr},0.28)`; ctx.lineWidth = 1;
+          rr(px, topY + 6, panelW, 26, 3); ctx.fill(); ctx.stroke();
+          ctx.fillStyle = "#2a1808";
+          const cols = Math.floor(panelW / 12);
+          for (let ri = 0; ri < 2; ri++) {
+            for (let ci = 0; ci < cols; ci++) {
+              ctx.beginPath();
+              ctx.moveTo(px + 4 + ci * 12, topY + 8 + ri * 12 + 10);
+              ctx.lineTo(px + 4 + ci * 12 + 10, topY + 8 + ri * 12 + 10);
+              ctx.lineTo(px + 4 + ci * 12 + 5, topY + 8 + ri * 12);
+              ctx.closePath(); ctx.fill();
+            }
+          }
+        }
+
+        // ── Three studio booths (bottom half) ────────────────────────
+        for (let bi = 0; bi < 3; bi++) {
+          const bx = 28 + bi * Math.floor((W - 56) / 3), by = H * 0.60;
+          const bw = Math.floor((W - 56) / 3) - 8, bh = Math.floor(H * 0.32);
+          ctx.fillStyle = "#160c02"; ctx.strokeStyle = bi === 1 ? GOLD : AMBER; ctx.lineWidth = 1.5;
+          rr(bx, by, bw, bh, 6); ctx.fill(); ctx.stroke();
+          ctx.fillStyle = bi === 1 ? GOLD : AMBER;
+          ctx.font = "bold 7px monospace"; ctx.textAlign = "center";
+          ctx.fillText(bi === 0 ? "BOOTH A" : bi === 1 ? "MAIN STUDIO" : "BOOTH B", bx + bw / 2, by + 14);
+          // Microphone stand
+          ctx.strokeStyle = SAND; ctx.lineWidth = 1.5;
+          ctx.beginPath(); ctx.moveTo(bx + bw / 2, by + 22); ctx.lineTo(bx + bw / 2, by + 52); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(bx + bw / 2 - 14, by + 52); ctx.lineTo(bx + bw / 2 + 14, by + 52); ctx.stroke();
+          ctx.fillStyle = SAND;
+          ctx.beginPath(); ctx.ellipse(bx + bw / 2, by + 18, 8, 12, 0, 0, Math.PI * 2); ctx.fill();
+          ctx.strokeStyle = `rgba(${SANDr},0.4)`; ctx.lineWidth = 0.8;
+          for (let li = 0; li < 4; li++) {
+            ctx.beginPath(); ctx.moveTo(bx + bw / 2 - 6, by + 12 + li * 5); ctx.lineTo(bx + bw / 2 + 6, by + 12 + li * 5); ctx.stroke();
+          }
+          // Human worker — Egyptian-style robed figure
+          const workerX = bx + bw / 2 + (bi === 1 ? 0 : bi === 0 ? 20 : -20);
+          const workerY = by + bh - 44;
+          ctx.save(); ctx.translate(workerX, workerY);
+          // Shadow beneath
+          ctx.fillStyle = "rgba(0,0,0,0.3)";
+          ctx.beginPath(); ctx.ellipse(0, 20, 12, 5, 0, 0, Math.PI * 2); ctx.fill();
+          // Robe (linen white with gold trim)
+          ctx.fillStyle = "#E8DCC0";
+          ctx.beginPath(); ctx.moveTo(-10, 0); ctx.lineTo(-12, 28); ctx.lineTo(12, 28); ctx.lineTo(10, 0); ctx.closePath(); ctx.fill();
+          // Gold trim on robe hem
+          ctx.strokeStyle = GOLD; ctx.lineWidth = 1.5;
+          ctx.beginPath(); ctx.moveTo(-12, 26); ctx.lineTo(12, 26); ctx.stroke();
+          // Skin — warm Egyptian tone
+          ctx.fillStyle = "#A0682A";
+          // Head
+          ctx.beginPath(); ctx.arc(0, -14, 8, 0, Math.PI * 2); ctx.fill();
+          // Neck
+          ctx.fillRect(-3, -6, 6, 7);
+          // Arms
+          ctx.beginPath(); ctx.ellipse(-13, 8, 3, 8, -0.3, 0, Math.PI * 2); ctx.fill();
+          ctx.beginPath(); ctx.ellipse(13, 8, 3, 8, 0.3, 0, Math.PI * 2); ctx.fill();
+          // Headdress (nemes cloth — blue and gold stripes)
+          ctx.fillStyle = "#1050AA";
+          ctx.beginPath(); ctx.moveTo(-9, -20); ctx.lineTo(-14, 2); ctx.lineTo(-7, -6); ctx.closePath(); ctx.fill();
+          ctx.beginPath(); ctx.moveTo(9, -20); ctx.lineTo(14, 2); ctx.lineTo(7, -6); ctx.closePath(); ctx.fill();
+          ctx.fillStyle = "#1040AA";
+          ctx.beginPath(); ctx.moveTo(-8, -22); ctx.quadraticCurveTo(0, -28, 8, -22); ctx.lineTo(6, -20); ctx.quadraticCurveTo(0, -25, -6, -20); ctx.closePath(); ctx.fill();
+          // Gold stripe on headdress
+          ctx.strokeStyle = GOLD; ctx.lineWidth = 1;
+          for (let hs = 0; hs < 3; hs++) {
+            ctx.beginPath(); ctx.moveTo(-8 + hs * 0.5, -20 + hs * 7); ctx.lineTo(-14 + hs * 0.5, 2 + hs * 0); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(8 - hs * 0.5, -20 + hs * 7); ctx.lineTo(14 - hs * 0.5, 2 + hs * 0); ctx.stroke();
+          }
+          // Kohl eyes
+          ctx.fillStyle = "#1a0a00";
+          ctx.beginPath(); ctx.ellipse(-3, -14, 2.2, 1.5, 0, 0, Math.PI * 2); ctx.fill();
+          ctx.beginPath(); ctx.ellipse(3, -14, 2.2, 1.5, 0, 0, Math.PI * 2); ctx.fill();
+          // Headphones or ear piece (for the DJ)
+          if (bi === 1) {
+            ctx.strokeStyle = GOLD; ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.arc(0, -14, 10, Math.PI * 0.2, Math.PI * 0.8); ctx.stroke();
+            ctx.fillStyle = GOLD;
+            ctx.beginPath(); ctx.arc(-9, -8, 3.5, 0, Math.PI * 2); ctx.fill();
+            ctx.beginPath(); ctx.arc(9, -8, 3.5, 0, Math.PI * 2); ctx.fill();
+          }
+          // Collar necklace — gold pectoral
+          ctx.fillStyle = GOLD; ctx.strokeStyle = AMBER; ctx.lineWidth = 0.8;
+          ctx.beginPath(); ctx.arc(0, -4, 6, Math.PI * 0.1, Math.PI * 0.9); ctx.fill(); ctx.stroke();
+          ctx.restore();
+        }
+
+        // ── Oud / sand instruments on wall shelves ───────────────────
+        // Left shelf
+        ctx.fillStyle = "#2a1800"; ctx.strokeStyle = `rgba(${AMBERr},0.35)`; ctx.lineWidth = 1;
+        rr(10, H * 0.48, 60, 10, 2); ctx.fill(); ctx.stroke();
+        // Oud (lute) shape
+        ctx.save(); ctx.translate(40, H * 0.38);
+        ctx.fillStyle = "#6a3a10";
+        ctx.beginPath(); ctx.ellipse(0, 0, 12, 16, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = "#3a1a04";
+        ctx.beginPath(); ctx.arc(0, 0, 5, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = GOLD; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(0, -16); ctx.lineTo(0, -30); ctx.stroke();
+        ctx.beginPath(); ctx.lineTo(-6, -28); ctx.lineTo(6, -28); ctx.stroke();
+        ctx.restore();
+        // Right shelf
+        ctx.fillStyle = "#2a1800"; ctx.strokeStyle = `rgba(${AMBERr},0.35)`; ctx.lineWidth = 1;
+        rr(W - 70, H * 0.48, 60, 10, 2); ctx.fill(); ctx.stroke();
+        // Sistrum (rattle) shape
+        ctx.save(); ctx.translate(W - 40, H * 0.38);
+        ctx.strokeStyle = GOLD; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(0, -24); ctx.lineTo(0, 8); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(-10, -18); ctx.quadraticCurveTo(-16, -8, -10, 0); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(10, -18); ctx.quadraticCurveTo(16, -8, 10, 0); ctx.stroke();
+        for (let si = 0; si < 3; si++) {
+          ctx.fillStyle = AMBER;
+          ctx.beginPath(); ctx.arc(0, -16 + si * 8, 2, 0, Math.PI * 2); ctx.fill();
+        }
+        ctx.restore();
+
+        // ── Vinyl / scroll display rack ──────────────────────────────
+        ctx.fillStyle = "#1e1004";
+        ctx.strokeStyle = `rgba(${GOLDr},0.25)`; ctx.lineWidth = 1;
+        rr(cx - 50, H * 0.78, 100, 20, 3); ctx.fill(); ctx.stroke();
+        for (let vi = 0; vi < 5; vi++) {
+          ctx.fillStyle = vi % 2 === 0 ? AMBER : SAND;
+          ctx.beginPath(); ctx.arc(cx - 36 + vi * 18, H * 0.788, 6, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = "#120800";
+          ctx.beginPath(); ctx.arc(cx - 36 + vi * 18, H * 0.788, 2, 0, Math.PI * 2); ctx.fill();
+        }
+        ctx.fillStyle = GOLD; ctx.font = "bold 7px monospace"; ctx.textAlign = "center";
+        ctx.fillText("DESERT TRACKS", cx, H * 0.792 + 14);
+
+        // ── Ambient sand particle drift ──────────────────────────────
+        for (let i = 0; i < 12; i++) {
+          const px = (t * 18 + i * 80) % W;
+          const py = topY + 10 + Math.sin(t * 0.8 + i * 1.7) * 20 + (i * (H - topY - 30)) / 12;
+          const alpha = Math.sin(t * 2 + i) * 0.2 + 0.25;
+          ctx.fillStyle = i % 2 === 0 ? `rgba(${GOLDr},${alpha})` : `rgba(${AMBERr},${alpha})`;
+          ctx.beginPath(); ctx.arc(px, py, i % 4 === 0 ? 1.8 : 1, 0, Math.PI * 2); ctx.fill();
+        }
+
+        // ── Station sign at bottom ───────────────────────────────────
+        ctx.fillStyle = GOLD; ctx.shadowColor = AMBER; ctx.shadowBlur = 8;
+        ctx.font = "bold 9px Orbitron, monospace"; ctx.textAlign = "center";
+        ctx.fillText("PYRAMID RADIO", cx, H - 16);
+        ctx.shadowBlur = 0;
+
       } else {
         // ── Default radio station (non-galactica, non-wasteland) ───────
         // ── Broadcast desk (center) ───────────────────

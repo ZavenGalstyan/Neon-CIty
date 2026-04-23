@@ -2658,6 +2658,7 @@ class Game {
           const isBlitz    = !!this.map.config.blitz;
           const isWasteland = !!this.map.config.wasteland;
           const isHardcoreD = !!this.map.config.hardcore;
+          const isDesertD   = !!this.map.config.desert;
           if (isNeonCity) {
             // Neon City: One professional cyber salesperson behind the counter
             // Counter is at S * 1.8 + 35 height, salesperson stands in front of counter (facing customers)
@@ -2707,6 +2708,13 @@ class Game {
             const spY = room.roomH * 0.38;
             this._salespersons = [
               new Salesperson(spX, spY, "#FFDD00", "DEALER", true),
+            ];
+          } else if (isDesertD) {
+            // Desert Sands: Egyptian gold-robed trade master
+            const spX = room.roomW / 2;
+            const spY = room.roomH * 0.38;
+            this._salespersons = [
+              new Salesperson(spX, spY, "#FFD060", "TRADE MASTER", "desert"),
             ];
           } else {
             this._salespersons = [

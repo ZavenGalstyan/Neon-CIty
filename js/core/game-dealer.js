@@ -12,6 +12,7 @@ Game.prototype._renderDealershipIndoor = function(ctx, W, H, shake) {
     const isWasteland = !!this.map.config.wasteland;
     const isSnow = !!this.map.config.snow;
     const isDino      = !!this.map.config.dino;
+    const isDesert    = !!this.map.config.desert;
     const t = performance.now() / 1000;
 
     // Background
@@ -25,6 +26,8 @@ Game.prototype._renderDealershipIndoor = function(ctx, W, H, shake) {
             ? "#050810"
           : isDino
             ? "#020801"
+          : isDesert
+            ? "#100c06"
             : "#06060a";
     ctx.fillRect(0, 0, W, H);
 
@@ -1316,6 +1319,174 @@ Game.prototype._renderDealershipIndoor = function(ctx, W, H, shake) {
       ctx.fillRect(S, S * 1.5, 3, room.roomH - S * 3);
       ctx.fillRect(room.roomW - S - 3, S * 1.5, 3, room.roomH - S * 3);
 
+    } else if (isDesert) {
+      // ═══ DESERT SANDS: PYRAMID MOTORS SHOWROOM ═══
+      const dA = "#FFD060"; const dB = "#FF9900"; const dAr = "255,208,96"; const dBr = "255,153,0";
+
+      // Sandstone floor + adobe walls
+      for (let ty = 0; ty < room.H; ty++) {
+        for (let tx = 0; tx < room.W; tx++) {
+          const px = tx * S, py = ty * S, tile = room.layout[ty][tx];
+          if (tile === 1) {
+            ctx.fillStyle = "#1e1406"; ctx.fillRect(px, py, S, S);
+            if ((tx + ty) % 3 === 0) {
+              ctx.fillStyle = `rgba(${dAr},0.12)`;
+              ctx.fillRect(px + S / 2 - 1, py, 2, S);
+            }
+            // Hieroglyph-style notch marks on walls
+            if ((tx * 7 + ty * 13) % 9 === 0) {
+              ctx.fillStyle = `rgba(${dBr},0.18)`;
+              ctx.fillRect(px + 6, py + 8, 4, 2);
+              ctx.fillRect(px + 12, py + 12, 2, 5);
+            }
+          } else {
+            const floorSeed = tx * 17 + ty * 31;
+            ctx.fillStyle = floorSeed % 2 === 0 ? "#181008" : "#140e06";
+            ctx.fillRect(px, py, S, S);
+            ctx.strokeStyle = `rgba(${dAr},0.06)`; ctx.lineWidth = 1;
+            ctx.strokeRect(px, py, S, S);
+            if ((tx + ty) % 4 === 0) {
+              const pulse = Math.sin(t * 1.5 + tx + ty) * 0.5 + 0.5;
+              ctx.fillStyle = `rgba(${dAr},${0.02 + pulse * 0.02})`;
+              ctx.fillRect(px + 4, py + 4, S - 8, S - 8);
+            }
+          }
+        }
+      }
+
+      // Room border — golden sandstone edge
+      ctx.strokeStyle = dA; ctx.lineWidth = 2; ctx.shadowColor = dA; ctx.shadowBlur = 14;
+      ctx.strokeRect(S + 2, S + 2, room.roomW - S * 2 - 4, room.roomH - S * 2 - 4);
+      ctx.shadowBlur = 0;
+
+      // Top accent bar — amber gradient
+      const topGrad = ctx.createLinearGradient(0, S, room.roomW, S);
+      topGrad.addColorStop(0, `rgba(${dBr},0.22)`);
+      topGrad.addColorStop(0.5, `rgba(${dAr},0.48)`);
+      topGrad.addColorStop(1, `rgba(${dBr},0.22)`);
+      ctx.fillStyle = topGrad; ctx.fillRect(S, S, room.roomW - S * 2, 4);
+
+      // Sand dust on ceiling edge
+      for (let i = 0; i < 14; i++) {
+        const dx = S + 18 + i * ((room.roomW - S * 2 - 36) / 13);
+        const dh = 6 + (i % 3) * 4;
+        ctx.fillStyle = `rgba(200,160,60,0.15)`;
+        ctx.beginPath(); ctx.moveTo(dx - 5, S); ctx.lineTo(dx, S + dh); ctx.lineTo(dx + 5, S); ctx.closePath(); ctx.fill();
+      }
+
+      // Showroom title — PYRAMID MOTORS
+      ctx.save();
+      ctx.font = "bold 20px Orbitron, monospace"; ctx.textAlign = "center";
+      ctx.fillStyle = dA; ctx.shadowColor = dA; ctx.shadowBlur = 24;
+      ctx.fillText("⬡ PYRAMID MOTORS ⬡", room.roomW / 2, S - 18);
+      ctx.shadowBlur = 0; ctx.restore();
+
+      // ═══ STONE SLAB COUNTER ═══
+      const counterX = room.roomW / 2 - 75, counterY = S * 1.2;
+      const counterW = 150, counterH = 40;
+      ctx.fillStyle = "rgba(0,0,0,0.4)";
+      ctx.fillRect(counterX + 4, counterY + counterH + 2, counterW, 6);
+      const counterGrad = ctx.createLinearGradient(counterX, counterY, counterX, counterY + counterH);
+      counterGrad.addColorStop(0, "#2e1e08"); counterGrad.addColorStop(0.5, "#221604"); counterGrad.addColorStop(1, "#180e02");
+      ctx.fillStyle = counterGrad; ctx.fillRect(counterX, counterY, counterW, counterH);
+      ctx.fillStyle = "#3e2a0a"; ctx.fillRect(counterX - 5, counterY, counterW + 10, 6);
+      ctx.strokeStyle = dA; ctx.lineWidth = 2; ctx.shadowColor = dA; ctx.shadowBlur = 10;
+      ctx.beginPath(); ctx.moveTo(counterX - 5, counterY + 3); ctx.lineTo(counterX + counterW + 5, counterY + 3); ctx.stroke();
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = dA; ctx.shadowColor = dA; ctx.shadowBlur = 10;
+      ctx.font = "bold 12px Orbitron, monospace"; ctx.textAlign = "center";
+      ctx.fillText("TRADE STONE", counterX + counterW / 2, counterY + 26);
+      ctx.shadowBlur = 0;
+
+      // ═══ CAMEL / VEHICLE DISPLAYS ON SAND PLATFORMS ═══
+      const carDisplays = [
+        { x: room.roomW * 0.18, y: room.roomH * 0.45, color: "#CC8830", name: "SCARAB"  },
+        { x: room.roomW * 0.38, y: room.roomH * 0.42, color: "#E0A040", name: "DUNE"    },
+        { x: room.roomW * 0.62, y: room.roomH * 0.42, color: "#D06010", name: "MIRAGE"  },
+        { x: room.roomW * 0.82, y: room.roomH * 0.45, color: "#B87820", name: "SPHINX"  },
+        { x: room.roomW * 0.28, y: room.roomH * 0.58, color: "#F0CC60", name: "PHARAOH" },
+        { x: room.roomW * 0.72, y: room.roomH * 0.58, color: "#C05808", name: "OASIS"   },
+      ];
+      for (const car of carDisplays) {
+        const pulse = Math.sin(t * 1.5 + car.x * 0.01) * 0.3 + 0.7;
+        ctx.save(); ctx.translate(car.x, car.y);
+        // Sand platform ring
+        ctx.beginPath(); ctx.arc(0, 15, 45, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${dAr},0.06)`; ctx.fill();
+        ctx.strokeStyle = `rgba(${dAr},${0.5 * pulse})`; ctx.lineWidth = 2; ctx.stroke();
+        ctx.beginPath(); ctx.arc(0, 15, 35, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(${dBr},${0.3 * pulse})`; ctx.lineWidth = 1; ctx.stroke();
+        // Rotating sand sweep
+        ctx.save(); ctx.translate(0, 15); ctx.rotate(t * 0.4);
+        for (let i = 0; i < 4; i++) {
+          ctx.fillStyle = `rgba(${dAr},${0.12 * pulse})`;
+          ctx.beginPath(); ctx.moveTo(0, 0);
+          ctx.arc(0, 0, 40, (i * Math.PI) / 2, (i * Math.PI) / 2 + 0.4);
+          ctx.closePath(); ctx.fill();
+        }
+        ctx.restore();
+        // Car body (desert palette)
+        ctx.save();
+        ctx.fillStyle = "rgba(0,0,0,0.35)"; ctx.beginPath(); ctx.ellipse(3, 18, 28, 12, 0, 0, Math.PI * 2); ctx.fill();
+        const carGrad = ctx.createLinearGradient(-25, -15, 25, 15);
+        carGrad.addColorStop(0, car.color); carGrad.addColorStop(0.5, car.color + "CC"); carGrad.addColorStop(1, car.color + "88");
+        ctx.fillStyle = carGrad;
+        ctx.beginPath(); ctx.moveTo(-22,-8); ctx.lineTo(-25,0); ctx.lineTo(-22,10); ctx.lineTo(22,10); ctx.lineTo(25,0); ctx.lineTo(22,-8); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = "#1a1008"; ctx.beginPath(); ctx.roundRect(-12,-5,24,12,3); ctx.fill();
+        // Tinted windows — warm sand
+        ctx.fillStyle = "rgba(180,140,60,0.4)";
+        ctx.beginPath(); ctx.moveTo(-12,-4); ctx.lineTo(-8,-8); ctx.lineTo(8,-8); ctx.lineTo(12,-4); ctx.closePath(); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(-10,6); ctx.lineTo(-6,10); ctx.lineTo(6,10); ctx.lineTo(10,6); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = "#FFFACC"; ctx.shadowColor = "#FFFACC"; ctx.shadowBlur = 6;
+        ctx.fillRect(-20,-6,4,3); ctx.fillRect(16,-6,4,3); ctx.shadowBlur = 0;
+        ctx.fillStyle = "#DD3300"; ctx.shadowColor = "#DD3300"; ctx.shadowBlur = 4;
+        ctx.fillRect(-20,6,4,2); ctx.fillRect(16,6,4,2); ctx.shadowBlur = 0;
+        ctx.fillStyle = "#1a1a1a";
+        ctx.beginPath(); ctx.arc(-16,-10,5,0,Math.PI*2); ctx.arc(16,-10,5,0,Math.PI*2); ctx.arc(-16,12,5,0,Math.PI*2); ctx.arc(16,12,5,0,Math.PI*2); ctx.fill();
+        ctx.fillStyle = "#5a4820";
+        ctx.beginPath(); ctx.arc(-16,-10,3,0,Math.PI*2); ctx.arc(16,-10,3,0,Math.PI*2); ctx.arc(-16,12,3,0,Math.PI*2); ctx.arc(16,12,3,0,Math.PI*2); ctx.fill();
+        ctx.restore();
+        ctx.fillStyle = "#FFF"; ctx.shadowColor = car.color; ctx.shadowBlur = 8;
+        ctx.font = "bold 8px Orbitron, monospace"; ctx.textAlign = "center";
+        ctx.fillText(car.name, 0, 45); ctx.shadowBlur = 0;
+        ctx.fillStyle = dA; ctx.font = "7px Orbitron, monospace";
+        ctx.fillText("ON DISPLAY", 0, 54);
+        ctx.restore();
+      }
+
+      // Sand mote particles
+      for (let i = 0; i < 10; i++) {
+        const px = (t * 25 + i * 100) % room.roomW;
+        const py = S * 1.5 + Math.sin(t * 0.7 + i * 2) * 20 + (i * (room.roomH - S * 3)) / 10;
+        const alpha = Math.sin(t * 2 + i) * 0.25 + 0.3;
+        ctx.fillStyle = i % 2 === 0 ? `rgba(${dAr},${alpha})` : `rgba(${dBr},${alpha})`;
+        ctx.beginPath(); ctx.arc(px, py, i % 4 === 0 ? 2 : 1, 0, Math.PI * 2); ctx.fill();
+      }
+
+      // Side amber strips
+      ctx.fillStyle = `rgba(${dBr},0.18)`;
+      ctx.fillRect(S, S * 1.5, 3, room.roomH - S * 3);
+      ctx.fillRect(room.roomW - S - 3, S * 1.5, 3, room.roomH - S * 3);
+
+      // Hieroglyph column decorations on side walls
+      for (let hi = 0; hi < 3; hi++) {
+        const hy2 = S * 2 + hi * (room.roomH - S * 4) / 2;
+        // Left column symbol
+        ctx.save(); ctx.translate(S + 16, hy2);
+        ctx.fillStyle = `rgba(${dAr},0.35)`;
+        ctx.fillRect(-3, -8, 6, 3); ctx.fillRect(-3, -2, 6, 3); ctx.fillRect(-3, 4, 6, 3);
+        ctx.beginPath(); ctx.arc(0, -14, 4, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(${dAr},0.3)`; ctx.lineWidth = 1.5; ctx.stroke();
+        ctx.restore();
+        // Right column symbol
+        ctx.save(); ctx.translate(room.roomW - S - 16, hy2);
+        ctx.fillStyle = `rgba(${dAr},0.35)`;
+        ctx.fillRect(-3, -8, 6, 3); ctx.fillRect(-3, -2, 6, 3); ctx.fillRect(-3, 4, 6, 3);
+        ctx.beginPath(); ctx.arc(0, -14, 4, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(${dAr},0.3)`; ctx.lineWidth = 1.5; ctx.stroke();
+        ctx.restore();
+      }
+
     } else {
       // ═══ DEFAULT SHOWROOM (other maps) ═══
       for (let ty = 0; ty < room.H; ty++) {
@@ -1375,6 +1546,11 @@ Game.prototype._renderDealershipIndoor = function(ctx, W, H, shake) {
           ctx.shadowColor = "#66BBFF";
           ctx.shadowBlur = 12;
           ctx.fillText("[T] OPEN SHOP", nearSp.x, nearSp.y - 102);
+        } else if (isDesert) {
+          ctx.fillStyle = "#FFD060";
+          ctx.shadowColor = "#FF9900";
+          ctx.shadowBlur = 12;
+          ctx.fillText("[T] OPEN SHOP", nearSp.x, nearSp.y - 102);
         } else {
           ctx.fillStyle = "#FFFFAA";
           ctx.shadowColor = "#FFFF00";
@@ -1408,6 +1584,11 @@ Game.prototype._renderDealershipIndoor = function(ctx, W, H, shake) {
     } else if (isSnow) {
       ctx.fillStyle = "#AADDFF";
       ctx.shadowColor = "#66BBFF";
+      ctx.shadowBlur = 10;
+      ctx.fillText("[E] EXIT", room.entryX, room.roomH - 25);
+    } else if (isDesert) {
+      ctx.fillStyle = "#FFD060";
+      ctx.shadowColor = "#FF9900";
       ctx.shadowBlur = 10;
       ctx.fillText("[E] EXIT", room.entryX, room.roomH - 25);
     } else {
