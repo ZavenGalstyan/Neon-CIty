@@ -4562,26 +4562,26 @@ class Bot {
     ctx.translate(x, y);
     ctx.rotate(this._angle - Math.PI / 2);
 
-    // Abdomen (oval)
+    // Abdomen (oval) — golden bronze scarab shell
     const ag = ctx.createRadialGradient(0, r*0.18, 1, 0, r*0.12, r*0.55);
-    ag.addColorStop(0, '#22aa44'); ag.addColorStop(0.5, '#116622'); ag.addColorStop(1, '#0a3a14');
-    ctx.fillStyle = ag; ctx.shadowColor = '#00ff88'; ctx.shadowBlur = 8;
+    ag.addColorStop(0, '#c8860a'); ag.addColorStop(0.5, '#8a5a04'); ag.addColorStop(1, '#4a3002');
+    ctx.fillStyle = ag; ctx.shadowColor = '#FFAA30'; ctx.shadowBlur = 8;
     ctx.beginPath(); ctx.ellipse(0, r*0.12, r*0.46, r*0.52, 0, 0, Math.PI*2); ctx.fill();
     ctx.shadowBlur = 0;
 
-    // Shell sheen
-    ctx.strokeStyle = 'rgba(80,255,120,0.30)'; ctx.lineWidth = 1.2;
+    // Shell sheen (gold shimmer)
+    ctx.strokeStyle = 'rgba(255,200,80,0.40)'; ctx.lineWidth = 1.2;
     ctx.beginPath(); ctx.ellipse(0, r*0.10, r*0.28, r*0.32, 0.3, Math.PI*1.2, Math.PI*1.8); ctx.stroke();
 
-    // Thorax
+    // Thorax — dark bronze
     const tg = ctx.createRadialGradient(0, -r*0.24, 1, 0, -r*0.20, r*0.32);
-    tg.addColorStop(0, '#33cc55'); tg.addColorStop(1, '#115522');
+    tg.addColorStop(0, '#b07810'); tg.addColorStop(1, '#5a3e06');
     ctx.fillStyle = tg;
     ctx.beginPath(); ctx.ellipse(0, -r*0.24, r*0.34, r*0.30, 0, 0, Math.PI*2); ctx.fill();
 
     // 6 legs (3 per side) scuttling animation
     const legSwing = Math.sin(Date.now() * 0.014) * 0.28;
-    ctx.strokeStyle = '#0a3a10'; ctx.lineWidth = 1.4; ctx.lineCap = 'round';
+    ctx.strokeStyle = '#5a3a04'; ctx.lineWidth = 1.4; ctx.lineCap = 'round';
     for (let i = 0; i < 3; i++) {
       const ly = -r*0.12 + i * r*0.22;
       const swing = (i % 2 === 0) ? legSwing : -legSwing;
@@ -4592,23 +4592,23 @@ class Bot {
       }
     }
 
-    // Head with pincers
-    ctx.fillStyle = '#0a4018';
+    // Head — dark brown
+    ctx.fillStyle = '#4a2e04';
     ctx.beginPath(); ctx.ellipse(0, -r*0.60, r*0.22, r*0.18, 0, 0, Math.PI*2); ctx.fill();
-    // Compound eyes
+    // Compound eyes — amber/gold glow (no green)
     for (const s of [-1, 1]) {
-      ctx.fillStyle = '#88FF44'; ctx.shadowColor = '#44FF00'; ctx.shadowBlur = 6;
+      ctx.fillStyle = '#FFCC44'; ctx.shadowColor = '#FF9900'; ctx.shadowBlur = 6;
       ctx.beginPath(); ctx.arc(s*r*0.14, -r*0.64, r*0.09, 0, Math.PI*2); ctx.fill();
       ctx.shadowBlur = 0;
     }
     // Antennae
-    ctx.strokeStyle = '#226600'; ctx.lineWidth = 1;
+    ctx.strokeStyle = '#7a5210'; ctx.lineWidth = 1;
     for (const s of [-1, 1]) {
       ctx.beginPath(); ctx.moveTo(s*r*0.10, -r*0.72); ctx.lineTo(s*r*0.32, -r*0.98); ctx.stroke();
       ctx.beginPath(); ctx.arc(s*r*0.32, -r*0.98, r*0.05, 0, Math.PI*2); ctx.fill();
     }
     // Pincers
-    ctx.strokeStyle = '#0a3010'; ctx.lineWidth = 2;
+    ctx.strokeStyle = '#3a1e00'; ctx.lineWidth = 2;
     for (const s of [-1, 1]) {
       ctx.beginPath(); ctx.moveTo(s*r*0.16, -r*0.72); ctx.lineTo(s*r*0.30, -r*0.88); ctx.stroke();
     }
@@ -10209,11 +10209,12 @@ class Grenade {
 class Salesperson {
   constructor(x, y, color = '#FFAA55', label = 'DEALER', mapType = false) {
     this.x = x; this.y = y; this.color = color; this.label = label; this.radius = 16;
-    // mapType can be: true (neonCity), 'galactica', 'wasteland', 'snow', or false (default)
+    // mapType can be: true (neonCity), 'galactica', 'wasteland', 'snow', 'desert', or false (default)
     this.isNeonCity = mapType === true || mapType === 'neonCity';
     this.isGalactica = mapType === 'galactica';
     this.isWasteland = mapType === 'wasteland';
     this.isSnow = mapType === 'snow';
+    this.isDesert = mapType === 'desert';
     this._waveT = 0;
   }
   update(dt) { this._waveT += dt * 1.4; }
@@ -10724,6 +10725,167 @@ class Salesperson {
       ctx.font = 'bold 8px Orbitron, monospace';
       ctx.textAlign = 'center';
       ctx.fillText(this.label, 0, -82 + breathe);
+      ctx.shadowBlur = 0;
+
+    } else if (this.isDesert) {
+      // ═══ DESERT SANDS: Egyptian gold-robed Trade Master ═══
+      // Neon City structure with Egyptian/amber palette
+      const breathe = Math.sin(this._waveT * 0.8) * 1;
+
+      // Shadow
+      ctx.globalAlpha = 0.3;
+      ctx.fillStyle = '#000';
+      ctx.beginPath();
+      ctx.ellipse(2, 4, 14, 5, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+
+      // Legs (linen/cream sandals)
+      ctx.fillStyle = '#c8b080';
+      ctx.fillRect(-6, -8, 5, 12);
+      ctx.fillRect(1, -8, 5, 12);
+
+      // Sandals
+      ctx.fillStyle = '#8a6030';
+      ctx.fillRect(-7, 2, 6, 4);
+      ctx.fillRect(1, 2, 6, 4);
+      // Sandal straps
+      ctx.strokeStyle = '#6a4010'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(-6, 3); ctx.lineTo(-4, 5); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(2, 3); ctx.lineTo(4, 5); ctx.stroke();
+
+      // Body (linen robe with gold trim)
+      const robeGrad = ctx.createLinearGradient(-12, -38, 12, -10);
+      robeGrad.addColorStop(0, '#e8d8a8');
+      robeGrad.addColorStop(0.5, '#dcc890');
+      robeGrad.addColorStop(1, '#c8b070');
+      ctx.fillStyle = robeGrad;
+      ctx.beginPath();
+      ctx.moveTo(-11, -10);
+      ctx.lineTo(-13, -38 + breathe);
+      ctx.lineTo(-8, -42 + breathe);
+      ctx.lineTo(8, -42 + breathe);
+      ctx.lineTo(13, -38 + breathe);
+      ctx.lineTo(11, -10);
+      ctx.closePath();
+      ctx.fill();
+
+      // Gold trim stripes on robe (Neon City lapel style but golden)
+      ctx.strokeStyle = '#FFD060';
+      ctx.lineWidth = 1.5;
+      ctx.globalAlpha = 0.7;
+      ctx.beginPath();
+      ctx.moveTo(-4, -38 + breathe); ctx.lineTo(-6, -20);
+      ctx.moveTo(4, -38 + breathe); ctx.lineTo(6, -20);
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+
+      // Gold pectoral collar (replaces tie)
+      ctx.fillStyle = '#FFD060';
+      ctx.shadowColor = '#FFD060'; ctx.shadowBlur = 6;
+      ctx.beginPath();
+      ctx.arc(0, -38 + breathe, 8, Math.PI * 0.1, Math.PI * 0.9);
+      ctx.closePath(); ctx.fill();
+      ctx.shadowBlur = 0;
+      // Collar detail lines
+      ctx.strokeStyle = '#FF9900'; ctx.lineWidth = 0.8; ctx.globalAlpha = 0.6;
+      for (let ci = 0; ci < 3; ci++) {
+        ctx.beginPath();
+        ctx.arc(0, -38 + breathe, 5 + ci * 1.5, Math.PI * 0.15, Math.PI * 0.85);
+        ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+
+      // Collar/neckline
+      ctx.fillStyle = '#F0E8D0';
+      ctx.beginPath();
+      ctx.moveTo(-5, -40 + breathe);
+      ctx.lineTo(0, -37 + breathe);
+      ctx.lineTo(5, -40 + breathe);
+      ctx.lineTo(4, -42 + breathe);
+      ctx.lineTo(-4, -42 + breathe);
+      ctx.closePath(); ctx.fill();
+
+      // Neck (warm Egyptian skin tone)
+      ctx.fillStyle = '#A0682A';
+      ctx.fillRect(-3, -46 + breathe, 6, 6);
+
+      // Head
+      const headGrad = ctx.createRadialGradient(-3, -54 + breathe, 2, 0, -52 + breathe, 12);
+      headGrad.addColorStop(0, '#B87832');
+      headGrad.addColorStop(1, '#8a5820');
+      ctx.fillStyle = headGrad;
+      ctx.beginPath();
+      ctx.ellipse(0, -54 + breathe, 10, 12, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Nemes headdress (blue + gold stripes, like Neon City's styled hair)
+      ctx.fillStyle = '#1050AA';
+      ctx.beginPath();
+      ctx.ellipse(0, -62 + breathe, 9.5, 6, 0, Math.PI, 0);
+      ctx.fill();
+      // Side panels of nemes
+      ctx.beginPath();
+      ctx.moveTo(-9, -58 + breathe); ctx.lineTo(-14, -42 + breathe); ctx.lineTo(-8, -58 + breathe); ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(9, -58 + breathe); ctx.lineTo(14, -42 + breathe); ctx.lineTo(8, -58 + breathe); ctx.fill();
+      // Gold stripe on headdress
+      ctx.strokeStyle = '#FFD060'; ctx.lineWidth = 1;
+      ctx.globalAlpha = 0.6;
+      for (let hs = 0; hs < 3; hs++) {
+        ctx.beginPath(); ctx.moveTo(-8 - hs * 1.2, -55 + breathe + hs * 4); ctx.lineTo(-13 - hs * 0.4, -44 + breathe); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(8 + hs * 1.2, -55 + breathe + hs * 4); ctx.lineTo(13 + hs * 0.4, -44 + breathe); ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+
+      // Kohl-lined eyes
+      ctx.fillStyle = '#FFFFFF';
+      ctx.beginPath();
+      ctx.ellipse(-4, -54 + breathe, 2.5, 2, 0, 0, Math.PI * 2);
+      ctx.ellipse(4, -54 + breathe, 2.5, 2, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#1a0a00';
+      ctx.beginPath();
+      ctx.arc(-4, -54 + breathe, 1.2, 0, Math.PI * 2);
+      ctx.arc(4, -54 + breathe, 1.2, 0, Math.PI * 2);
+      ctx.fill();
+      // Eye liner (kohl)
+      ctx.strokeStyle = '#1a0a00'; ctx.lineWidth = 0.8;
+      ctx.beginPath(); ctx.moveTo(-7, -54 + breathe); ctx.lineTo(-2, -54 + breathe); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(2, -54 + breathe); ctx.lineTo(7, -54 + breathe); ctx.stroke();
+
+      // Slight smile
+      ctx.strokeStyle = '#6a4020'; ctx.lineWidth = 1.2;
+      ctx.beginPath(); ctx.arc(0, -50 + breathe, 4, 0.2, Math.PI - 0.2); ctx.stroke();
+
+      // Arms (robe sleeves)
+      ctx.fillStyle = '#dcc890';
+      ctx.beginPath();
+      ctx.moveTo(-13, -36 + breathe); ctx.lineTo(-16, -20); ctx.lineTo(-14, -10); ctx.lineTo(-11, -10); ctx.lineTo(-11, -34 + breathe); ctx.closePath(); ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(13, -36 + breathe); ctx.lineTo(16, -20); ctx.lineTo(14, -10); ctx.lineTo(11, -10); ctx.lineTo(11, -34 + breathe); ctx.closePath(); ctx.fill();
+
+      // Hands (skin tone)
+      ctx.fillStyle = '#A0682A';
+      ctx.beginPath();
+      ctx.arc(-15, -8, 4, 0, Math.PI * 2);
+      ctx.arc(15, -8, 4, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Name badge / cartouche on chest
+      ctx.fillStyle = 'rgba(0,0,0,0.6)';
+      ctx.fillRect(-16, -32 + breathe, 14, 8);
+      ctx.fillStyle = '#FFD060';
+      ctx.font = 'bold 5px Orbitron, monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText('MASTER', -9, -26 + breathe);
+
+      // Label above head
+      ctx.fillStyle = '#FFD060';
+      ctx.shadowColor = '#FF9900'; ctx.shadowBlur = 10;
+      ctx.font = 'bold 8px Orbitron, monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText(this.label, 0, -76 + breathe);
       ctx.shadowBlur = 0;
 
     } else {

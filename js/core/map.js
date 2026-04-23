@@ -3871,6 +3871,108 @@ class GameMap {
               ctx.fillRect(wx + S*0.62, wy + S*0.6, S*0.18, S*0.12);
             }
 
+          } else if (cfg.desert) {
+            // ═══════════════════════════════════════════════════════════════
+            //  DESERT SANDS: Pyramid & sandstone architecture
+            // ═══════════════════════════════════════════════════════════════
+            const bseed = (x * 37 + y * 53) % 7;
+            const sandPal = ['#c8960a','#b8840a','#d4a018','#c09010','#b07c08','#c8a020','#a87008'];
+            const shadowPal = ['#7a5a04','#6a4e04','#8a6606','#7a5e06','#6a4c04','#7a6208','#5e4402'];
+            const highlightPal = ['rgba(255,220,120,0.32)','rgba(255,210,100,0.28)','rgba(255,230,140,0.36)'];
+            const sandCol    = sandPal[bseed];
+            const shadowCol  = shadowPal[bseed];
+
+            if (bseed === 0 || bseed === 3) {
+              // Full pyramid (top view — triangular faces from center)
+              // Base fill
+              ctx.fillStyle = sandCol; ctx.fillRect(wx, wy, S, S);
+              // Left-dark face
+              ctx.fillStyle = shadowCol;
+              ctx.beginPath(); ctx.moveTo(wx, wy); ctx.lineTo(wx+S*0.5,wy+S*0.5); ctx.lineTo(wx,wy+S); ctx.closePath(); ctx.fill();
+              // Right face (lighter gold)
+              ctx.fillStyle = highlightPal[bseed % highlightPal.length];
+              ctx.beginPath(); ctx.moveTo(wx+S,wy); ctx.lineTo(wx+S*0.5,wy+S*0.5); ctx.lineTo(wx+S,wy+S); ctx.closePath(); ctx.fill();
+              // Top edge cap (brightest)
+              ctx.fillStyle = 'rgba(255,240,160,0.55)';
+              ctx.beginPath(); ctx.moveTo(wx+S*0.12,wy+S*0.05); ctx.lineTo(wx+S*0.5,wy+S*0.5); ctx.lineTo(wx+S*0.88,wy+S*0.05); ctx.closePath(); ctx.fill();
+              // Cap stone
+              ctx.fillStyle = '#FFE080'; ctx.strokeStyle='rgba(255,200,60,0.7)'; ctx.lineWidth=1.5;
+              ctx.beginPath(); ctx.arc(wx+S*0.5,wy+S*0.5,S*0.07,0,Math.PI*2); ctx.fill(); ctx.stroke();
+              // Edge lines (stone blocks)
+              ctx.strokeStyle = 'rgba(100,60,0,0.30)'; ctx.lineWidth=0.8;
+              for (let li=1;li<4;li++) {
+                const lp=li/4;
+                ctx.beginPath(); ctx.moveTo(wx+S*lp*0.5,wy+S*lp*0.5); ctx.lineTo(wx+S*(1-lp*0.5),wy+S*lp*0.5); ctx.stroke();
+              }
+
+            } else if (bseed === 1 || bseed === 5) {
+              // Stepped pyramid (mastaba/ziggurat)
+              const steps = 4;
+              for (let si=0; si<steps; si++) {
+                const shrink = si * (S*0.10);
+                const stepH  = S / steps;
+                const light  = si * 18;
+                ctx.fillStyle = `rgb(${Math.min(210,184+light)},${Math.min(165,134+light)},${Math.min(40,10+light)})`;
+                ctx.fillRect(wx + shrink, wy + si*stepH, S - shrink*2, stepH);
+                // Step edge shadow
+                ctx.fillStyle='rgba(0,0,0,0.18)'; ctx.fillRect(wx+shrink,wy+si*stepH,S-shrink*2,2);
+              }
+              // Top ornament
+              ctx.fillStyle='#FFD060'; ctx.beginPath(); ctx.arc(wx+S*0.5,wy+S*0.12,S*0.08,0,Math.PI*2); ctx.fill();
+
+            } else if (bseed === 2) {
+              // Obelisk/tower (tall narrow)
+              ctx.fillStyle = sandCol; ctx.fillRect(wx, wy, S, S);
+              // Obelisk shaft
+              ctx.fillStyle='#c8a020'; ctx.fillRect(wx+S*0.3,wy+S*0.05,S*0.4,S*0.88);
+              // Tip triangle
+              ctx.fillStyle='#FFE080';
+              ctx.beginPath(); ctx.moveTo(wx+S*0.3,wy+S*0.05); ctx.lineTo(wx+S*0.5,wy); ctx.lineTo(wx+S*0.7,wy+S*0.05); ctx.closePath(); ctx.fill();
+              // Carved hieroglyph lines
+              ctx.strokeStyle='rgba(100,60,0,0.45)'; ctx.lineWidth=1;
+              for (let hi=1;hi<5;hi++) { ctx.beginPath(); ctx.moveTo(wx+S*0.32,wy+S*(hi*0.18)); ctx.lineTo(wx+S*0.68,wy+S*(hi*0.18)); ctx.stroke(); }
+              // Shaded side
+              ctx.fillStyle='rgba(0,0,0,0.22)'; ctx.fillRect(wx+S*0.3,wy+S*0.05,S*0.1,S*0.88);
+
+            } else if (bseed === 4) {
+              // Sphinx temple block
+              ctx.fillStyle = sandCol; ctx.fillRect(wx, wy, S, S);
+              // Columns (3 on face)
+              for (let ci=0;ci<3;ci++) {
+                const cx2=wx+S*(0.18+ci*0.30); const cy2=wy+S*0.15;
+                ctx.fillStyle='#d4a820'; ctx.fillRect(cx2,cy2,S*0.10,S*0.78);
+                ctx.fillStyle='rgba(0,0,0,0.20)'; ctx.fillRect(cx2+S*0.07,cy2,S*0.03,S*0.78);
+                ctx.fillStyle='rgba(255,220,80,0.4)'; ctx.fillRect(cx2,cy2,S*0.10,S*0.06);
+              }
+              // Cornice (top bar)
+              ctx.fillStyle='#b8900c'; ctx.fillRect(wx+S*0.04,wy,S*0.92,S*0.16);
+              ctx.fillStyle='rgba(255,220,80,0.5)'; ctx.fillRect(wx+S*0.04,wy,S*0.92,S*0.04);
+
+            } else if (bseed === 6) {
+              // Desert dome/tholos
+              ctx.fillStyle = sandCol; ctx.fillRect(wx, wy+S*0.42, S, S*0.58);
+              // Dome arc
+              ctx.fillStyle = sandCol;
+              ctx.beginPath(); ctx.arc(wx+S*0.5,wy+S*0.44,S*0.45,Math.PI,0); ctx.fill();
+              // Shadow underside
+              ctx.fillStyle='rgba(0,0,0,0.22)'; ctx.beginPath(); ctx.arc(wx+S*0.5,wy+S*0.44,S*0.45,0.1,Math.PI-0.1); ctx.fill();
+              // Highlight top
+              ctx.fillStyle='rgba(255,230,120,0.45)'; ctx.beginPath(); ctx.arc(wx+S*0.5,wy+S*0.26,S*0.25,Math.PI,0); ctx.fill();
+              // Base band
+              ctx.fillStyle='#c09010'; ctx.fillRect(wx,wy+S*0.40,S,S*0.06);
+            }
+
+            // Universal desert glow edge
+            ctx.strokeStyle = 'rgba(255,200,80,0.22)';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(wx + 2, wy + 2, S - 4, S - 4);
+            // Sand hieroglyph accent (deterministic per building)
+            if ((x + y) % 4 === 0) {
+              ctx.fillStyle='rgba(255,180,40,0.15)';
+              ctx.fillRect(wx+S*0.38,wy+S*0.72,S*0.24,S*0.05);
+              ctx.fillRect(wx+S*0.35,wy+S*0.80,S*0.30,S*0.05);
+            }
+
           } else {
             ctx.fillStyle = this.buildingColors[y][x];
             ctx.fillRect(wx, wy, S, S);
@@ -4210,7 +4312,8 @@ class GameMap {
       ctx.fillText('M', wx, wy);
     }
     ctx.shadowBlur = 0; ctx.textBaseline = 'alphabetic';
-    ctx.restore();
+    ctx.restore(); // inner save (#2)
+    ctx.restore(); // outer save (#1 at top of renderMetroEntrance) — MUST restore to clear shadow leak
   }
 
   // ── Indoor room factory ───────────────────────────────────
@@ -4221,11 +4324,13 @@ class GameMap {
     const isRobot     = !!this.config.robot;
     const isHardcore  = !!this.config.hardcore;
     const isDino        = !!this.config.dino;
+    const isDesert      = !!this.config.desert;
     const isNeonDealer  = this.config.id === 'neon_city' && door.specialType === 'dealership';
     const isGalDealer   = isGalactica && door.specialType === 'dealership';
     const isWastelandDealer = !!this.config.wasteland && door.specialType === 'dealership';
     const isHardcoreDealer  = isHardcore && door.specialType === 'dealership';
     const isDinoDealer  = isDino && door.specialType === 'dealership';
+    const isDesertDealer = isDesert && door.specialType === 'dealership';
     const isNeonArcade  = this.config.id === 'neon_city' && door.bTypeIdx === 4;
     const isGalArcade   = isGalactica && door.bTypeIdx === 4;
     const isGalMarket   = isGalactica && door.bTypeIdx === 3;
@@ -4233,14 +4338,15 @@ class GameMap {
     const isGalRest     = isGalactica && (door.bTypeIdx === 0 || door.specialType === 'restaurant');
     const isGalPharmacy = isGalactica && door.bTypeIdx === 5;
     const isGalRadio    = isGalactica && door.bTypeIdx === 22;
+    const isDesertRadio = isDesert && door.bTypeIdx === 22;
     const isZombieMap   = !!this.config.zombie;
-    const useLargeDealer = isNeonDealer || isGalDealer || isWastelandDealer || isHardcoreDealer || isDinoDealer;
+    const useLargeDealer = isNeonDealer || isGalDealer || isWastelandDealer || isHardcoreDealer || isDinoDealer || isDesertDealer;
     const useLargeArcade = isNeonArcade || isGalArcade;
     const useLargeMarket = isGalMarket;
     const useLargeClub   = isGalClub;
     const useLargeRest   = isGalRest;
     const useLargePharm  = isGalPharmacy;
-    const useLargeRadio  = isGalRadio;
+    const useLargeRadio  = isGalRadio || isDesertRadio;
     // All zombie buildings use the large arcade layout (1080×840)
     const useLargeZombie = isZombieMap;
     // All blitz/robot/hardcore buildings use large rooms (same as galactica)
