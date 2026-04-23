@@ -312,9 +312,81 @@ const SocialUI = (() => {
     if (page === 'ranks')   _renderRanksPage(S.rankType);
   }
 
+  /* ── FAB drag-to-reposition ─────────────────────────────── */
+  function _initFabDrag() {
+    const fab = document.getElementById('ncsFab');
+    if (!fab) return;
+
+    // Restore saved position
+    const saved = (() => { try { return JSON.parse(localStorage.getItem('ncsFabPos')); } catch { return null; } })();
+    if (saved) {
+      fab.style.right  = 'auto';
+      fab.style.bottom = 'auto';
+      fab.style.left   = saved.left + 'px';
+      fab.style.top    = saved.top  + 'px';
+    }
+
+    let dragging = false, hasMoved = false;
+    let startX, startY, origLeft, origTop;
+
+    fab.addEventListener('mousedown', e => {
+      // Only primary button
+      if (e.button !== 0) return;
+      e.preventDefault();
+
+      const rect = fab.getBoundingClientRect();
+      // Switch to left/top positioning at current visual position
+      fab.style.right  = 'auto';
+      fab.style.bottom = 'auto';
+      fab.style.left   = rect.left + 'px';
+      fab.style.top    = rect.top  + 'px';
+
+      startX   = e.clientX;
+      startY   = e.clientY;
+      origLeft = rect.left;
+      origTop  = rect.top;
+      dragging = true;
+      hasMoved = false;
+      fab.style.cursor = 'grabbing';
+      fab.style.transition = 'none';
+    });
+
+    document.addEventListener('mousemove', e => {
+      if (!dragging) return;
+      const dx = e.clientX - startX;
+      const dy = e.clientY - startY;
+      if (Math.abs(dx) > 4 || Math.abs(dy) > 4) hasMoved = true;
+      if (!hasMoved) return;
+
+      const size  = fab.offsetWidth;
+      const newLeft = Math.max(0, Math.min(window.innerWidth  - size, origLeft + dx));
+      const newTop  = Math.max(0, Math.min(window.innerHeight - size, origTop  + dy));
+      fab.style.left = newLeft + 'px';
+      fab.style.top  = newTop  + 'px';
+    });
+
+    document.addEventListener('mouseup', e => {
+      if (!dragging) return;
+      dragging = false;
+      fab.style.cursor   = '';
+      fab.style.transition = '';
+
+      if (hasMoved) {
+        // Save position
+        localStorage.setItem('ncsFabPos', JSON.stringify({
+          left: parseFloat(fab.style.left),
+          top:  parseFloat(fab.style.top)
+        }));
+      } else {
+        // It was a click — open chat
+        openPage('chat');
+      }
+    });
+  }
+
   /* ── Global event binding ────────────────────────────────── */
   function _bindGlobalEvents() {
-    document.getElementById('ncsFab').onclick = () => openPage('chat');
+    _initFabDrag();
 
     document.addEventListener('click', e => {
       const closeBtn = e.target.closest('[data-close]');
