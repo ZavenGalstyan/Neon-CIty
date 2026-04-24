@@ -77,6 +77,8 @@
   <script src="js/utils.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/api.js"></script>
+  <script src="js/ws.js"></script>
+  <script src="js/multiplayer.js"></script>
   <script src="js/systems/audio.js"></script>
   <script src="js/core/input.js"></script>
   <script src="js/core/map.js"></script>
@@ -244,6 +246,15 @@
         let mapData = null;
         try { mapData = JSON.parse(localStorage.getItem('selectedMap')); } catch (e) {}
         if (!mapData) mapData = CONFIG.MAPS[0];
+
+        // Multiplayer: read roomId from URL query params
+        const _urlP   = new URLSearchParams(window.location.search);
+        const _roomId = _urlP.get('roomId');
+        const _isHost = _urlP.get('host') === '1';
+        if (_roomId) {
+          window._mpRoomId = _roomId;
+          window._mpIsHost = _isHost;
+        }
 
         window.startGame(charData, mapData);
       }, 900);
