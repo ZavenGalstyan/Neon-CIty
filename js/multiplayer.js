@@ -163,22 +163,31 @@ const Multiplayer = (() => {
 
     // _applyRemotePos: shared logic for both 'remote:pos' and 'player:pos' relay
     function _applyRemotePos(userId, x, y, angle, hp, weaponId) {
-      // If userId missing (backend relay bug), fall back to first remote player
-      let targetId = userId;
-      if (!targetId || !remotePlayers.has(targetId)) {
-        targetId = remotePlayers.keys().next().value;
-      }
-      if (!targetId) return;
+      // Determine which remote player entry to update:
+      // 1. Use userId if provided and exists in map
+      // 2. Use first existing remote player if userId missing
+      // 3. Create a new entry if map is completely empty (most common case when backend omits userId)
+      let targetId = (userId && remotePlayers.has(userId)) ? userId
+                   : remotePlayers.size > 0 ? remotePlayers.keys().next().value
+                   : userId || '__remote_0';
 
       let rp = remotePlayers.get(targetId);
       if (!rp) {
-        rp = { x, y, targetX: x, targetY: y, angle: angle || 0, hp: hp || 100, maxHp: 100, weaponId: weaponId || 'pistol', username: 'PLAYER', charId: 'gangster', dead: false };
+        // Create the remote player on first position received
+        rp = {
+          x: x, y: y, targetX: x, targetY: y,
+          angle: angle || 0,
+          hp: hp || 100, maxHp: 100,
+          weaponId: weaponId || 'pistol',
+          username: 'PLAYER', charId: 'gangster',
+          dead: false
+        };
         remotePlayers.set(targetId, rp);
       }
       rp.targetX  = x;
       rp.targetY  = y;
-      rp.angle    = angle || rp.angle;
-      rp.hp       = hp    !== undefined ? hp : rp.hp;
+      rp.angle    = angle !== undefined ? angle : rp.angle;
+      rp.hp       = hp    !== undefined ? hp    : rp.hp;
       rp.weaponId = weaponId || rp.weaponId;
       rp.dead     = false;
     }
