@@ -110,30 +110,78 @@ const Multiplayer = (() => {
     });
   }
 
+  /* ── Sync remotePlayers from authoritative room state ─────── */
+  function _syncFromRoom(room) {
+    if (!room || !room.players) return;
+    const myName = (Auth.getSession()?.name || '').toLowerCase();
+    const myId   = Auth.getSession()?.id   || '';
+    room.players.forEach(p => {
+      // Skip self
+      const pid = String(p.userId || p._id || '');
+      if (pid === String(myId)) return;
+      if ((p.username || '').toLowerCase() === myName) return;
+      // Add or update entry
+      if (!remotePlayers.has(pid)) {
+        remotePlayers.set(pid, {
+          x: 0, y: 0, targetX: 0, targetY: 0,
+          angle: 0,
+          hp:    p.hp    || 100,
+          maxHp: p.maxHp || 100,
+          username: p.username || 'PLAYER',
+          charId:   p.charId   || 'gangster',
+          dead: false
+        });
+      }
+    });
+  }
+
   let _gameEventsBound = false;
   function bindGameEvents() {
     if (_gameEventsBound) return;
     _gameEventsBound = true;
-    WS.on('remote:pos', ({ userId, x, y, angle, hp, weaponId }) => {
-      const rp = remotePlayers.get(userId);
-      if (rp) {
-        rp.targetX  = x;
-        rp.targetY  = y;
-        rp.angle    = angle;
-        rp.hp       = hp;
-        rp.weaponId = weaponId;
-        rp.dead     = false;
+
+    // room:state — sent by backend after room:rejoin
+    // This is the authoritative player list; use it to populate remotePlayers
+    WS.on('room:state', ({ room }) => {
+      _syncFromRoom(room);
+    });
+
+    // room:player_rejoined — a teammate reconnected after page navigate
+    WS.on('room:player_rejoined', ({ userId, username }) => {
+      if (!remotePlayers.has(userId)) {
+        remotePlayers.set(userId, {
+          x: 0, y: 0, targetX: 0, targetY: 0,
+          angle: 0, hp: 100, maxHp: 100,
+          username: username || 'PLAYER',
+          charId: 'gangster', dead: false
+        });
+      } else {
+        // They were already there (from localStorage) — just mark alive
+        remotePlayers.get(userId).dead = false;
       }
     });
 
+    WS.on('remote:pos', ({ userId, x, y, angle, hp, weaponId }) => {
+      let rp = remotePlayers.get(userId);
+      // If we get a position for someone not in the map yet, add them on the fly
+      if (!rp) {
+        rp = { x, y, targetX: x, targetY: y, angle: angle || 0, hp: hp || 100, maxHp: 100, weaponId, username: 'PLAYER', charId: 'gangster', dead: false };
+        remotePlayers.set(userId, rp);
+      }
+      rp.targetX  = x;
+      rp.targetY  = y;
+      rp.angle    = angle;
+      rp.hp       = hp;
+      rp.weaponId = weaponId;
+      rp.dead     = false;
+    });
+
     WS.on('remote:shoot', ({ userId, x, y, angle, weaponId }) => {
-      // Spawn a visual remote bullet in the game if it's running
       if (window._game) {
         const cfg   = (CONFIG.WEAPONS || []).find(w => w.id === weaponId) || {};
         const color = cfg.color || '#FF4444';
         const spd   = cfg.bulletSpeed || 420;
-        const dmg   = 0; // remote bullets are visual-only, no local damage
-        const b     = new Bullet(x, y, angle, spd, dmg, false, color);
+        const b     = new Bullet(x, y, angle, spd, 0, false, color);
         b._isRemote = true;
         window._game.bullets.push(b);
       }
@@ -150,11 +198,11 @@ const Multiplayer = (() => {
     });
 
     WS.on('room:player_joined', ({ player }) => {
-      // In-game join (late join)
-      if (!remotePlayers.has(player.userId)) {
-        remotePlayers.set(player.userId, {
+      const pid = String(player.userId || player._id || '');
+      if (pid && !remotePlayers.has(pid)) {
+        remotePlayers.set(pid, {
           x: 0, y: 0, targetX: 0, targetY: 0,
-          angle: 0, hp: player.hp, maxHp: player.maxHp || 100,
+          angle: 0, hp: player.hp || 100, maxHp: player.maxHp || 100,
           username: player.username, charId: player.charId, dead: false
         });
       }
