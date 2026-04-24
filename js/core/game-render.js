@@ -327,18 +327,95 @@ Game.prototype._render = function() {
             ctx.fillText("[E] TELEPORT", 0, -64);
           }
         } else if (isWasteland) {
+          // ── WASTELAND: Dust gate — amber / rust / sand rings ──
+          const t = p._animT;
+          const pulse2 = Math.sin(t * 2.2) * 0.3 + 0.7;
+          const pulse3 = Math.sin(t * 4.5) * 0.2 + 0.8;
+
+          // Wide amber dust halo
+          const haloG = ctx.createRadialGradient(0, 0, 10, 0, 0, 55);
+          haloG.addColorStop(0, `rgba(255,140,20,${pulse * 0.22})`);
+          haloG.addColorStop(0.5, `rgba(180,60,0,${pulse * 0.12})`);
+          haloG.addColorStop(1, "rgba(0,0,0,0)");
+          ctx.fillStyle = haloG;
+          ctx.beginPath(); ctx.arc(0, 0, 55, 0, Math.PI * 2); ctx.fill();
+
+          // Outer rotating ring — rusty orange dashes
+          ctx.save(); ctx.rotate(t * 0.4);
+          ctx.strokeStyle = `rgba(220,90,10,${pulse * 0.75})`;
+          ctx.lineWidth = 2; ctx.setLineDash([9, 11]);
+          ctx.beginPath(); ctx.arc(0, 0, 40, 0, Math.PI * 2); ctx.stroke();
+          ctx.setLineDash([]); ctx.restore();
+
+          // Middle counter-rotating ring — amber dashes
+          ctx.save(); ctx.rotate(-t * 0.7);
+          ctx.strokeStyle = `rgba(255,185,30,${pulse2 * 0.65})`;
+          ctx.lineWidth = 1.5; ctx.setLineDash([5, 9]);
+          ctx.beginPath(); ctx.arc(0, 0, 32, 0, Math.PI * 2); ctx.stroke();
+          ctx.setLineDash([]); ctx.restore();
+
+          // Inner fast ring — sandy yellow
+          ctx.save(); ctx.rotate(t * 1.3);
+          ctx.strokeStyle = `rgba(255,220,100,${pulse3 * 0.3})`;
+          ctx.lineWidth = 1; ctx.setLineDash([3, 7]);
+          ctx.beginPath(); ctx.arc(0, 0, 23, 0, Math.PI * 2); ctx.stroke();
+          ctx.setLineDash([]); ctx.restore();
+
+          // Desert core gradient
+          const coreG = ctx.createRadialGradient(0, 0, 0, 0, 0, 26);
+          coreG.addColorStop(0, `rgba(255,230,160,${pulse3 * 0.95})`);
+          coreG.addColorStop(0.25, `rgba(255,140,20,${pulse2 * 0.7})`);
+          coreG.addColorStop(0.65, `rgba(140,40,0,${pulse * 0.4})`);
+          coreG.addColorStop(1, "rgba(0,0,0,0)");
+          ctx.fillStyle = coreG;
+          ctx.beginPath(); ctx.arc(0, 0, 26, 0, Math.PI * 2); ctx.fill();
+
+          // Orbiting particles — 8 alternating amber + rust
+          for (let i = 0; i < 8; i++) {
+            const angle = t * 1.8 + (i * Math.PI) / 4;
+            const dist = 24 + Math.sin(t * 2.5 + i * 1.2) * 6;
+            const gp = Math.cos(angle) * dist;
+            const hp = Math.sin(angle) * dist;
+            const r = i % 3 === 0 ? 2.8 : 1.8;
+            ctx.fillStyle = i % 2 === 0
+              ? `rgba(255,160,30,${pulse})`
+              : `rgba(200,60,10,${pulse2})`;
+            ctx.beginPath(); ctx.arc(gp, hp, r, 0, Math.PI * 2); ctx.fill();
+          }
+
+          // Bright amber core
+          ctx.shadowColor = "#FF8800"; ctx.shadowBlur = 24 * pulse;
+          ctx.fillStyle = `rgba(255,230,150,${pulse3})`;
+          ctx.beginPath(); ctx.arc(0, 0, 7, 0, Math.PI * 2); ctx.fill();
+
+          // 8-point rusted gate frame — orange
+          ctx.shadowBlur = 16 * pulse;
+          ctx.strokeStyle = `rgba(220,100,20,${pulse})`;
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          for (let i = 0; i < 8; i++) {
+            const ang = (Math.PI / 4) * i - Math.PI / 2;
+            const r = i % 2 === 0 ? 30 : 20;
+            i === 0 ? ctx.moveTo(Math.cos(ang)*r, Math.sin(ang)*r) : ctx.lineTo(Math.cos(ang)*r, Math.sin(ang)*r);
+          }
+          ctx.closePath(); ctx.stroke();
+
+          // Sandy accent ring
+          ctx.shadowBlur = 8 * pulse2;
+          ctx.strokeStyle = `rgba(255,200,80,${pulse2 * 0.45})`;
+          ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.arc(0, 0, 25, 0, Math.PI * 2); ctx.stroke();
+
           ctx.shadowBlur = 0;
-          ctx.fillStyle = near ? "#FFEEAA" : "#FF8800";
+          ctx.fillStyle = near ? "#FFE0A0" : "#FF9922";
           ctx.font = "bold 9px Orbitron, monospace";
           ctx.textAlign = "center";
-          ctx.shadowColor = "#FF8800";
-          ctx.shadowBlur = 10;
-          ctx.fillText("⚡ PORTAL ⚡", 0, -48);
+          ctx.shadowColor = "#FF8800"; ctx.shadowBlur = 12;
+          ctx.fillText("⚡ DUST GATE ⚡", 0, -52);
           if (near) {
-            ctx.fillStyle = "#FFEEAA";
-            ctx.shadowColor = "#FFAA00";
-            ctx.shadowBlur = 12;
-            ctx.fillText("[E] TELEPORT", 0, -62);
+            ctx.fillStyle = "#FFE0A0";
+            ctx.shadowColor = "#FFAA00"; ctx.shadowBlur = 14;
+            ctx.fillText("[E]  ENTER GATE", 0, -66);
           }
         } else if (!!this.map?.config?.dino) {
           // ── DINO WORLD: Bio-luminescent jungle portal — green / amber ──
@@ -637,7 +714,7 @@ Game.prototype._render = function() {
             ctx.shadowBlur = 14;
             ctx.fillText("[E]  ENTER GATE", 0, -66);
           }
-        } else if (isNeonCity || isWasteland || isRobotCity) {
+        } else if (isNeonCity || isRobotCity) {
           // ── NEON CITY: Cyber warp gate — cyan / magenta ───────────
           const t = p._animT;
           const pulse2 = Math.sin(t * 2.2) * 0.3 + 0.7;

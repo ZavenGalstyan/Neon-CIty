@@ -7593,6 +7593,365 @@ Game.prototype._renderIndoorFurniture = function(ctx, room) {
         ctx.fillText("TECH TRADER", cx, topY - 2);
         ctx.shadowBlur = 0;
 
+      } else if (!!this.map?.config?.wasteland) {
+        // ═══ WASTELAND: SCRAP TECH LAB — FULL ROOM ═══
+        const t = performance.now() / 1000;
+
+        // ── Rust & sand floor ─────────────────────────────────────
+        ctx.fillStyle = "#120800";
+        ctx.fillRect(0, 0, W, H);
+        const tSz = Math.round(W / 16);
+        for (let gy = 0; gy <= Math.ceil(H / tSz); gy++) {
+          for (let gx = 0; gx <= Math.ceil(W / tSz); gx++) {
+            const tx = gx * tSz, ty = gy * tSz;
+            const sd = gx * 13 + gy * 7;
+            ctx.fillStyle = sd%3===0?"rgba(28,12,2,0.96)":sd%3===1?"rgba(20,8,1,0.96)":"rgba(24,10,2,0.96)";
+            ctx.fillRect(tx, ty, tSz, tSz);
+            ctx.strokeStyle = `rgba(180,80,10,${0.08+0.04*Math.sin(t*0.7+sd*0.12)})`;
+            ctx.lineWidth = 0.7; ctx.strokeRect(tx, ty, tSz, tSz);
+            // Sand dust patches
+            if (sd % 11 === 0) {
+              const dg = ctx.createRadialGradient(tx+tSz/2,ty+tSz/2,0,tx+tSz/2,ty+tSz/2,tSz*0.55);
+              dg.addColorStop(0,`rgba(200,100,20,${0.05+0.03*Math.sin(t+sd)})`);
+              dg.addColorStop(1,"rgba(0,0,0,0)");
+              ctx.fillStyle=dg; ctx.fillRect(tx,ty,tSz,tSz);
+            }
+          }
+        }
+
+        // ── Room border: corroded metal frame ─────────────────────
+        ctx.strokeStyle = `rgba(210,100,20,${0.6+0.2*Math.sin(t*1.3)})`; ctx.lineWidth=3;
+        ctx.strokeRect(2,2,W-4,H-4);
+        ctx.strokeStyle="rgba(160,60,10,0.25)"; ctx.lineWidth=1;
+        ctx.strokeRect(7,7,W-14,H-14);
+
+        // ── Hanging industrial lights (flickering) ────────────────
+        const hLightXs=[W*0.18,W*0.44,W*0.70,W*0.88];
+        for (let li=0;li<4;li++) {
+          const lx=hLightXs[li], flicker=li===1?(0.6+0.4*Math.sin(t*13.7)):1;
+          const lcone=ctx.createRadialGradient(lx,0,2,lx,H*0.32,W*0.14);
+          lcone.addColorStop(0,`rgba(255,180,60,${0.14*flicker})`);
+          lcone.addColorStop(1,"rgba(0,0,0,0)");
+          ctx.fillStyle=lcone;
+          ctx.beginPath(); ctx.moveTo(lx-5,0); ctx.lineTo(lx-W*0.08,H*0.38); ctx.lineTo(lx+W*0.08,H*0.38); ctx.closePath(); ctx.fill();
+          // Bulb
+          ctx.fillStyle=`rgba(255,200,80,${0.8*flicker})`; ctx.shadowColor="#FF9922"; ctx.shadowBlur=12*flicker;
+          ctx.beginPath(); ctx.arc(lx,5,5,0,Math.PI*2); ctx.fill(); ctx.shadowBlur=0;
+          // Hanging wire
+          ctx.strokeStyle="rgba(100,50,10,0.8)"; ctx.lineWidth=1.5;
+          ctx.beginPath(); ctx.moveTo(lx,0); ctx.lineTo(lx,5); ctx.stroke();
+        }
+
+        // ── Room border rust strips ───────────────────────────────
+        // Horizontal rust streaks on walls
+        for (let rs=0;rs<5;rs++) {
+          const ry=topY*0.4+rs*(H*0.18);
+          ctx.strokeStyle=`rgba(160,50,5,${0.15+0.08*Math.sin(t*0.5+rs)})`; ctx.lineWidth=1;
+          ctx.beginPath(); ctx.moveTo(0,ry); ctx.lineTo(W*0.03,ry); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(W-W*0.03,ry); ctx.lineTo(W,ry); ctx.stroke();
+        }
+
+        // ── WASTELAND TECH LAB banner ─────────────────────────────
+        const sigW=W*0.58, sigH=H*0.042, sigX=cx-sigW/2, sigY=room.S-sigH-4;
+        const sigGr=ctx.createLinearGradient(sigX,sigY,sigX+sigW,sigY);
+        sigGr.addColorStop(0,"rgba(50,20,2,0.97)"); sigGr.addColorStop(0.5,"rgba(160,60,5,0.99)"); sigGr.addColorStop(1,"rgba(50,20,2,0.97)");
+        ctx.fillStyle=sigGr; rr(sigX,sigY,sigW,sigH,7); ctx.fill();
+        ctx.strokeStyle=`rgba(255,140,30,${0.7+0.3*Math.sin(t*1.8)})`; ctx.lineWidth=2; ctx.stroke();
+        ctx.fillStyle="#FFE0A0"; ctx.font=`bold ${Math.round(sigH*0.55)}px monospace`; ctx.textAlign="center";
+        ctx.shadowColor="#FF8800"; ctx.shadowBlur=12;
+        ctx.fillText("⚙  SCRAP  TECH  LAB  ⚙", cx, sigY+sigH*0.72); ctx.shadowBlur=0;
+
+        // ── RADIATION WARNING sign ────────────────────────────────
+        const radA=0.7+0.3*Math.sin(t*3.5);
+        const radW=W*0.12, radH=H*0.038;
+        ctx.fillStyle=`rgba(255,200,0,${radA})`; ctx.shadowColor="#FFCC00"; ctx.shadowBlur=15*radA;
+        rr(cx-radW/2,topY+H*0.04,radW,radH,5); ctx.fill(); ctx.shadowBlur=0;
+        ctx.strokeStyle=`rgba(200,100,0,${radA})`; ctx.lineWidth=1.5; ctx.stroke();
+        ctx.fillStyle="#1a0800"; ctx.font=`bold ${Math.round(radH*0.5)}px monospace`; ctx.textAlign="center";
+        ctx.fillText("☢ RADIATION ZONE ☢", cx, topY+H*0.04+radH*0.68);
+
+        // ── Top wall: scavenged server racks ──────────────────────
+        const srvH=H*0.065, srvY=topY+H*0.005;
+        const srvGr=ctx.createLinearGradient(W*0.04,srvY,W*0.96,srvY+srvH);
+        srvGr.addColorStop(0,"#0e0600"); srvGr.addColorStop(0.5,"#1c0c02"); srvGr.addColorStop(1,"#0e0600");
+        ctx.fillStyle=srvGr; rr(W*0.04,srvY,W*0.92,srvH,5); ctx.fill();
+        ctx.strokeStyle=`rgba(200,90,10,0.6)`; ctx.lineWidth=1.5; ctx.stroke();
+        // Server units
+        const srvCount=10;
+        for (let si=0;si<srvCount;si++) {
+          const sx=W*0.05+si*(W*0.9/srvCount);
+          ctx.fillStyle="#0a0400"; ctx.strokeStyle="rgba(180,70,10,0.4)"; ctx.lineWidth=0.7;
+          ctx.fillRect(sx,srvY+3,W*0.08,srvH-6); ctx.strokeRect(sx,srvY+3,W*0.08,srvH-6);
+          // LED strips
+          const ledCols=["#FF4400","#FFAA00","#FF6600","#FFCC00","#FF3300","#FF8800","#44FF88","#FF4400","#FFCC44","#FF6622"];
+          const ledA=0.5+0.5*Math.sin(t*(1.2+si*0.25)+si);
+          ctx.fillStyle=ledCols[si]; ctx.shadowColor=ledCols[si]; ctx.shadowBlur=4*ledA;
+          ctx.fillRect(sx+2,srvY+4,W*0.06,3); ctx.shadowBlur=0;
+          // Disk activity dot
+          const diskA=Math.sin(t*(3+si*0.7)+si)>0.4;
+          ctx.fillStyle=diskA?"#FF8800":"#2a1200";
+          ctx.beginPath(); ctx.arc(sx+W*0.068,srvY+srvH-6,2.5,0,Math.PI*2); ctx.fill();
+        }
+
+        // ── Main workstation desk (full width) ────────────────────
+        const dskH=H*0.055, dskY=topY+H*0.10, dskW=W*0.82, dskX=cx-dskW/2;
+        const dskBg=ctx.createLinearGradient(dskX,dskY,dskX+dskW,dskY+dskH);
+        dskBg.addColorStop(0,"#0e0600"); dskBg.addColorStop(0.5,"#1e0c02"); dskBg.addColorStop(1,"#0e0600");
+        ctx.fillStyle=dskBg; rr(dskX,dskY,dskW,dskH,6); ctx.fill();
+        ctx.strokeStyle="rgba(200,90,10,0.8)"; ctx.lineWidth=2; ctx.stroke();
+        // Desk edge strip (corroded copper)
+        ctx.strokeStyle=`rgba(220,120,30,${0.45+0.25*Math.sin(t*1.5)})`; ctx.lineWidth=1.5;
+        ctx.beginPath(); ctx.moveTo(dskX+8,dskY+dskH-2); ctx.lineTo(dskX+dskW-8,dskY+dskH-2); ctx.stroke();
+
+        // Holographic display on desk (center, glitchy)
+        const holW=W*0.28, holH=H*0.12, holX=cx-holW/2, holY=dskY-holH-H*0.005;
+        const glitch=(Math.sin(t*8.3)>0.88)?Math.sin(t*30)*4:0;
+        ctx.fillStyle="rgba(10,5,0,0.92)"; rr(holX+glitch,holY,holW,holH,5); ctx.fill();
+        ctx.strokeStyle=`rgba(255,140,20,${0.6+0.3*Math.sin(t*2.2)})`; ctx.lineWidth=1.5; ctx.stroke();
+        // Hologram content
+        ctx.fillStyle="#FF8800"; ctx.font=`bold ${Math.round(holH*0.13)}px monospace`; ctx.textAlign="center";
+        ctx.shadowColor="#FF6600"; ctx.shadowBlur=8;
+        ctx.fillText("⚙ SYSTEM ONLINE ⚙", cx+glitch*0.5, holY+holH*0.22); ctx.shadowBlur=0;
+        // Data readout lines
+        const dataLines=["POWER: 84%","SCRAP: 1,247 KG","TEMP: 312°C","RADS: HIGH","UPLINK: LOST"];
+        for (let dl=0;dl<5;dl++) {
+          const glA=dl%2===0?0.85:0.55;
+          ctx.fillStyle=dl===3?`rgba(255,80,0,${glA})`:`rgba(255,160,40,${glA})`;
+          ctx.font=`${Math.round(holH*0.1)}px monospace`; ctx.textAlign="left";
+          ctx.fillText(dataLines[dl],holX+holW*0.06+glitch,holY+holH*0.35+dl*holH*0.13);
+        }
+        // Waveform at bottom of hologram
+        ctx.strokeStyle=`rgba(255,180,40,0.7)`; ctx.lineWidth=1.2;
+        ctx.beginPath();
+        for (let wx=0;wx<holW-10;wx+=2) {
+          const wy=holY+holH*0.82+holH*0.1*Math.sin(t*6+wx*0.22);
+          wx===0?ctx.moveTo(holX+5+wx,wy):ctx.lineTo(holX+5+wx,wy);
+        }
+        ctx.stroke();
+
+        // Keyboard & tablet on desk
+        ctx.fillStyle="#0a0400"; rr(dskX+dskW*0.04,dskY+4,dskW*0.22,dskH-8,3); ctx.fill();
+        ctx.strokeStyle="rgba(180,80,10,0.4)"; ctx.lineWidth=0.8; ctx.stroke();
+        for (let ki=0;ki<10;ki++) {
+          const krow=Math.floor(ki/5), kcol=ki%5;
+          ctx.fillStyle=`rgba(200,100,20,${0.25+0.15*Math.sin(t+ki)})`;
+          ctx.fillRect(dskX+dskW*0.05+kcol*dskW*0.038,dskY+6+krow*7,dskW*0.03,5);
+        }
+
+        // ── LEFT: GIANT TESLA COIL ────────────────────────────────
+        const tcX=W*0.075, tcY=H*0.3, tcW=W*0.1, tcH=H*0.5;
+        // Base platform
+        ctx.fillStyle="#0e0600"; ctx.strokeStyle="rgba(200,90,10,0.7)"; ctx.lineWidth=2;
+        rr(tcX,tcY+tcH-tcH*0.12,tcW,tcH*0.12,5); ctx.fill(); ctx.stroke();
+        // Column
+        const colGr=ctx.createLinearGradient(tcX+tcW*0.3,tcY,tcX+tcW*0.7,tcY);
+        colGr.addColorStop(0,"#1a0c04"); colGr.addColorStop(0.5,"#2e1608"); colGr.addColorStop(1,"#1a0c04");
+        ctx.fillStyle=colGr; ctx.strokeStyle="rgba(180,70,10,0.5)"; ctx.lineWidth=1.5;
+        ctx.fillRect(tcX+tcW*0.3,tcY+tcH*0.15,tcW*0.4,tcH*0.72); ctx.strokeRect(tcX+tcW*0.3,tcY+tcH*0.15,tcW*0.4,tcH*0.72);
+        // Coil rings along column
+        for (let ci=0;ci<7;ci++) {
+          const cy=tcY+tcH*0.18+ci*(tcH*0.65/7);
+          ctx.strokeStyle=`rgba(255,${140+ci*8},20,0.55)`; ctx.lineWidth=2;
+          ctx.beginPath(); ctx.ellipse(tcX+tcW/2,cy,tcW*0.42,tcH*0.025,0,0,Math.PI*2); ctx.stroke();
+        }
+        // Tesla sphere top
+        const tsR=tcW*0.38;
+        const tsG=ctx.createRadialGradient(tcX+tcW/2,tcY+tsR*0.4,tsR*0.1,tcX+tcW/2,tcY+tsR*0.4,tsR);
+        tsG.addColorStop(0,"#3a1800"); tsG.addColorStop(0.5,"#200e00"); tsG.addColorStop(1,"#0e0600");
+        ctx.fillStyle=tsG; ctx.strokeStyle=`rgba(255,160,30,${0.6+0.3*Math.sin(t*2)})`; ctx.lineWidth=2;
+        ctx.beginPath(); ctx.arc(tcX+tcW/2,tcY+tsR*0.55,tsR,0,Math.PI*2); ctx.fill(); ctx.stroke();
+        // Electric arcs from sphere
+        const arcCount=5;
+        for (let ai=0;ai<arcCount;ai++) {
+          const arcSeed=Math.floor(t*4+ai*3.7)%7;
+          const aX1=tcX+tcW/2, aY1=tcY+tsR*0.55;
+          const aX2=aX1+(Math.sin(ai*1.3+t*2+arcSeed)*tcW*0.8);
+          const aY2=aY1+(Math.cos(ai*1.1+t*1.7+arcSeed)*tcW*0.6);
+          const aAlpha=0.4+0.5*Math.abs(Math.sin(t*7+ai));
+          ctx.strokeStyle=`rgba(255,220,60,${aAlpha})`; ctx.lineWidth=1;
+          ctx.beginPath(); ctx.moveTo(aX1,aY1);
+          const mx=aX1+(aX2-aX1)*0.5+Math.sin(t*11+ai)*10;
+          const my=aY1+(aY2-aY1)*0.5+Math.cos(t*9+ai)*8;
+          ctx.quadraticCurveTo(mx,my,aX2,aY2); ctx.stroke();
+          ctx.fillStyle=`rgba(255,200,40,${aAlpha*0.7})`; ctx.shadowColor="#FFCC00"; ctx.shadowBlur=6*aAlpha;
+          ctx.beginPath(); ctx.arc(aX2,aY2,2,0,Math.PI*2); ctx.fill(); ctx.shadowBlur=0;
+        }
+        // Sphere glow
+        const tsGl=ctx.createRadialGradient(tcX+tcW/2,tcY+tsR*0.55,0,tcX+tcW/2,tcY+tsR*0.55,tsR*1.5);
+        tsGl.addColorStop(0,`rgba(255,180,30,${0.2+0.15*Math.sin(t*3)})`); tsGl.addColorStop(1,"rgba(0,0,0,0)");
+        ctx.fillStyle=tsGl; ctx.beginPath(); ctx.arc(tcX+tcW/2,tcY+tsR*0.55,tsR*1.5,0,Math.PI*2); ctx.fill();
+        ctx.fillStyle="rgba(255,160,30,0.6)"; ctx.font=`bold ${Math.round(tcW*0.16)}px monospace`; ctx.textAlign="center";
+        ctx.fillText("TESLA",tcX+tcW/2,tcY+tcH-2);
+
+        // ── CENTER: Holographic map table ─────────────────────────
+        const mapTX=cx-W*0.1, mapTY=H*0.5, mapTW=W*0.2, mapTH=H*0.12;
+        ctx.fillStyle="#0a0400"; ctx.strokeStyle="rgba(255,140,20,0.6)"; ctx.lineWidth=2;
+        rr(mapTX,mapTY,mapTW,mapTH,6); ctx.fill(); ctx.stroke();
+        // Map display (top surface)
+        const mSurf=ctx.createLinearGradient(mapTX,mapTY,mapTX+mapTW,mapTY+mapTH*0.5);
+        mSurf.addColorStop(0,"rgba(180,70,10,0.18)"); mSurf.addColorStop(1,"rgba(255,140,20,0.06)");
+        ctx.fillStyle=mSurf; ctx.fillRect(mapTX+3,mapTY+3,mapTW-6,mapTH*0.6);
+        // Map grid lines
+        ctx.strokeStyle="rgba(255,160,40,0.3)"; ctx.lineWidth=0.7;
+        for (let mg=0;mg<6;mg++) { ctx.beginPath(); ctx.moveTo(mapTX+4+mg*(mapTW-8)/5,mapTY+3); ctx.lineTo(mapTX+4+mg*(mapTW-8)/5,mapTY+mapTH*0.6); ctx.stroke(); }
+        for (let mg=0;mg<4;mg++) { ctx.beginPath(); ctx.moveTo(mapTX+3,mapTY+3+mg*mapTH*0.18); ctx.lineTo(mapTX+mapTW-3,mapTY+3+mg*mapTH*0.18); ctx.stroke(); }
+        // Pulsing location marker
+        const locA=0.6+0.4*Math.sin(t*2.5);
+        ctx.fillStyle=`rgba(255,60,0,${locA})`; ctx.shadowColor="#FF4400"; ctx.shadowBlur=8*locA;
+        ctx.beginPath(); ctx.arc(mapTX+mapTW*0.55,mapTY+mapTH*0.22,4,0,Math.PI*2); ctx.fill(); ctx.shadowBlur=0;
+        ctx.fillStyle="rgba(255,160,40,0.7)"; ctx.font=`bold ${Math.round(mapTH*0.14)}px monospace`; ctx.textAlign="center";
+        ctx.fillText("TACTICAL MAP",cx,mapTY+mapTH*0.8);
+
+        // ── RIGHT: Chemical analysis tanks ───────────────────────
+        const tankZoneX=W*0.72, tankZoneY=H*0.3, tankZW=W*0.2, tankZH=H*0.5;
+        // Rack frame
+        ctx.fillStyle="#0e0600"; ctx.strokeStyle="rgba(180,70,10,0.55)"; ctx.lineWidth=2;
+        rr(tankZoneX,tankZoneY,tankZW,tankZH,6); ctx.fill(); ctx.stroke();
+        // Shelf bars
+        ctx.fillStyle="rgba(140,55,8,0.6)";
+        for (let sh=0;sh<3;sh++) {
+          ctx.fillRect(tankZoneX+4,tankZoneY+tankZH*(0.22+sh*0.26),tankZW-8,4);
+        }
+        // Chemical vials/beakers
+        const chemData=[
+          {col:"#FF4400",lbl:"ACID"},{col:"#FF8800",lbl:"RUST AGENT"},{col:"#FFCC00",lbl:"FUEL"},
+          {col:"#44FF88",lbl:"STIM"},{col:"#FF2200",lbl:"TOXIC"},{col:"#FFAA44",lbl:"PLASMA"},
+        ];
+        for (let ci2=0;ci2<6;ci2++) {
+          const row=Math.floor(ci2/3), col2=ci2%3;
+          const vx=tankZoneX+tankZW*0.1+col2*(tankZW*0.3);
+          const vy=tankZoneY+tankZH*0.05+row*(tankZH*0.46);
+          const vH=tankZH*0.2, vW=tankZW*0.22;
+          // Vial body
+          ctx.fillStyle="#100600"; ctx.strokeStyle=chemData[ci2].col+"88"; ctx.lineWidth=1.2;
+          rr(vx,vy,vW,vH,4); ctx.fill(); ctx.stroke();
+          // Liquid inside
+          const lvl=0.3+0.3*Math.abs(Math.sin(t*0.8+ci2*0.9));
+          const liqG=ctx.createLinearGradient(vx,vy+vH*(1-lvl),vx+vW,vy+vH);
+          liqG.addColorStop(0,chemData[ci2].col+"AA"); liqG.addColorStop(1,chemData[ci2].col+"44");
+          ctx.fillStyle=liqG; ctx.fillRect(vx+2,vy+vH*(1-lvl),vW-4,vH*lvl-2);
+          // Bubbles
+          for (let bi=0;bi<2;bi++) {
+            const bx=vx+vW*0.25+bi*vW*0.4;
+            const by=vy+vH*0.85-bi*6+Math.sin(t*2+ci2+bi)*4;
+            ctx.fillStyle=chemData[ci2].col+"66"; ctx.beginPath(); ctx.arc(bx,by,2,0,Math.PI*2); ctx.fill();
+          }
+          // Glow
+          ctx.fillStyle=chemData[ci2].col; ctx.shadowColor=chemData[ci2].col; ctx.shadowBlur=6+3*Math.sin(t*1.5+ci2);
+          ctx.font=`${Math.round(vH*0.15)}px monospace`; ctx.textAlign="center";
+          ctx.fillText(chemData[ci2].lbl,vx+vW/2,vy+vH+vH*0.16); ctx.shadowBlur=0;
+        }
+
+        // ── Center-left: Circuit board wall panel ─────────────────
+        const cbX=W*0.13, cbY=H*0.32, cbW=W*0.12, cbH=H*0.26;
+        ctx.fillStyle="#080400"; ctx.strokeStyle="rgba(180,90,10,0.5)"; ctx.lineWidth=1.5;
+        rr(cbX,cbY,cbW,cbH,5); ctx.fill(); ctx.stroke();
+        // PCB traces
+        const traceColors=["rgba(255,140,20,0.5)","rgba(200,80,10,0.4)","rgba(255,200,40,0.35)"];
+        const traces=[
+          [0.05,0.08,0.6,0.08],[0.05,0.08,0.05,0.35],[0.05,0.35,0.4,0.35],[0.4,0.08,0.4,0.6],
+          [0.7,0.2,0.95,0.2],[0.95,0.2,0.95,0.7],[0.2,0.6,0.7,0.6],[0.7,0.6,0.7,0.85],
+          [0.15,0.85,0.7,0.85],[0.15,0.4,0.15,0.85],[0.55,0.08,0.55,0.35],[0.55,0.35,0.85,0.35],
+        ];
+        for (let ti2=0;ti2<traces.length;ti2++) {
+          const [x1,y1,x2,y2]=traces[ti2];
+          ctx.strokeStyle=traceColors[ti2%3]; ctx.lineWidth=1.2;
+          ctx.beginPath(); ctx.moveTo(cbX+cbW*x1,cbY+cbH*y1); ctx.lineTo(cbX+cbW*x2,cbY+cbH*y2); ctx.stroke();
+        }
+        // ICs / chips
+        const icPos=[[0.15,0.1],[0.5,0.1],[0.15,0.5],[0.5,0.5],[0.2,0.78],[0.6,0.3]];
+        for (let ic=0;ic<6;ic++) {
+          const ix=cbX+cbW*icPos[ic][0], iy=cbY+cbH*icPos[ic][1];
+          ctx.fillStyle="#0e0600"; ctx.strokeStyle="rgba(200,100,20,0.6)"; ctx.lineWidth=0.8;
+          rr(ix,iy,cbW*0.22,cbH*0.1,2); ctx.fill(); ctx.stroke();
+          const ledA2=0.5+0.5*Math.sin(t*(1+ic*0.3)+ic*1.2);
+          ctx.fillStyle=ic%2===0?"#FF8800":"#FFCC00"; ctx.shadowColor=ctx.fillStyle; ctx.shadowBlur=3*ledA2;
+          ctx.beginPath(); ctx.arc(ix+cbW*0.2,iy+cbH*0.05,1.5,0,Math.PI*2); ctx.fill(); ctx.shadowBlur=0;
+        }
+        ctx.fillStyle="rgba(255,150,40,0.6)"; ctx.font=`bold ${Math.round(cbH*0.08)}px monospace`; ctx.textAlign="center";
+        ctx.fillText("CIRCUIT", cbX+cbW/2, cbY+cbH-4);
+
+        // ── Center-right: Radiation detector / Geiger counter ─────
+        const gcX=W*0.52, gcY=H*0.5, gcW=W*0.12, gcH=H*0.2;
+        ctx.fillStyle="#0e0600"; ctx.strokeStyle="rgba(200,90,10,0.55)"; ctx.lineWidth=1.5;
+        rr(gcX,gcY,gcW,gcH,6); ctx.fill(); ctx.stroke();
+        // Gauge face
+        ctx.fillStyle="#080300"; rr(gcX+4,gcY+4,gcW-8,gcH*0.55,4); ctx.fill();
+        const radLevel=0.55+0.3*Math.sin(t*0.7);
+        // Gauge arc
+        ctx.strokeStyle="rgba(80,30,5,0.8)"; ctx.lineWidth=gcH*0.07;
+        ctx.beginPath(); ctx.arc(gcX+gcW/2,gcY+gcH*0.36,gcH*0.24,Math.PI,0); ctx.stroke();
+        const gaugeAng=Math.PI+(radLevel*Math.PI);
+        const gaugCol=radLevel>0.8?"#FF2200":radLevel>0.5?"#FF8800":"#FFCC00";
+        ctx.strokeStyle=gaugCol; ctx.lineWidth=gcH*0.07; ctx.shadowColor=gaugCol; ctx.shadowBlur=8;
+        ctx.beginPath(); ctx.arc(gcX+gcW/2,gcY+gcH*0.36,gcH*0.24,Math.PI,gaugeAng); ctx.stroke(); ctx.shadowBlur=0;
+        // Needle
+        const ndA=Math.PI+radLevel*Math.PI;
+        ctx.strokeStyle="#FF4400"; ctx.lineWidth=1.5; ctx.lineCap="round";
+        ctx.beginPath(); ctx.moveTo(gcX+gcW/2,gcY+gcH*0.36); ctx.lineTo(gcX+gcW/2+Math.cos(ndA)*gcH*0.22,gcY+gcH*0.36+Math.sin(ndA)*gcH*0.22); ctx.stroke(); ctx.lineCap="butt";
+        // Geiger click display
+        const cpm=Math.floor(340+180*Math.sin(t*0.9));
+        ctx.fillStyle="#FF8800"; ctx.font=`bold ${Math.round(gcH*0.11)}px monospace`; ctx.textAlign="center";
+        ctx.fillText(`${cpm} CPM`,gcX+gcW/2,gcY+gcH*0.68);
+        ctx.fillStyle="rgba(255,140,30,0.7)"; ctx.font=`${Math.round(gcH*0.09)}px monospace`;
+        ctx.fillText("GEIGER",gcX+gcW/2,gcY+gcH*0.82);
+        ctx.fillText("COUNTER",gcX+gcW/2,gcY+gcH*0.92);
+
+        // ── Bottom: Scrap material bins ───────────────────────────
+        const binY=H-H*0.14, binH=H*0.1;
+        const bins=[{lbl:"IRON SCRAP",col:"rgba(160,70,10,0.8)"},{lbl:"COPPER",col:"rgba(200,120,30,0.8)"},{lbl:"CIRCUITS",col:"rgba(220,180,20,0.8)"},{lbl:"FUEL CELLS",col:"rgba(255,80,20,0.8)"}];
+        for (let bi=0;bi<4;bi++) {
+          const bx=W*0.1+bi*(W*0.2);
+          ctx.fillStyle="#0e0600"; ctx.strokeStyle=bins[bi].col; ctx.lineWidth=1.5;
+          rr(bx,binY,W*0.16,binH,5); ctx.fill(); ctx.stroke();
+          // Fill indicator
+          const fillH=binH*(0.3+0.4*Math.abs(Math.sin(t*0.4+bi*1.1)));
+          ctx.fillStyle=bins[bi].col; ctx.fillRect(bx+4,binY+binH-fillH-2,W*0.14-4,fillH);
+          ctx.fillStyle="#FFE0A0"; ctx.font=`bold ${Math.round(binH*0.16)}px monospace`; ctx.textAlign="center";
+          ctx.fillText(bins[bi].lbl,bx+W*0.08,binY+binH*0.18);
+        }
+
+        // ── Award/trophy shelf (far right) ───────────────────────
+        const trophX=W-W*0.1, trophY=H*0.33, trophW=W*0.085, trophH=H*0.38;
+        ctx.fillStyle="#0a0400"; ctx.strokeStyle="rgba(180,80,10,0.5)"; ctx.lineWidth=1.5;
+        rr(trophX,trophY,trophW,trophH,5); ctx.fill(); ctx.stroke();
+        // Shelves
+        for (let sh=0;sh<3;sh++) ctx.fillStyle="rgba(140,55,8,0.55)", ctx.fillRect(trophX+2,trophY+trophH*(0.2+sh*0.27),trophW-4,3);
+        // Trophies / items
+        const trItems=[{lbl:"SCRAP#1",col:"#FF8800"},{lbl:"PROTO",col:"#FFCC00"},{lbl:"WIRES",col:"#FF4422"}];
+        for (let ti3=0;ti3<3;ti3++) {
+          const ty3=trophY+trophH*(0.06+ti3*0.27);
+          ctx.fillStyle="#120800"; ctx.strokeStyle=trItems[ti3].col+"88"; ctx.lineWidth=1;
+          rr(trophX+trophW*0.12,ty3,trophW*0.76,trophH*0.19,3); ctx.fill(); ctx.stroke();
+          ctx.fillStyle=trItems[ti3].col; ctx.shadowColor=trItems[ti3].col; ctx.shadowBlur=4+2*Math.sin(t+ti3);
+          ctx.font=`bold ${Math.round(trophH*0.06)}px monospace`; ctx.textAlign="center";
+          ctx.fillText(trItems[ti3].lbl,trophX+trophW/2,ty3+trophH*0.12); ctx.shadowBlur=0;
+        }
+
+        // ── Floor cable runs ──────────────────────────────────────
+        ctx.strokeStyle="rgba(160,60,10,0.35)"; ctx.lineWidth=2;
+        ctx.setLineDash([5,5]);
+        ctx.beginPath(); ctx.moveTo(tcX+tcW,tcY+tcH*0.5); ctx.lineTo(dskX,dskY+dskH*0.5); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(tankZoneX,tankZoneY+tankZH*0.5); ctx.lineTo(dskX+dskW,dskY+dskH*0.5); ctx.stroke();
+        ctx.setLineDash([]);
+
+        // ── Ambient dust particles ────────────────────────────────
+        for (let pi=0;pi<16;pi++) {
+          const px=(Math.sin(pi*2.1+t*0.35)*0.42+0.5)*W;
+          const py=(Math.cos(pi*1.6+t*0.24)*0.38+0.5)*(H*0.88);
+          const pA=0.1+0.07*Math.sin(t*1.3+pi);
+          ctx.fillStyle=pi%3===0?`rgba(255,140,30,${pA})`:pi%3===1?`rgba(200,80,10,${pA})`:`rgba(255,200,60,${pA})`;
+          ctx.beginPath(); ctx.arc(px,py,1.8,0,Math.PI*2); ctx.fill();
+        }
+
+        // ── [T] TALK hint ─────────────────────────────────────────
+        const thW2=W*0.12, thH2=H*0.025;
+        ctx.fillStyle=`rgba(140,50,5,${0.85+0.1*Math.sin(t*2.5)})`;
+        rr(cx-thW2/2,topY+H*0.13,thW2,thH2,5); ctx.fill();
+        ctx.strokeStyle="rgba(255,140,30,0.6)"; ctx.lineWidth=1; ctx.stroke();
+        ctx.fillStyle="#FFE0A0"; ctx.font=`bold ${Math.round(thH2*0.55)}px monospace`; ctx.textAlign="center";
+        ctx.fillText("[T] TALK TO TECH",cx,topY+H*0.13+thH2*0.75);
+
       } else {
         // ═══ DEFAULT TECH LAB ═══
         // ── Main server bank (top) ───────────────────
