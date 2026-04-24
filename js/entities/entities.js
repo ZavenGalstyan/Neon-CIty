@@ -10555,6 +10555,197 @@ class Salesperson {
       ctx.fillText(this.label, 0, -76 + breathe);
       ctx.shadowBlur = 0;
 
+    } else if (this.isGalactica) {
+      // ═══ GALACTICA: Cosmic agent in deep-space dress suit ═══
+      const breathe = Math.sin(this._waveT * 0.8) * 1;
+
+      // Shadow
+      ctx.globalAlpha = 0.3;
+      ctx.fillStyle = '#000';
+      ctx.beginPath();
+      ctx.ellipse(2, 4, 14, 5, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+
+      // Legs (dark cosmic pants)
+      ctx.fillStyle = '#0d0020';
+      ctx.fillRect(-6, -8, 5, 12);
+      ctx.fillRect(1, -8, 5, 12);
+
+      // Space boots with gold trim
+      ctx.fillStyle = '#07001a';
+      ctx.fillRect(-7, 2, 6, 5);
+      ctx.fillRect(1, 2, 6, 5);
+      ctx.fillStyle = '#FFDD44';
+      ctx.fillRect(-7, 2, 6, 1.5);
+      ctx.fillRect(1, 2, 6, 1.5);
+
+      // Body (fitted space-suit jacket — deep indigo with purple sheen)
+      const suitGrad = ctx.createLinearGradient(-12, -38, 12, -10);
+      suitGrad.addColorStop(0, '#2a0050');
+      suitGrad.addColorStop(0.5, '#1a0038');
+      suitGrad.addColorStop(1, '#0e0020');
+      ctx.fillStyle = suitGrad;
+      ctx.beginPath();
+      ctx.moveTo(-11, -10);
+      ctx.lineTo(-13, -38 + breathe);
+      ctx.lineTo(-8, -42 + breathe);
+      ctx.lineTo(8, -42 + breathe);
+      ctx.lineTo(13, -38 + breathe);
+      ctx.lineTo(11, -10);
+      ctx.closePath();
+      ctx.fill();
+
+      // Suit lapels with gold edge
+      ctx.strokeStyle = '#FFDD44';
+      ctx.lineWidth = 1;
+      ctx.globalAlpha = 0.5;
+      ctx.beginPath();
+      ctx.moveTo(-4, -38 + breathe);
+      ctx.lineTo(-6, -20);
+      ctx.moveTo(4, -38 + breathe);
+      ctx.lineTo(6, -20);
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+
+      // Gold cosmic tie
+      ctx.fillStyle = '#FFDD44';
+      ctx.shadowColor = '#FFDD44';
+      ctx.shadowBlur = 7;
+      ctx.beginPath();
+      ctx.moveTo(0, -38 + breathe);
+      ctx.lineTo(-3, -34 + breathe);
+      ctx.lineTo(0, -12);
+      ctx.lineTo(3, -34 + breathe);
+      ctx.closePath();
+      ctx.fill();
+      ctx.shadowBlur = 0;
+
+      // Shirt collar (white)
+      ctx.fillStyle = '#FFFFFF';
+      ctx.beginPath();
+      ctx.moveTo(-5, -40 + breathe);
+      ctx.lineTo(0, -37 + breathe);
+      ctx.lineTo(5, -40 + breathe);
+      ctx.lineTo(4, -42 + breathe);
+      ctx.lineTo(-4, -42 + breathe);
+      ctx.closePath();
+      ctx.fill();
+
+      // Neck
+      ctx.fillStyle = '#E8D0C0';
+      ctx.fillRect(-3, -46 + breathe, 6, 6);
+
+      // Head
+      const headGrad = ctx.createRadialGradient(-3, -54 + breathe, 2, 0, -52 + breathe, 12);
+      headGrad.addColorStop(0, '#F0DDD0');
+      headGrad.addColorStop(1, '#D0B8A8');
+      ctx.fillStyle = headGrad;
+      ctx.beginPath();
+      ctx.ellipse(0, -54 + breathe, 10, 12, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Hair (dark with purple tint)
+      ctx.fillStyle = '#0d0022';
+      ctx.beginPath();
+      ctx.ellipse(0, -62 + breathe, 9, 6, 0, Math.PI, 0);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(-9, -58 + breathe);
+      ctx.quadraticCurveTo(-10, -52 + breathe, -8, -50 + breathe);
+      ctx.lineTo(-8, -58 + breathe);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(9, -58 + breathe);
+      ctx.quadraticCurveTo(10, -52 + breathe, 8, -50 + breathe);
+      ctx.lineTo(8, -58 + breathe);
+      ctx.fill();
+
+      // Eyes with glowing violet iris
+      ctx.fillStyle = '#FFFFFF';
+      ctx.beginPath();
+      ctx.ellipse(-4, -54 + breathe, 2.5, 2, 0, 0, Math.PI * 2);
+      ctx.ellipse(4, -54 + breathe, 2.5, 2, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#CC66FF';
+      ctx.shadowColor = '#AA44FF';
+      ctx.shadowBlur = 6;
+      ctx.beginPath();
+      ctx.arc(-4, -54 + breathe, 1.3, 0, Math.PI * 2);
+      ctx.arc(4, -54 + breathe, 1.3, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = '#000';
+      ctx.beginPath();
+      ctx.arc(-4, -54 + breathe, 0.5, 0, Math.PI * 2);
+      ctx.arc(4, -54 + breathe, 0.5, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Friendly smile
+      ctx.strokeStyle = '#AA7766';
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.arc(0, -50 + breathe, 4, 0.2, Math.PI - 0.2);
+      ctx.stroke();
+
+      // Arms (professional stance)
+      ctx.fillStyle = '#1a0038';
+      ctx.beginPath();
+      ctx.moveTo(-13, -36 + breathe);
+      ctx.lineTo(-16, -20);
+      ctx.lineTo(-14, -10);
+      ctx.lineTo(-11, -10);
+      ctx.lineTo(-11, -34 + breathe);
+      ctx.closePath();
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(13, -36 + breathe);
+      ctx.lineTo(16, -20);
+      ctx.lineTo(14, -10);
+      ctx.lineTo(11, -10);
+      ctx.lineTo(11, -34 + breathe);
+      ctx.closePath();
+      ctx.fill();
+
+      // Hands
+      ctx.fillStyle = '#E8D0C0';
+      ctx.beginPath();
+      ctx.arc(-15, -8, 4, 0, Math.PI * 2);
+      ctx.arc(15, -8, 4, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Chest badge (cosmic emblem)
+      ctx.fillStyle = 'rgba(0,0,0,0.7)';
+      ctx.fillRect(-16, -32 + breathe, 14, 8);
+      ctx.fillStyle = '#FFDD44';
+      ctx.shadowColor = '#FFAA00';
+      ctx.shadowBlur = 4;
+      ctx.font = 'bold 5px Orbitron, monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText('STAR', -9, -26 + breathe);
+      ctx.shadowBlur = 0;
+
+      // Star-pip shoulder rank (gold)
+      ctx.fillStyle = '#FFDD44';
+      ctx.shadowColor = '#FFAA00';
+      ctx.shadowBlur = 5;
+      ctx.beginPath();
+      ctx.arc(-10, -40 + breathe, 2.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(-14, -38 + breathe, 2.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+
+      // Label above head
+      ctx.fillStyle = '#CC99FF';
+      ctx.shadowColor = '#AA66FF';
+      ctx.shadowBlur = 12;
+      ctx.font = 'bold 8px Orbitron, monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText(this.label, 0, -76 + breathe);
+      ctx.shadowBlur = 0;
+
     } else if (this.isSnow) {
       // ═══ FROZEN TUNDRA: Winter-dressed salesperson ═══
       const breathe = Math.sin(this._waveT * 0.8) * 1;
