@@ -114,7 +114,7 @@ const Multiplayer = (() => {
   function _syncFromRoom(room) {
     if (!room || !room.players) return;
     const myName = (Auth.getSession()?.name || '').toLowerCase();
-    const myId   = Auth.getSession()?.id   || '';
+    const myId   = Auth.getSession()?.id   || _myUserId || '';
     room.players.forEach(p => {
       // Skip self
       const pid = String(p.userId || p._id || '');

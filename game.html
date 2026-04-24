@@ -275,16 +275,14 @@
             localStorage.removeItem('mpRoomPlayers');
           }
 
-          // Connect WebSocket and send room:rejoin once connected
-          // This is CRITICAL — the old WS from index.html closed on navigation.
-          // Backend still has the room linked to the dead socket.
-          // We must tell it "I'm back, re-associate me with my room".
           if (typeof WS !== 'undefined' && Auth.isLoggedIn()) {
             WS.connect();
-            // Wait for WS to open, then send rejoin
-            WS.on('connected', function _onReconnected() {
+            WS.on('connected', function _handleRejoin({ userId } = {}) {
+              if (userId) {
+                window._myUserId = userId;
+                if (typeof Multiplayer !== 'undefined') Multiplayer.setMyUserId(userId);
+              }
               WS.send('room:rejoin', { roomId: _roomId });
-              WS.off('connected', _onReconnected);
             });
           }
         }
