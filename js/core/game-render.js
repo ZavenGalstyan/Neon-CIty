@@ -326,7 +326,7 @@ Game.prototype._render = function() {
             ctx.shadowBlur = 14;
             ctx.fillText("[E] TELEPORT", 0, -64);
           }
-        } else if (isNeonCity || isWasteland) {
+        } else if (isWasteland) {
           ctx.shadowBlur = 0;
           ctx.fillStyle = near ? "#FFEEAA" : "#FF8800";
           ctx.font = "bold 9px Orbitron, monospace";
@@ -638,96 +638,127 @@ Game.prototype._render = function() {
             ctx.fillText("[E]  ENTER GATE", 0, -66);
           }
         } else if (isNeonCity || isWasteland || isRobotCity) {
-          // ── NEON CITY: Cyber portal — cyan / magenta rings ────────
+          // ── NEON CITY: Cyber warp gate — cyan / magenta ───────────
           const t = p._animT;
-          const pulse2 = Math.sin(t * 2) * 0.3 + 0.7;
-          const pulse3 = Math.sin(t * 4) * 0.2 + 0.8;
+          const pulse2 = Math.sin(t * 2.2) * 0.3 + 0.7;
+          const pulse3 = Math.sin(t * 4.5) * 0.2 + 0.8;
 
-          // Outer rotating ring
-          ctx.save();
-          ctx.rotate(t * 0.5);
-          ctx.strokeStyle = `rgba(0,255,255,${pulse * 0.6})`;
-          ctx.lineWidth = 2;
-          ctx.setLineDash([8, 12]);
+          // Wide neon halo mist
+          const haloG = ctx.createRadialGradient(0, 0, 10, 0, 0, 55);
+          haloG.addColorStop(0, `rgba(0,255,255,${pulse * 0.18})`);
+          haloG.addColorStop(0.5, `rgba(180,0,255,${pulse * 0.1})`);
+          haloG.addColorStop(1, "rgba(0,0,0,0)");
+          ctx.fillStyle = haloG;
           ctx.beginPath();
-          ctx.arc(0, 0, 38, 0, Math.PI * 2);
-          ctx.stroke();
-          ctx.setLineDash([]);
-          ctx.restore();
-
-          // Middle counter-rotating ring
-          ctx.save();
-          ctx.rotate(-t * 0.8);
-          ctx.strokeStyle = `rgba(255,0,255,${pulse2 * 0.5})`;
-          ctx.lineWidth = 1.5;
-          ctx.setLineDash([5, 8]);
-          ctx.beginPath();
-          ctx.arc(0, 0, 30, 0, Math.PI * 2);
-          ctx.stroke();
-          ctx.setLineDash([]);
-          ctx.restore();
-
-          // Inner glow core
-          const coreGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, 24);
-          coreGrad.addColorStop(0, `rgba(0,255,255,${pulse3 * 0.8})`);
-          coreGrad.addColorStop(0.3, `rgba(100,0,255,${pulse2 * 0.5})`);
-          coreGrad.addColorStop(0.7, `rgba(255,0,150,${pulse * 0.3})`);
-          coreGrad.addColorStop(1, "rgba(0,0,0,0)");
-          ctx.fillStyle = coreGrad;
-          ctx.beginPath();
-          ctx.arc(0, 0, 24, 0, Math.PI * 2);
+          ctx.arc(0, 0, 55, 0, Math.PI * 2);
           ctx.fill();
 
-          // Energy particles orbiting
-          for (let i = 0; i < 6; i++) {
-            const angle = t * 2 + (i * Math.PI) / 3;
-            const dist = 20 + Math.sin(t * 3 + i) * 5;
-            const px = Math.cos(angle) * dist;
-            const py = Math.sin(angle) * dist;
+          // Outer rotating ring — cyan dashes
+          ctx.save();
+          ctx.rotate(t * 0.4);
+          ctx.strokeStyle = `rgba(0,255,255,${pulse * 0.7})`;
+          ctx.lineWidth = 2;
+          ctx.setLineDash([9, 11]);
+          ctx.beginPath();
+          ctx.arc(0, 0, 40, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.restore();
+
+          // Middle counter-rotating ring — magenta dashes
+          ctx.save();
+          ctx.rotate(-t * 0.7);
+          ctx.strokeStyle = `rgba(255,0,255,${pulse2 * 0.6})`;
+          ctx.lineWidth = 1.5;
+          ctx.setLineDash([5, 9]);
+          ctx.beginPath();
+          ctx.arc(0, 0, 32, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.restore();
+
+          // Inner fast ring — faint electric blue
+          ctx.save();
+          ctx.rotate(t * 1.3);
+          ctx.strokeStyle = `rgba(100,200,255,${pulse3 * 0.28})`;
+          ctx.lineWidth = 1;
+          ctx.setLineDash([3, 7]);
+          ctx.beginPath();
+          ctx.arc(0, 0, 23, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.restore();
+
+          // Deep neon core gradient
+          const coreG = ctx.createRadialGradient(0, 0, 0, 0, 0, 26);
+          coreG.addColorStop(0, `rgba(200,255,255,${pulse3 * 0.95})`);
+          coreG.addColorStop(0.25, `rgba(0,220,255,${pulse2 * 0.7})`);
+          coreG.addColorStop(0.65, `rgba(140,0,200,${pulse * 0.4})`);
+          coreG.addColorStop(1, "rgba(0,0,0,0)");
+          ctx.fillStyle = coreG;
+          ctx.beginPath();
+          ctx.arc(0, 0, 26, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Orbiting particles — 8 alternating cyan + magenta
+          for (let i = 0; i < 8; i++) {
+            const angle = t * 1.8 + (i * Math.PI) / 4;
+            const dist = 24 + Math.sin(t * 2.5 + i * 1.2) * 6;
+            const gp = Math.cos(angle) * dist;
+            const hp = Math.sin(angle) * dist;
+            const r = i % 3 === 0 ? 2.8 : 1.8;
             ctx.fillStyle =
               i % 2 === 0
                 ? `rgba(0,255,255,${pulse})`
-                : `rgba(255,0,255,${pulse})`;
+                : `rgba(255,0,255,${pulse2})`;
             ctx.beginPath();
-            ctx.arc(px, py, 2, 0, Math.PI * 2);
+            ctx.arc(gp, hp, r, 0, Math.PI * 2);
             ctx.fill();
           }
 
-          // Central bright core
+          // Bright central core
           ctx.shadowColor = "#00FFFF";
-          ctx.shadowBlur = 20 * pulse;
-          ctx.fillStyle = `rgba(255,255,255,${pulse3})`;
+          ctx.shadowBlur = 24 * pulse;
+          ctx.fillStyle = `rgba(220,255,255,${pulse3})`;
           ctx.beginPath();
-          ctx.arc(0, 0, 6, 0, Math.PI * 2);
+          ctx.arc(0, 0, 7, 0, Math.PI * 2);
           ctx.fill();
 
-          // Hexagon frame
-          ctx.shadowBlur = 15 * pulse;
+          // 8-point cyber-gate frame — cyan
+          ctx.shadowBlur = 16 * pulse;
           ctx.strokeStyle = `rgba(0,255,255,${pulse})`;
           ctx.lineWidth = 2;
           ctx.beginPath();
-          for (let i = 0; i < 6; i++) {
-            const angle = (Math.PI / 3) * i - Math.PI / 2;
-            const hx = Math.cos(angle) * 26;
-            const hy = Math.sin(angle) * 26;
-            if (i === 0) ctx.moveTo(hx, hy);
-            else ctx.lineTo(hx, hy);
+          for (let i = 0; i < 8; i++) {
+            const ang = (Math.PI / 4) * i - Math.PI / 2;
+            const r = i % 2 === 0 ? 30 : 20;
+            const fx = Math.cos(ang) * r;
+            const fy = Math.sin(ang) * r;
+            i === 0 ? ctx.moveTo(fx, fy) : ctx.lineTo(fx, fy);
           }
           ctx.closePath();
           ctx.stroke();
 
+          // Magenta accent ring
+          ctx.shadowBlur = 8 * pulse2;
+          ctx.strokeStyle = `rgba(255,0,255,${pulse2 * 0.45})`;
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.arc(0, 0, 25, 0, Math.PI * 2);
+          ctx.stroke();
+
           ctx.shadowBlur = 0;
-          ctx.fillStyle = near ? "#FFFFAA" : "#00FFFF";
+          ctx.fillStyle = near ? "#AAFFFF" : "#00FFFF";
           ctx.font = "bold 9px Orbitron, monospace";
           ctx.textAlign = "center";
           ctx.shadowColor = "#00FFFF";
-          ctx.shadowBlur = 10;
-          ctx.fillText("◈ PORTAL ◈", 0, -48);
+          ctx.shadowBlur = 12;
+          ctx.fillText("◈ CYBER GATE ◈", 0, -52);
           if (near) {
-            ctx.fillStyle = "#FFFFAA";
-            ctx.shadowColor = "#FFFF00";
-            ctx.shadowBlur = 12;
-            ctx.fillText("[E] TELEPORT", 0, -62);
+            ctx.fillStyle = "#AAFFFF";
+            ctx.shadowColor = "#00FFFF";
+            ctx.shadowBlur = 14;
+            ctx.fillText("[E]  ENTER GATE", 0, -66);
           }
         } else if (isGalactica) {
           // ── GALACTICA: Cosmic warp gate — purple / gold star rings ─
