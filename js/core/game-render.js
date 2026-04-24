@@ -86,6 +86,64 @@ Game.prototype._render = function() {
       if (!this.player.dead) this.player.render(ctx);
       if (this.player.companion && !this.player.companion.dead)
         this.player.companion.render(ctx);
+
+      // ── Remote players (multiplayer) ───────────────────────
+      if (this._roomId && this._remotePlayers && this._remotePlayers.size > 0) {
+        for (const [, rp] of this._remotePlayers) {
+          if (rp.dead) continue;
+          const rpSx = rp.x;
+          const rpSy = rp.y;
+
+          ctx.save();
+          ctx.translate(rpSx, rpSy);
+          ctx.rotate(rp.angle || 0);
+
+          // Body
+          ctx.fillStyle = '#44EEFF';
+          ctx.strokeStyle = '#fff';
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.ellipse(0, 0, 10, 13, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+
+          // Head
+          ctx.fillStyle = '#fff';
+          ctx.beginPath();
+          ctx.arc(0, -14, 6, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Direction indicator
+          ctx.fillStyle = '#00FFCC';
+          ctx.beginPath();
+          ctx.moveTo(0, -20);
+          ctx.lineTo(-3, -14);
+          ctx.lineTo(3, -14);
+          ctx.closePath();
+          ctx.fill();
+
+          ctx.restore();
+
+          // HP bar (world-space, above player)
+          const barW = 38, barH = 4;
+          const hpPct = Math.max(0, Math.min(1, (rp.hp || 0) / (rp.maxHp || 100)));
+          ctx.fillStyle = 'rgba(0,0,0,0.55)';
+          ctx.fillRect(rpSx - barW / 2, rpSy - 34, barW, barH);
+          ctx.fillStyle = hpPct > 0.5 ? '#44FF88' : hpPct > 0.25 ? '#FFCC00' : '#FF4444';
+          ctx.fillRect(rpSx - barW / 2, rpSy - 34, barW * hpPct, barH);
+
+          // Name tag
+          ctx.save();
+          ctx.font = 'bold 10px Orbitron, monospace';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'bottom';
+          ctx.fillStyle = 'rgba(0,0,0,0.5)';
+          ctx.fillText(rp.username || 'PLAYER', rpSx + 1, rpSy - 37);
+          ctx.fillStyle = '#44EEFF';
+          ctx.fillText(rp.username || 'PLAYER', rpSx, rpSy - 38);
+          ctx.restore();
+        }
+      }
       for (const bg of this._bodyguards) bg.render(ctx);
 
       // Drones

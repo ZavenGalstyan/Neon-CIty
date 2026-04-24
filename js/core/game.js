@@ -302,6 +302,15 @@ class Game {
     this.camX = spawnX - this.canvas.width / 2;
     this.camY = spawnY - this.canvas.height / 2;
 
+    // ── Multiplayer ───────────────────────────────────────────
+    this._roomId  = window._mpRoomId || null;
+    this._isHost  = window._mpIsHost || false;
+    this._mpTimer = 0;
+    this._remotePlayers = (typeof Multiplayer !== 'undefined') ? Multiplayer.getRemotePlayers() : new Map();
+    if (this._roomId && typeof Multiplayer !== 'undefined') {
+      Multiplayer.bindGameEvents();
+    }
+
     this.state = "playing";
 
     this._lastTime = null;
@@ -603,6 +612,16 @@ class Game {
 
   // ── Update ─────────────────────────────────────────────────
   _update(dt) {
+    // ── Multiplayer: send position + interpolate remote players ─
+    if (this._roomId && typeof Multiplayer !== 'undefined') {
+      this._mpTimer += dt;
+      if (this._mpTimer >= 0.05) {  // 20 updates/sec
+        this._mpTimer = 0;
+        Multiplayer.sendPos(this.player);
+      }
+      Multiplayer.updateRemotePlayers(dt);
+    }
+
     // Survival timer
     this._surviveTime += dt;
     // Track current weapon for session save
@@ -838,12 +857,24 @@ class Game {
 
     // Sync vehicle state before player update (also freeze player while controlling drone)
     this.player.inVehicle = !!this._playerVehicle || this._droneControl;
+    const _bulletsBefore = this.bullets.length;
     this.player.update(dt, this.input, this.map, this.bullets, this.particles);
+    // Broadcast newly spawned player bullets to remote players
+    if (this._roomId && typeof Multiplayer !== 'undefined' && this.bullets.length > _bulletsBefore) {
+      const newBullet = this.bullets[this.bullets.length - 1];
+      if (newBullet && newBullet.isPlayer) {
+        Multiplayer.sendShoot(newBullet, this.player.equippedWeaponId);
+      }
+    }
     if (
       this.player.dead &&
       (this.state === "playing" || this.state === "blackmarket")
-    )
+    ) {
       this.state = "gameover";
+      if (this._roomId && typeof Multiplayer !== 'undefined') {
+        Multiplayer.sendDead();
+      }
+    }
 
     // ── Vehicles ───────────────────────────────────────────
     for (const v of this.vehicles) {

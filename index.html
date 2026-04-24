@@ -1880,11 +1880,268 @@
   <script src="js/api.js"></script>
   <script src="js/social.js"></script>
   <script src="js/ws.js"></script>
+  <script src="js/multiplayer.js"></script>
   <script src="js/social-ui.js"></script>
   <script src="js/screens/select.js"></script>
   <script>
     Auth.mountNavbar();
     if (Auth.isLoggedIn()) SocialUI.init();
+  </script>
+
+  <!-- Multiplayer button (visible when logged in) -->
+  <button id="mpBtn" style="display:none" onclick="MPLobby.open()">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="9" cy="7" r="3" stroke="#fff" stroke-width="2"/><circle cx="17" cy="9" r="2.5" stroke="#fff" stroke-width="2"/><path d="M3 19c0-3.314 2.686-6 6-6s6 2.686 6 6" stroke="#fff" stroke-width="2" stroke-linecap="round"/><path d="M17 14c1.657 0 3 1.343 3 3" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
+    MULTIPLAYER
+  </button>
+
+  <!-- Multiplayer Lobby Overlay -->
+  <div id="mpOverlay" style="display:none">
+    <div id="mpPanel">
+      <div class="mp-header">
+        <h2 id="mpPanelTitle">MULTIPLAYER</h2>
+        <button class="mp-close" onclick="MPLobby.close()">×</button>
+      </div>
+      <div class="mp-tabs" id="mpTabs">
+        <button class="mp-tab active" data-tab="create" onclick="MPLobby.switchTab('create')">CREATE ROOM</button>
+        <button class="mp-tab" data-tab="browse" onclick="MPLobby.switchTab('browse')">BROWSE ROOMS</button>
+        <button class="mp-tab" data-tab="waiting" onclick="MPLobby.switchTab('waiting')" id="mpWaitingTab" style="display:none">WAITING ROOM</button>
+      </div>
+      <div class="mp-body" id="mpBody"></div>
+    </div>
+  </div>
+
+  <script>
+  /* ── MPLobby: simple lobby UI controller ───────────────── */
+  const MPLobby = (() => {
+    let _tab = 'create';
+    let _room = null;
+    let _isHost = false;
+    let _charId = null;
+    let _mapId  = null;
+    let _myName = null;
+    let _readySet = new Set();
+
+    const MAPS = [
+      'neon_city','galactica','wasteland','robot_city','campaign',
+      'survival','hardcore','blitz','siege','frozen_tundra',
+      'ocean_depths','metropolis','desert_sands','jungle','arena','zombie','lifemode'
+    ];
+
+    function open() {
+      if (!Auth.isLoggedIn()) {
+        alert('You must be logged in to use multiplayer.');
+        return;
+      }
+      _myName = (Auth.getSession()?.name || 'PLAYER').toUpperCase();
+      document.getElementById('mpOverlay').style.display = 'flex';
+      // Read current selections from select.js state via localStorage
+      try {
+        const c = JSON.parse(localStorage.getItem('selectedChar') || '{}');
+        const m = JSON.parse(localStorage.getItem('selectedMap')  || '{}');
+        _charId = c.id || 'gangster';
+        _mapId  = m.id || 'neon_city';
+      } catch { _charId = 'gangster'; _mapId = 'neon_city'; }
+      switchTab(_tab);
+    }
+
+    function close() {
+      document.getElementById('mpOverlay').style.display = 'none';
+    }
+
+    function switchTab(tab) {
+      _tab = tab;
+      document.querySelectorAll('.mp-tab').forEach(t =>
+        t.classList.toggle('active', t.dataset.tab === tab));
+      if (tab === 'create')  _renderCreate();
+      if (tab === 'browse')  _renderBrowse();
+      if (tab === 'waiting') _renderWaiting();
+    }
+
+    /* ── CREATE TAB ─────────────────────────────── */
+    function _renderCreate() {
+      const mapOpts = MAPS.map(m =>
+        `<option value="${m}" ${m === _mapId ? 'selected' : ''}>${m.replace(/_/g,' ').toUpperCase()}</option>`
+      ).join('');
+      document.getElementById('mpBody').innerHTML = `
+        <div id="mpToast"></div>
+        <div class="mp-form-row">
+          <div class="mp-form-col">
+            <label class="mp-label">MAP</label>
+            <select class="mp-select" id="mpMapSel">${mapOpts}</select>
+          </div>
+          <div class="mp-form-col">
+            <label class="mp-label">MAX PLAYERS</label>
+            <select class="mp-select" id="mpMaxSel">
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4" selected>4</option>
+            </select>
+          </div>
+        </div>
+        <div style="margin-top:8px;display:flex;gap:12px;flex-wrap:wrap;">
+          <button class="mp-btn mp-btn-primary" onclick="MPLobby.doCreate()">CREATE ROOM</button>
+        </div>
+        <p class="mp-status-msg">Create a room, share the Room ID with friends, and start when ready.</p>
+      `;
+    }
+
+    /* ── BROWSE TAB ─────────────────────────────── */
+    async function _renderBrowse() {
+      document.getElementById('mpBody').innerHTML = `
+        <div class="mp-list-header">
+          <span class="mp-list-title">OPEN ROOMS</span>
+          <button class="mp-btn mp-btn-ghost" style="padding:6px 14px;font-size:10px" onclick="MPLobby.switchTab('browse')">↻ REFRESH</button>
+        </div>
+        <div id="mpRoomList"><div class="mp-empty">Loading rooms…</div></div>
+      `;
+      try {
+        const rooms = await Multiplayer.listRooms();
+        const el = document.getElementById('mpRoomList');
+        if (!rooms.length) { el.innerHTML = '<div class="mp-empty">No open rooms right now. Create one!</div>'; return; }
+        el.innerHTML = rooms.map(r => `
+          <div class="mp-room-item">
+            <div class="mp-room-map">${r.mapId.replace(/_/g,' ').toUpperCase()}</div>
+            <div class="mp-room-host">by ${r.hostName || '?'}</div>
+            <div class="mp-room-count">${r.playerCount}/${r.maxPlayers}</div>
+            <button class="mp-btn mp-btn-primary mp-room-join" onclick="MPLobby.doJoin('${r.roomId}')">JOIN</button>
+          </div>
+        `).join('');
+      } catch (e) {
+        document.getElementById('mpRoomList').innerHTML = `<div class="mp-toast error">Failed to load rooms: ${e.message}</div>`;
+      }
+    }
+
+    /* ── WAITING ROOM TAB ───────────────────────── */
+    function _renderWaiting() {
+      if (!_room) { switchTab('create'); return; }
+      document.getElementById('mpWaitingTab').style.display = '';
+      const me = Auth.getSession()?.name || '';
+      const playersHtml = (_room.players || []).map(p => `
+        <div class="mp-player-row ${p.username === me ? 'is-you' : ''} ${p.userId === _room.hostId ? 'is-host' : ''}">
+          <div class="mp-player-name">${p.username}${p.username === me ? ' (you)' : ''}</div>
+          <div class="mp-player-char">${(p.charId || '').toUpperCase()}</div>
+          <span class="mp-player-ready">${_readySet.has(p.userId) ? '✅' : '⏳'}</span>
+        </div>
+      `).join('');
+      document.getElementById('mpBody').innerHTML = `
+        <div class="mp-waiting-title">ROOM · ${_room.mapId.replace(/_/g,' ').toUpperCase()}</div>
+        <div class="mp-room-id">ROOM ID: ${_room.roomId}</div>
+        <div class="mp-player-list" id="mpPlayerList">${playersHtml}</div>
+        <div class="mp-waiting-actions">
+          ${_isHost ? `<button class="mp-btn mp-btn-green" id="mpStartBtn" onclick="MPLobby.doStart()">▶ START GAME</button>` : ''}
+          <button class="mp-btn mp-btn-ghost" onclick="MPLobby.doReady()" id="mpReadyBtn">✔ READY</button>
+          <button class="mp-btn mp-btn-danger" onclick="MPLobby.doLeave()">LEAVE ROOM</button>
+        </div>
+        <p class="mp-status-msg" id="mpStatusMsg">Waiting for players…</p>
+      `;
+    }
+
+    /* ── ACTIONS ────────────────────────────────── */
+    async function doCreate() {
+      const mapId = document.getElementById('mpMapSel')?.value || _mapId;
+      const max   = parseInt(document.getElementById('mpMaxSel')?.value || '4');
+      try {
+        const res = await Multiplayer.createRoom(mapId, _charId, max);
+        _room    = res.room;
+        _isHost  = true;
+        Multiplayer.setRoom(_room);
+        Multiplayer.setIsHost(true);
+        _bindLobbyWS();
+        document.getElementById('mpWaitingTab').style.display = '';
+        switchTab('waiting');
+      } catch (e) {
+        _toast('error', e.message);
+      }
+    }
+
+    async function doJoin(roomId) {
+      try {
+        const room = await Multiplayer.joinRoom(roomId, _charId);
+        _room   = room;
+        _isHost = false;
+        Multiplayer.setRoom(room);
+        Multiplayer.setIsHost(false);
+        _bindLobbyWS();
+        document.getElementById('mpWaitingTab').style.display = '';
+        switchTab('waiting');
+      } catch (e) {
+        _toast('error', e.message);
+      }
+    }
+
+    async function doStart() {
+      try {
+        await Multiplayer.startRoom();
+        document.getElementById('mpStatusMsg').textContent = 'Starting…';
+        document.getElementById('mpStartBtn').disabled = true;
+      } catch (e) {
+        _toast('error', e.message);
+      }
+    }
+
+    async function doReady() {
+      await Multiplayer.markReady();
+      document.getElementById('mpReadyBtn').disabled = true;
+      document.getElementById('mpStatusMsg').textContent = 'Marked as ready!';
+    }
+
+    async function doLeave() {
+      await Multiplayer.leaveRoom();
+      _room    = null;
+      _isHost  = false;
+      _readySet.clear();
+      document.getElementById('mpWaitingTab').style.display = 'none';
+      switchTab('create');
+    }
+
+    /* ── WS lobby bindings ──────────────────────── */
+    function _bindLobbyWS() {
+      Multiplayer.bindLobbyEvents({
+        onPlayerJoined(player) {
+          if (_room && _room.players) {
+            _room.players.push(player);
+          } else if (_room) {
+            _room.players = [player];
+          }
+          if (_tab === 'waiting') _renderWaiting();
+        },
+        onPlayerLeft(userId, newHostId) {
+          if (_room?.players) _room.players = _room.players.filter(p => p.userId !== userId);
+          if (newHostId) {
+            const myId = Auth.getSession()?.id;
+            if (String(newHostId) === String(myId)) { _isHost = true; Multiplayer.setIsHost(true); }
+          }
+          if (_tab === 'waiting') _renderWaiting();
+        },
+        onPlayerReady(userId) {
+          _readySet.add(userId);
+          if (_tab === 'waiting') _renderWaiting();
+        },
+        onStart(roomId, mapId) {
+          close();
+          // Save room info for game.html
+          localStorage.setItem('mpRoomId', roomId);
+          localStorage.setItem('mpIsHost', _isHost ? '1' : '0');
+          // Navigate — use whatever map + char the player already selected
+          const mapData = CONFIG.MAPS.find(m => m.id === mapId) || CONFIG.MAPS[0];
+          localStorage.setItem('selectedMap', JSON.stringify(mapData));
+          window.location.href = 'game.html?roomId=' + encodeURIComponent(roomId) + '&host=' + (_isHost ? '1' : '0');
+        }
+      });
+    }
+
+    function _toast(type, msg) {
+      const el = document.getElementById('mpToast');
+      if (el) el.innerHTML = `<div class="mp-toast ${type}">${msg}</div>`;
+    }
+
+    return { open, close, switchTab, doCreate, doJoin, doStart, doReady, doLeave };
+  })();
+
+  // Show MULTIPLAYER button only when logged in
+  document.addEventListener('DOMContentLoaded', () => {
+    if (Auth.isLoggedIn()) document.getElementById('mpBtn').style.display = 'flex';
+  });
   </script>
 
   <!-- Online player count -->
