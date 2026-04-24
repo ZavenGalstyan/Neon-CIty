@@ -255,13 +255,7 @@
           window._mpRoomId = _roomId;
           window._mpIsHost = _isHost;
 
-          // Bug fix 1: Connect WebSocket (only called in SocialUI on menu, not in game)
-          if (typeof WS !== 'undefined' && Auth.isLoggedIn()) {
-            WS.connect();
-          }
-
-          // Bug fix 2: Pre-populate remotePlayers from the room list saved in localStorage
-          // (the Map is empty on fresh page load — we must restore it before the game starts)
+          // Pre-populate remotePlayers from the room list saved in localStorage
           if (typeof Multiplayer !== 'undefined') {
             try {
               const saved = JSON.parse(localStorage.getItem('mpRoomPlayers') || '[]');
@@ -279,6 +273,19 @@
               });
             } catch (_) {}
             localStorage.removeItem('mpRoomPlayers');
+          }
+
+          // Connect WebSocket and send room:rejoin once connected
+          // This is CRITICAL — the old WS from index.html closed on navigation.
+          // Backend still has the room linked to the dead socket.
+          // We must tell it "I'm back, re-associate me with my room".
+          if (typeof WS !== 'undefined' && Auth.isLoggedIn()) {
+            WS.connect();
+            // Wait for WS to open, then send rejoin
+            WS.on('connected', function _onReconnected() {
+              WS.send('room:rejoin', { roomId: _roomId });
+              WS.off('connected', _onReconnected);
+            });
           }
         }
 
