@@ -101,8 +101,9 @@ const WS = (() => {
     _stopPing();
     _pingInterval = setInterval(() => {
       send('ping');
-      // also send heartbeat every 30s
-      send('heartbeat', { status: 'menu' });
+      // also send heartbeat every 30s — detect if we're ingame
+      const _inGame = !!(window._game && window._game._roomId);
+      send('heartbeat', { status: _inGame ? 'ingame' : 'menu' });
     }, 30000);
   }
 
