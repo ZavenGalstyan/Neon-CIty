@@ -11114,10 +11114,11 @@ class BuildingNPC {
     this.dialogue    = cfg.dialogue;
     this._waveT      = 0;
     this._interactR  = 65;
-    // renderType can be: true (neonCity for backwards compat), 'wasteland', or false (default)
-    this._isNeonCity = renderType === true || renderType === 'neonCity';
+    // renderType can be: true (neonCity for backwards compat), 'wasteland', 'galactica', or false (default)
+    this._isNeonCity  = renderType === true || renderType === 'neonCity';
     this._isWasteland = renderType === 'wasteland';
-    this._isGirl     = isGirl;
+    this._isGalactica = renderType === 'galactica';
+    this._isGirl      = isGirl;
     this._buildingType = buildingType;
   }
 
@@ -11127,6 +11128,8 @@ class BuildingNPC {
     if (this._hidden) return;
     if (this._isGirl) {
       this._renderGirl(ctx);
+    } else if (this._isGalactica) {
+      this._renderGalactica(ctx);
     } else if (this._isWasteland) {
       this._renderWasteland(ctx);
     } else if (this._isNeonCity) {
@@ -11134,6 +11137,185 @@ class BuildingNPC {
     } else {
       this._renderDefault(ctx);
     }
+  }
+
+  _renderGalactica(ctx) {
+    // ═══ GALACTICA: Human cosmic bartender ═══
+    const t = performance.now() / 1000;
+    const breathe = Math.sin(t * 0.8) * 1;
+    const sway    = Math.sin(this._waveT) * 2;
+
+    ctx.save();
+    ctx.translate(this.x + sway, this.y);
+
+    // Shadow
+    ctx.globalAlpha = 0.3;
+    ctx.fillStyle = '#000';
+    ctx.beginPath();
+    ctx.ellipse(2, 6, 14, 5, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+
+    // Legs (dark cosmic pants)
+    ctx.fillStyle = '#0d0022';
+    ctx.fillRect(-6, -8, 5, 14);
+    ctx.fillRect(1, -8, 5, 14);
+
+    // Space boots with gold trim
+    ctx.fillStyle = '#07001a';
+    ctx.fillRect(-7, 4, 6, 5);
+    ctx.fillRect(1, 4, 6, 5);
+    ctx.fillStyle = '#FFDD44';
+    ctx.fillRect(-7, 4, 6, 1.5);
+    ctx.fillRect(1, 4, 6, 1.5);
+
+    // Body (bartender vest — deep indigo, gold trim)
+    const vGrad = ctx.createLinearGradient(-12, -40, 12, -8);
+    vGrad.addColorStop(0, '#2a0050');
+    vGrad.addColorStop(0.5, '#1a0038');
+    vGrad.addColorStop(1, '#0e001e');
+    ctx.fillStyle = vGrad;
+    ctx.beginPath();
+    ctx.moveTo(-11, -8);
+    ctx.lineTo(-13, -38 + breathe);
+    ctx.lineTo(-8, -42 + breathe);
+    ctx.lineTo(8, -42 + breathe);
+    ctx.lineTo(13, -38 + breathe);
+    ctx.lineTo(11, -8);
+    ctx.closePath();
+    ctx.fill();
+
+    // Gold vest lapels
+    ctx.strokeStyle = '#FFDD44'; ctx.lineWidth = 1; ctx.globalAlpha = 0.55;
+    ctx.beginPath();
+    ctx.moveTo(-4, -38 + breathe); ctx.lineTo(-6, -20);
+    ctx.moveTo(4, -38 + breathe);  ctx.lineTo(6, -20);
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+
+    // White shirt / collar
+    ctx.fillStyle = '#FFFFFF';
+    ctx.beginPath();
+    ctx.moveTo(-5, -40 + breathe); ctx.lineTo(0, -37 + breathe);
+    ctx.lineTo(5, -40 + breathe);  ctx.lineTo(4, -42 + breathe);
+    ctx.lineTo(-4, -42 + breathe); ctx.closePath(); ctx.fill();
+
+    // Gold bow-tie (bartender style)
+    ctx.fillStyle = '#FFDD44'; ctx.shadowColor = '#FFAA00'; ctx.shadowBlur = 5;
+    ctx.beginPath();
+    ctx.moveTo(-4, -38 + breathe); ctx.lineTo(-1, -36 + breathe);
+    ctx.lineTo(-4, -34 + breathe); ctx.closePath(); ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(4, -38 + breathe);  ctx.lineTo(1, -36 + breathe);
+    ctx.lineTo(4, -34 + breathe);  ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.arc(0, -36 + breathe, 1.5, 0, Math.PI * 2); ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // Neck
+    ctx.fillStyle = '#E8D0C0'; ctx.fillRect(-3, -46 + breathe, 6, 6);
+
+    // Head
+    const hG = ctx.createRadialGradient(-2, -54 + breathe, 2, 0, -52 + breathe, 11);
+    hG.addColorStop(0, '#F5E0D0'); hG.addColorStop(1, '#D4B8A8');
+    ctx.fillStyle = hG;
+    ctx.beginPath(); ctx.ellipse(0, -54 + breathe, 10, 12, 0, 0, Math.PI * 2); ctx.fill();
+
+    // Hair (dark purple-black, styled back)
+    ctx.fillStyle = '#0d0022';
+    ctx.beginPath(); ctx.ellipse(0, -62 + breathe, 9, 6, 0, Math.PI, 0); ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(-9, -58 + breathe);
+    ctx.quadraticCurveTo(-10, -52 + breathe, -8, -50 + breathe);
+    ctx.lineTo(-8, -58 + breathe); ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(9, -58 + breathe);
+    ctx.quadraticCurveTo(10, -52 + breathe, 8, -50 + breathe);
+    ctx.lineTo(8, -58 + breathe); ctx.fill();
+
+    // Eyes — glowing violet iris
+    ctx.fillStyle = '#FFFFFF';
+    ctx.beginPath();
+    ctx.ellipse(-4, -54 + breathe, 2.5, 2, 0, 0, Math.PI * 2);
+    ctx.ellipse(4, -54 + breathe, 2.5, 2, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#CC66FF'; ctx.shadowColor = '#AA44FF'; ctx.shadowBlur = 6;
+    ctx.beginPath();
+    ctx.arc(-4, -54 + breathe, 1.3, 0, Math.PI * 2);
+    ctx.arc(4, -54 + breathe, 1.3, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = '#111';
+    ctx.beginPath();
+    ctx.arc(-4, -54 + breathe, 0.5, 0, Math.PI * 2);
+    ctx.arc(4, -54 + breathe, 0.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Eyebrows
+    ctx.strokeStyle = '#0d0022'; ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(-7, -58 + breathe); ctx.lineTo(-2, -59 + breathe); ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(2, -59 + breathe);  ctx.lineTo(7, -58 + breathe);  ctx.stroke();
+
+    // Nose
+    ctx.fillStyle = 'rgba(0,0,0,0.15)';
+    ctx.beginPath(); ctx.arc(0, -50 + breathe, 1.2, 0, Math.PI * 2); ctx.fill();
+
+    // Friendly smile
+    ctx.strokeStyle = '#AA7766'; ctx.lineWidth = 1.3;
+    ctx.beginPath(); ctx.arc(0, -47 + breathe, 4, 0.2, Math.PI - 0.2); ctx.stroke();
+
+    // Left arm (holding glass to customer)
+    ctx.fillStyle = '#1a0038';
+    ctx.beginPath();
+    ctx.moveTo(-13, -36 + breathe); ctx.lineTo(-20, -16);
+    ctx.lineTo(-18, -8);  ctx.lineTo(-15, -8);
+    ctx.lineTo(-10, -30 + breathe); ctx.closePath(); ctx.fill();
+
+    // Right arm (reaching back to shelf)
+    ctx.beginPath();
+    ctx.moveTo(13, -36 + breathe); ctx.lineTo(18, -18);
+    ctx.lineTo(16, -8);  ctx.lineTo(13, -8);
+    ctx.lineTo(10, -32 + breathe); ctx.closePath(); ctx.fill();
+
+    // Hands
+    ctx.fillStyle = '#E8D0C0';
+    ctx.beginPath(); ctx.arc(-18, -7, 4, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(16, -7, 4, 0, Math.PI * 2); ctx.fill();
+
+    // Glowing drink in left hand
+    const drinkCol = '#AA66FF';
+    ctx.fillStyle = drinkCol + '55'; ctx.strokeStyle = drinkCol;
+    ctx.lineWidth = 1.2; ctx.shadowColor = drinkCol; ctx.shadowBlur = 8;
+    ctx.beginPath();
+    ctx.moveTo(-23, -22); ctx.lineTo(-21, -12);
+    ctx.lineTo(-14, -12); ctx.lineTo(-12, -22);
+    ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    // Gold shoulder stars
+    ctx.fillStyle = '#FFDD44'; ctx.shadowColor = '#FFAA00'; ctx.shadowBlur = 4;
+    ctx.beginPath(); ctx.arc(-10, -40 + breathe, 2.5, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(-14, -38 + breathe, 2, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(10, -40 + breathe, 2.5, 0, Math.PI * 2); ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // Name badge
+    ctx.fillStyle = 'rgba(0,0,0,0.7)';
+    ctx.fillRect(-15, -30 + breathe, 13, 8);
+    ctx.fillStyle = '#FFDD44'; ctx.shadowColor = '#FFAA00'; ctx.shadowBlur = 3;
+    ctx.font = 'bold 4.5px Orbitron, monospace'; ctx.textAlign = 'center';
+    ctx.fillText('BAR', -8, -24 + breathe);
+    ctx.shadowBlur = 0;
+
+    // Label above head
+    ctx.fillStyle = '#CC99FF'; ctx.shadowColor = '#AA66FF'; ctx.shadowBlur = 14;
+    ctx.font = 'bold 8px Orbitron, monospace'; ctx.textAlign = 'center';
+    ctx.fillText(this.name, 0, -78 + breathe);
+    ctx.shadowBlur = 0;
+
+    // [T] interact hint when near (rendered by game.js separately — this is just the figure)
+    ctx.restore();
   }
 
   _renderWasteland(ctx) {
