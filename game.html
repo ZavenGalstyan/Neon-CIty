@@ -254,6 +254,32 @@
         if (_roomId) {
           window._mpRoomId = _roomId;
           window._mpIsHost = _isHost;
+
+          // Bug fix 1: Connect WebSocket (only called in SocialUI on menu, not in game)
+          if (typeof WS !== 'undefined' && Auth.isLoggedIn()) {
+            WS.connect();
+          }
+
+          // Bug fix 2: Pre-populate remotePlayers from the room list saved in localStorage
+          // (the Map is empty on fresh page load — we must restore it before the game starts)
+          if (typeof Multiplayer !== 'undefined') {
+            try {
+              const saved = JSON.parse(localStorage.getItem('mpRoomPlayers') || '[]');
+              const map   = Multiplayer.getRemotePlayers();
+              saved.forEach(p => {
+                map.set(p.userId, {
+                  x: 0, y: 0, targetX: 0, targetY: 0,
+                  angle: 0,
+                  hp:    p.hp    || 100,
+                  maxHp: p.maxHp || 100,
+                  username: p.username || 'PLAYER',
+                  charId:   p.charId   || 'gangster',
+                  dead: false
+                });
+              });
+            } catch (_) {}
+            localStorage.removeItem('mpRoomPlayers');
+          }
         }
 
         window.startGame(charData, mapData);

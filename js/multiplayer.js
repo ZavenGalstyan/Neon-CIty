@@ -110,7 +110,10 @@ const Multiplayer = (() => {
     });
   }
 
+  let _gameEventsBound = false;
   function bindGameEvents() {
+    if (_gameEventsBound) return;
+    _gameEventsBound = true;
     WS.on('remote:pos', ({ userId, x, y, angle, hp, weaponId }) => {
       const rp = remotePlayers.get(userId);
       if (rp) {

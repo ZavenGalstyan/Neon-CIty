@@ -2122,6 +2122,12 @@
           // Save room info for game.html
           localStorage.setItem('mpRoomId', roomId);
           localStorage.setItem('mpIsHost', _isHost ? '1' : '0');
+          // Save ALL room players so game.html can pre-populate remotePlayers
+          const myName = (Auth.getSession()?.name || '').toLowerCase();
+          const remotesOnly = (_room?.players || []).filter(p =>
+            (p.username || '').toLowerCase() !== myName
+          );
+          localStorage.setItem('mpRoomPlayers', JSON.stringify(remotesOnly));
           // Navigate — use whatever map + char the player already selected
           const mapData = CONFIG.MAPS.find(m => m.id === mapId) || CONFIG.MAPS[0];
           localStorage.setItem('selectedMap', JSON.stringify(mapData));
