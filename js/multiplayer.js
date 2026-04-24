@@ -161,30 +161,58 @@ const Multiplayer = (() => {
       }
     });
 
-    WS.on('remote:pos', ({ userId, x, y, angle, hp, weaponId }) => {
-      let rp = remotePlayers.get(userId);
-      // If we get a position for someone not in the map yet, add them on the fly
+    // _applyRemotePos: shared logic for both 'remote:pos' and 'player:pos' relay
+    function _applyRemotePos(userId, x, y, angle, hp, weaponId) {
+      // If userId missing (backend relay bug), fall back to first remote player
+      let targetId = userId;
+      if (!targetId || !remotePlayers.has(targetId)) {
+        targetId = remotePlayers.keys().next().value;
+      }
+      if (!targetId) return;
+
+      let rp = remotePlayers.get(targetId);
       if (!rp) {
-        rp = { x, y, targetX: x, targetY: y, angle: angle || 0, hp: hp || 100, maxHp: 100, weaponId, username: 'PLAYER', charId: 'gangster', dead: false };
-        remotePlayers.set(userId, rp);
+        rp = { x, y, targetX: x, targetY: y, angle: angle || 0, hp: hp || 100, maxHp: 100, weaponId: weaponId || 'pistol', username: 'PLAYER', charId: 'gangster', dead: false };
+        remotePlayers.set(targetId, rp);
       }
       rp.targetX  = x;
       rp.targetY  = y;
-      rp.angle    = angle;
-      rp.hp       = hp;
-      rp.weaponId = weaponId;
+      rp.angle    = angle || rp.angle;
+      rp.hp       = hp    !== undefined ? hp : rp.hp;
+      rp.weaponId = weaponId || rp.weaponId;
       rp.dead     = false;
+    }
+
+    // _applyRemoteShoot: shared logic for both 'remote:shoot' and 'player:shoot' relay
+    function _applyRemoteShoot(x, y, angle, weaponId) {
+      if (!window._game) return;
+      const cfg   = (CONFIG.WEAPONS || []).find(w => w.id === weaponId) || {};
+      const color = cfg.color || '#FF4444';
+      const spd   = cfg.bulletSpeed || 420;
+      const b     = new Bullet(x, y, angle || 0, spd, 0, false, color);
+      b._isRemote = true;
+      window._game.bullets.push(b);
+    }
+
+    // Backend correctly sends remote:pos (future-proof)
+    WS.on('remote:pos', ({ userId, x, y, angle, hp, weaponId }) => {
+      _applyRemotePos(userId, x, y, angle, hp, weaponId);
+    });
+
+    // Backend currently relays as player:pos (relay type bug) — handle both
+    WS.on('player:pos', ({ userId, x, y, angle, hp, weaponId }) => {
+      // Only process if it came FROM the server (relay), not our own echo
+      // WS never echoes our own sends, so any player:pos WE RECEIVE is a relay
+      _applyRemotePos(userId, x, y, angle, hp, weaponId);
     });
 
     WS.on('remote:shoot', ({ userId, x, y, angle, weaponId }) => {
-      if (window._game) {
-        const cfg   = (CONFIG.WEAPONS || []).find(w => w.id === weaponId) || {};
-        const color = cfg.color || '#FF4444';
-        const spd   = cfg.bulletSpeed || 420;
-        const b     = new Bullet(x, y, angle, spd, 0, false, color);
-        b._isRemote = true;
-        window._game.bullets.push(b);
-      }
+      _applyRemoteShoot(x, y, angle, weaponId);
+    });
+
+    // Backend currently relays as player:shoot — handle both
+    WS.on('player:shoot', ({ userId, x, y, angle, weaponId }) => {
+      _applyRemoteShoot(x, y, angle, weaponId);
     });
 
     WS.on('remote:dead', ({ userId }) => {
