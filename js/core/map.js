@@ -4337,6 +4337,7 @@ class GameMap {
     const isRobot     = !!this.config.robot;
     const isHardcore  = !!this.config.hardcore;
     const isDino        = !!this.config.dino;
+    const isJungle      = !!this.config.jungle;
     const isDesert      = !!this.config.desert;
     const isNeonDealer  = this.config.id === 'neon_city' && door.specialType === 'dealership';
     const isGalDealer   = isGalactica && door.specialType === 'dealership';
@@ -4352,6 +4353,7 @@ class GameMap {
     const isGalPharmacy = isGalactica && door.bTypeIdx === 5;
     const isGalRadio    = isGalactica && door.bTypeIdx === 22;
     const isDesertRadio = isDesert && door.bTypeIdx === 22;
+    const isJungleRadio = isJungle && door.bTypeIdx === 22;
     const isZombieMap   = !!this.config.zombie;
     const useLargeDealer = isNeonDealer || isGalDealer || isWastelandDealer || isHardcoreDealer || isDinoDealer || isDesertDealer;
     const useLargeArcade = isNeonArcade || isGalArcade;
@@ -4359,7 +4361,7 @@ class GameMap {
     const useLargeClub   = isGalClub;
     const useLargeRest   = isGalRest;
     const useLargePharm  = isGalPharmacy;
-    const useLargeRadio  = isGalRadio || isDesertRadio;
+    const useLargeRadio  = isGalRadio || isDesertRadio || isJungleRadio;
     // All zombie buildings use the large arcade layout (1080×840)
     const useLargeZombie = isZombieMap;
     // All blitz/robot/hardcore buildings use large rooms (same as galactica)
