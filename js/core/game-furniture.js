@@ -9837,78 +9837,302 @@ Game.prototype._renderIndoorFurniture = function(ctx, room) {
         ctx.shadowBlur=0;ctx.restore();
         return;
       }
-      // ── Monitor wall (top) ───────────────────────
-      for (let mi = 0; mi < 4; mi++) {
-        const mx2 = cx - W * 0.4 + mi * ((W * 0.8) / 3);
-        ctx.fillStyle = "#050a08";
-        ctx.strokeStyle = "#00FF88";
-        ctx.lineWidth = 1;
-        rr(mx2 - 18, topY + 4, 36, 28, 2);
-        ctx.fill();
-        ctx.stroke();
-        ctx.fillStyle = "#001a10";
-        ctx.fillRect(mx2 - 16, topY + 6, 32, 24);
-        ctx.fillStyle = "#00FF88";
-        ctx.shadowColor = "#00FF44";
-        ctx.shadowBlur = 6;
-        ctx.font = "4px monospace";
-        ctx.textAlign = "center";
-        for (let li = 0; li < 4; li++) {
-          const lineText =
-            "01" +
-            Math.floor(Math.random() * 1000)
-              .toString()
-              .padStart(4, "0");
-          ctx.fillText(lineText, mx2, topY + 10 + li * 5);
+      if (!!this.map?.config?.hardcore) {
+        // ═══ HARDCORE: INFERNO HACKER DEN ═══
+        const tH = performance.now() / 1000;
+
+        // ── Dark ember floor tiles ────────────────────────────
+        ctx.fillStyle = "#080200"; ctx.fillRect(0,0,W,H);
+        const tSzH=Math.round(W/16);
+        for (let gy=0;gy<=Math.ceil(H/tSzH);gy++) for (let gx=0;gx<=Math.ceil(W/tSzH);gx++) {
+          const ftx=gx*tSzH,fty=gy*tSzH,fsd=gx*17+gy*11;
+          ctx.fillStyle=fsd%3===0?"rgba(12,4,0,0.97)":fsd%3===1?"rgba(16,5,0,0.97)":"rgba(10,3,0,0.97)";
+          ctx.fillRect(ftx,fty,tSzH,tSzH);
+          ctx.strokeStyle=`rgba(255,80,0,${0.04+0.02*Math.sin(tH*0.6+fsd*0.1)})`;
+          ctx.lineWidth=0.5; ctx.strokeRect(ftx,fty,tSzH,tSzH);
         }
-        ctx.shadowBlur = 0;
-      }
-      // ── Hacker desk (center) ─────────────────────
-      ctx.fillStyle = "#050a08";
-      ctx.strokeStyle = "#00FF88";
-      ctx.lineWidth = 1.5;
-      rr(cx - 52, midY - 8, 104, 32, 4);
-      ctx.fill();
-      ctx.stroke();
-      // Triple monitor setup
-      for (let mi2 = -1; mi2 <= 1; mi2++) {
-        ctx.fillStyle = "#020806";
-        ctx.strokeStyle = "#00FF44";
-        ctx.lineWidth = 1;
-        rr(cx + mi2 * 34 - 14, midY - 24, 28, 18, 2);
-        ctx.fill();
-        ctx.stroke();
-        ctx.fillStyle = "#001a10";
-        ctx.fillRect(cx + mi2 * 34 - 12, midY - 22, 24, 14);
-        ctx.fillStyle = "#00FF88";
-        ctx.shadowColor = "#00FF44";
-        ctx.shadowBlur = 5;
-        ctx.fillRect(cx + mi2 * 34 - 10, midY - 20, 20, 4);
-        ctx.fillRect(cx + mi2 * 34 - 10, midY - 14, 20, 2);
-        ctx.shadowBlur = 0;
-      }
-      // Keyboard
-      ctx.fillStyle = "#0a1208";
-      rr(cx - 30, midY - 4, 60, 12, 2);
-      ctx.fill();
-      for (let ki = 0; ki < 9; ki++) {
-        ctx.fillStyle =
-          "#00FF88" + Math.floor(Math.random() * 99 + 20).toString(16);
-        ctx.fillRect(cx - 28 + ki * 7, midY - 2, 5, 8);
-      }
-      // ── Pizza boxes (on floor) ────────────────────
-      ctx.fillStyle = "#4a2a10";
-      ctx.strokeStyle = "#8a5a28";
-      ctx.lineWidth = 1;
-      for (let pi = 0; pi < 3; pi++) {
-        rr(cx - W * 0.4 + pi * 24, midY + 28, 22, 22, 1);
-        ctx.fill();
-        ctx.stroke();
-        ctx.fillStyle = "#FF6622";
-        ctx.beginPath();
-        ctx.arc(cx - W * 0.4 + pi * 24 + 11, midY + 39, 8, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = "#4a2a10";
+
+        // ── Room border ────────────────────────────────────────
+        ctx.strokeStyle=`rgba(255,100,0,${0.55+0.2*Math.sin(tH*1.4)})`; ctx.lineWidth=3;
+        ctx.strokeRect(2,2,W-4,H-4);
+        ctx.strokeStyle="rgba(200,50,0,0.2)"; ctx.lineWidth=1; ctx.strokeRect(7,7,W-14,H-14);
+
+        // ── Ceiling LED strips (ember/orange) ─────────────────
+        for (let li=0;li<6;li++) {
+          const lx=W*0.07+li*(W*0.86/5);
+          ctx.fillStyle=`rgba(255,80,0,${0.07+0.04*Math.sin(tH*0.9+li)})`; ctx.fillRect(lx,0,W*0.14,4);
+          ctx.fillStyle=`rgba(255,120,20,0.7)`; ctx.shadowColor="#FF5500"; ctx.shadowBlur=6;
+          ctx.fillRect(lx+2,1,W*0.12,2); ctx.shadowBlur=0;
+        }
+
+        // ── INFERNO HACKER DEN banner ──────────────────────────
+        const bWH=W*0.58, bHH=H*0.042, bXH=cx-bWH/2, bYH=room.S-bHH-4;
+        const bGrH=ctx.createLinearGradient(bXH,bYH,bXH+bWH,bYH);
+        bGrH.addColorStop(0,"rgba(18,4,0,0.97)"); bGrH.addColorStop(0.5,"rgba(60,14,0,0.99)"); bGrH.addColorStop(1,"rgba(18,4,0,0.97)");
+        ctx.fillStyle=bGrH; rr(bXH,bYH,bWH,bHH,7); ctx.fill();
+        ctx.strokeStyle=`rgba(255,100,0,${0.7+0.3*Math.sin(tH*1.8)})`; ctx.lineWidth=2; ctx.stroke();
+        ctx.fillStyle="#FFCC88"; ctx.font=`bold ${Math.round(bHH*0.55)}px monospace`; ctx.textAlign="center";
+        ctx.shadowColor="#FF6600"; ctx.shadowBlur=14;
+        ctx.fillText("🔥  INFERNO  HACKER  DEN  🔥",cx,bYH+bHH*0.72); ctx.shadowBlur=0;
+
+        // ── TOP: 6 hacking monitors (wall-mounted) ────────────
+        for (let mi=0;mi<6;mi++) {
+          const mxH=W*0.06+mi*(W*0.88/5);
+          const mwH=W*0.14, mhH=H*0.11;
+          ctx.fillStyle="#0c0300"; ctx.strokeStyle=mi===2?`rgba(255,120,0,${0.7+0.3*Math.sin(tH*2+mi)})`:"rgba(200,60,0,0.6)"; ctx.lineWidth=1.5;
+          rr(mxH,topY+4,mwH,mhH,3); ctx.fill(); ctx.stroke();
+          ctx.fillStyle="#050100"; ctx.fillRect(mxH+2,topY+6,mwH-4,mhH-4);
+          // Screen content (scrolling code lines)
+          const lineColors=["#FF6600","#00FF88","#FF3300","#FFAA00","#FF0044","#00DDFF"];
+          ctx.fillStyle=lineColors[mi]; ctx.shadowColor=lineColors[mi]; ctx.shadowBlur=4;
+          ctx.font=`${Math.round(mhH*0.11)}px monospace`; ctx.textAlign="left";
+          for (let li=0;li<5;li++) {
+            const seed=(tH*18+li*37+mi*111)%1; // deterministic scroll
+            const val=Math.floor(Math.sin(tH*1.3+li*7+mi*13)*50000+50000).toString(16).padStart(5,"0");
+            ctx.fillText((li%2===0?"0x":">>")+" "+val,mxH+3,topY+8+li*(mhH*0.19));
+          }
+          ctx.shadowBlur=0;
+          // Monitor label
+          const mLabels=["INTRUSION","FIREWALL","PAYLOAD","EXPLOIT","DARKNET","EXFIL"];
+          ctx.fillStyle=lineColors[mi]; ctx.font=`bold ${Math.round(mhH*0.13)}px monospace`; ctx.textAlign="center";
+          ctx.fillText(mLabels[mi],mxH+mwH/2,topY+mhH+12);
+        }
+
+        // ── LEFT: Server tower rack ───────────────────────────
+        const stX=W*0.03, stY=H*0.25, stW=W*0.12, stH=H*0.55;
+        ctx.fillStyle="#0a0300"; ctx.strokeStyle="rgba(255,80,0,0.6)"; ctx.lineWidth=2;
+        rr(stX,stY,stW,stH,4); ctx.fill(); ctx.stroke();
+        ctx.fillStyle="#FF6600"; ctx.font=`bold ${Math.round(stW*0.2)}px monospace`; ctx.textAlign="center";
+        ctx.shadowColor="#FF4400"; ctx.shadowBlur=8;
+        ctx.fillText("SRV",stX+stW/2,stY-6); ctx.shadowBlur=0;
+        for (let su=0;su<10;su++) {
+          const suy=stY+6+su*(stH-12)/10;
+          ctx.fillStyle="#0c0400"; ctx.strokeStyle="rgba(200,60,0,0.35)"; ctx.lineWidth=0.7;
+          ctx.fillRect(stX+4,suy,stW-8,(stH-12)/10-2); ctx.strokeRect(stX+4,suy,stW-8,(stH-12)/10-2);
+          // LED bar
+          const lc2=su%3===0?"#FF4400":su%3===1?"#FF8800":"#00FF88";
+          const la2=0.5+0.5*Math.sin(tH*(1.5+su*0.3)+su);
+          ctx.fillStyle=lc2; ctx.shadowColor=lc2; ctx.shadowBlur=3*la2;
+          ctx.fillRect(stX+5,suy+1,stW-14,2); ctx.shadowBlur=0;
+          // Activity dot
+          const active2=Math.sin(tH*(4+su*0.8)+su)>0.2;
+          ctx.fillStyle=active2?"#FF6600":"#2a0c00";
+          ctx.beginPath(); ctx.arc(stX+stW-8,suy+(stH-12)/10*0.5,2.5,0,Math.PI*2); ctx.fill();
+        }
+        // Fan grille on server
+        ctx.strokeStyle="rgba(255,80,0,0.3)"; ctx.lineWidth=1;
+        for (let fg=0;fg<4;fg++) { ctx.beginPath(); ctx.ellipse(stX+stW/2,stY+stH-20,stW*0.3-fg*3,stW*0.3-fg*3,tH*0.5,0,Math.PI*2); ctx.stroke(); }
+
+        // ── LEFT-CENTER: Main hacking desk + 5-screen arc ─────
+        const dkX=W*0.17, dkY=midY-H*0.04, dkW=W*0.48, dkH=H*0.065;
+        const dkBg=ctx.createLinearGradient(dkX,dkY,dkX+dkW,dkY+dkH);
+        dkBg.addColorStop(0,"#0c0400"); dkBg.addColorStop(0.5,"#180800"); dkBg.addColorStop(1,"#0c0400");
+        ctx.fillStyle=dkBg; rr(dkX,dkY,dkW,dkH,5); ctx.fill();
+        ctx.strokeStyle="rgba(255,100,0,0.8)"; ctx.lineWidth=2; ctx.stroke();
+        // LED strip under desk edge
+        ctx.strokeStyle=`rgba(255,80,0,${0.4+0.3*Math.sin(tH*2)})`; ctx.lineWidth=1.5;
+        ctx.beginPath(); ctx.moveTo(dkX+8,dkY+dkH); ctx.lineTo(dkX+dkW-8,dkY+dkH); ctx.stroke();
+
+        // 5 monitors on desk arc
+        for (let mi2=0;mi2<5;mi2++) {
+          const mAng=(mi2-2)*0.22; // arc spread
+          const m2x=dkX+dkW*0.1+mi2*(dkW*0.8/4), m2y=dkY-H*0.13-Math.abs(mi2-2)*H*0.01;
+          const m2w=dkW*0.16, m2h=H*0.12;
+          // slight rotation for arc effect
+          ctx.save(); ctx.translate(m2x+m2w/2,m2y+m2h); ctx.rotate(mAng);
+          ctx.fillStyle="#0c0300"; ctx.strokeStyle=mi2===2?"rgba(255,150,0,0.9)":"rgba(220,70,0,0.65)"; ctx.lineWidth=1.5;
+          rr(-m2w/2,-m2h,m2w,m2h,3); ctx.fill(); ctx.stroke();
+          ctx.fillStyle="#040100"; ctx.fillRect(-m2w/2+2,-m2h+2,m2w-4,m2h-4);
+          // Screen glow
+          const mScreenColors=["#FF4400","#FF8800","#00FF88","#FF3300","#FFAA00"];
+          ctx.fillStyle=mScreenColors[mi2]; ctx.shadowColor=mScreenColors[mi2]; ctx.shadowBlur=6;
+          ctx.font=`${Math.round(m2h*0.1)}px monospace`; ctx.textAlign="left";
+          for (let dl=0;dl<5;dl++) {
+            const dv=Math.floor(Math.sin(tH*1.1+dl*5+mi2*9)*32767+32767).toString(16).toUpperCase().padStart(4,"0");
+            ctx.fillText(dl===0?"root@fire:~#":`  ${dv}  ${dl%2?"OK":"ERR"}`,-m2w/2+3,-m2h+m2h*0.18+dl*m2h*0.16);
+          }
+          ctx.shadowBlur=0;
+          ctx.restore();
+        }
+
+        // Mechanical keyboard on desk
+        ctx.fillStyle="#0e0400"; rr(dkX+dkW*0.15,dkY+4,dkW*0.35,dkH-8,3); ctx.fill();
+        ctx.strokeStyle="rgba(200,60,0,0.4)"; ctx.lineWidth=0.8; ctx.stroke();
+        for (let ki=0;ki<14;ki++) {
+          const kr=Math.floor(ki/7), kc=ki%7;
+          const keyC=Math.sin(tH*8+ki)>0.6?"rgba(255,100,0,0.9)":"rgba(180,50,0,0.45)";
+          ctx.fillStyle=keyC; ctx.fillRect(dkX+dkW*0.16+kc*dkW*0.048,dkY+5+kr*((dkH-10)/2),dkW*0.038,dkH*0.38);
+        }
+
+        // ── CENTER-RIGHT: Network topology board ──────────────
+        const ntX=W*0.67, ntY=H*0.24, ntW=W*0.14, ntH=H*0.35;
+        ctx.fillStyle="#0a0200"; ctx.strokeStyle="rgba(255,80,0,0.55)"; ctx.lineWidth=1.5;
+        rr(ntX,ntY,ntW,ntH,4); ctx.fill(); ctx.stroke();
+        ctx.fillStyle="#FF6600"; ctx.font=`bold ${Math.round(ntH*0.07)}px monospace`; ctx.textAlign="center";
+        ctx.shadowColor="#FF4400"; ctx.shadowBlur=7;
+        ctx.fillText("NET MAP",ntX+ntW/2,ntY+ntH*0.09); ctx.shadowBlur=0;
+        // Nodes and connections
+        const netNodes=[{x:0.25,y:0.25,c:"#FF4400"},{x:0.75,y:0.2,c:"#FF8800"},{x:0.5,y:0.5,c:"#00FF88"},{x:0.2,y:0.7,c:"#FF6600"},{x:0.8,y:0.65,c:"#FFAA00"},{x:0.5,y:0.85,c:"#FF3300"}];
+        // Lines first
+        ctx.strokeStyle="rgba(255,80,0,0.22)"; ctx.lineWidth=1;
+        const edges=[[0,2],[1,2],[2,3],[2,4],[3,5],[4,5]];
+        for (const [a,b] of edges) {
+          ctx.beginPath(); ctx.moveTo(ntX+netNodes[a].x*ntW,ntY+netNodes[a].y*ntH); ctx.lineTo(ntX+netNodes[b].x*ntW,ntY+netNodes[b].y*ntH); ctx.stroke();
+        }
+        // Nodes
+        for (let ni=0;ni<netNodes.length;ni++) {
+          const nd=netNodes[ni], np=0.5+0.5*Math.sin(tH*2.5+ni*1.1);
+          ctx.fillStyle=nd.c; ctx.shadowColor=nd.c; ctx.shadowBlur=6*np;
+          ctx.beginPath(); ctx.arc(ntX+nd.x*ntW,ntY+nd.y*ntH,4,0,Math.PI*2); ctx.fill(); ctx.shadowBlur=0;
+        }
+        // Packet animation on edge 0-2
+        const pkP=(tH*0.4)%1;
+        const pkx=ntX+netNodes[0].x*ntW+(netNodes[2].x-netNodes[0].x)*ntW*pkP;
+        const pky=ntY+netNodes[0].y*ntH+(netNodes[2].y-netNodes[0].y)*ntH*pkP;
+        ctx.fillStyle="#FFFF00"; ctx.shadowColor="#FFFF00"; ctx.shadowBlur=8;
+        ctx.beginPath(); ctx.arc(pkx,pky,3,0,Math.PI*2); ctx.fill(); ctx.shadowBlur=0;
+
+        // ── RIGHT: Deep rack + patch panel ────────────────────
+        const prX=W*0.84, prY=H*0.25, prW=W*0.13, prH=H*0.55;
+        ctx.fillStyle="#0a0300"; ctx.strokeStyle="rgba(200,60,0,0.55)"; ctx.lineWidth=1.5;
+        rr(prX,prY,prW,prH,4); ctx.fill(); ctx.stroke();
+        ctx.fillStyle="#FF8800"; ctx.font=`bold ${Math.round(prW*0.2)}px monospace`; ctx.textAlign="center";
+        ctx.shadowColor="#FF6600"; ctx.shadowBlur=8;
+        ctx.fillText("RACK",prX+prW/2,prY-6); ctx.shadowBlur=0;
+        // Patch panel cables
+        for (let pp=0;pp<8;pp++) {
+          const ppy=prY+10+pp*(prH-20)/7;
+          ctx.fillStyle="#0c0400"; ctx.fillRect(prX+4,ppy,prW-8,10);
+          ctx.strokeStyle="rgba(180,50,0,0.4)"; ctx.lineWidth=0.7; ctx.strokeRect(prX+4,ppy,prW-8,10);
+          // RJ45 ports
+          for (let pt=0;pt<4;pt++) {
+            const ptx=prX+5+pt*(prW-10)/3;
+            ctx.fillStyle="#0a0100"; ctx.fillRect(ptx,ppy+2,6,6);
+            ctx.strokeStyle="rgba(255,80,0,0.5)"; ctx.lineWidth=0.5; ctx.strokeRect(ptx,ppy+2,6,6);
+            // Cable lead
+            if (Math.sin(pp*7+pt*3)>0) {
+              const cColors=["#FF4400","#FFAA00","#00FF88","#FF0044","#00DDFF","#FF8800"];
+              ctx.strokeStyle=cColors[(pp+pt)%6]; ctx.lineWidth=1.5;
+              ctx.beginPath(); ctx.moveTo(ptx+3,ppy+8); ctx.bezierCurveTo(ptx+3,ppy+18,prX+Math.sin(pp*2+pt)*6+prW/2,ppy+20,prX+prW/2,ppy+22); ctx.stroke();
+            }
+          }
+        }
+
+        // ── FLOOR: scattered items ─────────────────────────────
+        // Energy drink cans
+        const canPositions=[{x:W*0.19,y:H*0.78},{x:W*0.22,y:H*0.80},{x:W*0.58,y:H*0.79},{x:W*0.62,y:H*0.81}];
+        for (const cp2 of canPositions) {
+          ctx.fillStyle="#CC2200"; ctx.strokeStyle="#FF4400"; ctx.lineWidth=1;
+          rr(cp2.x-4,cp2.y-11,8,14,2); ctx.fill(); ctx.stroke();
+          ctx.fillStyle="rgba(255,200,0,0.8)"; ctx.fillRect(cp2.x-3,cp2.y-9,6,2);
+          ctx.fillStyle="#FF6600"; ctx.shadowColor="#FF4400"; ctx.shadowBlur=4;
+          ctx.font=`bold ${Math.round(7)}px monospace`; ctx.textAlign="center";
+          ctx.fillText("⚡",cp2.x,cp2.y-3); ctx.shadowBlur=0;
+        }
+        // Pizza boxes (stacked)
+        ctx.fillStyle="#4a2a10"; ctx.strokeStyle="#8a5a28"; ctx.lineWidth=1;
+        for (let pi=0;pi<4;pi++) {
+          rr(W*0.30+pi*26,H*0.80,24,24,1); ctx.fill(); ctx.stroke();
+          ctx.fillStyle="#FF5500";
+          ctx.beginPath(); ctx.arc(W*0.30+pi*26+12,H*0.80+12,8,0,Math.PI*2); ctx.fill();
+          ctx.fillStyle="#4a2a10";
+        }
+        // USB drives / HDDs scattered
+        const usbPos=[{x:W*0.52,y:H*0.72},{x:W*0.55,y:H*0.74},{x:W*0.48,y:H*0.75}];
+        for (const up of usbPos) {
+          ctx.fillStyle="#222"; ctx.strokeStyle="#FF8800"; ctx.lineWidth=1;
+          rr(up.x-7,up.y-4,14,8,2); ctx.fill(); ctx.stroke();
+          ctx.fillStyle="#FF6600"; ctx.fillRect(up.x+5,up.y-2,4,4);
+        }
+        // Sticky notes on wall/monitor
+        const noteColors=["rgba(255,200,0,0.85)","rgba(255,100,0,0.85)","rgba(255,160,0,0.85)"];
+        const noteTexts=["0DAY","PWNED","ROOTKIT"];
+        for (let ni=0;ni<3;ni++) {
+          const nx=W*0.68+ni*W*0.03, ny=topY+H*0.13+ni*H*0.02;
+          ctx.fillStyle=noteColors[ni]; rr(nx,ny,22,18,1); ctx.fill();
+          ctx.strokeStyle="rgba(180,80,0,0.4)"; ctx.lineWidth=0.5; ctx.stroke();
+          ctx.fillStyle="#1a0800"; ctx.font=`bold 5px monospace`; ctx.textAlign="center";
+          ctx.fillText(noteTexts[ni],nx+11,ny+11);
+        }
+        // Hoodie on chair (left of desk)
+        const hdX=dkX-W*0.06, hdY=dkY;
+        ctx.fillStyle="#1a0000"; ctx.strokeStyle="#330000"; ctx.lineWidth=1;
+        rr(hdX,hdY,W*0.04,H*0.06,4); ctx.fill(); ctx.stroke();
+        ctx.fillStyle="rgba(255,30,0,0.15)"; rr(hdX+2,hdY+2,W*0.04-4,H*0.06-4,3); ctx.fill();
+        // Hood
+        ctx.fillStyle="#1a0000";
+        ctx.beginPath(); ctx.arc(hdX+W*0.02,hdY,W*0.018,Math.PI,0); ctx.fill();
+        ctx.fillStyle="#FF4400"; ctx.font=`bold 6px monospace`; ctx.textAlign="center";
+        ctx.fillText("⊘",hdX+W*0.02,hdY+H*0.035);
+
+        // ── Crypto ticker display ──────────────────────────────
+        const tkY5=H*0.94;
+        ctx.fillStyle="rgba(8,2,0,0.88)"; ctx.fillRect(0,tkY5,W,H*0.035);
+        ctx.fillStyle=`rgba(255,100,0,${0.75+0.25*Math.sin(tH*4)})`; rr(W*0.005,tkY5+H*0.001,W*0.05,H*0.027,3); ctx.fill();
+        ctx.fillStyle="#0a0200"; ctx.font=`bold ${Math.round(H*0.017)}px monospace`; ctx.textAlign="left";
+        ctx.fillText("LIVE",W*0.005+W*0.05*0.14,tkY5+H*0.001+H*0.027*0.75);
+        const btcVal=Math.floor(69000+Math.sin(tH*0.3)*2000).toLocaleString();
+        const ethVal=Math.floor(3800+Math.sin(tH*0.4)*200).toLocaleString();
+        const tkTxtH=`🔥 INFERNO DEN  ✦  ROOT ACCESS: GRANTED  ✦  BTC $${btcVal}  ✦  ETH $${ethVal}  ✦  FIREWALL: BYPASSED  ✦  PAYLOAD DEPLOYED  ✦  TARGET: ${Math.floor(tH*7)%256}.${Math.floor(tH*13)%256}.0.1  ✦  `;
+        const tkXH=W*0.06+W-(tH*55)%(W+2000);
+        ctx.save(); ctx.beginPath(); ctx.rect(W*0.06,tkY5,W-W*0.06,H*0.032); ctx.clip();
+        ctx.fillStyle="#FFCC88"; ctx.font=`bold ${Math.round(H*0.017)}px monospace`; ctx.textAlign="left";
+        ctx.fillText(tkTxtH,tkXH,tkY5+H*0.021); ctx.restore();
+
+        // ── Ambient ember sparks ───────────────────────────────
+        for (let pi=0;pi<18;pi++) {
+          const fpx=(Math.sin(pi*2.3+tH*0.38)*0.44+0.5)*W, fpy=(Math.cos(pi*1.7+tH*0.25)*0.4+0.5)*(H*0.88);
+          const pA=0.07+0.05*Math.sin(tH*1.4+pi);
+          ctx.fillStyle=pi%3===0?`rgba(255,100,0,${pA})`:pi%3===1?`rgba(255,60,0,${pA})`:`rgba(255,160,0,${pA})`;
+          ctx.beginPath(); ctx.arc(fpx,fpy,1.8,0,Math.PI*2); ctx.fill();
+        }
+
+      } else {
+        // ── DEFAULT: Monitor wall (top) ───────────────────────
+        for (let mi = 0; mi < 4; mi++) {
+          const mx2 = cx - W * 0.4 + mi * ((W * 0.8) / 3);
+          ctx.fillStyle = "#050a08";
+          ctx.strokeStyle = "#00FF88";
+          ctx.lineWidth = 1;
+          rr(mx2 - 18, topY + 4, 36, 28, 2);
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#001a10";
+          ctx.fillRect(mx2 - 16, topY + 6, 32, 24);
+          ctx.fillStyle = "#00FF88";
+          ctx.shadowColor = "#00FF44";
+          ctx.shadowBlur = 6;
+          ctx.font = "4px monospace";
+          ctx.textAlign = "center";
+          for (let li = 0; li < 4; li++) {
+            const lineText = "01" + Math.floor(Math.sin(li*7+mi*13)*500+500).toString().padStart(4, "0");
+            ctx.fillText(lineText, mx2, topY + 10 + li * 5);
+          }
+          ctx.shadowBlur = 0;
+        }
+        // ── Hacker desk (center) ─────────────────────
+        ctx.fillStyle = "#050a08"; ctx.strokeStyle = "#00FF88"; ctx.lineWidth = 1.5;
+        rr(cx - 52, midY - 8, 104, 32, 4); ctx.fill(); ctx.stroke();
+        for (let mi2 = -1; mi2 <= 1; mi2++) {
+          ctx.fillStyle = "#020806"; ctx.strokeStyle = "#00FF44"; ctx.lineWidth = 1;
+          rr(cx + mi2 * 34 - 14, midY - 24, 28, 18, 2); ctx.fill(); ctx.stroke();
+          ctx.fillStyle = "#001a10"; ctx.fillRect(cx + mi2 * 34 - 12, midY - 22, 24, 14);
+          ctx.fillStyle = "#00FF88"; ctx.shadowColor = "#00FF44"; ctx.shadowBlur = 5;
+          ctx.fillRect(cx + mi2 * 34 - 10, midY - 20, 20, 4);
+          ctx.fillRect(cx + mi2 * 34 - 10, midY - 14, 20, 2); ctx.shadowBlur = 0;
+        }
+        ctx.fillStyle = "#0a1208"; rr(cx - 30, midY - 4, 60, 12, 2); ctx.fill();
+        for (let ki = 0; ki < 9; ki++) {
+          ctx.fillStyle = `rgba(0,255,136,${0.3+0.4*Math.abs(Math.sin(ki*1.3))})`;
+          ctx.fillRect(cx - 28 + ki * 7, midY - 2, 5, 8);
+        }
+        ctx.fillStyle = "#4a2a10"; ctx.strokeStyle = "#8a5a28"; ctx.lineWidth = 1;
+        for (let pi = 0; pi < 3; pi++) {
+          rr(cx - W * 0.4 + pi * 24, midY + 28, 22, 22, 1); ctx.fill(); ctx.stroke();
+          ctx.fillStyle = "#FF6622";
+          ctx.beginPath(); ctx.arc(cx - W * 0.4 + pi * 24 + 11, midY + 39, 8, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = "#4a2a10";
+        }
       }
     } else if (type === 19) {
       // DOJO
