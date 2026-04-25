@@ -1055,6 +1055,128 @@ Game.prototype._render = function() {
             ctx.shadowBlur = 14;
             ctx.fillText("[E]  ENTER WARP", 0, -66);
           }
+        } else if (!!this.map.config.jungle) {
+          // ── JUNGLE SAFARI: Bioluminescent vine gate — leaf green / firefly amber ──
+          const t = p._animT;
+          const pulse2 = Math.sin(t * 2.2) * 0.3 + 0.7;
+          const pulse3 = Math.sin(t * 4.5) * 0.2 + 0.8;
+
+          // Wide soft jungle mist halo
+          const haloGJ = ctx.createRadialGradient(0, 0, 10, 0, 0, 55);
+          haloGJ.addColorStop(0, `rgba(68,221,34,${pulse * 0.18})`);
+          haloGJ.addColorStop(0.5, `rgba(30,120,10,${pulse * 0.10})`);
+          haloGJ.addColorStop(1, "rgba(0,0,0,0)");
+          ctx.fillStyle = haloGJ;
+          ctx.beginPath();
+          ctx.arc(0, 0, 55, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Outer rotating ring — bright leaf green dashes
+          ctx.save();
+          ctx.rotate(t * 0.4);
+          ctx.strokeStyle = `rgba(68,221,34,${pulse * 0.72})`;
+          ctx.lineWidth = 2;
+          ctx.setLineDash([9, 11]);
+          ctx.beginPath();
+          ctx.arc(0, 0, 40, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.restore();
+
+          // Middle counter-rotating ring — firefly amber dashes
+          ctx.save();
+          ctx.rotate(-t * 0.7);
+          ctx.strokeStyle = `rgba(255,170,68,${pulse2 * 0.62})`;
+          ctx.lineWidth = 1.5;
+          ctx.setLineDash([5, 9]);
+          ctx.beginPath();
+          ctx.arc(0, 0, 32, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.restore();
+
+          // Inner fast ring — pale lime shimmer
+          ctx.save();
+          ctx.rotate(t * 1.3);
+          ctx.strokeStyle = `rgba(160,255,80,${pulse3 * 0.30})`;
+          ctx.lineWidth = 1;
+          ctx.setLineDash([3, 7]);
+          ctx.beginPath();
+          ctx.arc(0, 0, 23, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.restore();
+
+          // Deep jungle core gradient — lime → jungle green → near black
+          const coreGJ = ctx.createRadialGradient(0, 0, 0, 0, 0, 26);
+          coreGJ.addColorStop(0, `rgba(180,255,80,${pulse3 * 0.95})`);
+          coreGJ.addColorStop(0.25, `rgba(68,221,34,${pulse2 * 0.72})`);
+          coreGJ.addColorStop(0.65, `rgba(20,80,8,${pulse * 0.42})`);
+          coreGJ.addColorStop(1, "rgba(0,0,0,0)");
+          ctx.fillStyle = coreGJ;
+          ctx.beginPath();
+          ctx.arc(0, 0, 26, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Orbiting particles — 8 alternating leaf green + firefly amber
+          for (let i = 0; i < 8; i++) {
+            const angle = t * 1.8 + (i * Math.PI) / 4;
+            const dist = 24 + Math.sin(t * 2.5 + i * 1.2) * 6;
+            const gpJ = Math.cos(angle) * dist;
+            const hpJ = Math.sin(angle) * dist;
+            const rJ = i % 3 === 0 ? 2.8 : 1.8;
+            ctx.fillStyle = i % 2 === 0
+              ? `rgba(68,221,34,${pulse})`
+              : `rgba(255,170,68,${pulse2})`;
+            ctx.beginPath();
+            ctx.arc(gpJ, hpJ, rJ, 0, Math.PI * 2);
+            ctx.fill();
+          }
+
+          // Bright central bioluminescent core
+          ctx.shadowColor = "#44DD22";
+          ctx.shadowBlur = 24 * pulse;
+          ctx.fillStyle = `rgba(200,255,140,${pulse3})`;
+          ctx.beginPath();
+          ctx.arc(0, 0, 7, 0, Math.PI * 2);
+          ctx.fill();
+
+          // 8-point vine/leaf gate frame — jungle green
+          ctx.shadowBlur = 16 * pulse;
+          ctx.strokeStyle = `rgba(68,221,34,${pulse})`;
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          for (let i = 0; i < 8; i++) {
+            const ang = (Math.PI / 4) * i - Math.PI / 2;
+            const fr = i % 2 === 0 ? 30 : 20;
+            const fxJ = Math.cos(ang) * fr;
+            const fyJ = Math.sin(ang) * fr;
+            i === 0 ? ctx.moveTo(fxJ, fyJ) : ctx.lineTo(fxJ, fyJ);
+          }
+          ctx.closePath();
+          ctx.stroke();
+
+          // Amber firefly accent ring
+          ctx.shadowBlur = 8 * pulse2;
+          ctx.strokeStyle = `rgba(255,170,68,${pulse2 * 0.45})`;
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.arc(0, 0, 25, 0, Math.PI * 2);
+          ctx.stroke();
+
+          ctx.shadowBlur = 0;
+          ctx.fillStyle = near ? "#CCFFAA" : "#44DD22";
+          ctx.font = "bold 9px Orbitron, monospace";
+          ctx.textAlign = "center";
+          ctx.shadowColor = "#22BB00";
+          ctx.shadowBlur = 12;
+          ctx.fillText("🌿 VINE GATE 🌿", 0, -52);
+          if (near) {
+            ctx.fillStyle = "#CCFFAA";
+            ctx.shadowColor = "#88FF44";
+            ctx.shadowBlur = 14;
+            ctx.fillText("[E]  ENTER GATE", 0, -66);
+          }
         } else {
           // ── DEFAULT portal style ──────────────────────────────────
           ctx.shadowColor = "#44EEFF";

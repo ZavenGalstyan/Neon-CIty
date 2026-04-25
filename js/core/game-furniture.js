@@ -7152,9 +7152,10 @@ Game.prototype._renderIndoorFurniture = function(ctx, room) {
       ctx.restore();
       }
     } else if (type === 13) {
-      // TECH LAB / WASTELAND TECH SHOP / FROZEN TUNDRA CRYO LAB
+      // TECH LAB / WASTELAND TECH SHOP / FROZEN TUNDRA CRYO LAB / ROBOT CITY
       const isTechShop = room.isTechShop;
       const isSnowTech = !!this.map?.config?.snow;
+      const isRobotTech = !!this.map?.config?.robot;
 
       if (isSnowTech) {
         // ═══ FROZEN TUNDRA: CRYO TECH LAB ═══
@@ -7535,6 +7536,282 @@ Game.prototype._renderIndoorFurniture = function(ctx, room) {
           ctx.beginPath();ctx.arc(fx,fy,1.6,0,Math.PI*2);ctx.fill();
         }
         ctx.shadowBlur=0;ctx.restore();
+      } else if (isRobotTech) {
+        // ═══ ROBOT CITY: MECH TECH LAB ═══
+        const tR = performance.now() / 1000;
+
+        // ── Dark teal circuit floor ────────────────────────────
+        ctx.fillStyle = "#020a0d"; ctx.fillRect(0,0,W,H);
+        const tSzR=Math.round(W/16);
+        for (let gy=0;gy<=Math.ceil(H/tSzR);gy++) for (let gx=0;gx<=Math.ceil(W/tSzR);gx++) {
+          const ftx=gx*tSzR,fty=gy*tSzR,fsd=gx*13+gy*7;
+          ctx.fillStyle=fsd%3===0?"rgba(2,14,18,0.97)":fsd%3===1?"rgba(3,16,20,0.97)":"rgba(2,12,16,0.97)";
+          ctx.fillRect(ftx,fty,tSzR,tSzR);
+          ctx.strokeStyle=`rgba(0,255,176,${0.05+0.03*Math.sin(tR*0.7+fsd*0.12)})`;
+          ctx.lineWidth=0.7; ctx.strokeRect(ftx,fty,tSzR,tSzR);
+        }
+
+        // ── Room border ────────────────────────────────────────
+        ctx.strokeStyle=`rgba(0,255,176,${0.6+0.2*Math.sin(tR*1.3)})`; ctx.lineWidth=3;
+        ctx.strokeRect(2,2,W-4,H-4);
+        ctx.strokeStyle="rgba(0,200,140,0.22)"; ctx.lineWidth=1; ctx.strokeRect(7,7,W-14,H-14);
+
+        // ── Ceiling scan-lights (one flickers) ────────────────
+        const hLXR=[W*0.15,W*0.40,W*0.65,W*0.88];
+        for (let li=0;li<4;li++) {
+          const lx=hLXR[li], fl=li===3?(0.55+0.45*Math.sin(tR*13.1)):1;
+          const lc=ctx.createRadialGradient(lx,0,2,lx,H*0.28,W*0.13);
+          lc.addColorStop(0,`rgba(0,255,176,${0.10*fl})`); lc.addColorStop(1,"rgba(0,0,0,0)");
+          ctx.fillStyle=lc; ctx.beginPath(); ctx.moveTo(lx-5,0); ctx.lineTo(lx-W*0.08,H*0.35); ctx.lineTo(lx+W*0.08,H*0.35); ctx.closePath(); ctx.fill();
+          ctx.fillStyle=`rgba(0,255,176,${0.8*fl})`; ctx.shadowColor="#00FFB0"; ctx.shadowBlur=10*fl;
+          ctx.beginPath(); ctx.arc(lx,5,4,0,Math.PI*2); ctx.fill(); ctx.shadowBlur=0;
+        }
+
+        // ── MECH TECH LAB banner ───────────────────────────────
+        const bWR=W*0.56, bHR=H*0.042, bXR=cx-bWR/2, bYR=room.S-bHR-4;
+        const bGrR=ctx.createLinearGradient(bXR,bYR,bXR+bWR,bYR);
+        bGrR.addColorStop(0,"rgba(0,14,10,0.97)"); bGrR.addColorStop(0.5,"rgba(0,38,28,0.99)"); bGrR.addColorStop(1,"rgba(0,14,10,0.97)");
+        ctx.fillStyle=bGrR; rr(bXR,bYR,bWR,bHR,7); ctx.fill();
+        ctx.strokeStyle=`rgba(0,255,176,${0.7+0.3*Math.sin(tR*1.8)})`; ctx.lineWidth=2; ctx.stroke();
+        ctx.fillStyle="#AAFFD8"; ctx.font=`bold ${Math.round(bHR*0.55)}px monospace`; ctx.textAlign="center";
+        ctx.shadowColor="#00FFB0"; ctx.shadowBlur=14;
+        ctx.fillText("⚡  MECH  TECH  LAB  ⚡",cx,bYR+bHR*0.72); ctx.shadowBlur=0;
+
+        // ── SYSTEM ALERT sign (blink) ──────────────────────────
+        const rWarnR=0.7+0.3*Math.sin(tR*3.5);
+        const rWR=W*0.13, rHR=H*0.038;
+        ctx.fillStyle=`rgba(0,255,176,${rWarnR})`; ctx.shadowColor="#00FFB0"; ctx.shadowBlur=14*rWarnR;
+        rr(cx-rWR/2,topY+H*0.04,rWR,rHR,5); ctx.fill(); ctx.shadowBlur=0;
+        ctx.strokeStyle=`rgba(0,200,140,${rWarnR})`; ctx.lineWidth=1.5; ctx.stroke();
+        ctx.fillStyle="#020a0d"; ctx.font=`bold ${Math.round(rHR*0.5)}px monospace`; ctx.textAlign="center";
+        ctx.fillText("⚡ SYSTEM ONLINE ⚡",cx,topY+H*0.04+rHR*0.7);
+
+        // ── Top: neural server rack (full width) ──────────────
+        const srvYR=topY+H*0.005, srvHR=H*0.065;
+        const srvBgR=ctx.createLinearGradient(W*0.04,srvYR,W*0.96,srvYR+srvHR);
+        srvBgR.addColorStop(0,"#020a0d"); srvBgR.addColorStop(0.5,"#031418"); srvBgR.addColorStop(1,"#020a0d");
+        ctx.fillStyle=srvBgR; rr(W*0.04,srvYR,W*0.92,srvHR,5); ctx.fill();
+        ctx.strokeStyle="rgba(0,220,160,0.65)"; ctx.lineWidth=1.5; ctx.stroke();
+        for (let si=0;si<12;si++) {
+          const sx=W*0.05+si*(W*0.9/12);
+          ctx.fillStyle="#020a0d"; ctx.strokeStyle="rgba(0,180,130,0.38)"; ctx.lineWidth=0.7;
+          ctx.fillRect(sx,srvYR+3,W*0.068,srvHR-6); ctx.strokeRect(sx,srvYR+3,W*0.068,srvHR-6);
+          const lCR=["#00FFB0","#44FFCC","#00DDA0","#66FFD0","#00CC90","#88FFE0","#00FFB0","#44FFCC","#00DDA0","#00CC90","#66FFD0","#AAFFD8"][si];
+          const lAR=0.5+0.5*Math.sin(tR*(1.2+si*0.25)+si);
+          ctx.fillStyle=lCR; ctx.shadowColor=lCR; ctx.shadowBlur=4*lAR;
+          ctx.fillRect(sx+2,srvYR+4,W*0.05,3); ctx.shadowBlur=0;
+          const daR=Math.sin(tR*(3+si*0.7)+si)>0.4;
+          ctx.fillStyle=daR?"#00FFB0":"#031418";
+          ctx.beginPath(); ctx.arc(sx+W*0.057,srvYR+srvHR-6,2.5,0,Math.PI*2); ctx.fill();
+        }
+
+        // ── Main workstation desk ──────────────────────────────
+        const dYR=topY+H*0.10, dH3R=H*0.055, dW3R=W*0.82, dX3R=cx-dW3R/2;
+        const dBgR=ctx.createLinearGradient(dX3R,dYR,dX3R+dW3R,dYR+dH3R);
+        dBgR.addColorStop(0,"#020a0d"); dBgR.addColorStop(0.5,"#041418"); dBgR.addColorStop(1,"#020a0d");
+        ctx.fillStyle=dBgR; rr(dX3R,dYR,dW3R,dH3R,6); ctx.fill();
+        ctx.strokeStyle="rgba(0,220,160,0.82)"; ctx.lineWidth=2; ctx.stroke();
+        ctx.strokeStyle=`rgba(0,255,176,${0.42+0.25*Math.sin(tR*1.5)})`; ctx.lineWidth=1.5;
+        ctx.beginPath(); ctx.moveTo(dX3R+10,dYR+dH3R-2); ctx.lineTo(dX3R+dW3R-10,dYR+dH3R-2); ctx.stroke();
+        // Keyboard
+        ctx.fillStyle="#020a0d"; rr(dX3R+dW3R*0.04,dYR+4,dW3R*0.2,dH3R-8,3); ctx.fill();
+        ctx.strokeStyle="rgba(0,180,130,0.38)"; ctx.lineWidth=0.8; ctx.stroke();
+        for (let ki=0;ki<10;ki++) { const kr=Math.floor(ki/5),kc=ki%5; ctx.fillStyle=`rgba(0,255,176,${0.24+0.14*Math.sin(tR+ki)})`; ctx.fillRect(dX3R+dW3R*0.05+kc*dW3R*0.036,dYR+6+kr*7,dW3R*0.028,5); }
+
+        // Holo-display above desk
+        const hW3R=W*0.26, hH4R=H*0.13, hX3R=cx-hW3R/2, hY3R=dYR-hH4R-H*0.006;
+        const glitchR=(Math.sin(tR*8.1)>0.88)?Math.sin(tR*28)*3:0;
+        ctx.fillStyle="rgba(2,10,14,0.93)"; rr(hX3R+glitchR,hY3R,hW3R,hH4R,5); ctx.fill();
+        ctx.strokeStyle=`rgba(0,255,176,${0.6+0.3*Math.sin(tR*2.1)})`; ctx.lineWidth=1.5; ctx.stroke();
+        ctx.fillStyle="#00FFB0"; ctx.font=`bold ${Math.round(hH4R*0.13)}px monospace`; ctx.textAlign="center";
+        ctx.shadowColor="#00DDA0"; ctx.shadowBlur=8;
+        ctx.fillText("⚡ MECH ONLINE ⚡",cx+glitchR*0.5,hY3R+hH4R*0.22); ctx.shadowBlur=0;
+        const dLinesR=["CPU: 99.9%","BOTS: 1,024","TEMP: 88°C","GRID: LIVE","UPLINK: OK"];
+        for (let dl=0;dl<5;dl++) {
+          ctx.fillStyle=dl===2?`rgba(255,180,0,0.9)`:`rgba(0,255,176,${dl%2===0?0.88:0.55})`;
+          ctx.font=`${Math.round(hH4R*0.1)}px monospace`; ctx.textAlign="left";
+          ctx.fillText(dLinesR[dl],hX3R+hW3R*0.06+glitchR,hY3R+hH4R*0.35+dl*hH4R*0.13);
+        }
+        ctx.strokeStyle="rgba(0,255,176,0.55)"; ctx.lineWidth=1.2;
+        ctx.beginPath();
+        for (let wx=0;wx<hW3R-10;wx+=2) { const wy=hY3R+hH4R*0.82+hH4R*0.1*Math.sin(tR*6.2+wx*0.22); wx===0?ctx.moveTo(hX3R+5+wx,wy):ctx.lineTo(hX3R+5+wx,wy); }
+        ctx.stroke();
+
+        // ── LEFT: Plasma arc generator ────────────────────────
+        const tcXR=W*0.06, tcYR=H*0.28, tcWR=W*0.11, tcHR=H*0.52;
+        ctx.fillStyle="#020a0d"; ctx.strokeStyle="rgba(0,220,160,0.7)"; ctx.lineWidth=2;
+        rr(tcXR,tcYR+tcHR-tcHR*0.11,tcWR,tcHR*0.11,5); ctx.fill(); ctx.stroke();
+        const cColR=ctx.createLinearGradient(tcXR+tcWR*0.3,tcYR,tcXR+tcWR*0.7,tcYR);
+        cColR.addColorStop(0,"#040e12"); cColR.addColorStop(0.5,"#071822"); cColR.addColorStop(1,"#040e12");
+        ctx.fillStyle=cColR; ctx.strokeStyle="rgba(0,180,130,0.48)"; ctx.lineWidth=1.5;
+        ctx.fillRect(tcXR+tcWR*0.3,tcYR+tcHR*0.14,tcWR*0.4,tcHR*0.73); ctx.strokeRect(tcXR+tcWR*0.3,tcYR+tcHR*0.14,tcWR*0.4,tcHR*0.73);
+        for (let ci=0;ci<8;ci++) {
+          const cyR=tcYR+tcHR*0.17+ci*(tcHR*0.64/8);
+          ctx.strokeStyle=`rgba(0,${200+ci*6},${140+ci*4},0.45)`; ctx.lineWidth=2;
+          ctx.beginPath(); ctx.ellipse(tcXR+tcWR/2,cyR,tcWR*0.43,tcHR*0.024,0,0,Math.PI*2); ctx.stroke();
+        }
+        const tsRR=tcWR*0.4;
+        const tsGR=ctx.createRadialGradient(tcXR+tcWR/2,tcYR+tsRR*0.45,tsRR*0.08,tcXR+tcWR/2,tcYR+tsRR*0.45,tsRR);
+        tsGR.addColorStop(0,"#0a2820"); tsGR.addColorStop(0.5,"#061a14"); tsGR.addColorStop(1,"#020a0d");
+        ctx.fillStyle=tsGR; ctx.strokeStyle=`rgba(0,255,176,${0.6+0.3*Math.sin(tR*2)})`; ctx.lineWidth=2;
+        ctx.beginPath(); ctx.arc(tcXR+tcWR/2,tcYR+tsRR*0.52,tsRR,0,Math.PI*2); ctx.fill(); ctx.stroke();
+        for (let ai=0;ai<6;ai++) {
+          const aSR=Math.floor(tR*4+ai*3.1)%7;
+          const aX6=tcXR+tcWR/2, aY6=tcYR+tsRR*0.52;
+          const aX7=aX6+Math.sin(ai*1.3+tR*2+aSR)*tcWR*0.9, aY7=aY6+Math.cos(ai*1.1+tR*1.7+aSR)*tcWR*0.7;
+          const aA3=0.4+0.5*Math.abs(Math.sin(tR*7+ai));
+          ctx.strokeStyle=`rgba(0,255,176,${aA3})`; ctx.lineWidth=1;
+          ctx.beginPath(); ctx.moveTo(aX6,aY6); ctx.quadraticCurveTo(aX6+(aX7-aX6)*0.5+Math.sin(tR*11+ai)*8,aY6+(aY7-aY6)*0.5+Math.cos(tR*9+ai)*7,aX7,aY7); ctx.stroke();
+          ctx.fillStyle=`rgba(0,255,200,${aA3*0.7})`; ctx.shadowColor="#00FFB0"; ctx.shadowBlur=6*aA3;
+          ctx.beginPath(); ctx.arc(aX7,aY7,2,0,Math.PI*2); ctx.fill(); ctx.shadowBlur=0;
+        }
+        ctx.fillStyle="#00FFB0"; ctx.font=`bold ${Math.round(tcWR*0.28)}px monospace`; ctx.textAlign="center";
+        ctx.shadowColor="#00DDA0"; ctx.shadowBlur=8;
+        ctx.fillText("PLASMA",tcXR+tcWR/2,tcYR+tcHR+12); ctx.shadowBlur=0;
+
+        // ── CENTER: Bot assembly schematic table ───────────────
+        const htXR=cx-W*0.11, htYR=midY-H*0.065, htWR=W*0.22, htHR=H*0.13;
+        ctx.fillStyle="rgba(2,10,14,0.88)"; rr(htXR,htYR,htWR,htHR,5); ctx.fill();
+        ctx.strokeStyle=`rgba(0,220,160,${0.5+0.3*Math.sin(tR*1.4)})`; ctx.lineWidth=1.5; ctx.stroke();
+        // Robot schematic grid
+        ctx.strokeStyle=`rgba(0,255,176,${0.18+0.08*Math.sin(tR*2)})`; ctx.lineWidth=1;
+        for (let gr=1;gr<=3;gr++) { ctx.beginPath(); ctx.ellipse(htXR+htWR/2,htYR+htHR/2,htWR*0.42*gr/3,htHR*0.42*gr/3,0,0,Math.PI*2); ctx.stroke(); }
+        ctx.beginPath(); ctx.moveTo(htXR+htWR*0.08,htYR+htHR/2); ctx.lineTo(htXR+htWR*0.92,htYR+htHR/2); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(htXR+htWR/2,htYR+htHR*0.1); ctx.lineTo(htXR+htWR/2,htYR+htHR*0.9); ctx.stroke();
+        // Bot shape schematic
+        const bsCX=htXR+htWR/2, bsCY=htYR+htHR/2;
+        const bsP=0.5+0.5*Math.sin(tR*2.5);
+        ctx.fillStyle=`rgba(0,255,176,${0.55*bsP})`; ctx.shadowColor="#00FFB0"; ctx.shadowBlur=6*bsP;
+        ctx.fillRect(bsCX-7,bsCY-12,14,10); // body
+        ctx.fillRect(bsCX-5,bsCY-18,10,7);  // head
+        ctx.fillRect(bsCX-11,bsCY-10,3,8);  // left arm
+        ctx.fillRect(bsCX+8,bsCY-10,3,8);   // right arm
+        ctx.fillRect(bsCX-5,bsCY-2,4,9);    // left leg
+        ctx.fillRect(bsCX+1,bsCY-2,4,9);    // right leg
+        ctx.shadowBlur=0;
+        ctx.fillStyle="#00FFB0"; ctx.font=`bold ${Math.round(htHR*0.14)}px monospace`; ctx.textAlign="center";
+        ctx.fillText("BOT SCHEMATIC",htXR+htWR/2,htYR+htHR+12);
+
+        // ── CENTER-LEFT: Circuit board panel ──────────────────
+        const cpXR=cx-W*0.35, cpYR=midY-H*0.14, cpWR=W*0.13, cpHR=H*0.28;
+        ctx.fillStyle="#020a0d"; ctx.strokeStyle="rgba(0,220,160,0.5)"; ctx.lineWidth=1.5;
+        rr(cpXR,cpYR,cpWR,cpHR,4); ctx.fill(); ctx.stroke();
+        ctx.strokeStyle="rgba(0,200,150,0.35)"; ctx.lineWidth=1;
+        const cpTxR=[cpXR+8,cpXR+cpWR*0.35,cpXR+cpWR*0.6,cpXR+cpWR-8];
+        for (let px2=0;px2<4;px2++) { ctx.beginPath(); ctx.moveTo(cpTxR[px2],cpYR+8); ctx.lineTo(cpTxR[px2],cpYR+cpHR-8); ctx.stroke(); }
+        const cpTyR=[cpYR+cpHR*0.25,cpYR+cpHR*0.5,cpYR+cpHR*0.75];
+        for (let py2=0;py2<3;py2++) { ctx.beginPath(); ctx.moveTo(cpXR+8,cpTyR[py2]); ctx.lineTo(cpXR+cpWR-8,cpTyR[py2]); ctx.stroke(); }
+        const icsR=[{x:cpXR+cpWR*0.15,y:cpYR+cpHR*0.2},{x:cpXR+cpWR*0.55,y:cpYR+cpHR*0.45},{x:cpXR+cpWR*0.2,y:cpYR+cpHR*0.65}];
+        for (const icR of icsR) {
+          ctx.fillStyle="#040e12"; ctx.strokeStyle="rgba(0,255,176,0.5)"; ctx.lineWidth=1;
+          ctx.fillRect(icR.x-8,icR.y-5,16,10); ctx.strokeRect(icR.x-8,icR.y-5,16,10);
+          ctx.fillStyle=`rgba(0,255,176,${0.5+0.3*Math.sin(tR*2+icR.x)})`; ctx.shadowColor="#00FFB0"; ctx.shadowBlur=4;
+          ctx.beginPath(); ctx.arc(icR.x,icR.y,3,0,Math.PI*2); ctx.fill(); ctx.shadowBlur=0;
+        }
+        ctx.fillStyle="#00FFB0"; ctx.font=`bold ${Math.round(cpHR*0.09)}px monospace`; ctx.textAlign="center";
+        ctx.fillText("CIRCUIT ARRAY",cpXR+cpWR/2,cpYR+cpHR+12);
+
+        // ── CENTER-RIGHT: System diagnostic panel ─────────────
+        const gmXR=cx+W*0.22, gmYR=midY-H*0.11, gmWR=W*0.13, gmHR=H*0.22;
+        ctx.fillStyle="#020a0d"; ctx.strokeStyle="rgba(0,220,160,0.5)"; ctx.lineWidth=1.5;
+        rr(gmXR,gmYR,gmWR,gmHR,4); ctx.fill(); ctx.stroke();
+        ctx.fillStyle="#00FFB0"; ctx.font=`bold ${Math.round(gmHR*0.1)}px monospace`; ctx.textAlign="center";
+        ctx.fillText("DIAG PANEL",gmXR+gmWR/2,gmYR+gmHR*0.15);
+        const dCXR=gmXR+gmWR/2, dCYR=gmYR+gmHR*0.5, dRR=gmWR*0.35;
+        ctx.strokeStyle="rgba(0,200,150,0.3)"; ctx.lineWidth=1;
+        ctx.beginPath(); ctx.arc(dCXR,dCYR,dRR,Math.PI,2*Math.PI); ctx.stroke();
+        ctx.strokeStyle="rgba(0,200,150,0.15)"; ctx.lineWidth=0.8;
+        for (let mk=0;mk<=5;mk++) {
+          const angR=Math.PI+mk*Math.PI/5;
+          ctx.beginPath(); ctx.moveTo(dCXR+Math.cos(angR)*(dRR-4),dCYR+Math.sin(angR)*(dRR-4));
+          ctx.lineTo(dCXR+Math.cos(angR)*dRR,dCYR+Math.sin(angR)*dRR); ctx.stroke();
+        }
+        const nAngR=Math.PI+Math.PI*((Math.sin(tR*0.8)*0.5+0.5)*0.9+0.05);
+        ctx.strokeStyle="#00FFB0"; ctx.lineWidth=2; ctx.shadowColor="#00DDA0"; ctx.shadowBlur=6;
+        ctx.beginPath(); ctx.moveTo(dCXR,dCYR); ctx.lineTo(dCXR+Math.cos(nAngR)*dRR*0.85,dCYR+Math.sin(nAngR)*dRR*0.85); ctx.stroke(); ctx.shadowBlur=0;
+        ctx.fillStyle="#00CC90"; ctx.beginPath(); ctx.arc(dCXR,dCYR,3,0,Math.PI*2); ctx.fill();
+        const cpuVal=Math.floor(88+Math.sin(tR*1.3)*8);
+        ctx.fillStyle="#AAFFD8"; ctx.font=`bold ${Math.round(gmHR*0.09)}px monospace`; ctx.textAlign="center";
+        ctx.fillText(`CPU ${cpuVal}%`,dCXR,gmYR+gmHR*0.82);
+        ctx.fillStyle="#00CC90"; ctx.font=`${Math.round(gmHR*0.08)}px monospace`;
+        ctx.fillText("LOAD",dCXR,gmYR+gmHR*0.92);
+
+        // ── RIGHT: Tech fluid racks ────────────────────────────
+        const vrXR=W*0.78, vrYR=H*0.28, vrWR=W*0.2, vrHR=H*0.52;
+        ctx.fillStyle="#020a0d"; ctx.strokeStyle="rgba(0,220,160,0.5)"; ctx.lineWidth=1.5;
+        rr(vrXR,vrYR,vrWR,vrHR,5); ctx.fill(); ctx.stroke();
+        const vialsR=[{l:"COOLANT",c:"rgba(0,255,176,0.9)"},{l:"NANO-OIL",c:"rgba(0,220,255,0.9)"},{l:"PLASMA",c:"rgba(100,255,220,0.9)"},{l:"SYNC-GEL",c:"rgba(0,200,150,0.9)"},{l:"SERVO",c:"rgba(0,255,130,0.9)"},{l:"BOOST",c:"rgba(44,255,200,0.9)"}];
+        for (let vi=0;vi<6;vi++) {
+          const vc=vi%2, vr=Math.floor(vi/2);
+          const vxR=vrXR+vrWR*0.14+vc*vrWR*0.48, vyR=vrYR+vrHR*0.1+vr*vrHR*0.3;
+          const vWR=vrWR*0.28, vHR=vrHR*0.22;
+          ctx.fillStyle="rgba(2,10,14,0.9)"; rr(vxR,vyR,vWR,vHR,4); ctx.fill();
+          ctx.strokeStyle=vialsR[vi].c; ctx.lineWidth=1.5; ctx.stroke();
+          const vFillR=0.3+Math.sin(tR*0.7+vi*1.1)*0.25+0.4;
+          const vGrR=ctx.createLinearGradient(vxR,vyR+vHR*(1-vFillR),vxR,vyR+vHR);
+          vGrR.addColorStop(0,vialsR[vi].c.replace(",0.9)",",0.75)")); vGrR.addColorStop(1,vialsR[vi].c.replace(",0.9)",",0.3)"));
+          ctx.fillStyle=vGrR; ctx.fillRect(vxR+2,vyR+vHR*(1-vFillR)+2,vWR-4,vHR*vFillR-4);
+          ctx.fillStyle=vialsR[vi].c; ctx.shadowColor=vialsR[vi].c; ctx.shadowBlur=6+3*Math.sin(tR+vi);
+          ctx.beginPath(); ctx.arc(vxR+vWR/2,vyR+vHR*0.3,3,0,Math.PI*2); ctx.fill(); ctx.shadowBlur=0;
+          ctx.fillStyle="#AAFFD8"; ctx.font=`bold ${Math.round(vHR*0.2)}px monospace`; ctx.textAlign="center";
+          ctx.fillText(vialsR[vi].l,vxR+vWR/2,vyR+vHR+11);
+        }
+
+        // ── BOTTOM: 4 data core bins ──────────────────────────
+        const binWR=W*0.17, binHR=H*0.075;
+        for (let bi=0;bi<4;bi++) {
+          const bx=W*0.07+bi*(W*0.85/4), by=H*0.82;
+          ctx.fillStyle="#020a0d"; ctx.strokeStyle="rgba(0,200,150,0.4)"; ctx.lineWidth=1.5;
+          rr(bx,by,binWR,binHR,4); ctx.fill(); ctx.stroke();
+          const bFillR=0.2+((bi*0.19+Math.sin(tR*0.6+bi)*0.08)%0.7);
+          const bGrRB=ctx.createLinearGradient(bx,by+binHR*(1-bFillR),bx,by+binHR);
+          bGrRB.addColorStop(0,"rgba(0,255,176,0.5)"); bGrRB.addColorStop(1,"rgba(0,180,130,0.25)");
+          ctx.fillStyle=bGrRB; ctx.fillRect(bx+2,by+binHR*(1-bFillR)+2,binWR-4,binHR*bFillR-4);
+          ctx.strokeStyle=`rgba(0,255,176,${0.4+0.3*Math.sin(tR*2+bi)})`; ctx.lineWidth=1;
+          ctx.strokeRect(bx+2,by+binHR*(1-bFillR)+2,binWR-4,binHR*bFillR-4);
+          const labelsR=["CORE-A","CORE-B","CACHE","NET BUS"];
+          ctx.fillStyle="#00DDA0"; ctx.font=`bold ${Math.round(binHR*0.25)}px monospace`; ctx.textAlign="center";
+          ctx.fillText(labelsR[bi],bx+binWR/2,by+binHR*0.65);
+          ctx.fillStyle="#AAFFD8"; ctx.font=`${Math.round(binHR*0.2)}px monospace`;
+          ctx.fillText(`${Math.round(bFillR*100)}%`,bx+binWR/2,by+binHR+12);
+        }
+
+        // ── Trophy shelf ───────────────────────────────────────
+        const trXR=W*0.80, trYR=H*0.28+H*0.56, trWR=W*0.18, trHR=H*0.065;
+        ctx.fillStyle="#030e12"; ctx.strokeStyle="rgba(0,200,150,0.35)"; ctx.lineWidth=1;
+        rr(trXR,trYR,trWR,trHR,3); ctx.fill(); ctx.stroke();
+        for (const trR of [{dx:0.2,c:"#FFDD44",s:"⬡"},{dx:0.5,c:"#00FFB0",s:"⚡"},{dx:0.8,c:"#44FFCC",s:"★"}]) {
+          ctx.fillStyle=trR.c; ctx.shadowColor=trR.c; ctx.shadowBlur=7;
+          ctx.font=`bold ${Math.round(trHR*0.65)}px monospace`; ctx.textAlign="center";
+          ctx.fillText(trR.s,trXR+trWR*trR.dx,trYR+trHR*0.75); ctx.shadowBlur=0;
+        }
+
+        // ── Floor cable runs ───────────────────────────────────
+        ctx.strokeStyle="rgba(0,200,150,0.18)"; ctx.lineWidth=2; ctx.setLineDash([6,5]);
+        ctx.beginPath(); ctx.moveTo(tcXR+tcWR,tcYR+tcHR*0.5); ctx.lineTo(cx-W*0.05,tcYR+tcHR*0.5); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(vrXR,vrYR+vrHR*0.5); ctx.lineTo(cx+W*0.1,vrYR+vrHR*0.5); ctx.stroke();
+        ctx.setLineDash([]);
+
+        // ── News ticker ────────────────────────────────────────
+        const tkY4=H*0.94;
+        ctx.fillStyle="rgba(2,10,14,0.88)"; ctx.fillRect(0,tkY4,W,H*0.035);
+        ctx.fillStyle=`rgba(0,255,176,${0.75+0.25*Math.sin(tR*4)})`; rr(W*0.005,tkY4+H*0.001,W*0.05,H*0.027,3); ctx.fill();
+        ctx.fillStyle="#020a0d"; ctx.font=`bold ${Math.round(H*0.017)}px monospace`; ctx.textAlign="left";
+        ctx.fillText("LIVE",W*0.005+W*0.05*0.14,tkY4+H*0.001+H*0.027*0.75);
+        const tkTxtR="⚡ MECH TECH LAB  ✦  CPU: 99.9%  ✦  BOTS ONLINE: 1,024  ✦  GRID: ACTIVE  ✦  PLASMA ARC: STABLE  ✦  NET BUS: CLEAR  ✦  ";
+        const tkXR=W*0.06+W-(tR*52)%(W+1500);
+        ctx.save(); ctx.beginPath(); ctx.rect(W*0.06,tkY4,W-W*0.06,H*0.032); ctx.clip();
+        ctx.fillStyle="#AAFFD8"; ctx.font=`bold ${Math.round(H*0.017)}px monospace`; ctx.textAlign="left";
+        ctx.fillText(tkTxtR,tkXR,tkY4+H*0.021); ctx.restore();
+
+        // ── Ambient circuit sparks ─────────────────────────────
+        for (let pi=0;pi<16;pi++) {
+          const fpx=(Math.sin(pi*2.1+tR*0.34)*0.42+0.5)*W, fpy=(Math.cos(pi*1.6+tR*0.23)*0.38+0.5)*(H*0.88);
+          const pA=0.08+0.05*Math.sin(tR*1.3+pi);
+          ctx.fillStyle=pi%3===0?`rgba(0,255,176,${pA})`:pi%3===1?`rgba(0,220,160,${pA})`:`rgba(0,255,200,${pA})`;
+          ctx.beginPath(); ctx.arc(fpx,fpy,1.8,0,Math.PI*2); ctx.fill();
+        }
+
       } else if (isTechShop) {
         // ═══ WASTELAND: SCRAP TECH LAB ═══
         const t2 = performance.now() / 1000;
@@ -9560,78 +9837,302 @@ Game.prototype._renderIndoorFurniture = function(ctx, room) {
         ctx.shadowBlur=0;ctx.restore();
         return;
       }
-      // ── Monitor wall (top) ───────────────────────
-      for (let mi = 0; mi < 4; mi++) {
-        const mx2 = cx - W * 0.4 + mi * ((W * 0.8) / 3);
-        ctx.fillStyle = "#050a08";
-        ctx.strokeStyle = "#00FF88";
-        ctx.lineWidth = 1;
-        rr(mx2 - 18, topY + 4, 36, 28, 2);
-        ctx.fill();
-        ctx.stroke();
-        ctx.fillStyle = "#001a10";
-        ctx.fillRect(mx2 - 16, topY + 6, 32, 24);
-        ctx.fillStyle = "#00FF88";
-        ctx.shadowColor = "#00FF44";
-        ctx.shadowBlur = 6;
-        ctx.font = "4px monospace";
-        ctx.textAlign = "center";
-        for (let li = 0; li < 4; li++) {
-          const lineText =
-            "01" +
-            Math.floor(Math.random() * 1000)
-              .toString()
-              .padStart(4, "0");
-          ctx.fillText(lineText, mx2, topY + 10 + li * 5);
+      if (!!this.map?.config?.hardcore) {
+        // ═══ HARDCORE: INFERNO HACKER DEN ═══
+        const tH = performance.now() / 1000;
+
+        // ── Dark ember floor tiles ────────────────────────────
+        ctx.fillStyle = "#080200"; ctx.fillRect(0,0,W,H);
+        const tSzH=Math.round(W/16);
+        for (let gy=0;gy<=Math.ceil(H/tSzH);gy++) for (let gx=0;gx<=Math.ceil(W/tSzH);gx++) {
+          const ftx=gx*tSzH,fty=gy*tSzH,fsd=gx*17+gy*11;
+          ctx.fillStyle=fsd%3===0?"rgba(12,4,0,0.97)":fsd%3===1?"rgba(16,5,0,0.97)":"rgba(10,3,0,0.97)";
+          ctx.fillRect(ftx,fty,tSzH,tSzH);
+          ctx.strokeStyle=`rgba(255,80,0,${0.04+0.02*Math.sin(tH*0.6+fsd*0.1)})`;
+          ctx.lineWidth=0.5; ctx.strokeRect(ftx,fty,tSzH,tSzH);
         }
-        ctx.shadowBlur = 0;
-      }
-      // ── Hacker desk (center) ─────────────────────
-      ctx.fillStyle = "#050a08";
-      ctx.strokeStyle = "#00FF88";
-      ctx.lineWidth = 1.5;
-      rr(cx - 52, midY - 8, 104, 32, 4);
-      ctx.fill();
-      ctx.stroke();
-      // Triple monitor setup
-      for (let mi2 = -1; mi2 <= 1; mi2++) {
-        ctx.fillStyle = "#020806";
-        ctx.strokeStyle = "#00FF44";
-        ctx.lineWidth = 1;
-        rr(cx + mi2 * 34 - 14, midY - 24, 28, 18, 2);
-        ctx.fill();
-        ctx.stroke();
-        ctx.fillStyle = "#001a10";
-        ctx.fillRect(cx + mi2 * 34 - 12, midY - 22, 24, 14);
-        ctx.fillStyle = "#00FF88";
-        ctx.shadowColor = "#00FF44";
-        ctx.shadowBlur = 5;
-        ctx.fillRect(cx + mi2 * 34 - 10, midY - 20, 20, 4);
-        ctx.fillRect(cx + mi2 * 34 - 10, midY - 14, 20, 2);
-        ctx.shadowBlur = 0;
-      }
-      // Keyboard
-      ctx.fillStyle = "#0a1208";
-      rr(cx - 30, midY - 4, 60, 12, 2);
-      ctx.fill();
-      for (let ki = 0; ki < 9; ki++) {
-        ctx.fillStyle =
-          "#00FF88" + Math.floor(Math.random() * 99 + 20).toString(16);
-        ctx.fillRect(cx - 28 + ki * 7, midY - 2, 5, 8);
-      }
-      // ── Pizza boxes (on floor) ────────────────────
-      ctx.fillStyle = "#4a2a10";
-      ctx.strokeStyle = "#8a5a28";
-      ctx.lineWidth = 1;
-      for (let pi = 0; pi < 3; pi++) {
-        rr(cx - W * 0.4 + pi * 24, midY + 28, 22, 22, 1);
-        ctx.fill();
-        ctx.stroke();
-        ctx.fillStyle = "#FF6622";
-        ctx.beginPath();
-        ctx.arc(cx - W * 0.4 + pi * 24 + 11, midY + 39, 8, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = "#4a2a10";
+
+        // ── Room border ────────────────────────────────────────
+        ctx.strokeStyle=`rgba(255,100,0,${0.55+0.2*Math.sin(tH*1.4)})`; ctx.lineWidth=3;
+        ctx.strokeRect(2,2,W-4,H-4);
+        ctx.strokeStyle="rgba(200,50,0,0.2)"; ctx.lineWidth=1; ctx.strokeRect(7,7,W-14,H-14);
+
+        // ── Ceiling LED strips (ember/orange) ─────────────────
+        for (let li=0;li<6;li++) {
+          const lx=W*0.07+li*(W*0.86/5);
+          ctx.fillStyle=`rgba(255,80,0,${0.07+0.04*Math.sin(tH*0.9+li)})`; ctx.fillRect(lx,0,W*0.14,4);
+          ctx.fillStyle=`rgba(255,120,20,0.7)`; ctx.shadowColor="#FF5500"; ctx.shadowBlur=6;
+          ctx.fillRect(lx+2,1,W*0.12,2); ctx.shadowBlur=0;
+        }
+
+        // ── INFERNO HACKER DEN banner ──────────────────────────
+        const bWH=W*0.58, bHH=H*0.042, bXH=cx-bWH/2, bYH=room.S-bHH-4;
+        const bGrH=ctx.createLinearGradient(bXH,bYH,bXH+bWH,bYH);
+        bGrH.addColorStop(0,"rgba(18,4,0,0.97)"); bGrH.addColorStop(0.5,"rgba(60,14,0,0.99)"); bGrH.addColorStop(1,"rgba(18,4,0,0.97)");
+        ctx.fillStyle=bGrH; rr(bXH,bYH,bWH,bHH,7); ctx.fill();
+        ctx.strokeStyle=`rgba(255,100,0,${0.7+0.3*Math.sin(tH*1.8)})`; ctx.lineWidth=2; ctx.stroke();
+        ctx.fillStyle="#FFCC88"; ctx.font=`bold ${Math.round(bHH*0.55)}px monospace`; ctx.textAlign="center";
+        ctx.shadowColor="#FF6600"; ctx.shadowBlur=14;
+        ctx.fillText("🔥  INFERNO  HACKER  DEN  🔥",cx,bYH+bHH*0.72); ctx.shadowBlur=0;
+
+        // ── TOP: 6 hacking monitors (wall-mounted) ────────────
+        for (let mi=0;mi<6;mi++) {
+          const mxH=W*0.06+mi*(W*0.88/5);
+          const mwH=W*0.14, mhH=H*0.11;
+          ctx.fillStyle="#0c0300"; ctx.strokeStyle=mi===2?`rgba(255,120,0,${0.7+0.3*Math.sin(tH*2+mi)})`:"rgba(200,60,0,0.6)"; ctx.lineWidth=1.5;
+          rr(mxH,topY+4,mwH,mhH,3); ctx.fill(); ctx.stroke();
+          ctx.fillStyle="#050100"; ctx.fillRect(mxH+2,topY+6,mwH-4,mhH-4);
+          // Screen content (scrolling code lines)
+          const lineColors=["#FF6600","#00FF88","#FF3300","#FFAA00","#FF0044","#00DDFF"];
+          ctx.fillStyle=lineColors[mi]; ctx.shadowColor=lineColors[mi]; ctx.shadowBlur=4;
+          ctx.font=`${Math.round(mhH*0.11)}px monospace`; ctx.textAlign="left";
+          for (let li=0;li<5;li++) {
+            const seed=(tH*18+li*37+mi*111)%1; // deterministic scroll
+            const val=Math.floor(Math.sin(tH*1.3+li*7+mi*13)*50000+50000).toString(16).padStart(5,"0");
+            ctx.fillText((li%2===0?"0x":">>")+" "+val,mxH+3,topY+8+li*(mhH*0.19));
+          }
+          ctx.shadowBlur=0;
+          // Monitor label
+          const mLabels=["INTRUSION","FIREWALL","PAYLOAD","EXPLOIT","DARKNET","EXFIL"];
+          ctx.fillStyle=lineColors[mi]; ctx.font=`bold ${Math.round(mhH*0.13)}px monospace`; ctx.textAlign="center";
+          ctx.fillText(mLabels[mi],mxH+mwH/2,topY+mhH+12);
+        }
+
+        // ── LEFT: Server tower rack ───────────────────────────
+        const stX=W*0.03, stY=H*0.25, stW=W*0.12, stH=H*0.55;
+        ctx.fillStyle="#0a0300"; ctx.strokeStyle="rgba(255,80,0,0.6)"; ctx.lineWidth=2;
+        rr(stX,stY,stW,stH,4); ctx.fill(); ctx.stroke();
+        ctx.fillStyle="#FF6600"; ctx.font=`bold ${Math.round(stW*0.2)}px monospace`; ctx.textAlign="center";
+        ctx.shadowColor="#FF4400"; ctx.shadowBlur=8;
+        ctx.fillText("SRV",stX+stW/2,stY-6); ctx.shadowBlur=0;
+        for (let su=0;su<10;su++) {
+          const suy=stY+6+su*(stH-12)/10;
+          ctx.fillStyle="#0c0400"; ctx.strokeStyle="rgba(200,60,0,0.35)"; ctx.lineWidth=0.7;
+          ctx.fillRect(stX+4,suy,stW-8,(stH-12)/10-2); ctx.strokeRect(stX+4,suy,stW-8,(stH-12)/10-2);
+          // LED bar
+          const lc2=su%3===0?"#FF4400":su%3===1?"#FF8800":"#00FF88";
+          const la2=0.5+0.5*Math.sin(tH*(1.5+su*0.3)+su);
+          ctx.fillStyle=lc2; ctx.shadowColor=lc2; ctx.shadowBlur=3*la2;
+          ctx.fillRect(stX+5,suy+1,stW-14,2); ctx.shadowBlur=0;
+          // Activity dot
+          const active2=Math.sin(tH*(4+su*0.8)+su)>0.2;
+          ctx.fillStyle=active2?"#FF6600":"#2a0c00";
+          ctx.beginPath(); ctx.arc(stX+stW-8,suy+(stH-12)/10*0.5,2.5,0,Math.PI*2); ctx.fill();
+        }
+        // Fan grille on server
+        ctx.strokeStyle="rgba(255,80,0,0.3)"; ctx.lineWidth=1;
+        for (let fg=0;fg<4;fg++) { ctx.beginPath(); ctx.ellipse(stX+stW/2,stY+stH-20,stW*0.3-fg*3,stW*0.3-fg*3,tH*0.5,0,Math.PI*2); ctx.stroke(); }
+
+        // ── LEFT-CENTER: Main hacking desk + 5-screen arc ─────
+        const dkX=W*0.17, dkY=midY-H*0.04, dkW=W*0.48, dkH=H*0.065;
+        const dkBg=ctx.createLinearGradient(dkX,dkY,dkX+dkW,dkY+dkH);
+        dkBg.addColorStop(0,"#0c0400"); dkBg.addColorStop(0.5,"#180800"); dkBg.addColorStop(1,"#0c0400");
+        ctx.fillStyle=dkBg; rr(dkX,dkY,dkW,dkH,5); ctx.fill();
+        ctx.strokeStyle="rgba(255,100,0,0.8)"; ctx.lineWidth=2; ctx.stroke();
+        // LED strip under desk edge
+        ctx.strokeStyle=`rgba(255,80,0,${0.4+0.3*Math.sin(tH*2)})`; ctx.lineWidth=1.5;
+        ctx.beginPath(); ctx.moveTo(dkX+8,dkY+dkH); ctx.lineTo(dkX+dkW-8,dkY+dkH); ctx.stroke();
+
+        // 5 monitors on desk arc
+        for (let mi2=0;mi2<5;mi2++) {
+          const mAng=(mi2-2)*0.22; // arc spread
+          const m2x=dkX+dkW*0.1+mi2*(dkW*0.8/4), m2y=dkY-H*0.13-Math.abs(mi2-2)*H*0.01;
+          const m2w=dkW*0.16, m2h=H*0.12;
+          // slight rotation for arc effect
+          ctx.save(); ctx.translate(m2x+m2w/2,m2y+m2h); ctx.rotate(mAng);
+          ctx.fillStyle="#0c0300"; ctx.strokeStyle=mi2===2?"rgba(255,150,0,0.9)":"rgba(220,70,0,0.65)"; ctx.lineWidth=1.5;
+          rr(-m2w/2,-m2h,m2w,m2h,3); ctx.fill(); ctx.stroke();
+          ctx.fillStyle="#040100"; ctx.fillRect(-m2w/2+2,-m2h+2,m2w-4,m2h-4);
+          // Screen glow
+          const mScreenColors=["#FF4400","#FF8800","#00FF88","#FF3300","#FFAA00"];
+          ctx.fillStyle=mScreenColors[mi2]; ctx.shadowColor=mScreenColors[mi2]; ctx.shadowBlur=6;
+          ctx.font=`${Math.round(m2h*0.1)}px monospace`; ctx.textAlign="left";
+          for (let dl=0;dl<5;dl++) {
+            const dv=Math.floor(Math.sin(tH*1.1+dl*5+mi2*9)*32767+32767).toString(16).toUpperCase().padStart(4,"0");
+            ctx.fillText(dl===0?"root@fire:~#":`  ${dv}  ${dl%2?"OK":"ERR"}`,-m2w/2+3,-m2h+m2h*0.18+dl*m2h*0.16);
+          }
+          ctx.shadowBlur=0;
+          ctx.restore();
+        }
+
+        // Mechanical keyboard on desk
+        ctx.fillStyle="#0e0400"; rr(dkX+dkW*0.15,dkY+4,dkW*0.35,dkH-8,3); ctx.fill();
+        ctx.strokeStyle="rgba(200,60,0,0.4)"; ctx.lineWidth=0.8; ctx.stroke();
+        for (let ki=0;ki<14;ki++) {
+          const kr=Math.floor(ki/7), kc=ki%7;
+          const keyC=Math.sin(tH*8+ki)>0.6?"rgba(255,100,0,0.9)":"rgba(180,50,0,0.45)";
+          ctx.fillStyle=keyC; ctx.fillRect(dkX+dkW*0.16+kc*dkW*0.048,dkY+5+kr*((dkH-10)/2),dkW*0.038,dkH*0.38);
+        }
+
+        // ── CENTER-RIGHT: Network topology board ──────────────
+        const ntX=W*0.67, ntY=H*0.24, ntW=W*0.14, ntH=H*0.35;
+        ctx.fillStyle="#0a0200"; ctx.strokeStyle="rgba(255,80,0,0.55)"; ctx.lineWidth=1.5;
+        rr(ntX,ntY,ntW,ntH,4); ctx.fill(); ctx.stroke();
+        ctx.fillStyle="#FF6600"; ctx.font=`bold ${Math.round(ntH*0.07)}px monospace`; ctx.textAlign="center";
+        ctx.shadowColor="#FF4400"; ctx.shadowBlur=7;
+        ctx.fillText("NET MAP",ntX+ntW/2,ntY+ntH*0.09); ctx.shadowBlur=0;
+        // Nodes and connections
+        const netNodes=[{x:0.25,y:0.25,c:"#FF4400"},{x:0.75,y:0.2,c:"#FF8800"},{x:0.5,y:0.5,c:"#00FF88"},{x:0.2,y:0.7,c:"#FF6600"},{x:0.8,y:0.65,c:"#FFAA00"},{x:0.5,y:0.85,c:"#FF3300"}];
+        // Lines first
+        ctx.strokeStyle="rgba(255,80,0,0.22)"; ctx.lineWidth=1;
+        const edges=[[0,2],[1,2],[2,3],[2,4],[3,5],[4,5]];
+        for (const [a,b] of edges) {
+          ctx.beginPath(); ctx.moveTo(ntX+netNodes[a].x*ntW,ntY+netNodes[a].y*ntH); ctx.lineTo(ntX+netNodes[b].x*ntW,ntY+netNodes[b].y*ntH); ctx.stroke();
+        }
+        // Nodes
+        for (let ni=0;ni<netNodes.length;ni++) {
+          const nd=netNodes[ni], np=0.5+0.5*Math.sin(tH*2.5+ni*1.1);
+          ctx.fillStyle=nd.c; ctx.shadowColor=nd.c; ctx.shadowBlur=6*np;
+          ctx.beginPath(); ctx.arc(ntX+nd.x*ntW,ntY+nd.y*ntH,4,0,Math.PI*2); ctx.fill(); ctx.shadowBlur=0;
+        }
+        // Packet animation on edge 0-2
+        const pkP=(tH*0.4)%1;
+        const pkx=ntX+netNodes[0].x*ntW+(netNodes[2].x-netNodes[0].x)*ntW*pkP;
+        const pky=ntY+netNodes[0].y*ntH+(netNodes[2].y-netNodes[0].y)*ntH*pkP;
+        ctx.fillStyle="#FFFF00"; ctx.shadowColor="#FFFF00"; ctx.shadowBlur=8;
+        ctx.beginPath(); ctx.arc(pkx,pky,3,0,Math.PI*2); ctx.fill(); ctx.shadowBlur=0;
+
+        // ── RIGHT: Deep rack + patch panel ────────────────────
+        const prX=W*0.84, prY=H*0.25, prW=W*0.13, prH=H*0.55;
+        ctx.fillStyle="#0a0300"; ctx.strokeStyle="rgba(200,60,0,0.55)"; ctx.lineWidth=1.5;
+        rr(prX,prY,prW,prH,4); ctx.fill(); ctx.stroke();
+        ctx.fillStyle="#FF8800"; ctx.font=`bold ${Math.round(prW*0.2)}px monospace`; ctx.textAlign="center";
+        ctx.shadowColor="#FF6600"; ctx.shadowBlur=8;
+        ctx.fillText("RACK",prX+prW/2,prY-6); ctx.shadowBlur=0;
+        // Patch panel cables
+        for (let pp=0;pp<8;pp++) {
+          const ppy=prY+10+pp*(prH-20)/7;
+          ctx.fillStyle="#0c0400"; ctx.fillRect(prX+4,ppy,prW-8,10);
+          ctx.strokeStyle="rgba(180,50,0,0.4)"; ctx.lineWidth=0.7; ctx.strokeRect(prX+4,ppy,prW-8,10);
+          // RJ45 ports
+          for (let pt=0;pt<4;pt++) {
+            const ptx=prX+5+pt*(prW-10)/3;
+            ctx.fillStyle="#0a0100"; ctx.fillRect(ptx,ppy+2,6,6);
+            ctx.strokeStyle="rgba(255,80,0,0.5)"; ctx.lineWidth=0.5; ctx.strokeRect(ptx,ppy+2,6,6);
+            // Cable lead
+            if (Math.sin(pp*7+pt*3)>0) {
+              const cColors=["#FF4400","#FFAA00","#00FF88","#FF0044","#00DDFF","#FF8800"];
+              ctx.strokeStyle=cColors[(pp+pt)%6]; ctx.lineWidth=1.5;
+              ctx.beginPath(); ctx.moveTo(ptx+3,ppy+8); ctx.bezierCurveTo(ptx+3,ppy+18,prX+Math.sin(pp*2+pt)*6+prW/2,ppy+20,prX+prW/2,ppy+22); ctx.stroke();
+            }
+          }
+        }
+
+        // ── FLOOR: scattered items ─────────────────────────────
+        // Energy drink cans
+        const canPositions=[{x:W*0.19,y:H*0.78},{x:W*0.22,y:H*0.80},{x:W*0.58,y:H*0.79},{x:W*0.62,y:H*0.81}];
+        for (const cp2 of canPositions) {
+          ctx.fillStyle="#CC2200"; ctx.strokeStyle="#FF4400"; ctx.lineWidth=1;
+          rr(cp2.x-4,cp2.y-11,8,14,2); ctx.fill(); ctx.stroke();
+          ctx.fillStyle="rgba(255,200,0,0.8)"; ctx.fillRect(cp2.x-3,cp2.y-9,6,2);
+          ctx.fillStyle="#FF6600"; ctx.shadowColor="#FF4400"; ctx.shadowBlur=4;
+          ctx.font=`bold ${Math.round(7)}px monospace`; ctx.textAlign="center";
+          ctx.fillText("⚡",cp2.x,cp2.y-3); ctx.shadowBlur=0;
+        }
+        // Pizza boxes (stacked)
+        ctx.fillStyle="#4a2a10"; ctx.strokeStyle="#8a5a28"; ctx.lineWidth=1;
+        for (let pi=0;pi<4;pi++) {
+          rr(W*0.30+pi*26,H*0.80,24,24,1); ctx.fill(); ctx.stroke();
+          ctx.fillStyle="#FF5500";
+          ctx.beginPath(); ctx.arc(W*0.30+pi*26+12,H*0.80+12,8,0,Math.PI*2); ctx.fill();
+          ctx.fillStyle="#4a2a10";
+        }
+        // USB drives / HDDs scattered
+        const usbPos=[{x:W*0.52,y:H*0.72},{x:W*0.55,y:H*0.74},{x:W*0.48,y:H*0.75}];
+        for (const up of usbPos) {
+          ctx.fillStyle="#222"; ctx.strokeStyle="#FF8800"; ctx.lineWidth=1;
+          rr(up.x-7,up.y-4,14,8,2); ctx.fill(); ctx.stroke();
+          ctx.fillStyle="#FF6600"; ctx.fillRect(up.x+5,up.y-2,4,4);
+        }
+        // Sticky notes on wall/monitor
+        const noteColors=["rgba(255,200,0,0.85)","rgba(255,100,0,0.85)","rgba(255,160,0,0.85)"];
+        const noteTexts=["0DAY","PWNED","ROOTKIT"];
+        for (let ni=0;ni<3;ni++) {
+          const nx=W*0.68+ni*W*0.03, ny=topY+H*0.13+ni*H*0.02;
+          ctx.fillStyle=noteColors[ni]; rr(nx,ny,22,18,1); ctx.fill();
+          ctx.strokeStyle="rgba(180,80,0,0.4)"; ctx.lineWidth=0.5; ctx.stroke();
+          ctx.fillStyle="#1a0800"; ctx.font=`bold 5px monospace`; ctx.textAlign="center";
+          ctx.fillText(noteTexts[ni],nx+11,ny+11);
+        }
+        // Hoodie on chair (left of desk)
+        const hdX=dkX-W*0.06, hdY=dkY;
+        ctx.fillStyle="#1a0000"; ctx.strokeStyle="#330000"; ctx.lineWidth=1;
+        rr(hdX,hdY,W*0.04,H*0.06,4); ctx.fill(); ctx.stroke();
+        ctx.fillStyle="rgba(255,30,0,0.15)"; rr(hdX+2,hdY+2,W*0.04-4,H*0.06-4,3); ctx.fill();
+        // Hood
+        ctx.fillStyle="#1a0000";
+        ctx.beginPath(); ctx.arc(hdX+W*0.02,hdY,W*0.018,Math.PI,0); ctx.fill();
+        ctx.fillStyle="#FF4400"; ctx.font=`bold 6px monospace`; ctx.textAlign="center";
+        ctx.fillText("⊘",hdX+W*0.02,hdY+H*0.035);
+
+        // ── Crypto ticker display ──────────────────────────────
+        const tkY5=H*0.94;
+        ctx.fillStyle="rgba(8,2,0,0.88)"; ctx.fillRect(0,tkY5,W,H*0.035);
+        ctx.fillStyle=`rgba(255,100,0,${0.75+0.25*Math.sin(tH*4)})`; rr(W*0.005,tkY5+H*0.001,W*0.05,H*0.027,3); ctx.fill();
+        ctx.fillStyle="#0a0200"; ctx.font=`bold ${Math.round(H*0.017)}px monospace`; ctx.textAlign="left";
+        ctx.fillText("LIVE",W*0.005+W*0.05*0.14,tkY5+H*0.001+H*0.027*0.75);
+        const btcVal=Math.floor(69000+Math.sin(tH*0.3)*2000).toLocaleString();
+        const ethVal=Math.floor(3800+Math.sin(tH*0.4)*200).toLocaleString();
+        const tkTxtH=`🔥 INFERNO DEN  ✦  ROOT ACCESS: GRANTED  ✦  BTC $${btcVal}  ✦  ETH $${ethVal}  ✦  FIREWALL: BYPASSED  ✦  PAYLOAD DEPLOYED  ✦  TARGET: ${Math.floor(tH*7)%256}.${Math.floor(tH*13)%256}.0.1  ✦  `;
+        const tkXH=W*0.06+W-(tH*55)%(W+2000);
+        ctx.save(); ctx.beginPath(); ctx.rect(W*0.06,tkY5,W-W*0.06,H*0.032); ctx.clip();
+        ctx.fillStyle="#FFCC88"; ctx.font=`bold ${Math.round(H*0.017)}px monospace`; ctx.textAlign="left";
+        ctx.fillText(tkTxtH,tkXH,tkY5+H*0.021); ctx.restore();
+
+        // ── Ambient ember sparks ───────────────────────────────
+        for (let pi=0;pi<18;pi++) {
+          const fpx=(Math.sin(pi*2.3+tH*0.38)*0.44+0.5)*W, fpy=(Math.cos(pi*1.7+tH*0.25)*0.4+0.5)*(H*0.88);
+          const pA=0.07+0.05*Math.sin(tH*1.4+pi);
+          ctx.fillStyle=pi%3===0?`rgba(255,100,0,${pA})`:pi%3===1?`rgba(255,60,0,${pA})`:`rgba(255,160,0,${pA})`;
+          ctx.beginPath(); ctx.arc(fpx,fpy,1.8,0,Math.PI*2); ctx.fill();
+        }
+
+      } else {
+        // ── DEFAULT: Monitor wall (top) ───────────────────────
+        for (let mi = 0; mi < 4; mi++) {
+          const mx2 = cx - W * 0.4 + mi * ((W * 0.8) / 3);
+          ctx.fillStyle = "#050a08";
+          ctx.strokeStyle = "#00FF88";
+          ctx.lineWidth = 1;
+          rr(mx2 - 18, topY + 4, 36, 28, 2);
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#001a10";
+          ctx.fillRect(mx2 - 16, topY + 6, 32, 24);
+          ctx.fillStyle = "#00FF88";
+          ctx.shadowColor = "#00FF44";
+          ctx.shadowBlur = 6;
+          ctx.font = "4px monospace";
+          ctx.textAlign = "center";
+          for (let li = 0; li < 4; li++) {
+            const lineText = "01" + Math.floor(Math.sin(li*7+mi*13)*500+500).toString().padStart(4, "0");
+            ctx.fillText(lineText, mx2, topY + 10 + li * 5);
+          }
+          ctx.shadowBlur = 0;
+        }
+        // ── Hacker desk (center) ─────────────────────
+        ctx.fillStyle = "#050a08"; ctx.strokeStyle = "#00FF88"; ctx.lineWidth = 1.5;
+        rr(cx - 52, midY - 8, 104, 32, 4); ctx.fill(); ctx.stroke();
+        for (let mi2 = -1; mi2 <= 1; mi2++) {
+          ctx.fillStyle = "#020806"; ctx.strokeStyle = "#00FF44"; ctx.lineWidth = 1;
+          rr(cx + mi2 * 34 - 14, midY - 24, 28, 18, 2); ctx.fill(); ctx.stroke();
+          ctx.fillStyle = "#001a10"; ctx.fillRect(cx + mi2 * 34 - 12, midY - 22, 24, 14);
+          ctx.fillStyle = "#00FF88"; ctx.shadowColor = "#00FF44"; ctx.shadowBlur = 5;
+          ctx.fillRect(cx + mi2 * 34 - 10, midY - 20, 20, 4);
+          ctx.fillRect(cx + mi2 * 34 - 10, midY - 14, 20, 2); ctx.shadowBlur = 0;
+        }
+        ctx.fillStyle = "#0a1208"; rr(cx - 30, midY - 4, 60, 12, 2); ctx.fill();
+        for (let ki = 0; ki < 9; ki++) {
+          ctx.fillStyle = `rgba(0,255,136,${0.3+0.4*Math.abs(Math.sin(ki*1.3))})`;
+          ctx.fillRect(cx - 28 + ki * 7, midY - 2, 5, 8);
+        }
+        ctx.fillStyle = "#4a2a10"; ctx.strokeStyle = "#8a5a28"; ctx.lineWidth = 1;
+        for (let pi = 0; pi < 3; pi++) {
+          rr(cx - W * 0.4 + pi * 24, midY + 28, 22, 22, 1); ctx.fill(); ctx.stroke();
+          ctx.fillStyle = "#FF6622";
+          ctx.beginPath(); ctx.arc(cx - W * 0.4 + pi * 24 + 11, midY + 39, 8, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = "#4a2a10";
+        }
       }
     } else if (type === 19) {
       // DOJO
@@ -12561,66 +13062,6 @@ Game.prototype._renderIndoorFurniture = function(ctx, room) {
         ctx.moveTo(cx, midY - 4);
         ctx.lineTo(cx, midY + 8);
         ctx.stroke();
-      } // end default radio station
-    } else if (type === 23) {
-      // UNDERGROUND LAB
-      // ── Experiment pods (top) ────────────────────
-      for (let pi = 0; pi < 3; pi++) {
-        const px2 = cx - W * 0.34 + pi * W * 0.34,
-          py2 = topY + 4;
-        ctx.fillStyle = "#0a1a0e";
-        ctx.strokeStyle = "#44FF88";
-        ctx.lineWidth = 1.5;
-        rr(px2 - 20, py2, 40, 52, 5);
-        ctx.fill();
-        ctx.stroke();
-        // Glowing liquid
-        const liqColors = ["#00FF88", "#FF00CC", "#FFCC00"];
-        ctx.fillStyle = liqColors[pi] + "44";
-        rr(px2 - 18, py2 + 2, 36, 48, 4);
-        ctx.fill();
-        ctx.fillStyle = liqColors[pi];
-        ctx.shadowColor = liqColors[pi];
-        ctx.shadowBlur = 12;
-        ctx.beginPath();
-        ctx.ellipse(px2, py2 + 26, 10, 14, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.shadowBlur = 0;
-        // Tube lines
-        ctx.strokeStyle = liqColors[pi] + "88";
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(px2 - 20, py2 + 26);
-        ctx.lineTo(px2 - 32, py2 + 26);
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.moveTo(px2 + 20, py2 + 26);
-        ctx.lineTo(px2 + 32, py2 + 26);
-        ctx.stroke();
-      }
-      // ── Control console (center) ──────────────────
-      ctx.fillStyle = "#050810";
-      ctx.strokeStyle = "#55FF99";
-      ctx.lineWidth = 2;
-      rr(cx - 48, midY - 14, 96, 40, 5);
-      ctx.fill();
-      ctx.stroke();
-      // Danger indicators
-      for (let di = 0; di < 6; di++) {
-        const dc = [
-          "#FF4400",
-          "#FFCC00",
-          "#44FF88",
-          "#44FF88",
-          "#FFCC00",
-          "#FF4400",
-        ][di];
-        ctx.fillStyle = dc;
-        ctx.shadowColor = dc;
-        ctx.shadowBlur = 6;
-        ctx.beginPath();
-        ctx.arc(cx - 38 + di * 15, midY - 6, 5, 0, Math.PI * 2);
-        ctx.fill();
       } // end default radio station
     } else if (type === 23) {
       // ════════════════════════════════════════════════════════════════════

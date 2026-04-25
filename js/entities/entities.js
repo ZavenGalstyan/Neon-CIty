@@ -10209,12 +10209,13 @@ class Grenade {
 class Salesperson {
   constructor(x, y, color = '#FFAA55', label = 'DEALER', mapType = false) {
     this.x = x; this.y = y; this.color = color; this.label = label; this.radius = 16;
-    // mapType can be: true (neonCity), 'galactica', 'wasteland', 'snow', 'desert', or false (default)
+    // mapType can be: true (neonCity), 'galactica', 'wasteland', 'snow', 'desert', 'dino', or false (default)
     this.isNeonCity = mapType === true || mapType === 'neonCity';
     this.isGalactica = mapType === 'galactica';
     this.isWasteland = mapType === 'wasteland';
     this.isSnow = mapType === 'snow';
     this.isDesert = mapType === 'desert';
+    this.isDino = mapType === 'dino';
     this._waveT = 0;
   }
   update(dt) { this._waveT += dt * 1.4; }
@@ -10923,6 +10924,189 @@ class Salesperson {
       // Label above head
       ctx.fillStyle = '#AADDFF';
       ctx.shadowColor = '#66BBFF';
+      ctx.shadowBlur = 12;
+      ctx.font = 'bold 8px Orbitron, monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText(this.label, 0, -76 + breathe);
+      ctx.shadowBlur = 0;
+
+    } else if (this.isDino) {
+      // ═══ DINO WORLD: Jungle professional — neon-city suit in prehistoric green ═══
+      const breathe = Math.sin(this._waveT * 0.8) * 1;
+
+      // Shadow
+      ctx.globalAlpha = 0.35;
+      ctx.fillStyle = '#000';
+      ctx.beginPath();
+      ctx.ellipse(2, 4, 14, 5, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+
+      // Legs (deep jungle-dark trousers)
+      ctx.fillStyle = '#132008';
+      ctx.fillRect(-6, -8, 5, 12);
+      ctx.fillRect(1, -8, 5, 12);
+
+      // Shoes (dark olive-black with amber highlight)
+      ctx.fillStyle = '#0a0e04';
+      ctx.fillRect(-7, 2, 6, 4);
+      ctx.fillRect(1, 2, 6, 4);
+      ctx.fillStyle = 'rgba(102,221,68,0.2)';
+      ctx.fillRect(-6, 2, 4, 2);
+      ctx.fillRect(2, 2, 4, 2);
+
+      // Body (fitted jungle-green suit jacket)
+      const dinoJacketGrad = ctx.createLinearGradient(-12, -38, 12, -10);
+      dinoJacketGrad.addColorStop(0, '#1a3010');
+      dinoJacketGrad.addColorStop(0.5, '#0e2008');
+      dinoJacketGrad.addColorStop(1, '#081404');
+      ctx.fillStyle = dinoJacketGrad;
+      ctx.beginPath();
+      ctx.moveTo(-11, -10);
+      ctx.lineTo(-13, -38 + breathe);
+      ctx.lineTo(-8, -42 + breathe);
+      ctx.lineTo(8, -42 + breathe);
+      ctx.lineTo(13, -38 + breathe);
+      ctx.lineTo(11, -10);
+      ctx.closePath();
+      ctx.fill();
+
+      // Suit lapels — bioluminescent green
+      ctx.strokeStyle = '#66DD44';
+      ctx.lineWidth = 1;
+      ctx.globalAlpha = 0.75;
+      ctx.beginPath();
+      ctx.moveTo(-4, -38 + breathe);
+      ctx.lineTo(-6, -20);
+      ctx.moveTo(4, -38 + breathe);
+      ctx.lineTo(6, -20);
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+
+      // Tie (jungle green glowing)
+      ctx.fillStyle = '#66DD44';
+      ctx.shadowColor = '#66DD44';
+      ctx.shadowBlur = 8;
+      ctx.beginPath();
+      ctx.moveTo(0, -38 + breathe);
+      ctx.lineTo(-3, -34 + breathe);
+      ctx.lineTo(0, -12);
+      ctx.lineTo(3, -34 + breathe);
+      ctx.closePath();
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      // Tie pin — amber fossil
+      ctx.fillStyle = '#FFCC44';
+      ctx.shadowColor = '#FFAA00';
+      ctx.shadowBlur = 5;
+      ctx.beginPath();
+      ctx.moveTo(0, -27 + breathe);
+      ctx.lineTo(-2.5, -24.5 + breathe);
+      ctx.lineTo(0, -22 + breathe);
+      ctx.lineTo(2.5, -24.5 + breathe);
+      ctx.closePath();
+      ctx.fill();
+      ctx.shadowBlur = 0;
+
+      // Shirt collar (cream/bone white)
+      ctx.fillStyle = '#F5EED8';
+      ctx.beginPath();
+      ctx.moveTo(-5, -40 + breathe);
+      ctx.lineTo(0, -37 + breathe);
+      ctx.lineTo(5, -40 + breathe);
+      ctx.lineTo(4, -42 + breathe);
+      ctx.lineTo(-4, -42 + breathe);
+      ctx.closePath();
+      ctx.fill();
+
+      // Neck
+      ctx.fillStyle = '#C8A888';
+      ctx.fillRect(-3, -46 + breathe, 6, 6);
+
+      // Head
+      const dinoHeadGrad = ctx.createRadialGradient(-3, -54 + breathe, 2, 0, -52 + breathe, 12);
+      dinoHeadGrad.addColorStop(0, '#D8B890');
+      dinoHeadGrad.addColorStop(1, '#B89070');
+      ctx.fillStyle = dinoHeadGrad;
+      ctx.beginPath();
+      ctx.ellipse(0, -54 + breathe, 10, 12, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Hair — dark jungle brown
+      ctx.fillStyle = '#3a2010';
+      ctx.beginPath();
+      ctx.ellipse(0, -62 + breathe, 9, 6, 0, Math.PI, 0);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(-9, -58 + breathe);
+      ctx.quadraticCurveTo(-10, -52 + breathe, -8, -50 + breathe);
+      ctx.lineTo(-8, -58 + breathe);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(9, -58 + breathe);
+      ctx.quadraticCurveTo(10, -52 + breathe, 8, -50 + breathe);
+      ctx.lineTo(8, -58 + breathe);
+      ctx.fill();
+
+      // Eyes
+      ctx.fillStyle = '#FFFFFF';
+      ctx.beginPath();
+      ctx.ellipse(-4, -54 + breathe, 2.5, 2, 0, 0, Math.PI * 2);
+      ctx.ellipse(4, -54 + breathe, 2.5, 2, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#44BB22';
+      ctx.beginPath();
+      ctx.arc(-4, -54 + breathe, 1.2, 0, Math.PI * 2);
+      ctx.arc(4, -54 + breathe, 1.2, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Friendly smile
+      ctx.strokeStyle = '#886644';
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.arc(0, -50 + breathe, 4, 0.2, Math.PI - 0.2);
+      ctx.stroke();
+
+      // Arms (jungle-green sleeves)
+      ctx.fillStyle = '#0e2008';
+      ctx.beginPath();
+      ctx.moveTo(-13, -36 + breathe);
+      ctx.lineTo(-16, -20);
+      ctx.lineTo(-14, -10);
+      ctx.lineTo(-11, -10);
+      ctx.lineTo(-11, -34 + breathe);
+      ctx.closePath();
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(13, -36 + breathe);
+      ctx.lineTo(16, -20);
+      ctx.lineTo(14, -10);
+      ctx.lineTo(11, -10);
+      ctx.lineTo(11, -34 + breathe);
+      ctx.closePath();
+      ctx.fill();
+
+      // Hands
+      ctx.fillStyle = '#C8A888';
+      ctx.beginPath();
+      ctx.arc(-15, -8, 4, 0, Math.PI * 2);
+      ctx.arc(15, -8, 4, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Name badge (green-framed)
+      ctx.fillStyle = 'rgba(6,14,2,0.88)';
+      ctx.fillRect(-16, -32 + breathe, 16, 8);
+      ctx.strokeStyle = '#448820';
+      ctx.lineWidth = 0.7;
+      ctx.strokeRect(-16, -32 + breathe, 16, 8);
+      ctx.fillStyle = '#66DD44';
+      ctx.font = 'bold 5px Orbitron, monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText('DINO REP', -8, -26 + breathe);
+
+      // Label above head
+      ctx.fillStyle = '#AAFFAA';
+      ctx.shadowColor = '#66DD44';
       ctx.shadowBlur = 12;
       ctx.font = 'bold 8px Orbitron, monospace';
       ctx.textAlign = 'center';

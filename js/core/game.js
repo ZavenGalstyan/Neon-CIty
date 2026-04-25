@@ -2690,6 +2690,7 @@ class Game {
           const isWasteland = !!this.map.config.wasteland;
           const isHardcoreD = !!this.map.config.hardcore;
           const isDesertD   = !!this.map.config.desert;
+          const isSnowD     = !!this.map.config.snow;
           if (isNeonCity) {
             // Neon City: One professional cyber salesperson behind the counter
             // Counter is at S * 1.8 + 35 height, salesperson stands in front of counter (facing customers)
@@ -2746,6 +2747,27 @@ class Game {
             const spY = room.roomH * 0.38;
             this._salespersons = [
               new Salesperson(spX, spY, "#FFD060", "TRADE MASTER", "desert"),
+            ];
+          } else if (isSnowD) {
+            // Frozen Tundra: Ice-blue professional sales rep
+            const spX = room.roomW / 2;
+            const spY = room.roomH * 0.38;
+            this._salespersons = [
+              new Salesperson(spX, spY, "#AADDFF", "ICE REP", "snow"),
+            ];
+          } else if (!!this.map.config.dino) {
+            // Dino World: Jungle-green professional sales rep
+            const spX = room.roomW / 2;
+            const spY = room.roomH * 0.38;
+            this._salespersons = [
+              new Salesperson(spX, spY, "#66DD44", "DINO REP", "dino"),
+            ];
+          } else if (!!this.map.config.jungle) {
+            // Jungle Safari: Bioluminescent green professional sales rep
+            const spX = room.roomW / 2;
+            const spY = room.roomH * 0.38;
+            this._salespersons = [
+              new Salesperson(spX, spY, "#44DD22", "SAFARI REP", "dino"),
             ];
           } else {
             this._salespersons = [
