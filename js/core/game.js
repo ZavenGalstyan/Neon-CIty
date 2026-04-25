@@ -2762,6 +2762,13 @@ class Game {
             this._salespersons = [
               new Salesperson(spX, spY, "#66DD44", "DINO REP", "dino"),
             ];
+          } else if (!!this.map.config.jungle) {
+            // Jungle Safari: Bioluminescent green professional sales rep
+            const spX = room.roomW / 2;
+            const spY = room.roomH * 0.38;
+            this._salespersons = [
+              new Salesperson(spX, spY, "#44DD22", "SAFARI REP", "dino"),
+            ];
           } else {
             this._salespersons = [
               new Salesperson(
