@@ -10555,8 +10555,8 @@ class Salesperson {
       ctx.fillText(this.label, 0, -76 + breathe);
       ctx.shadowBlur = 0;
 
-    } else if (this.isSnow) {
-      // ═══ FROZEN TUNDRA: Winter-dressed salesperson ═══
+    } else if (this.isGalactica) {
+      // ═══ GALACTICA: Cosmic agent in deep-space dress suit ═══
       const breathe = Math.sin(this._waveT * 0.8) * 1;
 
       // Shadow
@@ -10567,164 +10567,366 @@ class Salesperson {
       ctx.fill();
       ctx.globalAlpha = 1;
 
-      // Legs (warm winter pants)
-      ctx.fillStyle = '#2a3a4a';
+      // Legs (dark cosmic pants)
+      ctx.fillStyle = '#0d0020';
       ctx.fillRect(-6, -8, 5, 12);
       ctx.fillRect(1, -8, 5, 12);
 
-      // Winter boots (insulated, furry top)
-      ctx.fillStyle = '#1a2530';
-      ctx.fillRect(-8, 2, 7, 6);
-      ctx.fillRect(1, 2, 7, 6);
-      // Fur trim on boots
-      ctx.fillStyle = '#CCDDEE';
-      ctx.fillRect(-8, 1, 7, 3);
-      ctx.fillRect(1, 1, 7, 3);
+      // Space boots with gold trim
+      ctx.fillStyle = '#07001a';
+      ctx.fillRect(-7, 2, 6, 5);
+      ctx.fillRect(1, 2, 6, 5);
+      ctx.fillStyle = '#FFDD44';
+      ctx.fillRect(-7, 2, 6, 1.5);
+      ctx.fillRect(1, 2, 6, 1.5);
 
-      // Body (thick winter parka)
-      const parkaGrad = ctx.createLinearGradient(-14, -42, 14, -8);
-      parkaGrad.addColorStop(0, '#3a5a7a');
-      parkaGrad.addColorStop(0.5, '#2a4a6a');
-      parkaGrad.addColorStop(1, '#1a3a5a');
-      ctx.fillStyle = parkaGrad;
+      // Body (fitted space-suit jacket — deep indigo with purple sheen)
+      const suitGrad = ctx.createLinearGradient(-12, -38, 12, -10);
+      suitGrad.addColorStop(0, '#2a0050');
+      suitGrad.addColorStop(0.5, '#1a0038');
+      suitGrad.addColorStop(1, '#0e0020');
+      ctx.fillStyle = suitGrad;
       ctx.beginPath();
-      ctx.moveTo(-13, -8);
-      ctx.lineTo(-15, -38 + breathe);
-      ctx.lineTo(-10, -44 + breathe);
-      ctx.lineTo(10, -44 + breathe);
-      ctx.lineTo(15, -38 + breathe);
-      ctx.lineTo(13, -8);
+      ctx.moveTo(-11, -10);
+      ctx.lineTo(-13, -38 + breathe);
+      ctx.lineTo(-8, -42 + breathe);
+      ctx.lineTo(8, -42 + breathe);
+      ctx.lineTo(13, -38 + breathe);
+      ctx.lineTo(11, -10);
       ctx.closePath();
       ctx.fill();
 
-      // Parka fur-lined hood (down)
-      ctx.fillStyle = '#DDEEFF';
+      // Suit lapels with gold edge
+      ctx.strokeStyle = '#FFDD44';
+      ctx.lineWidth = 1;
+      ctx.globalAlpha = 0.5;
       ctx.beginPath();
-      ctx.ellipse(0, -44 + breathe, 12, 5, 0, Math.PI, 0);
+      ctx.moveTo(-4, -38 + breathe);
+      ctx.lineTo(-6, -20);
+      ctx.moveTo(4, -38 + breathe);
+      ctx.lineTo(6, -20);
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+
+      // Gold cosmic tie
+      ctx.fillStyle = '#FFDD44';
+      ctx.shadowColor = '#FFDD44';
+      ctx.shadowBlur = 7;
+      ctx.beginPath();
+      ctx.moveTo(0, -38 + breathe);
+      ctx.lineTo(-3, -34 + breathe);
+      ctx.lineTo(0, -12);
+      ctx.lineTo(3, -34 + breathe);
+      ctx.closePath();
+      ctx.fill();
+      ctx.shadowBlur = 0;
+
+      // Shirt collar (white)
+      ctx.fillStyle = '#FFFFFF';
+      ctx.beginPath();
+      ctx.moveTo(-5, -40 + breathe);
+      ctx.lineTo(0, -37 + breathe);
+      ctx.lineTo(5, -40 + breathe);
+      ctx.lineTo(4, -42 + breathe);
+      ctx.lineTo(-4, -42 + breathe);
+      ctx.closePath();
       ctx.fill();
 
-      // Parka zipper
-      ctx.fillStyle = '#88AACC';
-      ctx.fillRect(-1, -42 + breathe, 2, 34);
-      // Zipper teeth
-      ctx.fillStyle = '#AACCDD';
-      for (let z = 0; z < 8; z++) {
-        ctx.fillRect(-2, -40 + z * 4 + breathe, 4, 2);
-      }
-
-      // Fur collar
-      ctx.fillStyle = '#EEFFFF';
-      ctx.beginPath();
-      ctx.ellipse(0, -42 + breathe, 10, 4, 0, 0, Math.PI);
-      ctx.fill();
-
-      // Neck (warm scarf showing)
-      ctx.fillStyle = '#88BBDD';
-      ctx.fillRect(-4, -48 + breathe, 8, 6);
+      // Neck
+      ctx.fillStyle = '#E8D0C0';
+      ctx.fillRect(-3, -46 + breathe, 6, 6);
 
       // Head
-      const headGrad = ctx.createRadialGradient(-2, -56 + breathe, 2, 0, -54 + breathe, 11);
-      headGrad.addColorStop(0, '#FFDDCC');
-      headGrad.addColorStop(1, '#E8C8B8');
+      const headGrad = ctx.createRadialGradient(-3, -54 + breathe, 2, 0, -52 + breathe, 12);
+      headGrad.addColorStop(0, '#F0DDD0');
+      headGrad.addColorStop(1, '#D0B8A8');
       ctx.fillStyle = headGrad;
       ctx.beginPath();
-      ctx.ellipse(0, -56 + breathe, 10, 11, 0, 0, Math.PI * 2);
+      ctx.ellipse(0, -54 + breathe, 10, 12, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // Rosy cheeks (cold weather)
-      ctx.fillStyle = 'rgba(255,150,150,0.35)';
+      // Hair (dark with purple tint)
+      ctx.fillStyle = '#0d0022';
       ctx.beginPath();
-      ctx.ellipse(-6, -53 + breathe, 3, 2, 0, 0, Math.PI * 2);
-      ctx.ellipse(6, -53 + breathe, 3, 2, 0, 0, Math.PI * 2);
+      ctx.ellipse(0, -62 + breathe, 9, 6, 0, Math.PI, 0);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(-9, -58 + breathe);
+      ctx.quadraticCurveTo(-10, -52 + breathe, -8, -50 + breathe);
+      ctx.lineTo(-8, -58 + breathe);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(9, -58 + breathe);
+      ctx.quadraticCurveTo(10, -52 + breathe, 8, -50 + breathe);
+      ctx.lineTo(8, -58 + breathe);
       ctx.fill();
 
-      // Winter hat (beanie)
-      ctx.fillStyle = '#4477AA';
-      ctx.beginPath();
-      ctx.ellipse(0, -64 + breathe, 11, 6, 0, Math.PI, 0);
-      ctx.fill();
-      ctx.fillRect(-11, -64 + breathe, 22, 6);
-      // Hat fold
-      ctx.fillStyle = '#5588BB';
-      ctx.fillRect(-10, -60 + breathe, 20, 3);
-      // Pom pom
+      // Eyes with glowing violet iris
       ctx.fillStyle = '#FFFFFF';
       ctx.beginPath();
-      ctx.arc(0, -70 + breathe, 4, 0, Math.PI * 2);
+      ctx.ellipse(-4, -54 + breathe, 2.5, 2, 0, 0, Math.PI * 2);
+      ctx.ellipse(4, -54 + breathe, 2.5, 2, 0, 0, Math.PI * 2);
       ctx.fill();
-
-      // Eyes (friendly)
-      ctx.fillStyle = '#FFFFFF';
+      ctx.fillStyle = '#CC66FF';
+      ctx.shadowColor = '#AA44FF';
+      ctx.shadowBlur = 6;
       ctx.beginPath();
-      ctx.ellipse(-4, -56 + breathe, 2.5, 2, 0, 0, Math.PI * 2);
-      ctx.ellipse(4, -56 + breathe, 2.5, 2, 0, 0, Math.PI * 2);
+      ctx.arc(-4, -54 + breathe, 1.3, 0, Math.PI * 2);
+      ctx.arc(4, -54 + breathe, 1.3, 0, Math.PI * 2);
       ctx.fill();
-      ctx.fillStyle = '#3355AA';
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = '#000';
       ctx.beginPath();
-      ctx.arc(-4, -56 + breathe, 1.3, 0, Math.PI * 2);
-      ctx.arc(4, -56 + breathe, 1.3, 0, Math.PI * 2);
+      ctx.arc(-4, -54 + breathe, 0.5, 0, Math.PI * 2);
+      ctx.arc(4, -54 + breathe, 0.5, 0, Math.PI * 2);
       ctx.fill();
 
       // Friendly smile
       ctx.strokeStyle = '#AA7766';
       ctx.lineWidth = 1.2;
       ctx.beginPath();
-      ctx.arc(0, -52 + breathe, 4, 0.2, Math.PI - 0.2);
+      ctx.arc(0, -50 + breathe, 4, 0.2, Math.PI - 0.2);
       ctx.stroke();
 
-      // Arms (thick parka sleeves)
-      ctx.fillStyle = '#2a4a6a';
+      // Arms (professional stance)
+      ctx.fillStyle = '#1a0038';
       ctx.beginPath();
-      ctx.moveTo(-15, -38 + breathe);
-      ctx.lineTo(-18, -22);
-      ctx.lineTo(-16, -10);
-      ctx.lineTo(-12, -10);
-      ctx.lineTo(-13, -36 + breathe);
+      ctx.moveTo(-13, -36 + breathe);
+      ctx.lineTo(-16, -20);
+      ctx.lineTo(-14, -10);
+      ctx.lineTo(-11, -10);
+      ctx.lineTo(-11, -34 + breathe);
       ctx.closePath();
       ctx.fill();
       ctx.beginPath();
-      ctx.moveTo(15, -38 + breathe);
-      ctx.lineTo(18, -22);
-      ctx.lineTo(16, -10);
-      ctx.lineTo(12, -10);
-      ctx.lineTo(13, -36 + breathe);
+      ctx.moveTo(13, -36 + breathe);
+      ctx.lineTo(16, -20);
+      ctx.lineTo(14, -10);
+      ctx.lineTo(11, -10);
+      ctx.lineTo(11, -34 + breathe);
       ctx.closePath();
       ctx.fill();
 
-      // Winter gloves
-      ctx.fillStyle = '#4488BB';
+      // Hands
+      ctx.fillStyle = '#E8D0C0';
       ctx.beginPath();
-      ctx.arc(-17, -8, 5, 0, Math.PI * 2);
-      ctx.arc(17, -8, 5, 0, Math.PI * 2);
+      ctx.arc(-15, -8, 4, 0, Math.PI * 2);
+      ctx.arc(15, -8, 4, 0, Math.PI * 2);
       ctx.fill();
 
-      // Clipboard in hand
-      ctx.fillStyle = '#2a3a4a';
-      ctx.fillRect(-22, -16, 10, 14);
-      ctx.fillStyle = '#EEFFFF';
-      ctx.fillRect(-21, -15, 8, 11);
-      ctx.fillStyle = '#88AACC';
-      ctx.fillRect(-20, -13, 6, 1);
-      ctx.fillRect(-20, -10, 6, 1);
-      ctx.fillRect(-20, -7, 4, 1);
-
-      // Name badge
-      ctx.fillStyle = '#3a5a7a';
-      ctx.fillRect(4, -34 + breathe, 14, 10);
-      ctx.fillStyle = '#EEFFFF';
-      ctx.fillRect(5, -33 + breathe, 12, 8);
-      ctx.fillStyle = '#2a4a6a';
-      ctx.font = 'bold 4px monospace';
+      // Chest badge (cosmic emblem)
+      ctx.fillStyle = 'rgba(0,0,0,0.7)';
+      ctx.fillRect(-16, -32 + breathe, 14, 8);
+      ctx.fillStyle = '#FFDD44';
+      ctx.shadowColor = '#FFAA00';
+      ctx.shadowBlur = 4;
+      ctx.font = 'bold 5px Orbitron, monospace';
       ctx.textAlign = 'center';
-      ctx.fillText('FROST', 11, -27 + breathe);
+      ctx.fillText('STAR', -9, -26 + breathe);
+      ctx.shadowBlur = 0;
+
+      // Star-pip shoulder rank (gold)
+      ctx.fillStyle = '#FFDD44';
+      ctx.shadowColor = '#FFAA00';
+      ctx.shadowBlur = 5;
+      ctx.beginPath();
+      ctx.arc(-10, -40 + breathe, 2.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(-14, -38 + breathe, 2.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+
+      // Label above head
+      ctx.fillStyle = '#CC99FF';
+      ctx.shadowColor = '#AA66FF';
+      ctx.shadowBlur = 12;
+      ctx.font = 'bold 8px Orbitron, monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText(this.label, 0, -76 + breathe);
+      ctx.shadowBlur = 0;
+
+    } else if (this.isSnow) {
+      // ═══ FROZEN TUNDRA: Cryo-tech professional — ice-blue suit ═══
+      const breathe = Math.sin(this._waveT * 0.8) * 1;
+
+      // Shadow
+      ctx.globalAlpha = 0.3;
+      ctx.fillStyle = '#000';
+      ctx.beginPath();
+      ctx.ellipse(2, 4, 14, 5, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+
+      // Legs (dark ice-navy pants)
+      ctx.fillStyle = '#0e1a30';
+      ctx.fillRect(-6, -8, 5, 12);
+      ctx.fillRect(1, -8, 5, 12);
+
+      // Shoes (gloss ice-black with subtle frost highlight)
+      ctx.fillStyle = '#080e18';
+      ctx.fillRect(-7, 2, 6, 4);
+      ctx.fillRect(1, 2, 6, 4);
+      ctx.fillStyle = 'rgba(136,204,255,0.22)';
+      ctx.fillRect(-6, 2, 4, 2);
+      ctx.fillRect(2, 2, 4, 2);
+
+      // Body (fitted ice-blue suit jacket)
+      const parkaGrad = ctx.createLinearGradient(-12, -38, 12, -10);
+      parkaGrad.addColorStop(0, '#1a2d4a');
+      parkaGrad.addColorStop(0.5, '#0f1f38');
+      parkaGrad.addColorStop(1, '#0a1525');
+      ctx.fillStyle = parkaGrad;
+      ctx.beginPath();
+      ctx.moveTo(-11, -10);
+      ctx.lineTo(-13, -38 + breathe);
+      ctx.lineTo(-8, -42 + breathe);
+      ctx.lineTo(8, -42 + breathe);
+      ctx.lineTo(13, -38 + breathe);
+      ctx.lineTo(11, -10);
+      ctx.closePath();
+      ctx.fill();
+
+      // Suit lapels — ice crystal blue
+      ctx.strokeStyle = '#88CCFF';
+      ctx.lineWidth = 1;
+      ctx.globalAlpha = 0.7;
+      ctx.beginPath();
+      ctx.moveTo(-4, -38 + breathe);
+      ctx.lineTo(-6, -20);
+      ctx.moveTo(4, -38 + breathe);
+      ctx.lineTo(6, -20);
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+
+      // Tie (ice-blue glowing)
+      ctx.fillStyle = '#66BBFF';
+      ctx.shadowColor = '#66BBFF';
+      ctx.shadowBlur = 7;
+      ctx.beginPath();
+      ctx.moveTo(0, -38 + breathe);
+      ctx.lineTo(-3, -34 + breathe);
+      ctx.lineTo(0, -12);
+      ctx.lineTo(3, -34 + breathe);
+      ctx.closePath();
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      // Tie pin — ice diamond
+      ctx.fillStyle = '#DDEEFF';
+      ctx.shadowColor = '#AADDFF';
+      ctx.shadowBlur = 5;
+      ctx.beginPath();
+      ctx.moveTo(0, -27 + breathe);
+      ctx.lineTo(-2.5, -24.5 + breathe);
+      ctx.lineTo(0, -22 + breathe);
+      ctx.lineTo(2.5, -24.5 + breathe);
+      ctx.closePath();
+      ctx.fill();
+      ctx.shadowBlur = 0;
+
+      // Shirt collar (white)
+      ctx.fillStyle = '#FFFFFF';
+      ctx.beginPath();
+      ctx.moveTo(-5, -40 + breathe);
+      ctx.lineTo(0, -37 + breathe);
+      ctx.lineTo(5, -40 + breathe);
+      ctx.lineTo(4, -42 + breathe);
+      ctx.lineTo(-4, -42 + breathe);
+      ctx.closePath();
+      ctx.fill();
+
+      // Neck
+      ctx.fillStyle = '#E8D0C0';
+      ctx.fillRect(-3, -46 + breathe, 6, 6);
+
+      // Head
+      const headGrad = ctx.createRadialGradient(-3, -54 + breathe, 2, 0, -52 + breathe, 12);
+      headGrad.addColorStop(0, '#F5E0D0');
+      headGrad.addColorStop(1, '#D4B8A8');
+      ctx.fillStyle = headGrad;
+      ctx.beginPath();
+      ctx.ellipse(0, -54 + breathe, 10, 12, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Hair — frost-silver platinum
+      ctx.fillStyle = '#C0D0E0';
+      ctx.beginPath();
+      ctx.ellipse(0, -62 + breathe, 9, 6, 0, Math.PI, 0);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(-9, -58 + breathe);
+      ctx.quadraticCurveTo(-10, -52 + breathe, -8, -50 + breathe);
+      ctx.lineTo(-8, -58 + breathe);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(9, -58 + breathe);
+      ctx.quadraticCurveTo(10, -52 + breathe, 8, -50 + breathe);
+      ctx.lineTo(8, -58 + breathe);
+      ctx.fill();
+
+      // Eyes
+      ctx.fillStyle = '#FFFFFF';
+      ctx.beginPath();
+      ctx.ellipse(-4, -54 + breathe, 2.5, 2, 0, 0, Math.PI * 2);
+      ctx.ellipse(4, -54 + breathe, 2.5, 2, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#3388CC';
+      ctx.beginPath();
+      ctx.arc(-4, -54 + breathe, 1.2, 0, Math.PI * 2);
+      ctx.arc(4, -54 + breathe, 1.2, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Friendly smile
+      ctx.strokeStyle = '#AA7766';
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.arc(0, -50 + breathe, 4, 0.2, Math.PI - 0.2);
+      ctx.stroke();
+
+      // Arms (at sides, professional ice-navy sleeves)
+      ctx.fillStyle = '#0f1f38';
+      ctx.beginPath();
+      ctx.moveTo(-13, -36 + breathe);
+      ctx.lineTo(-16, -20);
+      ctx.lineTo(-14, -10);
+      ctx.lineTo(-11, -10);
+      ctx.lineTo(-11, -34 + breathe);
+      ctx.closePath();
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(13, -36 + breathe);
+      ctx.lineTo(16, -20);
+      ctx.lineTo(14, -10);
+      ctx.lineTo(11, -10);
+      ctx.lineTo(11, -34 + breathe);
+      ctx.closePath();
+      ctx.fill();
+
+      // Hands
+      ctx.fillStyle = '#E8D0C0';
+      ctx.beginPath();
+      ctx.arc(-15, -8, 4, 0, Math.PI * 2);
+      ctx.arc(15, -8, 4, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Name badge on chest (ice-blue framed)
+      ctx.fillStyle = 'rgba(10,20,40,0.85)';
+      ctx.fillRect(-16, -32 + breathe, 14, 8);
+      ctx.strokeStyle = '#66AADD';
+      ctx.lineWidth = 0.7;
+      ctx.strokeRect(-16, -32 + breathe, 14, 8);
+      ctx.fillStyle = '#88CCFF';
+      ctx.font = 'bold 5px Orbitron, monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText('ICE REP', -9, -26 + breathe);
 
       // Label above head
       ctx.fillStyle = '#AADDFF';
       ctx.shadowColor = '#66BBFF';
-      ctx.shadowBlur = 10;
+      ctx.shadowBlur = 12;
       ctx.font = 'bold 8px Orbitron, monospace';
       ctx.textAlign = 'center';
-      ctx.fillText(this.label, 0, -82 + breathe);
+      ctx.fillText(this.label, 0, -76 + breathe);
       ctx.shadowBlur = 0;
 
     } else if (this.isDesert) {
@@ -10923,10 +11125,11 @@ class BuildingNPC {
     this.dialogue    = cfg.dialogue;
     this._waveT      = 0;
     this._interactR  = 65;
-    // renderType can be: true (neonCity for backwards compat), 'wasteland', or false (default)
-    this._isNeonCity = renderType === true || renderType === 'neonCity';
+    // renderType can be: true (neonCity for backwards compat), 'wasteland', 'galactica', or false (default)
+    this._isNeonCity  = renderType === true || renderType === 'neonCity';
     this._isWasteland = renderType === 'wasteland';
-    this._isGirl     = isGirl;
+    this._isGalactica = renderType === 'galactica';
+    this._isGirl      = isGirl;
     this._buildingType = buildingType;
   }
 
@@ -10936,6 +11139,8 @@ class BuildingNPC {
     if (this._hidden) return;
     if (this._isGirl) {
       this._renderGirl(ctx);
+    } else if (this._isGalactica) {
+      this._renderGalactica(ctx);
     } else if (this._isWasteland) {
       this._renderWasteland(ctx);
     } else if (this._isNeonCity) {
@@ -10943,6 +11148,185 @@ class BuildingNPC {
     } else {
       this._renderDefault(ctx);
     }
+  }
+
+  _renderGalactica(ctx) {
+    // ═══ GALACTICA: Human cosmic bartender ═══
+    const t = performance.now() / 1000;
+    const breathe = Math.sin(t * 0.8) * 1;
+    const sway    = Math.sin(this._waveT) * 2;
+
+    ctx.save();
+    ctx.translate(this.x + sway, this.y);
+
+    // Shadow
+    ctx.globalAlpha = 0.3;
+    ctx.fillStyle = '#000';
+    ctx.beginPath();
+    ctx.ellipse(2, 6, 14, 5, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+
+    // Legs (dark cosmic pants)
+    ctx.fillStyle = '#0d0022';
+    ctx.fillRect(-6, -8, 5, 14);
+    ctx.fillRect(1, -8, 5, 14);
+
+    // Space boots with gold trim
+    ctx.fillStyle = '#07001a';
+    ctx.fillRect(-7, 4, 6, 5);
+    ctx.fillRect(1, 4, 6, 5);
+    ctx.fillStyle = '#FFDD44';
+    ctx.fillRect(-7, 4, 6, 1.5);
+    ctx.fillRect(1, 4, 6, 1.5);
+
+    // Body (bartender vest — deep indigo, gold trim)
+    const vGrad = ctx.createLinearGradient(-12, -40, 12, -8);
+    vGrad.addColorStop(0, '#2a0050');
+    vGrad.addColorStop(0.5, '#1a0038');
+    vGrad.addColorStop(1, '#0e001e');
+    ctx.fillStyle = vGrad;
+    ctx.beginPath();
+    ctx.moveTo(-11, -8);
+    ctx.lineTo(-13, -38 + breathe);
+    ctx.lineTo(-8, -42 + breathe);
+    ctx.lineTo(8, -42 + breathe);
+    ctx.lineTo(13, -38 + breathe);
+    ctx.lineTo(11, -8);
+    ctx.closePath();
+    ctx.fill();
+
+    // Gold vest lapels
+    ctx.strokeStyle = '#FFDD44'; ctx.lineWidth = 1; ctx.globalAlpha = 0.55;
+    ctx.beginPath();
+    ctx.moveTo(-4, -38 + breathe); ctx.lineTo(-6, -20);
+    ctx.moveTo(4, -38 + breathe);  ctx.lineTo(6, -20);
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+
+    // White shirt / collar
+    ctx.fillStyle = '#FFFFFF';
+    ctx.beginPath();
+    ctx.moveTo(-5, -40 + breathe); ctx.lineTo(0, -37 + breathe);
+    ctx.lineTo(5, -40 + breathe);  ctx.lineTo(4, -42 + breathe);
+    ctx.lineTo(-4, -42 + breathe); ctx.closePath(); ctx.fill();
+
+    // Gold bow-tie (bartender style)
+    ctx.fillStyle = '#FFDD44'; ctx.shadowColor = '#FFAA00'; ctx.shadowBlur = 5;
+    ctx.beginPath();
+    ctx.moveTo(-4, -38 + breathe); ctx.lineTo(-1, -36 + breathe);
+    ctx.lineTo(-4, -34 + breathe); ctx.closePath(); ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(4, -38 + breathe);  ctx.lineTo(1, -36 + breathe);
+    ctx.lineTo(4, -34 + breathe);  ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.arc(0, -36 + breathe, 1.5, 0, Math.PI * 2); ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // Neck
+    ctx.fillStyle = '#E8D0C0'; ctx.fillRect(-3, -46 + breathe, 6, 6);
+
+    // Head
+    const hG = ctx.createRadialGradient(-2, -54 + breathe, 2, 0, -52 + breathe, 11);
+    hG.addColorStop(0, '#F5E0D0'); hG.addColorStop(1, '#D4B8A8');
+    ctx.fillStyle = hG;
+    ctx.beginPath(); ctx.ellipse(0, -54 + breathe, 10, 12, 0, 0, Math.PI * 2); ctx.fill();
+
+    // Hair (dark purple-black, styled back)
+    ctx.fillStyle = '#0d0022';
+    ctx.beginPath(); ctx.ellipse(0, -62 + breathe, 9, 6, 0, Math.PI, 0); ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(-9, -58 + breathe);
+    ctx.quadraticCurveTo(-10, -52 + breathe, -8, -50 + breathe);
+    ctx.lineTo(-8, -58 + breathe); ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(9, -58 + breathe);
+    ctx.quadraticCurveTo(10, -52 + breathe, 8, -50 + breathe);
+    ctx.lineTo(8, -58 + breathe); ctx.fill();
+
+    // Eyes — glowing violet iris
+    ctx.fillStyle = '#FFFFFF';
+    ctx.beginPath();
+    ctx.ellipse(-4, -54 + breathe, 2.5, 2, 0, 0, Math.PI * 2);
+    ctx.ellipse(4, -54 + breathe, 2.5, 2, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#CC66FF'; ctx.shadowColor = '#AA44FF'; ctx.shadowBlur = 6;
+    ctx.beginPath();
+    ctx.arc(-4, -54 + breathe, 1.3, 0, Math.PI * 2);
+    ctx.arc(4, -54 + breathe, 1.3, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = '#111';
+    ctx.beginPath();
+    ctx.arc(-4, -54 + breathe, 0.5, 0, Math.PI * 2);
+    ctx.arc(4, -54 + breathe, 0.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Eyebrows
+    ctx.strokeStyle = '#0d0022'; ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(-7, -58 + breathe); ctx.lineTo(-2, -59 + breathe); ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(2, -59 + breathe);  ctx.lineTo(7, -58 + breathe);  ctx.stroke();
+
+    // Nose
+    ctx.fillStyle = 'rgba(0,0,0,0.15)';
+    ctx.beginPath(); ctx.arc(0, -50 + breathe, 1.2, 0, Math.PI * 2); ctx.fill();
+
+    // Friendly smile
+    ctx.strokeStyle = '#AA7766'; ctx.lineWidth = 1.3;
+    ctx.beginPath(); ctx.arc(0, -47 + breathe, 4, 0.2, Math.PI - 0.2); ctx.stroke();
+
+    // Left arm (holding glass to customer)
+    ctx.fillStyle = '#1a0038';
+    ctx.beginPath();
+    ctx.moveTo(-13, -36 + breathe); ctx.lineTo(-20, -16);
+    ctx.lineTo(-18, -8);  ctx.lineTo(-15, -8);
+    ctx.lineTo(-10, -30 + breathe); ctx.closePath(); ctx.fill();
+
+    // Right arm (reaching back to shelf)
+    ctx.beginPath();
+    ctx.moveTo(13, -36 + breathe); ctx.lineTo(18, -18);
+    ctx.lineTo(16, -8);  ctx.lineTo(13, -8);
+    ctx.lineTo(10, -32 + breathe); ctx.closePath(); ctx.fill();
+
+    // Hands
+    ctx.fillStyle = '#E8D0C0';
+    ctx.beginPath(); ctx.arc(-18, -7, 4, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(16, -7, 4, 0, Math.PI * 2); ctx.fill();
+
+    // Glowing drink in left hand
+    const drinkCol = '#AA66FF';
+    ctx.fillStyle = drinkCol + '55'; ctx.strokeStyle = drinkCol;
+    ctx.lineWidth = 1.2; ctx.shadowColor = drinkCol; ctx.shadowBlur = 8;
+    ctx.beginPath();
+    ctx.moveTo(-23, -22); ctx.lineTo(-21, -12);
+    ctx.lineTo(-14, -12); ctx.lineTo(-12, -22);
+    ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    // Gold shoulder stars
+    ctx.fillStyle = '#FFDD44'; ctx.shadowColor = '#FFAA00'; ctx.shadowBlur = 4;
+    ctx.beginPath(); ctx.arc(-10, -40 + breathe, 2.5, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(-14, -38 + breathe, 2, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(10, -40 + breathe, 2.5, 0, Math.PI * 2); ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // Name badge
+    ctx.fillStyle = 'rgba(0,0,0,0.7)';
+    ctx.fillRect(-15, -30 + breathe, 13, 8);
+    ctx.fillStyle = '#FFDD44'; ctx.shadowColor = '#FFAA00'; ctx.shadowBlur = 3;
+    ctx.font = 'bold 4.5px Orbitron, monospace'; ctx.textAlign = 'center';
+    ctx.fillText('BAR', -8, -24 + breathe);
+    ctx.shadowBlur = 0;
+
+    // Label above head
+    ctx.fillStyle = '#CC99FF'; ctx.shadowColor = '#AA66FF'; ctx.shadowBlur = 14;
+    ctx.font = 'bold 8px Orbitron, monospace'; ctx.textAlign = 'center';
+    ctx.fillText(this.name, 0, -78 + breathe);
+    ctx.shadowBlur = 0;
+
+    // [T] interact hint when near (rendered by game.js separately — this is just the figure)
+    ctx.restore();
   }
 
   _renderWasteland(ctx) {

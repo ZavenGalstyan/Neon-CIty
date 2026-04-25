@@ -6180,40 +6180,67 @@ Game.prototype._renderIndoorFurniture = function(ctx, room) {
         ctx.shadowBlur = 0;
         ctx.restore();
 
-        // ── COSMIC BAR COUNTER (curved top) ──
+        // ── COSMIC BAR COUNTER (wide, curved top) ──
         ctx.fillStyle = "#0c0420";
         ctx.strokeStyle = PURP;
         ctx.lineWidth = 2;
         ctx.shadowColor = PURP;
         ctx.shadowBlur = 14;
-        rr(cx - W * 0.38, topY + 6, W * 0.76, 28, 6);
+        rr(cx - W * 0.44, topY + 6, W * 0.88, 32, 8);
         ctx.fill();
         ctx.stroke();
         ctx.shadowBlur = 0;
         // Counter top surface glow
-        const ctGrad = ctx.createLinearGradient(
-          cx - W * 0.38,
-          0,
-          cx + W * 0.38,
-          0,
-        );
+        const ctGrad = ctx.createLinearGradient(cx - W * 0.44, 0, cx + W * 0.44, 0);
         ctGrad.addColorStop(0, "rgba(170,136,255,0)");
-        ctGrad.addColorStop(0.5, "rgba(170,136,255,0.4)");
+        ctGrad.addColorStop(0.5, "rgba(170,136,255,0.45)");
         ctGrad.addColorStop(1, "rgba(170,136,255,0)");
         ctx.fillStyle = ctGrad;
-        ctx.fillRect(cx - W * 0.38, topY + 6, W * 0.76, 5);
+        ctx.fillRect(cx - W * 0.44, topY + 6, W * 0.88, 6);
 
-        // ── ALIEN DRINK BOTTLES (on counter shelf) ──
+        // ── BACK SHELF behind counter ──
+        ctx.fillStyle = "#07011a";
+        ctx.strokeStyle = "rgba(170,136,255,0.35)";
+        ctx.lineWidth = 1;
+        rr(cx - W * 0.42, topY - 52, W * 0.84, 56, 4);
+        ctx.fill(); ctx.stroke();
+        // Shelf dividers
+        ctx.fillStyle = "#1a0040";
+        ctx.fillRect(cx - W * 0.42, topY - 34, W * 0.84, 3);
+        ctx.fillRect(cx - W * 0.42, topY - 16, W * 0.84, 3);
+        // Shelf bottles (3 rows)
+        const shelfColors = ["#AA66FF","#55DDFF","#FF55CC","#FFDD44","#88FFCC","#FF8855","#AA88FF","#55FF88"];
+        for (let row = 0; row < 3; row++) {
+          const sy = topY - 50 + row * 18;
+          for (let col = 0; col < 8; col++) {
+            const sc = shelfColors[(col + row) % shelfColors.length];
+            const bx2 = cx - W * 0.40 + col * (W * 0.80 / 7);
+            const lp = Math.sin(t * 1.2 + col * 0.9 + row) * 0.3 + 0.7;
+            ctx.fillStyle = sc + "40"; ctx.strokeStyle = sc; ctx.lineWidth = 1;
+            ctx.shadowColor = sc; ctx.shadowBlur = 4 * lp;
+            ctx.beginPath();
+            ctx.moveTo(bx2 - 4, sy + 14); ctx.lineTo(bx2 - 5, sy + 6);
+            ctx.lineTo(bx2 - 2, sy + 2); ctx.lineTo(bx2 + 2, sy + 2);
+            ctx.lineTo(bx2 + 5, sy + 6); ctx.lineTo(bx2 + 4, sy + 14);
+            ctx.closePath(); ctx.fill(); ctx.stroke();
+            ctx.shadowBlur = 0;
+          }
+        }
+
+        // (Bartender NPC is rendered as interactive BuildingNPC by game.js)
+
+        // ── ALIEN DRINK BOTTLES (on counter, in front of shelf) ──
         const drinkData = [
           { col: PURP, symbol: "◈", label: "VOID" },
           { col: CYAN, symbol: "⬡", label: "CRYO" },
           { col: PINK, symbol: "✦", label: "NOVA" },
           { col: GOLD, symbol: "⬢", label: "SOLAR" },
           { col: "#88FFCC", symbol: "◎", label: "NEBULA" },
+          { col: "#FF8855", symbol: "⬟", label: "EMBER" },
         ];
         for (let i = 0; i < drinkData.length; i++) {
           const dd = drinkData[i];
-          const bx = cx - W * 0.3 + i * (W * 0.15);
+          const bx = cx - W * 0.36 + i * (W * 0.145);
           const by = topY + 2;
           const lp = Math.sin(t * 1.5 + i * 1.2) * 0.3 + 0.7;
           // Bottle body — tall hexagonal vial
@@ -6261,9 +6288,9 @@ Game.prototype._renderIndoorFurniture = function(ctx, room) {
         }
 
         // ── BAR STOOLS along counter ──────────────────
-        for (let si = 0; si < 5; si++) {
-          const bsx = cx - W * 0.3 + si * (W * 0.15);
-          const bsy = topY + 56;
+        for (let si = 0; si < 6; si++) {
+          const bsx = cx - W * 0.36 + si * (W * 0.145);
+          const bsy = topY + 60;
           // Stool legs
           ctx.strokeStyle = PURP + "77"; ctx.lineWidth = 1.5;
           ctx.beginPath(); ctx.moveTo(bsx - 6, bsy + 6); ctx.lineTo(bsx - 8, bsy + 20); ctx.stroke();
@@ -6278,14 +6305,15 @@ Game.prototype._renderIndoorFurniture = function(ctx, room) {
         }
         // ── BAR PATRONS on stools ─────────────────────
         const barPatrons = [
-          { x: cx - W * 0.3 + 0 * (W * 0.15), skin: "#FFDDBB", hair: "#1a1a2a", col: PURP, gender: "m", drink: PURP },
-          { x: cx - W * 0.3 + 1 * (W * 0.15), skin: "#F0C080", hair: "#AA5522", col: PINK, gender: "f", drink: PINK },
-          { x: cx - W * 0.3 + 2 * (W * 0.15), skin: "#D4956A", hair: "#2a1a00", col: CYAN, gender: "m", drink: CYAN },
-          { x: cx - W * 0.3 + 3 * (W * 0.15), skin: "#EECCAA", hair: "#1a002a", col: GOLD, gender: "f", drink: GOLD },
-          { x: cx - W * 0.3 + 4 * (W * 0.15), skin: "#DDBB99", hair: "#332211", col: "#88FFCC", gender: "m", drink: "#88FFCC" },
+          { x: cx - W * 0.36 + 0 * (W * 0.145), skin: "#FFDDBB", hair: "#1a1a2a", col: PURP, gender: "m", drink: PURP },
+          { x: cx - W * 0.36 + 1 * (W * 0.145), skin: "#F0C080", hair: "#AA5522", col: PINK, gender: "f", drink: PINK },
+          { x: cx - W * 0.36 + 2 * (W * 0.145), skin: "#D4956A", hair: "#2a1a00", col: CYAN, gender: "m", drink: CYAN },
+          { x: cx - W * 0.36 + 3 * (W * 0.145), skin: "#EECCAA", hair: "#1a002a", col: GOLD, gender: "f", drink: GOLD },
+          { x: cx - W * 0.36 + 4 * (W * 0.145), skin: "#DDBB99", hair: "#332211", col: "#88FFCC", gender: "m", drink: "#88FFCC" },
+          { x: cx - W * 0.36 + 5 * (W * 0.145), skin: "#FFE0CC", hair: "#220044", col: "#FF8855", gender: "f", drink: "#FF8855" },
         ];
         for (const bp of barPatrons) {
-          const bpx = bp.x, bpy = topY + 36;
+          const bpx = bp.x, bpy = topY + 40;
           ctx.save();
           // Body
           ctx.fillStyle = bp.col + "CC"; ctx.shadowColor = bp.col; ctx.shadowBlur = 5;
@@ -7129,14 +7157,274 @@ Game.prototype._renderIndoorFurniture = function(ctx, room) {
       const isSnowTech = !!this.map?.config?.snow;
 
       if (isSnowTech) {
-        // ═══ FROZEN TUNDRA: CRYO RESEARCH LAB ═══
+        // ═══ FROZEN TUNDRA: CRYO TECH LAB ═══
         const t = performance.now() / 1000;
 
-        // ── Lab sign ───────────────────
-        ctx.fillStyle = "#AADDFF";
-        ctx.shadowColor = "#66BBFF";
-        ctx.shadowBlur = 15;
-        ctx.font = "bold 12px Orbitron, monospace";
+        // ── Ice tile floor ────────────────────────────────────
+        ctx.fillStyle = "#020810"; ctx.fillRect(0,0,W,H);
+        const tSz2=Math.round(W/16);
+        for (let gy=0;gy<=Math.ceil(H/tSz2);gy++) for (let gx=0;gx<=Math.ceil(W/tSz2);gx++) {
+          const ftx=gx*tSz2,fty=gy*tSz2,fsd=gx*13+gy*7;
+          ctx.fillStyle=fsd%3===0?"rgba(4,14,28,0.97)":fsd%3===1?"rgba(6,18,34,0.97)":"rgba(5,16,30,0.97)";
+          ctx.fillRect(ftx,fty,tSz2,tSz2);
+          ctx.strokeStyle=`rgba(100,180,255,${0.06+0.03*Math.sin(t*0.7+fsd*0.12)})`;
+          ctx.lineWidth=0.7; ctx.strokeRect(ftx,fty,tSz2,tSz2);
+        }
+
+        // ── Room border (ice glow) ─────────────────────────────
+        ctx.strokeStyle=`rgba(136,221,255,${0.6+0.2*Math.sin(t*1.3)})`; ctx.lineWidth=3;
+        ctx.strokeRect(2,2,W-4,H-4);
+        ctx.strokeStyle="rgba(80,160,220,0.22)"; ctx.lineWidth=1; ctx.strokeRect(7,7,W-14,H-14);
+
+        // ── Ceiling cryo-lights (one flickers) ────────────────
+        const hLX2=[W*0.15,W*0.40,W*0.65,W*0.88];
+        for (let li=0;li<4;li++) {
+          const lx=hLX2[li], fl=li===2?(0.55+0.45*Math.sin(t*11.7)):1;
+          const lc=ctx.createRadialGradient(lx,0,2,lx,H*0.28,W*0.13);
+          lc.addColorStop(0,`rgba(136,221,255,${0.11*fl})`); lc.addColorStop(1,"rgba(0,0,0,0)");
+          ctx.fillStyle=lc; ctx.beginPath(); ctx.moveTo(lx-5,0); ctx.lineTo(lx-W*0.08,H*0.35); ctx.lineTo(lx+W*0.08,H*0.35); ctx.closePath(); ctx.fill();
+          ctx.fillStyle=`rgba(180,230,255,${0.8*fl})`; ctx.shadowColor="#88DDFF"; ctx.shadowBlur=10*fl;
+          ctx.beginPath(); ctx.arc(lx,5,4,0,Math.PI*2); ctx.fill(); ctx.shadowBlur=0;
+        }
+
+        // ── CRYO TECH LAB banner ──────────────────────────────
+        const bW2=W*0.56, bH2=H*0.042, bX2=cx-bW2/2, bY2=room.S-bH2-4;
+        const bGr2=ctx.createLinearGradient(bX2,bY2,bX2+bW2,bY2);
+        bGr2.addColorStop(0,"rgba(2,10,28,0.97)"); bGr2.addColorStop(0.5,"rgba(10,40,90,0.99)"); bGr2.addColorStop(1,"rgba(2,10,28,0.97)");
+        ctx.fillStyle=bGr2; rr(bX2,bY2,bW2,bH2,7); ctx.fill();
+        ctx.strokeStyle=`rgba(136,221,255,${0.7+0.3*Math.sin(t*1.8)})`; ctx.lineWidth=2; ctx.stroke();
+        ctx.fillStyle="#CCEEFF"; ctx.font=`bold ${Math.round(bH2*0.55)}px monospace`; ctx.textAlign="center";
+        ctx.shadowColor="#88DDFF"; ctx.shadowBlur=14;
+        ctx.fillText("❄  CRYO  TECH  LAB  ❄",cx,bY2+bH2*0.72); ctx.shadowBlur=0;
+
+        // ── CRYO HAZARD sign (blink) ─────────────────────────
+        const rWarn2=0.7+0.3*Math.sin(t*3.5);
+        const rW2=W*0.14, rH2=H*0.038;
+        ctx.fillStyle=`rgba(136,221,255,${rWarn2})`; ctx.shadowColor="#66BBFF"; ctx.shadowBlur=14*rWarn2;
+        rr(cx-rW2/2,topY+H*0.04,rW2,rH2,5); ctx.fill(); ctx.shadowBlur=0;
+        ctx.strokeStyle=`rgba(60,140,220,${rWarn2})`; ctx.lineWidth=1.5; ctx.stroke();
+        ctx.fillStyle="#020810"; ctx.font=`bold ${Math.round(rH2*0.5)}px monospace`; ctx.textAlign="center";
+        ctx.fillText("❄ CRYO HAZARD ZONE ❄",cx,topY+H*0.04+rH2*0.7);
+
+        // ── Top: cryo server rack (full width) ────────────────
+        const srvY2=topY+H*0.005, srvH2=H*0.065;
+        const srvBg2=ctx.createLinearGradient(W*0.04,srvY2,W*0.96,srvY2+srvH2);
+        srvBg2.addColorStop(0,"#020810"); srvBg2.addColorStop(0.5,"#04112a"); srvBg2.addColorStop(1,"#020810");
+        ctx.fillStyle=srvBg2; rr(W*0.04,srvY2,W*0.92,srvH2,5); ctx.fill();
+        ctx.strokeStyle="rgba(88,180,255,0.65)"; ctx.lineWidth=1.5; ctx.stroke();
+        for (let si=0;si<12;si++) {
+          const sx=W*0.05+si*(W*0.9/12);
+          ctx.fillStyle="#020810"; ctx.strokeStyle="rgba(60,140,220,0.38)"; ctx.lineWidth=0.7;
+          ctx.fillRect(sx,srvY2+3,W*0.068,srvH2-6); ctx.strokeRect(sx,srvY2+3,W*0.068,srvH2-6);
+          const lCA=["#00AAFF","#44CCFF","#0088DD","#66DDFF","#0099EE","#88EEFF","#44AAFF","#00BBFF","#55CCFF","#0077CC","#66BBFF","#AADDFF"][si];
+          const lAA=0.5+0.5*Math.sin(t*(1.2+si*0.25)+si);
+          ctx.fillStyle=lCA; ctx.shadowColor=lCA; ctx.shadowBlur=4*lAA;
+          ctx.fillRect(sx+2,srvY2+4,W*0.05,3); ctx.shadowBlur=0;
+          const da2=Math.sin(t*(3+si*0.7)+si)>0.4;
+          ctx.fillStyle=da2?"#66BBFF":"#04112a";
+          ctx.beginPath(); ctx.arc(sx+W*0.057,srvY2+srvH2-6,2.5,0,Math.PI*2); ctx.fill();
+        }
+
+        // ── Main research desk ─────────────────────────────────
+        const dY2=topY+H*0.10, dH3=H*0.055, dW3=W*0.82, dX3=cx-dW3/2;
+        const dBg2=ctx.createLinearGradient(dX3,dY2,dX3+dW3,dY2+dH3);
+        dBg2.addColorStop(0,"#020810"); dBg2.addColorStop(0.5,"#04122c"); dBg2.addColorStop(1,"#020810");
+        ctx.fillStyle=dBg2; rr(dX3,dY2,dW3,dH3,6); ctx.fill();
+        ctx.strokeStyle="rgba(88,180,255,0.82)"; ctx.lineWidth=2; ctx.stroke();
+        ctx.strokeStyle=`rgba(136,221,255,${0.42+0.25*Math.sin(t*1.5)})`; ctx.lineWidth=1.5;
+        ctx.beginPath(); ctx.moveTo(dX3+10,dY2+dH3-2); ctx.lineTo(dX3+dW3-10,dY2+dH3-2); ctx.stroke();
+        // Keyboard
+        ctx.fillStyle="#020810"; rr(dX3+dW3*0.04,dY2+4,dW3*0.2,dH3-8,3); ctx.fill();
+        ctx.strokeStyle="rgba(60,140,220,0.38)"; ctx.lineWidth=0.8; ctx.stroke();
+        for (let ki=0;ki<10;ki++) { const kr=Math.floor(ki/5),kc=ki%5; ctx.fillStyle=`rgba(88,180,255,${0.24+0.14*Math.sin(t+ki)})`; ctx.fillRect(dX3+dW3*0.05+kc*dW3*0.036,dY2+6+kr*7,dW3*0.028,5); }
+
+        // Cryo holo-display above desk
+        const hW2=W*0.26, hH3=H*0.13, hX2=cx-hW2/2, hY2=dY2-hH3-H*0.006;
+        const glitch2=(Math.sin(t*7.3)>0.88)?Math.sin(t*25)*3:0;
+        ctx.fillStyle="rgba(2,8,22,0.93)"; rr(hX2+glitch2,hY2,hW2,hH3,5); ctx.fill();
+        ctx.strokeStyle=`rgba(136,221,255,${0.6+0.3*Math.sin(t*2.1)})`; ctx.lineWidth=1.5; ctx.stroke();
+        ctx.fillStyle="#88DDFF"; ctx.font=`bold ${Math.round(hH3*0.13)}px monospace`; ctx.textAlign="center";
+        ctx.shadowColor="#66BBFF"; ctx.shadowBlur=8;
+        ctx.fillText("❄ CRYO ONLINE ❄",cx+glitch2*0.5,hY2+hH3*0.22); ctx.shadowBlur=0;
+        const dLines2=["TEMP: -196°C","CRYO: ACTIVE","POWER: 92%","RADS: ZERO","UPLINK: OK"];
+        for (let dl=0;dl<5;dl++) {
+          ctx.fillStyle=dl===0?`rgba(136,221,255,0.95)`:`rgba(88,180,255,${dl%2===0?0.88:0.55})`;
+          ctx.font=`${Math.round(hH3*0.1)}px monospace`; ctx.textAlign="left";
+          ctx.fillText(dLines2[dl],hX2+hW2*0.06+glitch2,hY2+hH3*0.35+dl*hH3*0.13);
+        }
+        ctx.strokeStyle="rgba(136,221,255,0.6)"; ctx.lineWidth=1.2;
+        ctx.beginPath();
+        for (let wx=0;wx<hW2-10;wx+=2) { const wy=hY2+hH3*0.82+hH3*0.1*Math.sin(t*5.5+wx*0.18); wx===0?ctx.moveTo(hX2+5+wx,wy):ctx.lineTo(hX2+5+wx,wy); }
+        ctx.stroke();
+
+        // ── LEFT: Cryo freeze chamber ──────────────────────────
+        const tcX2=W*0.06, tcY2=H*0.28, tcW2=W*0.11, tcH2=H*0.52;
+        ctx.fillStyle="#020810"; ctx.strokeStyle="rgba(88,180,255,0.7)"; ctx.lineWidth=2;
+        rr(tcX2,tcY2+tcH2-tcH2*0.11,tcW2,tcH2*0.11,5); ctx.fill(); ctx.stroke();
+        const cCol2=ctx.createLinearGradient(tcX2+tcW2*0.3,tcY2,tcX2+tcW2*0.7,tcY2);
+        cCol2.addColorStop(0,"#040e22"); cCol2.addColorStop(0.5,"#081830"); cCol2.addColorStop(1,"#040e22");
+        ctx.fillStyle=cCol2; ctx.strokeStyle="rgba(60,140,220,0.48)"; ctx.lineWidth=1.5;
+        ctx.fillRect(tcX2+tcW2*0.3,tcY2+tcH2*0.14,tcW2*0.4,tcH2*0.73); ctx.strokeRect(tcX2+tcW2*0.3,tcY2+tcH2*0.14,tcW2*0.4,tcH2*0.73);
+        for (let ci=0;ci<8;ci++) {
+          const cy2=tcY2+tcH2*0.17+ci*(tcH2*0.64/8);
+          ctx.strokeStyle=`rgba(136,${200+ci*4},255,0.45)`; ctx.lineWidth=2;
+          ctx.beginPath(); ctx.ellipse(tcX2+tcW2/2,cy2,tcW2*0.43,tcH2*0.024,0,0,Math.PI*2); ctx.stroke();
+        }
+        const tsR2=tcW2*0.4;
+        const tsG2=ctx.createRadialGradient(tcX2+tcW2/2,tcY2+tsR2*0.45,tsR2*0.08,tcX2+tcW2/2,tcY2+tsR2*0.45,tsR2);
+        tsG2.addColorStop(0,"#0a2040"); tsG2.addColorStop(0.5,"#061428"); tsG2.addColorStop(1,"#020810");
+        ctx.fillStyle=tsG2; ctx.strokeStyle=`rgba(136,221,255,${0.6+0.3*Math.sin(t*2)})`; ctx.lineWidth=2;
+        ctx.beginPath(); ctx.arc(tcX2+tcW2/2,tcY2+tsR2*0.52,tsR2,0,Math.PI*2); ctx.fill(); ctx.stroke();
+        // Frost arcs
+        for (let ai=0;ai<6;ai++) {
+          const aS2=Math.floor(t*3+ai*3.1)%7;
+          const aX4=tcX2+tcW2/2, aY4=tcY2+tsR2*0.52;
+          const aX5=aX4+Math.sin(ai*1.3+t*1.5+aS2)*tcW2*0.9, aY5=aY4+Math.cos(ai*1.1+t*1.2+aS2)*tcW2*0.7;
+          const aA2=0.3+0.5*Math.abs(Math.sin(t*5+ai));
+          ctx.strokeStyle=`rgba(136,221,255,${aA2})`; ctx.lineWidth=1;
+          ctx.beginPath(); ctx.moveTo(aX4,aY4); ctx.quadraticCurveTo(aX4+(aX5-aX4)*0.5+Math.sin(t*9+ai)*6,aY4+(aY5-aY4)*0.5+Math.cos(t*7+ai)*6,aX5,aY5); ctx.stroke();
+          ctx.fillStyle=`rgba(180,230,255,${aA2*0.7})`; ctx.shadowColor="#AADDFF"; ctx.shadowBlur=5*aA2;
+          ctx.beginPath(); ctx.arc(aX5,aY5,2,0,Math.PI*2); ctx.fill(); ctx.shadowBlur=0;
+        }
+        ctx.fillStyle="#AADDFF"; ctx.font=`bold ${Math.round(tcW2*0.28)}px monospace`; ctx.textAlign="center";
+        ctx.shadowColor="#66BBFF"; ctx.shadowBlur=8;
+        ctx.fillText("CRYO",tcX2+tcW2/2,tcY2+tcH2+12); ctx.shadowBlur=0;
+
+        // ── CENTER: Tactical cryo-map table ────────────────────
+        const htX2=cx-W*0.11, htY2=midY-H*0.065, htW2=W*0.22, htH2=H*0.13;
+        ctx.fillStyle="rgba(2,8,20,0.88)"; rr(htX2,htY2,htW2,htH2,5); ctx.fill();
+        ctx.strokeStyle=`rgba(88,180,255,${0.5+0.3*Math.sin(t*1.4)})`; ctx.lineWidth=1.5; ctx.stroke();
+        ctx.fillStyle="rgba(136,221,255,0.05)"; ctx.beginPath(); ctx.ellipse(htX2+htW2/2,htY2+htH2/2,htW2*0.42,htH2*0.42,0,0,Math.PI*2); ctx.fill();
+        ctx.strokeStyle=`rgba(136,221,255,${0.2+0.1*Math.sin(t*2)})`; ctx.lineWidth=1;
+        for (let gr=1;gr<=3;gr++) { ctx.beginPath(); ctx.ellipse(htX2+htW2/2,htY2+htH2/2,htW2*0.42*gr/3,htH2*0.42*gr/3,0,0,Math.PI*2); ctx.stroke(); }
+        ctx.beginPath(); ctx.moveTo(htX2+htW2*0.08,htY2+htH2/2); ctx.lineTo(htX2+htW2*0.92,htY2+htH2/2); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(htX2+htW2/2,htY2+htH2*0.1); ctx.lineTo(htX2+htW2/2,htY2+htH2*0.9); ctx.stroke();
+        const pd2=0.5+0.5*Math.sin(t*3);
+        ctx.fillStyle=`rgba(136,221,255,${pd2})`; ctx.shadowColor="#88DDFF"; ctx.shadowBlur=8*pd2;
+        ctx.beginPath(); ctx.arc(htX2+htW2*0.62,htY2+htH2*0.38,3,0,Math.PI*2); ctx.fill(); ctx.shadowBlur=0;
+        ctx.fillStyle="#88CCFF"; ctx.font=`bold ${Math.round(htH2*0.14)}px monospace`; ctx.textAlign="center";
+        ctx.fillText("CRYO MAP",htX2+htW2/2,htY2+htH2+12);
+
+        // ── CENTER-LEFT: Ice crystal analysis panel ────────────
+        const cpX2=cx-W*0.35, cpY2=midY-H*0.14, cpW2=W*0.13, cpH2=H*0.28;
+        ctx.fillStyle="#020810"; ctx.strokeStyle="rgba(88,180,255,0.5)"; ctx.lineWidth=1.5;
+        rr(cpX2,cpY2,cpW2,cpH2,4); ctx.fill(); ctx.stroke();
+        ctx.strokeStyle="rgba(88,180,255,0.35)"; ctx.lineWidth=1;
+        const cpTx2=[cpX2+8,cpX2+cpW2*0.35,cpX2+cpW2*0.6,cpX2+cpW2-8];
+        for (let px2=0;px2<4;px2++) { ctx.beginPath(); ctx.moveTo(cpTx2[px2],cpY2+8); ctx.lineTo(cpTx2[px2],cpY2+cpH2-8); ctx.stroke(); }
+        const cpTy2=[cpY2+cpH2*0.25,cpY2+cpH2*0.5,cpY2+cpH2*0.75];
+        for (let py2=0;py2<3;py2++) { ctx.beginPath(); ctx.moveTo(cpX2+8,cpTy2[py2]); ctx.lineTo(cpX2+cpW2-8,cpTy2[py2]); ctx.stroke(); }
+        const ics2=[{x:cpX2+cpW2*0.15,y:cpY2+cpH2*0.2},{x:cpX2+cpW2*0.55,y:cpY2+cpH2*0.45},{x:cpX2+cpW2*0.2,y:cpY2+cpH2*0.65}];
+        for (const ic2 of ics2) {
+          ctx.fillStyle="#04102a"; ctx.strokeStyle="rgba(136,221,255,0.5)"; ctx.lineWidth=1;
+          ctx.fillRect(ic2.x-8,ic2.y-5,16,10); ctx.strokeRect(ic2.x-8,ic2.y-5,16,10);
+          ctx.fillStyle=`rgba(136,221,255,${0.5+0.3*Math.sin(t*2+ic2.x)})`; ctx.shadowColor="#88DDFF"; ctx.shadowBlur=4;
+          ctx.beginPath(); ctx.arc(ic2.x,ic2.y,3,0,Math.PI*2); ctx.fill(); ctx.shadowBlur=0;
+        }
+        ctx.fillStyle="#88CCFF"; ctx.font=`bold ${Math.round(cpH2*0.09)}px monospace`; ctx.textAlign="center";
+        ctx.fillText("ICE ARRAY",cpX2+cpW2/2,cpY2+cpH2+12);
+
+        // ── CENTER-RIGHT: Cryo-meter ─────────────────────────
+        const gmX2=cx+W*0.22, gmY2=midY-H*0.11, gmW2=W*0.13, gmH2=H*0.22;
+        ctx.fillStyle="#020810"; ctx.strokeStyle="rgba(88,180,255,0.5)"; ctx.lineWidth=1.5;
+        rr(gmX2,gmY2,gmW2,gmH2,4); ctx.fill(); ctx.stroke();
+        ctx.fillStyle="#88CCFF"; ctx.font=`bold ${Math.round(gmH2*0.1)}px monospace`; ctx.textAlign="center";
+        ctx.fillText("CRYO-METER",gmX2+gmW2/2,gmY2+gmH2*0.15);
+        const dCX2=gmX2+gmW2/2, dCY2=gmY2+gmH2*0.5, dR2=gmW2*0.35;
+        ctx.strokeStyle="rgba(88,180,255,0.3)"; ctx.lineWidth=1;
+        ctx.beginPath(); ctx.arc(dCX2,dCY2,dR2,Math.PI,2*Math.PI); ctx.stroke();
+        ctx.strokeStyle="rgba(88,180,255,0.15)"; ctx.lineWidth=0.8;
+        for (let mk=0;mk<=5;mk++) {
+          const ang2=Math.PI+mk*Math.PI/5;
+          ctx.beginPath(); ctx.moveTo(dCX2+Math.cos(ang2)*(dR2-4),dCY2+Math.sin(ang2)*(dR2-4));
+          ctx.lineTo(dCX2+Math.cos(ang2)*dR2,dCY2+Math.sin(ang2)*dR2); ctx.stroke();
+        }
+        const nAng2=Math.PI+Math.PI*((Math.sin(t*0.5)*0.5+0.5)*0.9+0.05);
+        ctx.strokeStyle="#88DDFF"; ctx.lineWidth=2; ctx.shadowColor="#66BBFF"; ctx.shadowBlur=6;
+        ctx.beginPath(); ctx.moveTo(dCX2,dCY2); ctx.lineTo(dCX2+Math.cos(nAng2)*dR2*0.85,dCY2+Math.sin(nAng2)*dR2*0.85); ctx.stroke(); ctx.shadowBlur=0;
+        ctx.fillStyle="#66AAFF"; ctx.beginPath(); ctx.arc(dCX2,dCY2,3,0,Math.PI*2); ctx.fill();
+        const cpmVal2=Math.floor(196+Math.sin(t*1.1)*20);
+        ctx.fillStyle="#AADDFF"; ctx.font=`bold ${Math.round(gmH2*0.09)}px monospace`; ctx.textAlign="center";
+        ctx.fillText(`-${cpmVal2}°C`,dCX2,gmY2+gmH2*0.82);
+        ctx.fillStyle="#66AAFF"; ctx.font=`${Math.round(gmH2*0.08)}px monospace`;
+        ctx.fillText("TEMP",dCX2,gmY2+gmH2*0.92);
+
+        // ── RIGHT: Cryo vial racks ─────────────────────────────
+        const vrX2=W*0.78, vrY2=H*0.28, vrW2=W*0.2, vrH2=H*0.52;
+        ctx.fillStyle="#020810"; ctx.strokeStyle="rgba(88,180,255,0.5)"; ctx.lineWidth=1.5;
+        rr(vrX2,vrY2,vrW2,vrH2,5); ctx.fill(); ctx.stroke();
+        const vials2=[{l:"LIQ N₂",c:"rgba(136,221,255,0.9)"},{l:"CRYO-1",c:"rgba(88,180,255,0.9)"},{l:"STASIS",c:"rgba(180,230,255,0.9)"},{l:"ICE-9",c:"rgba(60,140,255,0.9)"},{l:"FREEZE",c:"rgba(200,240,255,0.9)"},{l:"PLASMA",c:"rgba(100,200,255,0.9)"}];
+        for (let vi=0;vi<6;vi++) {
+          const vc=vi%2, vr=Math.floor(vi/2);
+          const vx=vrX2+vrW2*0.14+vc*vrW2*0.48, vy=vrY2+vrH2*0.1+vr*vrH2*0.3;
+          const vW2=vrW2*0.28, vH2=vrH2*0.22;
+          ctx.fillStyle="rgba(2,8,20,0.9)"; rr(vx,vy,vW2,vH2,4); ctx.fill();
+          ctx.strokeStyle=vials2[vi].c; ctx.lineWidth=1.5; ctx.stroke();
+          const vFill2=0.3+Math.sin(t*0.7+vi*1.1)*0.25+0.4;
+          const vGr2=ctx.createLinearGradient(vx,vy+vH2*(1-vFill2),vx,vy+vH2);
+          vGr2.addColorStop(0,vials2[vi].c.replace(",0.9)",",0.75)")); vGr2.addColorStop(1,vials2[vi].c.replace(",0.9)",",0.3)"));
+          ctx.fillStyle=vGr2; ctx.fillRect(vx+2,vy+vH2*(1-vFill2)+2,vW2-4,vH2*vFill2-4);
+          ctx.fillStyle=vials2[vi].c; ctx.shadowColor=vials2[vi].c; ctx.shadowBlur=6+3*Math.sin(t+vi);
+          ctx.beginPath(); ctx.arc(vx+vW2/2,vy+vH2*0.3,3,0,Math.PI*2); ctx.fill(); ctx.shadowBlur=0;
+          ctx.fillStyle="#CCEEFF"; ctx.font=`bold ${Math.round(vH2*0.2)}px monospace`; ctx.textAlign="center";
+          ctx.fillText(vials2[vi].l,vx+vW2/2,vy+vH2+11);
+        }
+
+        // ── BOTTOM: 4 cryo storage bins ───────────────────────
+        const binW2=W*0.17, binH2=H*0.075;
+        for (let bi=0;bi<4;bi++) {
+          const bx=W*0.07+bi*(W*0.85/4), by=H*0.82;
+          ctx.fillStyle="#020810"; ctx.strokeStyle="rgba(88,180,255,0.4)"; ctx.lineWidth=1.5;
+          rr(bx,by,binW2,binH2,4); ctx.fill(); ctx.stroke();
+          const bFill2=0.2+((bi*0.19+Math.sin(t*0.6+bi)*0.08)%0.7);
+          const bGr3=ctx.createLinearGradient(bx,by+binH2*(1-bFill2),bx,by+binH2);
+          bGr3.addColorStop(0,"rgba(88,180,255,0.5)"); bGr3.addColorStop(1,"rgba(60,130,220,0.25)");
+          ctx.fillStyle=bGr3; ctx.fillRect(bx+2,by+binH2*(1-bFill2)+2,binW2-4,binH2*bFill2-4);
+          ctx.strokeStyle=`rgba(136,221,255,${0.4+0.3*Math.sin(t*2+bi)})`; ctx.lineWidth=1;
+          ctx.strokeRect(bx+2,by+binH2*(1-bFill2)+2,binW2-4,binH2*bFill2-4);
+          const labels2=["SAMPLE A","SAMPLE B","ICE CORE","LIQ N₂"];
+          ctx.fillStyle="#88BBDD"; ctx.font=`bold ${Math.round(binH2*0.25)}px monospace`; ctx.textAlign="center";
+          ctx.fillText(labels2[bi],bx+binW2/2,by+binH2*0.65);
+          ctx.fillStyle="#AADDFF"; ctx.font=`${Math.round(binH2*0.2)}px monospace`;
+          ctx.fillText(`${Math.round(bFill2*100)}%`,bx+binW2/2,by+binH2+12);
+        }
+
+        // ── Trophy shelf ──────────────────────────────────────
+        const trX2=W*0.80, trY2=H*0.28+H*0.56, trW2=W*0.18, trH2=H*0.065;
+        ctx.fillStyle="#030a1e"; ctx.strokeStyle="rgba(88,180,255,0.35)"; ctx.lineWidth=1;
+        rr(trX2,trY2,trW2,trH2,3); ctx.fill(); ctx.stroke();
+        for (const tr3 of [{dx:0.2,c:"#FFDD44",s:"⬡"},{dx:0.5,c:"#AADDFF",s:"❄"},{dx:0.8,c:"#88CCFF",s:"★"}]) {
+          ctx.fillStyle=tr3.c; ctx.shadowColor=tr3.c; ctx.shadowBlur=7;
+          ctx.font=`bold ${Math.round(trH2*0.65)}px monospace`; ctx.textAlign="center";
+          ctx.fillText(tr3.s,trX2+trW2*tr3.dx,trY2+trH2*0.75); ctx.shadowBlur=0;
+        }
+
+        // ── Floor cable runs ──────────────────────────────────
+        ctx.strokeStyle="rgba(88,180,255,0.18)"; ctx.lineWidth=2; ctx.setLineDash([6,5]);
+        ctx.beginPath(); ctx.moveTo(tcX2+tcW2,tcY2+tcH2*0.5); ctx.lineTo(cx-W*0.05,tcY2+tcH2*0.5); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(vrX2,vrY2+vrH2*0.5); ctx.lineTo(cx+W*0.1,vrY2+vrH2*0.5); ctx.stroke();
+        ctx.setLineDash([]);
+
+        // ── Scrolling news ticker ─────────────────────────────
+        const tkY3=H*0.94;
+        ctx.fillStyle="rgba(2,8,20,0.88)"; ctx.fillRect(0,tkY3,W,H*0.035);
+        ctx.fillStyle=`rgba(136,221,255,${0.75+0.25*Math.sin(t*4)})`; rr(W*0.005,tkY3+H*0.001,W*0.05,H*0.027,3); ctx.fill();
+        ctx.fillStyle="#020810"; ctx.font=`bold ${Math.round(H*0.017)}px monospace`; ctx.textAlign="left";
+        ctx.fillText("LIVE",W*0.005+W*0.05*0.14,tkY3+H*0.001+H*0.027*0.75);
+        const tkTxt3="❄ CRYO TECH LAB  ✦  TEMP: -196°C  ✦  SAMPLES: 1,024  ✦  CRYO CHAMBER: ONLINE  ✦  NEXT CYCLE: 04:22  ✦  UPLINK: ACTIVE  ✦  ";
+        const tkX3=W*0.06+W-(t*50)%(W+1400);
+        ctx.save(); ctx.beginPath(); ctx.rect(W*0.06,tkY3,W-W*0.06,H*0.032); ctx.clip();
+        ctx.fillStyle="#CCEEFF"; ctx.font=`bold ${Math.round(H*0.017)}px monospace`; ctx.textAlign="left";
+        ctx.fillText(tkTxt3,tkX3,tkY3+H*0.021); ctx.restore();
+
+        // ── Ambient ice crystal particles ──────────────────────
+        for (let pi=0;pi<16;pi++) {
+          const fpx=(Math.sin(pi*2.1+t*0.32)*0.42+0.5)*W, fpy=(Math.cos(pi*1.6+t*0.21)*0.38+0.5)*(H*0.88);
+          const pA=0.08+0.05*Math.sin(t*1.2+pi);
+          ctx.fillStyle=pi%3===0?`rgba(136,221,255,${pA})`:pi%3===1?`rgba(88,180,255,${pA})`:`rgba(180,230,255,${pA})`;
+          ctx.beginPath(); ctx.arc(fpx,fpy,1.8,0,Math.PI*2); ctx.fill();
+        }
+
       } else if (isDino) {
         // ═══ DINO WORLD: ANCIENT RESEARCH HUT ═══
         const t13=performance.now()/1000;
@@ -7248,182 +7536,287 @@ Game.prototype._renderIndoorFurniture = function(ctx, room) {
         }
         ctx.shadowBlur=0;ctx.restore();
       } else if (isTechShop) {
-        // ═══ WASTELAND TECH SHOP ═══
-        // ── Sales counter (top center) ───────────────────
-        ctx.fillStyle = "#3a3530";
-        ctx.strokeStyle = "#5a5048";
-        ctx.lineWidth = 2;
-        rr(cx - 60, topY + 8, 120, 38, 3);
-        ctx.fill();
-        ctx.stroke();
-        // Counter top (worn metal)
-        ctx.fillStyle = "#4a4540";
-        rr(cx - 58, topY + 10, 116, 8, 2);
-        ctx.fill();
-        // Cash register
-        ctx.fillStyle = "#2a2520";
-        rr(cx + 20, topY + 12, 32, 28, 2);
-        ctx.fill();
-        ctx.fillStyle = "#00FFCC";
-        ctx.fillRect(cx + 24, topY + 16, 24, 12);
-        ctx.fillStyle = "#00AA88";
-        ctx.font = "bold 6px monospace";
-        ctx.textAlign = "center";
-        ctx.fillText("❄ CRYO RESEARCH LAB ❄", cx, topY - 4);
-        ctx.shadowBlur = 0;
+        // ═══ WASTELAND: SCRAP TECH LAB ═══
+        const t2 = performance.now() / 1000;
 
-        // ── Main cryo chamber bank (top) ───────────────────
-        ctx.fillStyle = "#081420";
-        ctx.strokeStyle = "#66BBFF";
-        ctx.lineWidth = 1.5;
-        rr(cx - W * 0.44, topY + 4, W * 0.88, 44, 3);
-        ctx.fill();
-        ctx.stroke();
-        // Cryo units
-        for (let si = 0; si < 5; si++) {
-          const sx2 = cx - W * 0.4 + si * ((W * 0.8) / 4.5);
-          ctx.fillStyle = "#0c1825";
-          rr(sx2 - 14, topY + 6, 28, 40, 2);
-          ctx.fill();
-          // Ice frost lines
-          const pulse = Math.sin(t * 1.5 + si) * 0.3 + 0.7;
-          ctx.fillStyle = `rgba(100,180,255,${0.2 * pulse})`;
-          ctx.fillRect(sx2 - 12, topY + 8, 24, 4);
-          ctx.fillRect(sx2 - 12, topY + 16, 24, 4);
-          ctx.fillRect(sx2 - 12, topY + 24, 24, 4);
-          // Status lights - ice blue
-          ctx.fillStyle = ["#66BBFF", "#88DDFF", "#AADDFF", "#66CCFF", "#88EEFF"][si];
-          ctx.shadowColor = ctx.fillStyle;
-          ctx.shadowBlur = 6;
-          ctx.beginPath();
-          ctx.arc(sx2 + 10, topY + 40, 3, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.shadowBlur = 0;
+        // ── Rust floor ─────────────────────────────────────────
+        ctx.fillStyle = "#100700"; ctx.fillRect(0,0,W,H);
+        const tSz2=Math.round(W/16);
+        for (let gy=0;gy<=Math.ceil(H/tSz2);gy++) for (let gx=0;gx<=Math.ceil(W/tSz2);gx++) {
+          const tx=gx*tSz2,ty=gy*tSz2,sd=gx*13+gy*7;
+          ctx.fillStyle=sd%3===0?"rgba(26,10,1,0.96)":sd%3===1?"rgba(18,7,1,0.96)":"rgba(22,9,2,0.96)";
+          ctx.fillRect(tx,ty,tSz2,tSz2);
+          ctx.strokeStyle=`rgba(180,75,8,${0.07+0.04*Math.sin(t2*0.7+sd*0.12)})`;
+          ctx.lineWidth=0.7; ctx.strokeRect(tx,ty,tSz2,tSz2);
         }
 
-        // ── Holographic ice workstation (center) ─────────
-        ctx.fillStyle = "#081015";
-        ctx.strokeStyle = "#4488BB";
-        ctx.lineWidth = 1.5;
-        rr(cx - 36, midY - 14, 72, 36, 4);
-        ctx.fill();
-        ctx.stroke();
-        // Hologram display - ice crystal projection
-        ctx.fillStyle = "rgba(100,180,255,0.12)";
-        ctx.strokeStyle = "#66BBFF88";
-        ctx.lineWidth = 1;
+        // ── Room border ──────────────────────────────────────────
+        ctx.strokeStyle=`rgba(210,100,20,${0.6+0.2*Math.sin(t2*1.3)})`; ctx.lineWidth=3;
+        ctx.strokeRect(2,2,W-4,H-4);
+        ctx.strokeStyle="rgba(150,55,8,0.22)"; ctx.lineWidth=1; ctx.strokeRect(7,7,W-14,H-14);
+
+        // ── Flickering industrial lights ─────────────────────────
+        const hLX=[W*0.15,W*0.40,W*0.65,W*0.88];
+        for (let li=0;li<4;li++) {
+          const lx=hLX[li], fl=li===1?(0.55+0.45*Math.sin(t2*14.3)):1;
+          const lc=ctx.createRadialGradient(lx,0,2,lx,H*0.28,W*0.13);
+          lc.addColorStop(0,`rgba(255,175,55,${0.13*fl})`); lc.addColorStop(1,"rgba(0,0,0,0)");
+          ctx.fillStyle=lc; ctx.beginPath(); ctx.moveTo(lx-5,0); ctx.lineTo(lx-W*0.08,H*0.35); ctx.lineTo(lx+W*0.08,H*0.35); ctx.closePath(); ctx.fill();
+          ctx.fillStyle=`rgba(255,195,75,${0.8*fl})`; ctx.shadowColor="#FF9922"; ctx.shadowBlur=10*fl;
+          ctx.beginPath(); ctx.arc(lx,5,4,0,Math.PI*2); ctx.fill(); ctx.shadowBlur=0;
+        }
+
+        // ── SCRAP TECH LAB banner ────────────────────────────────
+        const bW=W*0.56, bH=H*0.042, bX=cx-bW/2, bY=room.S-bH-4;
+        const bGr=ctx.createLinearGradient(bX,bY,bX+bW,bY);
+        bGr.addColorStop(0,"rgba(45,18,2,0.97)"); bGr.addColorStop(0.5,"rgba(155,58,5,0.99)"); bGr.addColorStop(1,"rgba(45,18,2,0.97)");
+        ctx.fillStyle=bGr; rr(bX,bY,bW,bH,7); ctx.fill();
+        ctx.strokeStyle=`rgba(255,138,28,${0.7+0.3*Math.sin(t2*1.8)})`; ctx.lineWidth=2; ctx.stroke();
+        ctx.fillStyle="#FFE0A0"; ctx.font=`bold ${Math.round(bH*0.55)}px monospace`; ctx.textAlign="center";
+        ctx.shadowColor="#FF8800"; ctx.shadowBlur=12;
+        ctx.fillText("⚙  SCRAP  TECH  LAB  ⚙",cx,bY+bH*0.72); ctx.shadowBlur=0;
+
+        // ── RADIATION WARNING sign ───────────────────────────────
+        const rWarn=0.7+0.3*Math.sin(t2*3.5);
+        const rW=W*0.12, rH=H*0.038;
+        ctx.fillStyle=`rgba(255,200,0,${rWarn})`; ctx.shadowColor="#FFCC00"; ctx.shadowBlur=14*rWarn;
+        rr(cx-rW/2,topY+H*0.04,rW,rH,5); ctx.fill(); ctx.shadowBlur=0;
+        ctx.strokeStyle=`rgba(200,100,0,${rWarn})`; ctx.lineWidth=1.5; ctx.stroke();
+        ctx.fillStyle="#1a0800"; ctx.font=`bold ${Math.round(rH*0.5)}px monospace`; ctx.textAlign="center";
+        ctx.fillText("☢ RADIATION ZONE ☢",cx,topY+H*0.04+rH*0.7);
+
+        // ── Top: corroded server rack (full width) ───────────────
+        const srvY=topY+H*0.005, srvH=H*0.065;
+        const srvBg=ctx.createLinearGradient(W*0.04,srvY,W*0.96,srvY+srvH);
+        srvBg.addColorStop(0,"#0d0500"); srvBg.addColorStop(0.5,"#1a0b02"); srvBg.addColorStop(1,"#0d0500");
+        ctx.fillStyle=srvBg; rr(W*0.04,srvY,W*0.92,srvH,5); ctx.fill();
+        ctx.strokeStyle="rgba(195,85,10,0.65)"; ctx.lineWidth=1.5; ctx.stroke();
+        const srvN=12;
+        for (let si=0;si<srvN;si++) {
+          const sx=W*0.05+si*(W*0.9/srvN);
+          ctx.fillStyle="#0a0300"; ctx.strokeStyle="rgba(175,65,8,0.38)"; ctx.lineWidth=0.7;
+          ctx.fillRect(sx,srvY+3,W*0.068,srvH-6); ctx.strokeRect(sx,srvY+3,W*0.068,srvH-6);
+          const lC=["#FF4400","#FFAA00","#FF6600","#FFCC00","#FF3300","#FF8800","#44FF88","#FF4400","#FFCC44","#FF6622","#FFAA44","#FF5500"][si];
+          const lA=0.5+0.5*Math.sin(t2*(1.2+si*0.25)+si);
+          ctx.fillStyle=lC; ctx.shadowColor=lC; ctx.shadowBlur=4*lA;
+          ctx.fillRect(sx+2,srvY+4,W*0.05,3); ctx.shadowBlur=0;
+          const da=Math.sin(t2*(3+si*0.7)+si)>0.4;
+          ctx.fillStyle=da?"#FF8800":"#2a1100";
+          ctx.beginPath(); ctx.arc(sx+W*0.057,srvY+srvH-6,2.5,0,Math.PI*2); ctx.fill();
+        }
+
+        // ── Main workstation desk ─────────────────────────────────
+        const dY=topY+H*0.10, dH2=H*0.055, dW2=W*0.82, dX2=cx-dW2/2;
+        const dBg=ctx.createLinearGradient(dX2,dY,dX2+dW2,dY+dH2);
+        dBg.addColorStop(0,"#0d0500"); dBg.addColorStop(0.5,"#1c0b02"); dBg.addColorStop(1,"#0d0500");
+        ctx.fillStyle=dBg; rr(dX2,dY,dW2,dH2,6); ctx.fill();
+        ctx.strokeStyle="rgba(198,85,8,0.82)"; ctx.lineWidth=2; ctx.stroke();
+        ctx.strokeStyle=`rgba(218,118,28,${0.42+0.25*Math.sin(t2*1.5)})`; ctx.lineWidth=1.5;
+        ctx.beginPath(); ctx.moveTo(dX2+10,dY+dH2-2); ctx.lineTo(dX2+dW2-10,dY+dH2-2); ctx.stroke();
+
+        // Holographic display above desk
+        const hW=W*0.26, hH=H*0.13, hX=cx-hW/2, hY=dY-hH-H*0.006;
+        const glitch=(Math.sin(t2*8.1)>0.87)?Math.sin(t2*28)*3.5:0;
+        ctx.fillStyle="rgba(8,4,0,0.93)"; rr(hX+glitch,hY,hW,hH,5); ctx.fill();
+        ctx.strokeStyle=`rgba(255,138,20,${0.6+0.3*Math.sin(t2*2.1)})`; ctx.lineWidth=1.5; ctx.stroke();
+        ctx.fillStyle="#FF8800"; ctx.font=`bold ${Math.round(hH*0.13)}px monospace`; ctx.textAlign="center";
+        ctx.shadowColor="#FF6600"; ctx.shadowBlur=8;
+        ctx.fillText("⚙ SYSTEM ONLINE ⚙",cx+glitch*0.5,hY+hH*0.22); ctx.shadowBlur=0;
+        const dLines=["POWER: 84%","SCRAP: 1,247kg","TEMP: 312°C","RADS: HIGH","UPLINK: LOST"];
+        for (let dl=0;dl<5;dl++) {
+          ctx.fillStyle=dl===3?`rgba(255,70,0,0.88)`:`rgba(255,158,38,${dl%2===0?0.88:0.55})`;
+          ctx.font=`${Math.round(hH*0.1)}px monospace`; ctx.textAlign="left";
+          ctx.fillText(dLines[dl],hX+hW*0.06+glitch,hY+hH*0.35+dl*hH*0.13);
+        }
+        ctx.strokeStyle=`rgba(255,178,38,0.7)`; ctx.lineWidth=1.2;
         ctx.beginPath();
-        ctx.moveTo(cx - 20, midY - 10);
-        ctx.lineTo(cx + 20, midY - 10);
-        ctx.lineTo(cx + 28, midY - 28);
-        ctx.lineTo(cx - 28, midY - 28);
-        ctx.closePath();
-        ctx.fill();
+        for (let wx=0;wx<hW-10;wx+=2) { const wy=hY+hH*0.82+hH*0.1*Math.sin(t2*6.2+wx*0.22); wx===0?ctx.moveTo(hX+5+wx,wy):ctx.lineTo(hX+5+wx,wy); }
         ctx.stroke();
-        // Snowflake hologram
-        ctx.fillStyle = "#88DDFF";
-        ctx.shadowColor = "#66BBFF";
-        ctx.shadowBlur = 12;
-        ctx.font = "14px sans-serif";
-        ctx.textAlign = "center";
-        ctx.fillText("❄", cx, midY - 16);
-        ctx.shadowBlur = 0;
-        ctx.fillStyle = "#AADDFF";
-        ctx.font = "bold 6px Orbitron, monospace";
-        ctx.fillText("CRYO ONLINE", cx, midY - 6);
-        // Frozen keyboard
-        ctx.fillStyle = "#0c1820";
-        rr(cx - 28, midY - 2, 56, 12, 2);
-        ctx.fill();
-        for (let ki = 0; ki < 8; ki++) {
-          ctx.fillStyle = `rgba(100,180,255,${0.3 + Math.sin(t * 2 + ki) * 0.1})`;
-          ctx.fillRect(cx - 26 + ki * 7, midY, 5, 8);
-        }
+        // Keyboard on desk
+        ctx.fillStyle="#090300"; rr(dX2+dW2*0.04,dY+4,dW2*0.2,dH2-8,3); ctx.fill();
+        ctx.strokeStyle="rgba(175,75,8,0.38)"; ctx.lineWidth=0.8; ctx.stroke();
+        for (let ki=0;ki<10;ki++) { const kr=Math.floor(ki/5),kc=ki%5; ctx.fillStyle=`rgba(198,95,18,${0.24+0.14*Math.sin(t2+ki)})`; ctx.fillRect(dX2+dW2*0.05+kc*dW2*0.036,dY+6+kr*7,dW2*0.028,5); }
 
-        // ── Cryo sample station (left) ───────────────────
-        ctx.fillStyle = "#0a1418";
-        ctx.strokeStyle = "#4488AA";
-        ctx.lineWidth = 1;
-        rr(cx - W * 0.44, midY - 8, 52, 48, 3);
-        ctx.fill();
-        ctx.stroke();
-        // Ice sample tubes
-        const sColors = ["#88DDFF", "#66BBFF", "#AAEEFF", "#55AACC"];
-        for (let fi = 0; fi < 4; fi++) {
-          ctx.fillStyle = sColors[fi];
-          ctx.shadowColor = sColors[fi];
-          ctx.shadowBlur = 6;
-          ctx.beginPath();
-          ctx.roundRect(cx - W * 0.42 + fi * 12, midY - 4, 9, 22, [3, 3, 0, 0]);
-          ctx.fill();
-          ctx.shadowBlur = 0;
+        // ── LEFT: Tesla coil ──────────────────────────────────────
+        const tcX=W*0.06, tcY=H*0.28, tcW=W*0.11, tcH=H*0.52;
+        ctx.fillStyle="#0d0500"; ctx.strokeStyle="rgba(198,85,8,0.7)"; ctx.lineWidth=2;
+        rr(tcX,tcY+tcH-tcH*0.11,tcW,tcH*0.11,5); ctx.fill(); ctx.stroke();
+        const cCol=ctx.createLinearGradient(tcX+tcW*0.3,tcY,tcX+tcW*0.7,tcY);
+        cCol.addColorStop(0,"#180a03"); cCol.addColorStop(0.5,"#2c1406"); cCol.addColorStop(1,"#180a03");
+        ctx.fillStyle=cCol; ctx.strokeStyle="rgba(175,65,8,0.48)"; ctx.lineWidth=1.5;
+        ctx.fillRect(tcX+tcW*0.3,tcY+tcH*0.14,tcW*0.4,tcH*0.73); ctx.strokeRect(tcX+tcW*0.3,tcY+tcH*0.14,tcW*0.4,tcH*0.73);
+        for (let ci=0;ci<8;ci++) {
+          const cy=tcY+tcH*0.17+ci*(tcH*0.64/8);
+          ctx.strokeStyle=`rgba(255,${138+ci*8},18,0.52)`; ctx.lineWidth=2;
+          ctx.beginPath(); ctx.ellipse(tcX+tcW/2,cy,tcW*0.43,tcH*0.024,0,0,Math.PI*2); ctx.stroke();
         }
-        ctx.fillStyle = "#AADDFF";
-        ctx.font = "bold 5px monospace";
-        ctx.textAlign = "center";
-        ctx.fillText("SAMPLES", cx - W * 0.42 + 20, midY + 24);
+        const tsR=tcW*0.4;
+        const tsG=ctx.createRadialGradient(tcX+tcW/2,tcY+tsR*0.45,tsR*0.08,tcX+tcW/2,tcY+tsR*0.45,tsR);
+        tsG.addColorStop(0,"#381500"); tsG.addColorStop(0.5,"#1e0c00"); tsG.addColorStop(1,"#0d0500");
+        ctx.fillStyle=tsG; ctx.strokeStyle=`rgba(255,158,28,${0.6+0.3*Math.sin(t2*2)})`; ctx.lineWidth=2;
+        ctx.beginPath(); ctx.arc(tcX+tcW/2,tcY+tsR*0.52,tsR,0,Math.PI*2); ctx.fill(); ctx.stroke();
+        for (let ai=0;ai<6;ai++) {
+          const aS=Math.floor(t2*4+ai*3.1)%7;
+          const aX2=tcX+tcW/2, aY2=tcY+tsR*0.52;
+          const aX3=aX2+Math.sin(ai*1.3+t2*2+aS)*tcW*0.9, aY3=aY2+Math.cos(ai*1.1+t2*1.7+aS)*tcW*0.7;
+          const aA=0.4+0.5*Math.abs(Math.sin(t2*7+ai));
+          ctx.strokeStyle=`rgba(255,218,58,${aA})`; ctx.lineWidth=1;
+          ctx.beginPath(); ctx.moveTo(aX2,aY2); ctx.quadraticCurveTo(aX2+(aX3-aX2)*0.5+Math.sin(t2*11+ai)*8,aY2+(aY3-aY2)*0.5+Math.cos(t2*9+ai)*7,aX3,aY3); ctx.stroke();
+          ctx.fillStyle=`rgba(255,200,40,${aA*0.7})`; ctx.shadowColor="#FFCC00"; ctx.shadowBlur=6*aA;
+          ctx.beginPath(); ctx.arc(aX3,aY3,2,0,Math.PI*2); ctx.fill(); ctx.shadowBlur=0;
+        }
+        const tsGl=ctx.createRadialGradient(tcX+tcW/2,tcY+tsR*0.52,0,tcX+tcW/2,tcY+tsR*0.52,tsR*1.5);
+        tsGl.addColorStop(0,`rgba(255,175,28,${0.18+0.14*Math.sin(t2*3)})`); tsGl.addColorStop(1,"rgba(0,0,0,0)");
+        ctx.fillStyle=tsGl; ctx.beginPath(); ctx.arc(tcX+tcW/2,tcY+tsR*0.52,tsR*1.5,0,Math.PI*2); ctx.fill();
+        ctx.fillStyle="rgba(255,158,28,0.62)"; ctx.font=`bold ${Math.round(tcW*0.16)}px monospace`; ctx.textAlign="center";
+        ctx.fillText("TESLA",tcX+tcW/2,tcY+tcH-3);
 
-        // ── Frozen storage rack (right) ───────────────────
-        ctx.fillStyle = "#0a1420";
-        ctx.strokeStyle = "#5599BB";
-        ctx.lineWidth = 1.5;
-        rr(W * 0.72, topY + 8, 56, 70, 3);
-        ctx.fill();
-        ctx.stroke();
-        // Shelves
-        ctx.fillStyle = "#1a2a3a";
-        ctx.fillRect(W * 0.74, topY + 24, 48, 3);
-        ctx.fillRect(W * 0.74, topY + 44, 48, 3);
-        // Ice containers
-        for (let ci = 0; ci < 3; ci++) {
-          for (let ri = 0; ri < 2; ri++) {
-            ctx.fillStyle = "#0c1825";
-            ctx.strokeStyle = "#4488AA";
-            ctx.lineWidth = 0.5;
-            rr(W * 0.74 + 4 + ci * 16, topY + 10 + ri * 24, 12, 12, 2);
-            ctx.fill();
-            ctx.stroke();
-            // Frost effect
-            ctx.fillStyle = `rgba(150,200,255,${0.3 + Math.sin(t + ci + ri) * 0.1})`;
-            ctx.fillRect(W * 0.74 + 6 + ci * 16, topY + 12 + ri * 24, 8, 8);
+        // ── CENTER: Tactical holo-map table ──────────────────────
+        const mTX=cx-W*0.11, mTY=H*0.5, mTW=W*0.22, mTH=H*0.13;
+        ctx.fillStyle="#090300"; ctx.strokeStyle="rgba(255,138,18,0.62)"; ctx.lineWidth=2;
+        rr(mTX,mTY,mTW,mTH,6); ctx.fill(); ctx.stroke();
+        const mSf=ctx.createLinearGradient(mTX,mTY,mTX+mTW,mTY+mTH*0.5);
+        mSf.addColorStop(0,"rgba(175,65,8,0.16)"); mSf.addColorStop(1,"rgba(255,138,18,0.05)");
+        ctx.fillStyle=mSf; ctx.fillRect(mTX+3,mTY+3,mTW-6,mTH*0.65);
+        ctx.strokeStyle="rgba(255,158,38,0.28)"; ctx.lineWidth=0.7;
+        for (let mg=0;mg<6;mg++) { ctx.beginPath(); ctx.moveTo(mTX+4+mg*(mTW-8)/5,mTY+3); ctx.lineTo(mTX+4+mg*(mTW-8)/5,mTY+mTH*0.65); ctx.stroke(); }
+        for (let mg=0;mg<4;mg++) { ctx.beginPath(); ctx.moveTo(mTX+3,mTY+3+mg*mTH*0.2); ctx.lineTo(mTX+mTW-3,mTY+3+mg*mTH*0.2); ctx.stroke(); }
+        const lA2=0.6+0.4*Math.sin(t2*2.5);
+        ctx.fillStyle=`rgba(255,55,0,${lA2})`; ctx.shadowColor="#FF4400"; ctx.shadowBlur=8*lA2;
+        ctx.beginPath(); ctx.arc(mTX+mTW*0.55,mTY+mTH*0.26,4,0,Math.PI*2); ctx.fill(); ctx.shadowBlur=0;
+        // Location label
+        ctx.fillStyle="rgba(255,158,38,0.72)"; ctx.font=`bold ${Math.round(mTH*0.14)}px monospace`; ctx.textAlign="center";
+        ctx.fillText("TACTICAL MAP",cx,mTY+mTH*0.82);
+
+        // ── CENTER-LEFT: Circuit board panel ─────────────────────
+        const cbX=W*0.14, cbY=H*0.32, cbW=W*0.13, cbH=H*0.28;
+        ctx.fillStyle="#080300"; ctx.strokeStyle="rgba(175,85,8,0.52)"; ctx.lineWidth=1.5;
+        rr(cbX,cbY,cbW,cbH,5); ctx.fill(); ctx.stroke();
+        const traceC=["rgba(255,138,18,0.48)","rgba(198,75,8,0.38)","rgba(255,198,38,0.32)"];
+        const traces2=[[0.05,0.08,0.6,0.08],[0.05,0.08,0.05,0.36],[0.05,0.36,0.42,0.36],[0.42,0.08,0.42,0.62],[0.7,0.2,0.95,0.2],[0.95,0.2,0.95,0.72],[0.2,0.62,0.7,0.62],[0.7,0.62,0.7,0.88],[0.15,0.88,0.7,0.88],[0.15,0.42,0.15,0.88],[0.55,0.08,0.55,0.36],[0.55,0.36,0.85,0.36]];
+        for (let ti2=0;ti2<traces2.length;ti2++) {
+          const [x1,y1,x2,y2]=traces2[ti2];
+          ctx.strokeStyle=traceC[ti2%3]; ctx.lineWidth=1.2;
+          ctx.beginPath(); ctx.moveTo(cbX+cbW*x1,cbY+cbH*y1); ctx.lineTo(cbX+cbW*x2,cbY+cbH*y2); ctx.stroke();
+        }
+        const icPos=[[0.12,0.1],[0.48,0.1],[0.12,0.48],[0.48,0.48],[0.18,0.76],[0.58,0.28]];
+        for (let ic=0;ic<6;ic++) {
+          const ix=cbX+cbW*icPos[ic][0], iy=cbY+cbH*icPos[ic][1];
+          ctx.fillStyle="#0d0500"; ctx.strokeStyle="rgba(198,95,18,0.58)"; ctx.lineWidth=0.8;
+          rr(ix,iy,cbW*0.24,cbH*0.1,2); ctx.fill(); ctx.stroke();
+          const lA3=0.5+0.5*Math.sin(t2*(1+ic*0.3)+ic*1.2);
+          ctx.fillStyle=ic%2===0?"#FF8800":"#FFCC00"; ctx.shadowColor=ctx.fillStyle; ctx.shadowBlur=3*lA3;
+          ctx.beginPath(); ctx.arc(ix+cbW*0.22,iy+cbH*0.05,1.5,0,Math.PI*2); ctx.fill(); ctx.shadowBlur=0;
+        }
+        ctx.fillStyle="rgba(255,148,38,0.62)"; ctx.font=`bold ${Math.round(cbH*0.08)}px monospace`; ctx.textAlign="center";
+        ctx.fillText("CIRCUIT BOARD",cbX+cbW/2,cbY+cbH-4);
+
+        // ── CENTER-RIGHT: Geiger counter / Rad scanner ───────────
+        const gcX=W*0.52, gcY=H*0.5, gcW=W*0.13, gcH=H*0.22;
+        ctx.fillStyle="#0d0500"; ctx.strokeStyle="rgba(198,85,8,0.55)"; ctx.lineWidth=1.5;
+        rr(gcX,gcY,gcW,gcH,6); ctx.fill(); ctx.stroke();
+        ctx.fillStyle="#080200"; rr(gcX+4,gcY+4,gcW-8,gcH*0.52,4); ctx.fill();
+        const rLvl=0.52+0.32*Math.sin(t2*0.72);
+        ctx.strokeStyle="rgba(75,28,4,0.82)"; ctx.lineWidth=gcH*0.07;
+        ctx.beginPath(); ctx.arc(gcX+gcW/2,gcY+gcH*0.35,gcH*0.24,Math.PI,0); ctx.stroke();
+        const gAng2=Math.PI+(rLvl*Math.PI), gC2=rLvl>0.8?"#FF2200":rLvl>0.5?"#FF8800":"#FFCC00";
+        ctx.strokeStyle=gC2; ctx.lineWidth=gcH*0.07; ctx.shadowColor=gC2; ctx.shadowBlur=8;
+        ctx.beginPath(); ctx.arc(gcX+gcW/2,gcY+gcH*0.35,gcH*0.24,Math.PI,gAng2); ctx.stroke(); ctx.shadowBlur=0;
+        ctx.strokeStyle="#FF4400"; ctx.lineWidth=1.5; ctx.lineCap="round";
+        ctx.beginPath(); ctx.moveTo(gcX+gcW/2,gcY+gcH*0.35); ctx.lineTo(gcX+gcW/2+Math.cos(gAng2)*gcH*0.22,gcY+gcH*0.35+Math.sin(gAng2)*gcH*0.22); ctx.stroke(); ctx.lineCap="butt";
+        const cpm2=Math.floor(340+180*Math.sin(t2*0.88));
+        ctx.fillStyle="#FF8800"; ctx.font=`bold ${Math.round(gcH*0.11)}px monospace`; ctx.textAlign="center";
+        ctx.fillText(`${cpm2} CPM`,gcX+gcW/2,gcY+gcH*0.66);
+        ctx.fillStyle="rgba(255,138,28,0.72)"; ctx.font=`${Math.round(gcH*0.09)}px monospace`;
+        ctx.fillText("GEIGER COUNTER",gcX+gcW/2,gcY+gcH*0.8);
+        // Clicker animation dots
+        const clkBeat=Math.sin(t2*6*rLvl+0.5)>0.7;
+        if (clkBeat) { ctx.fillStyle=`rgba(255,60,0,0.85)`; ctx.shadowColor="#FF4400"; ctx.shadowBlur=8; ctx.beginPath(); ctx.arc(gcX+gcW*0.82,gcY+gcH*0.66,4,0,Math.PI*2); ctx.fill(); ctx.shadowBlur=0; }
+
+        // ── RIGHT: Chemical analysis racks ────────────────────────
+        const rkX2=W*0.73, rkY2=H*0.28, rkW2=W*0.2, rkH2=H*0.52;
+        ctx.fillStyle="#0d0500"; ctx.strokeStyle="rgba(175,65,8,0.55)"; ctx.lineWidth=2;
+        rr(rkX2,rkY2,rkW2,rkH2,6); ctx.fill(); ctx.stroke();
+        for (let sh=0;sh<3;sh++) { ctx.fillStyle="rgba(138,52,7,0.55)"; ctx.fillRect(rkX2+4,rkY2+rkH2*(0.22+sh*0.26),rkW2-8,4); }
+        const chem=[{col:"#FF4400",lbl:"ACID"},{col:"#FF8800",lbl:"RUST AGENT"},{col:"#FFCC00",lbl:"FUEL"},{col:"#44FF88",lbl:"STIM"},{col:"#FF2200",lbl:"TOXIC"},{col:"#FFAA44",lbl:"PLASMA"}];
+        for (let ci2=0;ci2<6;ci2++) {
+          const row2=Math.floor(ci2/3),col3=ci2%3;
+          const vx=rkX2+rkW2*0.08+col3*(rkW2*0.3), vy=rkY2+rkH2*0.04+row2*(rkH2*0.48);
+          const vH2=rkH2*0.22, vW2=rkW2*0.24;
+          ctx.fillStyle="#0f0400"; ctx.strokeStyle=chem[ci2].col+"85"; ctx.lineWidth=1.2;
+          rr(vx,vy,vW2,vH2,4); ctx.fill(); ctx.stroke();
+          const lv2=0.3+0.28*Math.abs(Math.sin(t2*0.82+ci2*0.9));
+          const lG2=ctx.createLinearGradient(vx,vy+vH2*(1-lv2),vx+vW2,vy+vH2);
+          lG2.addColorStop(0,chem[ci2].col+"AA"); lG2.addColorStop(1,chem[ci2].col+"44");
+          ctx.fillStyle=lG2; ctx.fillRect(vx+2,vy+vH2*(1-lv2),vW2-4,vH2*lv2-2);
+          for (let bi2=0;bi2<2;bi2++) {
+            const bx2=vx+vW2*0.25+bi2*vW2*0.42, by2=vy+vH2*0.84-bi2*5+Math.sin(t2*2+ci2+bi2)*3.5;
+            ctx.fillStyle=chem[ci2].col+"66"; ctx.beginPath(); ctx.arc(bx2,by2,2,0,Math.PI*2); ctx.fill();
           }
+          ctx.fillStyle=chem[ci2].col; ctx.shadowColor=chem[ci2].col; ctx.shadowBlur=5+3*Math.sin(t2*1.5+ci2);
+          ctx.font=`${Math.round(vH2*0.15)}px monospace`; ctx.textAlign="center";
+          ctx.fillText(chem[ci2].lbl,vx+vW2/2,vy+vH2+vH2*0.18); ctx.shadowBlur=0;
         }
-        ctx.fillStyle = "#88CCFF";
-        ctx.font = "bold 6px monospace";
-        ctx.textAlign = "center";
-        ctx.fillText("STORAGE", W * 0.72 + 28, topY + 82);
 
-        // ── Frozen specimen pod (bottom) ───────────────────
-        ctx.fillStyle = "#081520";
-        ctx.strokeStyle = "#66BBFF";
-        ctx.lineWidth = 1.5;
-        rr(cx - 30, midY + 20, 60, 40, 4);
-        ctx.fill();
-        ctx.stroke();
-        // Specimen inside
-        const specPulse = Math.sin(t * 0.8) * 0.2 + 0.8;
-        ctx.fillStyle = `rgba(100,180,255,${0.15 * specPulse})`;
-        ctx.beginPath();
-        ctx.ellipse(cx, midY + 38, 20, 12, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = "#AADDFF";
-        ctx.font = "bold 5px monospace";
-        ctx.textAlign = "center";
-        ctx.fillText("SPECIMEN A-7", cx, midY + 66);
+        // ── BOTTOM: Scrap bin row ─────────────────────────────────
+        const binY2=H-H*0.15, binH2=H*0.11;
+        const bins2=[{lbl:"IRON SCRAP",col:"rgba(155,65,8,0.85)"},{lbl:"COPPER",col:"rgba(198,118,28,0.85)"},{lbl:"CIRCUITS",col:"rgba(218,178,18,0.85)"},{lbl:"FUEL CELLS",col:"rgba(255,75,18,0.85)"}];
+        for (let bi=0;bi<4;bi++) {
+          const bx3=W*0.1+bi*(W*0.2);
+          ctx.fillStyle="#0d0500"; ctx.strokeStyle=bins2[bi].col; ctx.lineWidth=1.5;
+          rr(bx3,binY2,W*0.17,binH2,5); ctx.fill(); ctx.stroke();
+          const fH2=binH2*(0.3+0.38*Math.abs(Math.sin(t2*0.42+bi*1.1)));
+          ctx.fillStyle=bins2[bi].col; ctx.fillRect(bx3+4,binY2+binH2-fH2-2,W*0.15-4,fH2);
+          ctx.fillStyle="#FFE0A0"; ctx.font=`bold ${Math.round(binH2*0.16)}px monospace`; ctx.textAlign="center";
+          ctx.fillText(bins2[bi].lbl,bx3+W*0.085,binY2+binH2*0.2);
+        }
 
-        // ── Ice particles ───────────────────
-        for (let i = 0; i < 8; i++) {
-          const px2 = W * 0.1 + (t * 15 + i * 50) % (W * 0.8);
-          const py2 = topY + 10 + Math.sin(t + i * 2) * 30 + i * 8;
-          const alpha = Math.sin(t * 2 + i) * 0.3 + 0.4;
-          ctx.fillStyle = `rgba(180,220,255,${alpha})`;
-          ctx.beginPath();
-          ctx.arc(px2, py2, 1.5, 0, Math.PI * 2);
-          ctx.fill();
+        // ── Far-right: trophy/award shelf ────────────────────────
+        const tpX=W-W*0.09, tpY=H*0.32, tpW=W*0.078, tpH=H*0.38;
+        ctx.fillStyle="#090300"; ctx.strokeStyle="rgba(175,75,8,0.48)"; ctx.lineWidth=1.5;
+        rr(tpX,tpY,tpW,tpH,5); ctx.fill(); ctx.stroke();
+        for (let sh2=0;sh2<3;sh2++) { ctx.fillStyle="rgba(135,50,7,0.52)"; ctx.fillRect(tpX+2,tpY+tpH*(0.2+sh2*0.27),tpW-4,3); }
+        const trI=[{lbl:"SCRAP #1",col:"#FF8800"},{lbl:"PROTOTYPE",col:"#FFCC00"},{lbl:"CORE RIG",col:"#FF4422"}];
+        for (let ti3=0;ti3<3;ti3++) {
+          const ty3=tpY+tpH*(0.05+ti3*0.27);
+          ctx.fillStyle="#110500"; ctx.strokeStyle=trI[ti3].col+"85"; ctx.lineWidth=1;
+          rr(tpX+tpW*0.1,ty3,tpW*0.8,tpH*0.19,3); ctx.fill(); ctx.stroke();
+          ctx.fillStyle=trI[ti3].col; ctx.shadowColor=trI[ti3].col; ctx.shadowBlur=4+2*Math.sin(t2+ti3);
+          ctx.font=`bold ${Math.round(tpH*0.06)}px monospace`; ctx.textAlign="center";
+          ctx.fillText(trI[ti3].lbl,tpX+tpW/2,ty3+tpH*0.12); ctx.shadowBlur=0;
+        }
+
+        // ── Floor cable runs ──────────────────────────────────────
+        ctx.strokeStyle="rgba(155,55,8,0.32)"; ctx.lineWidth=2; ctx.setLineDash([5,5]);
+        ctx.beginPath(); ctx.moveTo(tcX+tcW,tcY+tcH*0.5); ctx.lineTo(dX2,dY+dH2*0.5); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(rkX2,rkY2+rkH2*0.5); ctx.lineTo(dX2+dW2,dY+dH2*0.5); ctx.stroke();
+        ctx.setLineDash([]);
+
+        // ── News ticker (bottom) ──────────────────────────────────
+        const tkY2=H-H*0.032;
+        ctx.fillStyle="rgba(50,16,2,0.92)"; ctx.fillRect(0,tkY2,W,H*0.03);
+        ctx.strokeStyle=`rgba(255,138,18,${0.52+0.2*Math.sin(t2*2)})`; ctx.lineWidth=1;
+        ctx.beginPath(); ctx.moveTo(0,tkY2); ctx.lineTo(W,tkY2); ctx.stroke();
+        const wL2=W*0.05, wH2=H*0.027;
+        ctx.fillStyle=`rgba(255,195,0,${0.75+0.25*Math.sin(t2*4)})`; rr(W*0.005,tkY2+H*0.001,wL2,wH2,3); ctx.fill();
+        ctx.fillStyle="#1a0800"; ctx.font=`bold ${Math.round(wH2*0.55)}px monospace`; ctx.textAlign="left";
+        ctx.fillText("LIVE",W*0.005+wL2*0.14,tkY2+H*0.001+wH2*0.75);
+        const tkTxt2="⚙ SCRAP TECH LAB  ✦  WASTELAND RESEARCH  ✦  POWER: 84%  ✦  RADS: HIGH  ✦  UPLINK LOST  ✦  TESLA ONLINE  ✦  SCRAP 1,247 KG  ✦  ";
+        const tkX2=W*0.06+W-(t2*52)%(W+1500);
+        ctx.save(); ctx.beginPath(); ctx.rect(W*0.06,tkY2,W-W*0.06,H*0.032); ctx.clip();
+        ctx.fillStyle="#FFE0A0"; ctx.font=`bold ${Math.round(H*0.017)}px monospace`; ctx.textAlign="left";
+        ctx.fillText(tkTxt2,tkX2,tkY2+H*0.021); ctx.restore();
+
+        // ── Ambient rust dust ─────────────────────────────────────
+        for (let pi=0;pi<16;pi++) {
+          const px=(Math.sin(pi*2.1+t2*0.34)*0.42+0.5)*W, py=(Math.cos(pi*1.6+t2*0.23)*0.38+0.5)*(H*0.88);
+          const pA=0.09+0.06*Math.sin(t2*1.3+pi);
+          ctx.fillStyle=pi%3===0?`rgba(255,138,28,${pA})`:pi%3===1?`rgba(198,75,8,${pA})`:`rgba(255,198,58,${pA})`;
+          ctx.beginPath(); ctx.arc(px,py,1.8,0,Math.PI*2); ctx.fill();
         }
 
       } else if (isTechShop) {
-        // ═══ WASTELAND TECH SHOP ═══
+        // ═══ WASTELAND TECH SHOP (fallback) ═══
         // ── Sales counter (top center) ───────────────────
         ctx.fillStyle = "#3a3530";
         ctx.strokeStyle = "#5a5048";
@@ -7564,6 +7957,365 @@ Game.prototype._renderIndoorFurniture = function(ctx, room) {
         ctx.textAlign = "center";
         ctx.fillText("TECH TRADER", cx, topY - 2);
         ctx.shadowBlur = 0;
+
+      } else if (!!this.map?.config?.wasteland) {
+        // ═══ WASTELAND: SCRAP TECH LAB — FULL ROOM ═══
+        const t = performance.now() / 1000;
+
+        // ── Rust & sand floor ─────────────────────────────────────
+        ctx.fillStyle = "#120800";
+        ctx.fillRect(0, 0, W, H);
+        const tSz = Math.round(W / 16);
+        for (let gy = 0; gy <= Math.ceil(H / tSz); gy++) {
+          for (let gx = 0; gx <= Math.ceil(W / tSz); gx++) {
+            const tx = gx * tSz, ty = gy * tSz;
+            const sd = gx * 13 + gy * 7;
+            ctx.fillStyle = sd%3===0?"rgba(28,12,2,0.96)":sd%3===1?"rgba(20,8,1,0.96)":"rgba(24,10,2,0.96)";
+            ctx.fillRect(tx, ty, tSz, tSz);
+            ctx.strokeStyle = `rgba(180,80,10,${0.08+0.04*Math.sin(t*0.7+sd*0.12)})`;
+            ctx.lineWidth = 0.7; ctx.strokeRect(tx, ty, tSz, tSz);
+            // Sand dust patches
+            if (sd % 11 === 0) {
+              const dg = ctx.createRadialGradient(tx+tSz/2,ty+tSz/2,0,tx+tSz/2,ty+tSz/2,tSz*0.55);
+              dg.addColorStop(0,`rgba(200,100,20,${0.05+0.03*Math.sin(t+sd)})`);
+              dg.addColorStop(1,"rgba(0,0,0,0)");
+              ctx.fillStyle=dg; ctx.fillRect(tx,ty,tSz,tSz);
+            }
+          }
+        }
+
+        // ── Room border: corroded metal frame ─────────────────────
+        ctx.strokeStyle = `rgba(210,100,20,${0.6+0.2*Math.sin(t*1.3)})`; ctx.lineWidth=3;
+        ctx.strokeRect(2,2,W-4,H-4);
+        ctx.strokeStyle="rgba(160,60,10,0.25)"; ctx.lineWidth=1;
+        ctx.strokeRect(7,7,W-14,H-14);
+
+        // ── Hanging industrial lights (flickering) ────────────────
+        const hLightXs=[W*0.18,W*0.44,W*0.70,W*0.88];
+        for (let li=0;li<4;li++) {
+          const lx=hLightXs[li], flicker=li===1?(0.6+0.4*Math.sin(t*13.7)):1;
+          const lcone=ctx.createRadialGradient(lx,0,2,lx,H*0.32,W*0.14);
+          lcone.addColorStop(0,`rgba(255,180,60,${0.14*flicker})`);
+          lcone.addColorStop(1,"rgba(0,0,0,0)");
+          ctx.fillStyle=lcone;
+          ctx.beginPath(); ctx.moveTo(lx-5,0); ctx.lineTo(lx-W*0.08,H*0.38); ctx.lineTo(lx+W*0.08,H*0.38); ctx.closePath(); ctx.fill();
+          // Bulb
+          ctx.fillStyle=`rgba(255,200,80,${0.8*flicker})`; ctx.shadowColor="#FF9922"; ctx.shadowBlur=12*flicker;
+          ctx.beginPath(); ctx.arc(lx,5,5,0,Math.PI*2); ctx.fill(); ctx.shadowBlur=0;
+          // Hanging wire
+          ctx.strokeStyle="rgba(100,50,10,0.8)"; ctx.lineWidth=1.5;
+          ctx.beginPath(); ctx.moveTo(lx,0); ctx.lineTo(lx,5); ctx.stroke();
+        }
+
+        // ── Room border rust strips ───────────────────────────────
+        // Horizontal rust streaks on walls
+        for (let rs=0;rs<5;rs++) {
+          const ry=topY*0.4+rs*(H*0.18);
+          ctx.strokeStyle=`rgba(160,50,5,${0.15+0.08*Math.sin(t*0.5+rs)})`; ctx.lineWidth=1;
+          ctx.beginPath(); ctx.moveTo(0,ry); ctx.lineTo(W*0.03,ry); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(W-W*0.03,ry); ctx.lineTo(W,ry); ctx.stroke();
+        }
+
+        // ── WASTELAND TECH LAB banner ─────────────────────────────
+        const sigW=W*0.58, sigH=H*0.042, sigX=cx-sigW/2, sigY=room.S-sigH-4;
+        const sigGr=ctx.createLinearGradient(sigX,sigY,sigX+sigW,sigY);
+        sigGr.addColorStop(0,"rgba(50,20,2,0.97)"); sigGr.addColorStop(0.5,"rgba(160,60,5,0.99)"); sigGr.addColorStop(1,"rgba(50,20,2,0.97)");
+        ctx.fillStyle=sigGr; rr(sigX,sigY,sigW,sigH,7); ctx.fill();
+        ctx.strokeStyle=`rgba(255,140,30,${0.7+0.3*Math.sin(t*1.8)})`; ctx.lineWidth=2; ctx.stroke();
+        ctx.fillStyle="#FFE0A0"; ctx.font=`bold ${Math.round(sigH*0.55)}px monospace`; ctx.textAlign="center";
+        ctx.shadowColor="#FF8800"; ctx.shadowBlur=12;
+        ctx.fillText("⚙  SCRAP  TECH  LAB  ⚙", cx, sigY+sigH*0.72); ctx.shadowBlur=0;
+
+        // ── RADIATION WARNING sign ────────────────────────────────
+        const radA=0.7+0.3*Math.sin(t*3.5);
+        const radW=W*0.12, radH=H*0.038;
+        ctx.fillStyle=`rgba(255,200,0,${radA})`; ctx.shadowColor="#FFCC00"; ctx.shadowBlur=15*radA;
+        rr(cx-radW/2,topY+H*0.04,radW,radH,5); ctx.fill(); ctx.shadowBlur=0;
+        ctx.strokeStyle=`rgba(200,100,0,${radA})`; ctx.lineWidth=1.5; ctx.stroke();
+        ctx.fillStyle="#1a0800"; ctx.font=`bold ${Math.round(radH*0.5)}px monospace`; ctx.textAlign="center";
+        ctx.fillText("☢ RADIATION ZONE ☢", cx, topY+H*0.04+radH*0.68);
+
+        // ── Top wall: scavenged server racks ──────────────────────
+        const srvH=H*0.065, srvY=topY+H*0.005;
+        const srvGr=ctx.createLinearGradient(W*0.04,srvY,W*0.96,srvY+srvH);
+        srvGr.addColorStop(0,"#0e0600"); srvGr.addColorStop(0.5,"#1c0c02"); srvGr.addColorStop(1,"#0e0600");
+        ctx.fillStyle=srvGr; rr(W*0.04,srvY,W*0.92,srvH,5); ctx.fill();
+        ctx.strokeStyle=`rgba(200,90,10,0.6)`; ctx.lineWidth=1.5; ctx.stroke();
+        // Server units
+        const srvCount=10;
+        for (let si=0;si<srvCount;si++) {
+          const sx=W*0.05+si*(W*0.9/srvCount);
+          ctx.fillStyle="#0a0400"; ctx.strokeStyle="rgba(180,70,10,0.4)"; ctx.lineWidth=0.7;
+          ctx.fillRect(sx,srvY+3,W*0.08,srvH-6); ctx.strokeRect(sx,srvY+3,W*0.08,srvH-6);
+          // LED strips
+          const ledCols=["#FF4400","#FFAA00","#FF6600","#FFCC00","#FF3300","#FF8800","#44FF88","#FF4400","#FFCC44","#FF6622"];
+          const ledA=0.5+0.5*Math.sin(t*(1.2+si*0.25)+si);
+          ctx.fillStyle=ledCols[si]; ctx.shadowColor=ledCols[si]; ctx.shadowBlur=4*ledA;
+          ctx.fillRect(sx+2,srvY+4,W*0.06,3); ctx.shadowBlur=0;
+          // Disk activity dot
+          const diskA=Math.sin(t*(3+si*0.7)+si)>0.4;
+          ctx.fillStyle=diskA?"#FF8800":"#2a1200";
+          ctx.beginPath(); ctx.arc(sx+W*0.068,srvY+srvH-6,2.5,0,Math.PI*2); ctx.fill();
+        }
+
+        // ── Main workstation desk (full width) ────────────────────
+        const dskH=H*0.055, dskY=topY+H*0.10, dskW=W*0.82, dskX=cx-dskW/2;
+        const dskBg=ctx.createLinearGradient(dskX,dskY,dskX+dskW,dskY+dskH);
+        dskBg.addColorStop(0,"#0e0600"); dskBg.addColorStop(0.5,"#1e0c02"); dskBg.addColorStop(1,"#0e0600");
+        ctx.fillStyle=dskBg; rr(dskX,dskY,dskW,dskH,6); ctx.fill();
+        ctx.strokeStyle="rgba(200,90,10,0.8)"; ctx.lineWidth=2; ctx.stroke();
+        // Desk edge strip (corroded copper)
+        ctx.strokeStyle=`rgba(220,120,30,${0.45+0.25*Math.sin(t*1.5)})`; ctx.lineWidth=1.5;
+        ctx.beginPath(); ctx.moveTo(dskX+8,dskY+dskH-2); ctx.lineTo(dskX+dskW-8,dskY+dskH-2); ctx.stroke();
+
+        // Holographic display on desk (center, glitchy)
+        const holW=W*0.28, holH=H*0.12, holX=cx-holW/2, holY=dskY-holH-H*0.005;
+        const glitch=(Math.sin(t*8.3)>0.88)?Math.sin(t*30)*4:0;
+        ctx.fillStyle="rgba(10,5,0,0.92)"; rr(holX+glitch,holY,holW,holH,5); ctx.fill();
+        ctx.strokeStyle=`rgba(255,140,20,${0.6+0.3*Math.sin(t*2.2)})`; ctx.lineWidth=1.5; ctx.stroke();
+        // Hologram content
+        ctx.fillStyle="#FF8800"; ctx.font=`bold ${Math.round(holH*0.13)}px monospace`; ctx.textAlign="center";
+        ctx.shadowColor="#FF6600"; ctx.shadowBlur=8;
+        ctx.fillText("⚙ SYSTEM ONLINE ⚙", cx+glitch*0.5, holY+holH*0.22); ctx.shadowBlur=0;
+        // Data readout lines
+        const dataLines=["POWER: 84%","SCRAP: 1,247 KG","TEMP: 312°C","RADS: HIGH","UPLINK: LOST"];
+        for (let dl=0;dl<5;dl++) {
+          const glA=dl%2===0?0.85:0.55;
+          ctx.fillStyle=dl===3?`rgba(255,80,0,${glA})`:`rgba(255,160,40,${glA})`;
+          ctx.font=`${Math.round(holH*0.1)}px monospace`; ctx.textAlign="left";
+          ctx.fillText(dataLines[dl],holX+holW*0.06+glitch,holY+holH*0.35+dl*holH*0.13);
+        }
+        // Waveform at bottom of hologram
+        ctx.strokeStyle=`rgba(255,180,40,0.7)`; ctx.lineWidth=1.2;
+        ctx.beginPath();
+        for (let wx=0;wx<holW-10;wx+=2) {
+          const wy=holY+holH*0.82+holH*0.1*Math.sin(t*6+wx*0.22);
+          wx===0?ctx.moveTo(holX+5+wx,wy):ctx.lineTo(holX+5+wx,wy);
+        }
+        ctx.stroke();
+
+        // Keyboard & tablet on desk
+        ctx.fillStyle="#0a0400"; rr(dskX+dskW*0.04,dskY+4,dskW*0.22,dskH-8,3); ctx.fill();
+        ctx.strokeStyle="rgba(180,80,10,0.4)"; ctx.lineWidth=0.8; ctx.stroke();
+        for (let ki=0;ki<10;ki++) {
+          const krow=Math.floor(ki/5), kcol=ki%5;
+          ctx.fillStyle=`rgba(200,100,20,${0.25+0.15*Math.sin(t+ki)})`;
+          ctx.fillRect(dskX+dskW*0.05+kcol*dskW*0.038,dskY+6+krow*7,dskW*0.03,5);
+        }
+
+        // ── LEFT: GIANT TESLA COIL ────────────────────────────────
+        const tcX=W*0.075, tcY=H*0.3, tcW=W*0.1, tcH=H*0.5;
+        // Base platform
+        ctx.fillStyle="#0e0600"; ctx.strokeStyle="rgba(200,90,10,0.7)"; ctx.lineWidth=2;
+        rr(tcX,tcY+tcH-tcH*0.12,tcW,tcH*0.12,5); ctx.fill(); ctx.stroke();
+        // Column
+        const colGr=ctx.createLinearGradient(tcX+tcW*0.3,tcY,tcX+tcW*0.7,tcY);
+        colGr.addColorStop(0,"#1a0c04"); colGr.addColorStop(0.5,"#2e1608"); colGr.addColorStop(1,"#1a0c04");
+        ctx.fillStyle=colGr; ctx.strokeStyle="rgba(180,70,10,0.5)"; ctx.lineWidth=1.5;
+        ctx.fillRect(tcX+tcW*0.3,tcY+tcH*0.15,tcW*0.4,tcH*0.72); ctx.strokeRect(tcX+tcW*0.3,tcY+tcH*0.15,tcW*0.4,tcH*0.72);
+        // Coil rings along column
+        for (let ci=0;ci<7;ci++) {
+          const cy=tcY+tcH*0.18+ci*(tcH*0.65/7);
+          ctx.strokeStyle=`rgba(255,${140+ci*8},20,0.55)`; ctx.lineWidth=2;
+          ctx.beginPath(); ctx.ellipse(tcX+tcW/2,cy,tcW*0.42,tcH*0.025,0,0,Math.PI*2); ctx.stroke();
+        }
+        // Tesla sphere top
+        const tsR=tcW*0.38;
+        const tsG=ctx.createRadialGradient(tcX+tcW/2,tcY+tsR*0.4,tsR*0.1,tcX+tcW/2,tcY+tsR*0.4,tsR);
+        tsG.addColorStop(0,"#3a1800"); tsG.addColorStop(0.5,"#200e00"); tsG.addColorStop(1,"#0e0600");
+        ctx.fillStyle=tsG; ctx.strokeStyle=`rgba(255,160,30,${0.6+0.3*Math.sin(t*2)})`; ctx.lineWidth=2;
+        ctx.beginPath(); ctx.arc(tcX+tcW/2,tcY+tsR*0.55,tsR,0,Math.PI*2); ctx.fill(); ctx.stroke();
+        // Electric arcs from sphere
+        const arcCount=5;
+        for (let ai=0;ai<arcCount;ai++) {
+          const arcSeed=Math.floor(t*4+ai*3.7)%7;
+          const aX1=tcX+tcW/2, aY1=tcY+tsR*0.55;
+          const aX2=aX1+(Math.sin(ai*1.3+t*2+arcSeed)*tcW*0.8);
+          const aY2=aY1+(Math.cos(ai*1.1+t*1.7+arcSeed)*tcW*0.6);
+          const aAlpha=0.4+0.5*Math.abs(Math.sin(t*7+ai));
+          ctx.strokeStyle=`rgba(255,220,60,${aAlpha})`; ctx.lineWidth=1;
+          ctx.beginPath(); ctx.moveTo(aX1,aY1);
+          const mx=aX1+(aX2-aX1)*0.5+Math.sin(t*11+ai)*10;
+          const my=aY1+(aY2-aY1)*0.5+Math.cos(t*9+ai)*8;
+          ctx.quadraticCurveTo(mx,my,aX2,aY2); ctx.stroke();
+          ctx.fillStyle=`rgba(255,200,40,${aAlpha*0.7})`; ctx.shadowColor="#FFCC00"; ctx.shadowBlur=6*aAlpha;
+          ctx.beginPath(); ctx.arc(aX2,aY2,2,0,Math.PI*2); ctx.fill(); ctx.shadowBlur=0;
+        }
+        // Sphere glow
+        const tsGl=ctx.createRadialGradient(tcX+tcW/2,tcY+tsR*0.55,0,tcX+tcW/2,tcY+tsR*0.55,tsR*1.5);
+        tsGl.addColorStop(0,`rgba(255,180,30,${0.2+0.15*Math.sin(t*3)})`); tsGl.addColorStop(1,"rgba(0,0,0,0)");
+        ctx.fillStyle=tsGl; ctx.beginPath(); ctx.arc(tcX+tcW/2,tcY+tsR*0.55,tsR*1.5,0,Math.PI*2); ctx.fill();
+        ctx.fillStyle="rgba(255,160,30,0.6)"; ctx.font=`bold ${Math.round(tcW*0.16)}px monospace`; ctx.textAlign="center";
+        ctx.fillText("TESLA",tcX+tcW/2,tcY+tcH-2);
+
+        // ── CENTER: Holographic map table ─────────────────────────
+        const mapTX=cx-W*0.1, mapTY=H*0.5, mapTW=W*0.2, mapTH=H*0.12;
+        ctx.fillStyle="#0a0400"; ctx.strokeStyle="rgba(255,140,20,0.6)"; ctx.lineWidth=2;
+        rr(mapTX,mapTY,mapTW,mapTH,6); ctx.fill(); ctx.stroke();
+        // Map display (top surface)
+        const mSurf=ctx.createLinearGradient(mapTX,mapTY,mapTX+mapTW,mapTY+mapTH*0.5);
+        mSurf.addColorStop(0,"rgba(180,70,10,0.18)"); mSurf.addColorStop(1,"rgba(255,140,20,0.06)");
+        ctx.fillStyle=mSurf; ctx.fillRect(mapTX+3,mapTY+3,mapTW-6,mapTH*0.6);
+        // Map grid lines
+        ctx.strokeStyle="rgba(255,160,40,0.3)"; ctx.lineWidth=0.7;
+        for (let mg=0;mg<6;mg++) { ctx.beginPath(); ctx.moveTo(mapTX+4+mg*(mapTW-8)/5,mapTY+3); ctx.lineTo(mapTX+4+mg*(mapTW-8)/5,mapTY+mapTH*0.6); ctx.stroke(); }
+        for (let mg=0;mg<4;mg++) { ctx.beginPath(); ctx.moveTo(mapTX+3,mapTY+3+mg*mapTH*0.18); ctx.lineTo(mapTX+mapTW-3,mapTY+3+mg*mapTH*0.18); ctx.stroke(); }
+        // Pulsing location marker
+        const locA=0.6+0.4*Math.sin(t*2.5);
+        ctx.fillStyle=`rgba(255,60,0,${locA})`; ctx.shadowColor="#FF4400"; ctx.shadowBlur=8*locA;
+        ctx.beginPath(); ctx.arc(mapTX+mapTW*0.55,mapTY+mapTH*0.22,4,0,Math.PI*2); ctx.fill(); ctx.shadowBlur=0;
+        ctx.fillStyle="rgba(255,160,40,0.7)"; ctx.font=`bold ${Math.round(mapTH*0.14)}px monospace`; ctx.textAlign="center";
+        ctx.fillText("TACTICAL MAP",cx,mapTY+mapTH*0.8);
+
+        // ── RIGHT: Chemical analysis tanks ───────────────────────
+        const tankZoneX=W*0.72, tankZoneY=H*0.3, tankZW=W*0.2, tankZH=H*0.5;
+        // Rack frame
+        ctx.fillStyle="#0e0600"; ctx.strokeStyle="rgba(180,70,10,0.55)"; ctx.lineWidth=2;
+        rr(tankZoneX,tankZoneY,tankZW,tankZH,6); ctx.fill(); ctx.stroke();
+        // Shelf bars
+        ctx.fillStyle="rgba(140,55,8,0.6)";
+        for (let sh=0;sh<3;sh++) {
+          ctx.fillRect(tankZoneX+4,tankZoneY+tankZH*(0.22+sh*0.26),tankZW-8,4);
+        }
+        // Chemical vials/beakers
+        const chemData=[
+          {col:"#FF4400",lbl:"ACID"},{col:"#FF8800",lbl:"RUST AGENT"},{col:"#FFCC00",lbl:"FUEL"},
+          {col:"#44FF88",lbl:"STIM"},{col:"#FF2200",lbl:"TOXIC"},{col:"#FFAA44",lbl:"PLASMA"},
+        ];
+        for (let ci2=0;ci2<6;ci2++) {
+          const row=Math.floor(ci2/3), col2=ci2%3;
+          const vx=tankZoneX+tankZW*0.1+col2*(tankZW*0.3);
+          const vy=tankZoneY+tankZH*0.05+row*(tankZH*0.46);
+          const vH=tankZH*0.2, vW=tankZW*0.22;
+          // Vial body
+          ctx.fillStyle="#100600"; ctx.strokeStyle=chemData[ci2].col+"88"; ctx.lineWidth=1.2;
+          rr(vx,vy,vW,vH,4); ctx.fill(); ctx.stroke();
+          // Liquid inside
+          const lvl=0.3+0.3*Math.abs(Math.sin(t*0.8+ci2*0.9));
+          const liqG=ctx.createLinearGradient(vx,vy+vH*(1-lvl),vx+vW,vy+vH);
+          liqG.addColorStop(0,chemData[ci2].col+"AA"); liqG.addColorStop(1,chemData[ci2].col+"44");
+          ctx.fillStyle=liqG; ctx.fillRect(vx+2,vy+vH*(1-lvl),vW-4,vH*lvl-2);
+          // Bubbles
+          for (let bi=0;bi<2;bi++) {
+            const bx=vx+vW*0.25+bi*vW*0.4;
+            const by=vy+vH*0.85-bi*6+Math.sin(t*2+ci2+bi)*4;
+            ctx.fillStyle=chemData[ci2].col+"66"; ctx.beginPath(); ctx.arc(bx,by,2,0,Math.PI*2); ctx.fill();
+          }
+          // Glow
+          ctx.fillStyle=chemData[ci2].col; ctx.shadowColor=chemData[ci2].col; ctx.shadowBlur=6+3*Math.sin(t*1.5+ci2);
+          ctx.font=`${Math.round(vH*0.15)}px monospace`; ctx.textAlign="center";
+          ctx.fillText(chemData[ci2].lbl,vx+vW/2,vy+vH+vH*0.16); ctx.shadowBlur=0;
+        }
+
+        // ── Center-left: Circuit board wall panel ─────────────────
+        const cbX=W*0.13, cbY=H*0.32, cbW=W*0.12, cbH=H*0.26;
+        ctx.fillStyle="#080400"; ctx.strokeStyle="rgba(180,90,10,0.5)"; ctx.lineWidth=1.5;
+        rr(cbX,cbY,cbW,cbH,5); ctx.fill(); ctx.stroke();
+        // PCB traces
+        const traceColors=["rgba(255,140,20,0.5)","rgba(200,80,10,0.4)","rgba(255,200,40,0.35)"];
+        const traces=[
+          [0.05,0.08,0.6,0.08],[0.05,0.08,0.05,0.35],[0.05,0.35,0.4,0.35],[0.4,0.08,0.4,0.6],
+          [0.7,0.2,0.95,0.2],[0.95,0.2,0.95,0.7],[0.2,0.6,0.7,0.6],[0.7,0.6,0.7,0.85],
+          [0.15,0.85,0.7,0.85],[0.15,0.4,0.15,0.85],[0.55,0.08,0.55,0.35],[0.55,0.35,0.85,0.35],
+        ];
+        for (let ti2=0;ti2<traces.length;ti2++) {
+          const [x1,y1,x2,y2]=traces[ti2];
+          ctx.strokeStyle=traceColors[ti2%3]; ctx.lineWidth=1.2;
+          ctx.beginPath(); ctx.moveTo(cbX+cbW*x1,cbY+cbH*y1); ctx.lineTo(cbX+cbW*x2,cbY+cbH*y2); ctx.stroke();
+        }
+        // ICs / chips
+        const icPos=[[0.15,0.1],[0.5,0.1],[0.15,0.5],[0.5,0.5],[0.2,0.78],[0.6,0.3]];
+        for (let ic=0;ic<6;ic++) {
+          const ix=cbX+cbW*icPos[ic][0], iy=cbY+cbH*icPos[ic][1];
+          ctx.fillStyle="#0e0600"; ctx.strokeStyle="rgba(200,100,20,0.6)"; ctx.lineWidth=0.8;
+          rr(ix,iy,cbW*0.22,cbH*0.1,2); ctx.fill(); ctx.stroke();
+          const ledA2=0.5+0.5*Math.sin(t*(1+ic*0.3)+ic*1.2);
+          ctx.fillStyle=ic%2===0?"#FF8800":"#FFCC00"; ctx.shadowColor=ctx.fillStyle; ctx.shadowBlur=3*ledA2;
+          ctx.beginPath(); ctx.arc(ix+cbW*0.2,iy+cbH*0.05,1.5,0,Math.PI*2); ctx.fill(); ctx.shadowBlur=0;
+        }
+        ctx.fillStyle="rgba(255,150,40,0.6)"; ctx.font=`bold ${Math.round(cbH*0.08)}px monospace`; ctx.textAlign="center";
+        ctx.fillText("CIRCUIT", cbX+cbW/2, cbY+cbH-4);
+
+        // ── Center-right: Radiation detector / Geiger counter ─────
+        const gcX=W*0.52, gcY=H*0.5, gcW=W*0.12, gcH=H*0.2;
+        ctx.fillStyle="#0e0600"; ctx.strokeStyle="rgba(200,90,10,0.55)"; ctx.lineWidth=1.5;
+        rr(gcX,gcY,gcW,gcH,6); ctx.fill(); ctx.stroke();
+        // Gauge face
+        ctx.fillStyle="#080300"; rr(gcX+4,gcY+4,gcW-8,gcH*0.55,4); ctx.fill();
+        const radLevel=0.55+0.3*Math.sin(t*0.7);
+        // Gauge arc
+        ctx.strokeStyle="rgba(80,30,5,0.8)"; ctx.lineWidth=gcH*0.07;
+        ctx.beginPath(); ctx.arc(gcX+gcW/2,gcY+gcH*0.36,gcH*0.24,Math.PI,0); ctx.stroke();
+        const gaugeAng=Math.PI+(radLevel*Math.PI);
+        const gaugCol=radLevel>0.8?"#FF2200":radLevel>0.5?"#FF8800":"#FFCC00";
+        ctx.strokeStyle=gaugCol; ctx.lineWidth=gcH*0.07; ctx.shadowColor=gaugCol; ctx.shadowBlur=8;
+        ctx.beginPath(); ctx.arc(gcX+gcW/2,gcY+gcH*0.36,gcH*0.24,Math.PI,gaugeAng); ctx.stroke(); ctx.shadowBlur=0;
+        // Needle
+        const ndA=Math.PI+radLevel*Math.PI;
+        ctx.strokeStyle="#FF4400"; ctx.lineWidth=1.5; ctx.lineCap="round";
+        ctx.beginPath(); ctx.moveTo(gcX+gcW/2,gcY+gcH*0.36); ctx.lineTo(gcX+gcW/2+Math.cos(ndA)*gcH*0.22,gcY+gcH*0.36+Math.sin(ndA)*gcH*0.22); ctx.stroke(); ctx.lineCap="butt";
+        // Geiger click display
+        const cpm=Math.floor(340+180*Math.sin(t*0.9));
+        ctx.fillStyle="#FF8800"; ctx.font=`bold ${Math.round(gcH*0.11)}px monospace`; ctx.textAlign="center";
+        ctx.fillText(`${cpm} CPM`,gcX+gcW/2,gcY+gcH*0.68);
+        ctx.fillStyle="rgba(255,140,30,0.7)"; ctx.font=`${Math.round(gcH*0.09)}px monospace`;
+        ctx.fillText("GEIGER",gcX+gcW/2,gcY+gcH*0.82);
+        ctx.fillText("COUNTER",gcX+gcW/2,gcY+gcH*0.92);
+
+        // ── Bottom: Scrap material bins ───────────────────────────
+        const binY=H-H*0.14, binH=H*0.1;
+        const bins=[{lbl:"IRON SCRAP",col:"rgba(160,70,10,0.8)"},{lbl:"COPPER",col:"rgba(200,120,30,0.8)"},{lbl:"CIRCUITS",col:"rgba(220,180,20,0.8)"},{lbl:"FUEL CELLS",col:"rgba(255,80,20,0.8)"}];
+        for (let bi=0;bi<4;bi++) {
+          const bx=W*0.1+bi*(W*0.2);
+          ctx.fillStyle="#0e0600"; ctx.strokeStyle=bins[bi].col; ctx.lineWidth=1.5;
+          rr(bx,binY,W*0.16,binH,5); ctx.fill(); ctx.stroke();
+          // Fill indicator
+          const fillH=binH*(0.3+0.4*Math.abs(Math.sin(t*0.4+bi*1.1)));
+          ctx.fillStyle=bins[bi].col; ctx.fillRect(bx+4,binY+binH-fillH-2,W*0.14-4,fillH);
+          ctx.fillStyle="#FFE0A0"; ctx.font=`bold ${Math.round(binH*0.16)}px monospace`; ctx.textAlign="center";
+          ctx.fillText(bins[bi].lbl,bx+W*0.08,binY+binH*0.18);
+        }
+
+        // ── Award/trophy shelf (far right) ───────────────────────
+        const trophX=W-W*0.1, trophY=H*0.33, trophW=W*0.085, trophH=H*0.38;
+        ctx.fillStyle="#0a0400"; ctx.strokeStyle="rgba(180,80,10,0.5)"; ctx.lineWidth=1.5;
+        rr(trophX,trophY,trophW,trophH,5); ctx.fill(); ctx.stroke();
+        // Shelves
+        for (let sh=0;sh<3;sh++) ctx.fillStyle="rgba(140,55,8,0.55)", ctx.fillRect(trophX+2,trophY+trophH*(0.2+sh*0.27),trophW-4,3);
+        // Trophies / items
+        const trItems=[{lbl:"SCRAP#1",col:"#FF8800"},{lbl:"PROTO",col:"#FFCC00"},{lbl:"WIRES",col:"#FF4422"}];
+        for (let ti3=0;ti3<3;ti3++) {
+          const ty3=trophY+trophH*(0.06+ti3*0.27);
+          ctx.fillStyle="#120800"; ctx.strokeStyle=trItems[ti3].col+"88"; ctx.lineWidth=1;
+          rr(trophX+trophW*0.12,ty3,trophW*0.76,trophH*0.19,3); ctx.fill(); ctx.stroke();
+          ctx.fillStyle=trItems[ti3].col; ctx.shadowColor=trItems[ti3].col; ctx.shadowBlur=4+2*Math.sin(t+ti3);
+          ctx.font=`bold ${Math.round(trophH*0.06)}px monospace`; ctx.textAlign="center";
+          ctx.fillText(trItems[ti3].lbl,trophX+trophW/2,ty3+trophH*0.12); ctx.shadowBlur=0;
+        }
+
+        // ── Floor cable runs ──────────────────────────────────────
+        ctx.strokeStyle="rgba(160,60,10,0.35)"; ctx.lineWidth=2;
+        ctx.setLineDash([5,5]);
+        ctx.beginPath(); ctx.moveTo(tcX+tcW,tcY+tcH*0.5); ctx.lineTo(dskX,dskY+dskH*0.5); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(tankZoneX,tankZoneY+tankZH*0.5); ctx.lineTo(dskX+dskW,dskY+dskH*0.5); ctx.stroke();
+        ctx.setLineDash([]);
+
+        // ── Ambient dust particles ────────────────────────────────
+        for (let pi=0;pi<16;pi++) {
+          const px=(Math.sin(pi*2.1+t*0.35)*0.42+0.5)*W;
+          const py=(Math.cos(pi*1.6+t*0.24)*0.38+0.5)*(H*0.88);
+          const pA=0.1+0.07*Math.sin(t*1.3+pi);
+          ctx.fillStyle=pi%3===0?`rgba(255,140,30,${pA})`:pi%3===1?`rgba(200,80,10,${pA})`:`rgba(255,200,60,${pA})`;
+          ctx.beginPath(); ctx.arc(px,py,1.8,0,Math.PI*2); ctx.fill();
+        }
+
+        // ── [T] TALK hint ─────────────────────────────────────────
+        const thW2=W*0.12, thH2=H*0.025;
+        ctx.fillStyle=`rgba(140,50,5,${0.85+0.1*Math.sin(t*2.5)})`;
+        rr(cx-thW2/2,topY+H*0.13,thW2,thH2,5); ctx.fill();
+        ctx.strokeStyle="rgba(255,140,30,0.6)"; ctx.lineWidth=1; ctx.stroke();
+        ctx.fillStyle="#FFE0A0"; ctx.font=`bold ${Math.round(thH2*0.55)}px monospace`; ctx.textAlign="center";
+        ctx.fillText("[T] TALK TO TECH",cx,topY+H*0.13+thH2*0.75);
 
       } else {
         // ═══ DEFAULT TECH LAB ═══
@@ -9565,120 +10317,555 @@ Game.prototype._renderIndoorFurniture = function(ctx, room) {
         return;
       }
       if (!!this.map?.config?.galactica) {
-        // ═══ GALACTICA: NOVA BROADCAST ═══
+        // ═══ GALACTICA: NOVA BROADCAST — FULL STUDIO ═══
         const t = performance.now() / 1000;
 
-        // ── Cosmic floor tiles ────────────────────────
-        const tileSize = 54;
-        for (let gy = 0; gy < Math.ceil(H / tileSize) + 1; gy++) {
-          for (let gx = 0; gx < Math.ceil(W / tileSize) + 1; gx++) {
-            const tx = gx * tileSize, ty = gy * tileSize;
-            const seed = gx * 19 + gy * 13;
-            ctx.fillStyle = (seed % 3 === 0) ? "rgba(20,0,30,0.88)"
-                          : (seed % 3 === 1) ? "rgba(14,0,24,0.88)"
-                          : "rgba(18,0,28,0.88)";
-            ctx.fillRect(tx, ty, tileSize, tileSize);
-            ctx.strokeStyle = "rgba(255,80,200,0.12)";
-            ctx.lineWidth = 0.5;
-            ctx.strokeRect(tx, ty, tileSize, tileSize);
-            if (seed % 5 === 0) {
-              ctx.fillStyle = `rgba(255,120,220,${0.22 + 0.12 * Math.sin(t * 1.3 + seed)})`;
-              ctx.beginPath();
-              ctx.arc(tx + 27, ty + 27, 1.2, 0, Math.PI * 2);
-              ctx.fill();
+        // ── Deep space floor ──────────────────────────────────────
+        ctx.fillStyle = "#04000e";
+        ctx.fillRect(0, 0, W, H);
+        const tileS = Math.round(W / 18);
+        for (let gy = 0; gy <= Math.ceil(H / tileS); gy++) {
+          for (let gx = 0; gx <= Math.ceil(W / tileS); gx++) {
+            const tx = gx * tileS, ty = gy * tileS;
+            const sd = gx * 17 + gy * 11;
+            ctx.fillStyle = sd%3===0?"rgba(20,0,34,0.95)":sd%3===1?"rgba(12,0,22,0.95)":"rgba(16,0,28,0.95)";
+            ctx.fillRect(tx, ty, tileS, tileS);
+            ctx.strokeStyle = `rgba(160,50,255,${0.06+0.04*Math.sin(t*0.9+sd*0.1)})`;
+            ctx.lineWidth = 0.7; ctx.strokeRect(tx, ty, tileS, tileS);
+            if (sd % 9 === 0) {
+              const ng = ctx.createRadialGradient(tx+tileS/2,ty+tileS/2,0,tx+tileS/2,ty+tileS/2,tileS*0.6);
+              ng.addColorStop(0,`rgba(160,50,255,${0.07+0.04*Math.sin(t+sd)})`);
+              ng.addColorStop(1,"rgba(0,0,0,0)");
+              ctx.fillStyle = ng; ctx.fillRect(tx,ty,tileS,tileS);
             }
           }
-          ctx.shadowBlur = 0;
         }
 
-        // ── Tool wall (left) ───────────────────
-        ctx.fillStyle = "#0c1820";
-        ctx.strokeStyle = "#3a5868";
-        ctx.lineWidth = 1.5;
-        rr(cx - W * 0.44, topY + 6, 55, 80, 2);
-        ctx.fill();
-        ctx.stroke();
-        // Tools on pegboard
-        const tools = [
-          { x: 10, y: 12, icon: "🔧", size: 14 },
-          { x: 30, y: 14, icon: "⚙", size: 14 },
-          { x: 10, y: 34, icon: "🔩", size: 12 },
-          { x: 30, y: 32, icon: "🪛", size: 14 },
-          { x: 10, y: 54, icon: "🔨", size: 14 },
-          { x: 30, y: 56, icon: "🪚", size: 14 },
-        ];
-        tools.forEach(tool => {
-          ctx.font = `${tool.size}px serif`;
-          ctx.fillText(tool.icon, cx - W * 0.44 + tool.x, topY + 6 + tool.y);
-        });
+        // ── Room neon border ──────────────────────────────────────
+        ctx.strokeStyle = `rgba(255,80,200,${0.55+0.2*Math.sin(t*1.5)})`; ctx.lineWidth = 3;
+        ctx.strokeRect(2,2,W-4,H-4);
+        ctx.strokeStyle = "rgba(120,40,255,0.22)"; ctx.lineWidth = 1;
+        ctx.strokeRect(7,7,W-14,H-14);
 
-        // ── Parts shelf (right) ───────────────────
-        ctx.fillStyle = "#0c1820";
-        ctx.strokeStyle = "#3a5868";
-        ctx.lineWidth = 1.5;
-        rr(cx + W * 0.2, topY + 6, 60, 75, 2);
-        ctx.fill();
-        ctx.stroke();
-        // Shelf dividers
-        ctx.fillStyle = "#2a4050";
-        ctx.fillRect(cx + W * 0.2, topY + 30, 60, 3);
-        ctx.fillRect(cx + W * 0.2, topY + 54, 60, 3);
-        // Car parts on shelves
-        const parts = [
-          { x: 8, y: 10, w: 18, h: 14, color: "#4a6878" },
-          { x: 32, y: 12, w: 22, h: 12, color: "#3a5868" },
-          { x: 10, y: 36, w: 20, h: 14, color: "#5a7888" },
-          { x: 36, y: 34, w: 16, h: 16, color: "#4a6070" },
-          { x: 12, y: 60, w: 16, h: 12, color: "#3a5060" },
-          { x: 34, y: 58, w: 20, h: 14, color: "#4a6878" },
-        ];
-        for (const part of parts) {
-          ctx.fillStyle = part.color;
-          rr(cx + W * 0.2 + part.x, topY + 6 + part.y, part.w, part.h, 2);
-          ctx.fill();
+        // ── Ceiling spotlight cones ───────────────────────────────
+        const spotXs = [W*0.15, W*0.38, W*0.62, W*0.85];
+        for (let li = 0; li < 4; li++) {
+          const lx = spotXs[li];
+          const lcol = li%2===0 ? [255,80,200] : [120,60,255];
+          const lg = ctx.createRadialGradient(lx,0,2,lx,H*0.35,W*0.18);
+          lg.addColorStop(0,`rgba(${lcol[0]},${lcol[1]},${lcol[2]},0.16)`);
+          lg.addColorStop(1,"rgba(0,0,0,0)");
+          ctx.fillStyle = lg;
+          ctx.beginPath(); ctx.moveTo(lx-5,0); ctx.lineTo(lx-W*0.1,H*0.42); ctx.lineTo(lx+W*0.1,H*0.42); ctx.closePath(); ctx.fill();
+          // Fixture
+          const la = 0.7+0.3*Math.sin(t*1.1+li);
+          ctx.fillStyle = `rgba(${lcol[0]},${lcol[1]},${lcol[2]},${la})`;
+          ctx.shadowColor = `rgb(${lcol[0]},${lcol[1]},${lcol[2]})`; ctx.shadowBlur = 10*la;
+          ctx.beginPath(); ctx.ellipse(lx,4,W*0.016,4,0,0,Math.PI*2); ctx.fill(); ctx.shadowBlur = 0;
         }
 
-        // ── Tire stack (bottom left) ───────────────────
-        for (let ti = 0; ti < 3; ti++) {
-          ctx.fillStyle = "#1a1a1a";
-          ctx.strokeStyle = "#3a3a3a";
-          ctx.lineWidth = 1;
-          ctx.beginPath();
-          ctx.ellipse(cx - W * 0.38 + ti * 6, midY + 40 + ti * 2, 16, 10, 0.2, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.stroke();
-          // Tire rim
-          ctx.fillStyle = "#4a6070";
-          ctx.beginPath();
-          ctx.arc(cx - W * 0.38 + ti * 6, midY + 40 + ti * 2, 6, 0, Math.PI * 2);
-          ctx.fill();
+        // ── NOVA BROADCAST banner ─────────────────────────────────
+        const sigW = W*0.52, sigH = H*0.038, sigX = cx-sigW/2, sigY = room.S-sigH-4;
+        const sigGr = ctx.createLinearGradient(sigX,sigY,sigX+sigW,sigY);
+        sigGr.addColorStop(0,"rgba(55,0,45,0.96)"); sigGr.addColorStop(0.5,"rgba(180,0,130,0.99)"); sigGr.addColorStop(1,"rgba(55,0,45,0.96)");
+        ctx.fillStyle = sigGr; rr(sigX,sigY,sigW,sigH,8); ctx.fill();
+        ctx.strokeStyle = `rgba(255,100,220,${0.7+0.3*Math.sin(t*2.2)})`; ctx.lineWidth = 2; ctx.stroke();
+        ctx.fillStyle = "#FFDDFF"; ctx.font = `bold ${Math.round(sigH*0.55)}px monospace`; ctx.textAlign = "center";
+        ctx.shadowColor = "#FF66DD"; ctx.shadowBlur = 12;
+        ctx.fillText("◉  NOVA  BROADCAST  ◉", cx, sigY+sigH*0.72); ctx.shadowBlur = 0;
+
+        // ── ON AIR blinking sign ──────────────────────────────────
+        const oaA = 0.75+0.25*Math.sin(t*5);
+        const oaW = W*0.14, oaH = H*0.038;
+        ctx.fillStyle = `rgba(255,10,50,${oaA})`; ctx.shadowColor="#FF0040"; ctx.shadowBlur=18*oaA;
+        rr(cx-oaW/2, topY+H*0.04, oaW, oaH, 6); ctx.fill(); ctx.shadowBlur=0;
+        ctx.strokeStyle = `rgba(255,100,120,${oaA})`; ctx.lineWidth=1.5; ctx.stroke();
+        ctx.fillStyle = "#FFFFFF"; ctx.font = `bold ${Math.round(oaH*0.52)}px monospace`; ctx.textAlign="center";
+        ctx.fillText("● ON AIR ●", cx, topY+H*0.04+oaH*0.72);
+
+        // ── Acoustic foam panels (top wall) ──────────────────────
+        const pCount = 8, pW = (W-W*0.06)/pCount-W*0.007;
+        for (let pi = 0; pi < pCount; pi++) {
+          const px = W*0.03+pi*((W-W*0.06)/pCount);
+          const py = topY+H*0.005;
+          const pH = H*0.042;
+          ctx.fillStyle = "#0d001e"; ctx.strokeStyle="rgba(150,40,130,0.35)"; ctx.lineWidth=1;
+          rr(px,py,pW,pH,4); ctx.fill(); ctx.stroke();
+          const cols=4, rows=3, wW=(pW-5)/cols, wH=(pH-5)/rows;
+          for (let wr=0;wr<rows;wr++) for (let wc=0;wc<cols;wc++) {
+            ctx.fillStyle=(wr+wc)%2===0?"#180030":"#100020";
+            ctx.beginPath(); ctx.moveTo(px+3+wc*wW,py+3+wr*wH+wH); ctx.lineTo(px+3+wc*wW+wW,py+3+wr*wH+wH); ctx.lineTo(px+3+wc*wW+wW/2,py+3+wr*wH); ctx.closePath(); ctx.fill();
+          }
         }
 
-        // ── Oil barrel (bottom right) ───────────────────
-        ctx.fillStyle = "#2a4050";
-        ctx.strokeStyle = "#4a6878";
-        ctx.lineWidth = 1;
+        // ── Broadcast desk (full width) ───────────────────────────
+        const dskH = H*0.055, dskY = topY+H*0.10, dskW = W*0.84, dskX = cx-dskW/2;
+        const dskGr = ctx.createLinearGradient(dskX,dskY,dskX+dskW,dskY+dskH);
+        dskGr.addColorStop(0,"#160024"); dskGr.addColorStop(0.5,"#280042"); dskGr.addColorStop(1,"#160024");
+        ctx.fillStyle = dskGr; rr(dskX,dskY,dskW,dskH,8); ctx.fill();
+        ctx.strokeStyle="rgba(255,80,200,0.85)"; ctx.lineWidth=2.5; ctx.stroke();
+        ctx.fillStyle="rgba(255,120,220,0.06)"; ctx.fillRect(dskX+6,dskY+3,dskW-12,dskH*0.25);
+        ctx.strokeStyle=`rgba(255,80,200,${0.4+0.3*Math.sin(t*2)})`; ctx.lineWidth=1.5;
+        ctx.beginPath(); ctx.moveTo(dskX+10,dskY+dskH-2); ctx.lineTo(dskX+dskW-10,dskY+dskH-2); ctx.stroke();
+
+        // ── Mixing console on desk ────────────────────────────────
+        const mbX=dskX+dskW*0.04, mbY=dskY+3, mbW=dskW*0.92, mbH=dskH-6;
+        ctx.fillStyle="#08001a"; rr(mbX,mbY,mbW,mbH,4); ctx.fill();
+        ctx.strokeStyle="rgba(200,60,180,0.5)"; ctx.lineWidth=1; ctx.stroke();
+        const fCnt=20;
+        for (let fi=0;fi<fCnt;fi++) {
+          const fx=mbX+mbW*0.02+fi*(mbW*0.96/fCnt);
+          ctx.fillStyle="#120024"; ctx.fillRect(fx+1,mbY+3,mbW*0.03,mbH-6);
+          const fP=3+(mbH-12)*(0.5+0.5*Math.sin(t*(0.7+fi*0.18)+fi));
+          ctx.fillStyle=fi%3===0?"#FF88CC":fi%3===1?"#AA66FF":"#66CCFF";
+          ctx.fillRect(fx,mbY+3+fP,mbW*0.034,4);
+        }
+        // VU bank right
+        const vuX2=mbX+mbW-mbW*0.09, vuY3=mbY+2, vuCols=["#44FF88","#88FF44","#CCFF00","#FF8800","#FF2244"];
+        for (let vi=0;vi<5;vi++) {
+          const bH2=Math.round((mbH-4)/5)-1;
+          const act=Math.sin(t*6+vi*0.6)>(vi/5-0.35);
+          ctx.fillStyle=act?vuCols[vi]:"#0e001c";
+          ctx.shadowColor=act?vuCols[vi]:"transparent"; ctx.shadowBlur=act?4:0;
+          ctx.fillRect(vuX2,vuY3+(4-vi)*(bH2+1),mbW*0.08,bH2);
+        }
+        ctx.shadowBlur=0;
+
+        // ── Presenters at desk ────────────────────────────────────
+        const drawAnchor = (ax, ay, hairCol, suitCol, irisCol, hasBoomMic) => {
+          ctx.save();
+          // Chair
+          ctx.fillStyle="#160026"; ctx.strokeStyle="rgba(255,80,200,0.4)"; ctx.lineWidth=1;
+          const cW=W*0.042, cH=H*0.04;
+          rr(ax-cW/2,ay+cH*0.3,cW,cH,4); ctx.fill(); ctx.stroke();
+          rr(ax-cW/2*0.9,ay-cH*0.25,cW*0.9,cH*0.5,3); ctx.fill(); ctx.stroke();
+          ctx.strokeStyle="rgba(255,80,200,0.25)"; ctx.lineWidth=1.5;
+          ctx.beginPath(); ctx.moveTo(ax-cW*0.36,ay+cH*1.3); ctx.lineTo(ax-cW*0.44,ay+cH*1.8); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(ax+cW*0.36,ay+cH*1.3); ctx.lineTo(ax+cW*0.44,ay+cH*1.8); ctx.stroke();
+          // Body
+          ctx.fillStyle=suitCol; rr(ax-W*0.014,ay-H*0.007,W*0.028,H*0.042,3); ctx.fill();
+          // Collar
+          ctx.fillStyle="#FFDDBB"; ctx.beginPath(); ctx.moveTo(ax-W*0.005,ay-H*0.007); ctx.lineTo(ax,ay+H*0.005); ctx.lineTo(ax+W*0.005,ay-H*0.007); ctx.fill();
+          const neckH=H*0.012; ctx.fillRect(ax-W*0.005,ay-neckH-H*0.007,W*0.01,neckH);
+          // Head
+          const hR=W*0.014; ctx.beginPath(); ctx.arc(ax,ay-neckH-H*0.007-hR,hR,0,Math.PI*2); ctx.fill();
+          // Hair
+          ctx.fillStyle=hairCol; ctx.beginPath(); ctx.arc(ax,ay-neckH-H*0.007-hR,hR*1.05,Math.PI*1.1,Math.PI*1.9); ctx.fill();
+          ctx.fillRect(ax-hR*0.85,ay-neckH-H*0.007-hR*1.8,hR*1.7,hR);
+          // Eyes
+          const eyeR=hR*0.26, eyeY=ay-neckH-H*0.007-hR*0.82;
+          ctx.fillStyle="#fff"; ctx.beginPath(); ctx.ellipse(ax-hR*0.4,eyeY,eyeR,eyeR*0.8,0,0,Math.PI*2); ctx.ellipse(ax+hR*0.4,eyeY,eyeR,eyeR*0.8,0,0,Math.PI*2); ctx.fill();
+          ctx.fillStyle=irisCol; ctx.beginPath(); ctx.arc(ax-hR*0.4,eyeY,eyeR*0.6,0,Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(ax+hR*0.4,eyeY,eyeR*0.6,0,Math.PI*2); ctx.fill();
+          ctx.fillStyle="#000"; ctx.beginPath(); ctx.arc(ax-hR*0.4,eyeY,eyeR*0.28,0,Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(ax+hR*0.4,eyeY,eyeR*0.28,0,Math.PI*2); ctx.fill();
+          // Mouth
+          const mY=ay-neckH-H*0.007-hR*0.36;
+          ctx.fillStyle="#331122"; ctx.beginPath(); ctx.ellipse(ax,mY,hR*0.38,hR*0.28,0,0,Math.PI); ctx.fill();
+          // Arm on desk
+          ctx.strokeStyle="#FFDDBB"; ctx.lineWidth=W*0.005; ctx.lineCap="round";
+          ctx.beginPath(); ctx.moveTo(ax+W*0.012,ay+H*0.01); ctx.lineTo(ax+W*0.03,ay); ctx.stroke();
+          ctx.lineCap="butt";
+          // Headset
+          ctx.fillStyle="#080016"; ctx.strokeStyle="rgba(255,80,200,0.75)"; ctx.lineWidth=1.5;
+          const hsR=hR*1.2, hcY=ay-neckH-H*0.007-hR;
+          ctx.beginPath(); ctx.arc(ax,hcY,hsR,Math.PI,0); ctx.stroke();
+          ctx.beginPath(); ctx.ellipse(ax-hsR,hcY,hR*0.35,hR*0.5,0.2,0,Math.PI*2); ctx.fill();
+          ctx.strokeStyle="rgba(255,80,200,0.5)"; ctx.lineWidth=1; ctx.stroke();
+          ctx.beginPath(); ctx.ellipse(ax+hsR,hcY,hR*0.35,hR*0.5,-0.2,0,Math.PI*2); ctx.fill(); ctx.stroke();
+          if (hasBoomMic) {
+            ctx.strokeStyle="rgba(200,120,255,0.7)"; ctx.lineWidth=1;
+            ctx.beginPath(); ctx.moveTo(ax+hsR,hcY); ctx.quadraticCurveTo(ax+hsR*1.8,hcY-hR,ax+hsR*1.6,hcY+hR*0.5); ctx.stroke();
+            ctx.fillStyle="#280042"; ctx.beginPath(); ctx.ellipse(ax+hsR*1.6,hcY+hR*0.5,hR*0.35,hR*0.55,-0.3,0,Math.PI*2); ctx.fill();
+            ctx.strokeStyle="rgba(255,80,200,0.6)"; ctx.lineWidth=0.8; ctx.stroke();
+          }
+          ctx.restore();
+        };
+        drawAnchor(cx-W*0.16, dskY+dskH*0.55, "#1a1a2e", "#2233AA", "#2255CC", true);
+        drawAnchor(cx+W*0.16, dskY+dskH*0.55, "#441100", "#440033", "#FF44AA", false);
+
+        // ── Left wall: TWO giant speaker towers ───────────────────
+        const spTW = W*0.085, spTH = H*0.32;
+        for (let si=0;si<2;si++) {
+          const spX=W*0.015, spY=H*0.34+si*(spTH+H*0.025);
+          ctx.fillStyle="#0b0018"; ctx.strokeStyle="rgba(255,80,200,0.6)"; ctx.lineWidth=2.5;
+          rr(spX,spY,spTW,spTH,10); ctx.fill(); ctx.stroke();
+          // Big woofer
+          const wCX=spX+spTW/2, wCY=spY+spTH*0.38, wR=spTW*0.42;
+          const wg=ctx.createRadialGradient(wCX,wCY,wR*0.08,wCX,wCY,wR);
+          wg.addColorStop(0,"#3a0055"); wg.addColorStop(0.45,"#200040"); wg.addColorStop(0.85,"#120028"); wg.addColorStop(1,"#080018");
+          ctx.fillStyle=wg; ctx.beginPath(); ctx.arc(wCX,wCY,wR,0,Math.PI*2); ctx.fill();
+          ctx.strokeStyle="rgba(255,80,200,0.5)"; ctx.lineWidth=1.5; ctx.stroke();
+          for (let ri=1;ri<=5;ri++) { ctx.strokeStyle=`rgba(255,80,200,${0.1*ri})`; ctx.lineWidth=0.9; ctx.beginPath(); ctx.arc(wCX,wCY,wR*ri/5.5,0,Math.PI*2); ctx.stroke(); }
+          const dcG=ctx.createRadialGradient(wCX,wCY,0,wCX,wCY,wR*0.18);
+          dcG.addColorStop(0,"#7700cc"); dcG.addColorStop(1,"#2a0044");
+          ctx.fillStyle=dcG; ctx.beginPath(); ctx.arc(wCX,wCY,wR*0.18,0,Math.PI*2); ctx.fill();
+          // Tweeter
+          const twY=spY+spTH*0.73;
+          ctx.fillStyle="#180030"; ctx.strokeStyle="rgba(255,80,200,0.4)"; ctx.lineWidth=1.2;
+          ctx.beginPath(); ctx.arc(wCX,twY,spTW*0.14,0,Math.PI*2); ctx.fill(); ctx.stroke();
+          ctx.fillStyle="#280044"; ctx.beginPath(); ctx.arc(wCX,twY,spTW*0.07,0,Math.PI*2); ctx.fill();
+          // Mid-range driver
+          const mdY=spY+spTH*0.57;
+          ctx.fillStyle="#120022"; ctx.strokeStyle="rgba(200,80,180,0.35)"; ctx.lineWidth=1;
+          ctx.beginPath(); ctx.arc(wCX,mdY,spTW*0.19,0,Math.PI*2); ctx.fill(); ctx.stroke();
+          for (let ri=1;ri<=3;ri++) { ctx.strokeStyle=`rgba(200,80,180,${0.08*ri})`; ctx.lineWidth=0.7; ctx.beginPath(); ctx.arc(wCX,mdY,spTW*0.06*ri,0,Math.PI*2); ctx.stroke(); }
+          // Brand badge
+          ctx.fillStyle="rgba(255,80,200,0.7)"; ctx.font=`bold ${Math.round(spTW*0.18)}px monospace`; ctx.textAlign="center";
+          ctx.fillText("NOVA", wCX, spY+spTH-spTH*0.04);
+          // Pulsing glow
+          const pulse=0.28+0.2*Math.sin(t*5.5+si*Math.PI);
+          const spGl=ctx.createRadialGradient(wCX,wCY,0,wCX,wCY,wR*1.3);
+          spGl.addColorStop(0,`rgba(200,60,255,${pulse})`); spGl.addColorStop(0.5,`rgba(255,80,200,${pulse*0.5})`); spGl.addColorStop(1,"rgba(0,0,0,0)");
+          ctx.fillStyle=spGl; ctx.beginPath(); ctx.arc(wCX,wCY,wR*1.3,0,Math.PI*2); ctx.fill();
+        }
+
+        // ══════════════════════════════════════════════════════
+        //  ▐█▌  HUGE MAIN RADIO — RIGHT-CENTER CENTERPIECE  ▐█▌
+        // ══════════════════════════════════════════════════════
+        const bRW=W*0.22, bRH=H*0.62;
+        const bRX=W*0.725, bRY=H*0.18;
+
+        // Cabinet outer glow
+        const cabGlR=ctx.createRadialGradient(bRX+bRW/2,bRY+bRH/2,bRW*0.2,bRX+bRW/2,bRY+bRH/2,bRW*0.85);
+        cabGlR.addColorStop(0,`rgba(180,60,255,${0.18+0.1*Math.sin(t*1.4)})`);
+        cabGlR.addColorStop(1,"rgba(0,0,0,0)");
+        ctx.fillStyle=cabGlR; ctx.beginPath(); ctx.ellipse(bRX+bRW/2,bRY+bRH/2,bRW*0.9,bRH*0.55,0,0,Math.PI*2); ctx.fill();
+
+        // Cabinet body
+        const cabBg=ctx.createLinearGradient(bRX,bRY,bRX+bRW,bRY+bRH);
+        cabBg.addColorStop(0,"#100020"); cabBg.addColorStop(0.35,"#1e0038"); cabBg.addColorStop(0.65,"#160030"); cabBg.addColorStop(1,"#0c0018");
+        ctx.fillStyle=cabBg; rr(bRX,bRY,bRW,bRH,bRW*0.07); ctx.fill();
+        ctx.strokeStyle=`rgba(255,80,200,${0.7+0.3*Math.sin(t*1.8)})`; ctx.lineWidth=3;
+        rr(bRX,bRY,bRW,bRH,bRW*0.07); ctx.stroke();
+        ctx.strokeStyle=`rgba(140,60,255,${0.4+0.2*Math.sin(t*2.2+1)})`; ctx.lineWidth=1;
+        rr(bRX+4,bRY+4,bRW-8,bRH-8,bRW*0.06); ctx.stroke();
+
+        // Chrome top strip
+        const topSG=ctx.createLinearGradient(bRX,bRY,bRX+bRW,bRY);
+        topSG.addColorStop(0,"rgba(255,80,200,0.04)"); topSG.addColorStop(0.5,"rgba(255,80,200,0.2)"); topSG.addColorStop(1,"rgba(255,80,200,0.04)");
+        ctx.fillStyle=topSG; ctx.fillRect(bRX+8,bRY+3,bRW-16,7);
+
+        // Station name badge
+        const bdgW=bRW*0.82, bdgH=bRH*0.065, bdgX=bRX+bRW*0.09, bdgY=bRY+bRH*0.038;
+        ctx.fillStyle="rgba(80,0,60,0.96)"; rr(bdgX,bdgY,bdgW,bdgH,6); ctx.fill();
+        ctx.strokeStyle=`rgba(255,100,220,${0.6+0.3*Math.sin(t*2.5)})`; ctx.lineWidth=1.5; ctx.stroke();
+        ctx.fillStyle="#FFDDFF"; ctx.font=`bold ${Math.round(bdgH*0.55)}px monospace`; ctx.textAlign="center";
+        ctx.shadowColor="#FF66CC"; ctx.shadowBlur=10;
+        ctx.fillText("NOVA FM", bRX+bRW/2, bdgY+bdgH*0.75); ctx.shadowBlur=0;
+
+        // ── Big analog frequency dial ─────────────────────────────
+        const dialCX=bRX+bRW/2, dialCY=bRY+bRH*0.295, dialR=bRW*0.38;
+        // Bezel
+        const dBez=ctx.createRadialGradient(dialCX,dialCY,dialR*0.8,dialCX,dialCY,dialR*1.08);
+        dBez.addColorStop(0,"#2a0046"); dBez.addColorStop(1,"#0e001e");
+        ctx.fillStyle=dBez; ctx.beginPath(); ctx.arc(dialCX,dialCY,dialR*1.08,0,Math.PI*2); ctx.fill();
+        ctx.strokeStyle=`rgba(255,80,200,${0.65+0.25*Math.sin(t*2)})`; ctx.lineWidth=3;
+        ctx.beginPath(); ctx.arc(dialCX,dialCY,dialR*1.08,0,Math.PI*2); ctx.stroke();
+        // Face
+        const dFace=ctx.createRadialGradient(dialCX,dialCY,0,dialCX,dialCY,dialR);
+        dFace.addColorStop(0,"#1c003a"); dFace.addColorStop(0.6,"#0e0024"); dFace.addColorStop(1,"#080018");
+        ctx.fillStyle=dFace; ctx.beginPath(); ctx.arc(dialCX,dialCY,dialR,0,Math.PI*2); ctx.fill();
+        // Frequency scale
+        const freqLbls=["88","92","96","100","104","108"];
+        for (let fi=0;fi<=10;fi++) {
+          const ang=Math.PI*0.75+fi*(Math.PI*1.5/10);
+          const isMaj=fi%2===0;
+          const tickLen=isMaj?dialR*0.2:dialR*0.1;
+          const tx2=dialCX+Math.cos(ang)*(dialR-dialR*0.06);
+          const ty2=dialCY+Math.sin(ang)*(dialR-dialR*0.06);
+          const tx3=dialCX+Math.cos(ang)*(dialR-dialR*0.06-tickLen);
+          const ty3=dialCY+Math.sin(ang)*(dialR-dialR*0.06-tickLen);
+          ctx.strokeStyle=isMaj?"rgba(255,120,220,0.9)":"rgba(255,80,200,0.5)";
+          ctx.lineWidth=isMaj?2:1; ctx.beginPath(); ctx.moveTo(tx2,ty2); ctx.lineTo(tx3,ty3); ctx.stroke();
+          if (isMaj&&fi/2<freqLbls.length) {
+            ctx.fillStyle="rgba(255,180,240,0.85)"; ctx.font=`bold ${Math.round(dialR*0.14)}px monospace`; ctx.textAlign="center";
+            ctx.fillText(freqLbls[fi/2],tx3-Math.cos(ang)*dialR*0.12,ty3-Math.sin(ang)*dialR*0.12+dialR*0.04);
+          }
+        }
+        // Glowing needle
+        const nAng=Math.PI*0.75+(0.52+0.04*Math.sin(t*0.3))*(Math.PI*1.5);
+        ctx.strokeStyle="#FF4400"; ctx.lineWidth=Math.max(2,dialR*0.04); ctx.lineCap="round";
+        ctx.shadowColor="#FF6600"; ctx.shadowBlur=12;
+        ctx.beginPath(); ctx.moveTo(dialCX-Math.cos(nAng)*dialR*0.16,dialCY-Math.sin(nAng)*dialR*0.16);
+        ctx.lineTo(dialCX+Math.cos(nAng)*dialR*0.82,dialCY+Math.sin(nAng)*dialR*0.82); ctx.stroke();
+        ctx.shadowBlur=0; ctx.lineCap="butt";
+        // Pivot
+        const pvG=ctx.createRadialGradient(dialCX,dialCY,0,dialCX,dialCY,dialR*0.1);
+        pvG.addColorStop(0,"#FFB080"); pvG.addColorStop(1,"#883300");
+        ctx.fillStyle=pvG; ctx.beginPath(); ctx.arc(dialCX,dialCY,dialR*0.1,0,Math.PI*2); ctx.fill();
+        // Frequency readout
+        const freqVal=(96.4+0.3*Math.sin(t*0.25)).toFixed(1);
+        const rdW=bRW*0.72, rdH=bRH*0.042, rdX=bRX+bRW*0.14, rdY=dialCY+dialR*1.1+bRH*0.01;
+        ctx.fillStyle="#060012"; rr(rdX,rdY,rdW,rdH,4); ctx.fill();
+        ctx.strokeStyle="rgba(0,255,180,0.6)"; ctx.lineWidth=1; ctx.stroke();
+        ctx.fillStyle=`rgba(0,255,180,${0.85+0.15*Math.sin(t*2.5)})`;
+        ctx.font=`bold ${Math.round(rdH*0.62)}px monospace`; ctx.textAlign="center";
+        ctx.fillText(`${freqVal} MHz`, bRX+bRW/2, rdY+rdH*0.75);
+
+        // ── Giant speaker grille ──────────────────────────────────
+        const grX=bRX+bRW/2, grY=bRY+bRH*0.665, grR=bRW*0.38;
+        // Surround ring
+        const grSR=ctx.createRadialGradient(grX,grY,grR*0.82,grX,grY,grR*1.12);
+        grSR.addColorStop(0,"#2a0044"); grSR.addColorStop(1,"#0e001e");
+        ctx.fillStyle=grSR; ctx.beginPath(); ctx.arc(grX,grY,grR*1.12,0,Math.PI*2); ctx.fill();
+        ctx.strokeStyle=`rgba(255,80,200,${0.65+0.2*Math.sin(t*2.4)})`; ctx.lineWidth=2.5;
+        ctx.beginPath(); ctx.arc(grX,grY,grR*1.12,0,Math.PI*2); ctx.stroke();
+        // Mesh background
+        ctx.fillStyle="#090016"; ctx.beginPath(); ctx.arc(grX,grY,grR,0,Math.PI*2); ctx.fill();
+        // Mesh grid
+        ctx.save(); ctx.beginPath(); ctx.arc(grX,grY,grR,0,Math.PI*2); ctx.clip();
+        ctx.strokeStyle="rgba(180,60,255,0.2)"; ctx.lineWidth=0.8;
+        const meshStep=Math.round(grR/5);
+        for (let gy2=-grR;gy2<=grR;gy2+=meshStep) { ctx.beginPath(); ctx.moveTo(grX-grR,grY+gy2); ctx.lineTo(grX+grR,grY+gy2); ctx.stroke(); }
+        for (let gx2=-grR;gx2<=grR;gx2+=meshStep) { ctx.beginPath(); ctx.moveTo(grX+gx2,grY-grR); ctx.lineTo(grX+gx2,grY+grR); ctx.stroke(); }
+        ctx.restore();
+        // Woofer cone
+        const wfG=ctx.createRadialGradient(grX,grY,grR*0.05,grX,grY,grR*0.75);
+        wfG.addColorStop(0,"#3c0058"); wfG.addColorStop(0.4,"#240045"); wfG.addColorStop(0.8,"#140030"); wfG.addColorStop(1,"#0a0020");
+        ctx.fillStyle=wfG; ctx.beginPath(); ctx.arc(grX,grY,grR*0.75,0,Math.PI*2); ctx.fill();
+        ctx.strokeStyle="rgba(255,80,200,0.5)"; ctx.lineWidth=2; ctx.stroke();
+        for (let ri=1;ri<=6;ri++) { ctx.strokeStyle=`rgba(255,80,200,${0.1*ri})`; ctx.lineWidth=1; ctx.beginPath(); ctx.arc(grX,grY,grR*0.1*ri,0,Math.PI*2); ctx.stroke(); }
+        // Dust cap
+        const dcG=ctx.createRadialGradient(grX-grR*0.03,grY-grR*0.03,0,grX,grY,grR*0.18);
+        dcG.addColorStop(0,"#8800cc"); dcG.addColorStop(1,"#2a0044");
+        ctx.fillStyle=dcG; ctx.beginPath(); ctx.arc(grX,grY,grR*0.18,0,Math.PI*2); ctx.fill();
+        // Pulsing speaker glow
+        const spkPls=0.28+0.2*Math.sin(t*5.8);
+        const spkG=ctx.createRadialGradient(grX,grY,0,grX,grY,grR*1.3);
+        spkG.addColorStop(0,`rgba(200,60,255,${spkPls})`); spkG.addColorStop(0.4,`rgba(255,80,200,${spkPls*0.5})`); spkG.addColorStop(1,"rgba(0,0,0,0)");
+        ctx.fillStyle=spkG; ctx.beginPath(); ctx.arc(grX,grY,grR*1.3,0,Math.PI*2); ctx.fill();
+
+        // ── VU meters panel ───────────────────────────────────────
+        const vuPX=bRX+bRW*0.06, vuPY=rdY+rdH+bRH*0.02, vuPW=bRW*0.88, vuPH=bRH*0.072;
+        ctx.fillStyle="#06000f"; rr(vuPX,vuPY,vuPW,vuPH,5); ctx.fill();
+        ctx.strokeStyle="rgba(180,60,255,0.55)"; ctx.lineWidth=1.2; ctx.stroke();
+        ctx.fillStyle="rgba(255,80,200,0.6)"; ctx.font=`bold ${Math.round(vuPH*0.3)}px monospace`; ctx.textAlign="left";
+        ctx.fillText("L", vuPX+vuPW*0.03, vuPY+vuPH*0.38);
+        ctx.fillText("R", vuPX+vuPW*0.03, vuPY+vuPH*0.82);
+        const vuBW=(vuPW*0.9)/8;
+        const vuBCols=["#44FF88","#44FF88","#88FF44","#CCFF00","#FFCC00","#FF8800","#FF4400","#FF2200"];
+        for (let ch=0;ch<2;ch++) {
+          const lvl=0.4+0.55*Math.abs(Math.sin(t*(3+ch*0.7)+ch*1.4));
+          for (let vi=0;vi<8;vi++) {
+            const vbx=vuPX+vuPW*0.09+vi*(vuBW+1);
+            const vby=vuPY+vuPH*(0.06+ch*0.46);
+            const act=vi/8<lvl;
+            ctx.fillStyle=act?vuBCols[vi]:"#0e001c";
+            ctx.shadowColor=act?vuBCols[vi]:"transparent"; ctx.shadowBlur=act?4:0;
+            ctx.fillRect(vbx,vby,vuBW-1,vuPH*0.38);
+          }
+        }
+        ctx.shadowBlur=0;
+
+        // ── Knobs row ─────────────────────────────────────────────
+        const knbY=bRY+bRH-bRH*0.048, knbLabels=["VOL","BASS","TREB","BAL"];
+        const knbR=bRW*0.07;
+        for (let ki=0;ki<4;ki++) {
+          const kx=bRX+bRW*(0.14+ki*0.24);
+          ctx.fillStyle="#1a0030"; ctx.strokeStyle="rgba(255,80,200,0.55)"; ctx.lineWidth=1.5;
+          ctx.beginPath(); ctx.arc(kx,knbY,knbR,0,Math.PI*2); ctx.fill(); ctx.stroke();
+          const kAng=-Math.PI*0.7+(ki===0?0.8+0.3*Math.sin(t*0.5):ki===1?1.1:ki===2?0.9:0.7)*Math.PI*1.4;
+          ctx.strokeStyle=ki===0?"#FF88CC":ki===1?"#AA66FF":ki===2?"#66CCFF":"#FFCC44";
+          ctx.lineWidth=2; ctx.lineCap="round";
+          ctx.beginPath(); ctx.moveTo(kx,knbY); ctx.lineTo(kx+Math.cos(kAng)*knbR*0.8,knbY+Math.sin(kAng)*knbR*0.8); ctx.stroke();
+          ctx.lineCap="butt";
+          ctx.fillStyle="rgba(255,180,240,0.65)"; ctx.font=`${Math.round(knbR*0.55)}px monospace`; ctx.textAlign="center";
+          ctx.fillText(knbLabels[ki],kx,knbY+knbR*1.6);
+        }
+
+        // ── Antenna from top of radio ──────────────────────────────
+        const antX=bRX+bRW*0.82, antBase=bRY, antTip=bRY-H*0.14-H*0.015*Math.sin(t*1.1);
+        ctx.fillStyle="#1e0034"; ctx.strokeStyle="rgba(255,80,200,0.5)"; ctx.lineWidth=1;
+        rr(antX-bRW*0.04,antBase-bRH*0.02,bRW*0.08,bRH*0.025,3); ctx.fill(); ctx.stroke();
+        const antGr=ctx.createLinearGradient(antX,antTip,antX,antBase);
+        antGr.addColorStop(0,"rgba(255,80,200,0.95)"); antGr.addColorStop(1,"rgba(140,40,180,0.4)");
+        ctx.strokeStyle=antGr; ctx.lineWidth=3;
+        ctx.beginPath(); ctx.moveTo(antX,antBase); ctx.lineTo(antX,antTip); ctx.stroke();
+        for (let ai=0;ai<5;ai++) {
+          const ay=antBase-H*0.025-ai*H*0.022;
+          ctx.fillStyle="#2a0044"; ctx.strokeStyle="rgba(255,80,200,0.4)"; ctx.lineWidth=0.8;
+          rr(antX-bRW*0.035,ay-bRH*0.008,bRW*0.07,bRH*0.012,2); ctx.fill(); ctx.stroke();
+        }
+        // Signal pulse at tip
+        const sigP=0.6+0.4*Math.sin(t*4);
+        ctx.fillStyle=`rgba(255,80,200,${sigP})`; ctx.shadowColor="#FF80CC"; ctx.shadowBlur=14*sigP;
+        ctx.beginPath(); ctx.arc(antX,antTip,5,0,Math.PI*2); ctx.fill(); ctx.shadowBlur=0;
+        for (let sri=1;sri<=4;sri++) {
+          const sra=((t*1.4+sri*0.5)%1);
+          ctx.strokeStyle=`rgba(255,80,200,${(1-sra)*0.5})`; ctx.lineWidth=1;
+          ctx.beginPath(); ctx.arc(antX,antTip,sra*W*0.055,0,Math.PI*2); ctx.stroke();
+        }
+
+        // ── Equipment rack (center-left) ──────────────────────────
+        const rkW=W*0.1, rkH=H*0.38, rkX=W*0.13, rkY=H*0.38;
+        ctx.fillStyle="#08001a"; ctx.strokeStyle="rgba(255,80,200,0.45)"; ctx.lineWidth=2;
+        rr(rkX,rkY,rkW,rkH,6); ctx.fill(); ctx.stroke();
+        ctx.strokeStyle="rgba(140,60,255,0.3)"; ctx.lineWidth=0.6;
+        ctx.beginPath(); ctx.moveTo(rkX+rkW*0.06,rkY+4); ctx.lineTo(rkX+rkW*0.06,rkY+rkH-4); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(rkX+rkW-rkW*0.06,rkY+4); ctx.lineTo(rkX+rkW-rkW*0.06,rkY+rkH-4); ctx.stroke();
+        const rkUnits=[{col:"#FF88CC",lbl:"AMP"},{col:"#AA66FF",lbl:"EQ "},{col:"#44CCFF",lbl:"COMP"},{col:"#FFCC44",lbl:"FX "},{col:"#88FF88",lbl:"OUT"},{col:"#FF6688",lbl:"SUB"},{col:"#FFAA44",lbl:"MON"}];
+        const rkUH=(rkH-rkH*0.1)/rkUnits.length;
+        for (let ri=0;ri<rkUnits.length;ri++) {
+          const ru=rkUnits[ri], ruy=rkY+rkH*0.05+ri*rkUH;
+          ctx.fillStyle="#0d001e"; ctx.strokeStyle=ru.col+"44"; ctx.lineWidth=0.8;
+          ctx.fillRect(rkX+rkW*0.08,ruy,rkW*0.84,rkUH-2); ctx.strokeRect(rkX+rkW*0.08,ruy,rkW*0.84,rkUH-2);
+          const la=0.6+0.4*Math.sin(t*(1.5+ri*0.4));
+          ctx.fillStyle=ru.col; ctx.shadowColor=ru.col; ctx.shadowBlur=5*la;
+          ctx.fillRect(rkX+rkW*0.12,ruy+rkUH*0.28,rkW*0.1,rkUH*0.44); ctx.shadowBlur=0;
+          ctx.fillStyle="#260038"; ctx.beginPath(); ctx.arc(rkX+rkW*0.82,ruy+rkUH*0.5,rkUH*0.35,0,Math.PI*2); ctx.fill();
+          ctx.strokeStyle=ru.col+"88"; ctx.lineWidth=0.8; ctx.stroke();
+          const ka=t*(0.5+ri*0.3)+ri;
+          ctx.strokeStyle=ru.col; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(rkX+rkW*0.82,ruy+rkUH*0.5); ctx.lineTo(rkX+rkW*0.82+Math.cos(ka)*rkUH*0.3,ruy+rkUH*0.5+Math.sin(ka)*rkUH*0.3); ctx.stroke();
+          ctx.fillStyle=ru.col+"cc"; ctx.font=`${Math.round(rkUH*0.38)}px monospace`; ctx.textAlign="center";
+          ctx.fillText(ru.lbl,rkX+rkW*0.5,ruy+rkUH*0.65);
+        }
+        ctx.fillStyle="rgba(255,80,200,0.6)"; ctx.font=`bold ${Math.round(rkW*0.14)}px monospace`; ctx.textAlign="center";
+        ctx.fillText("RACK",rkX+rkW/2,rkY+rkH-4);
+
+        // ── Waveform monitor (above rack) ─────────────────────────
+        const wmW=rkW+8, wmH=H*0.14, wmX=rkX-4, wmY=rkY-wmH-H*0.02;
+        ctx.fillStyle="#05000e"; ctx.strokeStyle="rgba(255,80,200,0.55)"; ctx.lineWidth=1.5;
+        rr(wmX,wmY,wmW,wmH,6); ctx.fill(); ctx.stroke();
+        ctx.fillStyle="#070016"; rr(wmX+3,wmY+3,wmW-6,wmH-6,4); ctx.fill();
+        ctx.strokeStyle="rgba(255,100,220,0.9)"; ctx.lineWidth=1.5;
         ctx.beginPath();
-        ctx.ellipse(cx + W * 0.32, midY + 44, 18, 10, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.stroke();
-        ctx.fillStyle = "#1a3040";
-        ctx.fillRect(cx + W * 0.32 - 16, midY + 44, 32, 18);
-        ctx.fillStyle = "#66BBFF";
-        ctx.font = "bold 6px monospace";
-        ctx.textAlign = "center";
-        ctx.fillText("OIL", cx + W * 0.32, midY + 56);
-
-        // ── Ice particles ───────────────────
-        for (let i = 0; i < 6; i++) {
-          const px2 = W * 0.1 + (t * 10 + i * 50) % (W * 0.8);
-          const py2 = topY + 15 + Math.sin(t * 0.7 + i * 2) * 20 + i * 10;
-          const alpha = Math.sin(t * 1.5 + i) * 0.25 + 0.3;
-          ctx.fillStyle = `rgba(180,220,255,${alpha})`;
-          ctx.beginPath();
-          ctx.arc(px2, py2, 1.5, 0, Math.PI * 2);
-          ctx.fill();
+        for (let wx=0;wx<wmW-8;wx+=2) {
+          const amp=wmH*0.22+wmH*0.14*Math.sin(t*3.2+wx*0.22);
+          const wy=wmY+wmH/2+amp*Math.sin(t*7.5+wx*0.28);
+          wx===0?ctx.moveTo(wmX+4+wx,wy):ctx.lineTo(wmX+4+wx,wy);
         }
+        ctx.stroke();
+        ctx.strokeStyle="rgba(100,180,255,0.5)"; ctx.lineWidth=1;
+        ctx.beginPath();
+        for (let wx=0;wx<wmW-8;wx+=2) {
+          const amp2=wmH*0.14+wmH*0.1*Math.sin(t*2.1+wx*0.18+1.5);
+          const wy2=wmY+wmH/2+amp2*Math.sin(t*5+wx*0.3+2);
+          wx===0?ctx.moveTo(wmX+4+wx,wy2):ctx.lineTo(wmX+4+wx,wy2);
+        }
+        ctx.stroke();
+        ctx.fillStyle="rgba(255,140,220,0.65)"; ctx.font=`bold ${Math.round(wmH*0.12)}px monospace`; ctx.textAlign="center";
+        ctx.fillText("LIVE SIGNAL",wmX+wmW/2,wmY+wmH-4);
+
+        // ── Center: standing studio mic ───────────────────────────
+        const micX=cx-W*0.08, micBY=dskY+dskH+H*0.16;
+        const micPoleH=H*0.16, micR=W*0.015;
+        ctx.fillStyle="#180030"; ctx.strokeStyle="rgba(255,80,200,0.5)"; ctx.lineWidth=1.5;
+        ctx.beginPath(); ctx.ellipse(micX,micBY+micPoleH*0.07,micR*1.8,H*0.018,0,0,Math.PI*2); ctx.fill(); ctx.stroke();
+        ctx.strokeStyle=`rgba(200,120,255,${0.8+0.2*Math.sin(t*2)})`; ctx.lineWidth=3;
+        ctx.beginPath(); ctx.moveTo(micX,micBY+micPoleH*0.07); ctx.lineTo(micX,micBY-micPoleH*0.86); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(micX,micBY-micPoleH*0.6); ctx.lineTo(micX+micR*2.8,micBY-micPoleH*0.82); ctx.stroke();
+        // Mic capsule
+        ctx.fillStyle="#240040"; ctx.strokeStyle="rgba(255,80,200,0.8)"; ctx.lineWidth=2;
+        ctx.beginPath(); ctx.ellipse(micX+micR*2.8,micBY-micPoleH*0.98,micR*1.1,micR*1.8,-0.3,0,Math.PI*2); ctx.fill(); ctx.stroke();
+        ctx.strokeStyle="rgba(255,120,220,0.3)"; ctx.lineWidth=0.6;
+        for (let mg=0;mg<5;mg++) { ctx.beginPath(); ctx.ellipse(micX+micR*2.8,micBY-micPoleH*0.98,micR*1.1,micR*(1.8-mg*0.32),-0.3,0,Math.PI*2); ctx.stroke(); }
+        const mGl=ctx.createRadialGradient(micX+micR*2.8,micBY-micPoleH*0.98,0,micX+micR*2.8,micBY-micPoleH*0.98,micR*3.5);
+        mGl.addColorStop(0,`rgba(255,80,200,${0.2+0.15*Math.sin(t*3)})`); mGl.addColorStop(1,"rgba(0,0,0,0)");
+        ctx.fillStyle=mGl; ctx.beginPath(); ctx.arc(micX+micR*2.8,micBY-micPoleH*0.98,micR*3.5,0,Math.PI*2); ctx.fill();
+        for (let ri=1;ri<=4;ri++) {
+          const rR=ri*micR*2.2+micR*1.5*Math.sin(t*2-ri*0.5);
+          ctx.strokeStyle=`rgba(255,80,200,${(0.15-ri*0.03)*(0.5+0.5*Math.sin(t*2+ri))})`;
+          ctx.lineWidth=1; ctx.beginPath(); ctx.arc(micX+micR*2.8,micBY-micPoleH*0.98,rR,0,Math.PI*2); ctx.stroke();
+        }
+
+        // ── Playlist/track display (right side) ───────────────────
+        const plW=W*0.14, plH=H*0.24, plX=W-plW-W*0.015, plY=H*0.34;
+        ctx.fillStyle="#07000f"; ctx.strokeStyle="rgba(140,60,255,0.55)"; ctx.lineWidth=1.5;
+        rr(plX,plY,plW,plH,6); ctx.fill(); ctx.stroke();
+        ctx.fillStyle="#AA66FF"; ctx.font=`bold ${Math.round(plH*0.09)}px monospace`; ctx.textAlign="center";
+        ctx.fillText("▶ NOW PLAYING",plX+plW/2,plY+plH*0.1);
+        ctx.strokeStyle="rgba(140,60,255,0.3)"; ctx.lineWidth=0.5;
+        ctx.beginPath(); ctx.moveTo(plX+8,plY+plH*0.15); ctx.lineTo(plX+plW-8,plY+plH*0.15); ctx.stroke();
+        const trks=["NOVA WAVE","VOID BEAT","STARFIELD","PLASMA FX","NEBULA DUB","DARK ORBIT"];
+        const actTrk=Math.floor(t*0.35)%trks.length;
+        trks.forEach((tr,ti)=>{
+          const isAct=ti===actTrk;
+          ctx.fillStyle=isAct?"#FF88CC":"rgba(180,120,255,0.6)";
+          ctx.font=isAct?`bold ${Math.round(plH*0.065)}px monospace`:`${Math.round(plH*0.065)}px monospace`;
+          ctx.textAlign="left";
+          ctx.fillText((isAct?"▶ ":"  ")+tr,plX+8,plY+plH*0.2+ti*plH*0.12);
+        });
+        // Progress bar
+        const pbY=plY+plH-plH*0.09, pbW=plW-16;
+        ctx.fillStyle="#0e0020"; ctx.fillRect(plX+8,pbY,pbW,7);
+        ctx.strokeStyle="rgba(180,60,255,0.4)"; ctx.lineWidth=0.6; ctx.strokeRect(plX+8,pbY,pbW,7);
+        const pbGr=ctx.createLinearGradient(plX+8,pbY,plX+8+pbW,pbY);
+        pbGr.addColorStop(0,"#FF80CC"); pbGr.addColorStop(1,"#AA66FF");
+        ctx.fillStyle=pbGr; ctx.fillRect(plX+8,pbY,pbW*((t*0.08)%1),7);
+
+        // ── Star chart (right-bottom wall) ───────────────────────
+        const scW=plW, scH=H*0.2, scX=plX, scY=plY+plH+H*0.02;
+        ctx.fillStyle="#04000c"; ctx.strokeStyle="rgba(160,60,255,0.55)"; ctx.lineWidth=1.5;
+        rr(scX,scY,scW,scH,6); ctx.fill(); ctx.stroke();
+        const sSeeds=[17,31,43,7,53,23,37,11,29,41,19,47,13,3,59,67,71,79];
+        for (let si3=0;si3<18;si3++) {
+          const s3=sSeeds[si3];
+          const sx3=scX+5+(s3*13%(scW-10));
+          const sy3=scY+6+(s3*7%(scH-12));
+          const tw=0.45+0.55*Math.sin(t*1.8+si3*0.7);
+          ctx.fillStyle=si3%4===0?`rgba(255,200,60,${tw})`:si3%4===1?`rgba(180,100,255,${tw})`:si3%4===2?`rgba(100,200,255,${tw})`:`rgba(255,255,255,${tw*0.85})`;
+          ctx.beginPath(); ctx.arc(sx3,sy3,si3%3===0?2:1,0,Math.PI*2); ctx.fill();
+        }
+        ctx.strokeStyle="rgba(160,100,255,0.22)"; ctx.lineWidth=0.7;
+        ctx.beginPath(); ctx.moveTo(scX+scW*0.14,scY+scH*0.28); ctx.lineTo(scX+scW*0.32,scY+scH*0.18); ctx.lineTo(scX+scW*0.52,scY+scH*0.4); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(scX+scW*0.6,scY+scH*0.25); ctx.lineTo(scX+scW*0.78,scY+scH*0.5); ctx.lineTo(scX+scW*0.9,scY+scH*0.3); ctx.stroke();
+        ctx.strokeStyle="rgba(255,180,60,0.55)"; ctx.lineWidth=1.2;
+        ctx.beginPath(); ctx.arc(scX+scW/2,scY+scH/2,scH*0.2,0,Math.PI*2); ctx.stroke();
+        ctx.fillStyle="#FFCC44"; ctx.shadowColor="#FFAA00"; ctx.shadowBlur=6;
+        ctx.beginPath(); ctx.arc(scX+scW/2,scY+scH/2,scH*0.08,0,Math.PI*2); ctx.fill(); ctx.shadowBlur=0;
+        ctx.fillStyle="rgba(160,60,255,0.7)"; ctx.font=`bold ${Math.round(scH*0.1)}px monospace`; ctx.textAlign="center";
+        ctx.fillText("STAR CHART",scX+scW/2,scY+scH-5);
+
+        // ── Award plaques (bottom center) ─────────────────────────
+        const plaqLabels=["★ NOVA AWARD","GALACTIC #1","5M LISTENERS"];
+        const plaqW=W*0.14, plaqH=H*0.04;
+        for (let pi2=0;pi2<3;pi2++) {
+          const px2=cx-plaqW*1.6+pi2*(plaqW+W*0.01), py2=H-plaqH-H*0.04;
+          const pcol=pi2===0?"rgba(255,200,60,0.9)":pi2===1?"rgba(255,80,200,0.85)":"rgba(180,60,255,0.85)";
+          ctx.fillStyle="#0d001e"; ctx.strokeStyle=pcol; ctx.lineWidth=1.2;
+          rr(px2,py2,plaqW,plaqH,5); ctx.fill(); ctx.stroke();
+          ctx.fillStyle=pcol; ctx.font=`bold ${Math.round(plaqH*0.4)}px monospace`; ctx.textAlign="center";
+          ctx.fillText(plaqLabels[pi2],px2+plaqW/2,py2+plaqH*0.68);
+        }
+
+        // ── Floor cable runs ──────────────────────────────────────
+        ctx.strokeStyle="rgba(140,40,180,0.32)"; ctx.lineWidth=2;
+        ctx.setLineDash([5,5]);
+        ctx.beginPath(); ctx.moveTo(rkX+rkW,rkY+rkH*0.5); ctx.lineTo(dskX,dskY+dskH*0.5); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(bRX,bRY+bRH*0.6); ctx.lineTo(dskX+dskW,dskY+dskH*0.5); ctx.stroke();
+        ctx.setLineDash([]);
+
+        // ── News ticker ───────────────────────────────────────────
+        const tkY=H-H*0.032;
+        ctx.fillStyle="rgba(55,0,45,0.92)"; ctx.fillRect(0,tkY,W,H*0.03);
+        ctx.strokeStyle=`rgba(255,80,200,${0.55+0.2*Math.sin(t*2)})`; ctx.lineWidth=1;
+        ctx.beginPath(); ctx.moveTo(0,tkY); ctx.lineTo(W,tkY); ctx.stroke();
+        // LIVE badge
+        const livW=W*0.055, livH=H*0.028;
+        ctx.fillStyle=`rgba(255,20,60,${0.75+0.25*Math.sin(t*5)})`; rr(W*0.005,tkY+H*0.001,livW,livH,3); ctx.fill();
+        ctx.fillStyle="#fff"; ctx.font=`bold ${Math.round(livH*0.55)}px monospace`; ctx.textAlign="left";
+        ctx.fillText("LIVE",W*0.005+livW*0.15,tkY+H*0.001+livH*0.75);
+        const tkTxt="◉ NOVA BROADCAST  ✦  GALACTIC NEWS  ✦  WARP STORM: SECTOR 7  ✦  NOVA FM 96.4 MHz  ✦  OVERLORD NEAR PLANET CORE  ✦  SPACE MARKETS +4.2%  ✦  ";
+        const tkX=W*0.065+W-(t*55)%(W+1600);
+        ctx.save(); ctx.beginPath(); ctx.rect(W*0.065,tkY,W-W*0.065,H*0.032); ctx.clip();
+        ctx.fillStyle="#FFDDFF"; ctx.font=`bold ${Math.round(H*0.018)}px monospace`; ctx.textAlign="left";
+        ctx.fillText(tkTxt,tkX,tkY+H*0.022); ctx.restore();
+
+        // ── Ambient space dust ────────────────────────────────────
+        for (let pi3=0;pi3<18;pi3++) {
+          const px3=(Math.sin(pi3*2.3+t*0.38)*0.42+0.5)*W;
+          const py3=(Math.cos(pi3*1.7+t*0.26)*0.36+0.5)*(H*0.88);
+          const pA=0.12+0.08*Math.sin(t*1.5+pi3);
+          ctx.fillStyle=pi3%3===0?`rgba(255,100,220,${pA})`:pi3%3===1?`rgba(140,80,255,${pA})`:`rgba(80,160,255,${pA})`;
+          ctx.beginPath(); ctx.arc(px3,py3,1.8,0,Math.PI*2); ctx.fill();
+        }
+
+        // ── [T] TALK hint ─────────────────────────────────────────
+        const thW=W*0.12, thH=H*0.025;
+        ctx.fillStyle=`rgba(160,0,110,${0.85+0.1*Math.sin(t*2.5)})`;
+        rr(cx-thW/2,topY+H*0.13,thW,thH,5); ctx.fill();
+        ctx.strokeStyle="rgba(255,80,200,0.6)"; ctx.lineWidth=1; ctx.stroke();
+        ctx.fillStyle="#FFDDFF"; ctx.font=`bold ${Math.round(thH*0.55)}px monospace`; ctx.textAlign="center";
+        ctx.fillText("[T] TALK TO DJ",cx,topY+H*0.13+thH*0.75);
 
       } else {
         // ═══ DEFAULT CHOP SHOP (ENHANCED) ═══
@@ -10288,10 +11475,118 @@ Game.prototype._renderIndoorFurniture = function(ctx, room) {
           ctx.stroke();
         }
 
+        // ── Second co-anchor at right of desk ──────────
+        const npX2 = W / 2 + 60, npY2 = deskY + 18;
+        ctx.save();
+        // Chair
+        ctx.fillStyle = "#180028"; ctx.strokeStyle = "rgba(255,80,200,0.4)"; ctx.lineWidth = 1;
+        rr(npX2 - 14, npY2 + 6, 28, 22, 4); ctx.fill(); ctx.stroke();
+        rr(npX2 - 13, npY2 - 8, 26, 14, 3); ctx.fill(); ctx.stroke();
+        ctx.strokeStyle = "rgba(255,80,200,0.3)"; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.moveTo(npX2 - 10, npY2 + 28); ctx.lineTo(npX2 - 12, npY2 + 38); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(npX2 + 10, npY2 + 28); ctx.lineTo(npX2 + 12, npY2 + 38); ctx.stroke();
+        // Body (different outfit — pink-accent)
+        ctx.fillStyle = "#440033"; rr(npX2 - 9, npY2 - 4, 18, 22, 3); ctx.fill();
+        // Collar
+        ctx.fillStyle = "#FFDDBB"; ctx.beginPath(); ctx.moveTo(npX2 - 3, npY2 - 4); ctx.lineTo(npX2, npY2); ctx.lineTo(npX2 + 3, npY2 - 4); ctx.fill();
+        // Neck
+        ctx.fillRect(npX2 - 3, npY2 - 8, 6, 6);
+        // Head
+        ctx.beginPath(); ctx.arc(npX2, npY2 - 16, 9, 0, Math.PI * 2); ctx.fill();
+        // Hair (long, female)
+        ctx.fillStyle = "#441100";
+        ctx.beginPath(); ctx.arc(npX2, npY2 - 20, 8, Math.PI, 0); ctx.fill();
+        ctx.fillRect(npX2 - 9, npY2 - 22, 4, 16);
+        ctx.fillRect(npX2 + 5, npY2 - 22, 4, 16);
+        // Eyes
+        ctx.fillStyle = "#fff";
+        ctx.beginPath();
+        ctx.ellipse(npX2 - 3, npY2 - 17, 2.2, 1.8, 0, 0, Math.PI * 2);
+        ctx.ellipse(npX2 + 3, npY2 - 17, 2.2, 1.8, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = "#FF44AA";
+        ctx.beginPath(); ctx.arc(npX2 - 3, npY2 - 17, 1.2, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(npX2 + 3, npY2 - 17, 1.2, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = "#000";
+        ctx.beginPath(); ctx.arc(npX2 - 3, npY2 - 17, 0.5, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(npX2 + 3, npY2 - 17, 0.5, 0, Math.PI*2); ctx.fill();
+        // Nose
+        ctx.fillStyle = "rgba(0,0,0,0.15)"; ctx.beginPath(); ctx.arc(npX2, npY2 - 14, 1.2, 0, Math.PI*2); ctx.fill();
+        // Mouth (talking)
+        ctx.fillStyle = "#441122";
+        ctx.beginPath(); ctx.ellipse(npX2, npY2 - 11, 3, 2.5, 0, 0, Math.PI); ctx.fill();
+        ctx.strokeStyle = "#EE4466"; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.arc(npX2, npY2 - 11, 3, 0.1, Math.PI - 0.1); ctx.stroke();
+        // Arm on desk
+        ctx.strokeStyle = "#FFDDBB"; ctx.lineWidth = 3.5; ctx.lineCap = "round";
+        ctx.beginPath(); ctx.moveTo(npX2 - 9, npY2 + 5); ctx.lineTo(npX2 - 22, npY2 - 2); ctx.stroke();
+        ctx.lineCap = "butt";
+        // Headset
+        ctx.fillStyle = "#0a0018"; ctx.strokeStyle = "rgba(255,80,200,0.7)"; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.arc(npX2, npY2 - 16, 11, Math.PI, 0); ctx.stroke();
+        ctx.beginPath(); ctx.ellipse(npX2 - 11, npY2 - 16, 4, 5, 0.2, 0, Math.PI*2); ctx.fill();
+        ctx.strokeStyle = "rgba(255,80,200,0.5)"; ctx.lineWidth = 1; ctx.stroke();
+        ctx.beginPath(); ctx.ellipse(npX2 + 11, npY2 - 16, 4, 5, -0.2, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+        // Earrings
+        ctx.fillStyle = "#FF44AA"; ctx.shadowColor = "#FF44AA"; ctx.shadowBlur = 4;
+        ctx.beginPath(); ctx.arc(npX2 - 11, npY2 - 16, 2, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(npX2 + 11, npY2 - 16, 2, 0, Math.PI*2); ctx.fill();
+        ctx.shadowBlur = 0;
+        ctx.restore();
+
+        // ── Star chart / galactic map on wall (center-right wall) ──
+        const scX = W * 0.44, scY = H * 0.32, scW = 100, scH = 74;
+        ctx.fillStyle = "#04000c";
+        ctx.strokeStyle = "rgba(180,60,255,0.55)"; ctx.lineWidth = 1.5;
+        rr(scX, scY, scW, scH, 5); ctx.fill(); ctx.stroke();
+        // Star field on chart
+        const starSeeds = [17,31,43,7,53,23,37,11,29,41,19,47,13,3,59,67];
+        for (let si2 = 0; si2 < 16; si2++) {
+          const seed2 = starSeeds[si2];
+          const sx2 = scX + 6 + (seed2 * 13 % (scW - 12));
+          const sy2 = scY + 8 + (seed2 * 7 % (scH - 16));
+          const sr2 = si2 % 3 === 0 ? 2 : 1;
+          const twinkle = 0.5 + 0.5 * Math.sin(t * 2 + si2);
+          ctx.fillStyle = si2 % 4 === 0 ? `rgba(255,200,60,${twinkle})`
+                        : si2 % 4 === 1 ? `rgba(180,100,255,${twinkle})`
+                        : si2 % 4 === 2 ? `rgba(100,200,255,${twinkle})`
+                        : `rgba(255,255,255,${twinkle * 0.8})`;
+          ctx.beginPath(); ctx.arc(sx2, sy2, sr2, 0, Math.PI*2); ctx.fill();
+        }
+        // Constellation lines
+        ctx.strokeStyle = "rgba(180,100,255,0.25)"; ctx.lineWidth = 0.7;
+        ctx.beginPath(); ctx.moveTo(scX+18,scY+20); ctx.lineTo(scX+35,scY+14); ctx.lineTo(scX+50,scY+28); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(scX+60,scY+18); ctx.lineTo(scX+75,scY+35); ctx.lineTo(scX+85,scY+22); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(scX+28,scY+48); ctx.lineTo(scX+45,scY+55); ctx.lineTo(scX+62,scY+44); ctx.stroke();
+        // Planet circles
+        ctx.strokeStyle = "rgba(255,180,60,0.5)"; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.arc(scX+scW/2, scY+scH/2, 12, 0, Math.PI*2); ctx.stroke();
+        ctx.strokeStyle = "rgba(255,180,60,0.25)"; ctx.lineWidth = 0.8;
+        ctx.beginPath(); ctx.arc(scX+scW/2, scY+scH/2, 20, 0, Math.PI*2); ctx.stroke();
+        ctx.fillStyle = "#FFCC44"; ctx.shadowColor = "#FFAA00"; ctx.shadowBlur = 6;
+        ctx.beginPath(); ctx.arc(scX+scW/2, scY+scH/2, 5, 0, Math.PI*2); ctx.fill();
+        ctx.shadowBlur = 0;
+        // Chart label
+        ctx.fillStyle = "rgba(180,60,255,0.7)"; ctx.font = "bold 5px monospace";
+        ctx.textAlign = "center"; ctx.fillText("STAR CHART", scX + scW/2, scY + scH - 5);
+
+        // ── News ticker at bottom of room ──────────────
+        const tkY = H - 28;
+        ctx.fillStyle = "rgba(80,0,60,0.85)";
+        ctx.fillRect(0, tkY, W, 20);
+        ctx.strokeStyle = "rgba(255,80,200,0.7)"; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(0, tkY); ctx.lineTo(W, tkY); ctx.stroke();
+        const tickerText = "◉ NOVA BROADCAST LIVE  ✦  GALACTIC NEWS  ✦  WARP STORM WARNING: SECTOR 7  ✦  OVERLORD SIGHTED NEAR PLANET CORE  ✦  SPACE MARKETS UP 4.2%  ✦  ";
+        const tickerX = W - (t * 60) % (W + 1200);
+        ctx.save();
+        ctx.beginPath(); ctx.rect(0, tkY, W, 20); ctx.clip();
+        ctx.fillStyle = "#FFDDFF"; ctx.font = "bold 7px monospace"; ctx.textAlign = "left";
+        ctx.fillText(tickerText, tickerX, tkY + 13);
+        ctx.restore();
+
         // ── Ambient particles ─────────────────────────
-        for (let pi = 0; pi < 7; pi++) {
+        for (let pi = 0; pi < 10; pi++) {
           const px = (Math.sin(pi * 2.5 + t * 0.45) * 0.38 + 0.5) * W;
-          const py = (Math.cos(pi * 1.8 + t * 0.3) * 0.32 + 0.5) * H;
+          const py = (Math.cos(pi * 1.8 + t * 0.3) * 0.32 + 0.5) * (H * 0.85);
           ctx.fillStyle = `rgba(255,100,220,${0.2 + 0.12 * Math.sin(t * 1.6 + pi)})`;
           ctx.beginPath();
           ctx.arc(px, py, 1.5, 0, Math.PI * 2);

@@ -308,6 +308,12 @@ class GameMap {
       meX = Math.max(meX, R);
       meY = Math.max(meY, R);
       this.metroEntrance = { tx: meX, ty: meY, wx: (meX + 0.5) * this.S, wy: (meY + 0.5) * this.S };
+      // Blitz 28×28 (roadEvery=7): generic formula puts metro at (14,14) colliding with portals — fix to top-right corner
+      if (this.config.blitz) {
+        const bR = this.ROAD_EVERY; // 7
+        const bmX = bR * 3, bmY = bR; // tile (21, 7) — top-right area, clear of both portals
+        this.metroEntrance = { tx: bmX, ty: bmY, wx: (bmX + 0.5) * this.S, wy: (bmY + 0.5) * this.S };
+      }
     }
 
     // Build block-type lookup for indoor furniture
@@ -361,16 +367,23 @@ class GameMap {
     if (!this.config.arena && !this.config.zombie && !this.config.lifeMode) {
       const R    = this.ROAD_EVERY;
       const S    = this.S;
-      const pos1 = { tx: R * 2, ty: R * 2 };
-      const pos2 = { tx: Math.floor(this.W / R) * R - R * 2, ty: Math.floor(this.H / R) * R - R * 2 };
-      // Clamp to valid road tiles
-      const clamp = (v, lo, hi) => Math.min(Math.max(v, lo), hi);
-      pos1.tx = clamp(Math.round(pos1.tx / R) * R, R, this.W - R);
-      pos1.ty = clamp(Math.round(pos1.ty / R) * R, R, this.H - R);
-      pos2.tx = clamp(Math.round(pos2.tx / R) * R, R, this.W - R);
-      pos2.ty = clamp(Math.round(pos2.ty / R) * R, R, this.H - R);
-      this.portals.push({ x: (pos1.tx + 0.5) * S, y: (pos1.ty + 0.5) * S, paired: 1, _animT: 0 });
-      this.portals.push({ x: (pos2.tx + 0.5) * S, y: (pos2.ty + 0.5) * S, paired: 0, _animT: 1.5 });
+      if (this.config.blitz) {
+        // Blitz 28×28 (roadEvery=7): generic formula collapses both portals to tile (14,14).
+        // Metro is at (21,7). Portals go to (7,7) top-left and (21,21) bottom-right.
+        this.portals.push({ x: (R + 0.5) * S,     y: (R + 0.5) * S,     paired: 1, _animT: 0   }); // (7,7)
+        this.portals.push({ x: (R * 3 + 0.5) * S, y: (R * 3 + 0.5) * S, paired: 0, _animT: 1.5 }); // (21,21)
+      } else {
+        const pos1 = { tx: R * 2, ty: R * 2 };
+        const pos2 = { tx: Math.floor(this.W / R) * R - R * 2, ty: Math.floor(this.H / R) * R - R * 2 };
+        // Clamp to valid road tiles
+        const clamp = (v, lo, hi) => Math.min(Math.max(v, lo), hi);
+        pos1.tx = clamp(Math.round(pos1.tx / R) * R, R, this.W - R);
+        pos1.ty = clamp(Math.round(pos1.ty / R) * R, R, this.H - R);
+        pos2.tx = clamp(Math.round(pos2.tx / R) * R, R, this.W - R);
+        pos2.ty = clamp(Math.round(pos2.ty / R) * R, R, this.H - R);
+        this.portals.push({ x: (pos1.tx + 0.5) * S, y: (pos1.ty + 0.5) * S, paired: 1, _animT: 0 });
+        this.portals.push({ x: (pos2.tx + 0.5) * S, y: (pos2.ty + 0.5) * S, paired: 0, _animT: 1.5 });
+      }
     }
     this._buildStreetLights(); this._buildCacti();
   }

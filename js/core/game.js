@@ -2878,6 +2878,10 @@ class Game {
           } else if (isNeonCity && bType === 4) {
             npcX = room.roomW / 2;
             npcY = room.roomH * 0.3;
+          } else if (isGalactica && bType === 11) {
+            // Galactica bar: NPC stands in front of the wide counter (player approaches from below)
+            npcX = room.roomW * 0.68;
+            npcY = room.roomH * 0.32;
           } else if (isSpecialMap && bType === 11) {
             npcX = room.roomW / 2;
             npcY = room.roomH * 0.34;
@@ -2917,6 +2921,8 @@ class Game {
           let npcRenderType = false;
           if (isWasteland) {
             npcRenderType = 'wasteland';
+          } else if (isGalactica && bType === 11) {
+            npcRenderType = 'galactica'; // cosmic human bartender
           } else if (isNeonCity || isZombie || isBlitz || isRobotCity || isHardcoreN || (isGalactica && (bType === 3 || bType === 8 || bType === 0 || bType === 5 || bType === 22))) {
             npcRenderType = true; // neonCity/robot city/hardcore/galactica style
           }
