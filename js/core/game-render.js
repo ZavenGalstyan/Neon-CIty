@@ -196,32 +196,127 @@ Game.prototype._render = function() {
         ctx.translate(p.x, p.y);
 
         if (isSnow) {
-          // ── FROZEN TUNDRA: Ice crystal portal — ice blue / white snowflakes ─
+          // ── FROZEN TUNDRA: Blizzard warp gate — ice-blue / white crystal rings ──
           const t = p._animT;
-          const pulse2 = Math.sin(t * 2) * 0.3 + 0.7;
-          const pulse3 = Math.sin(t * 3.5) * 0.25 + 0.75;
+          const pulse2 = Math.sin(t * 2.2) * 0.3 + 0.7;
+          const pulse3 = Math.sin(t * 4.5) * 0.2 + 0.8;
 
-          // Frosty halo mist
-          const haloG = ctx.createRadialGradient(0, 0, 8, 0, 0, 52);
-          haloG.addColorStop(0, `rgba(200,240,255,${pulse * 0.2})`);
-          haloG.addColorStop(0.5, `rgba(100,180,220,${pulse * 0.12})`);
+          // Wide soft blizzard halo
+          const haloG = ctx.createRadialGradient(0, 0, 10, 0, 0, 55);
+          haloG.addColorStop(0, `rgba(180,230,255,${pulse * 0.16})`);
+          haloG.addColorStop(0.5, `rgba(80,160,220,${pulse * 0.09})`);
           haloG.addColorStop(1, "rgba(0,0,0,0)");
           ctx.fillStyle = haloG;
           ctx.beginPath();
-          ctx.arc(0, 0, 52, 0, Math.PI * 2);
+          ctx.arc(0, 0, 55, 0, Math.PI * 2);
           ctx.fill();
 
-          // Outer rotating ice ring
+          // Outer rotating ring — ice-blue dashes
           ctx.save();
-          ctx.rotate(t * 0.35);
-          ctx.strokeStyle = `rgba(136,221,255,${pulse * 0.65})`;
-          ctx.lineWidth = 2.5;
-          ctx.setLineDash([12, 6]);
+          ctx.rotate(t * 0.4);
+          ctx.strokeStyle = `rgba(136,221,255,${pulse * 0.72})`;
+          ctx.lineWidth = 2;
+          ctx.setLineDash([9, 11]);
           ctx.beginPath();
-          ctx.arc(0, 0, 38, 0, Math.PI * 2);
+          ctx.arc(0, 0, 40, 0, Math.PI * 2);
           ctx.stroke();
           ctx.setLineDash([]);
           ctx.restore();
+
+          // Middle counter-rotating ring — white silver dashes
+          ctx.save();
+          ctx.rotate(-t * 0.7);
+          ctx.strokeStyle = `rgba(200,240,255,${pulse2 * 0.6})`;
+          ctx.lineWidth = 1.5;
+          ctx.setLineDash([5, 9]);
+          ctx.beginPath();
+          ctx.arc(0, 0, 32, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.restore();
+
+          // Inner fast ring — pale frost cyan
+          ctx.save();
+          ctx.rotate(t * 1.3);
+          ctx.strokeStyle = `rgba(180,230,255,${pulse3 * 0.3})`;
+          ctx.lineWidth = 1;
+          ctx.setLineDash([3, 7]);
+          ctx.beginPath();
+          ctx.arc(0, 0, 23, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.restore();
+
+          // Deep-ice core gradient
+          const coreG = ctx.createRadialGradient(0, 0, 0, 0, 0, 26);
+          coreG.addColorStop(0, `rgba(240,252,255,${pulse3 * 0.95})`);
+          coreG.addColorStop(0.25, `rgba(100,200,255,${pulse2 * 0.7})`);
+          coreG.addColorStop(0.65, `rgba(20,80,160,${pulse * 0.4})`);
+          coreG.addColorStop(1, "rgba(0,0,0,0)");
+          ctx.fillStyle = coreG;
+          ctx.beginPath();
+          ctx.arc(0, 0, 26, 0, Math.PI * 2);
+          ctx.fill();
+
+          // 8 orbiting particles — alternating ice-blue + white
+          for (let i = 0; i < 8; i++) {
+            const angle = t * 1.8 + (i * Math.PI) / 4;
+            const dist = 24 + Math.sin(t * 2.5 + i * 1.2) * 6;
+            const gp = Math.cos(angle) * dist;
+            const hp = Math.sin(angle) * dist;
+            const r = i % 3 === 0 ? 2.8 : 1.8;
+            ctx.fillStyle = i % 2 === 0
+              ? `rgba(100,200,255,${pulse})`
+              : `rgba(220,245,255,${pulse2})`;
+            ctx.beginPath();
+            ctx.arc(gp, hp, r, 0, Math.PI * 2);
+            ctx.fill();
+          }
+
+          // Bright central frost core
+          ctx.shadowColor = "#AADDFF";
+          ctx.shadowBlur = 24 * pulse;
+          ctx.fillStyle = `rgba(240,252,255,${pulse3})`;
+          ctx.beginPath();
+          ctx.arc(0, 0, 7, 0, Math.PI * 2);
+          ctx.fill();
+
+          // 8-point ice crystal / snowflake gate frame
+          ctx.shadowBlur = 16 * pulse;
+          ctx.strokeStyle = `rgba(136,221,255,${pulse})`;
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          for (let i = 0; i < 8; i++) {
+            const ang = (Math.PI / 4) * i - Math.PI / 2;
+            const r = i % 2 === 0 ? 30 : 20;
+            const fx = Math.cos(ang) * r;
+            const fy = Math.sin(ang) * r;
+            i === 0 ? ctx.moveTo(fx, fy) : ctx.lineTo(fx, fy);
+          }
+          ctx.closePath();
+          ctx.stroke();
+
+          // White accent ring
+          ctx.shadowBlur = 8 * pulse2;
+          ctx.strokeStyle = `rgba(200,240,255,${pulse2 * 0.45})`;
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.arc(0, 0, 25, 0, Math.PI * 2);
+          ctx.stroke();
+
+          ctx.shadowBlur = 0;
+          ctx.fillStyle = near ? "#EEFFFF" : "#AADDFF";
+          ctx.font = "bold 9px Orbitron, monospace";
+          ctx.textAlign = "center";
+          ctx.shadowColor = "#66BBFF";
+          ctx.shadowBlur = 12;
+          ctx.fillText("❄ ICE GATE ❄", 0, -52);
+          if (near) {
+            ctx.fillStyle = "#EEFFFF";
+            ctx.shadowColor = "#AADDFF";
+            ctx.shadowBlur = 14;
+            ctx.fillText("[E]  ENTER GATE", 0, -66);
+          }
         } else if (!!this.map.config.hardcore) {
           // ── HARDCORE: Fire portal — ember / crimson rings ──────────
           const t = p._animT;

@@ -7157,14 +7157,274 @@ Game.prototype._renderIndoorFurniture = function(ctx, room) {
       const isSnowTech = !!this.map?.config?.snow;
 
       if (isSnowTech) {
-        // ═══ FROZEN TUNDRA: CRYO RESEARCH LAB ═══
+        // ═══ FROZEN TUNDRA: CRYO TECH LAB ═══
         const t = performance.now() / 1000;
 
-        // ── Lab sign ───────────────────
-        ctx.fillStyle = "#AADDFF";
-        ctx.shadowColor = "#66BBFF";
-        ctx.shadowBlur = 15;
-        ctx.font = "bold 12px Orbitron, monospace";
+        // ── Ice tile floor ────────────────────────────────────
+        ctx.fillStyle = "#020810"; ctx.fillRect(0,0,W,H);
+        const tSz2=Math.round(W/16);
+        for (let gy=0;gy<=Math.ceil(H/tSz2);gy++) for (let gx=0;gx<=Math.ceil(W/tSz2);gx++) {
+          const ftx=gx*tSz2,fty=gy*tSz2,fsd=gx*13+gy*7;
+          ctx.fillStyle=fsd%3===0?"rgba(4,14,28,0.97)":fsd%3===1?"rgba(6,18,34,0.97)":"rgba(5,16,30,0.97)";
+          ctx.fillRect(ftx,fty,tSz2,tSz2);
+          ctx.strokeStyle=`rgba(100,180,255,${0.06+0.03*Math.sin(t*0.7+fsd*0.12)})`;
+          ctx.lineWidth=0.7; ctx.strokeRect(ftx,fty,tSz2,tSz2);
+        }
+
+        // ── Room border (ice glow) ─────────────────────────────
+        ctx.strokeStyle=`rgba(136,221,255,${0.6+0.2*Math.sin(t*1.3)})`; ctx.lineWidth=3;
+        ctx.strokeRect(2,2,W-4,H-4);
+        ctx.strokeStyle="rgba(80,160,220,0.22)"; ctx.lineWidth=1; ctx.strokeRect(7,7,W-14,H-14);
+
+        // ── Ceiling cryo-lights (one flickers) ────────────────
+        const hLX2=[W*0.15,W*0.40,W*0.65,W*0.88];
+        for (let li=0;li<4;li++) {
+          const lx=hLX2[li], fl=li===2?(0.55+0.45*Math.sin(t*11.7)):1;
+          const lc=ctx.createRadialGradient(lx,0,2,lx,H*0.28,W*0.13);
+          lc.addColorStop(0,`rgba(136,221,255,${0.11*fl})`); lc.addColorStop(1,"rgba(0,0,0,0)");
+          ctx.fillStyle=lc; ctx.beginPath(); ctx.moveTo(lx-5,0); ctx.lineTo(lx-W*0.08,H*0.35); ctx.lineTo(lx+W*0.08,H*0.35); ctx.closePath(); ctx.fill();
+          ctx.fillStyle=`rgba(180,230,255,${0.8*fl})`; ctx.shadowColor="#88DDFF"; ctx.shadowBlur=10*fl;
+          ctx.beginPath(); ctx.arc(lx,5,4,0,Math.PI*2); ctx.fill(); ctx.shadowBlur=0;
+        }
+
+        // ── CRYO TECH LAB banner ──────────────────────────────
+        const bW2=W*0.56, bH2=H*0.042, bX2=cx-bW2/2, bY2=room.S-bH2-4;
+        const bGr2=ctx.createLinearGradient(bX2,bY2,bX2+bW2,bY2);
+        bGr2.addColorStop(0,"rgba(2,10,28,0.97)"); bGr2.addColorStop(0.5,"rgba(10,40,90,0.99)"); bGr2.addColorStop(1,"rgba(2,10,28,0.97)");
+        ctx.fillStyle=bGr2; rr(bX2,bY2,bW2,bH2,7); ctx.fill();
+        ctx.strokeStyle=`rgba(136,221,255,${0.7+0.3*Math.sin(t*1.8)})`; ctx.lineWidth=2; ctx.stroke();
+        ctx.fillStyle="#CCEEFF"; ctx.font=`bold ${Math.round(bH2*0.55)}px monospace`; ctx.textAlign="center";
+        ctx.shadowColor="#88DDFF"; ctx.shadowBlur=14;
+        ctx.fillText("❄  CRYO  TECH  LAB  ❄",cx,bY2+bH2*0.72); ctx.shadowBlur=0;
+
+        // ── CRYO HAZARD sign (blink) ─────────────────────────
+        const rWarn2=0.7+0.3*Math.sin(t*3.5);
+        const rW2=W*0.14, rH2=H*0.038;
+        ctx.fillStyle=`rgba(136,221,255,${rWarn2})`; ctx.shadowColor="#66BBFF"; ctx.shadowBlur=14*rWarn2;
+        rr(cx-rW2/2,topY+H*0.04,rW2,rH2,5); ctx.fill(); ctx.shadowBlur=0;
+        ctx.strokeStyle=`rgba(60,140,220,${rWarn2})`; ctx.lineWidth=1.5; ctx.stroke();
+        ctx.fillStyle="#020810"; ctx.font=`bold ${Math.round(rH2*0.5)}px monospace`; ctx.textAlign="center";
+        ctx.fillText("❄ CRYO HAZARD ZONE ❄",cx,topY+H*0.04+rH2*0.7);
+
+        // ── Top: cryo server rack (full width) ────────────────
+        const srvY2=topY+H*0.005, srvH2=H*0.065;
+        const srvBg2=ctx.createLinearGradient(W*0.04,srvY2,W*0.96,srvY2+srvH2);
+        srvBg2.addColorStop(0,"#020810"); srvBg2.addColorStop(0.5,"#04112a"); srvBg2.addColorStop(1,"#020810");
+        ctx.fillStyle=srvBg2; rr(W*0.04,srvY2,W*0.92,srvH2,5); ctx.fill();
+        ctx.strokeStyle="rgba(88,180,255,0.65)"; ctx.lineWidth=1.5; ctx.stroke();
+        for (let si=0;si<12;si++) {
+          const sx=W*0.05+si*(W*0.9/12);
+          ctx.fillStyle="#020810"; ctx.strokeStyle="rgba(60,140,220,0.38)"; ctx.lineWidth=0.7;
+          ctx.fillRect(sx,srvY2+3,W*0.068,srvH2-6); ctx.strokeRect(sx,srvY2+3,W*0.068,srvH2-6);
+          const lCA=["#00AAFF","#44CCFF","#0088DD","#66DDFF","#0099EE","#88EEFF","#44AAFF","#00BBFF","#55CCFF","#0077CC","#66BBFF","#AADDFF"][si];
+          const lAA=0.5+0.5*Math.sin(t*(1.2+si*0.25)+si);
+          ctx.fillStyle=lCA; ctx.shadowColor=lCA; ctx.shadowBlur=4*lAA;
+          ctx.fillRect(sx+2,srvY2+4,W*0.05,3); ctx.shadowBlur=0;
+          const da2=Math.sin(t*(3+si*0.7)+si)>0.4;
+          ctx.fillStyle=da2?"#66BBFF":"#04112a";
+          ctx.beginPath(); ctx.arc(sx+W*0.057,srvY2+srvH2-6,2.5,0,Math.PI*2); ctx.fill();
+        }
+
+        // ── Main research desk ─────────────────────────────────
+        const dY2=topY+H*0.10, dH3=H*0.055, dW3=W*0.82, dX3=cx-dW3/2;
+        const dBg2=ctx.createLinearGradient(dX3,dY2,dX3+dW3,dY2+dH3);
+        dBg2.addColorStop(0,"#020810"); dBg2.addColorStop(0.5,"#04122c"); dBg2.addColorStop(1,"#020810");
+        ctx.fillStyle=dBg2; rr(dX3,dY2,dW3,dH3,6); ctx.fill();
+        ctx.strokeStyle="rgba(88,180,255,0.82)"; ctx.lineWidth=2; ctx.stroke();
+        ctx.strokeStyle=`rgba(136,221,255,${0.42+0.25*Math.sin(t*1.5)})`; ctx.lineWidth=1.5;
+        ctx.beginPath(); ctx.moveTo(dX3+10,dY2+dH3-2); ctx.lineTo(dX3+dW3-10,dY2+dH3-2); ctx.stroke();
+        // Keyboard
+        ctx.fillStyle="#020810"; rr(dX3+dW3*0.04,dY2+4,dW3*0.2,dH3-8,3); ctx.fill();
+        ctx.strokeStyle="rgba(60,140,220,0.38)"; ctx.lineWidth=0.8; ctx.stroke();
+        for (let ki=0;ki<10;ki++) { const kr=Math.floor(ki/5),kc=ki%5; ctx.fillStyle=`rgba(88,180,255,${0.24+0.14*Math.sin(t+ki)})`; ctx.fillRect(dX3+dW3*0.05+kc*dW3*0.036,dY2+6+kr*7,dW3*0.028,5); }
+
+        // Cryo holo-display above desk
+        const hW2=W*0.26, hH3=H*0.13, hX2=cx-hW2/2, hY2=dY2-hH3-H*0.006;
+        const glitch2=(Math.sin(t*7.3)>0.88)?Math.sin(t*25)*3:0;
+        ctx.fillStyle="rgba(2,8,22,0.93)"; rr(hX2+glitch2,hY2,hW2,hH3,5); ctx.fill();
+        ctx.strokeStyle=`rgba(136,221,255,${0.6+0.3*Math.sin(t*2.1)})`; ctx.lineWidth=1.5; ctx.stroke();
+        ctx.fillStyle="#88DDFF"; ctx.font=`bold ${Math.round(hH3*0.13)}px monospace`; ctx.textAlign="center";
+        ctx.shadowColor="#66BBFF"; ctx.shadowBlur=8;
+        ctx.fillText("❄ CRYO ONLINE ❄",cx+glitch2*0.5,hY2+hH3*0.22); ctx.shadowBlur=0;
+        const dLines2=["TEMP: -196°C","CRYO: ACTIVE","POWER: 92%","RADS: ZERO","UPLINK: OK"];
+        for (let dl=0;dl<5;dl++) {
+          ctx.fillStyle=dl===0?`rgba(136,221,255,0.95)`:`rgba(88,180,255,${dl%2===0?0.88:0.55})`;
+          ctx.font=`${Math.round(hH3*0.1)}px monospace`; ctx.textAlign="left";
+          ctx.fillText(dLines2[dl],hX2+hW2*0.06+glitch2,hY2+hH3*0.35+dl*hH3*0.13);
+        }
+        ctx.strokeStyle="rgba(136,221,255,0.6)"; ctx.lineWidth=1.2;
+        ctx.beginPath();
+        for (let wx=0;wx<hW2-10;wx+=2) { const wy=hY2+hH3*0.82+hH3*0.1*Math.sin(t*5.5+wx*0.18); wx===0?ctx.moveTo(hX2+5+wx,wy):ctx.lineTo(hX2+5+wx,wy); }
+        ctx.stroke();
+
+        // ── LEFT: Cryo freeze chamber ──────────────────────────
+        const tcX2=W*0.06, tcY2=H*0.28, tcW2=W*0.11, tcH2=H*0.52;
+        ctx.fillStyle="#020810"; ctx.strokeStyle="rgba(88,180,255,0.7)"; ctx.lineWidth=2;
+        rr(tcX2,tcY2+tcH2-tcH2*0.11,tcW2,tcH2*0.11,5); ctx.fill(); ctx.stroke();
+        const cCol2=ctx.createLinearGradient(tcX2+tcW2*0.3,tcY2,tcX2+tcW2*0.7,tcY2);
+        cCol2.addColorStop(0,"#040e22"); cCol2.addColorStop(0.5,"#081830"); cCol2.addColorStop(1,"#040e22");
+        ctx.fillStyle=cCol2; ctx.strokeStyle="rgba(60,140,220,0.48)"; ctx.lineWidth=1.5;
+        ctx.fillRect(tcX2+tcW2*0.3,tcY2+tcH2*0.14,tcW2*0.4,tcH2*0.73); ctx.strokeRect(tcX2+tcW2*0.3,tcY2+tcH2*0.14,tcW2*0.4,tcH2*0.73);
+        for (let ci=0;ci<8;ci++) {
+          const cy2=tcY2+tcH2*0.17+ci*(tcH2*0.64/8);
+          ctx.strokeStyle=`rgba(136,${200+ci*4},255,0.45)`; ctx.lineWidth=2;
+          ctx.beginPath(); ctx.ellipse(tcX2+tcW2/2,cy2,tcW2*0.43,tcH2*0.024,0,0,Math.PI*2); ctx.stroke();
+        }
+        const tsR2=tcW2*0.4;
+        const tsG2=ctx.createRadialGradient(tcX2+tcW2/2,tcY2+tsR2*0.45,tsR2*0.08,tcX2+tcW2/2,tcY2+tsR2*0.45,tsR2);
+        tsG2.addColorStop(0,"#0a2040"); tsG2.addColorStop(0.5,"#061428"); tsG2.addColorStop(1,"#020810");
+        ctx.fillStyle=tsG2; ctx.strokeStyle=`rgba(136,221,255,${0.6+0.3*Math.sin(t*2)})`; ctx.lineWidth=2;
+        ctx.beginPath(); ctx.arc(tcX2+tcW2/2,tcY2+tsR2*0.52,tsR2,0,Math.PI*2); ctx.fill(); ctx.stroke();
+        // Frost arcs
+        for (let ai=0;ai<6;ai++) {
+          const aS2=Math.floor(t*3+ai*3.1)%7;
+          const aX4=tcX2+tcW2/2, aY4=tcY2+tsR2*0.52;
+          const aX5=aX4+Math.sin(ai*1.3+t*1.5+aS2)*tcW2*0.9, aY5=aY4+Math.cos(ai*1.1+t*1.2+aS2)*tcW2*0.7;
+          const aA2=0.3+0.5*Math.abs(Math.sin(t*5+ai));
+          ctx.strokeStyle=`rgba(136,221,255,${aA2})`; ctx.lineWidth=1;
+          ctx.beginPath(); ctx.moveTo(aX4,aY4); ctx.quadraticCurveTo(aX4+(aX5-aX4)*0.5+Math.sin(t*9+ai)*6,aY4+(aY5-aY4)*0.5+Math.cos(t*7+ai)*6,aX5,aY5); ctx.stroke();
+          ctx.fillStyle=`rgba(180,230,255,${aA2*0.7})`; ctx.shadowColor="#AADDFF"; ctx.shadowBlur=5*aA2;
+          ctx.beginPath(); ctx.arc(aX5,aY5,2,0,Math.PI*2); ctx.fill(); ctx.shadowBlur=0;
+        }
+        ctx.fillStyle="#AADDFF"; ctx.font=`bold ${Math.round(tcW2*0.28)}px monospace`; ctx.textAlign="center";
+        ctx.shadowColor="#66BBFF"; ctx.shadowBlur=8;
+        ctx.fillText("CRYO",tcX2+tcW2/2,tcY2+tcH2+12); ctx.shadowBlur=0;
+
+        // ── CENTER: Tactical cryo-map table ────────────────────
+        const htX2=cx-W*0.11, htY2=midY-H*0.065, htW2=W*0.22, htH2=H*0.13;
+        ctx.fillStyle="rgba(2,8,20,0.88)"; rr(htX2,htY2,htW2,htH2,5); ctx.fill();
+        ctx.strokeStyle=`rgba(88,180,255,${0.5+0.3*Math.sin(t*1.4)})`; ctx.lineWidth=1.5; ctx.stroke();
+        ctx.fillStyle="rgba(136,221,255,0.05)"; ctx.beginPath(); ctx.ellipse(htX2+htW2/2,htY2+htH2/2,htW2*0.42,htH2*0.42,0,0,Math.PI*2); ctx.fill();
+        ctx.strokeStyle=`rgba(136,221,255,${0.2+0.1*Math.sin(t*2)})`; ctx.lineWidth=1;
+        for (let gr=1;gr<=3;gr++) { ctx.beginPath(); ctx.ellipse(htX2+htW2/2,htY2+htH2/2,htW2*0.42*gr/3,htH2*0.42*gr/3,0,0,Math.PI*2); ctx.stroke(); }
+        ctx.beginPath(); ctx.moveTo(htX2+htW2*0.08,htY2+htH2/2); ctx.lineTo(htX2+htW2*0.92,htY2+htH2/2); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(htX2+htW2/2,htY2+htH2*0.1); ctx.lineTo(htX2+htW2/2,htY2+htH2*0.9); ctx.stroke();
+        const pd2=0.5+0.5*Math.sin(t*3);
+        ctx.fillStyle=`rgba(136,221,255,${pd2})`; ctx.shadowColor="#88DDFF"; ctx.shadowBlur=8*pd2;
+        ctx.beginPath(); ctx.arc(htX2+htW2*0.62,htY2+htH2*0.38,3,0,Math.PI*2); ctx.fill(); ctx.shadowBlur=0;
+        ctx.fillStyle="#88CCFF"; ctx.font=`bold ${Math.round(htH2*0.14)}px monospace`; ctx.textAlign="center";
+        ctx.fillText("CRYO MAP",htX2+htW2/2,htY2+htH2+12);
+
+        // ── CENTER-LEFT: Ice crystal analysis panel ────────────
+        const cpX2=cx-W*0.35, cpY2=midY-H*0.14, cpW2=W*0.13, cpH2=H*0.28;
+        ctx.fillStyle="#020810"; ctx.strokeStyle="rgba(88,180,255,0.5)"; ctx.lineWidth=1.5;
+        rr(cpX2,cpY2,cpW2,cpH2,4); ctx.fill(); ctx.stroke();
+        ctx.strokeStyle="rgba(88,180,255,0.35)"; ctx.lineWidth=1;
+        const cpTx2=[cpX2+8,cpX2+cpW2*0.35,cpX2+cpW2*0.6,cpX2+cpW2-8];
+        for (let px2=0;px2<4;px2++) { ctx.beginPath(); ctx.moveTo(cpTx2[px2],cpY2+8); ctx.lineTo(cpTx2[px2],cpY2+cpH2-8); ctx.stroke(); }
+        const cpTy2=[cpY2+cpH2*0.25,cpY2+cpH2*0.5,cpY2+cpH2*0.75];
+        for (let py2=0;py2<3;py2++) { ctx.beginPath(); ctx.moveTo(cpX2+8,cpTy2[py2]); ctx.lineTo(cpX2+cpW2-8,cpTy2[py2]); ctx.stroke(); }
+        const ics2=[{x:cpX2+cpW2*0.15,y:cpY2+cpH2*0.2},{x:cpX2+cpW2*0.55,y:cpY2+cpH2*0.45},{x:cpX2+cpW2*0.2,y:cpY2+cpH2*0.65}];
+        for (const ic2 of ics2) {
+          ctx.fillStyle="#04102a"; ctx.strokeStyle="rgba(136,221,255,0.5)"; ctx.lineWidth=1;
+          ctx.fillRect(ic2.x-8,ic2.y-5,16,10); ctx.strokeRect(ic2.x-8,ic2.y-5,16,10);
+          ctx.fillStyle=`rgba(136,221,255,${0.5+0.3*Math.sin(t*2+ic2.x)})`; ctx.shadowColor="#88DDFF"; ctx.shadowBlur=4;
+          ctx.beginPath(); ctx.arc(ic2.x,ic2.y,3,0,Math.PI*2); ctx.fill(); ctx.shadowBlur=0;
+        }
+        ctx.fillStyle="#88CCFF"; ctx.font=`bold ${Math.round(cpH2*0.09)}px monospace`; ctx.textAlign="center";
+        ctx.fillText("ICE ARRAY",cpX2+cpW2/2,cpY2+cpH2+12);
+
+        // ── CENTER-RIGHT: Cryo-meter ─────────────────────────
+        const gmX2=cx+W*0.22, gmY2=midY-H*0.11, gmW2=W*0.13, gmH2=H*0.22;
+        ctx.fillStyle="#020810"; ctx.strokeStyle="rgba(88,180,255,0.5)"; ctx.lineWidth=1.5;
+        rr(gmX2,gmY2,gmW2,gmH2,4); ctx.fill(); ctx.stroke();
+        ctx.fillStyle="#88CCFF"; ctx.font=`bold ${Math.round(gmH2*0.1)}px monospace`; ctx.textAlign="center";
+        ctx.fillText("CRYO-METER",gmX2+gmW2/2,gmY2+gmH2*0.15);
+        const dCX2=gmX2+gmW2/2, dCY2=gmY2+gmH2*0.5, dR2=gmW2*0.35;
+        ctx.strokeStyle="rgba(88,180,255,0.3)"; ctx.lineWidth=1;
+        ctx.beginPath(); ctx.arc(dCX2,dCY2,dR2,Math.PI,2*Math.PI); ctx.stroke();
+        ctx.strokeStyle="rgba(88,180,255,0.15)"; ctx.lineWidth=0.8;
+        for (let mk=0;mk<=5;mk++) {
+          const ang2=Math.PI+mk*Math.PI/5;
+          ctx.beginPath(); ctx.moveTo(dCX2+Math.cos(ang2)*(dR2-4),dCY2+Math.sin(ang2)*(dR2-4));
+          ctx.lineTo(dCX2+Math.cos(ang2)*dR2,dCY2+Math.sin(ang2)*dR2); ctx.stroke();
+        }
+        const nAng2=Math.PI+Math.PI*((Math.sin(t*0.5)*0.5+0.5)*0.9+0.05);
+        ctx.strokeStyle="#88DDFF"; ctx.lineWidth=2; ctx.shadowColor="#66BBFF"; ctx.shadowBlur=6;
+        ctx.beginPath(); ctx.moveTo(dCX2,dCY2); ctx.lineTo(dCX2+Math.cos(nAng2)*dR2*0.85,dCY2+Math.sin(nAng2)*dR2*0.85); ctx.stroke(); ctx.shadowBlur=0;
+        ctx.fillStyle="#66AAFF"; ctx.beginPath(); ctx.arc(dCX2,dCY2,3,0,Math.PI*2); ctx.fill();
+        const cpmVal2=Math.floor(196+Math.sin(t*1.1)*20);
+        ctx.fillStyle="#AADDFF"; ctx.font=`bold ${Math.round(gmH2*0.09)}px monospace`; ctx.textAlign="center";
+        ctx.fillText(`-${cpmVal2}°C`,dCX2,gmY2+gmH2*0.82);
+        ctx.fillStyle="#66AAFF"; ctx.font=`${Math.round(gmH2*0.08)}px monospace`;
+        ctx.fillText("TEMP",dCX2,gmY2+gmH2*0.92);
+
+        // ── RIGHT: Cryo vial racks ─────────────────────────────
+        const vrX2=W*0.78, vrY2=H*0.28, vrW2=W*0.2, vrH2=H*0.52;
+        ctx.fillStyle="#020810"; ctx.strokeStyle="rgba(88,180,255,0.5)"; ctx.lineWidth=1.5;
+        rr(vrX2,vrY2,vrW2,vrH2,5); ctx.fill(); ctx.stroke();
+        const vials2=[{l:"LIQ N₂",c:"rgba(136,221,255,0.9)"},{l:"CRYO-1",c:"rgba(88,180,255,0.9)"},{l:"STASIS",c:"rgba(180,230,255,0.9)"},{l:"ICE-9",c:"rgba(60,140,255,0.9)"},{l:"FREEZE",c:"rgba(200,240,255,0.9)"},{l:"PLASMA",c:"rgba(100,200,255,0.9)"}];
+        for (let vi=0;vi<6;vi++) {
+          const vc=vi%2, vr=Math.floor(vi/2);
+          const vx=vrX2+vrW2*0.14+vc*vrW2*0.48, vy=vrY2+vrH2*0.1+vr*vrH2*0.3;
+          const vW2=vrW2*0.28, vH2=vrH2*0.22;
+          ctx.fillStyle="rgba(2,8,20,0.9)"; rr(vx,vy,vW2,vH2,4); ctx.fill();
+          ctx.strokeStyle=vials2[vi].c; ctx.lineWidth=1.5; ctx.stroke();
+          const vFill2=0.3+Math.sin(t*0.7+vi*1.1)*0.25+0.4;
+          const vGr2=ctx.createLinearGradient(vx,vy+vH2*(1-vFill2),vx,vy+vH2);
+          vGr2.addColorStop(0,vials2[vi].c.replace(",0.9)",",0.75)")); vGr2.addColorStop(1,vials2[vi].c.replace(",0.9)",",0.3)"));
+          ctx.fillStyle=vGr2; ctx.fillRect(vx+2,vy+vH2*(1-vFill2)+2,vW2-4,vH2*vFill2-4);
+          ctx.fillStyle=vials2[vi].c; ctx.shadowColor=vials2[vi].c; ctx.shadowBlur=6+3*Math.sin(t+vi);
+          ctx.beginPath(); ctx.arc(vx+vW2/2,vy+vH2*0.3,3,0,Math.PI*2); ctx.fill(); ctx.shadowBlur=0;
+          ctx.fillStyle="#CCEEFF"; ctx.font=`bold ${Math.round(vH2*0.2)}px monospace`; ctx.textAlign="center";
+          ctx.fillText(vials2[vi].l,vx+vW2/2,vy+vH2+11);
+        }
+
+        // ── BOTTOM: 4 cryo storage bins ───────────────────────
+        const binW2=W*0.17, binH2=H*0.075;
+        for (let bi=0;bi<4;bi++) {
+          const bx=W*0.07+bi*(W*0.85/4), by=H*0.82;
+          ctx.fillStyle="#020810"; ctx.strokeStyle="rgba(88,180,255,0.4)"; ctx.lineWidth=1.5;
+          rr(bx,by,binW2,binH2,4); ctx.fill(); ctx.stroke();
+          const bFill2=0.2+((bi*0.19+Math.sin(t*0.6+bi)*0.08)%0.7);
+          const bGr3=ctx.createLinearGradient(bx,by+binH2*(1-bFill2),bx,by+binH2);
+          bGr3.addColorStop(0,"rgba(88,180,255,0.5)"); bGr3.addColorStop(1,"rgba(60,130,220,0.25)");
+          ctx.fillStyle=bGr3; ctx.fillRect(bx+2,by+binH2*(1-bFill2)+2,binW2-4,binH2*bFill2-4);
+          ctx.strokeStyle=`rgba(136,221,255,${0.4+0.3*Math.sin(t*2+bi)})`; ctx.lineWidth=1;
+          ctx.strokeRect(bx+2,by+binH2*(1-bFill2)+2,binW2-4,binH2*bFill2-4);
+          const labels2=["SAMPLE A","SAMPLE B","ICE CORE","LIQ N₂"];
+          ctx.fillStyle="#88BBDD"; ctx.font=`bold ${Math.round(binH2*0.25)}px monospace`; ctx.textAlign="center";
+          ctx.fillText(labels2[bi],bx+binW2/2,by+binH2*0.65);
+          ctx.fillStyle="#AADDFF"; ctx.font=`${Math.round(binH2*0.2)}px monospace`;
+          ctx.fillText(`${Math.round(bFill2*100)}%`,bx+binW2/2,by+binH2+12);
+        }
+
+        // ── Trophy shelf ──────────────────────────────────────
+        const trX2=W*0.80, trY2=H*0.28+H*0.56, trW2=W*0.18, trH2=H*0.065;
+        ctx.fillStyle="#030a1e"; ctx.strokeStyle="rgba(88,180,255,0.35)"; ctx.lineWidth=1;
+        rr(trX2,trY2,trW2,trH2,3); ctx.fill(); ctx.stroke();
+        for (const tr3 of [{dx:0.2,c:"#FFDD44",s:"⬡"},{dx:0.5,c:"#AADDFF",s:"❄"},{dx:0.8,c:"#88CCFF",s:"★"}]) {
+          ctx.fillStyle=tr3.c; ctx.shadowColor=tr3.c; ctx.shadowBlur=7;
+          ctx.font=`bold ${Math.round(trH2*0.65)}px monospace`; ctx.textAlign="center";
+          ctx.fillText(tr3.s,trX2+trW2*tr3.dx,trY2+trH2*0.75); ctx.shadowBlur=0;
+        }
+
+        // ── Floor cable runs ──────────────────────────────────
+        ctx.strokeStyle="rgba(88,180,255,0.18)"; ctx.lineWidth=2; ctx.setLineDash([6,5]);
+        ctx.beginPath(); ctx.moveTo(tcX2+tcW2,tcY2+tcH2*0.5); ctx.lineTo(cx-W*0.05,tcY2+tcH2*0.5); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(vrX2,vrY2+vrH2*0.5); ctx.lineTo(cx+W*0.1,vrY2+vrH2*0.5); ctx.stroke();
+        ctx.setLineDash([]);
+
+        // ── Scrolling news ticker ─────────────────────────────
+        const tkY3=H*0.94;
+        ctx.fillStyle="rgba(2,8,20,0.88)"; ctx.fillRect(0,tkY3,W,H*0.035);
+        ctx.fillStyle=`rgba(136,221,255,${0.75+0.25*Math.sin(t*4)})`; rr(W*0.005,tkY3+H*0.001,W*0.05,H*0.027,3); ctx.fill();
+        ctx.fillStyle="#020810"; ctx.font=`bold ${Math.round(H*0.017)}px monospace`; ctx.textAlign="left";
+        ctx.fillText("LIVE",W*0.005+W*0.05*0.14,tkY3+H*0.001+H*0.027*0.75);
+        const tkTxt3="❄ CRYO TECH LAB  ✦  TEMP: -196°C  ✦  SAMPLES: 1,024  ✦  CRYO CHAMBER: ONLINE  ✦  NEXT CYCLE: 04:22  ✦  UPLINK: ACTIVE  ✦  ";
+        const tkX3=W*0.06+W-(t*50)%(W+1400);
+        ctx.save(); ctx.beginPath(); ctx.rect(W*0.06,tkY3,W-W*0.06,H*0.032); ctx.clip();
+        ctx.fillStyle="#CCEEFF"; ctx.font=`bold ${Math.round(H*0.017)}px monospace`; ctx.textAlign="left";
+        ctx.fillText(tkTxt3,tkX3,tkY3+H*0.021); ctx.restore();
+
+        // ── Ambient ice crystal particles ──────────────────────
+        for (let pi=0;pi<16;pi++) {
+          const fpx=(Math.sin(pi*2.1+t*0.32)*0.42+0.5)*W, fpy=(Math.cos(pi*1.6+t*0.21)*0.38+0.5)*(H*0.88);
+          const pA=0.08+0.05*Math.sin(t*1.2+pi);
+          ctx.fillStyle=pi%3===0?`rgba(136,221,255,${pA})`:pi%3===1?`rgba(88,180,255,${pA})`:`rgba(180,230,255,${pA})`;
+          ctx.beginPath(); ctx.arc(fpx,fpy,1.8,0,Math.PI*2); ctx.fill();
+        }
+
       } else if (isDino) {
         // ═══ DINO WORLD: ANCIENT RESEARCH HUT ═══
         const t13=performance.now()/1000;
