@@ -2755,6 +2755,13 @@ class Game {
             this._salespersons = [
               new Salesperson(spX, spY, "#AADDFF", "ICE REP", "snow"),
             ];
+          } else if (!!this.map.config.dino) {
+            // Dino World: Jungle-green professional sales rep
+            const spX = room.roomW / 2;
+            const spY = room.roomH * 0.38;
+            this._salespersons = [
+              new Salesperson(spX, spY, "#66DD44", "DINO REP", "dino"),
+            ];
           } else {
             this._salespersons = [
               new Salesperson(

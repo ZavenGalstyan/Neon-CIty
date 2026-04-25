@@ -14,10 +14,11 @@ Game.prototype._renderDealershipIndoor = function(ctx, W, H, shake) {
     const isDino      = !!this.map.config.dino;
     const isDesert    = !!this.map.config.desert;
     const t = performance.now() / 1000;
+    const isCampaign = !!this.map.config.campaign;
 
     // Background
     ctx.fillStyle = isNeonCity
-      ? (isHardcore ? "#090200" : "#020208")
+      ? (isHardcore ? "#090200" : isCampaign ? "#030804" : "#020208")
       : isGalactica
         ? "#00000e"
         : isWasteland
@@ -37,17 +38,17 @@ Game.prototype._renderDealershipIndoor = function(ctx, W, H, shake) {
     if (isNeonCity) {
       // ═══ CYBERPUNK SHOWROOM (neon city / blitz / robot / hardcore) ═══
       // Palette: swap to fire/ember for hardcore, keep cyan/magenta for others
-      const dA    = isHardcore ? "#FF8800" : "#00FFFF";  // primary accent
-      const dB    = isHardcore ? "#FF3300" : "#FF00FF";  // secondary accent
-      const dAr   = isHardcore ? "255,136,0" : "0,255,255";
-      const dBr   = isHardcore ? "255,51,0"  : "255,0,255";
-      const dWall = isHardcore ? "#14080a" : "#0a0a14";
-      const dFlr  = isHardcore ? "#0e0600" : "#08080e";
-      const dC1   = isHardcore ? "#2e1a0a" : "#1a1a2e";
-      const dC2   = isHardcore ? "#1e0e04" : "#12121e";
-      const dC3   = isHardcore ? "#140800" : "#0a0a14";
-      const dCTop = isHardcore ? "#3e2000" : "#2a2a3e";
-      const dTitleText = isHardcore ? "⚡ INFERNO MOTORS ⚡" : "◈ CYBER MOTORS ◈";
+      const dA    = isHardcore ? "#FF8800" : isCampaign ? "#FFDD00" : "#00FFFF";  // primary accent
+      const dB    = isHardcore ? "#FF3300" : isCampaign ? "#44AA22" : "#FF00FF";  // secondary accent
+      const dAr   = isHardcore ? "255,136,0" : isCampaign ? "255,221,0" : "0,255,255";
+      const dBr   = isHardcore ? "255,51,0"  : isCampaign ? "68,170,34"  : "255,0,255";
+      const dWall = isHardcore ? "#14080a" : isCampaign ? "#0a1006" : "#0a0a14";
+      const dFlr  = isHardcore ? "#0e0600" : isCampaign ? "#060a04" : "#08080e";
+      const dC1   = isHardcore ? "#2e1a0a" : isCampaign ? "#1e2e14" : "#1a1a2e";
+      const dC2   = isHardcore ? "#1e0e04" : isCampaign ? "#141e0a" : "#12121e";
+      const dC3   = isHardcore ? "#140800" : isCampaign ? "#0c1406" : "#0a0a14";
+      const dCTop = isHardcore ? "#3e2000" : isCampaign ? "#2e4e18" : "#2a2a3e";
+      const dTitleText = isHardcore ? "⚡ INFERNO MOTORS ⚡" : isCampaign ? "⚔ COMMAND MOTORS ⚔" : "◈ CYBER MOTORS ◈";
 
       // Floor + walls
       for (let ty = 0; ty < room.H; ty++) {
@@ -117,9 +118,11 @@ Game.prototype._renderDealershipIndoor = function(ctx, W, H, shake) {
         { x: room.roomW * 0.28, y: room.roomH * 0.58, color: "#AA44FF", name: "COUPE"  },
         { x: room.roomW * 0.72, y: room.roomH * 0.58, color: "#FF66AA", name: "TURBO"  },
       ];
+      const cScale = isCampaign ? 1.42 : 1;
       for (const car of carDisplays) {
         const pulse = Math.sin(t * 1.5 + car.x * 0.01) * 0.3 + 0.7;
         ctx.save(); ctx.translate(car.x, car.y);
+        if (isCampaign) ctx.scale(cScale, cScale);
         // Platform outer ring
         ctx.beginPath(); ctx.arc(0, 15, 45, 0, Math.PI * 2);
         ctx.fillStyle = `rgba(${dAr},0.06)`; ctx.fill();
@@ -1546,6 +1549,11 @@ Game.prototype._renderDealershipIndoor = function(ctx, W, H, shake) {
           ctx.shadowColor = "#66BBFF";
           ctx.shadowBlur = 12;
           ctx.fillText("[T] OPEN SHOP", nearSp.x, nearSp.y - 102);
+        } else if (isDino) {
+          ctx.fillStyle = "#AAFFAA";
+          ctx.shadowColor = "#66DD44";
+          ctx.shadowBlur = 12;
+          ctx.fillText("[T] OPEN SHOP", nearSp.x, nearSp.y - 102);
         } else if (isDesert) {
           ctx.fillStyle = "#FFD060";
           ctx.shadowColor = "#FF9900";
@@ -1584,6 +1592,11 @@ Game.prototype._renderDealershipIndoor = function(ctx, W, H, shake) {
     } else if (isSnow) {
       ctx.fillStyle = "#AADDFF";
       ctx.shadowColor = "#66BBFF";
+      ctx.shadowBlur = 10;
+      ctx.fillText("[E] EXIT", room.entryX, room.roomH - 25);
+    } else if (isDino) {
+      ctx.fillStyle = "#AAFFAA";
+      ctx.shadowColor = "#66DD44";
       ctx.shadowBlur = 10;
       ctx.fillText("[E] EXIT", room.entryX, room.roomH - 25);
     } else if (isDesert) {
