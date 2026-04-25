@@ -7276,182 +7276,287 @@ Game.prototype._renderIndoorFurniture = function(ctx, room) {
         }
         ctx.shadowBlur=0;ctx.restore();
       } else if (isTechShop) {
-        // ═══ WASTELAND TECH SHOP ═══
-        // ── Sales counter (top center) ───────────────────
-        ctx.fillStyle = "#3a3530";
-        ctx.strokeStyle = "#5a5048";
-        ctx.lineWidth = 2;
-        rr(cx - 60, topY + 8, 120, 38, 3);
-        ctx.fill();
-        ctx.stroke();
-        // Counter top (worn metal)
-        ctx.fillStyle = "#4a4540";
-        rr(cx - 58, topY + 10, 116, 8, 2);
-        ctx.fill();
-        // Cash register
-        ctx.fillStyle = "#2a2520";
-        rr(cx + 20, topY + 12, 32, 28, 2);
-        ctx.fill();
-        ctx.fillStyle = "#00FFCC";
-        ctx.fillRect(cx + 24, topY + 16, 24, 12);
-        ctx.fillStyle = "#00AA88";
-        ctx.font = "bold 6px monospace";
-        ctx.textAlign = "center";
-        ctx.fillText("❄ CRYO RESEARCH LAB ❄", cx, topY - 4);
-        ctx.shadowBlur = 0;
+        // ═══ WASTELAND: SCRAP TECH LAB ═══
+        const t2 = performance.now() / 1000;
 
-        // ── Main cryo chamber bank (top) ───────────────────
-        ctx.fillStyle = "#081420";
-        ctx.strokeStyle = "#66BBFF";
-        ctx.lineWidth = 1.5;
-        rr(cx - W * 0.44, topY + 4, W * 0.88, 44, 3);
-        ctx.fill();
-        ctx.stroke();
-        // Cryo units
-        for (let si = 0; si < 5; si++) {
-          const sx2 = cx - W * 0.4 + si * ((W * 0.8) / 4.5);
-          ctx.fillStyle = "#0c1825";
-          rr(sx2 - 14, topY + 6, 28, 40, 2);
-          ctx.fill();
-          // Ice frost lines
-          const pulse = Math.sin(t * 1.5 + si) * 0.3 + 0.7;
-          ctx.fillStyle = `rgba(100,180,255,${0.2 * pulse})`;
-          ctx.fillRect(sx2 - 12, topY + 8, 24, 4);
-          ctx.fillRect(sx2 - 12, topY + 16, 24, 4);
-          ctx.fillRect(sx2 - 12, topY + 24, 24, 4);
-          // Status lights - ice blue
-          ctx.fillStyle = ["#66BBFF", "#88DDFF", "#AADDFF", "#66CCFF", "#88EEFF"][si];
-          ctx.shadowColor = ctx.fillStyle;
-          ctx.shadowBlur = 6;
-          ctx.beginPath();
-          ctx.arc(sx2 + 10, topY + 40, 3, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.shadowBlur = 0;
+        // ── Rust floor ─────────────────────────────────────────
+        ctx.fillStyle = "#100700"; ctx.fillRect(0,0,W,H);
+        const tSz2=Math.round(W/16);
+        for (let gy=0;gy<=Math.ceil(H/tSz2);gy++) for (let gx=0;gx<=Math.ceil(W/tSz2);gx++) {
+          const tx=gx*tSz2,ty=gy*tSz2,sd=gx*13+gy*7;
+          ctx.fillStyle=sd%3===0?"rgba(26,10,1,0.96)":sd%3===1?"rgba(18,7,1,0.96)":"rgba(22,9,2,0.96)";
+          ctx.fillRect(tx,ty,tSz2,tSz2);
+          ctx.strokeStyle=`rgba(180,75,8,${0.07+0.04*Math.sin(t2*0.7+sd*0.12)})`;
+          ctx.lineWidth=0.7; ctx.strokeRect(tx,ty,tSz2,tSz2);
         }
 
-        // ── Holographic ice workstation (center) ─────────
-        ctx.fillStyle = "#081015";
-        ctx.strokeStyle = "#4488BB";
-        ctx.lineWidth = 1.5;
-        rr(cx - 36, midY - 14, 72, 36, 4);
-        ctx.fill();
-        ctx.stroke();
-        // Hologram display - ice crystal projection
-        ctx.fillStyle = "rgba(100,180,255,0.12)";
-        ctx.strokeStyle = "#66BBFF88";
-        ctx.lineWidth = 1;
+        // ── Room border ──────────────────────────────────────────
+        ctx.strokeStyle=`rgba(210,100,20,${0.6+0.2*Math.sin(t2*1.3)})`; ctx.lineWidth=3;
+        ctx.strokeRect(2,2,W-4,H-4);
+        ctx.strokeStyle="rgba(150,55,8,0.22)"; ctx.lineWidth=1; ctx.strokeRect(7,7,W-14,H-14);
+
+        // ── Flickering industrial lights ─────────────────────────
+        const hLX=[W*0.15,W*0.40,W*0.65,W*0.88];
+        for (let li=0;li<4;li++) {
+          const lx=hLX[li], fl=li===1?(0.55+0.45*Math.sin(t2*14.3)):1;
+          const lc=ctx.createRadialGradient(lx,0,2,lx,H*0.28,W*0.13);
+          lc.addColorStop(0,`rgba(255,175,55,${0.13*fl})`); lc.addColorStop(1,"rgba(0,0,0,0)");
+          ctx.fillStyle=lc; ctx.beginPath(); ctx.moveTo(lx-5,0); ctx.lineTo(lx-W*0.08,H*0.35); ctx.lineTo(lx+W*0.08,H*0.35); ctx.closePath(); ctx.fill();
+          ctx.fillStyle=`rgba(255,195,75,${0.8*fl})`; ctx.shadowColor="#FF9922"; ctx.shadowBlur=10*fl;
+          ctx.beginPath(); ctx.arc(lx,5,4,0,Math.PI*2); ctx.fill(); ctx.shadowBlur=0;
+        }
+
+        // ── SCRAP TECH LAB banner ────────────────────────────────
+        const bW=W*0.56, bH=H*0.042, bX=cx-bW/2, bY=room.S-bH-4;
+        const bGr=ctx.createLinearGradient(bX,bY,bX+bW,bY);
+        bGr.addColorStop(0,"rgba(45,18,2,0.97)"); bGr.addColorStop(0.5,"rgba(155,58,5,0.99)"); bGr.addColorStop(1,"rgba(45,18,2,0.97)");
+        ctx.fillStyle=bGr; rr(bX,bY,bW,bH,7); ctx.fill();
+        ctx.strokeStyle=`rgba(255,138,28,${0.7+0.3*Math.sin(t2*1.8)})`; ctx.lineWidth=2; ctx.stroke();
+        ctx.fillStyle="#FFE0A0"; ctx.font=`bold ${Math.round(bH*0.55)}px monospace`; ctx.textAlign="center";
+        ctx.shadowColor="#FF8800"; ctx.shadowBlur=12;
+        ctx.fillText("⚙  SCRAP  TECH  LAB  ⚙",cx,bY+bH*0.72); ctx.shadowBlur=0;
+
+        // ── RADIATION WARNING sign ───────────────────────────────
+        const rWarn=0.7+0.3*Math.sin(t2*3.5);
+        const rW=W*0.12, rH=H*0.038;
+        ctx.fillStyle=`rgba(255,200,0,${rWarn})`; ctx.shadowColor="#FFCC00"; ctx.shadowBlur=14*rWarn;
+        rr(cx-rW/2,topY+H*0.04,rW,rH,5); ctx.fill(); ctx.shadowBlur=0;
+        ctx.strokeStyle=`rgba(200,100,0,${rWarn})`; ctx.lineWidth=1.5; ctx.stroke();
+        ctx.fillStyle="#1a0800"; ctx.font=`bold ${Math.round(rH*0.5)}px monospace`; ctx.textAlign="center";
+        ctx.fillText("☢ RADIATION ZONE ☢",cx,topY+H*0.04+rH*0.7);
+
+        // ── Top: corroded server rack (full width) ───────────────
+        const srvY=topY+H*0.005, srvH=H*0.065;
+        const srvBg=ctx.createLinearGradient(W*0.04,srvY,W*0.96,srvY+srvH);
+        srvBg.addColorStop(0,"#0d0500"); srvBg.addColorStop(0.5,"#1a0b02"); srvBg.addColorStop(1,"#0d0500");
+        ctx.fillStyle=srvBg; rr(W*0.04,srvY,W*0.92,srvH,5); ctx.fill();
+        ctx.strokeStyle="rgba(195,85,10,0.65)"; ctx.lineWidth=1.5; ctx.stroke();
+        const srvN=12;
+        for (let si=0;si<srvN;si++) {
+          const sx=W*0.05+si*(W*0.9/srvN);
+          ctx.fillStyle="#0a0300"; ctx.strokeStyle="rgba(175,65,8,0.38)"; ctx.lineWidth=0.7;
+          ctx.fillRect(sx,srvY+3,W*0.068,srvH-6); ctx.strokeRect(sx,srvY+3,W*0.068,srvH-6);
+          const lC=["#FF4400","#FFAA00","#FF6600","#FFCC00","#FF3300","#FF8800","#44FF88","#FF4400","#FFCC44","#FF6622","#FFAA44","#FF5500"][si];
+          const lA=0.5+0.5*Math.sin(t2*(1.2+si*0.25)+si);
+          ctx.fillStyle=lC; ctx.shadowColor=lC; ctx.shadowBlur=4*lA;
+          ctx.fillRect(sx+2,srvY+4,W*0.05,3); ctx.shadowBlur=0;
+          const da=Math.sin(t2*(3+si*0.7)+si)>0.4;
+          ctx.fillStyle=da?"#FF8800":"#2a1100";
+          ctx.beginPath(); ctx.arc(sx+W*0.057,srvY+srvH-6,2.5,0,Math.PI*2); ctx.fill();
+        }
+
+        // ── Main workstation desk ─────────────────────────────────
+        const dY=topY+H*0.10, dH2=H*0.055, dW2=W*0.82, dX2=cx-dW2/2;
+        const dBg=ctx.createLinearGradient(dX2,dY,dX2+dW2,dY+dH2);
+        dBg.addColorStop(0,"#0d0500"); dBg.addColorStop(0.5,"#1c0b02"); dBg.addColorStop(1,"#0d0500");
+        ctx.fillStyle=dBg; rr(dX2,dY,dW2,dH2,6); ctx.fill();
+        ctx.strokeStyle="rgba(198,85,8,0.82)"; ctx.lineWidth=2; ctx.stroke();
+        ctx.strokeStyle=`rgba(218,118,28,${0.42+0.25*Math.sin(t2*1.5)})`; ctx.lineWidth=1.5;
+        ctx.beginPath(); ctx.moveTo(dX2+10,dY+dH2-2); ctx.lineTo(dX2+dW2-10,dY+dH2-2); ctx.stroke();
+
+        // Holographic display above desk
+        const hW=W*0.26, hH=H*0.13, hX=cx-hW/2, hY=dY-hH-H*0.006;
+        const glitch=(Math.sin(t2*8.1)>0.87)?Math.sin(t2*28)*3.5:0;
+        ctx.fillStyle="rgba(8,4,0,0.93)"; rr(hX+glitch,hY,hW,hH,5); ctx.fill();
+        ctx.strokeStyle=`rgba(255,138,20,${0.6+0.3*Math.sin(t2*2.1)})`; ctx.lineWidth=1.5; ctx.stroke();
+        ctx.fillStyle="#FF8800"; ctx.font=`bold ${Math.round(hH*0.13)}px monospace`; ctx.textAlign="center";
+        ctx.shadowColor="#FF6600"; ctx.shadowBlur=8;
+        ctx.fillText("⚙ SYSTEM ONLINE ⚙",cx+glitch*0.5,hY+hH*0.22); ctx.shadowBlur=0;
+        const dLines=["POWER: 84%","SCRAP: 1,247kg","TEMP: 312°C","RADS: HIGH","UPLINK: LOST"];
+        for (let dl=0;dl<5;dl++) {
+          ctx.fillStyle=dl===3?`rgba(255,70,0,0.88)`:`rgba(255,158,38,${dl%2===0?0.88:0.55})`;
+          ctx.font=`${Math.round(hH*0.1)}px monospace`; ctx.textAlign="left";
+          ctx.fillText(dLines[dl],hX+hW*0.06+glitch,hY+hH*0.35+dl*hH*0.13);
+        }
+        ctx.strokeStyle=`rgba(255,178,38,0.7)`; ctx.lineWidth=1.2;
         ctx.beginPath();
-        ctx.moveTo(cx - 20, midY - 10);
-        ctx.lineTo(cx + 20, midY - 10);
-        ctx.lineTo(cx + 28, midY - 28);
-        ctx.lineTo(cx - 28, midY - 28);
-        ctx.closePath();
-        ctx.fill();
+        for (let wx=0;wx<hW-10;wx+=2) { const wy=hY+hH*0.82+hH*0.1*Math.sin(t2*6.2+wx*0.22); wx===0?ctx.moveTo(hX+5+wx,wy):ctx.lineTo(hX+5+wx,wy); }
         ctx.stroke();
-        // Snowflake hologram
-        ctx.fillStyle = "#88DDFF";
-        ctx.shadowColor = "#66BBFF";
-        ctx.shadowBlur = 12;
-        ctx.font = "14px sans-serif";
-        ctx.textAlign = "center";
-        ctx.fillText("❄", cx, midY - 16);
-        ctx.shadowBlur = 0;
-        ctx.fillStyle = "#AADDFF";
-        ctx.font = "bold 6px Orbitron, monospace";
-        ctx.fillText("CRYO ONLINE", cx, midY - 6);
-        // Frozen keyboard
-        ctx.fillStyle = "#0c1820";
-        rr(cx - 28, midY - 2, 56, 12, 2);
-        ctx.fill();
-        for (let ki = 0; ki < 8; ki++) {
-          ctx.fillStyle = `rgba(100,180,255,${0.3 + Math.sin(t * 2 + ki) * 0.1})`;
-          ctx.fillRect(cx - 26 + ki * 7, midY, 5, 8);
-        }
+        // Keyboard on desk
+        ctx.fillStyle="#090300"; rr(dX2+dW2*0.04,dY+4,dW2*0.2,dH2-8,3); ctx.fill();
+        ctx.strokeStyle="rgba(175,75,8,0.38)"; ctx.lineWidth=0.8; ctx.stroke();
+        for (let ki=0;ki<10;ki++) { const kr=Math.floor(ki/5),kc=ki%5; ctx.fillStyle=`rgba(198,95,18,${0.24+0.14*Math.sin(t2+ki)})`; ctx.fillRect(dX2+dW2*0.05+kc*dW2*0.036,dY+6+kr*7,dW2*0.028,5); }
 
-        // ── Cryo sample station (left) ───────────────────
-        ctx.fillStyle = "#0a1418";
-        ctx.strokeStyle = "#4488AA";
-        ctx.lineWidth = 1;
-        rr(cx - W * 0.44, midY - 8, 52, 48, 3);
-        ctx.fill();
-        ctx.stroke();
-        // Ice sample tubes
-        const sColors = ["#88DDFF", "#66BBFF", "#AAEEFF", "#55AACC"];
-        for (let fi = 0; fi < 4; fi++) {
-          ctx.fillStyle = sColors[fi];
-          ctx.shadowColor = sColors[fi];
-          ctx.shadowBlur = 6;
-          ctx.beginPath();
-          ctx.roundRect(cx - W * 0.42 + fi * 12, midY - 4, 9, 22, [3, 3, 0, 0]);
-          ctx.fill();
-          ctx.shadowBlur = 0;
+        // ── LEFT: Tesla coil ──────────────────────────────────────
+        const tcX=W*0.06, tcY=H*0.28, tcW=W*0.11, tcH=H*0.52;
+        ctx.fillStyle="#0d0500"; ctx.strokeStyle="rgba(198,85,8,0.7)"; ctx.lineWidth=2;
+        rr(tcX,tcY+tcH-tcH*0.11,tcW,tcH*0.11,5); ctx.fill(); ctx.stroke();
+        const cCol=ctx.createLinearGradient(tcX+tcW*0.3,tcY,tcX+tcW*0.7,tcY);
+        cCol.addColorStop(0,"#180a03"); cCol.addColorStop(0.5,"#2c1406"); cCol.addColorStop(1,"#180a03");
+        ctx.fillStyle=cCol; ctx.strokeStyle="rgba(175,65,8,0.48)"; ctx.lineWidth=1.5;
+        ctx.fillRect(tcX+tcW*0.3,tcY+tcH*0.14,tcW*0.4,tcH*0.73); ctx.strokeRect(tcX+tcW*0.3,tcY+tcH*0.14,tcW*0.4,tcH*0.73);
+        for (let ci=0;ci<8;ci++) {
+          const cy=tcY+tcH*0.17+ci*(tcH*0.64/8);
+          ctx.strokeStyle=`rgba(255,${138+ci*8},18,0.52)`; ctx.lineWidth=2;
+          ctx.beginPath(); ctx.ellipse(tcX+tcW/2,cy,tcW*0.43,tcH*0.024,0,0,Math.PI*2); ctx.stroke();
         }
-        ctx.fillStyle = "#AADDFF";
-        ctx.font = "bold 5px monospace";
-        ctx.textAlign = "center";
-        ctx.fillText("SAMPLES", cx - W * 0.42 + 20, midY + 24);
+        const tsR=tcW*0.4;
+        const tsG=ctx.createRadialGradient(tcX+tcW/2,tcY+tsR*0.45,tsR*0.08,tcX+tcW/2,tcY+tsR*0.45,tsR);
+        tsG.addColorStop(0,"#381500"); tsG.addColorStop(0.5,"#1e0c00"); tsG.addColorStop(1,"#0d0500");
+        ctx.fillStyle=tsG; ctx.strokeStyle=`rgba(255,158,28,${0.6+0.3*Math.sin(t2*2)})`; ctx.lineWidth=2;
+        ctx.beginPath(); ctx.arc(tcX+tcW/2,tcY+tsR*0.52,tsR,0,Math.PI*2); ctx.fill(); ctx.stroke();
+        for (let ai=0;ai<6;ai++) {
+          const aS=Math.floor(t2*4+ai*3.1)%7;
+          const aX2=tcX+tcW/2, aY2=tcY+tsR*0.52;
+          const aX3=aX2+Math.sin(ai*1.3+t2*2+aS)*tcW*0.9, aY3=aY2+Math.cos(ai*1.1+t2*1.7+aS)*tcW*0.7;
+          const aA=0.4+0.5*Math.abs(Math.sin(t2*7+ai));
+          ctx.strokeStyle=`rgba(255,218,58,${aA})`; ctx.lineWidth=1;
+          ctx.beginPath(); ctx.moveTo(aX2,aY2); ctx.quadraticCurveTo(aX2+(aX3-aX2)*0.5+Math.sin(t2*11+ai)*8,aY2+(aY3-aY2)*0.5+Math.cos(t2*9+ai)*7,aX3,aY3); ctx.stroke();
+          ctx.fillStyle=`rgba(255,200,40,${aA*0.7})`; ctx.shadowColor="#FFCC00"; ctx.shadowBlur=6*aA;
+          ctx.beginPath(); ctx.arc(aX3,aY3,2,0,Math.PI*2); ctx.fill(); ctx.shadowBlur=0;
+        }
+        const tsGl=ctx.createRadialGradient(tcX+tcW/2,tcY+tsR*0.52,0,tcX+tcW/2,tcY+tsR*0.52,tsR*1.5);
+        tsGl.addColorStop(0,`rgba(255,175,28,${0.18+0.14*Math.sin(t2*3)})`); tsGl.addColorStop(1,"rgba(0,0,0,0)");
+        ctx.fillStyle=tsGl; ctx.beginPath(); ctx.arc(tcX+tcW/2,tcY+tsR*0.52,tsR*1.5,0,Math.PI*2); ctx.fill();
+        ctx.fillStyle="rgba(255,158,28,0.62)"; ctx.font=`bold ${Math.round(tcW*0.16)}px monospace`; ctx.textAlign="center";
+        ctx.fillText("TESLA",tcX+tcW/2,tcY+tcH-3);
 
-        // ── Frozen storage rack (right) ───────────────────
-        ctx.fillStyle = "#0a1420";
-        ctx.strokeStyle = "#5599BB";
-        ctx.lineWidth = 1.5;
-        rr(W * 0.72, topY + 8, 56, 70, 3);
-        ctx.fill();
-        ctx.stroke();
-        // Shelves
-        ctx.fillStyle = "#1a2a3a";
-        ctx.fillRect(W * 0.74, topY + 24, 48, 3);
-        ctx.fillRect(W * 0.74, topY + 44, 48, 3);
-        // Ice containers
-        for (let ci = 0; ci < 3; ci++) {
-          for (let ri = 0; ri < 2; ri++) {
-            ctx.fillStyle = "#0c1825";
-            ctx.strokeStyle = "#4488AA";
-            ctx.lineWidth = 0.5;
-            rr(W * 0.74 + 4 + ci * 16, topY + 10 + ri * 24, 12, 12, 2);
-            ctx.fill();
-            ctx.stroke();
-            // Frost effect
-            ctx.fillStyle = `rgba(150,200,255,${0.3 + Math.sin(t + ci + ri) * 0.1})`;
-            ctx.fillRect(W * 0.74 + 6 + ci * 16, topY + 12 + ri * 24, 8, 8);
+        // ── CENTER: Tactical holo-map table ──────────────────────
+        const mTX=cx-W*0.11, mTY=H*0.5, mTW=W*0.22, mTH=H*0.13;
+        ctx.fillStyle="#090300"; ctx.strokeStyle="rgba(255,138,18,0.62)"; ctx.lineWidth=2;
+        rr(mTX,mTY,mTW,mTH,6); ctx.fill(); ctx.stroke();
+        const mSf=ctx.createLinearGradient(mTX,mTY,mTX+mTW,mTY+mTH*0.5);
+        mSf.addColorStop(0,"rgba(175,65,8,0.16)"); mSf.addColorStop(1,"rgba(255,138,18,0.05)");
+        ctx.fillStyle=mSf; ctx.fillRect(mTX+3,mTY+3,mTW-6,mTH*0.65);
+        ctx.strokeStyle="rgba(255,158,38,0.28)"; ctx.lineWidth=0.7;
+        for (let mg=0;mg<6;mg++) { ctx.beginPath(); ctx.moveTo(mTX+4+mg*(mTW-8)/5,mTY+3); ctx.lineTo(mTX+4+mg*(mTW-8)/5,mTY+mTH*0.65); ctx.stroke(); }
+        for (let mg=0;mg<4;mg++) { ctx.beginPath(); ctx.moveTo(mTX+3,mTY+3+mg*mTH*0.2); ctx.lineTo(mTX+mTW-3,mTY+3+mg*mTH*0.2); ctx.stroke(); }
+        const lA2=0.6+0.4*Math.sin(t2*2.5);
+        ctx.fillStyle=`rgba(255,55,0,${lA2})`; ctx.shadowColor="#FF4400"; ctx.shadowBlur=8*lA2;
+        ctx.beginPath(); ctx.arc(mTX+mTW*0.55,mTY+mTH*0.26,4,0,Math.PI*2); ctx.fill(); ctx.shadowBlur=0;
+        // Location label
+        ctx.fillStyle="rgba(255,158,38,0.72)"; ctx.font=`bold ${Math.round(mTH*0.14)}px monospace`; ctx.textAlign="center";
+        ctx.fillText("TACTICAL MAP",cx,mTY+mTH*0.82);
+
+        // ── CENTER-LEFT: Circuit board panel ─────────────────────
+        const cbX=W*0.14, cbY=H*0.32, cbW=W*0.13, cbH=H*0.28;
+        ctx.fillStyle="#080300"; ctx.strokeStyle="rgba(175,85,8,0.52)"; ctx.lineWidth=1.5;
+        rr(cbX,cbY,cbW,cbH,5); ctx.fill(); ctx.stroke();
+        const traceC=["rgba(255,138,18,0.48)","rgba(198,75,8,0.38)","rgba(255,198,38,0.32)"];
+        const traces2=[[0.05,0.08,0.6,0.08],[0.05,0.08,0.05,0.36],[0.05,0.36,0.42,0.36],[0.42,0.08,0.42,0.62],[0.7,0.2,0.95,0.2],[0.95,0.2,0.95,0.72],[0.2,0.62,0.7,0.62],[0.7,0.62,0.7,0.88],[0.15,0.88,0.7,0.88],[0.15,0.42,0.15,0.88],[0.55,0.08,0.55,0.36],[0.55,0.36,0.85,0.36]];
+        for (let ti2=0;ti2<traces2.length;ti2++) {
+          const [x1,y1,x2,y2]=traces2[ti2];
+          ctx.strokeStyle=traceC[ti2%3]; ctx.lineWidth=1.2;
+          ctx.beginPath(); ctx.moveTo(cbX+cbW*x1,cbY+cbH*y1); ctx.lineTo(cbX+cbW*x2,cbY+cbH*y2); ctx.stroke();
+        }
+        const icPos=[[0.12,0.1],[0.48,0.1],[0.12,0.48],[0.48,0.48],[0.18,0.76],[0.58,0.28]];
+        for (let ic=0;ic<6;ic++) {
+          const ix=cbX+cbW*icPos[ic][0], iy=cbY+cbH*icPos[ic][1];
+          ctx.fillStyle="#0d0500"; ctx.strokeStyle="rgba(198,95,18,0.58)"; ctx.lineWidth=0.8;
+          rr(ix,iy,cbW*0.24,cbH*0.1,2); ctx.fill(); ctx.stroke();
+          const lA3=0.5+0.5*Math.sin(t2*(1+ic*0.3)+ic*1.2);
+          ctx.fillStyle=ic%2===0?"#FF8800":"#FFCC00"; ctx.shadowColor=ctx.fillStyle; ctx.shadowBlur=3*lA3;
+          ctx.beginPath(); ctx.arc(ix+cbW*0.22,iy+cbH*0.05,1.5,0,Math.PI*2); ctx.fill(); ctx.shadowBlur=0;
+        }
+        ctx.fillStyle="rgba(255,148,38,0.62)"; ctx.font=`bold ${Math.round(cbH*0.08)}px monospace`; ctx.textAlign="center";
+        ctx.fillText("CIRCUIT BOARD",cbX+cbW/2,cbY+cbH-4);
+
+        // ── CENTER-RIGHT: Geiger counter / Rad scanner ───────────
+        const gcX=W*0.52, gcY=H*0.5, gcW=W*0.13, gcH=H*0.22;
+        ctx.fillStyle="#0d0500"; ctx.strokeStyle="rgba(198,85,8,0.55)"; ctx.lineWidth=1.5;
+        rr(gcX,gcY,gcW,gcH,6); ctx.fill(); ctx.stroke();
+        ctx.fillStyle="#080200"; rr(gcX+4,gcY+4,gcW-8,gcH*0.52,4); ctx.fill();
+        const rLvl=0.52+0.32*Math.sin(t2*0.72);
+        ctx.strokeStyle="rgba(75,28,4,0.82)"; ctx.lineWidth=gcH*0.07;
+        ctx.beginPath(); ctx.arc(gcX+gcW/2,gcY+gcH*0.35,gcH*0.24,Math.PI,0); ctx.stroke();
+        const gAng2=Math.PI+(rLvl*Math.PI), gC2=rLvl>0.8?"#FF2200":rLvl>0.5?"#FF8800":"#FFCC00";
+        ctx.strokeStyle=gC2; ctx.lineWidth=gcH*0.07; ctx.shadowColor=gC2; ctx.shadowBlur=8;
+        ctx.beginPath(); ctx.arc(gcX+gcW/2,gcY+gcH*0.35,gcH*0.24,Math.PI,gAng2); ctx.stroke(); ctx.shadowBlur=0;
+        ctx.strokeStyle="#FF4400"; ctx.lineWidth=1.5; ctx.lineCap="round";
+        ctx.beginPath(); ctx.moveTo(gcX+gcW/2,gcY+gcH*0.35); ctx.lineTo(gcX+gcW/2+Math.cos(gAng2)*gcH*0.22,gcY+gcH*0.35+Math.sin(gAng2)*gcH*0.22); ctx.stroke(); ctx.lineCap="butt";
+        const cpm2=Math.floor(340+180*Math.sin(t2*0.88));
+        ctx.fillStyle="#FF8800"; ctx.font=`bold ${Math.round(gcH*0.11)}px monospace`; ctx.textAlign="center";
+        ctx.fillText(`${cpm2} CPM`,gcX+gcW/2,gcY+gcH*0.66);
+        ctx.fillStyle="rgba(255,138,28,0.72)"; ctx.font=`${Math.round(gcH*0.09)}px monospace`;
+        ctx.fillText("GEIGER COUNTER",gcX+gcW/2,gcY+gcH*0.8);
+        // Clicker animation dots
+        const clkBeat=Math.sin(t2*6*rLvl+0.5)>0.7;
+        if (clkBeat) { ctx.fillStyle=`rgba(255,60,0,0.85)`; ctx.shadowColor="#FF4400"; ctx.shadowBlur=8; ctx.beginPath(); ctx.arc(gcX+gcW*0.82,gcY+gcH*0.66,4,0,Math.PI*2); ctx.fill(); ctx.shadowBlur=0; }
+
+        // ── RIGHT: Chemical analysis racks ────────────────────────
+        const rkX2=W*0.73, rkY2=H*0.28, rkW2=W*0.2, rkH2=H*0.52;
+        ctx.fillStyle="#0d0500"; ctx.strokeStyle="rgba(175,65,8,0.55)"; ctx.lineWidth=2;
+        rr(rkX2,rkY2,rkW2,rkH2,6); ctx.fill(); ctx.stroke();
+        for (let sh=0;sh<3;sh++) { ctx.fillStyle="rgba(138,52,7,0.55)"; ctx.fillRect(rkX2+4,rkY2+rkH2*(0.22+sh*0.26),rkW2-8,4); }
+        const chem=[{col:"#FF4400",lbl:"ACID"},{col:"#FF8800",lbl:"RUST AGENT"},{col:"#FFCC00",lbl:"FUEL"},{col:"#44FF88",lbl:"STIM"},{col:"#FF2200",lbl:"TOXIC"},{col:"#FFAA44",lbl:"PLASMA"}];
+        for (let ci2=0;ci2<6;ci2++) {
+          const row2=Math.floor(ci2/3),col3=ci2%3;
+          const vx=rkX2+rkW2*0.08+col3*(rkW2*0.3), vy=rkY2+rkH2*0.04+row2*(rkH2*0.48);
+          const vH2=rkH2*0.22, vW2=rkW2*0.24;
+          ctx.fillStyle="#0f0400"; ctx.strokeStyle=chem[ci2].col+"85"; ctx.lineWidth=1.2;
+          rr(vx,vy,vW2,vH2,4); ctx.fill(); ctx.stroke();
+          const lv2=0.3+0.28*Math.abs(Math.sin(t2*0.82+ci2*0.9));
+          const lG2=ctx.createLinearGradient(vx,vy+vH2*(1-lv2),vx+vW2,vy+vH2);
+          lG2.addColorStop(0,chem[ci2].col+"AA"); lG2.addColorStop(1,chem[ci2].col+"44");
+          ctx.fillStyle=lG2; ctx.fillRect(vx+2,vy+vH2*(1-lv2),vW2-4,vH2*lv2-2);
+          for (let bi2=0;bi2<2;bi2++) {
+            const bx2=vx+vW2*0.25+bi2*vW2*0.42, by2=vy+vH2*0.84-bi2*5+Math.sin(t2*2+ci2+bi2)*3.5;
+            ctx.fillStyle=chem[ci2].col+"66"; ctx.beginPath(); ctx.arc(bx2,by2,2,0,Math.PI*2); ctx.fill();
           }
+          ctx.fillStyle=chem[ci2].col; ctx.shadowColor=chem[ci2].col; ctx.shadowBlur=5+3*Math.sin(t2*1.5+ci2);
+          ctx.font=`${Math.round(vH2*0.15)}px monospace`; ctx.textAlign="center";
+          ctx.fillText(chem[ci2].lbl,vx+vW2/2,vy+vH2+vH2*0.18); ctx.shadowBlur=0;
         }
-        ctx.fillStyle = "#88CCFF";
-        ctx.font = "bold 6px monospace";
-        ctx.textAlign = "center";
-        ctx.fillText("STORAGE", W * 0.72 + 28, topY + 82);
 
-        // ── Frozen specimen pod (bottom) ───────────────────
-        ctx.fillStyle = "#081520";
-        ctx.strokeStyle = "#66BBFF";
-        ctx.lineWidth = 1.5;
-        rr(cx - 30, midY + 20, 60, 40, 4);
-        ctx.fill();
-        ctx.stroke();
-        // Specimen inside
-        const specPulse = Math.sin(t * 0.8) * 0.2 + 0.8;
-        ctx.fillStyle = `rgba(100,180,255,${0.15 * specPulse})`;
-        ctx.beginPath();
-        ctx.ellipse(cx, midY + 38, 20, 12, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = "#AADDFF";
-        ctx.font = "bold 5px monospace";
-        ctx.textAlign = "center";
-        ctx.fillText("SPECIMEN A-7", cx, midY + 66);
+        // ── BOTTOM: Scrap bin row ─────────────────────────────────
+        const binY2=H-H*0.15, binH2=H*0.11;
+        const bins2=[{lbl:"IRON SCRAP",col:"rgba(155,65,8,0.85)"},{lbl:"COPPER",col:"rgba(198,118,28,0.85)"},{lbl:"CIRCUITS",col:"rgba(218,178,18,0.85)"},{lbl:"FUEL CELLS",col:"rgba(255,75,18,0.85)"}];
+        for (let bi=0;bi<4;bi++) {
+          const bx3=W*0.1+bi*(W*0.2);
+          ctx.fillStyle="#0d0500"; ctx.strokeStyle=bins2[bi].col; ctx.lineWidth=1.5;
+          rr(bx3,binY2,W*0.17,binH2,5); ctx.fill(); ctx.stroke();
+          const fH2=binH2*(0.3+0.38*Math.abs(Math.sin(t2*0.42+bi*1.1)));
+          ctx.fillStyle=bins2[bi].col; ctx.fillRect(bx3+4,binY2+binH2-fH2-2,W*0.15-4,fH2);
+          ctx.fillStyle="#FFE0A0"; ctx.font=`bold ${Math.round(binH2*0.16)}px monospace`; ctx.textAlign="center";
+          ctx.fillText(bins2[bi].lbl,bx3+W*0.085,binY2+binH2*0.2);
+        }
 
-        // ── Ice particles ───────────────────
-        for (let i = 0; i < 8; i++) {
-          const px2 = W * 0.1 + (t * 15 + i * 50) % (W * 0.8);
-          const py2 = topY + 10 + Math.sin(t + i * 2) * 30 + i * 8;
-          const alpha = Math.sin(t * 2 + i) * 0.3 + 0.4;
-          ctx.fillStyle = `rgba(180,220,255,${alpha})`;
-          ctx.beginPath();
-          ctx.arc(px2, py2, 1.5, 0, Math.PI * 2);
-          ctx.fill();
+        // ── Far-right: trophy/award shelf ────────────────────────
+        const tpX=W-W*0.09, tpY=H*0.32, tpW=W*0.078, tpH=H*0.38;
+        ctx.fillStyle="#090300"; ctx.strokeStyle="rgba(175,75,8,0.48)"; ctx.lineWidth=1.5;
+        rr(tpX,tpY,tpW,tpH,5); ctx.fill(); ctx.stroke();
+        for (let sh2=0;sh2<3;sh2++) { ctx.fillStyle="rgba(135,50,7,0.52)"; ctx.fillRect(tpX+2,tpY+tpH*(0.2+sh2*0.27),tpW-4,3); }
+        const trI=[{lbl:"SCRAP #1",col:"#FF8800"},{lbl:"PROTOTYPE",col:"#FFCC00"},{lbl:"CORE RIG",col:"#FF4422"}];
+        for (let ti3=0;ti3<3;ti3++) {
+          const ty3=tpY+tpH*(0.05+ti3*0.27);
+          ctx.fillStyle="#110500"; ctx.strokeStyle=trI[ti3].col+"85"; ctx.lineWidth=1;
+          rr(tpX+tpW*0.1,ty3,tpW*0.8,tpH*0.19,3); ctx.fill(); ctx.stroke();
+          ctx.fillStyle=trI[ti3].col; ctx.shadowColor=trI[ti3].col; ctx.shadowBlur=4+2*Math.sin(t2+ti3);
+          ctx.font=`bold ${Math.round(tpH*0.06)}px monospace`; ctx.textAlign="center";
+          ctx.fillText(trI[ti3].lbl,tpX+tpW/2,ty3+tpH*0.12); ctx.shadowBlur=0;
+        }
+
+        // ── Floor cable runs ──────────────────────────────────────
+        ctx.strokeStyle="rgba(155,55,8,0.32)"; ctx.lineWidth=2; ctx.setLineDash([5,5]);
+        ctx.beginPath(); ctx.moveTo(tcX+tcW,tcY+tcH*0.5); ctx.lineTo(dX2,dY+dH2*0.5); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(rkX2,rkY2+rkH2*0.5); ctx.lineTo(dX2+dW2,dY+dH2*0.5); ctx.stroke();
+        ctx.setLineDash([]);
+
+        // ── News ticker (bottom) ──────────────────────────────────
+        const tkY2=H-H*0.032;
+        ctx.fillStyle="rgba(50,16,2,0.92)"; ctx.fillRect(0,tkY2,W,H*0.03);
+        ctx.strokeStyle=`rgba(255,138,18,${0.52+0.2*Math.sin(t2*2)})`; ctx.lineWidth=1;
+        ctx.beginPath(); ctx.moveTo(0,tkY2); ctx.lineTo(W,tkY2); ctx.stroke();
+        const wL2=W*0.05, wH2=H*0.027;
+        ctx.fillStyle=`rgba(255,195,0,${0.75+0.25*Math.sin(t2*4)})`; rr(W*0.005,tkY2+H*0.001,wL2,wH2,3); ctx.fill();
+        ctx.fillStyle="#1a0800"; ctx.font=`bold ${Math.round(wH2*0.55)}px monospace`; ctx.textAlign="left";
+        ctx.fillText("LIVE",W*0.005+wL2*0.14,tkY2+H*0.001+wH2*0.75);
+        const tkTxt2="⚙ SCRAP TECH LAB  ✦  WASTELAND RESEARCH  ✦  POWER: 84%  ✦  RADS: HIGH  ✦  UPLINK LOST  ✦  TESLA ONLINE  ✦  SCRAP 1,247 KG  ✦  ";
+        const tkX2=W*0.06+W-(t2*52)%(W+1500);
+        ctx.save(); ctx.beginPath(); ctx.rect(W*0.06,tkY2,W-W*0.06,H*0.032); ctx.clip();
+        ctx.fillStyle="#FFE0A0"; ctx.font=`bold ${Math.round(H*0.017)}px monospace`; ctx.textAlign="left";
+        ctx.fillText(tkTxt2,tkX2,tkY2+H*0.021); ctx.restore();
+
+        // ── Ambient rust dust ─────────────────────────────────────
+        for (let pi=0;pi<16;pi++) {
+          const px=(Math.sin(pi*2.1+t2*0.34)*0.42+0.5)*W, py=(Math.cos(pi*1.6+t2*0.23)*0.38+0.5)*(H*0.88);
+          const pA=0.09+0.06*Math.sin(t2*1.3+pi);
+          ctx.fillStyle=pi%3===0?`rgba(255,138,28,${pA})`:pi%3===1?`rgba(198,75,8,${pA})`:`rgba(255,198,58,${pA})`;
+          ctx.beginPath(); ctx.arc(px,py,1.8,0,Math.PI*2); ctx.fill();
         }
 
       } else if (isTechShop) {
-        // ═══ WASTELAND TECH SHOP ═══
+        // ═══ WASTELAND TECH SHOP (fallback) ═══
         // ── Sales counter (top center) ───────────────────
         ctx.fillStyle = "#3a3530";
         ctx.strokeStyle = "#5a5048";
