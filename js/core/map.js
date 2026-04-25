@@ -2233,44 +2233,147 @@ class GameMap {
         } else {
           // Building (or Tree in jungle, or Server Block in robot city)
           if (cfg.jungle) {
-            // Jungle: render dense tree canopy
-            const tseed = (x * 41 + y * 59) % 5;
-            // Ground under tree — dark soil
-            const soils = ['#1a2e0a','#162808','#1e3210','#18280a','#142408'];
-            ctx.fillStyle = soils[tseed];
-            ctx.fillRect(wx, wy, S, S);
-            // Canopy shadow on ground
-            ctx.globalAlpha = 0.30; ctx.fillStyle = '#000';
-            ctx.beginPath(); ctx.ellipse(wx + S/2 + 5, wy + S/2 + 7, S*0.38, S*0.22, 0, 0, Math.PI*2); ctx.fill();
-            ctx.globalAlpha = 1;
-            // Layered canopy — dark outer, brighter inner
-            const treeGreens = [
-              ['#0d3808','#1a5010','#22661a'],
-              ['#08340a','#14520e','#1e6818'],
-              ['#0a3c0c','#185814','#22701e'],
-              ['#0e3a08','#1c5412','#28681c'],
-              ['#0a3206','#164a0c','#205816'],
-            ][tseed];
-            // Outer canopy blob
-            ctx.fillStyle = treeGreens[0];
-            ctx.beginPath(); ctx.arc(wx + S/2, wy + S/2, S*0.46, 0, Math.PI*2); ctx.fill();
-            // Mid canopy
-            ctx.fillStyle = treeGreens[1];
-            ctx.beginPath(); ctx.arc(wx + S/2 - 3, wy + S/2 - 4, S*0.36, 0, Math.PI*2); ctx.fill();
-            // Highlight inner
-            ctx.fillStyle = treeGreens[2];
-            ctx.beginPath(); ctx.arc(wx + S/2 - 5, wy + S/2 - 7, S*0.22, 0, Math.PI*2); ctx.fill();
-            // Sunlit top-left specular
-            ctx.fillStyle = 'rgba(180,255,100,0.12)';
-            ctx.beginPath(); ctx.arc(wx + S/2 - 8, wy + S/2 - 10, S*0.14, 0, Math.PI*2); ctx.fill();
-            // Trunk peek
-            ctx.fillStyle = '#3a2408';
-            ctx.fillRect(wx + S/2 - 4, wy + S*0.62, 8, S*0.38);
-            // Occasional tropical flower on canopy
-            if ((x*7+y*11) % 8 === 0) {
-              ctx.fillStyle = 'rgba(255,100,30,0.80)';
-              ctx.beginPath(); ctx.arc(wx + S*0.60, wy + S*0.35, 5, 0, Math.PI*2); ctx.fill();
+            // ═══ JUNGLE SAFARI: Varied tropical buildings ═══
+            const bseed = (x * 41 + y * 59) % 7;
+            const baseCol = this.buildingColors[y][x];
+            ctx.fillStyle = baseCol;
+
+            if (bseed === 0) {
+              // Jungle tower with thatched peak
+              ctx.fillRect(wx + S*0.2, wy + S*0.18, S*0.6, S*0.82);
+              // Thatched roof (inverted V, dark straw)
+              ctx.fillStyle = '#3a5010';
+              ctx.beginPath();
+              ctx.moveTo(wx + S*0.12, wy + S*0.18);
+              ctx.lineTo(wx + S*0.5, wy + S*0.02);
+              ctx.lineTo(wx + S*0.88, wy + S*0.18);
+              ctx.closePath(); ctx.fill();
+              // Roof highlight
+              ctx.fillStyle = 'rgba(100,200,60,0.45)';
+              ctx.beginPath();
+              ctx.moveTo(wx + S*0.3, wy + S*0.18);
+              ctx.lineTo(wx + S*0.5, wy + S*0.05);
+              ctx.lineTo(wx + S*0.7, wy + S*0.18);
+              ctx.closePath(); ctx.fill();
+              // Hanging vines from roof edge
+              ctx.strokeStyle = 'rgba(40,130,20,0.65)';
+              ctx.lineWidth = 1.2;
+              for (let vi = 0; vi < 4; vi++) {
+                const vx = wx + S*0.25 + vi*S*0.15;
+                const vlen = S*0.12 + (vi % 2)*S*0.06;
+                ctx.beginPath(); ctx.moveTo(vx, wy + S*0.18); ctx.lineTo(vx + 2, wy + S*0.18 + vlen); ctx.stroke();
+              }
+            } else if (bseed === 1) {
+              // Longhouse / warehouse with vine canopy
+              ctx.fillRect(wx + S*0.06, wy + S*0.28, S*0.88, S*0.72);
+              // Leaf canopy strip on roof
+              ctx.fillStyle = 'rgba(34,120,20,0.80)';
+              ctx.fillRect(wx + S*0.03, wy + S*0.24, S*0.94, S*0.08);
+              // Vine drape at base
+              ctx.fillStyle = 'rgba(30,100,15,0.55)';
+              ctx.beginPath();
+              ctx.ellipse(wx + S*0.2, wy + S*0.97, S*0.18, S*0.07, 0, 0, Math.PI*2); ctx.fill();
+              ctx.beginPath();
+              ctx.ellipse(wx + S*0.72, wy + S*0.97, S*0.15, S*0.06, 0, 0, Math.PI*2); ctx.fill();
+            } else if (bseed === 2) {
+              // Bamboo spire / pagoda
+              ctx.beginPath();
+              ctx.moveTo(wx + S*0.5, wy + S*0.02);
+              ctx.lineTo(wx + S*0.82, wy + S);
+              ctx.lineTo(wx + S*0.18, wy + S);
+              ctx.closePath(); ctx.fill();
+              // Leaf cluster on tip
+              ctx.fillStyle = 'rgba(50,180,30,0.72)';
+              ctx.beginPath(); ctx.arc(wx + S*0.5, wy + S*0.05, S*0.12, 0, Math.PI*2); ctx.fill();
+              ctx.beginPath(); ctx.arc(wx + S*0.42, wy + S*0.10, S*0.08, 0, Math.PI*2); ctx.fill();
+              ctx.beginPath(); ctx.arc(wx + S*0.58, wy + S*0.10, S*0.08, 0, Math.PI*2); ctx.fill();
+            } else if (bseed === 3) {
+              // Treehouse dome
+              ctx.fillRect(wx + S*0.1, wy + S*0.48, S*0.8, S*0.52);
+              ctx.beginPath(); ctx.arc(wx + S*0.5, wy + S*0.5, S*0.38, Math.PI, 0); ctx.fill();
+              // Thick vine overgrowth on dome crown
+              ctx.fillStyle = 'rgba(40,160,20,0.75)';
+              ctx.beginPath(); ctx.arc(wx + S*0.5, wy + S*0.5, S*0.38, Math.PI + 0.4, -0.4); ctx.fill();
+              // Leaf tufts
+              ctx.fillStyle = 'rgba(80,200,40,0.55)';
+              ctx.beginPath(); ctx.arc(wx + S*0.28, wy + S*0.20, S*0.10, 0, Math.PI*2); ctx.fill();
+              ctx.beginPath(); ctx.arc(wx + S*0.72, wy + S*0.20, S*0.10, 0, Math.PI*2); ctx.fill();
+            } else if (bseed === 4) {
+              // Jungle workshop with smokestack
+              ctx.fillRect(wx + S*0.04, wy + S*0.38, S*0.66, S*0.62);
+              // Bamboo smokestack
+              ctx.fillStyle = '#4a3010';
+              ctx.fillRect(wx + S*0.73, wy + S*0.18, S*0.18, S*0.82);
+              // Leaf canopy on main roof
+              ctx.fillStyle = 'rgba(34,120,20,0.75)';
+              ctx.fillRect(wx + S*0.02, wy + S*0.34, S*0.70, S*0.07);
+              ctx.fillStyle = 'rgba(34,120,20,0.6)';
+              ctx.fillRect(wx + S*0.70, wy + S*0.15, S*0.24, S*0.06);
+            } else if (bseed === 5) {
+              // Stone temple — hexagonal
+              const hcx = wx + S*0.5, hcy = wy + S*0.5;
+              ctx.beginPath();
+              for (let i = 0; i < 6; i++) {
+                const angle = (Math.PI / 3) * i - Math.PI / 2;
+                const hx = hcx + Math.cos(angle) * S*0.40;
+                const hy = hcy + Math.sin(angle) * S*0.40;
+                if (i === 0) ctx.moveTo(hx, hy); else ctx.lineTo(hx, hy);
+              }
+              ctx.closePath(); ctx.fill();
+              // Inner carved highlight
+              ctx.fillStyle = 'rgba(80,200,50,0.32)';
+              ctx.beginPath();
+              for (let i = 0; i < 6; i++) {
+                const angle = (Math.PI / 3) * i - Math.PI / 2;
+                const hx = hcx + Math.cos(angle) * S*0.24;
+                const hy = hcy + Math.sin(angle) * S*0.24;
+                if (i === 0) ctx.moveTo(hx, hy); else ctx.lineTo(hx, hy);
+              }
+              ctx.closePath(); ctx.fill();
+            } else {
+              // Standard jungle hut with large leaf overhang
+              ctx.fillRect(wx + S*0.08, wy + S*0.22, S*0.84, S*0.78);
+              // Broad leaf overhang on roof
+              ctx.fillStyle = 'rgba(34,120,20,0.82)';
+              ctx.fillRect(wx + S*0.03, wy + S*0.18, S*0.94, S*0.09);
+              // Hanging vines from overhang
+              ctx.strokeStyle = 'rgba(40,130,20,0.60)';
+              ctx.lineWidth = 1.2;
+              for (let vi = 0; vi < 5; vi++) {
+                const vx = wx + S*0.10 + vi*S*0.18;
+                const vlen = S*0.10 + (vi % 2)*S*0.05;
+                ctx.beginPath(); ctx.moveTo(vx, wy + S*0.27); ctx.lineTo(vx + 1, wy + S*0.27 + vlen); ctx.stroke();
+              }
             }
+
+            // Vine border glow (replaces frost crystal edge)
+            ctx.strokeStyle = 'rgba(40,160,20,0.30)';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(wx + 3, wy + 3, S - 6, S - 6);
+
+            // Green neon accent border
+            ctx.strokeStyle = cfg.neonColors[(x + y) % cfg.neonColors.length] + '55';
+            ctx.lineWidth = 1.5;
+            ctx.strokeRect(wx + 6, wy + 6, S - 12, S - 12);
+
+            // Amber/green jungle windows
+            if ((x + y) % 2 === 0) {
+              ctx.fillStyle = 'rgba(255,200,60,0.42)';
+              ctx.fillRect(wx + S*0.2,  wy + S*0.42, S*0.18, S*0.12);
+              ctx.fillRect(wx + S*0.62, wy + S*0.42, S*0.18, S*0.12);
+              ctx.fillStyle = 'rgba(80,200,40,0.30)';
+              ctx.fillRect(wx + S*0.2,  wy + S*0.60, S*0.18, S*0.12);
+              ctx.fillRect(wx + S*0.62, wy + S*0.60, S*0.18, S*0.12);
+            }
+
+            // Occasional tropical flower accent
+            if ((x*7+y*11) % 6 === 0) {
+              ctx.fillStyle = 'rgba(255,80,30,0.80)';
+              ctx.beginPath(); ctx.arc(wx + S*0.82, wy + S*0.30, 4, 0, Math.PI*2); ctx.fill();
+              ctx.fillStyle = 'rgba(255,200,30,0.60)';
+              ctx.beginPath(); ctx.arc(wx + S*0.82, wy + S*0.30, 2, 0, Math.PI*2); ctx.fill();
+            }
+
           } else if (cfg.tower) {
             // ═══════════════════════════════════════════════════════════
             //  TOWER WALLS — 10 fully unique, beautiful wall designs
@@ -4355,7 +4458,8 @@ class GameMap {
     const isDesertRadio = isDesert && door.bTypeIdx === 22;
     const isJungleRadio = isJungle && door.bTypeIdx === 22;
     const isZombieMap   = !!this.config.zombie;
-    const useLargeDealer = isNeonDealer || isGalDealer || isWastelandDealer || isHardcoreDealer || isDinoDealer || isDesertDealer;
+    const isJungleDealer = isJungle && door.specialType === 'dealership';
+    const useLargeDealer = isNeonDealer || isGalDealer || isWastelandDealer || isHardcoreDealer || isDinoDealer || isDesertDealer || isJungleDealer;
     const useLargeArcade = isNeonArcade || isGalArcade;
     const useLargeMarket = isGalMarket;
     const useLargeClub   = isGalClub;
