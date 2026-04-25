@@ -2233,44 +2233,147 @@ class GameMap {
         } else {
           // Building (or Tree in jungle, or Server Block in robot city)
           if (cfg.jungle) {
-            // Jungle: render dense tree canopy
-            const tseed = (x * 41 + y * 59) % 5;
-            // Ground under tree — dark soil
-            const soils = ['#1a2e0a','#162808','#1e3210','#18280a','#142408'];
-            ctx.fillStyle = soils[tseed];
-            ctx.fillRect(wx, wy, S, S);
-            // Canopy shadow on ground
-            ctx.globalAlpha = 0.30; ctx.fillStyle = '#000';
-            ctx.beginPath(); ctx.ellipse(wx + S/2 + 5, wy + S/2 + 7, S*0.38, S*0.22, 0, 0, Math.PI*2); ctx.fill();
-            ctx.globalAlpha = 1;
-            // Layered canopy — dark outer, brighter inner
-            const treeGreens = [
-              ['#0d3808','#1a5010','#22661a'],
-              ['#08340a','#14520e','#1e6818'],
-              ['#0a3c0c','#185814','#22701e'],
-              ['#0e3a08','#1c5412','#28681c'],
-              ['#0a3206','#164a0c','#205816'],
-            ][tseed];
-            // Outer canopy blob
-            ctx.fillStyle = treeGreens[0];
-            ctx.beginPath(); ctx.arc(wx + S/2, wy + S/2, S*0.46, 0, Math.PI*2); ctx.fill();
-            // Mid canopy
-            ctx.fillStyle = treeGreens[1];
-            ctx.beginPath(); ctx.arc(wx + S/2 - 3, wy + S/2 - 4, S*0.36, 0, Math.PI*2); ctx.fill();
-            // Highlight inner
-            ctx.fillStyle = treeGreens[2];
-            ctx.beginPath(); ctx.arc(wx + S/2 - 5, wy + S/2 - 7, S*0.22, 0, Math.PI*2); ctx.fill();
-            // Sunlit top-left specular
-            ctx.fillStyle = 'rgba(180,255,100,0.12)';
-            ctx.beginPath(); ctx.arc(wx + S/2 - 8, wy + S/2 - 10, S*0.14, 0, Math.PI*2); ctx.fill();
-            // Trunk peek
-            ctx.fillStyle = '#3a2408';
-            ctx.fillRect(wx + S/2 - 4, wy + S*0.62, 8, S*0.38);
-            // Occasional tropical flower on canopy
-            if ((x*7+y*11) % 8 === 0) {
-              ctx.fillStyle = 'rgba(255,100,30,0.80)';
-              ctx.beginPath(); ctx.arc(wx + S*0.60, wy + S*0.35, 5, 0, Math.PI*2); ctx.fill();
+            // ═══ JUNGLE SAFARI: Varied tropical buildings ═══
+            const bseed = (x * 41 + y * 59) % 7;
+            const baseCol = this.buildingColors[y][x];
+            ctx.fillStyle = baseCol;
+
+            if (bseed === 0) {
+              // Jungle tower with thatched peak
+              ctx.fillRect(wx + S*0.2, wy + S*0.18, S*0.6, S*0.82);
+              // Thatched roof (inverted V, dark straw)
+              ctx.fillStyle = '#3a5010';
+              ctx.beginPath();
+              ctx.moveTo(wx + S*0.12, wy + S*0.18);
+              ctx.lineTo(wx + S*0.5, wy + S*0.02);
+              ctx.lineTo(wx + S*0.88, wy + S*0.18);
+              ctx.closePath(); ctx.fill();
+              // Roof highlight
+              ctx.fillStyle = 'rgba(100,200,60,0.45)';
+              ctx.beginPath();
+              ctx.moveTo(wx + S*0.3, wy + S*0.18);
+              ctx.lineTo(wx + S*0.5, wy + S*0.05);
+              ctx.lineTo(wx + S*0.7, wy + S*0.18);
+              ctx.closePath(); ctx.fill();
+              // Hanging vines from roof edge
+              ctx.strokeStyle = 'rgba(40,130,20,0.65)';
+              ctx.lineWidth = 1.2;
+              for (let vi = 0; vi < 4; vi++) {
+                const vx = wx + S*0.25 + vi*S*0.15;
+                const vlen = S*0.12 + (vi % 2)*S*0.06;
+                ctx.beginPath(); ctx.moveTo(vx, wy + S*0.18); ctx.lineTo(vx + 2, wy + S*0.18 + vlen); ctx.stroke();
+              }
+            } else if (bseed === 1) {
+              // Longhouse / warehouse with vine canopy
+              ctx.fillRect(wx + S*0.06, wy + S*0.28, S*0.88, S*0.72);
+              // Leaf canopy strip on roof
+              ctx.fillStyle = 'rgba(34,120,20,0.80)';
+              ctx.fillRect(wx + S*0.03, wy + S*0.24, S*0.94, S*0.08);
+              // Vine drape at base
+              ctx.fillStyle = 'rgba(30,100,15,0.55)';
+              ctx.beginPath();
+              ctx.ellipse(wx + S*0.2, wy + S*0.97, S*0.18, S*0.07, 0, 0, Math.PI*2); ctx.fill();
+              ctx.beginPath();
+              ctx.ellipse(wx + S*0.72, wy + S*0.97, S*0.15, S*0.06, 0, 0, Math.PI*2); ctx.fill();
+            } else if (bseed === 2) {
+              // Bamboo spire / pagoda
+              ctx.beginPath();
+              ctx.moveTo(wx + S*0.5, wy + S*0.02);
+              ctx.lineTo(wx + S*0.82, wy + S);
+              ctx.lineTo(wx + S*0.18, wy + S);
+              ctx.closePath(); ctx.fill();
+              // Leaf cluster on tip
+              ctx.fillStyle = 'rgba(50,180,30,0.72)';
+              ctx.beginPath(); ctx.arc(wx + S*0.5, wy + S*0.05, S*0.12, 0, Math.PI*2); ctx.fill();
+              ctx.beginPath(); ctx.arc(wx + S*0.42, wy + S*0.10, S*0.08, 0, Math.PI*2); ctx.fill();
+              ctx.beginPath(); ctx.arc(wx + S*0.58, wy + S*0.10, S*0.08, 0, Math.PI*2); ctx.fill();
+            } else if (bseed === 3) {
+              // Treehouse dome
+              ctx.fillRect(wx + S*0.1, wy + S*0.48, S*0.8, S*0.52);
+              ctx.beginPath(); ctx.arc(wx + S*0.5, wy + S*0.5, S*0.38, Math.PI, 0); ctx.fill();
+              // Thick vine overgrowth on dome crown
+              ctx.fillStyle = 'rgba(40,160,20,0.75)';
+              ctx.beginPath(); ctx.arc(wx + S*0.5, wy + S*0.5, S*0.38, Math.PI + 0.4, -0.4); ctx.fill();
+              // Leaf tufts
+              ctx.fillStyle = 'rgba(80,200,40,0.55)';
+              ctx.beginPath(); ctx.arc(wx + S*0.28, wy + S*0.20, S*0.10, 0, Math.PI*2); ctx.fill();
+              ctx.beginPath(); ctx.arc(wx + S*0.72, wy + S*0.20, S*0.10, 0, Math.PI*2); ctx.fill();
+            } else if (bseed === 4) {
+              // Jungle workshop with smokestack
+              ctx.fillRect(wx + S*0.04, wy + S*0.38, S*0.66, S*0.62);
+              // Bamboo smokestack
+              ctx.fillStyle = '#4a3010';
+              ctx.fillRect(wx + S*0.73, wy + S*0.18, S*0.18, S*0.82);
+              // Leaf canopy on main roof
+              ctx.fillStyle = 'rgba(34,120,20,0.75)';
+              ctx.fillRect(wx + S*0.02, wy + S*0.34, S*0.70, S*0.07);
+              ctx.fillStyle = 'rgba(34,120,20,0.6)';
+              ctx.fillRect(wx + S*0.70, wy + S*0.15, S*0.24, S*0.06);
+            } else if (bseed === 5) {
+              // Stone temple — hexagonal
+              const hcx = wx + S*0.5, hcy = wy + S*0.5;
+              ctx.beginPath();
+              for (let i = 0; i < 6; i++) {
+                const angle = (Math.PI / 3) * i - Math.PI / 2;
+                const hx = hcx + Math.cos(angle) * S*0.40;
+                const hy = hcy + Math.sin(angle) * S*0.40;
+                if (i === 0) ctx.moveTo(hx, hy); else ctx.lineTo(hx, hy);
+              }
+              ctx.closePath(); ctx.fill();
+              // Inner carved highlight
+              ctx.fillStyle = 'rgba(80,200,50,0.32)';
+              ctx.beginPath();
+              for (let i = 0; i < 6; i++) {
+                const angle = (Math.PI / 3) * i - Math.PI / 2;
+                const hx = hcx + Math.cos(angle) * S*0.24;
+                const hy = hcy + Math.sin(angle) * S*0.24;
+                if (i === 0) ctx.moveTo(hx, hy); else ctx.lineTo(hx, hy);
+              }
+              ctx.closePath(); ctx.fill();
+            } else {
+              // Standard jungle hut with large leaf overhang
+              ctx.fillRect(wx + S*0.08, wy + S*0.22, S*0.84, S*0.78);
+              // Broad leaf overhang on roof
+              ctx.fillStyle = 'rgba(34,120,20,0.82)';
+              ctx.fillRect(wx + S*0.03, wy + S*0.18, S*0.94, S*0.09);
+              // Hanging vines from overhang
+              ctx.strokeStyle = 'rgba(40,130,20,0.60)';
+              ctx.lineWidth = 1.2;
+              for (let vi = 0; vi < 5; vi++) {
+                const vx = wx + S*0.10 + vi*S*0.18;
+                const vlen = S*0.10 + (vi % 2)*S*0.05;
+                ctx.beginPath(); ctx.moveTo(vx, wy + S*0.27); ctx.lineTo(vx + 1, wy + S*0.27 + vlen); ctx.stroke();
+              }
             }
+
+            // Vine border glow (replaces frost crystal edge)
+            ctx.strokeStyle = 'rgba(40,160,20,0.30)';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(wx + 3, wy + 3, S - 6, S - 6);
+
+            // Green neon accent border
+            ctx.strokeStyle = cfg.neonColors[(x + y) % cfg.neonColors.length] + '55';
+            ctx.lineWidth = 1.5;
+            ctx.strokeRect(wx + 6, wy + 6, S - 12, S - 12);
+
+            // Amber/green jungle windows
+            if ((x + y) % 2 === 0) {
+              ctx.fillStyle = 'rgba(255,200,60,0.42)';
+              ctx.fillRect(wx + S*0.2,  wy + S*0.42, S*0.18, S*0.12);
+              ctx.fillRect(wx + S*0.62, wy + S*0.42, S*0.18, S*0.12);
+              ctx.fillStyle = 'rgba(80,200,40,0.30)';
+              ctx.fillRect(wx + S*0.2,  wy + S*0.60, S*0.18, S*0.12);
+              ctx.fillRect(wx + S*0.62, wy + S*0.60, S*0.18, S*0.12);
+            }
+
+            // Occasional tropical flower accent
+            if ((x*7+y*11) % 6 === 0) {
+              ctx.fillStyle = 'rgba(255,80,30,0.80)';
+              ctx.beginPath(); ctx.arc(wx + S*0.82, wy + S*0.30, 4, 0, Math.PI*2); ctx.fill();
+              ctx.fillStyle = 'rgba(255,200,30,0.60)';
+              ctx.beginPath(); ctx.arc(wx + S*0.82, wy + S*0.30, 2, 0, Math.PI*2); ctx.fill();
+            }
+
           } else if (cfg.tower) {
             // ═══════════════════════════════════════════════════════════
             //  TOWER WALLS — 10 fully unique, beautiful wall designs
@@ -2757,7 +2860,347 @@ class GameMap {
           } else if (cfg.sky) {
             // Sky Realm: blit pre-rendered cloud canvas — single drawImage instead of 7 ellipses
             ctx.drawImage(this._skyCloudCanvas, wx, wy);
-          } else if (cfg.desert || cfg.wasteland) {
+          } else if (cfg.desert) {
+            // ═══════════════════════════════════════════════════════════════
+            //  DESERT SANDS: Pyramids, Sphinx, Obelisks, Temples
+            // ═══════════════════════════════════════════════════════════════
+            const ts = x * 41 + y * 59;
+            const t = Date.now() * 0.001;
+            const bseed = ts % 6;
+
+            // Sandy ground base
+            const sandBg = ['#2a1c06','#241804','#2c2008','#201604','#2e2209','#1e1603'];
+            ctx.fillStyle = sandBg[bseed];
+            ctx.fillRect(wx, wy, S, S);
+
+            // Sand texture ripples
+            ctx.strokeStyle = `rgba(180,130,40,0.10)`;
+            ctx.lineWidth = 0.8;
+            for (let ri = 0; ri < 4; ri++) {
+              const ry = wy + 10 + ri * 18 + (ts % 7);
+              ctx.beginPath();
+              ctx.moveTo(wx + 2, ry);
+              ctx.quadraticCurveTo(wx + S * 0.5, ry - 4, wx + S - 2, ry);
+              ctx.stroke();
+            }
+
+            if (bseed === 0) {
+              // ── LARGE STEPPED PYRAMID ──────────────────────────────
+              // 4 tiers, top-down view — widest at bottom
+              const cx = wx + S / 2, cy = wy + S / 2;
+              const cols = ['#C07830','#A86020','#B87030','#906018'];
+              const shadowCols = ['#804010','#6a3010','#783820','#5a2808'];
+              for (let tier = 3; tier >= 0; tier--) {
+                const half = S * (0.18 + tier * 0.10);
+                // South face (slightly darker — shadow side)
+                ctx.fillStyle = shadowCols[tier];
+                ctx.beginPath();
+                ctx.moveTo(cx - half, cy - half);
+                ctx.lineTo(cx + half, cy - half);
+                ctx.lineTo(cx + half, cy + half);
+                ctx.lineTo(cx - half, cy + half);
+                ctx.closePath();
+                ctx.fill();
+                // Top/main face
+                ctx.fillStyle = cols[tier];
+                const inset = S * 0.03;
+                ctx.beginPath();
+                ctx.moveTo(cx - half + inset, cy - half + inset);
+                ctx.lineTo(cx + half - inset, cy - half + inset);
+                ctx.lineTo(cx + half - half * 0.18, cy + half - half * 0.18);
+                ctx.lineTo(cx - half + half * 0.18, cy + half - half * 0.18);
+                ctx.closePath();
+                ctx.fill();
+                // Tier edge
+                ctx.strokeStyle = `rgba(0,0,0,0.25)`;
+                ctx.lineWidth = 1;
+                ctx.strokeRect(cx - half + inset, cy - half + inset, (half - inset) * 2, (half - inset) * 2);
+              }
+              // Apex capstone (gold)
+              ctx.fillStyle = '#FFD060';
+              ctx.shadowColor = '#FFAA00'; ctx.shadowBlur = 6;
+              ctx.beginPath();
+              ctx.arc(cx, cy, S * 0.055, 0, Math.PI * 2);
+              ctx.fill();
+              ctx.shadowBlur = 0;
+              // Entrance doorway (bottom face)
+              ctx.fillStyle = '#100800';
+              ctx.fillRect(cx - S * 0.07, cy + S * 0.14, S * 0.14, S * 0.12);
+              // Door arch
+              ctx.fillStyle = '#1a0e00';
+              ctx.beginPath();
+              ctx.arc(cx, cy + S * 0.14, S * 0.07, Math.PI, 0);
+              ctx.fill();
+
+            } else if (bseed === 1) {
+              // ── GREAT SPHINX ──────────────────────────────────────
+              const cx = wx + S / 2, cy = wy + S * 0.58;
+              // Body (elongated sandstone block)
+              ctx.fillStyle = '#B87830';
+              ctx.beginPath();
+              ctx.moveTo(wx + S * 0.08, cy - S * 0.08);
+              ctx.lineTo(wx + S * 0.92, cy - S * 0.08);
+              ctx.lineTo(wx + S * 0.92, cy + S * 0.22);
+              ctx.lineTo(wx + S * 0.08, cy + S * 0.22);
+              ctx.closePath();
+              ctx.fill();
+              // Paw extensions (front)
+              ctx.fillStyle = '#C08040';
+              ctx.fillRect(wx + S * 0.10, cy + S * 0.10, S * 0.22, S * 0.16);
+              ctx.fillRect(wx + S * 0.68, cy + S * 0.10, S * 0.22, S * 0.16);
+              // Body surface cracks
+              ctx.strokeStyle = 'rgba(0,0,0,0.2)'; ctx.lineWidth = 0.8;
+              ctx.beginPath(); ctx.moveTo(wx + S * 0.3, cy - S * 0.08); ctx.lineTo(wx + S * 0.28, cy + S * 0.22); ctx.stroke();
+              ctx.beginPath(); ctx.moveTo(wx + S * 0.6, cy - S * 0.02); ctx.lineTo(wx + S * 0.62, cy + S * 0.22); ctx.stroke();
+              // Head (facing forward — top of tile)
+              const hx = cx, hy = cy - S * 0.22;
+              ctx.fillStyle = '#C88040';
+              ctx.beginPath();
+              ctx.ellipse(hx, hy, S * 0.15, S * 0.18, 0, 0, Math.PI * 2);
+              ctx.fill();
+              // Nemes headdress (blue/gold stripes extending to sides)
+              ctx.fillStyle = '#1848AA';
+              ctx.beginPath();
+              ctx.moveTo(hx - S * 0.13, hy - S * 0.10);
+              ctx.lineTo(hx - S * 0.26, hy + S * 0.12);
+              ctx.lineTo(hx - S * 0.10, hy + S * 0.08);
+              ctx.closePath(); ctx.fill();
+              ctx.beginPath();
+              ctx.moveTo(hx + S * 0.13, hy - S * 0.10);
+              ctx.lineTo(hx + S * 0.26, hy + S * 0.12);
+              ctx.lineTo(hx + S * 0.10, hy + S * 0.08);
+              ctx.closePath(); ctx.fill();
+              // Gold headdress top band
+              ctx.fillStyle = '#FFD060';
+              ctx.beginPath();
+              ctx.moveTo(hx - S * 0.14, hy - S * 0.14);
+              ctx.quadraticCurveTo(hx, hy - S * 0.24, hx + S * 0.14, hy - S * 0.14);
+              ctx.lineTo(hx + S * 0.11, hy - S * 0.10);
+              ctx.quadraticCurveTo(hx, hy - S * 0.19, hx - S * 0.11, hy - S * 0.10);
+              ctx.closePath(); ctx.fill();
+              // Nose bridge + kohl eyes
+              ctx.fillStyle = '#A06020';
+              ctx.fillRect(hx - S * 0.025, hy - S * 0.04, S * 0.05, S * 0.09);
+              ctx.fillStyle = '#1a0a00';
+              ctx.beginPath(); ctx.ellipse(hx - S * 0.07, hy - S * 0.04, S * 0.04, S * 0.025, 0, 0, Math.PI * 2); ctx.fill();
+              ctx.beginPath(); ctx.ellipse(hx + S * 0.07, hy - S * 0.04, S * 0.04, S * 0.025, 0, 0, Math.PI * 2); ctx.fill();
+              // Chin beard
+              ctx.fillStyle = '#FFD060';
+              ctx.beginPath();
+              ctx.moveTo(hx - S * 0.05, hy + S * 0.10);
+              ctx.lineTo(hx + S * 0.05, hy + S * 0.10);
+              ctx.lineTo(hx + S * 0.03, hy + S * 0.18);
+              ctx.lineTo(hx - S * 0.03, hy + S * 0.18);
+              ctx.closePath(); ctx.fill();
+              // Offering between paws
+              ctx.fillStyle = '#FFD060';
+              ctx.beginPath();
+              ctx.arc(cx, cy + S * 0.17, S * 0.04, 0, Math.PI * 2);
+              ctx.fill();
+
+            } else if (bseed === 2) {
+              // ── OBELISK + STONE COURT ────────────────────────────
+              const cx = wx + S / 2, cy = wy + S / 2;
+              // Stone courtyard paving
+              ctx.fillStyle = '#3a2a10';
+              ctx.fillRect(wx + S * 0.06, wy + S * 0.06, S * 0.88, S * 0.88);
+              ctx.strokeStyle = `rgba(150,100,30,0.18)`; ctx.lineWidth = 0.8;
+              for (let gi = 1; gi < 4; gi++) {
+                ctx.beginPath(); ctx.moveTo(wx + S * 0.06 + gi * S * 0.22, wy + S * 0.06); ctx.lineTo(wx + S * 0.06 + gi * S * 0.22, wy + S * 0.94); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(wx + S * 0.06, wy + S * 0.06 + gi * S * 0.22); ctx.lineTo(wx + S * 0.94, wy + S * 0.06 + gi * S * 0.22); ctx.stroke();
+              }
+              // Obelisk base slab
+              ctx.fillStyle = '#D4A840';
+              ctx.strokeStyle = 'rgba(0,0,0,0.3)'; ctx.lineWidth = 1;
+              ctx.fillRect(cx - S * 0.10, cy + S * 0.14, S * 0.20, S * 0.18);
+              ctx.strokeRect(cx - S * 0.10, cy + S * 0.14, S * 0.20, S * 0.18);
+              // Obelisk shaft
+              ctx.fillStyle = '#C09030';
+              ctx.fillRect(cx - S * 0.07, cy - S * 0.24, S * 0.14, S * 0.40);
+              ctx.strokeRect(cx - S * 0.07, cy - S * 0.24, S * 0.14, S * 0.40);
+              // Obelisk pyramidion (tip)
+              ctx.fillStyle = '#FFD060';
+              ctx.shadowColor = '#FFAA00'; ctx.shadowBlur = 5;
+              ctx.beginPath();
+              ctx.moveTo(cx - S * 0.07, cy - S * 0.24);
+              ctx.lineTo(cx + S * 0.07, cy - S * 0.24);
+              ctx.lineTo(cx, cy - S * 0.38);
+              ctx.closePath(); ctx.fill();
+              ctx.shadowBlur = 0;
+              // Hieroglyphs on shaft (3 rows of glyphs)
+              ctx.fillStyle = `rgba(255,200,60,0.35)`;
+              for (let hi = 0; hi < 3; hi++) {
+                ctx.fillRect(cx - S * 0.045, cy - S * 0.18 + hi * S * 0.10, S * 0.09, S * 0.025);
+                ctx.fillRect(cx - S * 0.02, cy - S * 0.14 + hi * S * 0.10, S * 0.04, S * 0.04);
+              }
+              // Two flanking torches
+              for (let si = -1; si <= 1; si += 2) {
+                const tx2 = cx + si * S * 0.30;
+                ctx.fillStyle = '#8a5a20';
+                ctx.fillRect(tx2 - S * 0.02, cy - S * 0.08, S * 0.04, S * 0.20);
+                // Flame glow
+                const flicker = 0.6 + Math.sin(t * 5 + si + x + y) * 0.3;
+                ctx.fillStyle = `rgba(255,160,30,${flicker * 0.85})`;
+                ctx.shadowColor = '#FF8800'; ctx.shadowBlur = 6 * flicker;
+                ctx.beginPath();
+                ctx.moveTo(tx2 - S * 0.04, cy - S * 0.08);
+                ctx.quadraticCurveTo(tx2, cy - S * 0.20, tx2 + S * 0.04, cy - S * 0.08);
+                ctx.closePath(); ctx.fill();
+                ctx.shadowBlur = 0;
+              }
+
+            } else if (bseed === 3) {
+              // ── SAND DUNE + BURIED RUIN ───────────────────────────
+              const cx = wx + S / 2;
+              // Dune mound (organic sandy hill)
+              ctx.fillStyle = '#C8922A';
+              ctx.beginPath();
+              ctx.moveTo(wx + 2, wy + S - 4);
+              ctx.quadraticCurveTo(wx + S * 0.25, wy + S * 0.28, wx + S * 0.5, wy + S * 0.22);
+              ctx.quadraticCurveTo(wx + S * 0.75, wy + S * 0.28, wx + S - 2, wy + S - 4);
+              ctx.closePath(); ctx.fill();
+              // Dune shadow
+              ctx.fillStyle = '#A07020';
+              ctx.beginPath();
+              ctx.moveTo(wx + S * 0.3, wy + S * 0.46);
+              ctx.quadraticCurveTo(wx + S * 0.5, wy + S * 0.38, wx + S * 0.7, wy + S * 0.46);
+              ctx.quadraticCurveTo(wx + S * 0.65, wy + S * 0.60, wx + S * 0.35, wy + S * 0.60);
+              ctx.closePath(); ctx.fill();
+              // Buried column tops sticking out
+              ctx.fillStyle = '#D4A84C';
+              ctx.strokeStyle = 'rgba(0,0,0,0.3)'; ctx.lineWidth = 1;
+              [[S*0.20, S*0.46],[S*0.50, S*0.34],[S*0.78, S*0.48]].forEach(([ox, oy]) => {
+                ctx.fillRect(wx + ox - S*0.035, wy + oy, S*0.07, S * 0.18);
+                ctx.strokeRect(wx + ox - S*0.035, wy + oy, S*0.07, S * 0.18);
+                // Capital top
+                ctx.fillStyle = '#C89838';
+                ctx.fillRect(wx + ox - S*0.055, wy + oy, S*0.11, S * 0.035);
+                ctx.fillStyle = '#D4A84C';
+              });
+              // Cracked wall fragment
+              ctx.fillStyle = '#B88030';
+              ctx.strokeStyle = 'rgba(0,0,0,0.2)'; ctx.lineWidth = 1;
+              ctx.beginPath();
+              ctx.moveTo(wx + S*0.06, wy + S*0.54);
+              ctx.lineTo(wx + S*0.06, wy + S*0.80);
+              ctx.lineTo(wx + S*0.22, wy + S*0.80);
+              ctx.lineTo(wx + S*0.22, wy + S*0.60);
+              ctx.lineTo(wx + S*0.14, wy + S*0.54);
+              ctx.closePath(); ctx.fill(); ctx.stroke();
+              // Scarab symbol on wall
+              ctx.fillStyle = `rgba(255,200,50,0.4)`;
+              ctx.beginPath(); ctx.ellipse(wx + S*0.14, wy + S*0.68, S*0.04, S*0.055, 0, 0, Math.PI*2); ctx.fill();
+
+            } else if (bseed === 4) {
+              // ── HYPOSTYLE TEMPLE HALL ────────────────────────────
+              // Temple platform
+              ctx.fillStyle = '#3C2808';
+              ctx.fillRect(wx + S*0.04, wy + S*0.12, S*0.92, S*0.78);
+              ctx.strokeStyle = '#FFD060'; ctx.lineWidth = 1.5;
+              ctx.strokeRect(wx + S*0.04, wy + S*0.12, S*0.92, S*0.78);
+              // Inner hall (darker)
+              ctx.fillStyle = '#280E02';
+              ctx.fillRect(wx + S*0.16, wy + S*0.26, S*0.68, S*0.54);
+              // 6 columns (3 per row, top-down)
+              const colCols = ['#C09030','#B07820','#D0A040'];
+              for (let ci = 0; ci < 3; ci++) {
+                const colX = wx + S * (0.22 + ci * 0.28);
+                [wy + S*0.30, wy + S*0.62].forEach(colY => {
+                  // Column base
+                  ctx.fillStyle = '#906818';
+                  ctx.fillRect(colX - S*0.055, colY, S*0.11, S*0.08);
+                  // Shaft
+                  ctx.fillStyle = colCols[ci % 3];
+                  ctx.fillRect(colX - S*0.04, colY + S*0.08, S*0.08, S*0.22);
+                  // Capital (lotus)
+                  ctx.fillStyle = '#FFD060';
+                  ctx.fillRect(colX - S*0.06, colY + S*0.30, S*0.12, S*0.04);
+                  // Hieroglyph stripe on shaft
+                  ctx.fillStyle = `rgba(255,200,60,0.35)`;
+                  ctx.fillRect(colX - S*0.025, colY + S*0.12, S*0.05, S*0.015);
+                  ctx.fillRect(colX - S*0.025, colY + S*0.20, S*0.05, S*0.015);
+                });
+              }
+              // Entrance pylons
+              ctx.fillStyle = '#C89030';
+              ctx.fillRect(wx + S*0.04, wy + S*0.12, S*0.12, S*0.26);
+              ctx.fillRect(wx + S*0.84, wy + S*0.12, S*0.12, S*0.26);
+              // Pylon top slope
+              ctx.fillStyle = '#A87020';
+              ctx.beginPath(); ctx.moveTo(wx+S*0.04,wy+S*0.12); ctx.lineTo(wx+S*0.16,wy+S*0.12); ctx.lineTo(wx+S*0.10,wy+S*0.04); ctx.closePath(); ctx.fill();
+              ctx.beginPath(); ctx.moveTo(wx+S*0.84,wy+S*0.12); ctx.lineTo(wx+S*0.96,wy+S*0.12); ctx.lineTo(wx+S*0.90,wy+S*0.04); ctx.closePath(); ctx.fill();
+              // Torchlit doorway glow
+              const glow = 0.5 + Math.sin(t * 3 + x + y) * 0.2;
+              ctx.fillStyle = `rgba(255,160,30,${glow * 0.18})`;
+              ctx.fillRect(wx + S*0.36, wy + S*0.26, S*0.28, S*0.54);
+
+            } else {
+              // ── MASTABA TOMB + PALM TREES ────────────────────────
+              // Mastaba (flat-topped tomb, trapezoidal)
+              ctx.fillStyle = '#A07020';
+              ctx.beginPath();
+              ctx.moveTo(wx + S*0.10, wy + S*0.76);
+              ctx.lineTo(wx + S*0.90, wy + S*0.76);
+              ctx.lineTo(wx + S*0.82, wy + S*0.34);
+              ctx.lineTo(wx + S*0.18, wy + S*0.34);
+              ctx.closePath(); ctx.fill();
+              // Top face
+              ctx.fillStyle = '#C89030';
+              ctx.fillRect(wx + S*0.18, wy + S*0.30, S*0.64, S*0.06);
+              // Entrance niche
+              ctx.fillStyle = '#100800';
+              ctx.beginPath();
+              ctx.moveTo(wx + S*0.40, wy + S*0.76);
+              ctx.lineTo(wx + S*0.40, wy + S*0.54);
+              ctx.lineTo(wx + S*0.50, wy + S*0.48);
+              ctx.lineTo(wx + S*0.60, wy + S*0.54);
+              ctx.lineTo(wx + S*0.60, wy + S*0.76);
+              ctx.closePath(); ctx.fill();
+              // Gold hieroglyph panel above niche
+              ctx.fillStyle = `rgba(255,208,60,0.35)`;
+              ctx.fillRect(wx + S*0.38, wy + S*0.36, S*0.24, S*0.10);
+              ctx.fillStyle = `rgba(255,180,40,0.4)`;
+              for (let hi = 0; hi < 3; hi++) {
+                ctx.beginPath(); ctx.arc(wx + S*(0.44 + hi*0.06), wy + S*0.41, S*0.018, 0, Math.PI*2); ctx.fill();
+              }
+              // Palm trees flanking
+              [S*0.08, S*0.82].forEach(px => {
+                const palmY = wy + S*0.60;
+                // Trunk
+                ctx.fillStyle = '#7a5020';
+                ctx.fillRect(wx + px, palmY - S*0.28, S*0.06, S*0.32);
+                // Frond crown (5 fronds)
+                ctx.fillStyle = '#44AA22';
+                for (let fi = 0; fi < 5; fi++) {
+                  const angle = (fi / 5) * Math.PI * 2;
+                  ctx.beginPath();
+                  ctx.moveTo(wx + px + S*0.03, palmY - S*0.28);
+                  ctx.quadraticCurveTo(
+                    wx + px + S*0.03 + Math.cos(angle) * S*0.14,
+                    palmY - S*0.28 + Math.sin(angle) * S*0.10,
+                    wx + px + S*0.03 + Math.cos(angle) * S*0.20,
+                    palmY - S*0.28 + Math.sin(angle) * S*0.06
+                  );
+                  ctx.lineWidth = 2; ctx.strokeStyle = '#44AA22'; ctx.stroke();
+                }
+              });
+            }
+
+            // ── Shared: gold shimmer on stone ──────────────────────
+            const shimmer = Math.sin(t * 1.2 + x * 0.5 + y * 0.7) * 0.06 + 0.08;
+            ctx.fillStyle = `rgba(255,200,60,${shimmer})`;
+            ctx.fillRect(wx + S*0.06, wy + S*0.06, S*0.88, S*0.88);
+
+            // ── Shared: occasional torch glow ──────────────────────
+            if (ts % 9 === 0) {
+              const flicker = 0.5 + Math.sin(t * 5 + ts) * 0.25;
+              const gx = wx + S*0.5 + (ts % 5 - 2) * S*0.12;
+              const gy2 = wy + S*0.85;
+              ctx.fillStyle = `rgba(255,140,20,${flicker * 0.22})`;
+              ctx.beginPath(); ctx.arc(gx, gy2, S*0.18, 0, Math.PI*2); ctx.fill();
+            }
+
+          } else if (cfg.wasteland) {
             // ═══════════════════════════════════════════════════════════════
             //  WASTELAND: Unique ruined industrial structures
             // ═══════════════════════════════════════════════════════════════
@@ -4337,6 +4780,7 @@ class GameMap {
     const isRobot     = !!this.config.robot;
     const isHardcore  = !!this.config.hardcore;
     const isDino        = !!this.config.dino;
+    const isJungle      = !!this.config.jungle;
     const isDesert      = !!this.config.desert;
     const isNeonDealer  = this.config.id === 'neon_city' && door.specialType === 'dealership';
     const isGalDealer   = isGalactica && door.specialType === 'dealership';
@@ -4352,14 +4796,16 @@ class GameMap {
     const isGalPharmacy = isGalactica && door.bTypeIdx === 5;
     const isGalRadio    = isGalactica && door.bTypeIdx === 22;
     const isDesertRadio = isDesert && door.bTypeIdx === 22;
+    const isJungleRadio = isJungle && door.bTypeIdx === 22;
     const isZombieMap   = !!this.config.zombie;
-    const useLargeDealer = isNeonDealer || isGalDealer || isWastelandDealer || isHardcoreDealer || isDinoDealer || isDesertDealer;
+    const isJungleDealer = isJungle && door.specialType === 'dealership';
+    const useLargeDealer = isNeonDealer || isGalDealer || isWastelandDealer || isHardcoreDealer || isDinoDealer || isDesertDealer || isJungleDealer;
     const useLargeArcade = isNeonArcade || isGalArcade;
     const useLargeMarket = isGalMarket;
     const useLargeClub   = isGalClub;
     const useLargeRest   = isGalRest;
     const useLargePharm  = isGalPharmacy;
-    const useLargeRadio  = isGalRadio || isDesertRadio;
+    const useLargeRadio  = isGalRadio || isDesertRadio || isJungleRadio;
     // All zombie buildings use the large arcade layout (1080×840)
     const useLargeZombie = isZombieMap;
     // All blitz/robot/hardcore buildings use large rooms (same as galactica)

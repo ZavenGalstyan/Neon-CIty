@@ -2848,6 +2848,25 @@ class Game {
             // Producer at right desk
             { x: room.roomW * 0.72, y: room.roomH * 0.52, role: "PRODUCER", sitting: true },
           ];
+        } else if (door.bTypeIdx === 22 && !!this.map?.config?.dino) {
+          // DINO WORLD RADIO STATION: Jungle Drums Broadcast — 3 human workers, no enemies
+          room.isRadioStation = true;
+          this._radioWorkers = [
+            { x: room.roomW * 0.20, y: room.roomH * 0.27, role: "TECH",     sitting: true },
+            { x: room.roomW * 0.50, y: room.roomH * 0.27, role: "DJ",       sitting: true },
+            { x: room.roomW * 0.80, y: room.roomH * 0.27, role: "PRODUCER", sitting: true },
+          ];
+        } else if (door.bTypeIdx === 22 && !!this.map?.config?.jungle) {
+          // JUNGLE SAFARI RADIO STATION: Jungle Beats Radio — 3 human workers, no enemies
+          room.isRadioStation = true;
+          this._radioWorkers = [
+            { x: room.roomW * 0.20, y: room.roomH * 0.27, role: "TECH",     sitting: true },
+            { x: room.roomW * 0.50, y: room.roomH * 0.27, role: "DJ",       sitting: true },
+            { x: room.roomW * 0.80, y: room.roomH * 0.27, role: "PRODUCER", sitting: true },
+          ];
+        } else if (door.bTypeIdx === 22 && !!this.map?.config?.desert) {
+          // DESERT SANDS RADIO: Pyramid Radio — Egyptian workers drawn inline in furniture
+          room.isRadioStation = true;
         } else if (door.bTypeIdx === 1 && !!this.map?.config?.snow) {
           // FROZEN TUNDRA OFFICE: Workers already rendered as furniture, no NPC needed
           room.isSnowOffice = true;
@@ -3876,6 +3895,22 @@ class Game {
     const t = performance.now() / 1000;
     const breathe = Math.sin(t * 1.4 + x * 0.1) * 1;
     const sway = Math.sin(t * 0.7 + y * 0.1) * 1;
+    const isDino   = !!this.map?.config?.dino;
+    const isJungle = !!this.map?.config?.jungle;
+    const isJungleTheme = isDino || isJungle;
+
+    // Jungle safari outfit colors vs default
+    const pants    = isJungleTheme ? "#3a5020" : "#3a3530";
+    const shoes    = isJungleTheme ? "#2a1a08" : "#2a2520";
+    const bodyColor = isJungleTheme
+      ? (role === "DJ" ? "#4a7a1a" : role === "TECH" ? "#3a6014" : "#2a5a18")
+      : (role === "DJ" ? "#2a4a6a" : role === "TECH" ? "#4a3a2a" : "#3a2a4a");
+    const hairColor = isJungleTheme
+      ? (role === "DJ" ? "#1a0a00" : role === "TECH" ? "#3a2808" : "#2a1808")
+      : (role === "DJ" ? "#1a1a2a" : role === "TECH" ? "#4a3a2a" : "#2a2a3a");
+    const labelCol  = isJungleTheme ? "#66DD44" : "#FF88CC";
+    const skinTone  = isJungleTheme ? "#C8A060" : "#DDBB99";
+    const handTone  = isJungleTheme ? "#C8A060" : "#CCAA88";
 
     ctx.save();
     ctx.translate(x + sway, y);
@@ -3890,38 +3925,42 @@ class Game {
 
     if (sitting) {
       // Sitting pose
-      ctx.fillStyle = "#3a3530";
+      ctx.fillStyle = pants;
       ctx.fillRect(-7, 4, 5, 10);
       ctx.fillRect(2, 4, 5, 10);
 
-      // Body (casual clothes)
-      const bodyColor = role === "DJ" ? "#2a4a6a" : role === "TECH" ? "#4a3a2a" : "#3a2a4a";
+      // Body
       ctx.fillStyle = bodyColor;
       ctx.beginPath();
       ctx.roundRect(-9, -16 + breathe * 0.3, 18, 22, 3);
       ctx.fill();
+      // Jungle: open collar detail
+      if (isJungleTheme) {
+        ctx.strokeStyle = "rgba(255,204,68,0.4)"; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(-3, -16 + breathe * 0.3); ctx.lineTo(0, -10 + breathe * 0.3); ctx.lineTo(3, -16 + breathe * 0.3); ctx.stroke();
+      }
 
       // Arms on desk
+      ctx.fillStyle = bodyColor;
       ctx.fillRect(-13, -6 + breathe * 0.3, 5, 12);
       ctx.fillRect(8, -6 + breathe * 0.3, 5, 12);
 
       // Hands
-      ctx.fillStyle = "#CCAA88";
+      ctx.fillStyle = handTone;
       ctx.beginPath();
       ctx.arc(-10.5, 8 + breathe * 0.3, 3, 0, Math.PI * 2);
       ctx.arc(10.5, 8 + breathe * 0.3, 3, 0, Math.PI * 2);
       ctx.fill();
     } else {
       // Standing pose
-      ctx.fillStyle = "#3a3530";
+      ctx.fillStyle = pants;
       ctx.fillRect(-6, 8, 5, 18);
       ctx.fillRect(1, 8, 5, 18);
 
-      ctx.fillStyle = "#2a2520";
+      ctx.fillStyle = shoes;
       ctx.fillRect(-7, 24, 7, 5);
       ctx.fillRect(0, 24, 7, 5);
 
-      const bodyColor = role === "DJ" ? "#2a4a6a" : role === "TECH" ? "#4a3a2a" : "#3a2a4a";
       ctx.fillStyle = bodyColor;
       ctx.beginPath();
       ctx.roundRect(-10, -20 + breathe * 0.3, 20, 30, 3);
@@ -3930,7 +3969,7 @@ class Game {
       ctx.fillRect(-14, -14 + breathe * 0.3, 5, 16);
       ctx.fillRect(9, -14 + breathe * 0.3, 5, 16);
 
-      ctx.fillStyle = "#CCAA88";
+      ctx.fillStyle = handTone;
       ctx.beginPath();
       ctx.arc(-11.5, 4 + breathe * 0.3, 3, 0, Math.PI * 2);
       ctx.arc(11.5, 4 + breathe * 0.3, 3, 0, Math.PI * 2);
@@ -3938,28 +3977,38 @@ class Game {
     }
 
     // Neck
-    ctx.fillStyle = "#CCAA88";
+    ctx.fillStyle = handTone;
     ctx.fillRect(-3, sitting ? -20 : -24, 6, 5);
 
     // Head
     const headY = sitting ? -28 : -32;
-    ctx.fillStyle = "#DDBB99";
+    ctx.fillStyle = skinTone;
     ctx.beginPath();
     ctx.ellipse(0, headY + breathe * 0.2, 9, 10, 0, 0, Math.PI * 2);
     ctx.fill();
 
     // Hair
-    const hairColor = role === "DJ" ? "#1a1a2a" : role === "TECH" ? "#4a3a2a" : "#2a2a3a";
     ctx.fillStyle = hairColor;
     ctx.beginPath();
     ctx.ellipse(0, headY - 5 + breathe * 0.2, 8, 5, 0, Math.PI, 0);
     ctx.fill();
     ctx.fillRect(-8, headY - 3 + breathe * 0.2, 16, 5);
 
-    // Headphones for DJ
+    // Jungle safari hat for TECH role
+    if (isJungleTheme && role === "TECH") {
+      ctx.fillStyle = "#8a6020";
+      ctx.beginPath(); ctx.ellipse(0, headY - 8 + breathe * 0.2, 12, 4, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "#7a5018";
+      ctx.beginPath(); ctx.roundRect(-7, headY - 16 + breathe * 0.2, 14, 10, 2); ctx.fill();
+      ctx.strokeStyle = "#a07030"; ctx.lineWidth = 1; ctx.stroke();
+    }
+
+    // Headphones for DJ (jungle: wooden-ring style)
     if (role === "DJ") {
-      ctx.fillStyle = "#2a2a30";
-      ctx.strokeStyle = "#4a4a50";
+      const hpCol  = isJungleTheme ? "#5a3a10" : "#2a2a30";
+      const hpStroke = isJungleTheme ? "#8a6030" : "#4a4a50";
+      ctx.fillStyle = hpCol;
+      ctx.strokeStyle = hpStroke;
       ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.arc(0, headY - 4 + breathe * 0.2, 11, Math.PI, 0);
@@ -3978,7 +4027,7 @@ class Game {
     ctx.ellipse(-3, headY + breathe * 0.2, 2, 1.8, 0, 0, Math.PI * 2);
     ctx.ellipse(3, headY + breathe * 0.2, 2, 1.8, 0, 0, Math.PI * 2);
     ctx.fill();
-    ctx.fillStyle = "#3a3020";
+    ctx.fillStyle = isJungleTheme ? "#1a0800" : "#3a3020";
     ctx.beginPath();
     ctx.arc(-3, headY + breathe * 0.2, 1, 0, Math.PI * 2);
     ctx.arc(3, headY + breathe * 0.2, 1, 0, Math.PI * 2);
@@ -3993,8 +4042,8 @@ class Game {
     ctx.stroke();
 
     // Role label
-    ctx.fillStyle = "#FF88CC";
-    ctx.shadowColor = "#FF88CC";
+    ctx.fillStyle = labelCol;
+    ctx.shadowColor = labelCol;
     ctx.shadowBlur = 5;
     ctx.font = "bold 6px Orbitron, monospace";
     ctx.textAlign = "center";
