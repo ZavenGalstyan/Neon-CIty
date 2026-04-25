@@ -2864,6 +2864,9 @@ class Game {
             { x: room.roomW * 0.50, y: room.roomH * 0.27, role: "DJ",       sitting: true },
             { x: room.roomW * 0.80, y: room.roomH * 0.27, role: "PRODUCER", sitting: true },
           ];
+        } else if (door.bTypeIdx === 22 && !!this.map?.config?.desert) {
+          // DESERT SANDS RADIO: Pyramid Radio — Egyptian workers drawn inline in furniture
+          room.isRadioStation = true;
         } else if (door.bTypeIdx === 1 && !!this.map?.config?.snow) {
           // FROZEN TUNDRA OFFICE: Workers already rendered as furniture, no NPC needed
           room.isSnowOffice = true;

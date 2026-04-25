@@ -57,6 +57,7 @@ Game.prototype._renderIndoorFurniture = function(ctx, room) {
 
     const isDino   = !!this.map?.config?.dino;
     const isJungle = !!this.map?.config?.jungle;
+    const isDesert = !!this.map?.config?.desert;
 
     // Floor tint per building type
     const _floorTints = {
@@ -11369,6 +11370,409 @@ Game.prototype._renderIndoorFurniture = function(ctx, room) {
         // ── Wall glow strips ───────────────────────────────────────────
         const glA2=`rgba(${LEAFr},${0.15+0.08*Math.sin(t*1.4)})`;
         ctx.fillStyle=glA2; ctx.fillRect(0,H/2-80,3,160); ctx.fillRect(W-3,H/2-80,3,160);
+        return;
+      }
+      if (isDesert) {
+        // ═══ DESERT SANDS: PYRAMID RADIO — VOICE OF THE SANDS ═══
+        const t = performance.now() / 1000;
+        const GOLD="#FFD060"; const AMBER="#FF9900"; const SAND="#E8C060"; const TERRA="#C06010";
+        const GOLDr="255,208,96"; const AMBERr="255,153,0"; const SANDr="232,192,96";
+
+        // ── Sandstone tile floor ──────────────────────────────────────
+        const tileSize = 48;
+        for (let gy = 0; gy < Math.ceil(H / tileSize) + 1; gy++) {
+          for (let gx = 0; gx < Math.ceil(W / tileSize) + 1; gx++) {
+            const tx = gx * tileSize, ty = gy * tileSize;
+            const seed = gx * 17 + gy * 11;
+            ctx.fillStyle = seed % 3 === 0 ? "rgba(28,18,4,0.92)"
+                          : seed % 3 === 1 ? "rgba(22,14,2,0.90)"
+                          : "rgba(32,20,6,0.90)";
+            ctx.fillRect(tx, ty, tileSize, tileSize);
+            ctx.strokeStyle = `rgba(${GOLDr},0.08)`;
+            ctx.lineWidth = 0.5;
+            ctx.strokeRect(tx, ty, tileSize, tileSize);
+            if (seed % 7 === 0) {
+              ctx.fillStyle = `rgba(${AMBERr},0.10)`;
+              ctx.fillRect(tx + 12, ty + 20, 8, 2);
+              ctx.fillRect(tx + 20, ty + 14, 2, 8);
+            }
+          }
+        }
+
+        // ── Room border — golden sandstone ───────────────────────────
+        ctx.strokeStyle = `rgba(${GOLDr},0.6)`;
+        ctx.lineWidth = 3;
+        ctx.strokeRect(2, 2, W - 4, H - 4);
+        ctx.strokeStyle = `rgba(${AMBERr},0.2)`;
+        ctx.lineWidth = 1;
+        ctx.strokeRect(6, 6, W - 12, H - 12);
+
+        // ── Title sign — VOICE OF THE SANDS ──────────────────────────
+        const signW = 380, signH = 32;
+        const signX = W / 2 - signW / 2, signY = room.S - 28;
+        const signGrad = ctx.createLinearGradient(signX, signY, signX + signW, signY);
+        signGrad.addColorStop(0, "rgba(60,30,0,0.92)");
+        signGrad.addColorStop(0.5, "rgba(140,80,0,0.98)");
+        signGrad.addColorStop(1, "rgba(60,30,0,0.92)");
+        ctx.fillStyle = signGrad;
+        rr(signX, signY, signW, signH, 7);
+        ctx.fill();
+        ctx.strokeStyle = `rgba(${GOLDr},${0.7 + 0.3 * Math.sin(t * 2.4)})`;
+        ctx.lineWidth = 1.5; ctx.stroke();
+        ctx.fillStyle = GOLD;
+        ctx.font = "bold 14px monospace";
+        ctx.textAlign = "center";
+        ctx.shadowColor = AMBER; ctx.shadowBlur = 10;
+        ctx.fillText("⬡  VOICE OF THE SANDS  ⬡", W / 2, signY + 22);
+        ctx.shadowBlur = 0;
+
+        // ── ON AIR blinking sign ──────────────────────────────────────
+        const onAirA = 0.7 + 0.3 * Math.sin(t * 4);
+        ctx.fillStyle = `rgba(200,80,0,${onAirA})`;
+        ctx.shadowColor = "#CC5500"; ctx.shadowBlur = 14 * onAirA;
+        rr(W / 2 - 46, topY + 34, 92, 22, 5); ctx.fill(); ctx.shadowBlur = 0;
+        ctx.strokeStyle = `rgba(${AMBERr},${onAirA})`; ctx.lineWidth = 1.5; ctx.stroke();
+        ctx.fillStyle = "#FFFFFF";
+        ctx.font = "bold 11px monospace"; ctx.textAlign = "center";
+        ctx.fillText("● ON AIR", W / 2, topY + 49);
+
+        // ── LIVE badge ───────────────────────────────────────────────
+        const livePulse = Math.abs(Math.sin(t * 2.5));
+        ctx.fillStyle = `rgba(255,200,0,${0.7 + 0.3 * livePulse})`;
+        rr(W / 2 + 56, topY + 36, 52, 18, 4); ctx.fill();
+        ctx.strokeStyle = `rgba(${GOLDr},0.8)`; ctx.lineWidth = 1; ctx.stroke();
+        ctx.fillStyle = "#1a0a00"; ctx.font = "bold 9px monospace"; ctx.textAlign = "center";
+        ctx.fillText("● LIVE", W / 2 + 82, topY + 48);
+
+        // ── Acoustic foam panels — sand-wedge texture ─────────────────
+        const panelCount = 6, panelGap = 6;
+        const totalPanelW = W - 32;
+        const panelW2 = (totalPanelW - (panelCount - 1) * panelGap) / panelCount;
+        for (let pi = 0; pi < panelCount; pi++) {
+          const px = 16 + pi * (panelW2 + panelGap);
+          ctx.fillStyle = "#1c1004"; ctx.strokeStyle = `rgba(${AMBERr},0.28)`; ctx.lineWidth = 1;
+          rr(px, topY + 6, panelW2, 26, 3); ctx.fill(); ctx.stroke();
+          ctx.fillStyle = "#2a1808";
+          const cols = Math.floor(panelW2 / 12);
+          for (let ri = 0; ri < 2; ri++) {
+            for (let ci = 0; ci < cols; ci++) {
+              ctx.beginPath();
+              ctx.moveTo(px + 4 + ci * 12, topY + 8 + ri * 12 + 10);
+              ctx.lineTo(px + 4 + ci * 12 + 10, topY + 8 + ri * 12 + 10);
+              ctx.lineTo(px + 4 + ci * 12 + 5, topY + 8 + ri * 12);
+              ctx.closePath(); ctx.fill();
+            }
+          }
+        }
+
+        // ── Main broadcast desk — wide stone slab ─────────────────────
+        const deskWd = Math.floor(W * 0.65), deskHd = 42;
+        const deskXd = cx - deskWd / 2, deskYd = topY + 62;
+        const deskGrad2 = ctx.createLinearGradient(deskXd, deskYd, deskXd + deskWd, deskYd);
+        deskGrad2.addColorStop(0, "#2a1800"); deskGrad2.addColorStop(0.5, "#3c2400"); deskGrad2.addColorStop(1, "#2a1800");
+        ctx.fillStyle = deskGrad2; rr(deskXd, deskYd, deskWd, deskHd, 6); ctx.fill();
+        ctx.strokeStyle = GOLD; ctx.lineWidth = 2;
+        ctx.shadowColor = GOLD; ctx.shadowBlur = 8; ctx.stroke(); ctx.shadowBlur = 0;
+        // Stone slab highlight
+        ctx.fillStyle = `rgba(${GOLDr},0.06)`; ctx.fillRect(deskXd + 4, deskYd + 3, deskWd - 8, 8);
+
+        // Mixing console faders (14 channels)
+        for (let ci = 0; ci < 14; ci++) {
+          const ch = 8 + 22 * Math.abs(Math.sin(t * 3.5 + ci * 0.6));
+          ctx.fillStyle = ci < 5 ? TERRA : ci < 9 ? AMBER : GOLD;
+          ctx.fillRect(deskXd + 10 + ci * Math.floor((deskWd - 20) / 14), deskYd + 38 - ch, Math.floor((deskWd - 20) / 14) - 2, ch);
+          ctx.fillStyle = ci % 3 === 0 ? GOLD : AMBER;
+          ctx.beginPath();
+          ctx.arc(deskXd + 10 + ci * Math.floor((deskWd - 20) / 14) + 6, deskYd + 24, 4, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        // VU bar
+        for (let vi = 0; vi < 18; vi++) {
+          ctx.fillStyle = vi < 7 ? GOLD : vi < 12 ? AMBER : TERRA;
+          ctx.fillRect(deskXd + 10 + vi * Math.floor((deskWd - 20) / 18), deskYd + 6, Math.floor((deskWd - 20) / 18) - 1, 8);
+        }
+        // Mic on desk
+        ctx.fillStyle = SAND; ctx.strokeStyle = AMBER; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.ellipse(deskXd + deskWd - 24, deskYd + 14, 6, 10, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+        ctx.strokeStyle = GOLD; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.moveTo(deskXd + deskWd - 24, deskYd + 24); ctx.lineTo(deskXd + deskWd - 24, deskYd + 36); ctx.stroke();
+        // Coffee mug (papyrus cup)
+        ctx.fillStyle = "#E8C080"; ctx.strokeStyle = AMBER; ctx.lineWidth = 1;
+        rr(deskXd + 14, deskYd + 20, 14, 16, 3); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = "rgba(40,20,0,0.7)"; ctx.fillRect(deskXd + 16, deskYd + 22, 10, 10);
+        for (let si = 0; si < 2; si++) {
+          ctx.strokeStyle = `rgba(${GOLDr},${0.3 + 0.15 * Math.sin(t * 2 + si)})`; ctx.lineWidth = 0.8; ctx.lineCap = "round";
+          ctx.beginPath(); ctx.moveTo(deskXd + 19 + si * 4 + Math.sin(t * 2 + si) * 2, deskYd + 20);
+          ctx.lineTo(deskXd + 17 + si * 4 - Math.sin(t * 2 + si) * 2, deskYd + 14); ctx.stroke();
+          ctx.lineCap = "butt";
+        }
+
+        // ── Left tech desk ────────────────────────────────────────────
+        const lDeskX = W * 0.07, lDeskY = H * 0.41;
+        ctx.fillStyle = "#2a1800"; ctx.strokeStyle = `rgba(${AMBERr},0.5)`; ctx.lineWidth = 1.5;
+        rr(lDeskX, lDeskY, 88, 44, 4); ctx.fill(); ctx.stroke();
+        // Dual monitors
+        ctx.fillStyle = "#0a0602"; ctx.strokeStyle = `rgba(${GOLDr},0.4)`; ctx.lineWidth = 1;
+        rr(lDeskX + 5, lDeskY + 4, 34, 28, 2); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = "#1a0c00"; ctx.fillRect(lDeskX + 7, lDeskY + 6, 30, 22);
+        // Waveform on monitor
+        ctx.strokeStyle = `rgba(${GOLDr},0.85)`; ctx.lineWidth = 1; ctx.beginPath();
+        for (let wx = 0; wx < 28; wx += 2) {
+          const wy = lDeskY + 17 + 6 * Math.sin(t * 5 + wx * 0.3);
+          wx === 0 ? ctx.moveTo(lDeskX + 8 + wx, wy) : ctx.lineTo(lDeskX + 8 + wx, wy);
+        }
+        ctx.stroke();
+        rr(lDeskX + 46, lDeskY + 4, 34, 28, 2); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = "#120a00"; ctx.fillRect(lDeskX + 48, lDeskY + 6, 30, 22);
+        // Playlist on second monitor
+        ctx.fillStyle = GOLD; ctx.font = "bold 4px monospace"; ctx.textAlign = "left";
+        ["▶ DAWN HYMN","  NILE FLOW","  SAND WIND"].forEach((tr, ti) => {
+          ctx.fillStyle = ti === 0 ? GOLD : `rgba(${AMBERr},0.6)`;
+          ctx.fillText(tr, lDeskX + 49, lDeskY + 14 + ti * 8);
+        });
+        // Scroll (papyrus) on desk
+        ctx.fillStyle = "#D4A860"; ctx.strokeStyle = TERRA; ctx.lineWidth = 0.8;
+        rr(lDeskX + 4, lDeskY + 36, 40, 6, 2); ctx.fill(); ctx.stroke();
+        ctx.strokeStyle = `rgba(${AMBERr},0.3)`; ctx.lineWidth = 0.5;
+        for (let li = 0; li < 4; li++) {
+          ctx.beginPath(); ctx.moveTo(lDeskX + 8 + li * 9, lDeskY + 37); ctx.lineTo(lDeskX + 8 + li * 9, lDeskY + 41); ctx.stroke();
+        }
+
+        // ── Right producer desk ───────────────────────────────────────
+        const rDeskX = W * 0.73, rDeskY = H * 0.41;
+        ctx.fillStyle = "#2a1800"; ctx.strokeStyle = `rgba(${AMBERr},0.5)`; ctx.lineWidth = 1.5;
+        rr(rDeskX, rDeskY, 88, 44, 4); ctx.fill(); ctx.stroke();
+        // Wide DAW monitor
+        ctx.fillStyle = "#0a0602"; ctx.strokeStyle = `rgba(${GOLDr},0.4)`; ctx.lineWidth = 1;
+        rr(rDeskX + 4, rDeskY + 4, 80, 28, 2); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = "#160e00"; ctx.fillRect(rDeskX + 6, rDeskY + 6, 76, 24);
+        // Piano roll on DAW
+        for (let pr = 0; pr < 8; pr++) {
+          const prX = rDeskX + 8 + pr * 9;
+          ctx.fillStyle = pr % 3 === 0 ? `rgba(${GOLDr},0.7)` : pr % 3 === 1 ? `rgba(${AMBERr},0.5)` : `rgba(${SANDr},0.3)`;
+          ctx.fillRect(prX, rDeskY + 10 + Math.floor(Math.abs(Math.sin(t * 2 + pr)) * 10), 7, 4 + Math.floor(Math.abs(Math.sin(t * 1.5 + pr * 0.7)) * 8));
+        }
+        ctx.fillStyle = GOLD; ctx.font = "bold 4px monospace"; ctx.textAlign = "center";
+        ctx.fillText("DESERT SESSION", rDeskX + 44, rDeskY + 30);
+        // Vinyl records stacked on desk
+        for (let vi = 0; vi < 4; vi++) {
+          ctx.fillStyle = vi % 2 === 0 ? "#1a0800" : "#240e00";
+          ctx.strokeStyle = `rgba(${AMBERr},0.4)`; ctx.lineWidth = 0.8;
+          ctx.beginPath(); ctx.arc(rDeskX + 10 + vi * 3, rDeskY + 38, 5, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+          ctx.fillStyle = TERRA; ctx.beginPath(); ctx.arc(rDeskX + 10 + vi * 3, rDeskY + 38, 1.5, 0, Math.PI * 2); ctx.fill();
+        }
+
+        // ── Equipment rack (left wall) ────────────────────────────────
+        const rackXd = W * 0.04, rackYd = H * 0.58;
+        ctx.fillStyle = "#1a0e02"; ctx.strokeStyle = `rgba(${AMBERr},0.45)`; ctx.lineWidth = 1.5;
+        rr(rackXd, rackYd, 64, 120, 4); ctx.fill(); ctx.stroke();
+        const rackUnitsD = [
+          { col: GOLD, label: "AMP" }, { col: AMBER, label: "EQ" },
+          { col: SAND, label: "COMP" }, { col: TERRA, label: "FX" },
+          { col: GOLD, label: "OUT" }, { col: AMBER, label: "PRE" },
+        ];
+        for (let ri = 0; ri < rackUnitsD.length; ri++) {
+          const ru = rackUnitsD[ri];
+          const ruy = rackYd + 8 + ri * 18;
+          ctx.fillStyle = "#110800"; ctx.strokeStyle = ru.col + "55"; ctx.lineWidth = 1;
+          ctx.fillRect(rackXd + 4, ruy, 56, 14);
+          ctx.strokeRect(rackXd + 4, ruy, 56, 14);
+          ctx.fillStyle = ru.col; ctx.shadowColor = ru.col; ctx.shadowBlur = 4;
+          ctx.fillRect(rackXd + 7, ruy + 4, 5, 6); ctx.shadowBlur = 0;
+          ctx.fillStyle = "#2a1400"; ctx.beginPath(); ctx.arc(rackXd + 52, ruy + 7, 4, 0, Math.PI * 2); ctx.fill();
+          ctx.strokeStyle = ru.col + "88"; ctx.lineWidth = 0.8; ctx.stroke();
+          ctx.fillStyle = ru.col; ctx.font = "4px monospace"; ctx.textAlign = "center";
+          ctx.fillText(ru.label, rackXd + 32, ruy + 9);
+        }
+        ctx.fillStyle = `rgba(${GOLDr},0.5)`; ctx.font = "bold 5px monospace"; ctx.textAlign = "center";
+        ctx.fillText("RACK", rackXd + 32, rackYd + 114);
+
+        // ── Obelisk broadcast tower (right wall) ─────────────────────
+        const towerXd = W - 66, towerBaseYd = H * 0.78;
+        ctx.strokeStyle = AMBER; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(towerXd, towerBaseYd); ctx.lineTo(towerXd - 20, towerBaseYd - 88); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(towerXd, towerBaseYd); ctx.lineTo(towerXd + 20, towerBaseYd - 88); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(towerXd - 13, towerBaseYd - 34); ctx.lineTo(towerXd + 13, towerBaseYd - 34); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(towerXd - 17, towerBaseYd - 62); ctx.lineTo(towerXd + 17, towerBaseYd - 62); ctx.stroke();
+        for (let wi = 0; wi < 4; wi++) {
+          const wa = 0.18 + 0.12 * Math.sin(t * 3 + wi);
+          ctx.strokeStyle = `rgba(${GOLDr},${wa})`; ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.arc(towerXd, towerBaseYd - 92, 12 + wi * 14, Math.PI * 1.1, Math.PI * 1.9); ctx.stroke();
+        }
+        const blinkD = Math.sin(t * 4) > 0;
+        ctx.fillStyle = blinkD ? `rgba(${AMBERr},0.9)` : TERRA;
+        ctx.shadowColor = AMBER; ctx.shadowBlur = blinkD ? 12 : 4;
+        ctx.beginPath(); ctx.arc(towerXd, towerBaseYd - 92, 5, 0, Math.PI * 2); ctx.fill();
+        ctx.shadowBlur = 0;
+
+        // ── Three studio booths (bottom half) ────────────────────────
+        for (let bi = 0; bi < 3; bi++) {
+          const bx = 24 + bi * Math.floor((W - 48) / 3), by = H * 0.60;
+          const bw = Math.floor((W - 48) / 3) - 6, bh = Math.floor(H * 0.31);
+          ctx.fillStyle = "#160c02"; ctx.strokeStyle = bi === 1 ? GOLD : AMBER; ctx.lineWidth = 1.5;
+          rr(bx, by, bw, bh, 6); ctx.fill(); ctx.stroke();
+          ctx.fillStyle = bi === 1 ? GOLD : AMBER;
+          ctx.font = "bold 7px monospace"; ctx.textAlign = "center";
+          ctx.fillText(bi === 0 ? "BOOTH A" : bi === 1 ? "MAIN STUDIO" : "BOOTH B", bx + bw / 2, by + 14);
+          // Mic stand
+          ctx.strokeStyle = SAND; ctx.lineWidth = 1.5;
+          ctx.beginPath(); ctx.moveTo(bx + bw / 2, by + 22); ctx.lineTo(bx + bw / 2, by + 52); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(bx + bw / 2 - 14, by + 52); ctx.lineTo(bx + bw / 2 + 14, by + 52); ctx.stroke();
+          ctx.fillStyle = SAND;
+          ctx.beginPath(); ctx.ellipse(bx + bw / 2, by + 18, 8, 12, 0, 0, Math.PI * 2); ctx.fill();
+          ctx.strokeStyle = `rgba(${SANDr},0.4)`; ctx.lineWidth = 0.8;
+          for (let li = 0; li < 4; li++) {
+            ctx.beginPath(); ctx.moveTo(bx + bw / 2 - 6, by + 12 + li * 5); ctx.lineTo(bx + bw / 2 + 6, by + 12 + li * 5); ctx.stroke();
+          }
+          // Pop filter
+          ctx.strokeStyle = `rgba(${SANDr},0.5)`; ctx.lineWidth = 0.8;
+          ctx.beginPath(); ctx.arc(bx + bw / 2 + 14, by + 18, 9, 0, Math.PI * 2); ctx.stroke();
+          // Headphones on desk
+          ctx.fillStyle = "#1a0c00"; ctx.strokeStyle = AMBER; ctx.lineWidth = 0.8;
+          rr(bx + bw / 2 - 20, by + bh - 24, 40, 16, 3); ctx.fill(); ctx.stroke();
+
+          // Egyptian-robed human worker
+          const workerX = bx + bw / 2 + (bi === 1 ? 0 : bi === 0 ? 18 : -18);
+          const workerY = by + bh - 48;
+          ctx.save(); ctx.translate(workerX, workerY);
+          ctx.fillStyle = "rgba(0,0,0,0.3)";
+          ctx.beginPath(); ctx.ellipse(0, 22, 12, 5, 0, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = "#E8DCC0";
+          ctx.beginPath(); ctx.moveTo(-10, 0); ctx.lineTo(-12, 28); ctx.lineTo(12, 28); ctx.lineTo(10, 0); ctx.closePath(); ctx.fill();
+          ctx.strokeStyle = GOLD; ctx.lineWidth = 1.5;
+          ctx.beginPath(); ctx.moveTo(-12, 26); ctx.lineTo(12, 26); ctx.stroke();
+          ctx.fillStyle = "#A0682A";
+          ctx.beginPath(); ctx.arc(0, -14, 8, 0, Math.PI * 2); ctx.fill();
+          ctx.fillRect(-3, -6, 6, 7);
+          ctx.beginPath(); ctx.ellipse(-13, 8, 3, 8, -0.3, 0, Math.PI * 2); ctx.fill();
+          ctx.beginPath(); ctx.ellipse(13, 8, 3, 8, 0.3, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = "#1050AA";
+          ctx.beginPath(); ctx.moveTo(-9, -20); ctx.lineTo(-14, 2); ctx.lineTo(-7, -6); ctx.closePath(); ctx.fill();
+          ctx.beginPath(); ctx.moveTo(9, -20); ctx.lineTo(14, 2); ctx.lineTo(7, -6); ctx.closePath(); ctx.fill();
+          ctx.fillStyle = "#1040AA";
+          ctx.beginPath(); ctx.moveTo(-8, -22); ctx.quadraticCurveTo(0, -28, 8, -22); ctx.lineTo(6, -20); ctx.quadraticCurveTo(0, -25, -6, -20); ctx.closePath(); ctx.fill();
+          ctx.strokeStyle = GOLD; ctx.lineWidth = 1;
+          for (let hs = 0; hs < 3; hs++) {
+            ctx.beginPath(); ctx.moveTo(-8 + hs * 0.5, -20 + hs * 7); ctx.lineTo(-14 + hs * 0.5, 2); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(8 - hs * 0.5, -20 + hs * 7); ctx.lineTo(14 - hs * 0.5, 2); ctx.stroke();
+          }
+          ctx.fillStyle = "#1a0a00";
+          ctx.beginPath(); ctx.ellipse(-3, -14, 2.2, 1.5, 0, 0, Math.PI * 2); ctx.fill();
+          ctx.beginPath(); ctx.ellipse(3, -14, 2.2, 1.5, 0, 0, Math.PI * 2); ctx.fill();
+          if (bi === 1) {
+            ctx.strokeStyle = GOLD; ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.arc(0, -14, 10, Math.PI * 0.2, Math.PI * 0.8); ctx.stroke();
+            ctx.fillStyle = GOLD;
+            ctx.beginPath(); ctx.arc(-9, -8, 3.5, 0, Math.PI * 2); ctx.fill();
+            ctx.beginPath(); ctx.arc(9, -8, 3.5, 0, Math.PI * 2); ctx.fill();
+          }
+          ctx.fillStyle = GOLD; ctx.strokeStyle = AMBER; ctx.lineWidth = 0.8;
+          ctx.beginPath(); ctx.arc(0, -4, 6, Math.PI * 0.1, Math.PI * 0.9); ctx.fill(); ctx.stroke();
+          ctx.restore();
+        }
+
+        // ── Waveform display screen (center-left wall) ────────────────
+        const scrXd = W * 0.36, scrYd = H * 0.35, scrWd = 90, scrHd = 58;
+        ctx.fillStyle = "#100800"; ctx.strokeStyle = `rgba(${GOLDr},0.5)`; ctx.lineWidth = 1.5;
+        rr(scrXd, scrYd, scrWd, scrHd, 5); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = "#0a0500"; rr(scrXd + 3, scrYd + 3, scrWd - 6, scrHd - 6, 3); ctx.fill();
+        ctx.strokeStyle = `rgba(${GOLDr},0.9)`; ctx.lineWidth = 1.5; ctx.beginPath();
+        for (let wx = 0; wx < scrWd - 12; wx += 2) {
+          const amp = 8 + 7 * Math.sin(t * 3 + wx * 0.18);
+          const wy = scrYd + scrHd / 2 + amp * Math.sin(t * 7 + wx * 0.22);
+          wx === 0 ? ctx.moveTo(scrXd + 6 + wx, wy) : ctx.lineTo(scrXd + 6 + wx, wy);
+        }
+        ctx.stroke();
+        ctx.fillStyle = `rgba(${GOLDr},0.7)`; ctx.font = "5px monospace"; ctx.textAlign = "center";
+        ctx.fillText("LIVE SIGNAL", scrXd + scrWd / 2, scrYd + scrHd - 5);
+
+        // ── Playlist / now-playing display ────────────────────────────
+        const plXd = W * 0.52, plYd = H * 0.35, plWd = 90, plHd = 82;
+        ctx.fillStyle = "#100800"; ctx.strokeStyle = `rgba(${AMBERr},0.45)`; ctx.lineWidth = 1.5;
+        rr(plXd, plYd, plWd, plHd, 5); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = GOLD; ctx.font = "bold 5px monospace"; ctx.textAlign = "center";
+        ctx.fillText("▶ NOW PLAYING", plXd + plWd / 2, plYd + 12);
+        ctx.strokeStyle = `rgba(${GOLDr},0.3)`; ctx.lineWidth = 0.5;
+        ctx.beginPath(); ctx.moveTo(plXd + 5, plYd + 15); ctx.lineTo(plXd + plWd - 5, plYd + 15); ctx.stroke();
+        const desertTracks = ["DAWN HYMN","NILE FLOW","SAND WIND","PHARAOH BEAT","OASIS DUB"];
+        desertTracks.forEach((tr, ti) => {
+          const isActiveD = ti === Math.floor(t * 0.4) % desertTracks.length;
+          ctx.fillStyle = isActiveD ? GOLD : `rgba(${AMBERr},0.6)`;
+          ctx.font = isActiveD ? "bold 5px monospace" : "5px monospace";
+          ctx.textAlign = "left";
+          ctx.fillText((isActiveD ? "▶ " : "  ") + tr, plXd + 7, plYd + 27 + ti * 12);
+        });
+
+        // ── Oud / sistrum instruments on left wall ────────────────────
+        ctx.fillStyle = "#2a1800"; ctx.strokeStyle = `rgba(${AMBERr},0.35)`; ctx.lineWidth = 1;
+        rr(8, H * 0.49, 56, 8, 2); ctx.fill(); ctx.stroke();
+        ctx.save(); ctx.translate(36, H * 0.39);
+        ctx.fillStyle = "#6a3a10";
+        ctx.beginPath(); ctx.ellipse(0, 0, 12, 16, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = "#3a1a04";
+        ctx.beginPath(); ctx.arc(0, 0, 5, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = GOLD; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(0, -16); ctx.lineTo(0, -30); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(-6, -28); ctx.lineTo(6, -28); ctx.stroke();
+        ctx.restore();
+
+        // ── Reel-to-reel recorders ────────────────────────────────────
+        for (let ri = 0; ri < 2; ri++) {
+          const rx = W * 0.05 + ri * 80, ry = topY + 120;
+          ctx.fillStyle = "#1e1004"; ctx.strokeStyle = AMBER; ctx.lineWidth = 1;
+          rr(rx, ry, 72, 84, 5); ctx.fill(); ctx.stroke();
+          [[rx + 16, ry + 22], [rx + 56, ry + 22]].forEach(([rx2, ry2]) => {
+            ctx.strokeStyle = GOLD; ctx.lineWidth = 1.5;
+            ctx.beginPath(); ctx.arc(rx2, ry2, 14, 0, Math.PI * 2); ctx.stroke();
+            for (let sp = 0; sp < 4; sp++) {
+              const sa = sp * Math.PI / 2 + t * (ri % 2 === 0 ? 1.2 : -1.2);
+              ctx.beginPath(); ctx.moveTo(rx2, ry2); ctx.lineTo(rx2 + Math.cos(sa) * 12, ry2 + Math.sin(sa) * 12); ctx.stroke();
+            }
+            ctx.fillStyle = `rgba(${GOLDr},0.15)`; ctx.beginPath(); ctx.arc(rx2, ry2, 14, 0, Math.PI * 2); ctx.fill();
+          });
+          ctx.fillStyle = AMBER; ctx.strokeStyle = TERRA; ctx.lineWidth = 0.8;
+          rr(rx + 26, ry + 46, 20, 10, 2); ctx.fill(); ctx.stroke();
+          ctx.fillStyle = GOLD; ctx.font = "bold 5px monospace"; ctx.textAlign = "center";
+          ctx.fillText(`TAPE ${ri + 1}`, rx + 36, ry + 72);
+        }
+
+        // ── Animated EQ bars (32 channels) ───────────────────────────
+        const eqBaseY = H - 52;
+        for (let ei = 0; ei < 32; ei++) {
+          const eqX = 20 + ei * Math.floor((W - 40) / 32);
+          const eqH2 = 8 + 20 * Math.abs(Math.sin(t * 4.5 + ei * 0.38));
+          ctx.fillStyle = ei < 11 ? GOLD : ei < 22 ? AMBER : TERRA;
+          ctx.fillRect(eqX, eqBaseY - eqH2, Math.floor((W - 40) / 32) - 1, eqH2);
+        }
+        ctx.fillStyle = `rgba(${GOLDr},0.15)`;
+        ctx.fillRect(20, eqBaseY - 30, W - 40, 30);
+
+        // ── Ambient sand particle drift ───────────────────────────────
+        for (let i = 0; i < 14; i++) {
+          const px = (t * 20 + i * 72) % W;
+          const py = topY + 10 + Math.sin(t * 0.8 + i * 1.7) * 18 + (i * (H - topY - 30)) / 14;
+          const alpha = Math.sin(t * 2 + i) * 0.2 + 0.25;
+          ctx.fillStyle = i % 2 === 0 ? `rgba(${GOLDr},${alpha})` : `rgba(${AMBERr},${alpha})`;
+          ctx.beginPath(); ctx.arc(px, py, i % 4 === 0 ? 1.8 : 1, 0, Math.PI * 2); ctx.fill();
+        }
+
+        // ── News ticker at bottom ─────────────────────────────────────
+        const tkYd = H - 22;
+        ctx.fillStyle = "rgba(50,25,0,0.88)"; ctx.fillRect(0, tkYd, W, 18);
+        ctx.strokeStyle = `rgba(${GOLDr},0.6)`; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(0, tkYd); ctx.lineTo(W, tkYd); ctx.stroke();
+        const tickerTextD = "⬡ VOICE OF THE SANDS LIVE  ✦  DESERT NEWS  ✦  SANDSTORM WARNING: PYRAMID SECTOR  ✦  PHARAOH SPOTTED NEAR OASIS  ✦  SAND MARKETS UP 3.8%  ✦  ";
+        const tickerXd = W - (t * 55) % (W + 1400);
+        ctx.save(); ctx.beginPath(); ctx.rect(0, tkYd, W, 18); ctx.clip();
+        ctx.fillStyle = GOLD; ctx.font = "bold 7px monospace"; ctx.textAlign = "left";
+        ctx.fillText(tickerTextD, tickerXd, tkYd + 13);
+        ctx.restore();
+
+        // ── Station sign at bottom ────────────────────────────────────
+        ctx.fillStyle = GOLD; ctx.shadowColor = AMBER; ctx.shadowBlur = 10;
+        ctx.font = "bold 10px Orbitron, monospace"; ctx.textAlign = "center";
+        ctx.fillText("⬡ PYRAMID RADIO ⬡", cx, H - 27);
+        ctx.shadowBlur = 0;
         return;
       }
       if (!!this.map?.config?.galactica) {
