@@ -4190,6 +4190,287 @@ class GameMap {
               }
             }
 
+          } else if (cfg.ocean) {
+            // ═══ OCEAN DEPTHS: Varied underwater structures — full tile ═══
+            const bseed = (x * 41 + y * 59) % 7;
+            const baseCol = this.buildingColors[y][x];
+
+            // Full-tile base — deep ocean building color, no floor bleed
+            ctx.fillStyle = baseCol;
+            ctx.fillRect(wx, wy, S, S);
+
+            if (bseed === 0) {
+              // ── CORAL TOWER — tall spire with sea-anemone crown ────
+              // Main tower shaft, full tile width
+              ctx.fillStyle = 'rgba(0,0,0,0.14)';
+              ctx.fillRect(wx + S*0.22, wy, S*0.56, S);
+              // Lit face
+              ctx.fillStyle = 'rgba(255,255,255,0.07)';
+              ctx.fillRect(wx + S*0.22, wy, S*0.28, S);
+              // Coral branch clusters at mid and base
+              const coralCol = 'rgba(255,100,120,0.80)';
+              ctx.fillStyle = coralCol;
+              [[S*0.14,S*0.32],[S*0.70,S*0.40],[S*0.10,S*0.60],[S*0.76,S*0.66]].forEach(([bx2,by2]) => {
+                ctx.beginPath(); ctx.arc(wx+bx2, wy+by2, S*0.09, 0, Math.PI*2); ctx.fill();
+                ctx.beginPath(); ctx.arc(wx+bx2-S*0.07, wy+by2-S*0.06, S*0.05, 0, Math.PI*2); ctx.fill();
+                ctx.beginPath(); ctx.arc(wx+bx2+S*0.07, wy+by2-S*0.07, S*0.05, 0, Math.PI*2); ctx.fill();
+              });
+              // Anemone crown (top of tower)
+              ctx.fillStyle = 'rgba(255,140,80,0.85)';
+              for (let ai = 0; ai < 7; ai++) {
+                const angle = (ai / 7) * Math.PI * 2;
+                ctx.beginPath();
+                ctx.moveTo(wx + S*0.5, wy + S*0.06);
+                ctx.quadraticCurveTo(
+                  wx + S*0.5 + Math.cos(angle)*S*0.22, wy + Math.sin(angle)*S*0.14,
+                  wx + S*0.5 + Math.cos(angle)*S*0.30, wy - S*0.04 + Math.sin(angle)*S*0.08
+                );
+                ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(255,140,80,0.80)'; ctx.stroke();
+              }
+              // Bioluminescent dots up shaft
+              ctx.fillStyle = 'rgba(80,255,220,0.60)';
+              for (let di = 0; di < 6; di++) {
+                ctx.beginPath(); ctx.arc(wx+S*0.5+(di%2?S*0.08:-S*0.08), wy+S*(0.15+di*0.14), S*0.025, 0, Math.PI*2); ctx.fill();
+              }
+
+            } else if (bseed === 1) {
+              // ── SUNKEN SHIPWRECK HULL — full tile ─────────────────
+              // Hull base fills full tile
+              ctx.fillStyle = 'rgba(0,0,0,0.20)';
+              ctx.fillRect(wx, wy + S*0.30, S, S*0.70);
+              // Hull planking (horizontal bands)
+              ctx.fillStyle = 'rgba(255,255,255,0.06)';
+              for (let pi = 0; pi < 5; pi++) ctx.fillRect(wx, wy+S*0.30+pi*S*0.14, S, S*0.07);
+              // Broken mast (diagonal)
+              ctx.strokeStyle = 'rgba(120,80,40,0.90)'; ctx.lineWidth = 4;
+              ctx.beginPath(); ctx.moveTo(wx+S*0.35, wy+S*0.28); ctx.lineTo(wx+S*0.72, wy); ctx.stroke();
+              ctx.lineWidth = 2;
+              ctx.beginPath(); ctx.moveTo(wx+S*0.72, wy); ctx.lineTo(wx+S*0.90, wy+S*0.12); ctx.stroke();
+              // Sail remnant (tattered)
+              ctx.fillStyle = 'rgba(200,180,130,0.45)';
+              ctx.beginPath();
+              ctx.moveTo(wx+S*0.55, wy+S*0.02); ctx.lineTo(wx+S*0.88, wy+S*0.10);
+              ctx.lineTo(wx+S*0.80, wy+S*0.26); ctx.lineTo(wx+S*0.50, wy+S*0.18);
+              ctx.closePath(); ctx.fill();
+              // Portholes
+              ctx.fillStyle = 'rgba(80,200,255,0.50)';
+              ctx.strokeStyle = 'rgba(100,140,100,0.70)'; ctx.lineWidth = 1.5;
+              [[S*0.14,S*0.48],[S*0.40,S*0.52],[S*0.66,S*0.48],[S*0.84,S*0.54]].forEach(([px,py]) => {
+                ctx.beginPath(); ctx.arc(wx+px, wy+py, S*0.06, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+              });
+              // Seaweed tufts at base
+              ctx.strokeStyle = 'rgba(30,160,80,0.70)'; ctx.lineWidth = 2;
+              for (let sw = 0; sw < 6; sw++) {
+                const sx = wx + S*(0.08 + sw*0.16);
+                ctx.beginPath(); ctx.moveTo(sx, wy+S); ctx.quadraticCurveTo(sx+S*0.06, wy+S*0.80, sx-S*0.04, wy+S*0.68); ctx.stroke();
+              }
+
+            } else if (bseed === 2) {
+              // ── DEEP-SEA DOME STATION — full tile ─────────────────
+              // Dome fills upper tile, base fills lower
+              ctx.fillStyle = 'rgba(0,0,0,0.16)';
+              ctx.fillRect(wx, wy+S*0.50, S, S*0.50);
+              // Dome arc (full width)
+              ctx.fillStyle = baseCol;
+              ctx.beginPath(); ctx.arc(wx+S*0.5, wy+S*0.52, S*0.50, Math.PI, 0); ctx.fill();
+              // Dome glass sheen
+              ctx.fillStyle = 'rgba(80,220,255,0.18)';
+              ctx.beginPath(); ctx.arc(wx+S*0.5, wy+S*0.52, S*0.50, Math.PI+0.3, -0.3); ctx.fill();
+              // Glass panel lines
+              ctx.strokeStyle = 'rgba(100,200,255,0.25)'; ctx.lineWidth = 1;
+              for (let dl = 0; dl < 5; dl++) {
+                ctx.beginPath(); ctx.arc(wx+S*0.5, wy+S*0.52, S*(0.12+dl*0.08), Math.PI, 0); ctx.stroke();
+              }
+              ctx.beginPath(); ctx.moveTo(wx+S*0.5, wy+S*0.02); ctx.lineTo(wx+S*0.5, wy+S*0.52); ctx.stroke();
+              ctx.beginPath(); ctx.moveTo(wx+S*0.14, wy+S*0.18); ctx.lineTo(wx+S*0.5, wy+S*0.52); ctx.stroke();
+              ctx.beginPath(); ctx.moveTo(wx+S*0.86, wy+S*0.18); ctx.lineTo(wx+S*0.5, wy+S*0.52); ctx.stroke();
+              // Antenna on top
+              ctx.strokeStyle = 'rgba(150,220,255,0.80)'; ctx.lineWidth = 2;
+              ctx.beginPath(); ctx.moveTo(wx+S*0.5, wy+S*0.02); ctx.lineTo(wx+S*0.5, wy-S*0.02); ctx.stroke();
+              ctx.fillStyle = 'rgba(80,255,200,0.90)'; ctx.shadowColor = '#00FFCC'; ctx.shadowBlur = 6;
+              ctx.beginPath(); ctx.arc(wx+S*0.5, wy, S*0.04, 0, Math.PI*2); ctx.fill();
+              ctx.shadowBlur = 0;
+              // Support pillars at base
+              ctx.fillStyle = 'rgba(0,0,0,0.22)';
+              [S*0.12, S*0.44, S*0.56, S*0.88].forEach(px => ctx.fillRect(wx+px-S*0.04, wy+S*0.50, S*0.08, S*0.50));
+
+            } else if (bseed === 3) {
+              // ── KELP FOREST TOWER — full tile ─────────────────────
+              // Stone base fills full tile
+              ctx.fillStyle = 'rgba(0,0,0,0.18)';
+              ctx.fillRect(wx + S*0.28, wy, S*0.44, S);
+              // Lit face
+              ctx.fillStyle = 'rgba(255,255,255,0.06)';
+              ctx.fillRect(wx + S*0.28, wy, S*0.22, S);
+              // Dense kelp fronds from left edge to right (fills tile width)
+              const kelpCols = ['rgba(20,150,60,0.85)','rgba(30,180,70,0.80)','rgba(15,130,50,0.90)','rgba(40,200,80,0.75)'];
+              for (let ki = 0; ki < 8; ki++) {
+                const kx = wx + S*(0.04 + ki*0.13);
+                const kH  = S*(0.55 + (ki%3)*0.15);
+                ctx.strokeStyle = kelpCols[ki%4]; ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.moveTo(kx, wy + S);
+                ctx.bezierCurveTo(
+                  kx + S*(ki%2?0.10:-0.10), wy + S - kH*0.4,
+                  kx + S*(ki%2?-0.08:0.08), wy + S - kH*0.7,
+                  kx + S*(ki%2?0.06:-0.06), wy + S - kH
+                );
+                ctx.stroke();
+                // Leaf blade
+                ctx.fillStyle = kelpCols[ki%4];
+                ctx.beginPath(); ctx.ellipse(kx + S*(ki%2?0.07:-0.07), wy+S-kH, S*0.07, S*0.03, ki*0.5, 0, Math.PI*2); ctx.fill();
+              }
+              // Glowing jellyfish drifting alongside
+              ctx.fillStyle = 'rgba(180,100,255,0.55)';
+              ctx.shadowColor = '#CC66FF'; ctx.shadowBlur = 8;
+              [[S*0.08,S*0.28],[S*0.88,S*0.44]].forEach(([jx,jy]) => {
+                ctx.beginPath(); ctx.arc(wx+jx, wy+jy, S*0.08, 0, Math.PI*2); ctx.fill();
+                ctx.strokeStyle = 'rgba(200,150,255,0.60)'; ctx.lineWidth = 1;
+                for (let tt = 0; tt < 4; tt++) {
+                  ctx.beginPath(); ctx.moveTo(wx+jx+S*(tt*0.04-0.06), wy+jy+S*0.08); ctx.lineTo(wx+jx+S*(tt*0.04-0.04), wy+jy+S*0.20); ctx.stroke();
+                }
+              });
+              ctx.shadowBlur = 0;
+
+            } else if (bseed === 4) {
+              // ── SUBMARINE DOCK / UNDERWATER HANGAR ────────────────
+              // Hangar body fills full tile
+              ctx.fillStyle = 'rgba(0,0,0,0.22)';
+              ctx.fillRect(wx, wy+S*0.08, S, S*0.92);
+              // Roof arch
+              ctx.fillStyle = baseCol;
+              ctx.beginPath(); ctx.arc(wx+S*0.5, wy+S*0.08, S*0.50, Math.PI, 0); ctx.fill();
+              // Riveted metal panels (horizontal lines)
+              ctx.strokeStyle = 'rgba(255,255,255,0.08)'; ctx.lineWidth = 1;
+              for (let ri = 0; ri < 6; ri++) ctx.strokeRect(wx+S*0.05, wy+S*(0.14+ri*0.14), S*0.90, S*0.12);
+              // Sub nose poking out of hangar door (bottom center)
+              ctx.fillStyle = '#2a5a7a';
+              ctx.beginPath();
+              ctx.moveTo(wx+S*0.34, wy+S); ctx.lineTo(wx+S*0.34, wy+S*0.72);
+              ctx.quadraticCurveTo(wx+S*0.50, wy+S*0.60, wx+S*0.66, wy+S*0.72);
+              ctx.lineTo(wx+S*0.66, wy+S); ctx.closePath(); ctx.fill();
+              // Conning tower
+              ctx.fillStyle = '#1e4a6a';
+              ctx.fillRect(wx+S*0.44, wy+S*0.56, S*0.12, S*0.16);
+              // Periscope
+              ctx.strokeStyle = '#3a7aaa'; ctx.lineWidth = 2;
+              ctx.beginPath(); ctx.moveTo(wx+S*0.50, wy+S*0.56); ctx.lineTo(wx+S*0.50, wy+S*0.44); ctx.stroke();
+              ctx.beginPath(); ctx.moveTo(wx+S*0.50, wy+S*0.44); ctx.lineTo(wx+S*0.60, wy+S*0.44); ctx.stroke();
+              // Porthole lights on hangar
+              ctx.fillStyle = 'rgba(80,220,255,0.55)';
+              [[S*0.14,S*0.30],[S*0.82,S*0.30],[S*0.14,S*0.54],[S*0.82,S*0.54]].forEach(([px,py]) => {
+                ctx.beginPath(); ctx.arc(wx+px, wy+py, S*0.05, 0, Math.PI*2); ctx.fill();
+              });
+
+            } else if (bseed === 5) {
+              // ── CORAL REEF HEXAGONAL TEMPLE — full tile ────────────
+              const hcx = wx+S*0.5, hcy = wy+S*0.5;
+              // Outer hexagon fills nearly full tile
+              ctx.fillStyle = baseCol;
+              ctx.beginPath();
+              for (let i = 0; i < 6; i++) {
+                const a = (Math.PI/3)*i - Math.PI/2;
+                if (i===0) ctx.moveTo(hcx+Math.cos(a)*S*0.49, hcy+Math.sin(a)*S*0.49);
+                else ctx.lineTo(hcx+Math.cos(a)*S*0.49, hcy+Math.sin(a)*S*0.49);
+              }
+              ctx.closePath(); ctx.fill();
+              // Shadow face
+              ctx.fillStyle = 'rgba(0,0,0,0.16)';
+              ctx.beginPath();
+              for (let i = 3; i < 6; i++) {
+                const a = (Math.PI/3)*i - Math.PI/2;
+                const pt = [hcx+Math.cos(a)*S*0.49, hcy+Math.sin(a)*S*0.49];
+                if (i===3) { ctx.moveTo(hcx,hcy); ctx.lineTo(pt[0],pt[1]); }
+                else ctx.lineTo(pt[0],pt[1]);
+              }
+              ctx.closePath(); ctx.fill();
+              // Inner coral ring
+              ctx.fillStyle = 'rgba(255,100,140,0.45)';
+              ctx.beginPath();
+              for (let i = 0; i < 6; i++) {
+                const a = (Math.PI/3)*i - Math.PI/2;
+                if (i===0) ctx.moveTo(hcx+Math.cos(a)*S*0.28, hcy+Math.sin(a)*S*0.28);
+                else ctx.lineTo(hcx+Math.cos(a)*S*0.28, hcy+Math.sin(a)*S*0.28);
+              }
+              ctx.closePath(); ctx.fill();
+              // Coral polyps on each hex vertex
+              ctx.fillStyle = 'rgba(255,120,100,0.80)';
+              for (let i = 0; i < 6; i++) {
+                const a = (Math.PI/3)*i - Math.PI/2;
+                ctx.beginPath(); ctx.arc(hcx+Math.cos(a)*S*0.40, hcy+Math.sin(a)*S*0.40, S*0.06, 0, Math.PI*2); ctx.fill();
+              }
+              // Bioluminescent center
+              ctx.fillStyle = 'rgba(80,255,220,0.70)';
+              ctx.shadowColor = '#00FFCC'; ctx.shadowBlur = 8;
+              ctx.beginPath(); ctx.arc(hcx, hcy, S*0.10, 0, Math.PI*2); ctx.fill();
+              ctx.shadowBlur = 0;
+
+            } else {
+              // ── UNDERWATER RESEARCH STATION — full tile ────────────
+              // Main block fills full tile
+              ctx.fillStyle = 'rgba(0,0,0,0.18)';
+              ctx.fillRect(wx, wy+S*0.16, S, S*0.84);
+              // Roof panel
+              ctx.fillStyle = 'rgba(255,255,255,0.07)';
+              ctx.fillRect(wx, wy+S*0.12, S, S*0.08);
+              // Horizontal seam stripes
+              ctx.fillStyle = 'rgba(255,255,255,0.05)';
+              for (let ri = 0; ri < 4; ri++) ctx.fillRect(wx, wy+S*(0.24+ri*0.19), S, S*0.08);
+              // Antenna array on roof
+              ctx.strokeStyle = 'rgba(100,220,255,0.75)'; ctx.lineWidth = 1.5;
+              [S*0.20,S*0.50,S*0.80].forEach(ax => {
+                ctx.beginPath(); ctx.moveTo(wx+ax, wy+S*0.12); ctx.lineTo(wx+ax, wy); ctx.stroke();
+                ctx.fillStyle = 'rgba(80,255,200,0.80)'; ctx.shadowColor = '#00FFCC'; ctx.shadowBlur = 5;
+                ctx.beginPath(); ctx.arc(wx+ax, wy, S*0.03, 0, Math.PI*2); ctx.fill();
+                ctx.shadowBlur = 0;
+              });
+              // Porthole windows
+              ctx.fillStyle = 'rgba(80,200,255,0.55)';
+              ctx.strokeStyle = 'rgba(60,160,200,0.60)'; ctx.lineWidth = 1.5;
+              [[S*0.18,S*0.38],[S*0.50,S*0.38],[S*0.82,S*0.38],
+               [S*0.18,S*0.62],[S*0.50,S*0.62],[S*0.82,S*0.62]].forEach(([px,py]) => {
+                ctx.beginPath(); ctx.arc(wx+px, wy+py, S*0.07, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+                // Inner glow
+                ctx.fillStyle = 'rgba(200,240,255,0.30)';
+                ctx.beginPath(); ctx.arc(wx+px-S*0.02, wy+py-S*0.02, S*0.035, 0, Math.PI*2); ctx.fill();
+                ctx.fillStyle = 'rgba(80,200,255,0.55)';
+              });
+              // Airlock door
+              ctx.fillStyle = 'rgba(20,80,120,0.80)';
+              ctx.fillRect(wx+S*0.38, wy+S*0.72, S*0.24, S*0.28);
+              ctx.strokeStyle = 'rgba(80,180,220,0.50)'; ctx.lineWidth = 1;
+              ctx.strokeRect(wx+S*0.38, wy+S*0.72, S*0.24, S*0.28);
+            }
+
+            // ── Shared: ocean edge shimmer ──────────────────────────
+            ctx.strokeStyle = 'rgba(40,160,220,0.40)';
+            ctx.lineWidth = 1.5;
+            ctx.strokeRect(wx + 2, wy + 2, S - 4, S - 4);
+
+            // Teal neon accent border
+            ctx.strokeStyle = cfg.neonColors[(x + y) % cfg.neonColors.length] + '55';
+            ctx.lineWidth = 1.5;
+            ctx.strokeRect(wx + 5, wy + 5, S - 10, S - 10);
+
+            // Porthole-style windows (alternate tiles)
+            if ((x + y) % 2 === 0) {
+              ctx.fillStyle = 'rgba(80,220,255,0.42)';
+              ctx.beginPath(); ctx.arc(wx+S*0.25, wy+S*0.45, S*0.08, 0, Math.PI*2); ctx.fill();
+              ctx.beginPath(); ctx.arc(wx+S*0.75, wy+S*0.45, S*0.08, 0, Math.PI*2); ctx.fill();
+              ctx.fillStyle = 'rgba(40,180,220,0.28)';
+              ctx.beginPath(); ctx.arc(wx+S*0.25, wy+S*0.65, S*0.08, 0, Math.PI*2); ctx.fill();
+              ctx.beginPath(); ctx.arc(wx+S*0.75, wy+S*0.65, S*0.08, 0, Math.PI*2); ctx.fill();
+            }
+
+            // Occasional bioluminescent bubble cluster
+            if ((x*7+y*11) % 6 === 0) {
+              ctx.fillStyle = 'rgba(80,255,200,0.60)';
+              ctx.shadowColor = '#00FFCC'; ctx.shadowBlur = 5;
+              ctx.beginPath(); ctx.arc(wx+S*0.86, wy+S*0.28, 4, 0, Math.PI*2); ctx.fill();
+              ctx.beginPath(); ctx.arc(wx+S*0.80, wy+S*0.20, 2.5, 0, Math.PI*2); ctx.fill();
+              ctx.shadowBlur = 0;
+            }
+
           } else if (cfg.snow) {
             // ═══ FROZEN TUNDRA: ICE BUILDINGS ═══
             const bseed = (x * 41 + y * 59) % 7;
