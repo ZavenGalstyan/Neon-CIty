@@ -37,8 +37,8 @@ const BattlePass = (() => {
       c1:'#000820', c2:'#0040A0', c3:'#2080FF', c4:'#80C0FF',
       glow:'rgba(32,128,255,0.9)', glowColor:'#2080FF' },
     { name:'IMMORTAL',  from: 81, to: 90,  shape:'fireCrown',
-      c1:'#200800', c2:'#A04000', c3:'#FF6000', c4:'#FFA040',
-      glow:'rgba(255,96,0,0.9)', glowColor:'#FF6000' },
+      c1:'#200800', c2:'#802008', c3:'#C04010', c4:'#E86020',
+      glow:'rgba(200,64,16,0.8)', glowColor:'#C04010' },
     { name:'CHAMPION',  from: 91, to:100,  shape:'champion',
       c1:'#101010', c2:'#606060', c3:'#FFFFFF', c4:'#FFFFFF',
       glow:'rgba(255,255,255,1.0)', glowColor:'#FFFFFF',
@@ -277,53 +277,69 @@ const BattlePass = (() => {
       ${_n(lvl, c4, 30, 10)}`;
     },
 
-    /* COMMANDO (41-50) — Heavy tactical armored shield */
+    /* COMMANDO (41-50) — Battle-worn tactical shield with combat details */
     armoredShield({ c1, c2, c3, c4 }, id, lvl, locked, tier) {
       const accent = tier?.accent || '#FFE000';
       const filt = locked ? '' : `filter="url(#${id}f)"`;
       return `<defs>
-        ${_glow(id, c3, locked, 5)}
+        ${_glow(id, c3, locked, 4)}
         ${_shine(id)}
         <linearGradient id="${id}g" x1="15%" y1="0%" x2="85%" y2="100%">
           <stop offset="0%"   stop-color="${c4}"/>
-          <stop offset="25%"  stop-color="${c3}"/>
-          <stop offset="60%"  stop-color="${c2}"/>
+          <stop offset="30%"  stop-color="${c3}"/>
+          <stop offset="65%"  stop-color="${c2}"/>
           <stop offset="100%" stop-color="${c1}"/>
         </linearGradient>
         <linearGradient id="${id}acc" x1="0%" y1="0%" x2="100%" y2="100%">
           <stop offset="0%"   stop-color="${accent}"/>
-          <stop offset="50%"  stop-color="#FFB000"/>
-          <stop offset="100%" stop-color="#CC8800"/>
+          <stop offset="50%"  stop-color="#E8A000"/>
+          <stop offset="100%" stop-color="#B07000"/>
         </linearGradient>
-        <linearGradient id="${id}steel" x1="50%" y1="0%" x2="50%" y2="100%">
-          <stop offset="0%"   stop-color="${c4}"/>
-          <stop offset="50%"  stop-color="${c3}"/>
-          <stop offset="100%" stop-color="${c2}"/>
+        <!-- Worn metal texture -->
+        <linearGradient id="${id}wear" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%"   stop-color="transparent"/>
+          <stop offset="30%"  stop-color="rgba(0,0,0,0.05)"/>
+          <stop offset="50%"  stop-color="transparent"/>
+          <stop offset="70%"  stop-color="rgba(255,255,255,0.03)"/>
+          <stop offset="100%" stop-color="transparent"/>
         </linearGradient>
       </defs>
       <!-- Outer armored frame -->
       <path d="M30,0 L58,6 L58,34 Q58,56 30,60 Q2,56 2,34 L2,6 Z"
-            fill="url(#${id}g)" stroke="${c3}" stroke-width="3" stroke-linejoin="round" ${filt}/>
-      <path d="M30,0 L58,6 L58,34 Q58,56 30,60 Q2,56 2,34 L2,6 Z" fill="url(#${id}sh)"/>
+            fill="url(#${id}g)" stroke="${c3}" stroke-width="2.5" stroke-linejoin="round" ${filt}/>
+      <!-- Wear texture overlay -->
+      <path d="M30,0 L58,6 L58,34 Q58,56 30,60 Q2,56 2,34 L2,6 Z" fill="url(#${id}wear)"/>
+      <!-- Depth -->
+      <path d="M30,0 L58,6 L58,34 Q58,56 30,60 Q2,56 2,34 L2,6 Z" fill="url(#${id}depth)" opacity="0.4"/>
+      <!-- Shine -->
+      <path d="M30,0 L58,6 L58,34 Q58,56 30,60 Q2,56 2,34 L2,6 Z" fill="url(#${id}sh)" opacity="0.5"/>
+      <!-- Battle scratches -->
+      <line x1="12" y1="15" x2="20" y2="12" stroke="rgba(0,0,0,0.15)" stroke-width="0.8" stroke-linecap="round"/>
+      <line x1="44" y1="38" x2="50" y2="42" stroke="rgba(0,0,0,0.12)" stroke-width="0.6" stroke-linecap="round"/>
+      <line x1="8" y1="30" x2="14" y2="32" stroke="rgba(255,255,255,0.08)" stroke-width="0.5" stroke-linecap="round"/>
       <!-- Reinforced inner border -->
       <path d="M30,4 L54,9 L54,33 Q54,52 30,56 Q6,52 6,33 L6,9 Z"
-            fill="none" stroke="${accent}" stroke-width="2" stroke-opacity="0.9"/>
-      <!-- Armored horizontal plates -->
-      <rect x="10" y="12" width="40" height="5" rx="1.5" fill="url(#${id}steel)" stroke="${accent}" stroke-width="0.8"/>
-      <rect x="10" y="43" width="40" height="5" rx="1.5" fill="url(#${id}steel)" stroke="${accent}" stroke-width="0.8"/>
-      <!-- Side rivets -->
-      <circle cx="8" cy="20" r="2" fill="${accent}" stroke="${c1}" stroke-width="0.5"/>
-      <circle cx="52" cy="20" r="2" fill="${accent}" stroke="${c1}" stroke-width="0.5"/>
-      <circle cx="8" cy="36" r="2" fill="${accent}" stroke="${c1}" stroke-width="0.5"/>
-      <circle cx="52" cy="36" r="2" fill="${accent}" stroke="${c1}" stroke-width="0.5"/>
-      <!-- Central tactical emblem - target reticle -->
-      <circle cx="30" cy="28" r="10" fill="${c1}" stroke="${c4}" stroke-width="1.5"/>
-      <circle cx="30" cy="28" r="6" fill="none" stroke="${accent}" stroke-width="1.5"/>
-      <circle cx="30" cy="28" r="2.5" fill="${accent}"/>
-      <line x1="30" y1="18" x2="30" y2="22" stroke="${accent}" stroke-width="1.5"/>
-      <line x1="30" y1="34" x2="30" y2="38" stroke="${accent}" stroke-width="1.5"/>
-      <line x1="20" y1="28" x2="24" y2="28" stroke="${accent}" stroke-width="1.5"/>
-      <line x1="36" y1="28" x2="40" y2="28" stroke="${accent}" stroke-width="1.5"/>
+            fill="none" stroke="${accent}" stroke-width="1.5" stroke-opacity="0.85"/>
+      <!-- Armored plates with wear -->
+      <rect x="10" y="12" width="40" height="4" rx="1" fill="${c2}" stroke="${accent}" stroke-width="0.8"/>
+      <rect x="10" y="44" width="40" height="4" rx="1" fill="${c2}" stroke="${accent}" stroke-width="0.8"/>
+      <!-- Rivets with depth -->
+      <circle cx="8" cy="20" r="2.5" fill="${c2}" stroke="${c1}" stroke-width="1"/>
+      <circle cx="8" cy="20" r="1" fill="${accent}" opacity="0.8"/>
+      <circle cx="52" cy="20" r="2.5" fill="${c2}" stroke="${c1}" stroke-width="1"/>
+      <circle cx="52" cy="20" r="1" fill="${accent}" opacity="0.8"/>
+      <circle cx="8" cy="36" r="2.5" fill="${c2}" stroke="${c1}" stroke-width="1"/>
+      <circle cx="8" cy="36" r="1" fill="${accent}" opacity="0.8"/>
+      <circle cx="52" cy="36" r="2.5" fill="${c2}" stroke="${c1}" stroke-width="1"/>
+      <circle cx="52" cy="36" r="1" fill="${accent}" opacity="0.8"/>
+      <!-- Central tactical emblem -->
+      <circle cx="30" cy="28" r="10" fill="${c1}" stroke="${c3}" stroke-width="1.5"/>
+      <circle cx="30" cy="28" r="7" fill="none" stroke="${accent}" stroke-width="1.2"/>
+      <circle cx="30" cy="28" r="3" fill="${accent}" opacity="0.9"/>
+      <line x1="30" y1="18" x2="30" y2="23" stroke="${accent}" stroke-width="1.5"/>
+      <line x1="30" y1="33" x2="30" y2="38" stroke="${accent}" stroke-width="1.5"/>
+      <line x1="20" y1="28" x2="23" y2="28" stroke="${accent}" stroke-width="1.5"/>
+      <line x1="37" y1="28" x2="40" y2="28" stroke="${accent}" stroke-width="1.5"/>
       ${_n(lvl, '#FFFFFF', 28, 9)}`;
     },
 
@@ -425,102 +441,142 @@ const BattlePass = (() => {
       ${_n(lvl, c4, 30, 10)}`;
     },
 
-    /* IMMORTAL (81-90) — Dark flame crown, serious and powerful */
+    /* IMMORTAL (81-90) — Deep flame crown with energy feel */
     fireCrown({ c1, c2, c3, c4 }, id, lvl, locked) {
       const filt = locked ? '' : `filter="url(#${id}f)"`;
       return `<defs>
-        ${_glow(id, '#CC4400', locked, 4)}
+        ${_glow(id, '#AA3300', locked, 4)}
         ${_shine(id)}
+        <!-- Deep fire gradient -->
         <linearGradient id="${id}g" x1="20%" y1="0%" x2="80%" y2="100%">
-          <stop offset="0%"   stop-color="#DD6600"/>
-          <stop offset="35%"  stop-color="#AA3300"/>
-          <stop offset="70%"  stop-color="#661100"/>
-          <stop offset="100%" stop-color="#330800"/>
+          <stop offset="0%"   stop-color="#E86020"/>
+          <stop offset="25%"  stop-color="#C04010"/>
+          <stop offset="55%"  stop-color="#802008"/>
+          <stop offset="85%"  stop-color="#401004"/>
+          <stop offset="100%" stop-color="#200800"/>
         </linearGradient>
-        <linearGradient id="${id}flame" x1="50%" y1="100%" x2="50%" y2="0%">
-          <stop offset="0%"   stop-color="#882200"/>
-          <stop offset="40%"  stop-color="#CC4400"/>
-          <stop offset="80%"  stop-color="#FF6600"/>
-          <stop offset="100%" stop-color="#FFAA44"/>
+        <!-- Inner fire glow -->
+        <radialGradient id="${id}core" cx="50%" cy="40%" r="50%">
+          <stop offset="0%"   stop-color="#FF6030" stop-opacity="0.4"/>
+          <stop offset="100%" stop-color="#400800" stop-opacity="0"/>
+        </radialGradient>
+        <!-- Energy texture gradient -->
+        <linearGradient id="${id}energy" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%"   stop-color="#FF8040" stop-opacity="0.3"/>
+          <stop offset="50%"  stop-color="transparent"/>
+          <stop offset="100%" stop-color="#FF4010" stop-opacity="0.2"/>
         </linearGradient>
       </defs>
-      <!-- Crown body - sharp angles -->
-      <path d="M4,52 L4,22 L13,32 L22,10 L30,24 L38,10 L47,32 L56,22 L56,52 Z"
-            fill="url(#${id}g)" stroke="#CC4400" stroke-width="2" stroke-linejoin="miter" ${filt}/>
-      <!-- Inner depth -->
-      <path d="M4,52 L4,22 L13,32 L22,10 L30,24 L38,10 L47,32 L56,22 L56,52 Z" fill="url(#${id}depth)" opacity="0.5"/>
-      <!-- Flame accents on peaks - static, no animation -->
-      <path d="M22,10 L22,4 L24,8 L22,10 Z" fill="url(#${id}flame)" opacity="0.9"/>
-      <path d="M30,24 L30,18 L32,22 L30,24 Z" fill="url(#${id}flame)" opacity="0.85"/>
-      <path d="M38,10 L38,4 L36,8 L38,10 Z" fill="url(#${id}flame)" opacity="0.9"/>
-      <!-- Crown band -->
-      <rect x="4" y="52" width="52" height="6" rx="1" fill="#441100" stroke="#AA4400" stroke-width="1.5"/>
-      <!-- Embedded gems - dark ruby style -->
-      <circle cx="22" cy="20" r="4" fill="#440000" stroke="#AA3300" stroke-width="1.5"/>
-      <circle cx="22" cy="20" r="1.5" fill="#FF4400" opacity="0.8"/>
-      <circle cx="38" cy="20" r="4" fill="#440000" stroke="#AA3300" stroke-width="1.5"/>
-      <circle cx="38" cy="20" r="1.5" fill="#FF4400" opacity="0.8"/>
-      <circle cx="30" cy="32" r="5" fill="#440000" stroke="#CC4400" stroke-width="1.5"/>
-      <circle cx="30" cy="32" r="2" fill="#FF6600" opacity="0.9"/>
-      ${_n(lvl, '#FFAA66', 55, 10)}`;
+      <!-- Outer energy aura -->
+      <path d="M4,52 L4,20 L13,31 L22,8 L30,23 L38,8 L47,31 L56,20 L56,52 Z"
+            fill="#200800" opacity="0.5" transform="translate(0,1)"/>
+      <!-- Crown body -->
+      <path d="M4,52 L4,20 L13,31 L22,8 L30,23 L38,8 L47,31 L56,20 L56,52 Z"
+            fill="url(#${id}g)" stroke="#C04010" stroke-width="2" stroke-linejoin="miter" ${filt}/>
+      <!-- Inner core glow -->
+      <path d="M4,52 L4,20 L13,31 L22,8 L30,23 L38,8 L47,31 L56,20 L56,52 Z"
+            fill="url(#${id}core)"/>
+      <!-- Energy texture overlay -->
+      <path d="M4,52 L4,20 L13,31 L22,8 L30,23 L38,8 L47,31 L56,20 L56,52 Z"
+            fill="url(#${id}energy)"/>
+      <!-- Depth -->
+      <path d="M4,52 L4,20 L13,31 L22,8 L30,23 L38,8 L47,31 L56,20 L56,52 Z"
+            fill="url(#${id}depth)" opacity="0.4"/>
+      <!-- Shine highlight -->
+      <path d="M8,25 L13,31 L22,12 L25,16" fill="none" stroke="rgba(255,200,150,0.3)" stroke-width="2" stroke-linecap="round"/>
+      <!-- Crown band with metallic finish -->
+      <rect x="4" y="52" width="52" height="6" rx="1" fill="#301005" stroke="#A03010" stroke-width="1.5"/>
+      <rect x="6" y="53" width="48" height="2" rx="0.5" fill="#C05020" opacity="0.2"/>
+      <!-- Embedded gems - deep ruby with inner fire -->
+      <circle cx="22" cy="18" r="4.5" fill="#300800" stroke="#A03010" stroke-width="1.5"/>
+      <circle cx="22" cy="18" r="2.5" fill="#601000" stroke="#FF4010" stroke-width="0.5"/>
+      <circle cx="22" cy="17" r="1" fill="#FF8040" opacity="0.9"/>
+      <circle cx="38" cy="18" r="4.5" fill="#300800" stroke="#A03010" stroke-width="1.5"/>
+      <circle cx="38" cy="18" r="2.5" fill="#601000" stroke="#FF4010" stroke-width="0.5"/>
+      <circle cx="38" cy="17" r="1" fill="#FF8040" opacity="0.9"/>
+      <!-- Center gem - the flame heart -->
+      <circle cx="30" cy="32" r="6" fill="#300800" stroke="#C04010" stroke-width="2"/>
+      <circle cx="30" cy="32" r="4" fill="#501000" stroke="#FF5020" stroke-width="0.5"/>
+      <circle cx="30" cy="31" r="1.5" fill="#FFA060" opacity="0.95"/>
+      ${_n(lvl, '#FFB080', 55, 10)}`;
     },
 
-    /* CHAMPION (91-100) — Premium elite crown, intimidating and powerful */
+    /* CHAMPION (91-100) — Ultimate premium crown, white + gold elite */
     champion({ c1, c2, c3, c4 }, id, lvl, locked, tier) {
       const isLvl100 = lvl === 100;
       const filt = locked ? '' : `filter="url(#${id}f)"`;
       return `<defs>
-        ${_glow(id, '#D4A020', locked, 5)}
+        ${_glow(id, isLvl100 ? '#FFE080' : '#D4A020', locked, isLvl100 ? 6 : 4)}
         ${_shine(id)}
-        <!-- Premium gold/platinum gradient -->
-        <linearGradient id="${id}g" x1="15%" y1="0%" x2="85%" y2="100%">
-          <stop offset="0%"   stop-color="${isLvl100 ? '#FFFFFF' : '#FFE8B0'}"/>
-          <stop offset="20%"  stop-color="${isLvl100 ? '#F0E8D0' : '#E8C060'}"/>
-          <stop offset="45%"  stop-color="#D4A020"/>
-          <stop offset="70%"  stop-color="#A07010"/>
-          <stop offset="100%" stop-color="#604008"/>
+        <!-- Premium white-gold gradient -->
+        <linearGradient id="${id}g" x1="10%" y1="0%" x2="90%" y2="100%">
+          <stop offset="0%"   stop-color="${isLvl100 ? '#FFFFFF' : '#FFF0D0'}"/>
+          <stop offset="15%"  stop-color="${isLvl100 ? '#FFF8E8' : '#F0D090'}"/>
+          <stop offset="35%"  stop-color="${isLvl100 ? '#FFE8C0' : '#D8B050'}"/>
+          <stop offset="55%"  stop-color="#C89820"/>
+          <stop offset="75%"  stop-color="#907010"/>
+          <stop offset="100%" stop-color="#504008"/>
         </linearGradient>
-        <!-- Diamond gem gradient -->
-        <radialGradient id="${id}gem" cx="35%" cy="30%" r="65%">
+        <!-- Diamond gem - premium sparkle -->
+        <radialGradient id="${id}gem" cx="30%" cy="25%" r="70%">
           <stop offset="0%"   stop-color="#FFFFFF"/>
-          <stop offset="40%"  stop-color="${isLvl100 ? '#E8E8FF' : '#C0D8E8'}"/>
-          <stop offset="100%" stop-color="${isLvl100 ? '#8888CC' : '#4080A0'}"/>
+          <stop offset="25%"  stop-color="${isLvl100 ? '#F8F8FF' : '#E0E8F0'}"/>
+          <stop offset="60%"  stop-color="${isLvl100 ? '#D0D8FF' : '#A0C0D8'}"/>
+          <stop offset="100%" stop-color="${isLvl100 ? '#8090C0' : '#5080A0'}"/>
+        </radialGradient>
+        <!-- Inner light radiance -->
+        <radialGradient id="${id}light" cx="50%" cy="35%" r="45%">
+          <stop offset="0%"   stop-color="${isLvl100 ? '#FFFFFF' : '#FFE8C0'}" stop-opacity="0.4"/>
+          <stop offset="100%" stop-color="transparent"/>
         </radialGradient>
       </defs>
 
-      <!-- Crown body - sharp, regal -->
-      <path d="M2,52 L2,18 L11,28 L20,6 L30,20 L40,6 L49,28 L58,18 L58,52 Z"
-            fill="url(#${id}g)" stroke="${isLvl100 ? '#FFFFFF' : '#D4A020'}" stroke-width="${isLvl100 ? 2.5 : 2}"
-            stroke-linejoin="miter" ${filt}/>
-      <!-- Depth -->
-      <path d="M2,52 L2,18 L11,28 L20,6 L30,20 L40,6 L49,28 L58,18 L58,52 Z" fill="url(#${id}depth)" opacity="0.4"/>
-      <!-- Shine -->
-      <path d="M2,52 L2,18 L11,28 L20,6 L30,20 L40,6 L49,28 L58,18 L58,52 Z" fill="url(#${id}sh)" opacity="0.5"/>
-
-      <!-- Crown band - solid, premium -->
-      <rect x="2" y="52" width="56" height="6" rx="1" fill="#806020" stroke="${isLvl100 ? '#E8D080' : '#A08030'}" stroke-width="1.5"/>
-
-      <!-- Band jewels -->
-      <circle cx="15" cy="55" r="2.5" fill="url(#${id}gem)" stroke="#FFFFFF" stroke-width="0.8"/>
-      <circle cx="30" cy="55" r="3" fill="url(#${id}gem)" stroke="#FFFFFF" stroke-width="0.8"/>
-      <circle cx="45" cy="55" r="2.5" fill="url(#${id}gem)" stroke="#FFFFFF" stroke-width="0.8"/>
-
-      <!-- Peak gems - elegant diamonds -->
-      <polygon points="20,6 24,14 20,22 16,14" fill="url(#${id}gem)" stroke="#FFFFFF" stroke-width="1"/>
-      <polygon points="40,6 44,14 40,22 36,14" fill="url(#${id}gem)" stroke="#FFFFFF" stroke-width="1"/>
-
-      <!-- Center crown jewel - the focal point -->
-      <circle cx="30" cy="28" r="7" fill="#403020" stroke="#D4A020" stroke-width="2"/>
-      <circle cx="30" cy="28" r="5" fill="url(#${id}gem)" stroke="#FFFFFF" stroke-width="1"/>
-      <circle cx="30" cy="28" r="2" fill="#FFFFFF" opacity="0.95"/>
-
       ${isLvl100 ? `
-      <!-- Level 100: subtle outer glow ring -->
-      <circle cx="30" cy="30" r="28" fill="none" stroke="#FFE080" stroke-width="1.5" opacity="0.4"/>
-      <circle cx="30" cy="30" r="26" fill="none" stroke="#FFFFFF" stroke-width="0.5" opacity="0.3"/>
+      <!-- Level 100: Outer aura frame (unique border) -->
+      <rect x="-2" y="-2" width="64" height="64" rx="4" fill="none"
+            stroke="url(#${id}g)" stroke-width="2" opacity="0.5"/>
+      <rect x="0" y="0" width="60" height="60" rx="3" fill="none"
+            stroke="#FFE8C0" stroke-width="1" opacity="0.3"/>
       ` : ''}
 
-      ${_n(lvl, isLvl100 ? '#FFFFFF' : '#FFE080', 55, 10)}`;
+      <!-- Crown body - regal and powerful -->
+      <path d="M2,52 L2,17 L11,27 L20,5 L30,19 L40,5 L49,27 L58,17 L58,52 Z"
+            fill="url(#${id}g)" stroke="${isLvl100 ? '#FFFAF0' : '#D4A020'}" stroke-width="${isLvl100 ? 2.5 : 2}"
+            stroke-linejoin="miter" ${filt}/>
+      <!-- Inner radiance -->
+      <path d="M2,52 L2,17 L11,27 L20,5 L30,19 L40,5 L49,27 L58,17 L58,52 Z"
+            fill="url(#${id}light)"/>
+      <!-- Depth shadow -->
+      <path d="M2,52 L2,17 L11,27 L20,5 L30,19 L40,5 L49,27 L58,17 L58,52 Z"
+            fill="url(#${id}depth)" opacity="0.35"/>
+      <!-- Shine highlight line -->
+      <path d="M5,22 L11,27 L20,9 L23,13" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1.5" stroke-linecap="round"/>
+
+      <!-- Crown band - premium metallic -->
+      <rect x="2" y="52" width="56" height="6" rx="1" fill="#705818" stroke="${isLvl100 ? '#E8D080' : '#A08030'}" stroke-width="1.5"/>
+      <rect x="4" y="53" width="52" height="2" rx="0.5" fill="${isLvl100 ? '#FFF8E0' : '#C8A040'}" opacity="0.25"/>
+
+      <!-- Band jewels - triple gems -->
+      <circle cx="15" cy="55" r="2.5" fill="url(#${id}gem)" stroke="#FFFFFF" stroke-width="0.8"/>
+      <circle cx="15" cy="54.5" r="0.8" fill="#FFFFFF" opacity="0.9"/>
+      <circle cx="30" cy="55" r="3" fill="url(#${id}gem)" stroke="#FFFFFF" stroke-width="1"/>
+      <circle cx="30" cy="54.5" r="1" fill="#FFFFFF" opacity="0.95"/>
+      <circle cx="45" cy="55" r="2.5" fill="url(#${id}gem)" stroke="#FFFFFF" stroke-width="0.8"/>
+      <circle cx="45" cy="54.5" r="0.8" fill="#FFFFFF" opacity="0.9"/>
+
+      <!-- Peak gems - elegant cut diamonds -->
+      <polygon points="20,5 25,14 20,23 15,14" fill="url(#${id}gem)" stroke="#FFFFFF" stroke-width="1.2"/>
+      <polygon points="20,8 22,14 20,20 18,14" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="0.5"/>
+      <polygon points="40,5 45,14 40,23 35,14" fill="url(#${id}gem)" stroke="#FFFFFF" stroke-width="1.2"/>
+      <polygon points="40,8 42,14 40,20 38,14" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="0.5"/>
+
+      <!-- Center crown jewel - the ultimate gem -->
+      <circle cx="30" cy="28" r="8" fill="#403020" stroke="${isLvl100 ? '#FFF8E0' : '#D4A020'}" stroke-width="2"/>
+      <circle cx="30" cy="28" r="6" fill="url(#${id}gem)" stroke="#FFFFFF" stroke-width="1"/>
+      <circle cx="30" cy="28" r="3.5" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="0.5"/>
+      <circle cx="29" cy="27" r="1.5" fill="#FFFFFF" opacity="0.98"/>
+
+      ${_n(lvl, isLvl100 ? '#FFFFFF' : '#FFE8B0', 55, 10)}`;
     },
   };
 
@@ -654,16 +710,16 @@ const BattlePass = (() => {
         <!-- 10x10 Grid Container -->
         <div class="bp-grid-container">
           <div class="bp-rank-labels">
-            <div class="bp-rank-row" style="--rank-dot-color:#6A6A6A"><span style="color:#9A9A9A">RECRUIT</span><span>1-10</span></div>
-            <div class="bp-rank-row" style="--rank-dot-color:#B87020"><span style="color:#E8A050;text-shadow:0 0 6px rgba(184,112,32,0.5)">SOLDIER</span><span>11-20</span></div>
-            <div class="bp-rank-row" style="--rank-dot-color:#A0C0D8"><span style="color:#E0F0FF;text-shadow:0 0 6px rgba(160,192,216,0.5)">VETERAN</span><span>21-30</span></div>
-            <div class="bp-rank-row" style="--rank-dot-color:#E8A800"><span style="color:#FFE040;text-shadow:0 0 8px rgba(232,168,0,0.6)">ELITE</span><span>31-40</span></div>
-            <div class="bp-rank-row" style="--rank-dot-color:#00B0FF"><span style="color:#40E0FF;text-shadow:0 0 10px rgba(0,176,255,0.7)">COMMANDO</span><span>41-50</span></div>
-            <div class="bp-rank-row" style="--rank-dot-color:#A020F0"><span style="color:#E080FF;text-shadow:0 0 10px rgba(160,32,240,0.6)">ASSASSIN</span><span>51-60</span></div>
-            <div class="bp-rank-row" style="--rank-dot-color:#E01010"><span style="color:#FF6060;text-shadow:0 0 10px rgba(224,16,16,0.6)">WARLORD</span><span>61-70</span></div>
-            <div class="bp-rank-row" style="--rank-dot-color:#2080FF"><span style="color:#80C0FF;text-shadow:0 0 10px rgba(32,128,255,0.6)">OVERLORD</span><span>71-80</span></div>
-            <div class="bp-rank-row" style="--rank-dot-color:#FF6000"><span style="color:#FFA040;text-shadow:0 0 12px rgba(255,96,0,0.7)">IMMORTAL</span><span>81-90</span></div>
-            <div class="bp-rank-row" style="--rank-dot-color:#FFD700"><span style="color:#FFFFFF;text-shadow:0 0 15px #FFD700, 0 0 25px #FF6464">CHAMPION</span><span>91-100</span></div>
+            <div class="bp-rank-row${tier.name === 'RECRUIT' ? ' bp-rank-row--active' : ''}" style="--rank-dot-color:#6A6A6A"><span style="color:#9A9A9A">RECRUIT</span><span>1-10</span></div>
+            <div class="bp-rank-row${tier.name === 'SOLDIER' ? ' bp-rank-row--active' : ''}" style="--rank-dot-color:#B87020"><span style="color:#E8A050">SOLDIER</span><span>11-20</span></div>
+            <div class="bp-rank-row${tier.name === 'VETERAN' ? ' bp-rank-row--active' : ''}" style="--rank-dot-color:#A0C0D8"><span style="color:#E0F0FF">VETERAN</span><span>21-30</span></div>
+            <div class="bp-rank-row${tier.name === 'ELITE' ? ' bp-rank-row--active' : ''}" style="--rank-dot-color:#E8A800"><span style="color:#FFE040">ELITE</span><span>31-40</span></div>
+            <div class="bp-rank-row${tier.name === 'COMMANDO' ? ' bp-rank-row--active' : ''}" style="--rank-dot-color:#00B0FF"><span style="color:#40E0FF">COMMANDO</span><span>41-50</span></div>
+            <div class="bp-rank-row${tier.name === 'ASSASSIN' ? ' bp-rank-row--active' : ''}" style="--rank-dot-color:#A020F0"><span style="color:#E080FF">ASSASSIN</span><span>51-60</span></div>
+            <div class="bp-rank-row${tier.name === 'WARLORD' ? ' bp-rank-row--active' : ''}" style="--rank-dot-color:#E01010"><span style="color:#FF6060">WARLORD</span><span>61-70</span></div>
+            <div class="bp-rank-row${tier.name === 'OVERLORD' ? ' bp-rank-row--active' : ''}" style="--rank-dot-color:#2080FF"><span style="color:#80C0FF">OVERLORD</span><span>71-80</span></div>
+            <div class="bp-rank-row${tier.name === 'IMMORTAL' ? ' bp-rank-row--active' : ''}" style="--rank-dot-color:#CC4400"><span style="color:#FF8050">IMMORTAL</span><span>81-90</span></div>
+            <div class="bp-rank-row${tier.name === 'CHAMPION' ? ' bp-rank-row--active' : ''}" style="--rank-dot-color:#FFD700"><span style="color:#FFE8C0">CHAMPION</span><span>91-100</span></div>
           </div>
           <div class="bp-grid" id="bpGrid"></div>
         </div>
