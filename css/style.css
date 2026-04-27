@@ -2338,11 +2338,22 @@ body {
    ════════════════════════════════════════════════════════════ */
 
 .bp-section {
-  background: rgba(13,13,26,0.9);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.01) 0%, transparent 30%),
+    rgba(13,13,26,0.92);
   border: 1px solid rgba(68,238,255,0.1);
   border-radius: 16px;
   padding: 28px 28px 32px;
   box-shadow: 0 4px 30px rgba(0,0,0,0.4);
+  position: relative;
+}
+/* Subtle top highlight */
+.bp-section::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 20px; right: 20px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(68,238,255,0.15), transparent);
 }
 
 /* ── BP header ────────────────────────────────────────────── */
@@ -2417,11 +2428,38 @@ body {
   height: 8px; border-radius: 99px;
   background: rgba(255,255,255,0.06);
   overflow: hidden;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.3);
 }
 .bp-xp-fill {
   height: 100%; border-radius: 99px;
   background: linear-gradient(90deg, var(--cyan) 0%, var(--purple) 100%);
   transition: width 0.5s ease-out;
+  position: relative;
+  overflow: hidden;
+}
+/* Static top shine */
+.bp-xp-fill::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 40%;
+  background: linear-gradient(180deg, rgba(255,255,255,0.3) 0%, transparent 100%);
+  border-radius: 99px 99px 0 0;
+}
+/* Subtle moving shine - lightweight animation */
+.bp-xp-fill::after {
+  content: '';
+  position: absolute;
+  top: 0; bottom: 0;
+  width: 30%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  animation: xpShine 3s ease-in-out infinite;
+}
+@keyframes xpShine {
+  0% { left: -30%; opacity: 0; }
+  20% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { left: 100%; opacity: 0; }
 }
 
 /* ── Level grid ───────────────────────────────────────────── */
@@ -2440,9 +2478,20 @@ body {
   padding: 10px 4px 8px;
   border: 1px solid transparent;
   cursor: pointer;
-  transition: transform 0.15s ease-out, opacity 0.15s;
+  transition: transform 0.15s ease-out, border-color 0.15s;
   position: relative;
   will-change: transform;
+}
+
+/* Subtle top highlight for depth */
+.bp-level::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 10%; right: 10%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
+  border-radius: 10px 10px 0 0;
+  pointer-events: none;
 }
 
 /* Hover — lightweight */
@@ -2455,18 +2504,23 @@ body {
 
 /* Completed */
 .bp-level--completed {
-  background: rgba(255,255,255,0.03);
+  background: linear-gradient(145deg, rgba(255,255,255,0.03) 0%, rgba(0,0,0,0.02) 100%);
   border-color: rgba(255,255,255,0.08);
 }
 .bp-level--completed:hover {
-  border-color: var(--tier-color, rgba(255,255,255,0.15));
+  border-color: var(--tier-color, rgba(255,255,255,0.2));
+  box-shadow: 0 2px 12px rgba(0,0,0,0.3);
 }
 
-/* Current level — simple glow */
+/* Current level — enhanced glow */
 .bp-level--current {
-  background: rgba(var(--tier-rgb, 68,238,255), 0.08);
+  background: linear-gradient(145deg,
+    rgba(var(--tier-rgb, 68,238,255), 0.1) 0%,
+    rgba(var(--tier-rgb, 68,238,255), 0.04) 100%);
   border: 2px solid var(--tier-color, var(--cyan));
-  box-shadow: 0 0 12px var(--tier-glow, rgba(68,238,255,0.4));
+  box-shadow:
+    0 0 15px var(--tier-glow, rgba(68,238,255,0.4)),
+    inset 0 0 10px rgba(var(--tier-rgb, 68,238,255), 0.08);
 }
 .bp-level--current::after {
   content: '▲';
@@ -2484,6 +2538,9 @@ body {
 .bp-level--locked:hover {
   opacity: 0.5;
   transform: translateY(-1px);
+}
+.bp-level--locked::before {
+  display: none;
 }
 
 /* ── Rank-specific card backgrounds ──────────────────────────
@@ -2544,8 +2601,20 @@ body {
 .bp-medal {
   width: 100%; aspect-ratio: 78/58;
   display: flex; align-items: center; justify-content: center;
+  position: relative;
 }
 .bp-medal svg { width: 100%; height: 100%; }
+/* Subtle reflection overlay */
+.bp-level--completed .bp-medal::after,
+.bp-level--current .bp-medal::after {
+  content: '';
+  position: absolute;
+  top: 5%; left: 15%; right: 15%;
+  height: 25%;
+  background: linear-gradient(180deg, rgba(255,255,255,0.12) 0%, transparent 100%);
+  border-radius: 50%;
+  pointer-events: none;
+}
 
 /* Tier label */
 .bp-tier-label {
@@ -2586,6 +2655,7 @@ body {
   font-family: 'Orbitron', sans-serif;
   white-space: nowrap;
   position: relative;
+  transition: opacity 0.15s;
 }
 
 /* Rank indicator dot */
@@ -2599,6 +2669,33 @@ body {
   height: 5px;
   border-radius: 50%;
   background: var(--rank-dot-color, rgba(68,238,255,0.5));
+}
+
+/* Current/active rank highlight */
+.bp-rank-row.bp-rank-row--active {
+  opacity: 1;
+}
+.bp-rank-row.bp-rank-row--active span:first-child {
+  text-shadow: 0 0 10px currentColor;
+}
+.bp-rank-row.bp-rank-row--active::after {
+  width: 7px;
+  height: 7px;
+  box-shadow: 0 0 8px var(--rank-dot-color, rgba(68,238,255,0.6));
+}
+.bp-rank-row.bp-rank-row--active::before {
+  content: '▸';
+  position: absolute;
+  right: 100%;
+  margin-right: 4px;
+  font-size: 8px;
+  color: var(--rank-dot-color, var(--cyan));
+  opacity: 0.8;
+}
+
+/* Inactive ranks slightly dimmed */
+.bp-rank-row:not(.bp-rank-row--active) {
+  opacity: 0.65;
 }
 
 .bp-rank-row span:first-child {
@@ -2616,14 +2713,74 @@ body {
   margin-top: 2px;
 }
 
-/* ── Champion Level 100 — Premium Elite styling ───────────── */
+/* ── Champion Level 100 — Ultimate Premium styling ───────── */
 .bp-level--champion {
-  background: linear-gradient(145deg, rgba(255,215,0,0.12) 0%, rgba(180,140,60,0.08) 100%);
-  border: 2px solid rgba(255,215,0,0.5);
-  box-shadow: 0 0 20px rgba(255,200,100,0.3);
+  background: linear-gradient(145deg,
+    rgba(255,250,240,0.15) 0%,
+    rgba(255,215,100,0.12) 50%,
+    rgba(180,140,60,0.1) 100%);
+  border: 2px solid rgba(255,220,120,0.6);
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.15),
+    0 0 25px rgba(255,200,100,0.35);
   position: relative;
 }
+/* Double border effect */
+.bp-level--champion::before {
+  content: '';
+  position: absolute;
+  inset: 2px;
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 7px;
+  pointer-events: none;
+}
+.bp-level--champion .bp-tier-label {
+  color: #FFD860;
+  font-weight: 900;
+  text-shadow: 0 0 8px rgba(255,200,100,0.5);
+}
 
+/* ── Immortal special styling ─────────────────────────────── */
+.bp-level[data-rank="immortal"]:not(.bp-level--locked) {
+  background: linear-gradient(145deg,
+    rgba(200,80,20,0.15) 0%,
+    rgba(140,40,10,0.12) 100%);
+  border-color: rgba(220,100,30,0.35);
+  box-shadow: inset 0 0 12px rgba(255,100,30,0.1);
+}
+
+/* ── Commando battle-worn styling ─────────────────────────── */
+.bp-level[data-rank="commando"]:not(.bp-level--locked) {
+  background: linear-gradient(145deg,
+    rgba(0,140,200,0.12) 0%,
+    rgba(0,60,100,0.1) 100%);
+  border-color: rgba(0,180,255,0.25);
+}
+/* Subtle wear texture via pseudo-element */
+.bp-level[data-rank="commando"]:not(.bp-level--locked)::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg,
+    transparent 40%,
+    rgba(0,0,0,0.05) 45%,
+    transparent 50%,
+    rgba(255,255,255,0.02) 55%,
+    transparent 60%);
+  pointer-events: none;
+  border-radius: 9px;
+}
+
+/* ── Subtle grid variation (reduce uniformity) ───────────── */
+.bp-level:nth-child(odd) {
+  --subtle-shift: 0.02;
+}
+.bp-level:nth-child(even) {
+  --subtle-shift: -0.02;
+}
+.bp-level:nth-child(3n) {
+  opacity: calc(1 + var(--subtle-shift, 0));
+}
 
 /* ── Responsive ───────────────────────────────────────────── */
 @media (max-width: 900px) {
