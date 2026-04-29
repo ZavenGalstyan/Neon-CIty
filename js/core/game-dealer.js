@@ -14,6 +14,7 @@ Game.prototype._renderDealershipIndoor = function(ctx, W, H, shake) {
     const isDino      = !!this.map.config.dino;
     const isDesert    = !!this.map.config.desert;
     const isJungle    = !!this.map.config.jungle;
+    const isOcean     = !!this.map.config.ocean;
     const t = performance.now() / 1000;
     const isCampaign = !!this.map.config.campaign;
 
@@ -32,6 +33,8 @@ Game.prototype._renderDealershipIndoor = function(ctx, W, H, shake) {
             ? "#100c06"
           : isJungle
             ? "#020a01"
+          : isOcean
+            ? "#020e10"
             : "#06060a";
     ctx.fillRect(0, 0, W, H);
 
@@ -1638,6 +1641,153 @@ Game.prototype._renderDealershipIndoor = function(ctx, W, H, shake) {
       ctx.fillRect(S, S * 1.5, 3, room.roomH - S * 3);
       ctx.fillRect(room.roomW - S - 3, S * 1.5, 3, room.roomH - S * 3);
 
+    } else if (isOcean) {
+      // ═══ OCEAN DEPTHS: ABYSS MOTORS — DEEP-SEA SHOWROOM ═══
+      const oA = "#00FFCC"; const oB = "#0088FF"; const oAr = "0,255,200"; const oBr = "0,136,255";
+      const oWall = "#03100e"; const oFlr1 = "#020c10"; const oFlr2 = "#030e12";
+
+      // Dark abyssal floor + kelp-wall panels
+      for (let ty = 0; ty < room.H; ty++) {
+        for (let tx = 0; tx < room.W; tx++) {
+          const px = tx * S, py = ty * S, tile = room.layout[ty][tx];
+          if (tile === 1) {
+            ctx.fillStyle = oWall; ctx.fillRect(px, py, S, S);
+            if ((tx + ty) % 3 === 0) {
+              ctx.fillStyle = `rgba(${oAr},0.12)`;
+              ctx.fillRect(px + S / 2 - 1, py, 2, S);
+            }
+          } else {
+            ctx.fillStyle = (tx + ty) % 2 === 0 ? oFlr1 : oFlr2;
+            ctx.fillRect(px, py, S, S);
+            ctx.strokeStyle = `rgba(${oAr},0.07)`; ctx.lineWidth = 1;
+            ctx.strokeRect(px, py, S, S);
+            if ((tx + ty) % 4 === 0) {
+              const pulse = Math.sin(t * 2 + tx + ty) * 0.5 + 0.5;
+              ctx.fillStyle = `rgba(${oAr},${0.03 + pulse * 0.02})`;
+              ctx.fillRect(px + 4, py + 4, S - 8, S - 8);
+            }
+          }
+        }
+      }
+
+      // Room border — teal bioluminescent glow
+      ctx.strokeStyle = oA; ctx.lineWidth = 2; ctx.shadowColor = oA; ctx.shadowBlur = 15;
+      ctx.strokeRect(S + 2, S + 2, room.roomW - S * 2 - 4, room.roomH - S * 2 - 4);
+      ctx.shadowBlur = 0;
+
+      // Top accent bar — ocean gradient
+      const oTopGrad = ctx.createLinearGradient(0, S, room.roomW, S);
+      oTopGrad.addColorStop(0, `rgba(${oBr},0.30)`);
+      oTopGrad.addColorStop(0.5, `rgba(${oAr},0.52)`);
+      oTopGrad.addColorStop(1, `rgba(${oBr},0.30)`);
+      ctx.fillStyle = oTopGrad; ctx.fillRect(S, S, room.roomW - S * 2, 4);
+
+      // Rising bubble curtain along top edge
+      for (let bi = 0; bi < 16; bi++) {
+        const bx = S + 12 + bi * ((room.roomW - S * 2 - 24) / 15);
+        const brise = ((t * 18 + bi * 40) % 30);
+        const balpha = 0.25 + Math.sin(t * 1.5 + bi) * 0.15;
+        ctx.strokeStyle = `rgba(${oAr},${balpha})`; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.arc(bx, S + brise, 2.5 + (bi % 3), 0, Math.PI * 2); ctx.stroke();
+      }
+
+      // Showroom title
+      ctx.save();
+      ctx.font = "bold 20px Orbitron, monospace"; ctx.textAlign = "center";
+      ctx.fillStyle = oA; ctx.shadowColor = oA; ctx.shadowBlur = 25;
+      ctx.fillText("≋ ABYSS MOTORS ≋", room.roomW / 2, S - 20);
+      ctx.shadowBlur = 0; ctx.restore();
+
+      // ═══ CASHIER COUNTER ═══
+      const oCtrX = room.roomW / 2 - 75, oCtrY = S * 1.2;
+      const oCtrW = 150, oCtrH = 40;
+      ctx.fillStyle = "rgba(0,0,0,0.4)";
+      ctx.fillRect(oCtrX + 4, oCtrY + oCtrH + 2, oCtrW, 6);
+      const oCtrGrad = ctx.createLinearGradient(oCtrX, oCtrY, oCtrX, oCtrY + oCtrH);
+      oCtrGrad.addColorStop(0, "#0a2020"); oCtrGrad.addColorStop(0.5, "#061818"); oCtrGrad.addColorStop(1, "#040e0e");
+      ctx.fillStyle = oCtrGrad; ctx.fillRect(oCtrX, oCtrY, oCtrW, oCtrH);
+      ctx.fillStyle = "#0a3030"; ctx.fillRect(oCtrX - 5, oCtrY, oCtrW + 10, 6);
+      ctx.strokeStyle = oA; ctx.lineWidth = 2; ctx.shadowColor = oA; ctx.shadowBlur = 10;
+      ctx.beginPath(); ctx.moveTo(oCtrX - 5, oCtrY + 3); ctx.lineTo(oCtrX + oCtrW + 5, oCtrY + 3); ctx.stroke();
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = oA; ctx.shadowColor = oA; ctx.shadowBlur = 10;
+      ctx.font = "bold 12px Orbitron, monospace"; ctx.textAlign = "center";
+      ctx.fillText("DIVE DESK", oCtrX + oCtrW / 2, oCtrY + 26);
+      ctx.shadowBlur = 0;
+
+      // ═══ DISPLAY VEHICLES ON OCEAN PLATFORMS ═══
+      const oCarDisplays = [
+        { x: room.roomW * 0.18, y: room.roomH * 0.45, color: "#008B8B", name: "REEF"   },
+        { x: room.roomW * 0.38, y: room.roomH * 0.42, color: "#1C86EE", name: "SHARK"  },
+        { x: room.roomW * 0.62, y: room.roomH * 0.42, color: "#00CED1", name: "MANTA"  },
+        { x: room.roomW * 0.82, y: room.roomH * 0.45, color: "#20B2AA", name: "TRENCH" },
+        { x: room.roomW * 0.28, y: room.roomH * 0.58, color: "#4169E1", name: "KELP"   },
+        { x: room.roomW * 0.72, y: room.roomH * 0.58, color: "#00FA9A", name: "ORCA"   },
+      ];
+      for (const oCar of oCarDisplays) {
+        const pulse = Math.sin(t * 1.5 + oCar.x * 0.01) * 0.3 + 0.7;
+        ctx.save(); ctx.translate(oCar.x, oCar.y);
+        // Platform outer ring — teal bioluminescent
+        ctx.beginPath(); ctx.arc(0, 15, 45, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${oAr},0.06)`; ctx.fill();
+        ctx.strokeStyle = `rgba(${oAr},${0.5 * pulse})`; ctx.lineWidth = 2; ctx.stroke();
+        // Inner ring — ocean blue
+        ctx.beginPath(); ctx.arc(0, 15, 35, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(${oBr},${0.3 * pulse})`; ctx.lineWidth = 1; ctx.stroke();
+        // Rotating whirlpool sweep
+        ctx.save(); ctx.translate(0, 15); ctx.rotate(t * 0.5);
+        for (let i = 0; i < 4; i++) {
+          ctx.fillStyle = `rgba(${oAr},${0.14 * pulse})`;
+          ctx.beginPath(); ctx.moveTo(0, 0);
+          ctx.arc(0, 0, 40, (i * Math.PI) / 2, (i * Math.PI) / 2 + 0.4);
+          ctx.closePath(); ctx.fill();
+        }
+        ctx.restore();
+        // Car body
+        ctx.save();
+        ctx.fillStyle = "rgba(0,0,0,0.38)"; ctx.beginPath(); ctx.ellipse(3, 18, 28, 12, 0, 0, Math.PI * 2); ctx.fill();
+        const oCarGrad = ctx.createLinearGradient(-25, -15, 25, 15);
+        oCarGrad.addColorStop(0, oCar.color); oCarGrad.addColorStop(0.5, oCar.color + "CC"); oCarGrad.addColorStop(1, oCar.color + "88");
+        ctx.fillStyle = oCarGrad;
+        ctx.beginPath(); ctx.moveTo(-22,-8); ctx.lineTo(-25,0); ctx.lineTo(-22,10); ctx.lineTo(22,10); ctx.lineTo(25,0); ctx.lineTo(22,-8); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = "#040e14"; ctx.beginPath(); ctx.roundRect(-12,-5,24,12,3); ctx.fill();
+        ctx.fillStyle = "rgba(0,220,255,0.38)";
+        ctx.beginPath(); ctx.moveTo(-12,-4); ctx.lineTo(-8,-8); ctx.lineTo(8,-8); ctx.lineTo(12,-4); ctx.closePath(); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(-10,6); ctx.lineTo(-6,10); ctx.lineTo(6,10); ctx.lineTo(10,6); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = "#AAFFEE"; ctx.shadowColor = "#00FFCC"; ctx.shadowBlur = 5;
+        ctx.fillRect(-20,-6,4,3); ctx.fillRect(16,-6,4,3); ctx.shadowBlur = 0;
+        ctx.fillStyle = "#FF4400"; ctx.shadowColor = "#FF4400"; ctx.shadowBlur = 4;
+        ctx.fillRect(-20,6,4,2); ctx.fillRect(16,6,4,2); ctx.shadowBlur = 0;
+        ctx.fillStyle = "#1a1a1a";
+        ctx.beginPath(); ctx.arc(-16,-10,5,0,Math.PI*2); ctx.arc(16,-10,5,0,Math.PI*2); ctx.arc(-16,12,5,0,Math.PI*2); ctx.arc(16,12,5,0,Math.PI*2); ctx.fill();
+        ctx.fillStyle = "#2a3a3a";
+        ctx.beginPath(); ctx.arc(-16,-10,3,0,Math.PI*2); ctx.arc(16,-10,3,0,Math.PI*2); ctx.arc(-16,12,3,0,Math.PI*2); ctx.arc(16,12,3,0,Math.PI*2); ctx.fill();
+        ctx.restore();
+        // Car label
+        ctx.fillStyle = "#AAFFEE"; ctx.shadowColor = oA; ctx.shadowBlur = 8;
+        ctx.font = "bold 8px Orbitron, monospace"; ctx.textAlign = "center";
+        ctx.fillText(oCar.name, 0, 45); ctx.shadowBlur = 0;
+        ctx.fillStyle = oA; ctx.font = "7px Orbitron, monospace";
+        ctx.fillText("ON DISPLAY", 0, 54);
+        ctx.restore();
+      }
+
+      // Ambient rising bubble particles
+      for (let i = 0; i < 10; i++) {
+        const bpx = S * 1.5 + ((t * 22 + i * 77) % (room.roomW - S * 3));
+        const bpy = room.roomH - S * 1.5 - ((t * 28 + i * 55) % (room.roomH - S * 3));
+        const balpha = Math.sin(t * 2.5 + i * 1.3) * 0.35 + 0.45;
+        const brad = i % 4 === 0 ? 2.5 : 1.5;
+        ctx.strokeStyle = i % 2 === 0 ? `rgba(${oAr},${balpha})` : `rgba(${oBr},${balpha})`;
+        ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.arc(bpx, bpy, brad, 0, Math.PI * 2); ctx.stroke();
+      }
+
+      // Side bioluminescent teal strips
+      ctx.fillStyle = `rgba(${oBr},0.20)`;
+      ctx.fillRect(S, S * 1.5, 3, room.roomH - S * 3);
+      ctx.fillRect(room.roomW - S - 3, S * 1.5, 3, room.roomH - S * 3);
+
     } else {
       // ═══ DEFAULT SHOWROOM (other maps) ═══
       for (let ty = 0; ty < room.H; ty++) {
@@ -1712,6 +1862,11 @@ Game.prototype._renderDealershipIndoor = function(ctx, W, H, shake) {
           ctx.shadowColor = "#44DD22";
           ctx.shadowBlur = 12;
           ctx.fillText("[T] OPEN SHOP", nearSp.x, nearSp.y - 102);
+        } else if (isOcean) {
+          ctx.fillStyle = "#00FFCC";
+          ctx.shadowColor = "#00FFCC";
+          ctx.shadowBlur = 14;
+          ctx.fillText("[T] OPEN SHOP", nearSp.x, nearSp.y - 102);
         } else {
           ctx.fillStyle = "#FFFFAA";
           ctx.shadowColor = "#FFFF00";
@@ -1761,6 +1916,11 @@ Game.prototype._renderDealershipIndoor = function(ctx, W, H, shake) {
       ctx.fillStyle = "#AAFFAA";
       ctx.shadowColor = "#44DD22";
       ctx.shadowBlur = 10;
+      ctx.fillText("[E] EXIT", room.entryX, room.roomH - 25);
+    } else if (isOcean) {
+      ctx.fillStyle = "#00FFCC";
+      ctx.shadowColor = "#00FFCC";
+      ctx.shadowBlur = 12;
       ctx.fillText("[E] EXIT", room.entryX, room.roomH - 25);
     } else {
       ctx.fillStyle = "#FFFFAA";

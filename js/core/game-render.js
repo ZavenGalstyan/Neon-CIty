@@ -192,6 +192,7 @@ Game.prototype._render = function() {
         const isSnow = !!this.map.config.snow;
         const isRobotCity = !!this.map.config.robot;
         const isDesert = !!this.map.config.desert;
+        const isOcean = !!this.map.config.ocean;
         ctx.save();
         ctx.translate(p.x, p.y);
 
@@ -1054,6 +1055,158 @@ Game.prototype._render = function() {
             ctx.shadowColor = "#FFD700";
             ctx.shadowBlur = 14;
             ctx.fillText("[E]  ENTER WARP", 0, -66);
+          }
+        } else if (isOcean) {
+          // ── OCEAN DEPTHS: Abyssal whirlpool gate — teal / deep-blue / bioluminescent ──
+          const t = p._animT;
+          const pulse2 = Math.sin(t * 2.2) * 0.3 + 0.7;
+          const pulse3 = Math.sin(t * 4.5) * 0.2 + 0.8;
+
+          // Wide bioluminescent halo — deep ocean glow
+          const haloG = ctx.createRadialGradient(0, 0, 8, 0, 0, 58);
+          haloG.addColorStop(0,   `rgba(0,200,220,${pulse * 0.22})`);
+          haloG.addColorStop(0.4, `rgba(0,80,160,${pulse * 0.14})`);
+          haloG.addColorStop(0.8, `rgba(0,40,80,${pulse * 0.07})`);
+          haloG.addColorStop(1,   "rgba(0,0,0,0)");
+          ctx.fillStyle = haloG;
+          ctx.beginPath();
+          ctx.arc(0, 0, 58, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Outer rotating ring — teal dashes (whirlpool spin)
+          ctx.save();
+          ctx.rotate(t * 0.5);
+          ctx.strokeStyle = `rgba(0,220,200,${pulse * 0.72})`;
+          ctx.lineWidth = 2;
+          ctx.setLineDash([9, 11]);
+          ctx.beginPath();
+          ctx.arc(0, 0, 40, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.restore();
+
+          // Middle counter-rotating ring — ocean blue dashes
+          ctx.save();
+          ctx.rotate(-t * 0.8);
+          ctx.strokeStyle = `rgba(40,160,255,${pulse2 * 0.65})`;
+          ctx.lineWidth = 1.5;
+          ctx.setLineDash([5, 9]);
+          ctx.beginPath();
+          ctx.arc(0, 0, 32, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.restore();
+
+          // Inner fast ring — faint seafoam
+          ctx.save();
+          ctx.rotate(t * 1.4);
+          ctx.strokeStyle = `rgba(80,255,200,${pulse3 * 0.30})`;
+          ctx.lineWidth = 1;
+          ctx.setLineDash([3, 7]);
+          ctx.beginPath();
+          ctx.arc(0, 0, 23, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.restore();
+
+          // Abyssal core gradient — deep ocean vortex
+          const coreG = ctx.createRadialGradient(0, 0, 0, 0, 0, 26);
+          coreG.addColorStop(0,    `rgba(200,255,255,${pulse3 * 0.95})`);
+          coreG.addColorStop(0.20, `rgba(0,220,200,${pulse2 * 0.80})`);
+          coreG.addColorStop(0.55, `rgba(0,80,180,${pulse * 0.55})`);
+          coreG.addColorStop(0.85, `rgba(0,20,60,${pulse * 0.35})`);
+          coreG.addColorStop(1,    "rgba(0,0,0,0)");
+          ctx.fillStyle = coreG;
+          ctx.beginPath();
+          ctx.arc(0, 0, 26, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Whirlpool spiral arms (3 curved strokes rotating outward)
+          ctx.save();
+          ctx.rotate(t * 0.6);
+          for (let arm = 0; arm < 3; arm++) {
+            ctx.save();
+            ctx.rotate((arm * Math.PI * 2) / 3);
+            ctx.strokeStyle = `rgba(0,200,220,${pulse * 0.35})`;
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(6, 0);
+            ctx.quadraticCurveTo(22, -10, 30, -22);
+            ctx.stroke();
+            ctx.restore();
+          }
+          ctx.restore();
+
+          // Orbiting particles — 8 alternating teal + seafoam bubbles
+          for (let i = 0; i < 8; i++) {
+            const angle = t * 1.9 + (i * Math.PI) / 4;
+            const dist = 24 + Math.sin(t * 2.5 + i * 1.2) * 6;
+            const gp = Math.cos(angle) * dist;
+            const hp = Math.sin(angle) * dist;
+            const r = i % 3 === 0 ? 2.8 : 1.8;
+            ctx.fillStyle = i % 2 === 0
+              ? `rgba(0,220,200,${pulse})`
+              : `rgba(80,180,255,${pulse2})`;
+            ctx.beginPath();
+            ctx.arc(gp, hp, r, 0, Math.PI * 2);
+            ctx.fill();
+          }
+
+          // Bioluminescent bubble ring (drifting up)
+          for (let bi = 0; bi < 5; bi++) {
+            const ba = (bi / 5) * Math.PI * 2 + t * 0.4;
+            const bd = 34 + bi * 2;
+            const bx2 = Math.cos(ba) * bd;
+            const by2 = Math.sin(ba) * bd;
+            ctx.fillStyle = `rgba(120,255,210,${0.35 + 0.20 * Math.sin(t * 2 + bi)})`;
+            ctx.beginPath();
+            ctx.arc(bx2, by2, 2.2, 0, Math.PI * 2);
+            ctx.fill();
+          }
+
+          // Bright bioluminescent core
+          ctx.shadowColor = "#00FFCC";
+          ctx.shadowBlur = 24 * pulse;
+          ctx.fillStyle = `rgba(200,255,240,${pulse3})`;
+          ctx.beginPath();
+          ctx.arc(0, 0, 7, 0, Math.PI * 2);
+          ctx.fill();
+
+          // 8-point coral gate frame — teal (same geometry as Galactica, ocean colors)
+          ctx.shadowBlur = 16 * pulse;
+          ctx.strokeStyle = `rgba(0,220,200,${pulse})`;
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          for (let i = 0; i < 8; i++) {
+            const ang = (Math.PI / 4) * i - Math.PI / 2;
+            const r = i % 2 === 0 ? 30 : 20;
+            const fx = Math.cos(ang) * r;
+            const fy = Math.sin(ang) * r;
+            i === 0 ? ctx.moveTo(fx, fy) : ctx.lineTo(fx, fy);
+          }
+          ctx.closePath();
+          ctx.stroke();
+
+          // Deep blue accent ring
+          ctx.shadowBlur = 8 * pulse2;
+          ctx.strokeStyle = `rgba(40,160,255,${pulse2 * 0.50})`;
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.arc(0, 0, 25, 0, Math.PI * 2);
+          ctx.stroke();
+
+          ctx.shadowBlur = 0;
+          ctx.fillStyle = near ? "#AAFFEE" : "#00DDCC";
+          ctx.font = "bold 9px Orbitron, monospace";
+          ctx.textAlign = "center";
+          ctx.shadowColor = "#00CCAA";
+          ctx.shadowBlur = 12;
+          ctx.fillText("≋ DEPTH GATE ≋", 0, -52);
+          if (near) {
+            ctx.fillStyle = "#AAFFEE";
+            ctx.shadowColor = "#00FFCC";
+            ctx.shadowBlur = 14;
+            ctx.fillText("[E]  DIVE IN", 0, -66);
           }
         } else if (!!this.map.config.jungle) {
           // ── JUNGLE SAFARI: Bioluminescent vine gate — leaf green / firefly amber ──

@@ -2691,6 +2691,7 @@ class Game {
           const isHardcoreD = !!this.map.config.hardcore;
           const isDesertD   = !!this.map.config.desert;
           const isSnowD     = !!this.map.config.snow;
+          const isOceanD    = !!this.map.config.ocean;
           if (isNeonCity) {
             // Neon City: One professional cyber salesperson behind the counter
             // Counter is at S * 1.8 + 35 height, salesperson stands in front of counter (facing customers)
@@ -2768,6 +2769,13 @@ class Game {
             const spY = room.roomH * 0.38;
             this._salespersons = [
               new Salesperson(spX, spY, "#44DD22", "SAFARI REP", "dino"),
+            ];
+          } else if (isOceanD) {
+            // Ocean Depths: Teal deep-sea sales rep
+            const spX = room.roomW / 2;
+            const spY = room.roomH * 0.38;
+            this._salespersons = [
+              new Salesperson(spX, spY, "#00FFCC", "DIVE REP", "ocean"),
             ];
           } else {
             this._salespersons = [

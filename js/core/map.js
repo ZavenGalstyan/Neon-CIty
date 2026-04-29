@@ -5080,7 +5080,8 @@ class GameMap {
     const isJungleRadio = isJungle && door.bTypeIdx === 22;
     const isZombieMap   = !!this.config.zombie;
     const isJungleDealer = isJungle && door.specialType === 'dealership';
-    const useLargeDealer = isNeonDealer || isGalDealer || isWastelandDealer || isHardcoreDealer || isDinoDealer || isDesertDealer || isJungleDealer;
+    const isOceanDealer  = !!this.config.ocean && door.specialType === 'dealership';
+    const useLargeDealer = isNeonDealer || isGalDealer || isWastelandDealer || isHardcoreDealer || isDinoDealer || isDesertDealer || isJungleDealer || isOceanDealer;
     const useLargeArcade = isNeonArcade || isGalArcade;
     const useLargeMarket = isGalMarket;
     const useLargeClub   = isGalClub;

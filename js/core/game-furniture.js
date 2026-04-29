@@ -4705,6 +4705,478 @@ Game.prototype._renderIndoorFurniture = function(ctx, room) {
           fcg.addColorStop(0,`rgba(${FLAMEr},${0.35+0.2*Math.sin(t*3+ci)})`); fcg.addColorStop(1,"rgba(0,0,0,0)");
           ctx.fillStyle=fcg; ctx.beginPath(); ctx.arc(fcx,fcy,14,0,Math.PI*2); ctx.fill();
         }
+      } else if (!!this.map?.config?.ocean) {
+        // ═══ OCEAN: ABYSS CLUB ═══
+        const t = performance.now() / 1000;
+        const AQUA = "#00FFEE", CYAN = "#00CCFF", TEAL = "#00AA88",
+              DEEP = "#0066CC", BIOL = "#44FFCC", CORAL = "#FF7755";
+
+        // ── DEEP OCEAN FLOOR ──
+        for (let ty2 = 0; ty2 < room.H; ty2++) {
+          for (let tx2 = 0; tx2 < room.W; tx2++) {
+            if (room.layout[ty2][tx2] !== 0) continue;
+            const px2 = tx2 * room.S, py2 = ty2 * room.S;
+            const wv = Math.sin(t * 0.8 + tx2 * 0.4 + ty2 * 0.3) * 0.04;
+            ctx.fillStyle = (tx2 + ty2) % 2 === 0 ? "#000e22" : "#000a1a";
+            ctx.fillRect(px2, py2, room.S, room.S);
+            ctx.strokeStyle = `rgba(0,180,200,${0.05 + wv})`;
+            ctx.lineWidth = 1;
+            ctx.strokeRect(px2, py2, room.S, room.S);
+          }
+        }
+
+        // ── ROOM BORDER ──
+        ctx.strokeStyle = AQUA;
+        ctx.lineWidth = 2;
+        ctx.shadowColor = AQUA;
+        ctx.shadowBlur = 20;
+        ctx.strokeRect(room.S + 2, room.S + 2, W - room.S * 2 - 4, H - room.S * 2 - 4);
+        ctx.shadowBlur = 0;
+
+        // ── TITLE SIGN ──
+        ctx.save();
+        ctx.font = "bold 22px Orbitron, monospace";
+        ctx.textAlign = "center";
+        ctx.fillStyle = "#fff";
+        ctx.shadowColor = AQUA;
+        ctx.shadowBlur = 30;
+        ctx.fillText("〜  ABYSS CLUB  〜", W / 2, room.S - 18);
+        ctx.shadowBlur = 0;
+        ctx.restore();
+
+        // ── TOP ACCENT BAR ──
+        const tgA = ctx.createLinearGradient(0, room.S, W, room.S);
+        tgA.addColorStop(0,   "rgba(0,255,238,0)");
+        tgA.addColorStop(0.5, "rgba(0,255,238,0.6)");
+        tgA.addColorStop(1,   "rgba(0,255,238,0)");
+        ctx.fillStyle = tgA;
+        ctx.fillRect(room.S, room.S, W - room.S * 2, 4);
+
+        // ── DJ BOOTH (top-center, large + detailed) ──
+        const djX = W / 2 - 110, djY = room.S * 1.1, djW = 220, djH = 54;
+        ctx.fillStyle = "#000e22";
+        ctx.strokeStyle = TEAL;
+        ctx.lineWidth = 2;
+        ctx.shadowColor = TEAL;
+        ctx.shadowBlur = 14;
+        rr(djX, djY, djW, djH, 8);
+        ctx.fill(); ctx.stroke();
+        ctx.shadowBlur = 0;
+        const djGA = ctx.createLinearGradient(djX, 0, djX + djW, 0);
+        djGA.addColorStop(0, AQUA + "00");
+        djGA.addColorStop(0.5, AQUA + "BB");
+        djGA.addColorStop(1, AQUA + "00");
+        ctx.fillStyle = djGA;
+        ctx.fillRect(djX + 4, djY, djW - 8, 4);
+        // Turntables
+        const ttA = (t * 1.2) % (Math.PI * 2);
+        for (const [ttx, sign] of [[djX + 42, 1], [djX + djW - 42, -1]]) {
+          ctx.fillStyle = "#001228";
+          ctx.strokeStyle = TEAL + "88";
+          ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.arc(ttx, djY + 28, 24, 0, Math.PI * 2);
+          ctx.fill(); ctx.stroke();
+          for (let gr = 1; gr <= 4; gr++) {
+            ctx.strokeStyle = `rgba(0,200,200,${0.1 + gr * 0.06})`;
+            ctx.beginPath(); ctx.arc(ttx, djY + 28, gr * 5, 0, Math.PI * 2); ctx.stroke();
+          }
+          ctx.fillStyle = AQUA;
+          ctx.beginPath(); ctx.arc(ttx, djY + 28, 6, 0, Math.PI * 2); ctx.fill();
+          ctx.strokeStyle = "#88ccdd"; ctx.lineWidth = 2;
+          ctx.save(); ctx.translate(ttx, djY + 28); ctx.rotate(ttA * sign);
+          ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(22, -6); ctx.stroke();
+          ctx.fillStyle = "#aaccee"; ctx.beginPath(); ctx.arc(22, -6, 2.5, 0, Math.PI * 2); ctx.fill();
+          ctx.restore();
+        }
+        // EQ bars
+        const eqColsA = [AQUA, CYAN, TEAL, BIOL, DEEP, AQUA, CYAN, BIOL];
+        for (let ei = 0; ei < 8; ei++) {
+          const bh = 8 + Math.sin(t * 8 + ei * 0.9) * 14;
+          ctx.fillStyle = eqColsA[ei]; ctx.shadowColor = eqColsA[ei]; ctx.shadowBlur = 6;
+          ctx.fillRect(djX + 80 + ei * 8, djY + djH - 6 - bh, 6, bh);
+        }
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = AQUA; ctx.shadowColor = AQUA; ctx.shadowBlur = 10;
+        ctx.font = "bold 9px Orbitron, monospace"; ctx.textAlign = "center";
+        ctx.fillText("〜 AQUA MIX 〜", W / 2, djY + djH + 14);
+        ctx.shadowBlur = 0;
+
+        // ── HUMAN DJ (standing behind booth, top-center) ──
+        {
+          const djHx = W / 2, djHy = djY - 4;
+          const djBob = Math.sin(t * 3.5) * 3;
+          const djArmL = Math.sin(t * 3.5) * 0.35;
+          const djArmR = Math.sin(t * 3.5 + 0.6) * 0.35;
+          const djSkin = "#DDEEFF", djHair = "#001a3a", djShirt = TEAL, djPants = "#001228";
+          ctx.save();
+          ctx.translate(djHx, djHy + djBob);
+
+          // Shadow
+          ctx.fillStyle = "rgba(0,0,0,0.35)";
+          ctx.beginPath(); ctx.ellipse(0, 6, 10, 3, 0, 0, Math.PI * 2); ctx.fill();
+
+          // Legs
+          ctx.fillStyle = djPants;
+          ctx.beginPath(); ctx.roundRect(-8, -4, 6, 14, 1); ctx.fill();
+          ctx.beginPath(); ctx.roundRect(2, -4, 6, 14, 1); ctx.fill();
+          // Shoes
+          ctx.fillStyle = AQUA + "99";
+          ctx.beginPath(); ctx.ellipse(-5, 10, 6, 2, 0, 0, Math.PI*2); ctx.fill();
+          ctx.beginPath(); ctx.ellipse(5, 10, 6, 2, 0, 0, Math.PI*2); ctx.fill();
+
+          // Body / shirt
+          ctx.fillStyle = djShirt + "DD"; ctx.shadowColor = AQUA; ctx.shadowBlur = 10;
+          ctx.beginPath(); ctx.roundRect(-9, -22, 18, 20, 3); ctx.fill(); ctx.shadowBlur = 0;
+          // Shirt detail stripe
+          ctx.strokeStyle = AQUA + "88"; ctx.lineWidth = 1.5;
+          ctx.beginPath(); ctx.moveTo(-9, -12); ctx.lineTo(9, -12); ctx.stroke();
+          // Headphones cord
+          ctx.strokeStyle = "#336688"; ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.moveTo(-4, -27); ctx.quadraticCurveTo(-16, -30, -16, -38); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(4, -27); ctx.quadraticCurveTo(16, -30, 16, -38); ctx.stroke();
+
+          // Arms (reaching toward booth, animated)
+          ctx.strokeStyle = djSkin; ctx.lineWidth = 5; ctx.lineCap = "round";
+          ctx.beginPath(); ctx.moveTo(-9, -18); ctx.lineTo(-20 + Math.cos(djArmL) * 8, -8 + Math.sin(djArmL) * 6); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(9, -18); ctx.lineTo(20 + Math.cos(djArmR) * 8, -8 + Math.sin(djArmR) * 6); ctx.stroke();
+          ctx.lineCap = "butt";
+          // Hands
+          ctx.fillStyle = djSkin;
+          ctx.beginPath(); ctx.arc(-20 + Math.cos(djArmL) * 8, -8 + Math.sin(djArmL) * 6, 4, 0, Math.PI*2); ctx.fill();
+          ctx.beginPath(); ctx.arc(20 + Math.cos(djArmR) * 8, -8 + Math.sin(djArmR) * 6, 4, 0, Math.PI*2); ctx.fill();
+
+          // Neck
+          ctx.fillStyle = djSkin; ctx.fillRect(-3, -24, 6, 5);
+
+          // Head
+          ctx.fillStyle = djSkin; ctx.beginPath(); ctx.arc(0, -33, 10, 0, Math.PI*2); ctx.fill();
+
+          // Hair (short, swept)
+          ctx.fillStyle = djHair;
+          ctx.beginPath(); ctx.arc(0, -37, 9, Math.PI * 1.1, Math.PI * 1.9); ctx.fill();
+          ctx.fillRect(-8, -37, 16, 7);
+          // Side hair
+          ctx.beginPath(); ctx.arc(-9, -33, 3, Math.PI * 0.5, Math.PI * 1.5); ctx.fill();
+          ctx.beginPath(); ctx.arc(9, -33, 3, Math.PI * 1.5, Math.PI * 0.5); ctx.fill();
+
+          // Headphones
+          ctx.strokeStyle = "#224466"; ctx.lineWidth = 3;
+          ctx.beginPath(); ctx.arc(0, -36, 12, Math.PI * 1.1, Math.PI * 1.9); ctx.stroke();
+          ctx.fillStyle = AQUA; ctx.shadowColor = AQUA; ctx.shadowBlur = 6;
+          ctx.beginPath(); ctx.arc(-11, -37, 4, 0, Math.PI*2); ctx.fill();
+          ctx.beginPath(); ctx.arc(11, -37, 4, 0, Math.PI*2); ctx.fill();
+          ctx.shadowBlur = 0;
+
+          // Eyes
+          ctx.fillStyle = "#fff";
+          ctx.beginPath(); ctx.ellipse(-3.5, -34, 2.2, 1.8, 0, 0, Math.PI*2); ctx.fill();
+          ctx.beginPath(); ctx.ellipse(3.5, -34, 2.2, 1.8, 0, 0, Math.PI*2); ctx.fill();
+          ctx.fillStyle = TEAL; ctx.shadowColor = TEAL; ctx.shadowBlur = 3;
+          ctx.beginPath(); ctx.arc(-3.5, -34, 1.2, 0, Math.PI*2); ctx.fill();
+          ctx.beginPath(); ctx.arc(3.5, -34, 1.2, 0, Math.PI*2); ctx.fill();
+          ctx.shadowBlur = 0;
+          ctx.fillStyle = "#000";
+          ctx.beginPath(); ctx.arc(-3.5, -34, 0.5, 0, Math.PI*2); ctx.fill();
+          ctx.beginPath(); ctx.arc(3.5, -34, 0.5, 0, Math.PI*2); ctx.fill();
+
+          // Eyebrows
+          ctx.strokeStyle = djHair; ctx.lineWidth = 1.3;
+          ctx.beginPath(); ctx.moveTo(-6, -37); ctx.lineTo(-2, -38); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(2, -38); ctx.lineTo(6, -37); ctx.stroke();
+
+          // Nose
+          ctx.fillStyle = "rgba(0,0,0,0.15)"; ctx.beginPath(); ctx.arc(0, -31, 1.2, 0, Math.PI*2); ctx.fill();
+
+          // Mouth (smile + open, dancing)
+          const djMouth = Math.abs(Math.sin(t * 3.5)) * 2;
+          ctx.strokeStyle = "#44AAEE"; ctx.lineWidth = 1.5;
+          ctx.beginPath(); ctx.arc(0, -28, 3, 0.1, Math.PI - 0.1); ctx.stroke();
+          if (djMouth > 0.8) {
+            ctx.fillStyle = "#002244"; ctx.beginPath(); ctx.arc(0, -27, djMouth * 0.8, 0, Math.PI); ctx.fill();
+          }
+
+          ctx.restore();
+        }
+
+        // ── SPEAKERS — left & right of DJ booth ──
+        for (const [spX, spY] of [[djX - 50, djY - 4], [djX + djW + 24, djY - 4]]) {
+          ctx.fillStyle = "#000e22"; ctx.strokeStyle = TEAL + "88"; ctx.lineWidth = 1.5;
+          rr(spX, spY, 32, 56, 5); ctx.fill(); ctx.stroke();
+          for (let ri = 0; ri < 4; ri++) {
+            const rp = Math.sin(t * 6 + ri) * 0.5 + 0.5;
+            ctx.strokeStyle = `rgba(0,200,200,${0.2 + rp * 0.5})`; ctx.lineWidth = 1;
+            ctx.beginPath(); ctx.arc(spX + 16, spY + 20, 4 + ri * 3, 0, Math.PI * 2); ctx.stroke();
+          }
+          ctx.fillStyle = AQUA; ctx.shadowColor = AQUA; ctx.shadowBlur = 8;
+          ctx.beginPath(); ctx.arc(spX + 16, spY + 44, 5, 0, Math.PI * 2); ctx.fill();
+          ctx.shadowBlur = 0;
+        }
+
+        // ── BIG DANCE FLOOR (center, wave-ripple tiles 9×6) ──
+        const dfColsA = 9, dfRowsA = 6;
+        const dfW2A = W * 0.65, dfH2A = H * 0.34;
+        const dfXA = W / 2 - dfW2A / 2, dfY2A = H * 0.38;
+        const twA = dfW2A / dfColsA, th2A = dfH2A / dfRowsA;
+        const tileColsA = [AQUA, CYAN, TEAL, BIOL, DEEP, "#00FFFF", "#44CCFF", BIOL, AQUA];
+        for (let tr = 0; tr < dfRowsA; tr++) {
+          for (let tc = 0; tc < dfColsA; tc++) {
+            const wv2 = Math.sin(t * 3 + tc * 0.6 + tr * 0.8) * 0.5 + 0.5;
+            const col = tileColsA[(tc + tr + Math.floor(t * 1.5)) % tileColsA.length];
+            ctx.fillStyle = `rgba(0,10,30,0.9)`;
+            ctx.fillRect(dfXA + tc * twA + 1, dfY2A + tr * th2A + 1, twA - 2, th2A - 2);
+            ctx.fillStyle = col + Math.floor(wv2 * 70 + 15).toString(16).padStart(2, "0");
+            ctx.fillRect(dfXA + tc * twA + 1, dfY2A + tr * th2A + 1, twA - 2, th2A - 2);
+            ctx.strokeStyle = col + Math.floor(wv2 * 160 + 40).toString(16).padStart(2, "0");
+            ctx.lineWidth = 1;
+            ctx.strokeRect(dfXA + tc * twA + 1, dfY2A + tr * th2A + 1, twA - 2, th2A - 2);
+            ctx.fillStyle = `rgba(255,255,255,${0.03 + wv2 * 0.05})`;
+            ctx.fillRect(dfXA + tc * twA + 2, dfY2A + tr * th2A + 2, twA / 2, th2A / 2);
+          }
+        }
+        ctx.fillStyle = "rgba(0,220,220,0.25)";
+        ctx.font = "bold 7px Orbitron, monospace"; ctx.textAlign = "center";
+        ctx.fillText("DANCE FLOOR", W / 2, dfY2A + dfH2A + 12);
+
+        // ── DANCERS (5, ocean outfits, full detail) ──
+        const dancerDefsA = [
+          { x: W * 0.25, y: H * 0.50, color: AQUA,      gender: "f", skin: "#DDEEFF", hair: "#002244" },
+          { x: W * 0.37, y: H * 0.53, color: BIOL,      gender: "m", skin: "#C8E0F0", hair: "#003355" },
+          { x: W * 0.50, y: H * 0.49, color: CYAN,      gender: "f", skin: "#E0F0FF", hair: "#001133" },
+          { x: W * 0.63, y: H * 0.53, color: TEAL,      gender: "m", skin: "#CCE8EE", hair: "#002030" },
+          { x: W * 0.75, y: H * 0.50, color: "#00FFFF",  gender: "f", skin: "#DDEEFF", hair: "#001a3a" },
+        ];
+        for (const d of dancerDefsA) {
+          const bounce   = Math.sin(t * 4 + d.x * 0.05) * 5;
+          const armSwing = Math.sin(t * 4 + d.x * 0.05) * 18;
+          const stepL    = Math.sin(t * 4 + d.x) * 5;
+          ctx.save();
+          ctx.translate(d.x, d.y + bounce);
+          ctx.fillStyle = "rgba(0,0,0,0.3)";
+          ctx.beginPath(); ctx.ellipse(0, 22, 9, 3, 0, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = d.gender === "f" ? "#001840" : "#001028";
+          ctx.beginPath(); ctx.roundRect(-8, 10, 5, 12 + stepL, 1); ctx.fill();
+          ctx.beginPath(); ctx.roundRect(3, 10, 5, 12 - stepL, 1); ctx.fill();
+          ctx.fillStyle = d.gender === "f" ? d.color + "AA" : "#002244";
+          ctx.beginPath(); ctx.ellipse(-5, 22 + stepL, 5, 2, 0, 0, Math.PI*2); ctx.fill();
+          ctx.beginPath(); ctx.ellipse(5, 22 - stepL, 5, 2, 0, 0, Math.PI*2); ctx.fill();
+          ctx.fillStyle = d.color + "CC"; ctx.shadowColor = d.color; ctx.shadowBlur = 8;
+          ctx.beginPath(); ctx.roundRect(d.gender === "f" ? -8 : -7, -8, d.gender === "f" ? 16 : 14, 20, 3); ctx.fill();
+          ctx.shadowBlur = 0;
+          if (d.gender === "f") {
+            ctx.fillStyle = d.color + "88";
+            ctx.beginPath(); ctx.moveTo(-8, 8); ctx.lineTo(-13, 22); ctx.lineTo(13, 22); ctx.lineTo(8, 8); ctx.closePath(); ctx.fill();
+            ctx.strokeStyle = d.color + "FF"; ctx.lineWidth = 1.5; ctx.shadowColor = d.color; ctx.shadowBlur = 4;
+            ctx.beginPath(); ctx.moveTo(-8, 4); ctx.lineTo(8, 4); ctx.stroke(); ctx.shadowBlur = 0;
+          } else {
+            ctx.fillStyle = d.skin; ctx.beginPath(); ctx.moveTo(-3,-8); ctx.lineTo(0,-4); ctx.lineTo(3,-8); ctx.fill();
+          }
+          ctx.strokeStyle = d.skin; ctx.lineWidth = 4; ctx.lineCap = "round";
+          ctx.beginPath(); ctx.moveTo(-7, -4); ctx.lineTo(-14 - armSwing * 0.3, 6); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(7, -4); ctx.lineTo(14 + armSwing * 0.3, 2); ctx.stroke();
+          ctx.fillStyle = d.skin;
+          ctx.beginPath(); ctx.arc(-14 - armSwing * 0.3, 6, 3, 0, Math.PI*2); ctx.fill();
+          ctx.beginPath(); ctx.arc(14 + armSwing * 0.3, 2, 3, 0, Math.PI*2); ctx.fill();
+          ctx.lineCap = "butt";
+          ctx.fillStyle = d.skin; ctx.fillRect(-3, -9, 6, 5);
+          ctx.beginPath(); ctx.arc(0, -16, 9, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = d.hair;
+          if (d.gender === "f") {
+            ctx.beginPath(); ctx.arc(0, -20, 8, Math.PI, 0); ctx.fill();
+            ctx.fillRect(-9, -21, 5, 14); ctx.fillRect(4, -21, 5, 14);
+          } else {
+            ctx.beginPath(); ctx.arc(0, -21, 7, Math.PI * 1.1, Math.PI * 1.9); ctx.fill();
+            ctx.fillRect(-6, -21, 12, 6);
+          }
+          ctx.fillStyle = "#fff";
+          ctx.beginPath(); ctx.ellipse(-3.5, -17, 2.2, 1.8, 0, 0, Math.PI*2); ctx.ellipse(3.5, -17, 2.2, 1.8, 0, 0, Math.PI*2); ctx.fill();
+          ctx.fillStyle = d.color; ctx.shadowColor = d.color; ctx.shadowBlur = 3;
+          ctx.beginPath(); ctx.arc(-3.5, -17, 1.2, 0, Math.PI*2); ctx.arc(3.5, -17, 1.2, 0, Math.PI*2); ctx.fill();
+          ctx.shadowBlur = 0;
+          ctx.fillStyle = "#000";
+          ctx.beginPath(); ctx.arc(-3.5, -17, 0.5, 0, Math.PI*2); ctx.fill();
+          ctx.beginPath(); ctx.arc(3.5, -17, 0.5, 0, Math.PI*2); ctx.fill();
+          ctx.strokeStyle = d.hair; ctx.lineWidth = 1.2;
+          ctx.beginPath(); ctx.moveTo(-6, -20); ctx.lineTo(-2, -21); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(2, -21); ctx.lineTo(6, -20); ctx.stroke();
+          ctx.fillStyle = "rgba(0,0,0,0.18)"; ctx.beginPath(); ctx.arc(0, -14, 1.2, 0, Math.PI*2); ctx.fill();
+          const mOpenA = Math.abs(Math.sin(t * 4 + d.x)) * 2;
+          ctx.strokeStyle = d.gender === "f" ? "#44AAEE" : "#3399CC"; ctx.lineWidth = 1.5;
+          ctx.beginPath(); ctx.arc(0, -11, 3, 0.1, Math.PI - 0.1); ctx.stroke();
+          if (mOpenA > 0.5) { ctx.fillStyle = "#002244"; ctx.beginPath(); ctx.arc(0, -10, mOpenA, 0, Math.PI); ctx.fill(); }
+          if (d.gender === "f") {
+            ctx.fillStyle = d.color; ctx.shadowColor = d.color; ctx.shadowBlur = 4;
+            ctx.beginPath(); ctx.arc(-9, -16, 2, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(9, -16, 2, 0, Math.PI*2); ctx.fill();
+            ctx.shadowBlur = 0;
+          }
+          ctx.restore();
+        }
+
+        // ── STAGE / PODIUMS (left and right) ──
+        for (const [pdX, pdCol] of [[W * 0.12, AQUA], [W * 0.88, CYAN]]) {
+          const podBounce = Math.sin(t * 3 + pdX) * 4;
+          ctx.fillStyle = "#001228"; ctx.strokeStyle = pdCol; ctx.lineWidth = 2;
+          ctx.shadowColor = pdCol; ctx.shadowBlur = 12;
+          rr(pdX - 22, H * 0.42, 44, 14, 4); ctx.fill(); ctx.stroke();
+          ctx.shadowBlur = 0;
+          const pdSkin = "#DDEEFF", pdHair = "#002244";
+          ctx.save();
+          ctx.translate(pdX, H * 0.42 - 5 + podBounce);
+          const poleGA = ctx.createLinearGradient(-1, 0, 1, -50);
+          poleGA.addColorStop(0, "#558"); poleGA.addColorStop(1, "#aac");
+          ctx.strokeStyle = poleGA; ctx.lineWidth = 3;
+          ctx.shadowColor = pdCol; ctx.shadowBlur = 6;
+          ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, -50); ctx.stroke();
+          ctx.shadowBlur = 0;
+          const pLegStep = Math.sin(t * 3 + pdX) * 6;
+          ctx.fillStyle = "#001840";
+          ctx.beginPath(); ctx.roundRect(-7, -20, 5, 14 + pLegStep, 1); ctx.fill();
+          ctx.beginPath(); ctx.roundRect(2, -20, 5, 14 - pLegStep, 1); ctx.fill();
+          ctx.fillStyle = pdCol + "AA";
+          ctx.beginPath(); ctx.ellipse(-4, -6 + pLegStep, 5, 2, 0, 0, Math.PI*2); ctx.fill();
+          ctx.beginPath(); ctx.ellipse(4, -6 - pLegStep, 5, 2, 0, 0, Math.PI*2); ctx.fill();
+          ctx.fillStyle = pdCol + "CC"; ctx.shadowColor = pdCol; ctx.shadowBlur = 10;
+          ctx.beginPath(); ctx.roundRect(-7, -38, 14, 20, 3); ctx.fill(); ctx.shadowBlur = 0;
+          ctx.fillStyle = pdCol + "77";
+          ctx.beginPath(); ctx.moveTo(-7,-20); ctx.lineTo(-11,-8); ctx.lineTo(11,-8); ctx.lineTo(7,-20); ctx.closePath(); ctx.fill();
+          ctx.strokeStyle = pdCol; ctx.lineWidth = 1.5; ctx.shadowColor = pdCol; ctx.shadowBlur = 4;
+          ctx.beginPath(); ctx.moveTo(-7,-22); ctx.lineTo(7,-22); ctx.stroke(); ctx.shadowBlur = 0;
+          ctx.fillStyle = pdSkin; ctx.fillRect(-3, -40, 6, 4);
+          ctx.fillStyle = pdSkin; ctx.beginPath(); ctx.arc(0, -47, 8, 0, Math.PI*2); ctx.fill();
+          ctx.fillStyle = pdHair;
+          ctx.beginPath(); ctx.arc(0, -50, 7, Math.PI, 0); ctx.fill();
+          ctx.fillRect(-8, -52, 4, 12); ctx.fillRect(4, -52, 4, 12);
+          ctx.fillStyle = "#fff";
+          ctx.beginPath(); ctx.ellipse(-3, -48, 2, 1.6, 0, 0, Math.PI*2); ctx.ellipse(3, -48, 2, 1.6, 0, 0, Math.PI*2); ctx.fill();
+          ctx.fillStyle = pdCol; ctx.shadowColor = pdCol; ctx.shadowBlur = 4;
+          ctx.beginPath(); ctx.arc(-3, -48, 1.1, 0, Math.PI*2); ctx.fill();
+          ctx.beginPath(); ctx.arc(3, -48, 1.1, 0, Math.PI*2); ctx.fill();
+          ctx.shadowBlur = 0;
+          ctx.strokeStyle = "#000"; ctx.lineWidth = 0.8;
+          ctx.beginPath(); ctx.moveTo(-5, -49.5); ctx.lineTo(-6, -51); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(5, -49.5); ctx.lineTo(6, -51); ctx.stroke();
+          ctx.fillStyle = "rgba(0,0,0,0.15)"; ctx.beginPath(); ctx.arc(0, -45.5, 1, 0, Math.PI*2); ctx.fill();
+          ctx.strokeStyle = "#44AAEE"; ctx.lineWidth = 1.2;
+          ctx.beginPath(); ctx.arc(0, -43.5, 2.5, 0.1, Math.PI-0.1); ctx.stroke();
+          ctx.fillStyle = pdCol; ctx.shadowColor = pdCol; ctx.shadowBlur = 4;
+          ctx.beginPath(); ctx.arc(-9, -47, 2, 0, Math.PI*2); ctx.fill();
+          ctx.beginPath(); ctx.arc(9, -47, 2, 0, Math.PI*2); ctx.fill();
+          ctx.shadowBlur = 0;
+          ctx.strokeStyle = pdSkin; ctx.lineWidth = 3; ctx.lineCap = "round";
+          const armAA = Math.sin(t * 3 + pdX) * 0.4;
+          ctx.beginPath(); ctx.moveTo(7, -34); ctx.lineTo(0 + Math.cos(armAA) * 16, -42 + Math.sin(armAA) * 8); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(-7, -34); ctx.lineTo(-14, -26); ctx.stroke();
+          ctx.lineCap = "butt";
+          ctx.restore();
+        }
+
+        // ── BIOLUMINESCENT LASER LIGHTS ──
+        for (let li = 0; li < 6; li++) {
+          const angle = t * 0.6 + (li * Math.PI * 2) / 6;
+          const originX = W / 2 + (li % 3 - 1) * 80;
+          const originY = room.S * 1.5;
+          const len = 180 + Math.sin(t * 2 + li) * 60;
+          const lCol = tileColsA[li % tileColsA.length];
+          ctx.strokeStyle = lCol + "55"; ctx.lineWidth = 1.5;
+          ctx.shadowColor = lCol; ctx.shadowBlur = 8;
+          ctx.beginPath(); ctx.moveTo(originX, originY);
+          ctx.lineTo(originX + Math.cos(angle) * len, originY + Math.sin(angle) * len);
+          ctx.stroke(); ctx.shadowBlur = 0;
+        }
+
+        // ── STROBE SPOTLIGHTS ──
+        for (let si = 0; si < 3; si++) {
+          const sp = Math.sin(t * 5 + si * 2) * 0.5 + 0.5;
+          const sCol = [AQUA, CYAN, BIOL][si];
+          const sx = dfXA + dfW2A * (0.2 + si * 0.3);
+          const sgA = ctx.createRadialGradient(sx, dfY2A + dfH2A / 2, 0, sx, dfY2A + dfH2A / 2, 60);
+          sgA.addColorStop(0, sCol + Math.floor(sp * 60).toString(16).padStart(2, "0"));
+          sgA.addColorStop(1, "rgba(0,0,0,0)");
+          ctx.fillStyle = sgA; ctx.beginPath(); ctx.arc(sx, dfY2A + dfH2A / 2, 60, 0, Math.PI * 2); ctx.fill();
+        }
+
+        // ── BAR (bottom-left) ──
+        const barXA = room.S + 4, barYA = H * 0.78, barWA = W * 0.22, barHA = 42;
+        ctx.fillStyle = "#000e20"; ctx.strokeStyle = TEAL; ctx.lineWidth = 2;
+        ctx.shadowColor = TEAL; ctx.shadowBlur = 10;
+        rr(barXA, barYA, barWA, barHA, 6); ctx.fill(); ctx.stroke(); ctx.shadowBlur = 0;
+        ctx.fillStyle = "#001830"; ctx.fillRect(barXA, barYA, barWA, 6);
+        const bColsA = [AQUA, CYAN, BIOL, TEAL];
+        for (let bi = 0; bi < 4; bi++) {
+          const bc = bColsA[bi];
+          const bxA = barXA + 12 + bi * (barWA - 24) / 3;
+          const bpA = Math.sin(t * 1.5 + bi) * 0.3 + 0.7;
+          ctx.fillStyle = bc + "50"; ctx.strokeStyle = bc; ctx.lineWidth = 1;
+          ctx.shadowColor = bc; ctx.shadowBlur = 6 * bpA;
+          ctx.beginPath();
+          ctx.moveTo(bxA - 5, barYA + barHA - 4); ctx.lineTo(bxA - 4, barYA + 12);
+          ctx.lineTo(bxA - 2, barYA + 8); ctx.lineTo(bxA + 2, barYA + 8);
+          ctx.lineTo(bxA + 4, barYA + 12); ctx.lineTo(bxA + 5, barYA + barHA - 4);
+          ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.shadowBlur = 0;
+        }
+        ctx.fillStyle = AQUA; ctx.font = "bold 6px Orbitron, monospace"; ctx.textAlign = "center";
+        ctx.fillText("DEEP BAR", barXA + barWA / 2, barYA + barHA + 11);
+
+        // ── VIP LOUNGE (bottom-right) ──
+        const vipXA = W - room.S - 4 - W * 0.22, vipYA = H * 0.78;
+        ctx.fillStyle = "#000e20"; ctx.strokeStyle = CYAN; ctx.lineWidth = 2;
+        ctx.shadowColor = CYAN; ctx.shadowBlur = 10;
+        rr(vipXA, vipYA, barWA, barHA, 6); ctx.fill(); ctx.stroke(); ctx.shadowBlur = 0;
+        for (let vi = 0; vi < 2; vi++) {
+          const vsxA = vipXA + 10 + vi * (barWA / 2 - 8);
+          ctx.fillStyle = "#001a30"; ctx.strokeStyle = CYAN + "88"; ctx.lineWidth = 1;
+          rr(vsxA, vipYA + 10, barWA / 2 - 14, 24, 4); ctx.fill(); ctx.stroke();
+          ctx.fillStyle = "#002040"; rr(vsxA, vipYA + 8, barWA / 2 - 14, 8, 2); ctx.fill();
+        }
+        ctx.fillStyle = CYAN; ctx.shadowColor = CYAN; ctx.shadowBlur = 8;
+        ctx.font = "bold 6px Orbitron, monospace"; ctx.textAlign = "center";
+        ctx.fillText("★ VIP LOUNGE ★", vipXA + barWA / 2, vipYA + barHA + 11);
+        ctx.shadowBlur = 0;
+
+        // ── JELLYFISH DECOR (slow ambient drift) ──
+        for (let ji = 0; ji < 3; ji++) {
+          const jx = W * (0.2 + ji * 0.3);
+          const jy = H * 0.20 + Math.sin(t * 0.7 + ji * 2.1) * 20;
+          const jc = [AQUA, BIOL, CYAN][ji];
+          const jpA = Math.sin(t * 1.5 + ji) * 0.3 + 0.5;
+          const jgA = ctx.createRadialGradient(jx, jy, 0, jx, jy, 18);
+          jgA.addColorStop(0, jc + Math.floor(jpA * 150).toString(16).padStart(2, "0"));
+          jgA.addColorStop(1, "rgba(0,0,0,0)");
+          ctx.fillStyle = jgA;
+          ctx.beginPath(); ctx.ellipse(jx, jy, 18, 14, 0, Math.PI, 0); ctx.fill();
+          ctx.strokeStyle = jc + "66"; ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.ellipse(jx, jy, 18, 14, 0, Math.PI, 0); ctx.stroke();
+          for (let ti = 0; ti < 5; ti++) {
+            const tx3 = jx - 14 + ti * 7;
+            const tWave = Math.sin(t * 2 + ti * 0.8 + ji) * 6;
+            ctx.strokeStyle = jc + "44"; ctx.lineWidth = 1;
+            ctx.beginPath(); ctx.moveTo(tx3, jy);
+            ctx.quadraticCurveTo(tx3 + tWave, jy + 14, tx3 + tWave * 0.5, jy + 26);
+            ctx.stroke();
+          }
+        }
+
+        // ── FLOATING BUBBLE PARTICLES ──
+        for (let pi = 0; pi < 20; pi++) {
+          const px2 = (t * 14 + pi * 53) % W;
+          const py2 = room.S * 2 + Math.sin(t * 1.0 + pi * 0.6) * 40 + (pi * (H * 0.7)) / 20;
+          const alA = Math.sin(t * 2.5 + pi) * 0.3 + 0.4;
+          const bcA = tileColsA[pi % tileColsA.length];
+          const brA = pi % 5 === 0 ? 3 : pi % 3 === 0 ? 2 : 1.2;
+          ctx.fillStyle = bcA + Math.floor(alA * 180).toString(16).padStart(2, "0");
+          ctx.beginPath(); ctx.arc(px2, py2, brA, 0, Math.PI * 2); ctx.fill();
+          if (pi % 5 === 0) {
+            ctx.strokeStyle = bcA + Math.floor(alA * 100).toString(16).padStart(2, "0");
+            ctx.lineWidth = 0.8;
+            ctx.beginPath(); ctx.arc(px2, py2, brA + 2, 0, Math.PI * 2); ctx.stroke();
+          }
+        }
+
+        // Side teal neon strips
+        ctx.fillStyle = "rgba(0,200,200,0.25)";
+        ctx.fillRect(room.S, room.S * 1.5, 3, H - room.S * 3);
+        ctx.fillRect(W - room.S - 3, room.S * 1.5, 3, H - room.S * 3);
+
       } else {
         // ── DEFAULT NIGHTCLUB (other maps) ──────────
         // ── Dance floor (center) ─────────────────────
@@ -9335,6 +9807,310 @@ Game.prototype._renderIndoorFurniture = function(ctx, room) {
       } // end else (standard NCPD)
     } else if (type === 16) {
       // TATTOO PARLOR
+      if (!!this.map?.config?.ocean) {
+        // ═══ OCEAN: DEEP INK TATTOO ═══
+        const t = performance.now() / 1000;
+        const AQUA = "#00FFEE", CYAN = "#00CCFF", TEAL = "#00AA88",
+              PINK = "#FF44AA", PURP = "#AA44FF", GOLD = "#FFDD44";
+
+        // ── FLOOR TILES (dark wet stone) ──
+        for (let ty2 = 0; ty2 < room.H; ty2++) {
+          for (let tx2 = 0; tx2 < room.W; tx2++) {
+            if (room.layout[ty2][tx2] !== 0) continue;
+            ctx.fillStyle = (tx2 + ty2) % 2 === 0 ? "#060e18" : "#04090f";
+            ctx.fillRect(tx2 * room.S, ty2 * room.S, room.S, room.S);
+            ctx.strokeStyle = "rgba(0,150,180,0.07)";
+            ctx.lineWidth = 1;
+            ctx.strokeRect(tx2 * room.S, ty2 * room.S, room.S, room.S);
+          }
+        }
+
+        // ── ROOM BORDER ──
+        ctx.strokeStyle = CYAN; ctx.lineWidth = 2;
+        ctx.shadowColor = CYAN; ctx.shadowBlur = 16;
+        ctx.strokeRect(room.S + 2, room.S + 2, W - room.S * 2 - 4, H - room.S * 2 - 4);
+        ctx.shadowBlur = 0;
+
+        // ── NEON SIGN (top center) ──
+        ctx.save();
+        ctx.font = "bold 20px Orbitron, monospace"; ctx.textAlign = "center";
+        ctx.fillStyle = "#fff"; ctx.shadowColor = AQUA; ctx.shadowBlur = 28;
+        ctx.fillText("〜  DEEP INK  〜", W / 2, room.S - 16);
+        ctx.shadowBlur = 0; ctx.restore();
+        const signG = ctx.createLinearGradient(0, room.S, W, room.S);
+        signG.addColorStop(0, "rgba(0,255,238,0)");
+        signG.addColorStop(0.5, "rgba(0,255,238,0.5)");
+        signG.addColorStop(1, "rgba(0,255,238,0)");
+        ctx.fillStyle = signG;
+        ctx.fillRect(room.S, room.S, W - room.S * 2, 3);
+
+        // ── FLASH ART WALL (top — ocean tattoo designs in frames) ──
+        const flashY = room.S + 4, flashH = 60;
+        ctx.fillStyle = "#04090f"; ctx.strokeStyle = TEAL; ctx.lineWidth = 1.5;
+        rr(room.S + 6, flashY, W - room.S * 2 - 12, flashH, 4);
+        ctx.fill(); ctx.stroke();
+        // 9 framed flash art panels
+        const flashIcons = ["🐙","🐬","⚓","🌊","🦈","🐠","🦑","🐚","🔱"];
+        const flashLabels = ["OCTOPUS","DOLPHIN","ANCHOR","WAVE","SHARK","FISH","SQUID","SHELL","TRIDENT"];
+        const flashW = (W - room.S * 2 - 24) / 9;
+        for (let fi = 0; fi < 9; fi++) {
+          const fx = room.S + 12 + fi * flashW;
+          ctx.fillStyle = "#060e18"; ctx.strokeStyle = AQUA + "55"; ctx.lineWidth = 1;
+          rr(fx, flashY + 4, flashW - 4, flashH - 8, 3); ctx.fill(); ctx.stroke();
+          ctx.font = "14px serif"; ctx.textAlign = "center";
+          ctx.fillText(flashIcons[fi], fx + flashW / 2 - 2, flashY + 30);
+          ctx.font = "bold 4.5px Orbitron, monospace"; ctx.textAlign = "center";
+          ctx.fillStyle = AQUA + "99";
+          ctx.fillText(flashLabels[fi], fx + flashW / 2 - 2, flashY + 50);
+        }
+
+        // ── TWO RECLINING TATTOO CHAIRS (side by side, large) ──
+        for (const [chX, chSide] of [[W * 0.28, -1], [W * 0.72, 1]]) {
+          const chY = H * 0.44;
+          // Chair body
+          ctx.fillStyle = "#0d1a28"; ctx.strokeStyle = CYAN; ctx.lineWidth = 1.8;
+          ctx.shadowColor = CYAN; ctx.shadowBlur = 8;
+          rr(chX - 52, chY, 104, 40, 8); ctx.fill(); ctx.stroke(); ctx.shadowBlur = 0;
+          // Seat cushion
+          ctx.fillStyle = "#122233";
+          rr(chX - 48, chY + 4, 80, 28, 5); ctx.fill();
+          // Headrest
+          ctx.fillStyle = "#0d1a28"; ctx.strokeStyle = CYAN + "88"; ctx.lineWidth = 1.5;
+          rr(chX + chSide * 36, chY - 8, 24, 22, 6); ctx.fill(); ctx.stroke();
+          // Armrests
+          ctx.fillStyle = "#0a141e"; ctx.strokeStyle = TEAL + "66"; ctx.lineWidth = 1;
+          rr(chX - 52, chY + 4, 8, 28, 3); ctx.fill(); ctx.stroke();
+          rr(chX + 44, chY + 4, 8, 28, 3); ctx.fill(); ctx.stroke();
+          // Footrest
+          ctx.fillStyle = "#0d1a28"; ctx.strokeStyle = CYAN + "55"; ctx.lineWidth = 1;
+          rr(chX - chSide * 52, chY + 8, 16, 20, 3); ctx.fill(); ctx.stroke();
+          // Client lying on chair (silhouette)
+          ctx.fillStyle = "#1a2a3a";
+          rr(chX - 44, chY + 6, 76, 14, 4); ctx.fill();
+          // Client head
+          ctx.fillStyle = "#CCDDEE";
+          ctx.beginPath(); ctx.arc(chX + chSide * 34, chY + 13, 8, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = "#334455";
+          ctx.beginPath(); ctx.arc(chX + chSide * 34, chY + 10, 7, Math.PI, 0); ctx.fill();
+          // Tattoo being drawn (glowing dot on client arm)
+          const tglow = Math.sin(t * 4) * 0.5 + 0.5;
+          ctx.fillStyle = AQUA + Math.floor(tglow * 200 + 55).toString(16).padStart(2,"0");
+          ctx.shadowColor = AQUA; ctx.shadowBlur = 8 * tglow;
+          ctx.beginPath(); ctx.arc(chX - chSide * 10, chY + 13, 3, 0, Math.PI * 2); ctx.fill();
+          ctx.shadowBlur = 0;
+          // Tattoo needle/machine lowered to skin
+          ctx.strokeStyle = "#8899AA"; ctx.lineWidth = 2;
+          ctx.beginPath(); ctx.moveTo(chX - chSide * 10, chY + 8); ctx.lineTo(chX - chSide * 10, chY + 10); ctx.stroke();
+        }
+
+        // ── TATTOO ARTISTS (human, one per chair) ──
+        for (const [artX, artY] of [[W * 0.18, H * 0.50], [W * 0.82, H * 0.50]]) {
+          const bob = Math.sin(t * 2 + artX) * 1.5;
+          const skin = "#DDEEFF", hair = "#002244", shirt = TEAL;
+          ctx.save(); ctx.translate(artX, artY + bob);
+          // Shadow
+          ctx.fillStyle = "rgba(0,0,0,0.3)"; ctx.beginPath(); ctx.ellipse(0, 14, 9, 3, 0, 0, Math.PI*2); ctx.fill();
+          // Legs
+          ctx.fillStyle = "#001228";
+          ctx.beginPath(); ctx.roundRect(-7, 2, 5, 12, 1); ctx.fill();
+          ctx.beginPath(); ctx.roundRect(2, 2, 5, 12, 1); ctx.fill();
+          // Shoes
+          ctx.fillStyle = "#002244";
+          ctx.beginPath(); ctx.ellipse(-4, 14, 5, 2, 0, 0, Math.PI*2); ctx.fill();
+          ctx.beginPath(); ctx.ellipse(4, 14, 5, 2, 0, 0, Math.PI*2); ctx.fill();
+          // Body (scrubs/apron)
+          ctx.fillStyle = shirt + "CC"; ctx.shadowColor = TEAL; ctx.shadowBlur = 6;
+          ctx.beginPath(); ctx.roundRect(-8, -16, 16, 20, 3); ctx.fill(); ctx.shadowBlur = 0;
+          // Apron
+          ctx.fillStyle = "#001830AA";
+          ctx.beginPath(); ctx.roundRect(-5, -10, 10, 16, 2); ctx.fill();
+          // Arm reaching forward (holding tattoo machine)
+          const armA2 = Math.sin(t * 2 + artX) * 0.2;
+          ctx.strokeStyle = skin; ctx.lineWidth = 4; ctx.lineCap = "round";
+          ctx.beginPath(); ctx.moveTo(artX > W/2 ? -8 : 8, -10);
+          ctx.lineTo(artX > W/2 ? -20 : 20, -4 + Math.sin(armA2)*3); ctx.stroke();
+          ctx.lineCap = "butt";
+          // Tattoo machine in hand
+          const mhX = artX > W/2 ? -20 : 20, mhY = -4 + Math.sin(armA2)*3;
+          ctx.fillStyle = "#334455"; ctx.strokeStyle = AQUA; ctx.lineWidth = 1;
+          rr(mhX - 6, mhY - 4, 12, 8, 2); ctx.fill(); ctx.stroke();
+          ctx.fillStyle = AQUA; ctx.shadowColor = AQUA; ctx.shadowBlur = 5;
+          ctx.beginPath(); ctx.arc(mhX, mhY + 4, 1.5, 0, Math.PI*2); ctx.fill(); ctx.shadowBlur = 0;
+          // Other arm
+          ctx.strokeStyle = skin; ctx.lineWidth = 4; ctx.lineCap = "round";
+          ctx.beginPath(); ctx.moveTo(artX > W/2 ? 8 : -8, -10); ctx.lineTo(artX > W/2 ? 16 : -16, 0); ctx.stroke();
+          ctx.lineCap = "butt";
+          // Neck
+          ctx.fillStyle = skin; ctx.fillRect(-3, -18, 6, 5);
+          // Head
+          ctx.fillStyle = skin; ctx.beginPath(); ctx.arc(0, -25, 9, 0, Math.PI*2); ctx.fill();
+          // Hair
+          ctx.fillStyle = hair;
+          ctx.beginPath(); ctx.arc(0, -29, 8, Math.PI*1.1, Math.PI*1.9); ctx.fill();
+          ctx.fillRect(-7, -29, 14, 6);
+          // Surgical mask
+          ctx.fillStyle = "#0055AA99";
+          ctx.beginPath(); ctx.roundRect(-6, -23, 12, 7, 2); ctx.fill();
+          ctx.strokeStyle = "#0077CC55"; ctx.lineWidth = 0.8; ctx.stroke();
+          // Eyes
+          ctx.fillStyle = "#fff";
+          ctx.beginPath(); ctx.ellipse(-3, -27, 2, 1.6, 0, 0, Math.PI*2); ctx.fill();
+          ctx.beginPath(); ctx.ellipse(3, -27, 2, 1.6, 0, 0, Math.PI*2); ctx.fill();
+          ctx.fillStyle = TEAL; ctx.beginPath(); ctx.arc(-3, -27, 1.1, 0, Math.PI*2); ctx.fill();
+          ctx.beginPath(); ctx.arc(3, -27, 1.1, 0, Math.PI*2); ctx.fill();
+          ctx.restore();
+        }
+
+        // ── INK STATIONS (left and right walls, large tray tables) ──
+        for (const [isX, side] of [[room.S + 8, 1], [W - room.S - 78, -1]]) {
+          const isY = H * 0.34;
+          ctx.fillStyle = "#060e18"; ctx.strokeStyle = TEAL; ctx.lineWidth = 1.5;
+          rr(isX, isY, 70, 110, 4); ctx.fill(); ctx.stroke();
+          ctx.fillStyle = "rgba(0,200,200,0.06)"; ctx.fillRect(isX + 2, isY + 2, 66, 106);
+          // Label
+          ctx.font = "bold 6px Orbitron, monospace"; ctx.textAlign = "center";
+          ctx.fillStyle = TEAL + "CC"; ctx.fillText("INK STATION", isX + 35, isY + 13);
+          // 8 ink bottles
+          const iColors = ["#FF0044","#0088FF","#00FF88","#FFCC00","#FF44AA","#AA00FF","#00CCFF","#FF8800"];
+          for (let ii = 0; ii < 8; ii++) {
+            const ic = iColors[ii];
+            const iBx = isX + 8 + (ii % 4) * 14;
+            const iBy = isY + 18 + Math.floor(ii / 4) * 28;
+            const ipA = Math.sin(t * 1.2 + ii) * 0.25 + 0.75;
+            ctx.fillStyle = ic + "44"; ctx.strokeStyle = ic; ctx.lineWidth = 1;
+            ctx.shadowColor = ic; ctx.shadowBlur = 4 * ipA;
+            ctx.beginPath();
+            ctx.moveTo(iBx - 4, iBy + 18); ctx.lineTo(iBx - 3, iBy + 6);
+            ctx.lineTo(iBx - 1, iBy + 2); ctx.lineTo(iBx + 1, iBy + 2);
+            ctx.lineTo(iBx + 3, iBy + 6); ctx.lineTo(iBx + 4, iBy + 18);
+            ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.shadowBlur = 0;
+            // Cap
+            ctx.fillStyle = ic; ctx.beginPath(); ctx.roundRect(iBx - 2, iBy, 4, 4, 1); ctx.fill();
+          }
+          // Needle tray
+          ctx.fillStyle = "#0a141e"; ctx.strokeStyle = AQUA + "55"; ctx.lineWidth = 1;
+          rr(isX + 6, isY + 76, 58, 26, 3); ctx.fill(); ctx.stroke();
+          ctx.fillStyle = AQUA + "88";
+          for (let ni = 0; ni < 5; ni++) {
+            ctx.fillRect(isX + 10 + ni * 11, isY + 80, 2, 18);
+          }
+          ctx.font = "bold 5px Orbitron, monospace"; ctx.textAlign = "center";
+          ctx.fillStyle = AQUA + "77"; ctx.fillText("NEEDLES", isX + 35, isY + 108);
+        }
+
+        // ── AUTOCLAVE / STERILIZATION UNIT (back left) ──
+        const acX = room.S + 8, acY = room.S * 1.4;
+        ctx.fillStyle = "#060e18"; ctx.strokeStyle = CYAN; ctx.lineWidth = 1.5;
+        rr(acX, acY, 60, 44, 4); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = "#0a141e"; rr(acX + 4, acY + 4, 52, 28, 3); ctx.fill();
+        // Status light
+        const acPulse = Math.sin(t * 2) * 0.5 + 0.5;
+        ctx.fillStyle = `rgba(0,255,150,${0.5 + acPulse * 0.5})`;
+        ctx.shadowColor = "#00FF96"; ctx.shadowBlur = 6 * acPulse;
+        ctx.beginPath(); ctx.arc(acX + 10, acY + 18, 4, 0, Math.PI*2); ctx.fill(); ctx.shadowBlur = 0;
+        ctx.fillStyle = CYAN + "88"; ctx.font = "bold 5px Orbitron, monospace"; ctx.textAlign = "left";
+        ctx.fillText("STERILIZING", acX + 18, acY + 21);
+        ctx.fillStyle = TEAL + "99"; ctx.font = "bold 5.5px Orbitron, monospace"; ctx.textAlign = "center";
+        ctx.fillText("AUTOCLAVE", acX + 30, acY + 40);
+
+        // ── DESIGN PORTFOLIO / SKETCH DESK (back right) ──
+        const dkX = W - room.S - 80, dkY = room.S * 1.4;
+        ctx.fillStyle = "#060e18"; ctx.strokeStyle = PURP; ctx.lineWidth = 1.5;
+        rr(dkX, dkY, 72, 44, 4); ctx.fill(); ctx.stroke();
+        // Sketchbook open on desk
+        ctx.fillStyle = "#EEF0F4";
+        rr(dkX + 6, dkY + 6, 38, 30, 2); ctx.fill();
+        ctx.fillStyle = "#CCD0D8"; ctx.fillRect(dkX + 6, dkY + 6, 1, 30);
+        // Drawing lines on sketchbook (anchor sketch)
+        ctx.strokeStyle = "#334455"; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.arc(dkX + 25, dkY + 20, 8, 0, Math.PI*2); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(dkX + 25, dkY + 12); ctx.lineTo(dkX + 25, dkY + 28); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(dkX + 17, dkY + 20); ctx.lineTo(dkX + 33, dkY + 20); ctx.stroke();
+        // Pencils
+        for (let pi2 = 0; pi2 < 3; pi2++) {
+          ctx.fillStyle = ["#FFCC00","#FF4444","#4488FF"][pi2];
+          ctx.fillRect(dkX + 48 + pi2 * 7, dkY + 8, 4, 22);
+          ctx.fillStyle = "#222"; ctx.fillRect(dkX + 48 + pi2 * 7, dkY + 28, 4, 4);
+        }
+        ctx.fillStyle = PURP + "99"; ctx.font = "bold 5.5px Orbitron, monospace"; ctx.textAlign = "center";
+        ctx.fillText("DESIGNS", dkX + 36, dkY + 40);
+
+        // ── MIRROR (left wall, large) ──
+        const mirX = room.S + 8, mirY = H * 0.66;
+        ctx.fillStyle = "#030810"; ctx.strokeStyle = AQUA; ctx.lineWidth = 2;
+        ctx.shadowColor = AQUA; ctx.shadowBlur = 10;
+        rr(mirX, mirY, 60, 80, 4); ctx.fill(); ctx.stroke(); ctx.shadowBlur = 0;
+        const mirG = ctx.createLinearGradient(mirX, mirY, mirX + 60, mirY + 80);
+        mirG.addColorStop(0, "rgba(0,200,220,0.10)");
+        mirG.addColorStop(0.5, "rgba(180,220,255,0.07)");
+        mirG.addColorStop(1, "rgba(0,180,200,0.05)");
+        ctx.fillStyle = mirG; ctx.fillRect(mirX + 3, mirY + 3, 54, 74);
+        // Reflection shimmer
+        ctx.fillStyle = `rgba(200,240,255,${0.04 + Math.sin(t * 1.2) * 0.02})`;
+        ctx.fillRect(mirX + 8, mirY + 4, 16, 72);
+        ctx.fillStyle = AQUA + "33"; ctx.font = "bold 5px Orbitron, monospace"; ctx.textAlign = "center";
+        ctx.fillText("MIRROR", mirX + 30, mirY + 76);
+
+        // ── RECEPTION / WAITING AREA (bottom center) ──
+        const recX = cx - 80, recY = H * 0.82, recW = 160, recH = 34;
+        ctx.fillStyle = "#04090f"; ctx.strokeStyle = TEAL; ctx.lineWidth = 1.5;
+        rr(recX, recY, recW, recH, 5); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = "#060e18"; rr(recX + 4, recY + 4, recW - 8, 12, 3); ctx.fill();
+        // Reception label
+        ctx.fillStyle = TEAL; ctx.shadowColor = TEAL; ctx.shadowBlur = 6;
+        ctx.font = "bold 6px Orbitron, monospace"; ctx.textAlign = "center";
+        ctx.fillText("RECEPTION", cx, recY + 14); ctx.shadowBlur = 0;
+        // Waiting seats
+        for (let si = 0; si < 4; si++) {
+          const sx2 = recX - 18 - si * 1 + si * (recW / 3);
+          ctx.fillStyle = "#0a141e"; ctx.strokeStyle = CYAN + "55"; ctx.lineWidth = 1;
+          rr(recX + 8 + si * 36, recY + 20, 28, 10, 3); ctx.fill(); ctx.stroke();
+        }
+
+        // ── WALL ART (large ocean tattoo motifs painted on walls) ──
+        // Left wall art — anchor
+        const wa1X = room.S + 78, wa1Y = H * 0.68;
+        ctx.strokeStyle = TEAL + "66"; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(wa1X, wa1Y, 18, 0, Math.PI*2); ctx.stroke();
+        ctx.strokeStyle = TEAL + "55"; ctx.lineWidth = 2.5;
+        ctx.beginPath(); ctx.moveTo(wa1X, wa1Y - 18); ctx.lineTo(wa1X, wa1Y + 18); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(wa1X - 14, wa1Y); ctx.lineTo(wa1X + 14, wa1Y); ctx.stroke();
+        // top bar
+        ctx.beginPath(); ctx.moveTo(wa1X - 10, wa1Y - 18); ctx.lineTo(wa1X + 10, wa1Y - 18); ctx.stroke();
+        // flukes
+        ctx.beginPath(); ctx.moveTo(wa1X, wa1Y + 18); ctx.lineTo(wa1X - 10, wa1Y + 12); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(wa1X, wa1Y + 18); ctx.lineTo(wa1X + 10, wa1Y + 12); ctx.stroke();
+        ctx.font = "bold 5.5px Orbitron, monospace"; ctx.textAlign = "center";
+        ctx.fillStyle = TEAL + "88"; ctx.fillText("ANCHOR", wa1X, wa1Y + 30);
+        // Right wall art — wave
+        const wa2X = W - room.S - 78, wa2Y = H * 0.68;
+        ctx.strokeStyle = AQUA + "66"; ctx.lineWidth = 2;
+        for (let wi2 = 0; wi2 < 3; wi2++) {
+          ctx.beginPath();
+          ctx.moveTo(wa2X - 22, wa2Y - 10 + wi2 * 10);
+          ctx.quadraticCurveTo(wa2X - 8, wa2Y - 22 + wi2 * 10, wa2X + 8, wa2Y - 10 + wi2 * 10);
+          ctx.quadraticCurveTo(wa2X + 18, wa2Y + wi2 * 10, wa2X + 22, wa2Y - 4 + wi2 * 10);
+          ctx.stroke();
+        }
+        ctx.font = "bold 5.5px Orbitron, monospace"; ctx.textAlign = "center";
+        ctx.fillStyle = AQUA + "88"; ctx.fillText("WAVE", wa2X, wa2Y + 26);
+
+        // ── AMBIENT BUBBLE PARTICLES ──
+        for (let pi3 = 0; pi3 < 14; pi3++) {
+          const px3 = (t * 10 + pi3 * 61) % W;
+          const py3 = room.S * 2 + Math.sin(t * 0.9 + pi3 * 0.7) * 30 + (pi3 * (H * 0.75)) / 14;
+          const al3 = Math.sin(t * 2 + pi3) * 0.25 + 0.3;
+          const col3 = [AQUA, CYAN, TEAL][pi3 % 3];
+          ctx.fillStyle = col3 + Math.floor(al3 * 160).toString(16).padStart(2, "0");
+          ctx.beginPath(); ctx.arc(px3, py3, pi3 % 4 === 0 ? 2.5 : 1.5, 0, Math.PI * 2); ctx.fill();
+        }
+
+        // Side teal neon strips
+        ctx.fillStyle = "rgba(0,200,200,0.22)";
+        ctx.fillRect(room.S, room.S * 1.5, 3, H - room.S * 3);
+        ctx.fillRect(W - room.S - 3, room.S * 1.5, 3, H - room.S * 3);
+
+      } else {
       // ── Reclining chair (center) ──────────────────
       ctx.fillStyle = "#1a0a18";
       ctx.strokeStyle = "#FF44AA";
@@ -9404,6 +10180,7 @@ Game.prototype._renderIndoorFurniture = function(ctx, room) {
       ctx.textAlign = "center";
       ctx.fillText("INK CITY", cx - W * 0.1, midY + 30);
       ctx.shadowBlur = 0;
+      } // end ocean tattoo else
     } else if (type === 17) {
       // ════════════════════════════════════════════════════════════════
       //  AMMO DEPOT — Military Grade Storage & Range
