@@ -10217,6 +10217,7 @@ class Salesperson {
     this.isDesert = mapType === 'desert';
     this.isDino = mapType === 'dino';
     this.isOcean = mapType === 'ocean';
+    this.isMetropolis = mapType === 'metropolis';
     this._waveT = 0;
   }
   update(dt) { this._waveT += dt * 1.4; }
@@ -10551,6 +10552,171 @@ class Salesperson {
       // Label above head
       ctx.fillStyle = '#00FFFF';
       ctx.shadowColor = '#00FFFF';
+      ctx.shadowBlur = 10;
+      ctx.font = 'bold 8px Orbitron, monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText(this.label, 0, -76 + breathe);
+      ctx.shadowBlur = 0;
+
+    } else if (this.isMetropolis) {
+      // ═══ METROPOLIS: Urban amber-suited city dealer ═══
+      const breathe = Math.sin(this._waveT * 0.8) * 1;
+
+      // Shadow
+      ctx.globalAlpha = 0.3;
+      ctx.fillStyle = '#000';
+      ctx.beginPath();
+      ctx.ellipse(2, 4, 14, 5, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+
+      // Legs (dark warm trousers)
+      ctx.fillStyle = '#1e1508';
+      ctx.fillRect(-6, -8, 5, 12);
+      ctx.fillRect(1, -8, 5, 12);
+
+      // Shoes (polished dark brown)
+      ctx.fillStyle = '#0e0a04';
+      ctx.fillRect(-7, 2, 6, 4);
+      ctx.fillRect(1, 2, 6, 4);
+
+      // Body (fitted suit jacket — dark warm tone)
+      const suitGrad = ctx.createLinearGradient(-12, -38, 12, -10);
+      suitGrad.addColorStop(0, '#2e2210');
+      suitGrad.addColorStop(0.5, '#1e1608');
+      suitGrad.addColorStop(1, '#140e04');
+      ctx.fillStyle = suitGrad;
+      ctx.beginPath();
+      ctx.moveTo(-11, -10);
+      ctx.lineTo(-13, -38 + breathe);
+      ctx.lineTo(-8, -42 + breathe);
+      ctx.lineTo(8, -42 + breathe);
+      ctx.lineTo(13, -38 + breathe);
+      ctx.lineTo(11, -10);
+      ctx.closePath();
+      ctx.fill();
+
+      // Suit lapels (amber trim)
+      ctx.strokeStyle = '#FF9933';
+      ctx.lineWidth = 1;
+      ctx.globalAlpha = 0.6;
+      ctx.beginPath();
+      ctx.moveTo(-4, -38 + breathe);
+      ctx.lineTo(-6, -20);
+      ctx.moveTo(4, -38 + breathe);
+      ctx.lineTo(6, -20);
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+
+      // Tie (amber neon)
+      ctx.fillStyle = '#FF9933';
+      ctx.shadowColor = '#FF9933';
+      ctx.shadowBlur = 6;
+      ctx.beginPath();
+      ctx.moveTo(0, -38 + breathe);
+      ctx.lineTo(-3, -34 + breathe);
+      ctx.lineTo(0, -12);
+      ctx.lineTo(3, -34 + breathe);
+      ctx.closePath();
+      ctx.fill();
+      ctx.shadowBlur = 0;
+
+      // Shirt collar
+      ctx.fillStyle = '#FFF8F0';
+      ctx.beginPath();
+      ctx.moveTo(-5, -40 + breathe);
+      ctx.lineTo(0, -37 + breathe);
+      ctx.lineTo(5, -40 + breathe);
+      ctx.lineTo(4, -42 + breathe);
+      ctx.lineTo(-4, -42 + breathe);
+      ctx.closePath();
+      ctx.fill();
+
+      // Neck
+      ctx.fillStyle = '#E8D0C0';
+      ctx.fillRect(-3, -46 + breathe, 6, 6);
+
+      // Head
+      const headGrad = ctx.createRadialGradient(-3, -54 + breathe, 2, 0, -52 + breathe, 12);
+      headGrad.addColorStop(0, '#F5E0D0');
+      headGrad.addColorStop(1, '#D4B8A8');
+      ctx.fillStyle = headGrad;
+      ctx.beginPath();
+      ctx.ellipse(0, -54 + breathe, 10, 12, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Hair (styled, dark)
+      ctx.fillStyle = '#1a140a';
+      ctx.beginPath();
+      ctx.ellipse(0, -62 + breathe, 9, 6, 0, Math.PI, 0);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(-9, -58 + breathe);
+      ctx.quadraticCurveTo(-10, -52 + breathe, -8, -50 + breathe);
+      ctx.lineTo(-8, -58 + breathe);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(9, -58 + breathe);
+      ctx.quadraticCurveTo(10, -52 + breathe, 8, -50 + breathe);
+      ctx.lineTo(8, -58 + breathe);
+      ctx.fill();
+
+      // Eyes
+      ctx.fillStyle = '#FFFFFF';
+      ctx.beginPath();
+      ctx.ellipse(-4, -54 + breathe, 2.5, 2, 0, 0, Math.PI * 2);
+      ctx.ellipse(4, -54 + breathe, 2.5, 2, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#3a2010';
+      ctx.beginPath();
+      ctx.arc(-4, -54 + breathe, 1.2, 0, Math.PI * 2);
+      ctx.arc(4, -54 + breathe, 1.2, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Friendly smile
+      ctx.strokeStyle = '#AA7766';
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.arc(0, -50 + breathe, 4, 0.2, Math.PI - 0.2);
+      ctx.stroke();
+
+      // Arms (professional stance)
+      ctx.fillStyle = '#1e1608';
+      ctx.beginPath();
+      ctx.moveTo(-13, -36 + breathe);
+      ctx.lineTo(-16, -20);
+      ctx.lineTo(-14, -10);
+      ctx.lineTo(-11, -10);
+      ctx.lineTo(-11, -34 + breathe);
+      ctx.closePath();
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(13, -36 + breathe);
+      ctx.lineTo(16, -20);
+      ctx.lineTo(14, -10);
+      ctx.lineTo(11, -10);
+      ctx.lineTo(11, -34 + breathe);
+      ctx.closePath();
+      ctx.fill();
+
+      // Hands
+      ctx.fillStyle = '#E8D0C0';
+      ctx.beginPath();
+      ctx.arc(-15, -8, 4, 0, Math.PI * 2);
+      ctx.arc(15, -8, 4, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Name badge on chest (amber)
+      ctx.fillStyle = 'rgba(0,0,0,0.7)';
+      ctx.fillRect(-16, -32 + breathe, 14, 8);
+      ctx.fillStyle = '#FF9933';
+      ctx.font = 'bold 5px Orbitron, monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText('REP', -9, -26 + breathe);
+
+      // Label above head
+      ctx.fillStyle = '#FF9933';
+      ctx.shadowColor = '#FF6600';
       ctx.shadowBlur = 10;
       ctx.font = 'bold 8px Orbitron, monospace';
       ctx.textAlign = 'center';

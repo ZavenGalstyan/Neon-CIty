@@ -2777,6 +2777,13 @@ class Game {
             this._salespersons = [
               new Salesperson(spX, spY, "#00FFCC", "DIVE REP", "ocean"),
             ];
+          } else if (!!this.map.config.metropolis) {
+            // Metropolis: Urban amber-suited city dealer
+            const spX = room.roomW / 2;
+            const spY = room.roomH * 0.38;
+            this._salespersons = [
+              new Salesperson(spX, spY, "#FF9933", "CITY REP", "metropolis"),
+            ];
           } else {
             this._salespersons = [
               new Salesperson(
