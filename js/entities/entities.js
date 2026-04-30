@@ -11478,10 +11478,11 @@ class BuildingNPC {
     this.dialogue    = cfg.dialogue;
     this._waveT      = 0;
     this._interactR  = 65;
-    // renderType can be: true (neonCity for backwards compat), 'wasteland', 'galactica', or false (default)
+    // renderType can be: true (neonCity for backwards compat), 'wasteland', 'galactica', 'ocean', or false (default)
     this._isNeonCity  = renderType === true || renderType === 'neonCity';
     this._isWasteland = renderType === 'wasteland';
     this._isGalactica = renderType === 'galactica';
+    this._isOcean     = renderType === 'ocean';
     this._isGirl      = isGirl;
     this._buildingType = buildingType;
   }
@@ -11494,6 +11495,8 @@ class BuildingNPC {
       this._renderGirl(ctx);
     } else if (this._isGalactica) {
       this._renderGalactica(ctx);
+    } else if (this._isOcean) {
+      this._renderOcean(ctx);
     } else if (this._isWasteland) {
       this._renderWasteland(ctx);
     } else if (this._isNeonCity) {
@@ -11679,6 +11682,165 @@ class BuildingNPC {
     ctx.shadowBlur = 0;
 
     // [T] interact hint when near (rendered by game.js separately — this is just the figure)
+    ctx.restore();
+  }
+
+  _renderOcean(ctx) {
+    const t      = performance.now() / 1000;
+    const breathe = Math.sin(t * 1.1) * 1.2;
+    const sway    = Math.sin(this._waveT * 0.7) * 2.5;
+
+    // Role-specific accent colour with ocean defaults
+    const accent  = this.color;
+    const suit1   = '#0a1a2e';   // deep navy wetsuit
+    const suit2   = '#0d2a44';
+    const visor   = '#00EEFF';
+
+    ctx.save();
+    ctx.translate(this.x + sway, this.y);
+
+    // ── Shadow ──────────────────────────────────────────────────
+    ctx.save();
+    ctx.globalAlpha = 0.28;
+    ctx.fillStyle = '#000';
+    ctx.beginPath();
+    ctx.ellipse(3, 30, 13, 4, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    // ── Fins / boots ────────────────────────────────────────────
+    ctx.fillStyle = accent + 'CC';
+    ctx.beginPath(); ctx.ellipse(-7, 29, 7, 3.5, -0.3, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(7,  29, 7, 3.5,  0.3, 0, Math.PI * 2); ctx.fill();
+
+    // ── Legs (wetsuit) ──────────────────────────────────────────
+    ctx.fillStyle = suit1;
+    ctx.fillRect(-8, 12, 6, 17);
+    ctx.fillRect(2,  12, 6, 17);
+    // Knee accent stripe
+    ctx.fillStyle = accent + '88';
+    ctx.fillRect(-8, 19, 6, 2);
+    ctx.fillRect(2,  19, 6, 2);
+
+    // ── Torso (wetsuit jacket) ──────────────────────────────────
+    const torsoG = ctx.createLinearGradient(-13, -10 + breathe * 0.3, 13, 14);
+    torsoG.addColorStop(0, suit2);
+    torsoG.addColorStop(0.5, suit1);
+    torsoG.addColorStop(1, '#061220');
+    ctx.fillStyle = torsoG;
+    ctx.beginPath();
+    ctx.roundRect(-12, -10 + breathe * 0.3, 24, 24, 5);
+    ctx.fill();
+
+    // Wetsuit centre zip stripe
+    ctx.strokeStyle = accent + 'AA';
+    ctx.lineWidth = 1.5;
+    ctx.shadowColor = accent; ctx.shadowBlur = 6;
+    ctx.beginPath();
+    ctx.moveTo(0, -10 + breathe * 0.3);
+    ctx.lineTo(0, 12 + breathe * 0.3);
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    // Shoulder accent stripes
+    ctx.strokeStyle = accent + '99'; ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(-12, -4 + breathe * 0.3); ctx.lineTo(-12, 8 + breathe * 0.3);
+    ctx.moveTo( 12, -4 + breathe * 0.3); ctx.lineTo( 12, 8 + breathe * 0.3);
+    ctx.stroke();
+
+    // Role badge on chest
+    ctx.fillStyle = 'rgba(0,0,0,0.65)';
+    ctx.beginPath(); ctx.roundRect(-11, -2 + breathe * 0.3, 22, 8, 2); ctx.fill();
+    ctx.fillStyle = accent; ctx.shadowColor = accent; ctx.shadowBlur = 4;
+    ctx.font = 'bold 4px Orbitron, monospace'; ctx.textAlign = 'center';
+    ctx.fillText(this.name.split(' ')[0], 0, 4 + breathe * 0.3);
+    ctx.shadowBlur = 0;
+
+    // ── Arms ────────────────────────────────────────────────────
+    ctx.fillStyle = suit1;
+    ctx.fillRect(-17, -6 + breathe * 0.3, 6, 15);
+    ctx.fillRect( 11, -6 + breathe * 0.3, 6, 15);
+
+    // Gloves
+    ctx.fillStyle = accent + 'BB';
+    ctx.beginPath(); ctx.arc(-14, 11 + breathe * 0.3, 4, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc( 14, 11 + breathe * 0.3, 4, 0, Math.PI * 2); ctx.fill();
+
+    // ── Neck ────────────────────────────────────────────────────
+    ctx.fillStyle = suit2;
+    ctx.fillRect(-4, -16 + breathe, 8, 7);
+
+    // ── Dive helmet ─────────────────────────────────────────────
+    // Helmet shell
+    const helmG = ctx.createRadialGradient(-4, -28 + breathe, 2, 0, -26 + breathe, 14);
+    helmG.addColorStop(0, '#1a3a5a');
+    helmG.addColorStop(1, '#061220');
+    ctx.fillStyle = helmG;
+    ctx.beginPath(); ctx.arc(0, -26 + breathe, 13, 0, Math.PI * 2); ctx.fill();
+
+    // Helmet rim / seal
+    ctx.strokeStyle = accent + 'CC'; ctx.lineWidth = 1.5;
+    ctx.shadowColor = accent; ctx.shadowBlur = 5;
+    ctx.beginPath(); ctx.arc(0, -26 + breathe, 13.5, 0, Math.PI * 2); ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    // Visor (glowing porthole)
+    const visorG = ctx.createRadialGradient(-2, -28 + breathe, 1, -1, -27 + breathe, 8);
+    visorG.addColorStop(0, visor + 'FF');
+    visorG.addColorStop(0.5, visor + '88');
+    visorG.addColorStop(1, '#003355AA');
+    ctx.fillStyle = visorG;
+    ctx.shadowColor = visor; ctx.shadowBlur = 10;
+    ctx.beginPath(); ctx.arc(0, -26 + breathe, 8, 0, Math.PI * 2); ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // Visor glare
+    ctx.fillStyle = 'rgba(255,255,255,0.22)';
+    ctx.beginPath(); ctx.arc(-3, -30 + breathe, 3, 0, Math.PI * 2); ctx.fill();
+
+    // Helmet side detail (air valve)
+    ctx.fillStyle = '#334455';
+    ctx.fillRect(11, -28 + breathe, 4, 5);
+    ctx.fillStyle = accent + '99';
+    ctx.fillRect(13, -27 + breathe, 2, 3);
+
+    // ── Rising air bubbles ──────────────────────────────────────
+    const bTime = t * 1.8;
+    for (let i = 0; i < 3; i++) {
+      const bx = 14 + i * 3;
+      const by = -26 + breathe - 10 - ((bTime * 18 + i * 22) % 38);
+      const br = 1.5 + i * 0.5;
+      ctx.strokeStyle = visor + '99'; ctx.lineWidth = 0.8;
+      ctx.beginPath(); ctx.arc(bx, by, br, 0, Math.PI * 2); ctx.stroke();
+    }
+
+    ctx.restore();
+
+    // ── Floating UI ─────────────────────────────────────────────
+    ctx.save();
+    const pulse = Math.sin(t * 2.8) * 0.2 + 0.8;
+
+    // Name badge
+    ctx.fillStyle = 'rgba(0,0,0,0.88)';
+    ctx.shadowColor = accent; ctx.shadowBlur = 10;
+    ctx.beginPath(); ctx.roundRect(this.x + sway - 36, this.y - 58, 72, 16, 4); ctx.fill();
+    ctx.strokeStyle = accent + 'AA'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.roundRect(this.x + sway - 36, this.y - 58, 72, 16, 4); ctx.stroke();
+    ctx.fillStyle = accent; ctx.shadowColor = accent; ctx.shadowBlur = 10;
+    ctx.font = 'bold 8px Orbitron, monospace'; ctx.textAlign = 'center';
+    ctx.fillText(this.name, this.x + sway, this.y - 46);
+
+    // [T] TALK prompt
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = `rgba(0,0,0,${0.85 + pulse * 0.1})`;
+    ctx.beginPath(); ctx.roundRect(this.x + sway - 32, this.y - 82, 64, 20, 6); ctx.fill();
+    ctx.strokeStyle = `rgba(0,238,255,${0.55 + pulse * 0.35})`;
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.roundRect(this.x + sway - 32, this.y - 82, 64, 20, 6); ctx.stroke();
+    ctx.fillStyle = '#FFDD44'; ctx.shadowColor = '#FFAA00'; ctx.shadowBlur = 10 * pulse;
+    ctx.font = 'bold 11px Orbitron, monospace';
+    ctx.fillText('[T] TALK', this.x + sway, this.y - 68);
     ctx.restore();
   }
 
