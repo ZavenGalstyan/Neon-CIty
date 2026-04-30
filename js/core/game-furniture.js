@@ -1486,13 +1486,34 @@ Game.prototype._renderIndoorFurniture = function(ctx, room) {
           // Keyboard
           ctx.fillStyle="#040c16"; rr(dkX-12,dkY+30,24,6,1); ctx.fill();
           ctx.strokeStyle=TEAL+"44"; ctx.lineWidth=0.5; ctx.stroke();
-          // Worker at desk (small figure)
-          ctx.fillStyle="#0a1a2a"; ctx.beginPath(); ctx.ellipse(dkX,dkY-8,6,4,0,0,Math.PI*2); ctx.fill(); // shadow
-          ctx.fillStyle="#0f2a3a"; rr(dkX-7,dkY-28,14,20,2); ctx.fill(); // body
-          ctx.fillStyle="#D8C8B8"; ctx.beginPath(); ctx.arc(dkX,dkY-32,6,0,Math.PI*2); ctx.fill(); // head
-          ctx.fillStyle="#080e1a"; ctx.beginPath(); ctx.arc(dkX,dkY-36,5,Math.PI,0); ctx.fill(); // hair
-          ctx.fillStyle="#fff"; ctx.beginPath(); ctx.ellipse(dkX-2.5,dkY-33,1.5,1.2,0,0,Math.PI*2); ctx.ellipse(dkX+2.5,dkY-33,1.5,1.2,0,0,Math.PI*2); ctx.fill();
-          ctx.fillStyle=TEAL; ctx.beginPath(); ctx.arc(dkX-2.5,dkY-33,0.8,0,Math.PI*2); ctx.arc(dkX+2.5,dkY-33,0.8,0,Math.PI*2); ctx.fill();
+          // Worker at desk (seated human — dancer-style proportions)
+          { const wkS=["#F0C880","#C8A068","#EED8B0"][di],wkH=["#080808","#3a1a08","#1a1800"][di],wkC=[TEAL,CYAN,"#0055BB"][di];
+          ctx.save(); ctx.translate(dkX,dkY);
+          ctx.fillStyle="rgba(0,20,40,0.45)"; ctx.beginPath(); ctx.ellipse(0,-8,7,3,0,0,Math.PI*2); ctx.fill();
+          ctx.strokeStyle=wkS; ctx.lineWidth=3.5; ctx.lineCap="round";
+          ctx.beginPath(); ctx.moveTo(-8,-24); ctx.lineTo(-15,-4); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(8,-24); ctx.lineTo(15,-4); ctx.stroke();
+          ctx.lineCap="butt"; ctx.fillStyle=wkS;
+          ctx.beginPath(); ctx.arc(-15,-4,2.5,0,Math.PI*2); ctx.fill();
+          ctx.beginPath(); ctx.arc(15,-4,2.5,0,Math.PI*2); ctx.fill();
+          ctx.fillStyle=wkC; ctx.shadowColor=TEAL; ctx.shadowBlur=5;
+          ctx.beginPath(); ctx.roundRect(-9,-40,18,20,3); ctx.fill(); ctx.shadowBlur=0;
+          ctx.fillStyle=wkS; ctx.beginPath(); ctx.moveTo(-3,-40); ctx.lineTo(0,-37); ctx.lineTo(3,-40); ctx.fill();
+          ctx.fillRect(-3,-44,6,5);
+          ctx.beginPath(); ctx.ellipse(0,-50,7,8,0,0,Math.PI*2); ctx.fill();
+          ctx.fillStyle=wkH; ctx.beginPath(); ctx.arc(0,-55,6,Math.PI*1.1,Math.PI*1.9); ctx.fill(); ctx.fillRect(-6,-55,12,5);
+          ctx.fillStyle="#fff"; ctx.beginPath(); ctx.ellipse(-3,-51,2,1.6,0,0,Math.PI*2); ctx.ellipse(3,-51,2,1.6,0,0,Math.PI*2); ctx.fill();
+          ctx.fillStyle=TEAL; ctx.shadowColor=TEAL; ctx.shadowBlur=2;
+          ctx.beginPath(); ctx.arc(-3,-51,1,0,Math.PI*2); ctx.arc(3,-51,1,0,Math.PI*2); ctx.fill(); ctx.shadowBlur=0;
+          ctx.fillStyle="#000"; ctx.beginPath(); ctx.arc(-3,-51,0.4,0,Math.PI*2); ctx.arc(3,-51,0.4,0,Math.PI*2); ctx.fill();
+          ctx.fillStyle="rgba(255,255,255,0.7)"; ctx.beginPath(); ctx.arc(-3.5,-51.5,0.5,0,Math.PI*2); ctx.fill();
+          ctx.strokeStyle=wkH; ctx.lineWidth=1.2;
+          ctx.beginPath(); ctx.moveTo(-5,-55); ctx.lineTo(-1.5,-56); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(1.5,-56); ctx.lineTo(5,-55); ctx.stroke();
+          ctx.fillStyle="rgba(0,0,0,0.15)"; ctx.beginPath(); ctx.arc(0,-48,1,0,Math.PI*2); ctx.fill();
+          ctx.strokeStyle="#AA7755"; ctx.lineWidth=1.3;
+          ctx.beginPath(); ctx.moveTo(-2.5,-46); ctx.lineTo(2.5,-46); ctx.stroke();
+          ctx.restore(); }
         }
 
         // ── FILING CABINETS (left wall) ──
@@ -10633,9 +10654,9 @@ Game.prototype._renderIndoorFurniture = function(ctx, room) {
         ctx.font = "bold 5.5px Orbitron, monospace"; ctx.textAlign = "center";
         ctx.fillStyle = AQUA + "88"; ctx.fillText("WAVE", wa2X, wa2Y + 26);
 
-        // ── RECEPTION WORKER (salesperson-scale human, stands at reception desk) ──
+        // ── RECEPTION WORKER (salesperson-scale human, stands center-top near entrance) ──
         {
-          const rwX = cx + 20, rwY = H * 0.88;
+          const rwX = cx, rwY = H * 0.25;
           const breathe = Math.sin(t * 0.9) * 1.5;
           ctx.save(); ctx.translate(rwX, rwY);
           // Shadow
