@@ -15480,6 +15480,244 @@ Game.prototype._renderIndoorFurniture = function(ctx, room) {
           ctx.fillStyle=AMBER+"66"; ctx.font="bold 4.5px monospace"; ctx.textAlign="center";
           ctx.fillText("FX PADS",pdX+pdW/2,pdY+pdH+6); }
 
+        // ── DAW WORKSTATION SCREEN (center-left below desk) ──
+        { const dwX=bdX+14, dwY=bdY+bdH+16, dwW=W*0.22, dwH=58;
+          // Monitor stand
+          ctx.fillStyle="#1a1006"; ctx.strokeStyle=AMBER+"33"; ctx.lineWidth=1;
+          rr(dwX+dwW/2-6,dwY+dwH,12,12,2); ctx.fill(); ctx.stroke();
+          ctx.fillRect(dwX+dwW/2-18,dwY+dwH+10,36,4);
+          // Screen bezel
+          ctx.fillStyle="#0c0806"; ctx.strokeStyle=GOLD; ctx.lineWidth=2;
+          ctx.shadowColor=GOLD; ctx.shadowBlur=8;
+          rr(dwX,dwY,dwW,dwH,4); ctx.fill(); ctx.stroke(); ctx.shadowBlur=0;
+          // Screen interior (DAW timeline)
+          ctx.fillStyle="#020100"; rr(dwX+3,dwY+3,dwW-6,dwH-6,2); ctx.fill();
+          // Track lanes (6 colored audio tracks)
+          const dawCols=[AMBER,GOLD,ORANGE,"#44AAFF","#FF4488","#44FF88"];
+          for(let tr=0;tr<6;tr++){
+            const ty=dwY+5+tr*(dwH-12)/6, th=(dwH-14)/6-1;
+            ctx.fillStyle=dawCols[tr]+"18"; ctx.fillRect(dwX+28,ty,dwW-34,th);
+            // Track label
+            ctx.fillStyle=dawCols[tr]+"CC"; ctx.font="bold 4px monospace"; ctx.textAlign="left";
+            ctx.fillText(["VOX","GTR","KEYS","BASS","FX","AMBT"][tr],dwX+5,ty+th-1);
+            // Audio waveform blocks
+            for(let wv=0;wv<14;wv++){
+              const wx=dwX+28+wv*((dwW-34)/14);
+              const wh=2+Math.abs(Math.sin(t*1.4+tr*0.8+wv*0.6))*((th-2)*0.85);
+              const wA=0.45+0.35*Math.abs(Math.sin(t*2.2+wv*0.4+tr));
+              ctx.fillStyle=`${dawCols[tr]}${Math.floor(wA*255).toString(16).padStart(2,"0")}`;
+              ctx.fillRect(wx+1,ty+th/2-wh/2,Math.max(2,(dwW-34)/14-2),wh);
+            }
+          }
+          // Playhead (animated red line)
+          const phPos=dwX+28+((t*18)%((dwW-34)));
+          ctx.strokeStyle="rgba(255,60,60,0.9)"; ctx.lineWidth=1;
+          ctx.beginPath(); ctx.moveTo(phPos,dwY+4); ctx.lineTo(phPos,dwY+dwH-4); ctx.stroke();
+          ctx.fillStyle="rgba(255,60,60,0.9)"; ctx.beginPath(); ctx.arc(phPos,dwY+4,3,0,Math.PI*2); ctx.fill();
+          // Label
+          ctx.fillStyle=GOLD+"99"; ctx.font="bold 5px Orbitron,monospace"; ctx.textAlign="center";
+          ctx.fillText("DAW  •  CITY FREQUENCY STUDIO",dwX+dwW/2,dwY+dwH+26); }
+
+        // ── REEL-TO-REEL TAPE RECORDER (right of center, below desk) ──
+        { const rtX=cx+W*0.12, rtY=bdY+bdH+16, rtW=82, rtH=74;
+          // Machine chassis
+          const rtG=ctx.createLinearGradient(rtX,rtY,rtX,rtY+rtH);
+          rtG.addColorStop(0,"#1a1208"); rtG.addColorStop(1,"#0e0804");
+          ctx.fillStyle=rtG; ctx.strokeStyle=AMBER+"88"; ctx.lineWidth=1.5;
+          ctx.shadowColor=AMBER; ctx.shadowBlur=6;
+          rr(rtX,rtY,rtW,rtH,4); ctx.fill(); ctx.stroke(); ctx.shadowBlur=0;
+          // Two spinning reels
+          for(let ri=0;ri<2;ri++){
+            const rlX=rtX+18+ri*46, rlY=rtY+22, rlR=16;
+            // Reel hub
+            ctx.fillStyle="#0a0604"; ctx.strokeStyle=GOLD; ctx.lineWidth=1.2;
+            ctx.beginPath(); ctx.arc(rlX,rlY,rlR,0,Math.PI*2); ctx.fill(); ctx.stroke();
+            // Tape wound on reel (more tape on left reel = supply)
+            const tapeR=ri===0?rlR-2:rlR-6;
+            ctx.strokeStyle=`rgba(${AMBERr},0.3)`; ctx.lineWidth=tapeR;
+            ctx.beginPath(); ctx.arc(rlX,rlY,tapeR/2+2,0,Math.PI*2); ctx.stroke();
+            // Spinning spokes (3)
+            const rAngle=t*(ri===0?1.8:-1.8);
+            for(let sp=0;sp<3;sp++){
+              const sa=rAngle+sp*Math.PI*2/3;
+              ctx.strokeStyle=GOLD+"88"; ctx.lineWidth=1.2;
+              ctx.beginPath(); ctx.moveTo(rlX,rlY);
+              ctx.lineTo(rlX+Math.cos(sa)*(rlR-3),rlY+Math.sin(sa)*(rlR-3)); ctx.stroke();
+            }
+            // Center hub dot
+            ctx.fillStyle=ORANGE; ctx.beginPath(); ctx.arc(rlX,rlY,3,0,Math.PI*2); ctx.fill();
+          }
+          // Tape path between reels
+          ctx.strokeStyle=AMBER+"55"; ctx.lineWidth=1.5;
+          ctx.beginPath(); ctx.moveTo(rtX+34,rtY+22); ctx.lineTo(rtX+48,rtY+22); ctx.stroke();
+          // Tape head block
+          ctx.fillStyle="#221408"; ctx.strokeStyle=AMBER; ctx.lineWidth=1;
+          rr(rtX+33,rtY+18,16,8,2); ctx.fill(); ctx.stroke();
+          // VU meter
+          ctx.fillStyle="#030200"; ctx.strokeStyle=GOLD+"44"; ctx.lineWidth=0.7;
+          rr(rtX+6,rtY+44,rtW-12,20,2); ctx.fill(); ctx.stroke();
+          // VU needle + bars
+          for(let vu=0;vu<2;vu++){
+            const vux=rtX+8+vu*(rtW/2-8), vuy=rtY+46, vuw=(rtW/2-12);
+            const lvl=0.4+0.5*Math.abs(Math.sin(t*5.5+vu*1.4));
+            const vg=ctx.createLinearGradient(vux,vuy,vux+vuw*lvl,vuy);
+            vg.addColorStop(0,"rgba(100,220,80,0.9)"); vg.addColorStop(0.7,"rgba(255,220,0,0.9)"); vg.addColorStop(1,"rgba(255,60,0,0.9)");
+            ctx.fillStyle=vg; ctx.fillRect(vux,vuy+4,vuw*lvl,10);
+            ctx.strokeStyle=GOLD+"44"; ctx.lineWidth=0.5; ctx.strokeRect(vux,vuy+4,vuw,10);
+            ctx.fillStyle=AMBER+"77"; ctx.font="bold 4px monospace"; ctx.textAlign="left";
+            ctx.fillText(vu===0?"L":"R",vux,vuy+4);
+          }
+          ctx.fillStyle=AMBER+"88"; ctx.font="bold 5px Orbitron,monospace"; ctx.textAlign="center";
+          ctx.fillText("REEL-TO-REEL",rtX+rtW/2,rtY+rtH+10); }
+
+        // ── VINYL TURNTABLE (center-left, lower area) ──
+        { const ttX=bdX+W*0.08, ttY=H*0.40, ttW=64, ttH=52;
+          // Plinth
+          const ttG=ctx.createLinearGradient(ttX,ttY,ttX,ttY+ttH);
+          ttG.addColorStop(0,"#181006"); ttG.addColorStop(1,"#0c0804");
+          ctx.fillStyle=ttG; ctx.strokeStyle=AMBER+"66"; ctx.lineWidth=1.2;
+          rr(ttX,ttY,ttW,ttH,4); ctx.fill(); ctx.stroke();
+          // Platter
+          const ttCX=ttX+ttW*0.44, ttCY=ttY+ttH*0.44, ttR=20;
+          ctx.fillStyle="#0a0604"; ctx.strokeStyle=GOLD+"55"; ctx.lineWidth=1;
+          ctx.beginPath(); ctx.arc(ttCX,ttCY,ttR,0,Math.PI*2); ctx.fill(); ctx.stroke();
+          // Spinning vinyl record
+          const rAngle2=t*2.4;
+          const recGrd=ctx.createRadialGradient(ttCX,ttCY,0,ttCX,ttCY,ttR-1);
+          recGrd.addColorStop(0,"rgba(255,180,0,0.3)"); recGrd.addColorStop(0.3,"rgba(20,10,5,1)"); recGrd.addColorStop(1,"rgba(10,5,3,1)");
+          ctx.fillStyle=recGrd; ctx.beginPath(); ctx.arc(ttCX,ttCY,ttR-1,0,Math.PI*2); ctx.fill();
+          // Spinning grooves
+          for(let gr=1;gr<=5;gr++){
+            ctx.strokeStyle=`rgba(${AMBERr},${0.06+gr*0.02})`; ctx.lineWidth=0.4;
+            ctx.beginPath(); ctx.arc(ttCX,ttCY,gr*3,0,Math.PI*2); ctx.stroke();
+          }
+          // Center label (spinning)
+          ctx.save(); ctx.translate(ttCX,ttCY); ctx.rotate(rAngle2);
+          ctx.fillStyle="#CC7700"; ctx.beginPath(); ctx.arc(0,0,6,0,Math.PI*2); ctx.fill();
+          ctx.fillStyle=GOLD; ctx.font="bold 3px monospace"; ctx.textAlign="center";
+          ctx.fillText("94.7",0,1.5); ctx.restore();
+          // Tonearm
+          ctx.save(); ctx.translate(ttX+ttW*0.82,ttY+12); ctx.rotate(-0.6);
+          ctx.strokeStyle=GOLD; ctx.lineWidth=1.5;
+          ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(-18,32); ctx.stroke();
+          ctx.fillStyle=AMBER; ctx.beginPath(); ctx.arc(0,0,4,0,Math.PI*2); ctx.fill();
+          ctx.fillStyle="#2a1a08"; ctx.beginPath(); ctx.arc(-18,32,2.5,0,Math.PI*2); ctx.fill();
+          ctx.restore();
+          // Controls (start/stop button)
+          ctx.fillStyle=`rgba(80,200,80,0.85)`; ctx.shadowColor="#60FF60"; ctx.shadowBlur=4;
+          ctx.beginPath(); ctx.arc(ttX+ttW-9,ttY+ttH-10,5,0,Math.PI*2); ctx.fill(); ctx.shadowBlur=0;
+          ctx.fillStyle=AMBER+"77"; ctx.font="bold 4.5px Orbitron,monospace"; ctx.textAlign="center";
+          ctx.fillText("TURNTABLE",ttX+ttW/2,ttY+ttH+10); }
+
+        // ── GUEST INTERVIEW CHAIRS (center, below desk) ──
+        { const gc1X=cx-W*0.04, gc2X=cx+W*0.08, gcY=H*0.41, gcW=28, gcH=38;
+          for(let gc=0;gc<2;gc++){
+            const gcX=gc===0?gc1X:gc2X;
+            // Chair back
+            const cgBack=ctx.createLinearGradient(gcX,gcY,gcX,gcY+gcH*0.55);
+            cgBack.addColorStop(0,"#1e1208"); cgBack.addColorStop(1,"#140c06");
+            ctx.fillStyle=cgBack; ctx.strokeStyle=AMBER+"44"; ctx.lineWidth=1;
+            rr(gcX,gcY,gcW,gcH*0.6,4); ctx.fill(); ctx.stroke();
+            // Seat
+            const cgSeat=ctx.createLinearGradient(gcX,gcY+gcH*0.6,gcX,gcY+gcH*0.85);
+            cgSeat.addColorStop(0,"#241408"); cgSeat.addColorStop(1,"#1a1006");
+            ctx.fillStyle=cgSeat; ctx.strokeStyle=AMBER+"44"; ctx.lineWidth=1;
+            rr(gcX-2,gcY+gcH*0.6,gcW+4,gcH*0.28,3); ctx.fill(); ctx.stroke();
+            // Armrests
+            for(const [arX] of [[gcX-5],[gcX+gcW-2]]){
+              ctx.fillStyle="#180e06"; ctx.strokeStyle=AMBER+"33"; ctx.lineWidth=0.7;
+              rr(arX,gcY+gcH*0.25,7,gcH*0.42,2); ctx.fill(); ctx.stroke();
+            }
+            // Legs
+            ctx.strokeStyle=GOLD+"66"; ctx.lineWidth=1.2;
+            for(const [lx,ly] of [[gcX+3,gcY+gcH*0.88],[gcX+gcW-3,gcY+gcH*0.88]]){
+              ctx.beginPath(); ctx.moveTo(lx,ly); ctx.lineTo(lx+2,ly+gcH*0.12); ctx.stroke();
+            }
+            // Cushion lines
+            ctx.strokeStyle="rgba(255,153,51,0.08)"; ctx.lineWidth=0.5;
+            ctx.beginPath(); ctx.moveTo(gcX+4,gcY+gcH*0.72); ctx.lineTo(gcX+gcW-4,gcY+gcH*0.72); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(gcX+6,gcY+gcH*0.2); ctx.lineTo(gcX+gcW-6,gcY+gcH*0.2); ctx.stroke();
+          }
+          ctx.fillStyle=AMBER+"55"; ctx.font="bold 5px monospace"; ctx.textAlign="center";
+          ctx.fillText("INTERVIEW",cx+W*0.02,gcY+gcH+9); }
+
+        // ── ACOUSTIC GUITAR (right wall, below gold record) ──
+        { const agX=W*0.87, agY=topY+172;
+          // Wall hook
+          ctx.strokeStyle=GOLD+"88"; ctx.lineWidth=1.5;
+          ctx.beginPath(); ctx.moveTo(agX+10,agY); ctx.lineTo(agX+10,agY+6); ctx.stroke();
+          // Guitar body (figure-8 shape)
+          ctx.fillStyle="#3a1c06"; ctx.strokeStyle=AMBER+"88"; ctx.lineWidth=1.5;
+          ctx.shadowColor=AMBER; ctx.shadowBlur=5;
+          ctx.beginPath(); ctx.ellipse(agX+10,agY+38,14,20,0,0,Math.PI*2); ctx.fill(); ctx.stroke(); // lower bout
+          ctx.beginPath(); ctx.ellipse(agX+10,agY+18,10,14,0,0,Math.PI*2); ctx.fill(); ctx.stroke(); // upper bout
+          ctx.shadowBlur=0;
+          // Sound hole
+          ctx.fillStyle="#1a0c04"; ctx.strokeStyle=GOLD+"66"; ctx.lineWidth=0.8;
+          ctx.beginPath(); ctx.arc(agX+10,agY+36,6,0,Math.PI*2); ctx.fill(); ctx.stroke();
+          // Neck
+          ctx.fillStyle="#2a1404"; ctx.strokeStyle=AMBER+"55"; ctx.lineWidth=1;
+          rr(agX+7,agY+3,6,12,1); ctx.fill(); ctx.stroke();
+          // Frets
+          for(let fr=0;fr<4;fr++){
+            ctx.strokeStyle=GOLD+"44"; ctx.lineWidth=0.5;
+            ctx.beginPath(); ctx.moveTo(agX+7,agY+5+fr*3); ctx.lineTo(agX+13,agY+5+fr*3); ctx.stroke();
+          }
+          // Strings (6)
+          for(let str=0;str<6;str++){
+            ctx.strokeStyle=`rgba(${GOLDr},0.18)`; ctx.lineWidth=0.4;
+            ctx.beginPath(); ctx.moveTo(agX+8+str*0.4,agY+4); ctx.lineTo(agX+5+str*0.8,agY+52); ctx.stroke();
+          }
+          // Tuning pegs
+          for(let peg=0;peg<3;peg++){
+            ctx.fillStyle=GOLD+"88"; ctx.beginPath(); ctx.arc(agX+6,agY+2+peg*3,1.5,0,Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(agX+14,agY+2+peg*3,1.5,0,Math.PI*2); ctx.fill();
+          }
+          ctx.fillStyle=AMBER+"66"; ctx.font="bold 4.5px monospace"; ctx.textAlign="center";
+          ctx.fillText("LIVE",agX+10,agY+62); }
+
+        // ── BROADCAST SCRIPT STAND (near mic, right of center) ──
+        { const ssX=cx+W*0.08, ssY=bdY-28;
+          // Stand leg
+          ctx.strokeStyle=AMBER+"66"; ctx.lineWidth=1.5;
+          ctx.beginPath(); ctx.moveTo(ssX,ssY+50); ctx.lineTo(ssX,ssY+20); ctx.stroke();
+          // Tray base
+          ctx.beginPath(); ctx.moveTo(ssX-16,ssY+50); ctx.lineTo(ssX+16,ssY+50); ctx.stroke();
+          // Angled script holder
+          ctx.save(); ctx.translate(ssX,ssY+18); ctx.rotate(-0.28);
+          ctx.fillStyle="#F4ECD8"; ctx.strokeStyle=AMBER+"44"; ctx.lineWidth=0.8;
+          rr(-14,-14,28,20,1); ctx.fill(); ctx.stroke();
+          // Script lines
+          ctx.fillStyle="rgba(60,40,20,0.6)"; ctx.font="3px monospace"; ctx.textAlign="left";
+          for(let ln=0;ln<5;ln++) ctx.fillRect(-12,-11+ln*3.8,20+Math.sin(ln*2.3)*4,1);
+          // "ON AIR" highlight
+          ctx.fillStyle=`rgba(220,30,10,${0.5+0.4*Math.sin(t*4)})`; ctx.fillRect(-12,-11,8,3);
+          ctx.restore(); }
+
+        // ── PATCH BAY WITH CABLES (right wall, above phone bank) ──
+        { const pbX=W-room.S-88, pbY=H*0.33, pbW=54, pbH=26;
+          ctx.fillStyle="#080604"; ctx.strokeStyle=AMBER+"44"; ctx.lineWidth=1;
+          rr(pbX,pbY,pbW,pbH,3); ctx.fill(); ctx.stroke();
+          ctx.fillStyle=AMBER+"77"; ctx.font="bold 4.5px monospace"; ctx.textAlign="center";
+          ctx.fillText("PATCH BAY",pbX+pbW/2,pbY+8);
+          // Patch jacks (4x2 grid)
+          const jackCols=[AMBER,GOLD,ORANGE,"#44AAFF",AMBER,GOLD,"#FF4488",ORANGE];
+          for(let jk=0;jk<8;jk++){
+            const jx=pbX+5+jk%4*12, jy=pbY+11+Math.floor(jk/4)*10;
+            ctx.fillStyle="#030200"; ctx.strokeStyle=jackCols[jk]+"88"; ctx.lineWidth=0.8;
+            ctx.beginPath(); ctx.arc(jx+4,jy+4,4,0,Math.PI*2); ctx.fill(); ctx.stroke();
+            ctx.fillStyle=jackCols[jk]+"55"; ctx.beginPath(); ctx.arc(jx+4,jy+4,2,0,Math.PI*2); ctx.fill();
+          }
+          // Dangling cables
+          const cableMap=[[0,1],[2,5],[3,6],[4,7]];
+          for(const [a,b] of cableMap){
+            const ax=pbX+5+a%4*12+4, ay=pbY+11+Math.floor(a/4)*10+8;
+            const bx=pbX+5+b%4*12+4, by=pbY+11+Math.floor(b/4)*10+8;
+            const sag=8+Math.sin(t*0.8+a*1.2)*3;
+            ctx.strokeStyle=jackCols[a]+"88"; ctx.lineWidth=1.2;
+            ctx.beginPath(); ctx.moveTo(ax,ay); ctx.quadraticCurveTo((ax+bx)/2,ay+sag,bx,by); ctx.stroke();
+          } }
+
         // ── NEWS TICKER / CRAWL (bottom strip above EQ bars) ──
         { const tkW=W-room.S*4, tkX=room.S*2, tkY=H-room.S-72, tkH=14;
           ctx.fillStyle="#0a0604"; ctx.strokeStyle=AMBER+"33"; ctx.lineWidth=0.8;
