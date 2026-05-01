@@ -2924,6 +2924,7 @@ class Game {
           const isWasteland  = !!this.map?.config?.wasteland;
           const isHardcoreN  = !!this.map?.config?.hardcore;
           const isOceanN     = !!this.map?.config?.ocean;
+          const isMetropolis = !!this.map?.config?.metropolis;
           const isGalOrBlitz = isGalactica || isBlitz;
           const isSpecialMap = isNeonCity || isGalactica || isWasteland || isBlitz || isRobotCity || isHardcoreN;
           // Special positioning for Neon City / Galactica / Blitz / Wasteland / Zombie buildings
@@ -2976,6 +2977,10 @@ class Game {
             // Ocean: workers centered in room
             npcX = room.roomW / 2;
             npcY = room.roomH * 0.20;
+          } else if (isMetropolis && bType === 11) {
+            // Metropolis bar: NPC stands behind bar counter
+            npcX = room.roomW * 0.60;
+            npcY = room.roomH * 0.26;
           }
           const useGirlRender = isGalOrBlitz && bType === 8;
           // Determine render type for BuildingNPC
@@ -2986,6 +2991,8 @@ class Game {
             npcRenderType = 'galactica'; // cosmic human bartender
           } else if (isOceanN) {
             npcRenderType = 'ocean'; // full underwater diver human
+          } else if (isMetropolis && bType === 11) {
+            npcRenderType = 'metropolis'; // amber pub bartender human
           } else if (isNeonCity || isZombie || isBlitz || isRobotCity || isHardcoreN || (isGalactica && (bType === 3 || bType === 8 || bType === 0 || bType === 5 || bType === 22))) {
             npcRenderType = true; // neonCity/robot city/hardcore/galactica style
           }

@@ -11644,11 +11644,12 @@ class BuildingNPC {
     this.dialogue    = cfg.dialogue;
     this._waveT      = 0;
     this._interactR  = 65;
-    // renderType can be: true (neonCity for backwards compat), 'wasteland', 'galactica', 'ocean', or false (default)
-    this._isNeonCity  = renderType === true || renderType === 'neonCity';
-    this._isWasteland = renderType === 'wasteland';
-    this._isGalactica = renderType === 'galactica';
-    this._isOcean     = renderType === 'ocean';
+    // renderType can be: true (neonCity for backwards compat), 'wasteland', 'galactica', 'ocean', 'metropolis', or false (default)
+    this._isNeonCity   = renderType === true || renderType === 'neonCity';
+    this._isWasteland  = renderType === 'wasteland';
+    this._isGalactica  = renderType === 'galactica';
+    this._isOcean      = renderType === 'ocean';
+    this._isMetropolis = renderType === 'metropolis';
     this._isGirl      = isGirl;
     this._buildingType = buildingType;
   }
@@ -11663,6 +11664,8 @@ class BuildingNPC {
       this._renderGalactica(ctx);
     } else if (this._isOcean) {
       this._renderOcean(ctx);
+    } else if (this._isMetropolis) {
+      this._renderMetropolis(ctx);
     } else if (this._isWasteland) {
       this._renderWasteland(ctx);
     } else if (this._isNeonCity) {
@@ -11848,6 +11851,157 @@ class BuildingNPC {
     ctx.shadowBlur = 0;
 
     // [T] interact hint when near (rendered by game.js separately — this is just the figure)
+    ctx.restore();
+  }
+
+  _renderMetropolis(ctx) {
+    // ═══ METROPOLIS: Human pub bartender — warm amber style ═══
+    const t      = performance.now() / 1000;
+    const breathe = Math.sin(t * 0.8) * 1;
+    const sway    = Math.sin(this._waveT) * 2;
+    const AMBER = '#FF9933', GOLD = '#FFCC44', ORANGE = '#FF6600';
+
+    ctx.save();
+    ctx.translate(this.x + sway, this.y);
+
+    // Shadow
+    ctx.globalAlpha = 0.3; ctx.fillStyle = '#000';
+    ctx.beginPath(); ctx.ellipse(2, 6, 14, 5, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.globalAlpha = 1;
+
+    // Legs (dark trousers)
+    ctx.fillStyle = '#1a0e04';
+    ctx.fillRect(-6, -8, 5, 14); ctx.fillRect(1, -8, 5, 14);
+
+    // Shoes with amber buckle
+    ctx.fillStyle = '#0a0604';
+    ctx.fillRect(-7, 4, 6, 5); ctx.fillRect(1, 4, 6, 5);
+    ctx.fillStyle = GOLD;
+    ctx.fillRect(-7, 4, 6, 1.5); ctx.fillRect(1, 4, 6, 1.5);
+
+    // Body — black vest over white shirt
+    const vG = ctx.createLinearGradient(-12, -42, 12, -8);
+    vG.addColorStop(0, '#1a1008'); vG.addColorStop(0.5, '#100a04'); vG.addColorStop(1, '#0a0602');
+    ctx.fillStyle = vG;
+    ctx.beginPath();
+    ctx.moveTo(-11, -8); ctx.lineTo(-13, -38 + breathe); ctx.lineTo(-8, -42 + breathe);
+    ctx.lineTo(8, -42 + breathe); ctx.lineTo(13, -38 + breathe); ctx.lineTo(11, -8);
+    ctx.closePath(); ctx.fill();
+
+    // White shirt collar
+    ctx.fillStyle = '#F0EBE0';
+    ctx.beginPath();
+    ctx.moveTo(-5, -40 + breathe); ctx.lineTo(0, -37 + breathe); ctx.lineTo(5, -40 + breathe);
+    ctx.lineTo(4, -42 + breathe); ctx.lineTo(-4, -42 + breathe); ctx.closePath(); ctx.fill();
+
+    // Amber bow-tie
+    ctx.fillStyle = AMBER; ctx.shadowColor = ORANGE; ctx.shadowBlur = 6;
+    ctx.beginPath(); ctx.moveTo(-4, -39 + breathe); ctx.lineTo(-1, -37 + breathe); ctx.lineTo(-4, -35 + breathe); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(4, -39 + breathe);  ctx.lineTo(1,  -37 + breathe); ctx.lineTo(4,  -35 + breathe); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.arc(0, -37 + breathe, 1.5, 0, Math.PI * 2); ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // Vest lapels (gold trim)
+    ctx.strokeStyle = GOLD + '66'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(-4, -38 + breathe); ctx.lineTo(-6, -20); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(4, -38 + breathe);  ctx.lineTo(6,  -20); ctx.stroke();
+
+    // Left arm — holds a beer glass out to player
+    ctx.fillStyle = '#100a04';
+    ctx.beginPath();
+    ctx.moveTo(-13, -36 + breathe); ctx.lineTo(-22, -16);
+    ctx.lineTo(-20, -8); ctx.lineTo(-17, -8); ctx.lineTo(-10, -30 + breathe); ctx.closePath(); ctx.fill();
+
+    // Right arm — reaches back to bar shelf
+    ctx.beginPath();
+    ctx.moveTo(13, -36 + breathe); ctx.lineTo(20, -18);
+    ctx.lineTo(18, -8); ctx.lineTo(15, -8); ctx.lineTo(10, -32 + breathe); ctx.closePath(); ctx.fill();
+
+    // Hands
+    ctx.fillStyle = '#E8C8A0';
+    ctx.beginPath(); ctx.arc(-20, -7, 4, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(18,  -7, 4, 0, Math.PI * 2); ctx.fill();
+
+    // Beer glass in left hand (amber glow)
+    const glassAlpha = Math.sin(t * 2) * 0.15 + 0.85;
+    ctx.fillStyle = `rgba(255,180,60,${glassAlpha * 0.4})`;
+    ctx.strokeStyle = GOLD; ctx.lineWidth = 1.2;
+    ctx.shadowColor = AMBER; ctx.shadowBlur = 8;
+    ctx.beginPath();
+    ctx.moveTo(-28, -22); ctx.lineTo(-25, -10); ctx.lineTo(-17, -10); ctx.lineTo(-14, -22); ctx.closePath();
+    ctx.fill(); ctx.stroke(); ctx.shadowBlur = 0;
+    // Foam on beer
+    ctx.fillStyle = 'rgba(255,255,240,0.85)';
+    ctx.beginPath(); ctx.ellipse(-21, -22, 5, 2, 0, 0, Math.PI * 2); ctx.fill();
+
+    // Shoulder epaulettes (amber trim)
+    ctx.fillStyle = AMBER; ctx.shadowColor = ORANGE; ctx.shadowBlur = 4;
+    ctx.beginPath(); ctx.arc(-10, -40 + breathe, 2.5, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(10,  -40 + breathe, 2.5, 0, Math.PI * 2); ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // Neck
+    ctx.fillStyle = '#E8C8A0'; ctx.fillRect(-3, -46 + breathe, 6, 6);
+
+    // Head — warm skin tone, ellipse
+    const hG = ctx.createRadialGradient(-2, -54 + breathe, 2, 0, -52 + breathe, 11);
+    hG.addColorStop(0, '#F5DEC0'); hG.addColorStop(1, '#D4AA88');
+    ctx.fillStyle = hG;
+    ctx.beginPath(); ctx.ellipse(0, -54 + breathe, 10, 12, 0, 0, Math.PI * 2); ctx.fill();
+
+    // Hair — dark brown, slicked side-part
+    ctx.fillStyle = '#1a0e04';
+    ctx.beginPath(); ctx.ellipse(0, -62 + breathe, 9, 6, 0, Math.PI, 0); ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(-9, -58 + breathe); ctx.quadraticCurveTo(-10, -52 + breathe, -8, -50 + breathe);
+    ctx.lineTo(-8, -58 + breathe); ctx.fill();
+    // Side part line
+    ctx.strokeStyle = '#2a1808'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(-2, -62 + breathe); ctx.lineTo(-2, -57 + breathe); ctx.stroke();
+
+    // Mustache (classic bartender)
+    ctx.fillStyle = '#1a0e04';
+    ctx.beginPath(); ctx.ellipse(-3, -47 + breathe, 3, 1.4, 0.25, 0, Math.PI); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(3,  -47 + breathe, 3, 1.4, -0.25, 0, Math.PI); ctx.fill();
+
+    // Eyes — warm brown iris
+    ctx.fillStyle = '#FFFFFF';
+    ctx.beginPath(); ctx.ellipse(-4, -54 + breathe, 2.5, 2, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(4,  -54 + breathe, 2.5, 2, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#6B3A10'; ctx.shadowColor = AMBER; ctx.shadowBlur = 3;
+    ctx.beginPath(); ctx.arc(-4, -54 + breathe, 1.3, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(4,  -54 + breathe, 1.3, 0, Math.PI * 2); ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = '#111';
+    ctx.beginPath(); ctx.arc(-4, -54 + breathe, 0.5, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(4,  -54 + breathe, 0.5, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.7)';
+    ctx.beginPath(); ctx.arc(-4.5, -54.5 + breathe, 0.5, 0, Math.PI * 2); ctx.fill();
+
+    // Eyebrows (thick, classic)
+    ctx.strokeStyle = '#1a0e04'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(-7, -58 + breathe); ctx.lineTo(-2, -59 + breathe); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(2, -59 + breathe);  ctx.lineTo(7,  -58 + breathe); ctx.stroke();
+
+    // Nose
+    ctx.fillStyle = 'rgba(0,0,0,0.14)';
+    ctx.beginPath(); ctx.arc(0, -50 + breathe, 1.2, 0, Math.PI * 2); ctx.fill();
+
+    // Friendly smile
+    ctx.strokeStyle = '#AA7755'; ctx.lineWidth = 1.4;
+    ctx.beginPath(); ctx.arc(0, -46 + breathe, 4, 0.2, Math.PI - 0.2); ctx.stroke();
+
+    // Name badge
+    ctx.fillStyle = 'rgba(0,0,0,0.75)'; ctx.beginPath(); ctx.roundRect(-16, -30 + breathe, 14, 8, 2); ctx.fill();
+    ctx.fillStyle = GOLD; ctx.shadowColor = AMBER; ctx.shadowBlur = 3;
+    ctx.font = 'bold 4px Orbitron, monospace'; ctx.textAlign = 'center';
+    ctx.fillText('BAR', -9, -24 + breathe); ctx.shadowBlur = 0;
+
+    // Name above head
+    ctx.fillStyle = AMBER; ctx.shadowColor = ORANGE; ctx.shadowBlur = 14;
+    ctx.font = 'bold 8px Orbitron, monospace'; ctx.textAlign = 'center';
+    ctx.fillText(this.name, 0, -80 + breathe); ctx.shadowBlur = 0;
+
     ctx.restore();
   }
 
