@@ -15012,6 +15012,505 @@ Game.prototype._renderIndoorFurniture = function(ctx, room) {
           ctx.strokeStyle=`rgba(${EMBERr},${0.1-sb*0.022})`; ctx.lineWidth=1;
           ctx.beginPath(); ctx.arc(W-240,topY+150,sw,Math.PI*1.1,Math.PI*1.9); ctx.stroke();
         }
+      } else if (!!this.map?.config?.metropolis) {
+        // ═══ METROPOLIS: CITY FREQUENCY RADIO — URBAN BROADCAST STUDIO ═══
+        const t = performance.now() / 1000;
+        const AMBER="#FF9933", GOLD="#FFCC44", ORANGE="#FF6600", WARM="#FFAA22";
+        const AMBERr="255,153,51", GOLDr="255,204,68", ORANGEr="255,102,0";
+
+        // ── FLOOR (dark studio concrete tiles) ──
+        const tS2=54;
+        for (let gy=0;gy<=Math.ceil(H/tS2)+1;gy++) {
+          for (let gx=0;gx<=Math.ceil(W/tS2)+1;gx++) {
+            const seed=gx*17+gy*11;
+            ctx.fillStyle=seed%3===0?"#0c0a0e":seed%3===1?"#0a0810":"#0e0c10";
+            ctx.fillRect(gx*tS2,gy*tS2,tS2,tS2);
+            ctx.strokeStyle="rgba(255,153,51,0.05)"; ctx.lineWidth=0.5;
+            ctx.strokeRect(gx*tS2,gy*tS2,tS2,tS2);
+          }
+        }
+        // Warm amber ambient glow
+        const flrAmb=ctx.createRadialGradient(cx,H*0.4,0,cx,H*0.4,W*0.5);
+        flrAmb.addColorStop(0,"rgba(255,153,51,0.07)"); flrAmb.addColorStop(1,"rgba(0,0,0,0)");
+        ctx.fillStyle=flrAmb; ctx.fillRect(0,0,W,H);
+
+        // ── ROOM BORDER ──
+        ctx.strokeStyle=`rgba(${AMBERr},${0.55+0.2*Math.sin(t*1.5)})`; ctx.lineWidth=2.5;
+        ctx.strokeRect(2,2,W-4,H-4);
+        ctx.strokeStyle=`rgba(${GOLDr},0.18)`; ctx.lineWidth=1.2; ctx.strokeRect(7,7,W-14,H-14);
+
+        // ── SIGN ──
+        ctx.save();
+        ctx.font="bold 20px Orbitron, monospace"; ctx.textAlign="center";
+        ctx.fillStyle="#fff"; ctx.shadowColor=AMBER; ctx.shadowBlur=28;
+        ctx.fillText("📡  CITY FREQUENCY  📡", cx, room.S-16); ctx.shadowBlur=0; ctx.restore();
+        const sigG=ctx.createLinearGradient(0,room.S,W,room.S);
+        sigG.addColorStop(0,"rgba(255,153,51,0)"); sigG.addColorStop(0.5,"rgba(255,153,51,0.5)"); sigG.addColorStop(1,"rgba(255,153,51,0)");
+        ctx.fillStyle=sigG; ctx.fillRect(room.S,room.S,W-room.S*2,3);
+
+        // ── ACOUSTIC FOAM PANELS (top wall) ──
+        const foamC=["#1a1208","#1e1408","#161008","#221808"];
+        for (let pi=0;pi<14;pi++) {
+          const fpx=room.S+4+pi*((W-room.S*2-8)/14), fpy=topY+2, fpw=(W-room.S*2-8)/14-3, fph=26;
+          ctx.fillStyle=foamC[pi%4]; rr(fpx,fpy,fpw,fph,3); ctx.fill();
+          ctx.strokeStyle=`rgba(${AMBERr},0.12)`; ctx.lineWidth=0.8; ctx.stroke();
+          ctx.strokeStyle=`rgba(${AMBERr},0.07)`; ctx.lineWidth=0.5;
+          ctx.beginPath(); ctx.moveTo(fpx+fpw/2,fpy+2); ctx.lineTo(fpx+fpw-3,fpy+fph/2); ctx.lineTo(fpx+fpw/2,fpy+fph-2); ctx.lineTo(fpx+3,fpy+fph/2); ctx.closePath(); ctx.stroke();
+        }
+        // Left wall foam panels
+        for (let pi=0;pi<7;pi++) {
+          ctx.fillStyle=foamC[pi%4]; rr(room.S+4,topY+36+pi*78,26,66,3); ctx.fill();
+          ctx.strokeStyle=`rgba(${AMBERr},0.10)`; ctx.lineWidth=0.8; ctx.stroke();
+        }
+        // Right wall foam panels
+        for (let pi=0;pi<7;pi++) {
+          ctx.fillStyle=foamC[pi%4]; rr(W-room.S-30,topY+36+pi*78,26,66,3); ctx.fill();
+          ctx.strokeStyle=`rgba(${AMBERr},0.10)`; ctx.lineWidth=0.8; ctx.stroke();
+        }
+
+        // ── ON AIR + LIVE badges ──
+        const onA=0.7+0.3*Math.sin(t*4);
+        ctx.fillStyle=`rgba(220,30,10,${onA})`; ctx.shadowColor="#DD1000"; ctx.shadowBlur=18*onA;
+        rr(cx-52,topY+32,104,26,6); ctx.fill(); ctx.shadowBlur=0;
+        ctx.strokeStyle=`rgba(255,90,60,${onA})`; ctx.lineWidth=1.5; ctx.stroke();
+        ctx.fillStyle="#FFF"; ctx.font="bold 12px monospace"; ctx.textAlign="center";
+        ctx.fillText("● ON AIR", cx, topY+49);
+        const livP=Math.abs(Math.sin(t*2.5));
+        ctx.fillStyle=`rgba(${GOLDr},${0.7+0.3*livP})`; ctx.shadowColor=GOLD; ctx.shadowBlur=10*livP;
+        rr(cx-180,topY+34,68,22,5); ctx.fill(); ctx.shadowBlur=0;
+        ctx.strokeStyle=GOLD; ctx.lineWidth=1; ctx.stroke();
+        ctx.fillStyle="#0a0600"; ctx.font="bold 10px monospace"; ctx.textAlign="center";
+        ctx.fillText("◉ LIVE", cx-146, topY+49);
+        // Frequency label
+        const freqPulse=0.8+0.2*Math.sin(t*0.7);
+        ctx.fillStyle=`rgba(${AMBERr},${freqPulse})`; ctx.font="bold 10px Orbitron, monospace"; ctx.textAlign="center";
+        ctx.shadowColor=AMBER; ctx.shadowBlur=8;
+        ctx.fillText("94.7 FM", cx+180, topY+49); ctx.shadowBlur=0;
+
+        // ── MAIN BROADCAST DESK (large, center) ──
+        const bdX=cx-W*0.28, bdY=topY+68, bdW=W*0.56, bdH=52;
+        const bdGrd=ctx.createLinearGradient(bdX,bdY,bdX,bdY+bdH);
+        bdGrd.addColorStop(0,"#1a1208"); bdGrd.addColorStop(1,"#0e0a06");
+        ctx.fillStyle=bdGrd; ctx.strokeStyle=AMBER; ctx.lineWidth=2;
+        ctx.shadowColor=AMBER; ctx.shadowBlur=10;
+        rr(bdX,bdY,bdW,bdH,6); ctx.fill(); ctx.stroke(); ctx.shadowBlur=0;
+        // Desk surface glow
+        const bdSurf=ctx.createLinearGradient(bdX,bdY,bdX,bdY+8);
+        bdSurf.addColorStop(0,"rgba(255,153,51,0.18)"); bdSurf.addColorStop(1,"rgba(255,153,51,0)");
+        ctx.fillStyle=bdSurf; ctx.fillRect(bdX+3,bdY+2,bdW-6,8);
+
+        // ── MIXING CONSOLE on desk ──
+        const mcX=bdX+10, mcY=bdY+6, mcW=bdW-20, mcH=36;
+        ctx.fillStyle="#060402"; ctx.strokeStyle=ORANGE+"66"; ctx.lineWidth=1;
+        rr(mcX,mcY,mcW,mcH,4); ctx.fill(); ctx.stroke();
+        // Fader channels (12 faders)
+        const fdrW=(mcW-20)/12;
+        for (let fi=0;fi<12;fi++) {
+          const fx=mcX+10+fi*fdrW;
+          // Fader track
+          ctx.fillStyle="#0a0804"; ctx.fillRect(fx+fdrW*0.3,mcY+6,fdrW*0.25,22);
+          // Fader cap
+          const fPos=14+Math.sin(t*1.5+fi*0.7)*6;
+          ctx.fillStyle=fi<4?AMBER:fi<8?ORANGE:GOLD;
+          ctx.shadowColor=ctx.fillStyle; ctx.shadowBlur=3;
+          rr(fx+fdrW*0.1,mcY+fPos,fdrW*0.8,5,2); ctx.fill(); ctx.shadowBlur=0;
+          // Channel LED
+          const ledA=Math.sin(t*6+fi)*0.4+0.6;
+          ctx.fillStyle=fi===5||fi===6?`rgba(${ORANGEr},${ledA})`:`rgba(${GOLDr},${0.4+0.3*Math.sin(t*2+fi)})`;
+          ctx.beginPath(); ctx.arc(fx+fdrW/2,mcY+4,2,0,Math.PI*2); ctx.fill();
+        }
+        // Master fader (right side)
+        ctx.fillStyle="#1a1006"; ctx.strokeStyle=GOLD; ctx.lineWidth=1.5;
+        rr(bdX+bdW-32,bdY+6,20,36,3); ctx.fill(); ctx.stroke();
+        const mfPos=18+Math.sin(t*0.6)*8;
+        ctx.fillStyle=GOLD; ctx.shadowColor=GOLD; ctx.shadowBlur=4;
+        rr(bdX+bdW-30,bdY+mfPos,16,6,2); ctx.fill(); ctx.shadowBlur=0;
+        ctx.fillStyle=GOLD+"88"; ctx.font="bold 4px monospace"; ctx.textAlign="center";
+        ctx.fillText("MASTER",bdX+bdW-22,bdY+46);
+
+        // ── BROADCAST MICROPHONE (on desk, center) ──
+        const micX=cx, micY=bdY-4;
+        // Mic boom arm
+        ctx.strokeStyle="#443322"; ctx.lineWidth=3;
+        ctx.beginPath(); ctx.moveTo(micX-60,bdY+30); ctx.quadraticCurveTo(micX-20,bdY+10,micX,micY); ctx.stroke();
+        // Mic capsule
+        ctx.fillStyle="#1a1208"; ctx.strokeStyle=GOLD; ctx.lineWidth=1.5;
+        ctx.shadowColor=GOLD; ctx.shadowBlur=8;
+        ctx.beginPath(); ctx.ellipse(micX,micY,12,18,0,0,Math.PI*2); ctx.fill(); ctx.stroke(); ctx.shadowBlur=0;
+        // Mesh grille lines
+        ctx.strokeStyle=AMBER+"66"; ctx.lineWidth=0.7;
+        for (let ml=0;ml<5;ml++) { ctx.beginPath(); ctx.moveTo(micX-10,micY-12+ml*6); ctx.lineTo(micX+10,micY-12+ml*6); ctx.stroke(); }
+        for (let ml=0;ml<4;ml++) { const mv=micY-14+ml; ctx.beginPath(); ctx.moveTo(micX-8,mv); ctx.lineTo(micX+8,mv+28); ctx.stroke(); }
+        // Pop filter
+        ctx.strokeStyle="#6a4a22"; ctx.lineWidth=2;
+        ctx.beginPath(); ctx.arc(micX+18,micY,14,0,Math.PI*2); ctx.stroke();
+        ctx.strokeStyle="#8a6a44"; ctx.lineWidth=0.8;
+        for (let pg=0;pg<6;pg++) { ctx.beginPath(); ctx.arc(micX+18,micY,4+pg*2,0,Math.PI*2); ctx.stroke(); }
+        // Mic stand base
+        ctx.fillStyle="#221408"; ctx.strokeStyle="#443322"; ctx.lineWidth=1;
+        rr(micX-50,bdY+28,14,8,3); ctx.fill(); ctx.stroke();
+
+        // ── MONITOR SPEAKERS (left and right of desk) ──
+        for (const [spX,side] of [[bdX-52,1],[bdX+bdW+8,-1]]) {
+          const spY=bdY-10;
+          ctx.fillStyle="#0e0a06"; ctx.strokeStyle=ORANGE+"99"; ctx.lineWidth=1.5;
+          ctx.shadowColor=ORANGE; ctx.shadowBlur=6;
+          rr(spX,spY,44,72,4); ctx.fill(); ctx.stroke(); ctx.shadowBlur=0;
+          // Woofer
+          const wG=ctx.createRadialGradient(spX+22,spY+28,2,spX+22,spY+28,16);
+          wG.addColorStop(0,"#2a1808"); wG.addColorStop(1,"#0a0604");
+          ctx.fillStyle=wG; ctx.beginPath(); ctx.arc(spX+22,spY+28,16,0,Math.PI*2); ctx.fill();
+          ctx.strokeStyle=ORANGE+"88"; ctx.lineWidth=1; ctx.beginPath(); ctx.arc(spX+22,spY+28,16,0,Math.PI*2); ctx.stroke();
+          ctx.strokeStyle=ORANGE+"44"; ctx.lineWidth=0.7;
+          ctx.beginPath(); ctx.arc(spX+22,spY+28,10,0,Math.PI*2); ctx.stroke();
+          ctx.beginPath(); ctx.arc(spX+22,spY+28,4,0,Math.PI*2); ctx.stroke();
+          // Tweeter
+          ctx.fillStyle="#0e0a06"; ctx.beginPath(); ctx.arc(spX+22,spY+54,7,0,Math.PI*2); ctx.fill();
+          ctx.strokeStyle=GOLD+"77"; ctx.lineWidth=1; ctx.stroke();
+          ctx.beginPath(); ctx.arc(spX+22,spY+54,3,0,Math.PI*2); ctx.stroke();
+          // Speaker glow cone
+          const spAlpha=Math.sin(t*3+spX*0.01)*0.06+0.08;
+          const scG=ctx.createRadialGradient(spX+22,spY+28,0,spX+(side>0?-20:64),spY+28,60);
+          scG.addColorStop(0,`rgba(${ORANGEr},${spAlpha*2})`); scG.addColorStop(1,"rgba(0,0,0,0)");
+          ctx.fillStyle=scG; ctx.beginPath(); ctx.arc(spX+(side>0?-20:64),spY+28,60,0,Math.PI*2); ctx.fill();
+          // Label
+          ctx.fillStyle=ORANGE+"88"; ctx.font="bold 4.5px Orbitron, monospace"; ctx.textAlign="center";
+          ctx.fillText("MONITOR",spX+22,spY+68);
+        }
+
+        // ── WAVEFORM DISPLAY SCREENS (2 large screens, top area) ──
+        for (let si=0;si<2;si++) {
+          const scX=W*0.14+si*(W*0.52), scY=topY+32, scW=W*0.32, scH=28;
+          ctx.fillStyle="#060402"; ctx.strokeStyle=`rgba(${AMBERr},0.6)`; ctx.lineWidth=1.5;
+          rr(scX,scY,scW,scH,4); ctx.fill(); ctx.stroke();
+          ctx.fillStyle="#020200"; rr(scX+3,scY+3,scW-6,scH-6,3); ctx.fill();
+          // Waveform
+          ctx.strokeStyle=si===0?`rgba(${GOLDr},0.9)`:`rgba(${ORANGEr},0.9)`; ctx.lineWidth=1.5;
+          ctx.beginPath();
+          for (let wx=0;wx<scW-10;wx+=2) {
+            const amp=8+6*Math.sin(t*4+wx*0.18+si*1.5)*Math.sin(t*2.2+wx*0.08);
+            const wy=scY+scH/2+amp;
+            wx===0?ctx.moveTo(scX+5+wx,wy):ctx.lineTo(scX+5+wx,wy);
+          }
+          ctx.stroke();
+          ctx.shadowBlur=0;
+          // Label
+          ctx.fillStyle=si===0?GOLD:AMBER; ctx.font="bold 4px monospace"; ctx.textAlign="left";
+          ctx.fillText(si===0?"MAIN IN":"MAIN OUT",scX+5,scY+10);
+        }
+
+        // ── EQUIPMENT RACK (left wall) ──
+        const rackX=room.S+36, rackY=H*0.34;
+        ctx.fillStyle="#0e0a06"; ctx.strokeStyle=`rgba(${AMBERr},0.5)`; ctx.lineWidth=1.5;
+        rr(rackX,rackY,68,130,4); ctx.fill(); ctx.stroke();
+        const rackUnits=[
+          {col:AMBER,label:"TX AMP"},{col:GOLD,label:"EQ"},{col:ORANGE,label:"COMP"},
+          {col:AMBER,label:"AUX"},{col:GOLD,label:"DSP"},{col:ORANGE,label:"MON"},
+          {col:AMBER,label:"PATCH"},{col:GOLD,label:"PWR"},
+        ];
+        for (let ri=0;ri<rackUnits.length;ri++) {
+          const ru=rackUnits[ri], ruy=rackY+6+ri*14;
+          ctx.fillStyle="#080604"; ctx.strokeStyle=ru.col+"44"; ctx.lineWidth=0.8;
+          ctx.fillRect(rackX+4,ruy,60,12); ctx.strokeRect(rackX+4,ruy,60,12);
+          ctx.fillStyle=ru.col; ctx.shadowColor=ru.col; ctx.shadowBlur=3;
+          ctx.fillRect(rackX+7,ruy+3,4,6); ctx.shadowBlur=0;
+          const knobA=Math.sin(t*1.2+ri)*0.4+0.6;
+          ctx.fillStyle="#1a0e06"; ctx.beginPath(); ctx.arc(rackX+58,ruy+6,4,0,Math.PI*2); ctx.fill();
+          ctx.strokeStyle=ru.col+Math.floor(knobA*200).toString(16).padStart(2,"0"); ctx.lineWidth=1;
+          ctx.beginPath(); ctx.arc(rackX+58,ruy+6,4,0,Math.PI*2); ctx.stroke();
+          ctx.fillStyle=ru.col; ctx.font="4px monospace"; ctx.textAlign="center";
+          ctx.fillText(ru.label,rackX+30,ruy+9);
+        }
+        ctx.fillStyle=`rgba(${AMBERr},0.55)`; ctx.font="bold 5px monospace"; ctx.textAlign="center";
+        ctx.fillText("RACK",rackX+34,rackY+124);
+
+        // ── BROADCAST TOWER diagram (right wall) ──
+        const twX=W-room.S-30, twBaseY=H*0.72;
+        ctx.strokeStyle=AMBER; ctx.lineWidth=2.5;
+        ctx.beginPath(); ctx.moveTo(twX,twBaseY); ctx.lineTo(twX-24,twBaseY-100); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(twX,twBaseY); ctx.lineTo(twX+24,twBaseY-100); ctx.stroke();
+        ctx.strokeStyle=GOLD; ctx.lineWidth=1.5;
+        ctx.beginPath(); ctx.moveTo(twX-16,twBaseY-38); ctx.lineTo(twX+16,twBaseY-38); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(twX-20,twBaseY-66); ctx.lineTo(twX+20,twBaseY-66); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(twX-10,twBaseY-90); ctx.lineTo(twX+10,twBaseY-90); ctx.stroke();
+        // Signal arcs
+        for (let wa=0;wa<5;wa++) {
+          const wAlpha=0.12+0.1*Math.sin(t*2.5+wa);
+          ctx.strokeStyle=`rgba(${GOLDr},${wAlpha})`; ctx.lineWidth=1.2;
+          ctx.beginPath(); ctx.arc(twX,twBaseY-104,14+wa*16,Math.PI*1.1,Math.PI*1.9); ctx.stroke();
+        }
+        const blinkT=Math.sin(t*4)>0;
+        ctx.fillStyle=blinkT?`rgba(${ORANGEr},0.95)`:AMBER;
+        ctx.shadowColor=ORANGE; ctx.shadowBlur=blinkT?14:4;
+        ctx.beginPath(); ctx.arc(twX,twBaseY-104,5,0,Math.PI*2); ctx.fill(); ctx.shadowBlur=0;
+        ctx.fillStyle=AMBER+"88"; ctx.font="bold 5.5px Orbitron, monospace"; ctx.textAlign="center";
+        ctx.fillText("TOWER",twX,twBaseY+12);
+
+        // ── CALL-IN PHONE BANK (right wall, below tower) ──
+        const phX=W-room.S-90, phY=H*0.48;
+        ctx.fillStyle="#0e0a06"; ctx.strokeStyle=ORANGE+"77"; ctx.lineWidth=1.5;
+        rr(phX,phY,62,52,4); ctx.fill(); ctx.stroke();
+        ctx.fillStyle=ORANGE+"88"; ctx.font="bold 5px Orbitron, monospace"; ctx.textAlign="center";
+        ctx.fillText("CALL IN",phX+31,phY+10);
+        // 6 phone line buttons
+        for (let ln=0;ln<6;ln++) {
+          const lx=phX+7+ln*9, ly=phY+16;
+          const lActive=Math.sin(t*3.5+ln*1.1)>0.6;
+          ctx.fillStyle=lActive?`rgba(${GOLDr},0.9)`:"#1a1006";
+          ctx.shadowColor=lActive?GOLD:"transparent"; ctx.shadowBlur=lActive?6:0;
+          rr(lx,ly,7,7,2); ctx.fill(); ctx.shadowBlur=0;
+          ctx.strokeStyle=AMBER+"66"; ctx.lineWidth=0.7; ctx.stroke();
+          ctx.fillStyle=AMBER+"99"; ctx.font="bold 3.5px monospace"; ctx.textAlign="center";
+          ctx.fillText(ln+1,lx+3.5,ly+5.5);
+        }
+        // Phone number display
+        ctx.fillStyle="#040200"; ctx.strokeStyle=GOLD+"44"; ctx.lineWidth=0.8;
+        rr(phX+6,phY+28,50,16,2); ctx.fill(); ctx.stroke();
+        ctx.fillStyle=`rgba(${GOLDr},${0.7+0.3*Math.sin(t*0.5)})`; ctx.font="bold 5px monospace"; ctx.textAlign="center";
+        ctx.fillText("555-947-CITY",phX+31,phY+40);
+
+        // ── 3 STUDIO BOOTHS (bottom half) ──
+        const boothDefs=[
+          {label:"BOOTH A",col:AMBER},{label:"MAIN STUDIO",col:GOLD},{label:"BOOTH B",col:ORANGE}
+        ];
+        for (let bi=0;bi<3;bi++) {
+          const bthX=room.S+8+bi*((W-room.S*2-24)/3), bthY=H*0.56;
+          const bthW=(W-room.S*2-24)/3-6, bthH=H*0.33;
+          const bd=boothDefs[bi];
+          ctx.fillStyle="#0e0a04"; ctx.strokeStyle=bi===1?GOLD:AMBER; ctx.lineWidth=bi===1?2:1.5;
+          ctx.shadowColor=bi===1?GOLD:AMBER; ctx.shadowBlur=bi===1?8:4;
+          rr(bthX,bthY,bthW,bthH,5); ctx.fill(); ctx.stroke(); ctx.shadowBlur=0;
+          ctx.fillStyle=bd.col; ctx.font="bold 6.5px Orbitron, monospace"; ctx.textAlign="center";
+          ctx.fillText(bd.label,bthX+bthW/2,bthY+12);
+          // Viewing window
+          ctx.fillStyle="#040200"; ctx.strokeStyle=bd.col+"55"; ctx.lineWidth=1;
+          rr(bthX+bthW*0.12,bthY+16,bthW*0.76,bthH*0.36,3); ctx.fill(); ctx.stroke();
+          // Glass sheen
+          ctx.fillStyle="rgba(255,200,100,0.05)"; ctx.fillRect(bthX+bthW*0.14,bthY+18,bthW*0.72,4);
+          // Mini mixer inside booth
+          ctx.fillStyle="#0a0806"; ctx.strokeStyle=bd.col+"44"; ctx.lineWidth=0.8;
+          rr(bthX+bthW*0.1,bthY+bthH*0.55,bthW*0.8,22,3); ctx.fill(); ctx.stroke();
+          // Mini faders
+          const mfCount=bi===1?8:5;
+          for (let mf=0;mf<mfCount;mf++) {
+            const mfx=bthX+bthW*0.14+mf*(bthW*0.76/mfCount), mfy2=bthY+bthH*0.55+3;
+            const mfH=6+Math.sin(t*2+mf+bi*1.5)*5;
+            ctx.fillStyle=bd.col+(Math.floor(0.5*255).toString(16).padStart(2,"0"));
+            ctx.fillRect(mfx,mfy2+18-mfH,bthW*0.76/mfCount-2,mfH);
+          }
+          // Mic stand inside booth
+          ctx.strokeStyle=bi===1?GOLD+"BB":AMBER+"88"; ctx.lineWidth=1.5;
+          ctx.beginPath(); ctx.moveTo(bthX+bthW/2,bthY+bthH*0.5); ctx.lineTo(bthX+bthW/2,bthY+bthH*0.82); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(bthX+bthW/2-10,bthY+bthH*0.82); ctx.lineTo(bthX+bthW/2+10,bthY+bthH*0.82); ctx.stroke();
+          ctx.fillStyle="#1a1208"; ctx.strokeStyle=bd.col; ctx.lineWidth=1;
+          ctx.shadowColor=bd.col; ctx.shadowBlur=bi===1?6:3;
+          ctx.beginPath(); ctx.ellipse(bthX+bthW/2,bthY+bthH*0.45,6,9,0,0,Math.PI*2); ctx.fill(); ctx.stroke(); ctx.shadowBlur=0;
+        }
+
+        // ── ANALOG STUDIO CLOCK (right-center upper wall) ──
+        { const clkX=W*0.84, clkY=topY+56, clkR=26;
+          ctx.fillStyle="#080604"; ctx.strokeStyle=AMBER; ctx.lineWidth=2;
+          ctx.shadowColor=AMBER; ctx.shadowBlur=10;
+          ctx.beginPath(); ctx.arc(clkX,clkY,clkR,0,Math.PI*2); ctx.fill(); ctx.stroke(); ctx.shadowBlur=0;
+          // Inner ring
+          ctx.strokeStyle=GOLD+"44"; ctx.lineWidth=0.8;
+          ctx.beginPath(); ctx.arc(clkX,clkY,clkR-5,0,Math.PI*2); ctx.stroke();
+          // Tick marks
+          for(let tk=0;tk<12;tk++){
+            const ta=tk*Math.PI/6-Math.PI/2;
+            const tIn=tk%3===0?clkR-7:clkR-4;
+            ctx.strokeStyle=tk%3===0?GOLD:AMBER+"66"; ctx.lineWidth=tk%3===0?2:1;
+            ctx.beginPath(); ctx.moveTo(clkX+Math.cos(ta)*tIn,clkY+Math.sin(ta)*tIn);
+            ctx.lineTo(clkX+Math.cos(ta)*(clkR-1),clkY+Math.sin(ta)*(clkR-1)); ctx.stroke();
+          }
+          // Real clock hands
+          const clkNow=new Date(), clkS=clkNow.getSeconds()+clkNow.getMilliseconds()/1000;
+          const clkM=clkNow.getMinutes()+clkS/60, clkH=clkNow.getHours()%12+clkM/60;
+          const hAng=clkH/12*Math.PI*2-Math.PI/2, mAng=clkM/60*Math.PI*2-Math.PI/2, sAng=clkS/60*Math.PI*2-Math.PI/2;
+          ctx.lineCap="round";
+          ctx.strokeStyle=GOLD; ctx.lineWidth=3;
+          ctx.beginPath(); ctx.moveTo(clkX,clkY); ctx.lineTo(clkX+Math.cos(hAng)*(clkR*0.52),clkY+Math.sin(hAng)*(clkR*0.52)); ctx.stroke();
+          ctx.strokeStyle=AMBER; ctx.lineWidth=2;
+          ctx.beginPath(); ctx.moveTo(clkX,clkY); ctx.lineTo(clkX+Math.cos(mAng)*(clkR*0.8),clkY+Math.sin(mAng)*(clkR*0.8)); ctx.stroke();
+          ctx.strokeStyle=ORANGE; ctx.lineWidth=1;
+          ctx.beginPath(); ctx.moveTo(clkX,clkY); ctx.lineTo(clkX+Math.cos(sAng)*(clkR*0.9),clkY+Math.sin(sAng)*(clkR*0.9)); ctx.stroke();
+          ctx.lineCap="butt";
+          ctx.fillStyle=GOLD; ctx.beginPath(); ctx.arc(clkX,clkY,2.5,0,Math.PI*2); ctx.fill();
+          ctx.fillStyle=AMBER+"88"; ctx.font="bold 5px Orbitron,monospace"; ctx.textAlign="center";
+          ctx.fillText("STUDIO",clkX,clkY+clkR+10); }
+
+        // ── VINYL / CD RECORD LIBRARY (left wall, below equipment rack) ──
+        { const libX=room.S+36, libY=H*0.56, libW=68, libH=72;
+          ctx.fillStyle="#080602"; ctx.strokeStyle=AMBER+"44"; ctx.lineWidth=1.2;
+          rr(libX,libY,libW,libH,3); ctx.fill(); ctx.stroke();
+          // Shelf horizontal lines
+          const recCols=["#3a1a08","#0a1a0a","#0a0a2a","#1a0a08","#2a1010","#1a1a00","#180a1a","#0a1410"];
+          for(let sh=0;sh<3;sh++){
+            ctx.strokeStyle=AMBER+"22"; ctx.lineWidth=0.5;
+            ctx.beginPath(); ctx.moveTo(libX+3,libY+21+sh*22); ctx.lineTo(libX+libW-3,libY+21+sh*22); ctx.stroke();
+            for(let rec=0;rec<8;rec++){
+              const rx=libX+4+rec*8, ry=libY+4+sh*22;
+              ctx.fillStyle=recCols[(sh*8+rec)%8]; ctx.fillRect(rx,ry,7,17);
+              ctx.strokeStyle="rgba(255,153,51,0.08)"; ctx.lineWidth=0.3; ctx.strokeRect(rx,ry,7,17);
+              // vinyl circle hint on some
+              if((sh+rec)%3===0){ ctx.strokeStyle="rgba(255,204,68,0.12)"; ctx.lineWidth=0.4;
+                ctx.beginPath(); ctx.arc(rx+3.5,ry+8,2.5,0,Math.PI*2); ctx.stroke(); }
+            }
+          }
+          ctx.fillStyle=AMBER+"66"; ctx.font="bold 5px monospace"; ctx.textAlign="center";
+          ctx.fillText("VINYL",libX+libW/2,libY+libH-3); }
+
+        // ── COFFEE MACHINE (left wall, bottom corner) ──
+        { const cfX=room.S+36, cfY=H*0.81, cfW=52, cfH=44;
+          ctx.fillStyle="#0e0a04"; ctx.strokeStyle=AMBER+"55"; ctx.lineWidth=1.2;
+          rr(cfX,cfY,cfW,cfH,4); ctx.fill(); ctx.stroke();
+          // Machine body
+          ctx.fillStyle="#180e06"; ctx.strokeStyle=ORANGE+"44"; ctx.lineWidth=0.8;
+          rr(cfX+4,cfY+3,cfW-8,cfH-18,3); ctx.fill(); ctx.stroke();
+          // Digital display
+          ctx.fillStyle="#030200"; ctx.strokeStyle=GOLD+"44"; ctx.lineWidth=0.7;
+          rr(cfX+7,cfY+5,cfW-20,14,2); ctx.fill(); ctx.stroke();
+          const bPulse=0.6+0.4*Math.sin(t*3);
+          ctx.fillStyle=`rgba(${GOLDr},${bPulse})`; ctx.font="bold 4.5px monospace"; ctx.textAlign="center";
+          ctx.fillText("BREWING",cfX+cfW*0.36,cfY+15);
+          // Brew button (orange, glowing)
+          ctx.fillStyle=`rgba(${ORANGEr},0.9)`; ctx.shadowColor=ORANGE; ctx.shadowBlur=5;
+          ctx.beginPath(); ctx.arc(cfX+cfW-10,cfY+11,6,0,Math.PI*2); ctx.fill(); ctx.shadowBlur=0;
+          ctx.strokeStyle=GOLD; ctx.lineWidth=0.8; ctx.stroke();
+          // Cup slot
+          ctx.fillStyle="#0a0604"; ctx.strokeStyle=AMBER+"33"; ctx.lineWidth=0.7;
+          rr(cfX+cfW*0.22,cfY+cfH-16,cfW*0.54,13,2); ctx.fill(); ctx.stroke();
+          // Coffee cup
+          ctx.fillStyle="#CCAA88"; ctx.strokeStyle=AMBER; ctx.lineWidth=1;
+          rr(cfX+cfW*0.30,cfY+cfH-14,cfW*0.38,9,2); ctx.fill(); ctx.stroke();
+          ctx.fillStyle="#3a1800"; ctx.fillRect(cfX+cfW*0.32,cfY+cfH-13,cfW*0.34,3);
+          // Steam wisps
+          for(let sm=0;sm<3;sm++){
+            const stX=cfX+cfW*0.38+sm*6, stOff=(t*16+sm*2.0)%8, smA=0.38-stOff/8*0.38;
+            ctx.strokeStyle=`rgba(255,200,120,${smA})`; ctx.lineWidth=0.8;
+            ctx.beginPath(); ctx.moveTo(stX,cfY+cfH-18-stOff);
+            ctx.quadraticCurveTo(stX+(sm%2===0?-3:3),cfY+cfH-23-stOff,stX,cfY+cfH-28-stOff); ctx.stroke();
+          }
+          ctx.fillStyle=AMBER+"77"; ctx.font="bold 5px monospace"; ctx.textAlign="center";
+          ctx.fillText("COFFEE",cfX+cfW/2,cfY+cfH+9); }
+
+        // ── HEADPHONE STATION (right side, near desk) ──
+        { const hpX=bdX+bdW+56, hpY=bdY-8, hpW=36, hpH=50;
+          ctx.fillStyle="#0c0806"; ctx.strokeStyle=GOLD+"55"; ctx.lineWidth=1;
+          rr(hpX,hpY,hpW,hpH,3); ctx.fill(); ctx.stroke();
+          // 3 hooks with headphones
+          const hpColors=[GOLD,ORANGE,AMBER];
+          for(let hp=0;hp<3;hp++){
+            const hkX=hpX+8+hp*11, hkY=hpY+8;
+            ctx.strokeStyle=AMBER+"66"; ctx.lineWidth=1;
+            ctx.beginPath(); ctx.moveTo(hkX,hkY); ctx.lineTo(hkX,hkY+8); ctx.stroke();
+            ctx.strokeStyle=hpColors[hp]; ctx.lineWidth=2.5;
+            ctx.beginPath(); ctx.arc(hkX,hkY+14,6,Math.PI,Math.PI*2); ctx.stroke();
+            ctx.fillStyle=hp===2?"#111":hpColors[hp]+"33"; ctx.strokeStyle=hpColors[hp]; ctx.lineWidth=1;
+            for(const side of[-6,6]){
+              ctx.beginPath(); ctx.ellipse(hkX+side,hkY+14,2.5,3.5,0,0,Math.PI*2); ctx.fill(); ctx.stroke();
+            }
+          }
+          ctx.fillStyle=GOLD+"77"; ctx.font="bold 4.5px monospace"; ctx.textAlign="center";
+          ctx.fillText("PHONES",hpX+hpW/2,hpY+hpH-3); }
+
+        // ── GOLD RECORD AWARD PLAQUE (right wall, upper) ──
+        { const gpX=W*0.83, gpY=topY+100;
+          // Wood frame
+          ctx.fillStyle="#1a0c00"; ctx.strokeStyle=GOLD; ctx.lineWidth=2;
+          ctx.shadowColor=GOLD; ctx.shadowBlur=8;
+          rr(gpX,gpY,48,64,3); ctx.fill(); ctx.stroke(); ctx.shadowBlur=0;
+          // Gold record disc
+          const recG=ctx.createRadialGradient(gpX+24,gpY+24,0,gpX+24,gpY+24,18);
+          recG.addColorStop(0,"rgba(255,215,0,0.5)"); recG.addColorStop(0.6,"rgba(255,153,51,0.2)"); recG.addColorStop(1,"rgba(200,160,0,0.3)");
+          ctx.fillStyle="#1a1200"; ctx.strokeStyle=GOLD+"88"; ctx.lineWidth=1;
+          ctx.beginPath(); ctx.arc(gpX+24,gpY+24,18,0,Math.PI*2); ctx.fill(); ctx.stroke();
+          ctx.fillStyle=recG; ctx.beginPath(); ctx.arc(gpX+24,gpY+24,18,0,Math.PI*2); ctx.fill();
+          // Groove rings
+          for(let gr=1;gr<=4;gr++){ ctx.strokeStyle=`rgba(${GOLDr},0.12)`; ctx.lineWidth=0.5;
+            ctx.beginPath(); ctx.arc(gpX+24,gpY+24,gr*3+4,0,Math.PI*2); ctx.stroke(); }
+          // Center label
+          ctx.fillStyle="#CC8800"; ctx.beginPath(); ctx.arc(gpX+24,gpY+24,6,0,Math.PI*2); ctx.fill();
+          ctx.fillStyle=GOLD; ctx.font="bold 3.5px monospace"; ctx.textAlign="center";
+          ctx.fillText("GOLD",gpX+24,gpY+25.5);
+          // Text beneath
+          ctx.fillStyle=GOLD+"BB"; ctx.font="bold 5px monospace";
+          ctx.fillText("#1 HIT",gpX+24,gpY+50);
+          ctx.fillStyle=AMBER+"99"; ctx.font="3.5px monospace";
+          ctx.fillText("94.7 FM",gpX+24,gpY+59); }
+
+        // ── PROGRAM SCHEDULE BOARD (between rack and desk) ──
+        { const sbX=room.S+108, sbY=H*0.38, sbW=70, sbH=96;
+          ctx.fillStyle="#060400"; ctx.strokeStyle=AMBER+"44"; ctx.lineWidth=1.2;
+          rr(sbX,sbY,sbW,sbH,4); ctx.fill(); ctx.stroke();
+          ctx.fillStyle=AMBER+"BB"; ctx.font="bold 5px Orbitron,monospace"; ctx.textAlign="center";
+          ctx.fillText("TODAY'S SHOWS",sbX+sbW/2,sbY+11);
+          ctx.strokeStyle=AMBER+"33"; ctx.lineWidth=0.5;
+          ctx.beginPath(); ctx.moveTo(sbX+5,sbY+15); ctx.lineTo(sbX+sbW-5,sbY+15); ctx.stroke();
+          const shows=[{t:"06:00",s:"MORNING DRIVE"},{t:"10:00",s:"TOP 40"},
+            {t:"14:00",s:"CITY TALK"},{t:"17:00",s:"RUSH HOUR"},
+            {t:"21:00",s:"NIGHT WAVE"},{t:"00:00",s:"LATE NIGHT"}];
+          const curH=new Date().getHours();
+          for(let si=0;si<shows.length;si++){
+            const sh=shows[si], sy=sbY+24+si*12;
+            const isNow=(curH>=17&&si===3)||(curH>=21&&si===4)||(curH>=10&&curH<14&&si===1)||(curH>=14&&curH<17&&si===2)||(curH>=6&&curH<10&&si===0);
+            ctx.fillStyle=isNow?`rgba(${GOLDr},1)`:AMBER+"77";
+            ctx.font=isNow?"bold 4px monospace":"3.5px monospace"; ctx.textAlign="left";
+            ctx.fillText(sh.t,sbX+5,sy); ctx.fillText(sh.s,sbX+29,sy);
+            if(isNow){ const onA2=0.7+0.3*Math.sin(t*4);
+              ctx.fillStyle=`rgba(220,30,10,${onA2})`; ctx.font="bold 3px monospace"; ctx.textAlign="center";
+              ctx.fillText("▶",sbX+sbW-5,sy); }
+          } }
+
+        // ── JINGLE / FX PAD CONTROLLER (on desk, right side) ──
+        { const pdX=bdX+bdW*0.60, pdY=bdY+7, pdW=52, pdH=30;
+          ctx.fillStyle="#060402"; ctx.strokeStyle=AMBER+"44"; ctx.lineWidth=0.8;
+          rr(pdX,pdY,pdW,pdH,3); ctx.fill(); ctx.stroke();
+          const padCols=[AMBER,GOLD,ORANGE,"#FF3366",AMBER,GOLD,ORANGE,AMBER,GOLD,ORANGE,AMBER,GOLD];
+          for(let pr=0;pr<3;pr++){
+            for(let pc=0;pc<4;pc++){
+              const pi2=pr*4+pc, pdx=pdX+4+pc*12, pdy=pdY+4+pr*8;
+              const lit=Math.sin(t*3+pi2*0.8)>0.65;
+              ctx.fillStyle=lit?padCols[pi2]:padCols[pi2]+"22";
+              ctx.shadowColor=lit?padCols[pi2]:"transparent"; ctx.shadowBlur=lit?5:0;
+              rr(pdx,pdy,10,6,1); ctx.fill(); ctx.shadowBlur=0;
+              ctx.strokeStyle=padCols[pi2]+"44"; ctx.lineWidth=0.5; ctx.stroke();
+            }
+          }
+          ctx.fillStyle=AMBER+"66"; ctx.font="bold 4.5px monospace"; ctx.textAlign="center";
+          ctx.fillText("FX PADS",pdX+pdW/2,pdY+pdH+6); }
+
+        // ── NEWS TICKER / CRAWL (bottom strip above EQ bars) ──
+        { const tkW=W-room.S*4, tkX=room.S*2, tkY=H-room.S-72, tkH=14;
+          ctx.fillStyle="#0a0604"; ctx.strokeStyle=AMBER+"33"; ctx.lineWidth=0.8;
+          ctx.fillRect(tkX,tkY,tkW,tkH); ctx.strokeRect(tkX,tkY,tkW,tkH);
+          ctx.save(); ctx.beginPath(); ctx.rect(tkX,tkY,tkW,tkH); ctx.clip();
+          const ticker="▶  CITY FREQUENCY 94.7 FM  •  WEATHER: CLEAR SKIES  •  TRAFFIC: HEAVY ON MAIN ST  •  HEADLINES: LOCAL MUSIC AWARDS TONIGHT  •  LISTENER REQUEST LINE OPEN  •  NEXT UP: TOP 40 COUNTDOWN  •  ";
+          const tickOff=((t*38)%((ticker.length)*5.2));
+          ctx.fillStyle=`rgba(${GOLDr},0.85)`; ctx.font="bold 7px monospace"; ctx.textAlign="left";
+          ctx.fillText(ticker+ticker,tkX+tkW-tickOff,tkY+10); ctx.restore(); }
+
+        // ── EQ BARS across floor ──
+        const eqFlY=H-room.S-54;
+        for (let eq=0;eq<36;eq++) {
+          const eqx=room.S*2+eq*((W-room.S*4)/36);
+          const eqh=5+Math.abs(Math.sin(t*4+eq*0.5+Math.cos(t*1.4+eq*0.2)))*32;
+          const eqCol=eq<12?AMBERr:eq<24?GOLDr:ORANGEr;
+          ctx.fillStyle=`rgba(${eqCol},${0.3+0.35*Math.abs(Math.sin(t*3+eq*0.4))})`;
+          ctx.fillRect(eqx-2,eqFlY-eqh,4,eqh);
+        }
+        ctx.fillStyle=`rgba(${AMBERr},0.22)`; ctx.fillRect(room.S*2,eqFlY,W-room.S*4,1);
+
+        // ── AMBIENT PARTICLES (signal dust) ──
+        for (let pi=0;pi<16;pi++) {
+          const pxp=room.S*2+((t*10+pi*64)%(W-room.S*4));
+          const pyp=topY+120+Math.sin(t*0.5+pi*0.7)*24+(pi%5)*26;
+          const palpha=Math.sin(t*1.2+pi*0.8)*0.06+0.06;
+          ctx.fillStyle=`rgba(${AMBERr},${palpha})`;
+          ctx.beginPath(); ctx.arc(pxp,pyp,pi%4===0?3.5:1.5,0,Math.PI*2); ctx.fill();
+        }
+
+        return;
       } else if (!!this.map?.config?.wasteland) {
         // ═══ WASTELAND: RADIO STATION ═══
         const t = performance.now() / 1000;
