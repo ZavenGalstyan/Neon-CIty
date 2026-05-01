@@ -5098,7 +5098,8 @@ class GameMap {
     const useLargeHardcore = isHardcore;
     const useLargeUnderground = door.bTypeIdx === 23; // Underground Lab always large
     const useLargeDino  = isDino;
-    const useLarge = useLargeDealer || useLargeArcade || useLargeMarket || useLargeClub || useLargeRest || useLargePharm || useLargeRadio || useLargeZombie || useLargeBlitz || useLargeRobot || useLargeHardcore || useLargeUnderground || useLargeDino;
+    const useLargeMetroBar = isMetropolis && door.bTypeIdx === 11; // Metropolis Bar — dealer-scale room
+    const useLarge = useLargeDealer || useLargeArcade || useLargeMarket || useLargeClub || useLargeRest || useLargePharm || useLargeRadio || useLargeZombie || useLargeBlitz || useLargeRobot || useLargeHardcore || useLargeUnderground || useLargeDino || useLargeMetroBar;
     const layout = useLargeDealer ? ROOM_LAYOUT_DEALER_NEON
                  : useLargeArcade ? ROOM_LAYOUT_ARCADE_NEON
                  : useLargeMarket ? ROOM_LAYOUT_DEALER_NEON
@@ -5112,6 +5113,7 @@ class GameMap {
                  : useLargeHardcore   ? ROOM_LAYOUT_ARCADE_NEON
                  : useLargeUnderground? ROOM_LAYOUT_ARCADE_NEON
                  : useLargeDino       ? ROOM_LAYOUT_ARCADE_NEON
+                 : useLargeMetroBar   ? ROOM_LAYOUT_DEALER_NEON
                  : door.type === 2 ? ROOM_LAYOUT_2 : ROOM_LAYOUT_1;
     const RH     = layout.length;
     const RW     = layout[0].length;
