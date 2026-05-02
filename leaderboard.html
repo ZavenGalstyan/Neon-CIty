@@ -7,236 +7,323 @@
   <link rel="stylesheet" href="css/style.css">
   <style>
   /* ══════════════════════════════════════════════════════
-     LEADERBOARD — self-contained styles
+     LEADERBOARD — Premium Cyberpunk UI
+     Breakpoints: 1440, 1024, 768, 480, 360
   ══════════════════════════════════════════════════════ */
 
-  /* Page wrapper */
-  .lb-page {
-    min-height: 100vh;
-    padding: 0 0 80px;
+  :root {
+    --lb-gold: #FFD700;
+    --lb-gold-dim: rgba(255,215,0,0.15);
+    --lb-silver: #C0C0C0;
+    --lb-silver-dim: rgba(192,192,192,0.12);
+    --lb-bronze: #CD7F32;
+    --lb-bronze-dim: rgba(205,127,50,0.12);
+    --lb-glow-pink: rgba(255,68,102,0.25);
+    --lb-glow-cyan: rgba(68,238,255,0.25);
+    --lb-surface: rgba(13,13,26,0.85);
+    --lb-surface-hover: rgba(255,255,255,0.06);
+    --lb-border: rgba(255,255,255,0.08);
+    --lb-border-active: rgba(255,68,102,0.5);
   }
 
-  /* ── Hero header ─────────────────────────────────────── */
+  /* ── Page wrapper ───────────────────────────────────────── */
+  .lb-page {
+    min-height: 100vh;
+    padding: 0 0 100px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ── Ambient orbs (subtle background glow) ──────────────── */
+  body { position: relative; }
+  body::before, body::after {
+    content: '';
+    position: fixed;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 0;
+    filter: blur(140px);
+    will-change: transform;
+  }
+  body::before {
+    width: 700px; height: 700px;
+    top: -200px; left: -100px;
+    background: radial-gradient(circle, rgba(255,68,102,0.10) 0%, transparent 60%);
+    animation: lb-orb-a 25s ease-in-out infinite alternate;
+  }
+  body::after {
+    width: 500px; height: 500px;
+    bottom: -80px; right: -60px;
+    background: radial-gradient(circle, rgba(255,215,0,0.08) 0%, transparent 60%);
+    animation: lb-orb-b 30s ease-in-out infinite alternate;
+  }
+  @keyframes lb-orb-a {
+    from { transform: translate(0,0) scale(1); opacity: 0.7; }
+    to   { transform: translate(60px,40px) scale(1.15); opacity: 1; }
+  }
+  @keyframes lb-orb-b {
+    from { transform: translate(0,0) scale(1); opacity: 0.6; }
+    to   { transform: translate(-50px,-40px) scale(1.1); opacity: 0.9; }
+  }
+
+  /* ── Hero header ─────────────────────────────────────────── */
   .lb-hero {
     position: relative;
     text-align: center;
-    padding: 52px 24px 36px;
+    padding: 64px 32px 44px;
     overflow: hidden;
+    background: radial-gradient(ellipse 100% 80% at 50% -20%, rgba(255,68,102,0.08) 0%, transparent 60%);
   }
   .lb-hero::before {
     content: '';
     position: absolute;
     inset: 0;
-    background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(255,68,102,0.09) 0%, transparent 70%);
+    background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(255,68,102,0.06) 0%, transparent 70%);
     pointer-events: none;
   }
+
   .lb-hero-eyebrow {
     font-family: 'Orbitron', sans-serif;
-    font-size: 10px;
-    letter-spacing: 0.35em;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.4em;
     color: var(--pink);
-    text-shadow: 0 0 12px rgba(255,68,102,0.55);
-    margin-bottom: 10px;
+    text-shadow: 0 0 20px rgba(255,68,102,0.6);
+    margin-bottom: 12px;
+    text-transform: uppercase;
   }
+
   .lb-hero-title {
     font-family: 'Orbitron', sans-serif;
-    font-size: clamp(28px, 5vw, 52px);
+    font-size: clamp(32px, 6vw, 58px);
     font-weight: 900;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.1em;
     line-height: 1;
-    background: linear-gradient(135deg, #fff 0%, #FF4466 40%, #FFD700 100%);
+    background: linear-gradient(135deg, #fff 0%, #FF4466 45%, #FFD700 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    margin-bottom: 10px;
+    margin-bottom: 14px;
+    filter: drop-shadow(0 0 30px rgba(255,68,102,0.3));
+    animation: title-glow 4s ease-in-out infinite alternate;
   }
-  .lb-hero-sub {
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 13px;
-    letter-spacing: 0.2em;
-    color: var(--muted);
+  @keyframes title-glow {
+    from { filter: drop-shadow(0 0 25px rgba(255,68,102,0.2)); }
+    to   { filter: drop-shadow(0 0 50px rgba(255,68,102,0.4)); }
   }
 
-  /* ── Player tag ──────────────────────────────────────── */
+  .lb-hero-sub {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.25em;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  /* ── Player signed-in tag ───────────────────────────────── */
   .lb-player-tag {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
-    padding: 7px 18px;
-    background: rgba(68,238,255,0.07);
-    border: 1px solid rgba(68,238,255,0.25);
+    gap: 10px;
+    padding: 10px 22px;
+    background: rgba(68,238,255,0.06);
+    border: 1px solid rgba(68,238,255,0.2);
     border-radius: 999px;
-    margin-top: 18px;
+    margin-top: 22px;
     font-family: 'Orbitron', sans-serif;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 700;
     color: var(--cyan);
-    letter-spacing: 0.1em;
-    box-shadow: 0 0 18px rgba(68,238,255,0.12);
+    letter-spacing: 0.12em;
+    box-shadow: 0 0 24px rgba(68,238,255,0.1);
+    transition: all 0.3s ease;
+  }
+  .lb-player-tag:hover {
+    background: rgba(68,238,255,0.1);
+    box-shadow: 0 0 32px rgba(68,238,255,0.18);
   }
   .lb-player-tag__dot {
-    width: 7px; height: 7px;
+    width: 8px; height: 8px;
     border-radius: 50%;
     background: var(--cyan);
-    box-shadow: 0 0 8px var(--cyan);
+    box-shadow: 0 0 10px var(--cyan);
     animation: lb-pulse 2s ease-in-out infinite;
   }
   @keyframes lb-pulse {
     0%,100% { opacity: 1; transform: scale(1); }
-    50%      { opacity: 0.5; transform: scale(0.7); }
+    50%     { opacity: 0.4; transform: scale(0.65); }
   }
 
-  /* ── Error banner ────────────────────────────────────── */
+  /* ── Error banner ───────────────────────────────────────── */
   .lb-error {
     display: flex;
     align-items: center;
-    gap: 12px;
-    margin: 0 auto 20px;
+    gap: 14px;
+    margin: 0 auto 24px;
     max-width: 960px;
-    padding: 14px 20px;
-    background: rgba(255,68,102,0.08);
-    border: 1px solid rgba(255,68,102,0.25);
-    border-radius: 10px;
+    padding: 16px 24px;
+    background: rgba(255,68,102,0.06);
+    border: 1px solid rgba(255,68,102,0.2);
+    border-radius: 12px;
     font-family: 'Rajdhani', sans-serif;
-    font-size: 14px;
+    font-size: 15px;
+    font-weight: 600;
     color: var(--pink);
+    backdrop-filter: blur(10px);
   }
   .lb-error__retry {
     margin-left: auto;
-    padding: 6px 16px;
-    background: rgba(255,68,102,0.15);
+    padding: 10px 20px;
+    min-height: 44px;
+    background: rgba(255,68,102,0.12);
     border: 1px solid rgba(255,68,102,0.35);
-    border-radius: 6px;
-    color: var(--pink);
-    font-family: 'Orbitron', sans-serif;
-    font-size: 9px;
-    font-weight: 700;
-    letter-spacing: 0.12em;
-    cursor: pointer;
-    transition: background 0.2s;
-  }
-  .lb-error__retry:hover { background: rgba(255,68,102,0.25); }
-
-  /* ── Tab bar ─────────────────────────────────────────── */
-  .lb-tabs {
-    display: flex;
-    justify-content: center;
-    gap: 6px;
-    padding: 0 24px 28px;
-    flex-wrap: wrap;
-  }
-  .lb-tab {
-    position: relative;
-    padding: 9px 22px;
-    background: rgba(255,255,255,0.04);
-    border: 1px solid rgba(255,255,255,0.1);
     border-radius: 8px;
+    color: var(--pink);
     font-family: 'Orbitron', sans-serif;
     font-size: 10px;
     font-weight: 700;
     letter-spacing: 0.14em;
-    color: var(--muted);
     cursor: pointer;
-    transition: all 0.2s;
-    white-space: nowrap;
+    transition: all 0.2s ease;
   }
-  .lb-tab:hover {
-    background: rgba(255,255,255,0.07);
-    color: var(--text);
-    border-color: rgba(255,255,255,0.2);
+  .lb-error__retry:hover {
+    background: rgba(255,68,102,0.22);
+    transform: translateY(-1px);
   }
-  .lb-tab.active {
-    background: rgba(255,68,102,0.12);
-    border-color: rgba(255,68,102,0.5);
-    color: #fff;
-    box-shadow: 0 0 18px rgba(255,68,102,0.2), inset 0 0 12px rgba(255,68,102,0.06);
-    text-shadow: 0 0 10px rgba(255,68,102,0.5);
-  }
-  .lb-tab__icon {
-    display: inline-block;
-    margin-right: 5px;
-    font-size: 12px;
-  }
+  .lb-error__retry:active { transform: translateY(0); }
 
-  /* ── Map row ─────────────────────────────────────────── */
-  .lb-map-row {
+  /* ══════════════════════════════════════════════════════
+     TAB BAR — Scrollable horizontal tabs
+  ══════════════════════════════════════════════════════ */
+  .lb-tabs-wrapper {
+    position: relative;
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 0 24px 32px;
+  }
+  .lb-tabs {
     display: flex;
     justify-content: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .lb-tab {
+    position: relative;
+    display: inline-flex;
     align-items: center;
-    gap: 12px;
-    padding: 0 24px 24px;
-  }
-  .lb-map-label {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 9px;
-    font-weight: 700;
-    letter-spacing: 0.18em;
-    color: var(--muted);
-  }
-  .lb-map-select {
-    background: rgba(255,255,255,0.04);
-    border: 1px solid rgba(255,255,255,0.12);
-    border-radius: 8px;
-    color: var(--text);
+    gap: 6px;
+    padding: 12px 24px;
+    min-height: 44px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--lb-border);
+    border-radius: 100px;
     font-family: 'Orbitron', sans-serif;
     font-size: 10px;
     font-weight: 700;
-    letter-spacing: 0.08em;
-    padding: 9px 16px;
+    letter-spacing: 0.15em;
+    color: var(--muted);
     cursor: pointer;
-    transition: border-color 0.2s, background 0.2s;
-    min-width: 200px;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    white-space: nowrap;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
   }
-  .lb-map-select:focus, .lb-map-select:hover {
-    outline: none;
-    border-color: rgba(255,68,102,0.45);
-    background: rgba(255,68,102,0.06);
+  .lb-tab:hover {
+    background: var(--lb-surface-hover);
+    color: var(--text);
+    border-color: rgba(255,255,255,0.15);
+    transform: translateY(-2px);
   }
-  .lb-map-select option { background: #0d0d1a; }
+  .lb-tab:active {
+    transform: translateY(0);
+  }
+  .lb-tab.active {
+    background: rgba(255,68,102,0.1);
+    border-color: var(--lb-border-active);
+    color: #fff;
+    box-shadow:
+      0 0 28px rgba(255,68,102,0.2),
+      inset 0 0 20px rgba(255,68,102,0.05);
+    text-shadow: 0 0 12px rgba(255,68,102,0.5);
+  }
+  .lb-tab.active::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 40%;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--pink), transparent);
+    border-radius: 2px;
+  }
+  .lb-tab__icon {
+    font-size: 13px;
+    opacity: 0.8;
+    transition: opacity 0.2s;
+  }
+  .lb-tab.active .lb-tab__icon,
+  .lb-tab:hover .lb-tab__icon { opacity: 1; }
 
-  /* ── Content area ────────────────────────────────────── */
+  /* Disabled tab state */
+  .lb-tab[disabled] {
+    opacity: 0.35;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+
+  /* ── Map selector row (now uses custom dropdown) ─────────── */
+  /* Styles moved to custom dropdown section below */
+
+  /* ── Content area ───────────────────────────────────────── */
   .lb-content {
-    max-width: 960px;
+    max-width: 1040px;
     margin: 0 auto;
-    padding: 0 20px;
-    animation: lb-fade-in 0.35s ease;
-  }
-  @keyframes lb-fade-in {
-    from { opacity: 0; transform: translateY(12px); }
-    to   { opacity: 1; transform: translateY(0); }
+    padding: 0 24px;
   }
 
-  /* ── Loading ─────────────────────────────────────────── */
+  /* ── Loading state ──────────────────────────────────────── */
   .lb-loading {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 16px;
-    padding: 80px 0;
+    gap: 20px;
+    padding: 100px 24px;
   }
   .lb-loading-text {
     font-family: 'Orbitron', sans-serif;
-    font-size: 11px;
-    letter-spacing: 0.2em;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.25em;
     color: var(--muted);
   }
   .lb-spinner {
-    width: 36px; height: 36px;
+    width: 44px; height: 44px;
     border-radius: 50%;
-    border: 3px solid rgba(255,68,102,0.12);
+    border: 3px solid rgba(255,68,102,0.1);
     border-top-color: var(--pink);
-    animation: lb-spin 0.8s linear infinite;
+    animation: lb-spin 0.75s linear infinite;
   }
   @keyframes lb-spin { to { transform: rotate(360deg); } }
 
-  /* ── Podium (top 3) ──────────────────────────────────── */
+  @keyframes lb-fade-in {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ══════════════════════════════════════════════════════
+     PODIUM — Top 3 players
+  ══════════════════════════════════════════════════════ */
   .lb-podium {
     display: flex;
     justify-content: center;
     align-items: flex-end;
-    gap: 12px;
-    margin-bottom: 36px;
-    padding: 0 8px;
+    gap: 16px;
+    margin-bottom: 48px;
+    padding: 0 12px;
+    animation: lb-fade-in 0.4s ease both;
   }
 
   .lb-podium-card {
@@ -244,17 +331,19 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    border-radius: 16px;
-    padding: 22px 16px 18px;
+    border-radius: 20px;
+    padding: 28px 20px 24px;
     border: 1px solid;
     overflow: hidden;
-    transition: transform 0.25s;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease;
     flex: 1;
-    max-width: 260px;
-    min-width: 160px;
+    max-width: 280px;
+    min-width: 180px;
     cursor: default;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
   }
-  .lb-podium-card:hover { transform: translateY(-4px); }
+  .lb-podium-card:hover { transform: translateY(-6px); }
 
   /* Shimmer line at top */
   .lb-podium-card::before {
@@ -267,30 +356,39 @@
   .lb-podium-card::after {
     content: '';
     position: absolute;
-    top: -40%; left: -20%;
-    width: 140%; height: 80%;
+    top: -50%; left: -25%;
+    width: 150%; height: 100%;
     border-radius: 50%;
-    opacity: 0.08;
+    opacity: 0.06;
+    pointer-events: none;
   }
 
   /* Gold — 1st place */
   .lb-podium-card--gold {
-    background: linear-gradient(160deg, rgba(255,215,0,0.1) 0%, rgba(255,215,0,0.03) 100%);
-    border-color: rgba(255,215,0,0.35);
-    box-shadow: 0 0 40px rgba(255,215,0,0.12), 0 8px 32px rgba(0,0,0,0.4);
+    background: linear-gradient(165deg, rgba(255,215,0,0.12) 0%, rgba(255,215,0,0.03) 100%);
+    border-color: rgba(255,215,0,0.4);
+    box-shadow:
+      0 0 60px rgba(255,215,0,0.15),
+      0 16px 48px rgba(0,0,0,0.5),
+      inset 0 1px 0 rgba(255,215,0,0.2);
     order: 2;
-    transform: translateY(-18px);
-    padding-top: 30px;
+    transform: translateY(-24px);
+    padding-top: 36px;
+    animation: podium-gold-pulse 4s ease-in-out infinite alternate;
   }
-  .lb-podium-card--gold::before  { background: linear-gradient(90deg, transparent, #FFD700, transparent); }
-  .lb-podium-card--gold::after   { background: #FFD700; }
-  .lb-podium-card--gold:hover    { transform: translateY(-22px); }
+  .lb-podium-card--gold::before { background: linear-gradient(90deg, transparent, #FFD700, transparent); }
+  .lb-podium-card--gold::after  { background: #FFD700; }
+  .lb-podium-card--gold:hover   { transform: translateY(-30px); }
+  @keyframes podium-gold-pulse {
+    from { box-shadow: 0 0 50px rgba(255,215,0,0.12), 0 16px 48px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,215,0,0.2); }
+    to   { box-shadow: 0 0 90px rgba(255,215,0,0.25), 0 16px 48px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,215,0,0.3); }
+  }
 
   /* Silver — 2nd place */
   .lb-podium-card--silver {
-    background: linear-gradient(160deg, rgba(192,192,192,0.08) 0%, rgba(192,192,192,0.02) 100%);
-    border-color: rgba(192,192,192,0.25);
-    box-shadow: 0 0 24px rgba(192,192,192,0.08), 0 6px 24px rgba(0,0,0,0.35);
+    background: linear-gradient(165deg, rgba(192,192,192,0.1) 0%, rgba(192,192,192,0.02) 100%);
+    border-color: rgba(192,192,192,0.3);
+    box-shadow: 0 0 40px rgba(192,192,192,0.1), 0 12px 36px rgba(0,0,0,0.45);
     order: 1;
   }
   .lb-podium-card--silver::before { background: linear-gradient(90deg, transparent, #C0C0C0, transparent); }
@@ -298,39 +396,49 @@
 
   /* Bronze — 3rd place */
   .lb-podium-card--bronze {
-    background: linear-gradient(160deg, rgba(205,127,50,0.08) 0%, rgba(205,127,50,0.02) 100%);
-    border-color: rgba(205,127,50,0.25);
-    box-shadow: 0 0 24px rgba(205,127,50,0.08), 0 6px 24px rgba(0,0,0,0.35);
+    background: linear-gradient(165deg, rgba(205,127,50,0.1) 0%, rgba(205,127,50,0.02) 100%);
+    border-color: rgba(205,127,50,0.3);
+    box-shadow: 0 0 40px rgba(205,127,50,0.1), 0 12px 36px rgba(0,0,0,0.45);
     order: 3;
   }
   .lb-podium-card--bronze::before { background: linear-gradient(90deg, transparent, #CD7F32, transparent); }
   .lb-podium-card--bronze::after  { background: #CD7F32; }
 
   .lb-podium-medal {
-    font-size: 32px;
-    margin-bottom: 10px;
-    filter: drop-shadow(0 0 8px currentColor);
+    font-size: 36px;
+    margin-bottom: 14px;
+    filter: drop-shadow(0 0 12px currentColor);
   }
+  .lb-podium-card--gold .lb-podium-medal {
+    animation: crown-float 2.5s ease-in-out infinite;
+  }
+  @keyframes crown-float {
+    0%,100% { transform: translateY(0); }
+    50%     { transform: translateY(-6px); }
+  }
+
   .lb-podium-avatar {
-    width: 52px; height: 52px;
+    width: 60px; height: 60px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     font-family: 'Orbitron', sans-serif;
-    font-size: 18px;
+    font-size: 20px;
     font-weight: 900;
     border: 2px solid;
-    margin-bottom: 10px;
+    margin-bottom: 14px;
     flex-shrink: 0;
+    transition: transform 0.2s ease;
   }
-  .lb-podium-avatar--gold   { border-color: rgba(255,215,0,0.6);   background: rgba(255,215,0,0.1);   color: #FFD700; }
+  .lb-podium-card:hover .lb-podium-avatar { transform: scale(1.05); }
+  .lb-podium-avatar--gold   { border-color: rgba(255,215,0,0.6); background: rgba(255,215,0,0.1); color: #FFD700; }
   .lb-podium-avatar--silver { border-color: rgba(192,192,192,0.5); background: rgba(192,192,192,0.08); color: #C0C0C0; }
-  .lb-podium-avatar--bronze { border-color: rgba(205,127,50,0.5);  background: rgba(205,127,50,0.08);  color: #CD7F32; }
+  .lb-podium-avatar--bronze { border-color: rgba(205,127,50,0.5); background: rgba(205,127,50,0.08); color: #CD7F32; }
 
   .lb-podium-name {
     font-family: 'Orbitron', sans-serif;
-    font-size: 11px;
+    font-size: 13px;
     font-weight: 700;
     letter-spacing: 0.08em;
     text-align: center;
@@ -338,431 +446,1099 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    margin-bottom: 4px;
+    margin-bottom: 6px;
   }
-  .lb-podium-name--gold   { color: #FFD700; text-shadow: 0 0 14px rgba(255,215,0,0.5); }
-  .lb-podium-name--silver { color: #C0C0C0; text-shadow: 0 0 10px rgba(192,192,192,0.4); }
-  .lb-podium-name--bronze { color: #CD7F32; text-shadow: 0 0 10px rgba(205,127,50,0.4); }
+  .lb-podium-name--gold   { color: #FFD700; text-shadow: 0 0 18px rgba(255,215,0,0.5); }
+  .lb-podium-name--silver { color: #D4D4D4; text-shadow: 0 0 12px rgba(192,192,192,0.4); }
+  .lb-podium-name--bronze { color: #E09050; text-shadow: 0 0 12px rgba(205,127,50,0.4); }
+
+  /* Info wrapper (for mobile horizontal layout) */
+  .lb-podium-info {
+    display: contents; /* Desktop: children flow normally in column */
+  }
 
   .lb-podium-char {
     font-family: 'Rajdhani', sans-serif;
-    font-size: 11px;
-    font-weight: 500;
+    font-size: 12px;
+    font-weight: 600;
     color: var(--muted);
-    margin-bottom: 10px;
+    margin-bottom: 14px;
     display: flex;
     align-items: center;
-    gap: 5px;
+    gap: 6px;
   }
   .lb-podium-char-dot {
-    width: 6px; height: 6px;
+    width: 7px; height: 7px;
     border-radius: 50%;
     flex-shrink: 0;
   }
+
   .lb-podium-value {
     font-family: 'Orbitron', sans-serif;
-    font-size: 17px;
+    font-size: 20px;
     font-weight: 900;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.05em;
     text-align: center;
   }
-  .lb-podium-value--gold   { color: #FFD700; }
-  .lb-podium-value--silver { color: #C0C0C0; }
-  .lb-podium-value--bronze { color: #CD7F32; }
+  .lb-podium-value--gold   { color: #FFD700; text-shadow: 0 0 16px rgba(255,215,0,0.4); }
+  .lb-podium-value--silver { color: #D4D4D4; text-shadow: 0 0 12px rgba(192,192,192,0.3); }
+  .lb-podium-value--bronze { color: #E09050; text-shadow: 0 0 12px rgba(205,127,50,0.3); }
 
   .lb-podium-you {
     position: absolute;
-    top: 10px; right: 10px;
-    padding: 2px 8px;
-    background: rgba(68,238,255,0.15);
-    border: 1px solid rgba(68,238,255,0.4);
-    border-radius: 4px;
+    top: 12px; right: 12px;
+    padding: 4px 10px;
+    background: rgba(68,238,255,0.12);
+    border: 1px solid rgba(68,238,255,0.35);
+    border-radius: 6px;
     font-family: 'Orbitron', sans-serif;
-    font-size: 7px;
+    font-size: 8px;
     font-weight: 700;
     color: var(--cyan);
-    letter-spacing: 0.12em;
+    letter-spacing: 0.14em;
+    text-shadow: 0 0 8px rgba(68,238,255,0.5);
   }
 
-  /* ── Rows list (rank 4–50) ───────────────────────────── */
+  /* ══════════════════════════════════════════════════════
+     RANKS LIST — Rows 4-50
+  ══════════════════════════════════════════════════════ */
+  .lb-divider {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    margin-bottom: 20px;
+  }
+  .lb-divider__line {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,68,102,0.25) 40%, rgba(255,215,0,0.2) 60%, transparent);
+  }
+  .lb-divider__label {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.25em;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  .lb-list-header {
+    display: grid;
+    grid-template-columns: 56px 1fr 180px 180px;
+    padding: 8px 20px 12px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    color: rgba(255,255,255,0.25);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    margin-bottom: 10px;
+    text-transform: uppercase;
+  }
+  .lb-list-header span:last-child { text-align: right; }
+
   .lb-list {
     display: flex;
     flex-direction: column;
-    gap: 3px;
-    margin-bottom: 24px;
+    gap: 4px;
+    margin-bottom: 28px;
   }
 
   .lb-row {
     display: grid;
-    grid-template-columns: 52px 1fr 160px 160px;
+    grid-template-columns: 56px 1fr 180px 180px;
     align-items: center;
-    padding: 13px 18px;
-    border-radius: 10px;
-    border: 1px solid rgba(255,255,255,0.05);
-    background: rgba(255,255,255,0.025);
-    transition: background 0.15s, border-color 0.15s, transform 0.15s;
-    animation: lb-row-in 0.3s ease both;
+    padding: 14px 20px;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.04);
+    background: rgba(255,255,255,0.02);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: lb-row-in 0.35s ease both;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
   }
   @keyframes lb-row-in {
-    from { opacity: 0; transform: translateX(-10px); }
+    from { opacity: 0; transform: translateX(-12px); }
     to   { opacity: 1; transform: translateX(0); }
   }
   .lb-row:hover {
-    background: rgba(255,255,255,0.045);
+    background: var(--lb-surface-hover);
     border-color: rgba(255,255,255,0.1);
-    transform: translateX(3px);
-  }
-  .lb-row--top10 {
-    background: rgba(68,238,255,0.03);
-    border-color: rgba(68,238,255,0.08);
-  }
-  .lb-row--top10:hover {
-    background: rgba(68,238,255,0.06);
-    border-color: rgba(68,238,255,0.15);
-  }
-  .lb-row--me {
-    background: rgba(68,238,255,0.07) !important;
-    border-color: rgba(68,238,255,0.3) !important;
-    box-shadow: inset 2px 0 0 rgba(68,238,255,0.6);
-  }
-  .lb-row--me:hover {
-    background: rgba(68,238,255,0.1) !important;
-    transform: translateX(3px);
+    transform: translateX(4px);
   }
 
-  /* Rank number */
+  /* Top 10 highlight */
+  .lb-row--top10 {
+    background: rgba(68,238,255,0.025);
+    border-color: rgba(68,238,255,0.06);
+  }
+  .lb-row--top10:hover {
+    background: rgba(68,238,255,0.055);
+    border-color: rgba(68,238,255,0.12);
+  }
+
+  /* Current user highlight */
+  .lb-row--me {
+    background: rgba(68,238,255,0.06) !important;
+    border-color: rgba(68,238,255,0.25) !important;
+    box-shadow: inset 3px 0 0 var(--cyan), 0 0 28px rgba(68,238,255,0.06) !important;
+  }
+  .lb-row--me:hover {
+    background: rgba(68,238,255,0.09) !important;
+  }
+
+  /* Row stagger animation */
+  .lb-row:nth-child(1)  { animation-delay:   0ms }
+  .lb-row:nth-child(2)  { animation-delay:  30ms }
+  .lb-row:nth-child(3)  { animation-delay:  60ms }
+  .lb-row:nth-child(4)  { animation-delay:  90ms }
+  .lb-row:nth-child(5)  { animation-delay: 120ms }
+  .lb-row:nth-child(6)  { animation-delay: 150ms }
+  .lb-row:nth-child(7)  { animation-delay: 180ms }
+  .lb-row:nth-child(8)  { animation-delay: 210ms }
+  .lb-row:nth-child(9)  { animation-delay: 240ms }
+  .lb-row:nth-child(10) { animation-delay: 270ms }
+
+  /* Rank badge */
   .lb-row__rank {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.06);
     font-family: 'Orbitron', sans-serif;
     font-size: 12px;
     font-weight: 700;
     color: var(--muted);
-    letter-spacing: 0.05em;
+    letter-spacing: 0.02em;
+    transition: all 0.2s ease;
   }
-  .lb-row--top10 .lb-row__rank { color: var(--cyan); }
-  .lb-row--me .lb-row__rank    { color: var(--cyan); }
+  .lb-row--top10 .lb-row__rank {
+    background: rgba(68,238,255,0.08);
+    border-color: rgba(68,238,255,0.2);
+    color: var(--cyan);
+    box-shadow: 0 0 12px rgba(68,238,255,0.08);
+  }
+  .lb-row--me .lb-row__rank { color: var(--cyan); }
 
   /* Player name */
   .lb-row__name {
     font-family: 'Rajdhani', sans-serif;
-    font-size: 16px;
+    font-size: 17px;
     font-weight: 700;
     color: var(--text);
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
     overflow: hidden;
   }
   .lb-row--me .lb-row__name { color: var(--cyan); }
 
   .lb-you-tag {
-    padding: 2px 7px;
-    background: rgba(68,238,255,0.12);
-    border: 1px solid rgba(68,238,255,0.3);
-    border-radius: 4px;
+    padding: 3px 9px;
+    background: rgba(68,238,255,0.1);
+    border: 1px solid rgba(68,238,255,0.25);
+    border-radius: 5px;
     font-family: 'Orbitron', sans-serif;
-    font-size: 7px;
+    font-size: 8px;
     font-weight: 700;
     color: var(--cyan);
-    letter-spacing: 0.1em;
+    letter-spacing: 0.12em;
     flex-shrink: 0;
+    text-shadow: 0 0 8px rgba(68,238,255,0.5);
   }
 
-  /* Character */
+  /* Character column */
   .lb-row__char {
     display: flex;
     align-items: center;
-    gap: 7px;
+    gap: 8px;
     font-family: 'Rajdhani', sans-serif;
-    font-size: 13px;
-    font-weight: 500;
+    font-size: 14px;
+    font-weight: 600;
     color: var(--muted);
     overflow: hidden;
   }
   .lb-char-dot {
-    width: 8px; height: 8px;
+    width: 9px; height: 9px;
     border-radius: 50%;
     flex-shrink: 0;
   }
 
-  /* Value */
+  /* Value column */
   .lb-row__val {
     font-family: 'Orbitron', sans-serif;
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 700;
     color: var(--cyan);
     text-align: right;
     white-space: nowrap;
-    letter-spacing: 0.03em;
+    letter-spacing: 0.04em;
   }
-  .lb-row--me .lb-row__val { color: var(--cyan); text-shadow: 0 0 10px rgba(68,238,255,0.4); }
+  .lb-row--top10 .lb-row__val { text-shadow: 0 0 16px rgba(68,238,255,0.4); }
+  .lb-row--me .lb-row__val { text-shadow: 0 0 12px rgba(68,238,255,0.5); }
 
-  /* Divider between podium and list */
-  .lb-divider {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    margin-bottom: 16px;
-  }
-  .lb-divider__line {
-    flex: 1;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
-  }
-  .lb-divider__label {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 9px;
-    letter-spacing: 0.2em;
-    color: var(--muted);
-    white-space: nowrap;
-  }
-
-  /* Not ranked banner */
+  /* ── Not ranked banner ──────────────────────────────────── */
   .lb-not-ranked {
-    margin-top: 20px;
-    padding: 16px 24px;
-    border: 1px dashed rgba(68,238,255,0.18);
-    border-radius: 10px;
+    margin-top: 24px;
+    padding: 20px 28px;
+    border: 1px dashed rgba(68,238,255,0.15);
+    border-radius: 12px;
     text-align: center;
     font-family: 'Rajdhani', sans-serif;
-    font-size: 14px;
+    font-size: 15px;
+    font-weight: 600;
     color: var(--muted);
-    background: rgba(68,238,255,0.03);
+    background: rgba(68,238,255,0.025);
   }
 
-  /* Empty state */
+  /* ── Empty state ────────────────────────────────────────── */
   .lb-empty {
     text-align: center;
-    padding: 80px 24px;
+    padding: 100px 24px;
     color: var(--muted);
   }
   .lb-empty__glyph {
-    font-size: 52px;
+    font-size: 60px;
     display: block;
-    opacity: 0.18;
-    margin-bottom: 18px;
+    opacity: 0.15;
+    margin-bottom: 22px;
     animation: lb-pulse 3s ease-in-out infinite;
   }
   .lb-empty__title {
     font-family: 'Orbitron', sans-serif;
-    font-size: 14px;
+    font-size: 16px;
     font-weight: 700;
     color: var(--text);
-    letter-spacing: 0.1em;
-    margin-bottom: 8px;
+    letter-spacing: 0.12em;
+    margin-bottom: 10px;
   }
   .lb-empty__sub {
     font-family: 'Rajdhani', sans-serif;
-    font-size: 14px;
+    font-size: 15px;
     color: var(--muted);
   }
 
-  /* ── Table header ────────────────────────────────────── */
-  .lb-list-header {
-    display: grid;
-    grid-template-columns: 52px 1fr 160px 160px;
-    padding: 6px 18px 10px;
-    font-family: 'Orbitron', sans-serif;
-    font-size: 8px;
-    font-weight: 700;
-    letter-spacing: 0.18em;
-    color: rgba(255,255,255,0.22);
-    border-bottom: 1px solid rgba(255,255,255,0.06);
-    margin-bottom: 8px;
-  }
-  .lb-list-header span:last-child { text-align: right; }
+  /* ══════════════════════════════════════════════════════
+     RESPONSIVE BREAKPOINTS
+  ══════════════════════════════════════════════════════ */
 
-  /* ── Mobile ──────────────────────────────────────────── */
-  @media (max-width: 680px) {
-    .lb-hero { padding: 40px 20px 28px; }
-    .lb-tabs { gap: 4px; }
-    .lb-tab  { padding: 8px 14px; font-size: 9px; }
-    .lb-podium { gap: 8px; }
-    .lb-podium-card { padding: 16px 12px 14px; min-width: 100px; }
-    .lb-podium-avatar { width: 40px; height: 40px; font-size: 14px; }
-    .lb-podium-value { font-size: 13px; }
-    .lb-podium-name  { font-size: 9px; }
-    .lb-row { grid-template-columns: 44px 1fr 120px; }
+  /* ── 1440px — Large desktop ─────────────────────────────── */
+  @media (max-width: 1440px) {
+    .lb-content { max-width: 960px; }
+    .lb-podium-card { max-width: 260px; }
+  }
+
+  /* ── 1024px — Desktop/Tablet landscape ──────────────────── */
+  @media (max-width: 1024px) {
+    .lb-hero { padding: 56px 24px 40px; }
+    .lb-hero-title { font-size: clamp(28px, 5vw, 48px); }
+    .lb-content { max-width: 100%; padding: 0 20px; }
+    .lb-podium-card { max-width: 240px; min-width: 160px; padding: 24px 16px 20px; }
+    .lb-podium-card--gold { padding-top: 30px; transform: translateY(-20px); }
+    .lb-podium-card--gold:hover { transform: translateY(-24px); }
+    .lb-row { grid-template-columns: 52px 1fr 150px 140px; }
+    .lb-list-header { grid-template-columns: 52px 1fr 150px 140px; }
+  }
+
+  /* ── 768px — Tablet portrait ────────────────────────────── */
+  @media (max-width: 768px) {
+    .lb-hero { padding: 48px 20px 32px; }
+    .lb-hero-eyebrow { font-size: 10px; letter-spacing: 0.3em; }
+    .lb-hero-title { font-size: clamp(26px, 6vw, 40px); }
+    .lb-hero-sub { font-size: 12px; letter-spacing: 0.2em; }
+
+    /* Scrollable tabs */
+    .lb-tabs-wrapper { padding: 0 16px 28px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .lb-tabs { justify-content: flex-start; flex-wrap: nowrap; gap: 6px; padding-bottom: 4px; }
+    .lb-tab { padding: 10px 18px; font-size: 9px; flex-shrink: 0; }
+
+    /* Map dropdown handled by custom dropdown responsive styles */
+
+    .lb-content { padding: 0 16px; }
+    .lb-podium { gap: 12px; padding: 0 8px; }
+    .lb-podium-card { padding: 20px 14px 18px; min-width: 130px; border-radius: 16px; }
+    .lb-podium-card--gold { padding-top: 26px; transform: translateY(-16px); }
+    .lb-podium-card--gold:hover { transform: translateY(-20px); }
+    .lb-podium-avatar { width: 48px; height: 48px; font-size: 16px; }
+    .lb-podium-medal { font-size: 28px; margin-bottom: 10px; }
+    .lb-podium-name { font-size: 11px; }
+    .lb-podium-value { font-size: 16px; }
+    .lb-podium-char { font-size: 11px; }
+
+    /* Hide character column on tablet */
+    .lb-row { grid-template-columns: 48px 1fr 130px; padding: 12px 16px; }
     .lb-row__char { display: none; }
+    .lb-list-header { grid-template-columns: 48px 1fr 130px; padding: 6px 16px 10px; }
     .lb-list-header span:nth-child(3) { display: none; }
-    .lb-list-header { grid-template-columns: 44px 1fr 120px; }
+    .lb-row__val { font-size: 12px; }
+    .lb-row__name { font-size: 15px; }
+    .lb-row__rank { width: 32px; height: 32px; font-size: 11px; }
+  }
+
+  /* ── 480px — Mobile landscape / large phone ─────────────── */
+  @media (max-width: 480px) {
+    .lb-hero { padding: 40px 16px 28px; }
+    .lb-hero-eyebrow { font-size: 9px; margin-bottom: 8px; }
+    .lb-hero-title { font-size: clamp(24px, 8vw, 34px); margin-bottom: 10px; }
+    .lb-hero-sub { font-size: 11px; letter-spacing: 0.15em; }
+    .lb-player-tag { padding: 8px 16px; font-size: 10px; gap: 8px; }
+
+    .lb-tabs-wrapper { padding: 0 12px 24px; }
+    .lb-tabs { gap: 5px; }
+    .lb-tab { padding: 10px 14px; font-size: 8px; letter-spacing: 0.1em; }
+    .lb-tab__icon { font-size: 11px; }
+
+    /* Map dropdown handled by custom dropdown responsive styles */
+
+    /* Stack podium cards vertically with horizontal internal layout */
+    .lb-podium {
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 36px;
+    }
+    .lb-podium-card {
+      max-width: 100%;
+      width: 100%;
+      transform: none !important;
+      order: unset !important;
+      flex-direction: row;
+      align-items: center;
+      padding: 16px 20px;
+      gap: 14px;
+    }
+    .lb-podium-card--gold { transform: none !important; padding-top: 16px; }
+    .lb-podium-card--gold:hover,
+    .lb-podium-card--silver:hover,
+    .lb-podium-card--bronze:hover { transform: translateX(4px) !important; }
+    .lb-podium-medal { font-size: 26px; margin-bottom: 0; flex-shrink: 0; order: -1; }
+    .lb-podium-avatar { width: 44px; height: 44px; font-size: 15px; margin-bottom: 0; flex-shrink: 0; }
+    .lb-podium-info {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      flex: 1;
+      min-width: 0;
+      gap: 2px;
+    }
+    .lb-podium-name { font-size: 12px; text-align: left; margin-bottom: 0; }
+    .lb-podium-char { margin-bottom: 0; font-size: 10px; gap: 5px; }
+    .lb-podium-char-dot { width: 6px; height: 6px; }
+    .lb-podium-value { font-size: 15px; margin-left: auto; flex-shrink: 0; }
+
+    .lb-content { padding: 0 12px; }
+    .lb-divider { gap: 12px; margin-bottom: 14px; }
+    .lb-divider__label { font-size: 9px; letter-spacing: 0.18em; }
+
+    .lb-list-header { grid-template-columns: 40px 1fr 100px; padding: 5px 12px 8px; font-size: 8px; }
+    .lb-row { grid-template-columns: 40px 1fr 100px; padding: 12px 12px; border-radius: 10px; gap: 8px; }
+    .lb-row__rank { width: 30px; height: 30px; font-size: 10px; border-radius: 8px; }
+    .lb-row__name { font-size: 14px; gap: 6px; }
+    .lb-you-tag { font-size: 7px; padding: 2px 6px; }
     .lb-row__val { font-size: 11px; }
-  }
-  @media (max-width: 440px) {
-    .lb-podium { flex-direction: column; align-items: center; }
-    .lb-podium-card { max-width: 100%; width: 100%; transform: none !important; order: unset !important; }
-    .lb-podium-card--gold { transform: none !important; }
+
+    .lb-not-ranked { padding: 16px 20px; font-size: 14px; }
+    .lb-error { flex-wrap: wrap; padding: 14px 16px; font-size: 13px; gap: 10px; }
+    .lb-error__retry { margin-left: 0; width: 100%; text-align: center; }
   }
 
-  /* ═══════════════════════════════════════════════════════════
-     RANKS — Enhanced premium styles
-  ═══════════════════════════════════════════════════════════ */
-
-  /* ── Ambient orbs ───────────────────────────────────────── */
-  body { position: relative; }
-  body::before, body::after {
-    content: '';
-    position: fixed;
-    border-radius: 50%;
-    pointer-events: none;
-    z-index: 0;
-    filter: blur(130px);
-  }
-  body::before {
-    width: 700px; height: 700px;
-    top: -200px; left: -100px;
-    background: radial-gradient(circle, rgba(255,68,102,0.12) 0%, transparent 65%);
-    animation: lb-orb-a 22s ease-in-out infinite alternate;
-  }
-  body::after {
-    width: 550px; height: 550px;
-    bottom: -100px; right: -80px;
-    background: radial-gradient(circle, rgba(255,215,0,0.09) 0%, transparent 65%);
-    animation: lb-orb-b 28s ease-in-out infinite alternate;
-  }
-  @keyframes lb-orb-a {
-    from { transform: translate(0,0) scale(1); opacity: 0.8; }
-    to   { transform: translate(80px,60px) scale(1.2); opacity: 1; }
-  }
-  @keyframes lb-orb-b {
-    from { transform: translate(0,0) scale(1); opacity: 0.7; }
-    to   { transform: translate(-60px,-50px) scale(1.15); opacity: 1; }
-  }
-
-  .lb-page { position: relative; z-index: 1; }
-
-  /* ── Hero enhancements ──────────────────────────────────── */
-  .lb-hero {
-    background: radial-gradient(ellipse 90% 70% at 50% -10%,
-      rgba(255,68,102,0.08) 0%, transparent 65%);
-  }
-  .lb-hero-title {
-    filter: drop-shadow(0 0 30px rgba(255,68,102,0.22));
-    animation: title-glow 4s ease-in-out infinite alternate;
-  }
-  @keyframes title-glow {
-    from { filter: drop-shadow(0 0 25px rgba(255,68,102,0.18)); }
-    to   { filter: drop-shadow(0 0 45px rgba(255,68,102,0.35)); }
-  }
-
-  /* ── Podium card: richer glow + glass feel ──────────────── */
-  .lb-podium-card {
-    backdrop-filter: blur(18px);
-    -webkit-backdrop-filter: blur(18px);
-  }
-  .lb-podium-card--gold {
-    box-shadow: 0 0 60px rgba(255,215,0,0.18), 0 12px 40px rgba(0,0,0,0.5);
-    animation: podium-gold-pulse 3.5s ease-in-out infinite alternate;
-  }
-  @keyframes podium-gold-pulse {
-    from { box-shadow: 0 0 45px rgba(255,215,0,0.14), 0 12px 40px rgba(0,0,0,0.5); }
-    to   { box-shadow: 0 0 80px rgba(255,215,0,0.26), 0 12px 40px rgba(0,0,0,0.5); }
-  }
-  .lb-podium-card--silver {
-    box-shadow: 0 0 36px rgba(192,192,192,0.12), 0 8px 28px rgba(0,0,0,0.4);
-  }
-  .lb-podium-card--bronze {
-    box-shadow: 0 0 36px rgba(205,127,50,0.12), 0 8px 28px rgba(0,0,0,0.4);
-  }
-
-  /* Crown/rank badge above podium avatar */
-  .lb-podium-card--gold   .lb-podium-medal { animation: crown-float 2.5s ease-in-out infinite; }
-  @keyframes crown-float {
-    0%,100% { transform: translateY(0);   }
-    50%      { transform: translateY(-5px); }
-  }
-
-  /* ── Rank rows: neon left border on "you" ───────────────── */
-  .lb-row {
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
-  }
-  .lb-row--me {
-    box-shadow: inset 3px 0 0 var(--cyan), 0 0 24px rgba(68,238,255,0.04) !important;
-  }
-
-  /* ── Rank number: tier-colored badges ──────────────────── */
-  .lb-row__rank {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 32px; height: 32px;
-    border-radius: 8px;
-    background: rgba(255,255,255,0.04);
-    border: 1px solid rgba(255,255,255,0.07);
-    font-size: 11px;
-  }
-  .lb-row--top10 .lb-row__rank {
-    background: rgba(68,238,255,0.08);
-    border-color: rgba(68,238,255,0.25);
-    box-shadow: 0 0 10px rgba(68,238,255,0.1);
-  }
-
-  /* ── Tab bar: pill style ────────────────────────────────── */
-  .lb-tab {
-    border-radius: 100px;
-    transition: all 0.22s;
-  }
-  .lb-tab.active {
-    box-shadow: 0 0 22px rgba(255,68,102,0.18), inset 0 0 16px rgba(255,68,102,0.06);
-  }
-
-  /* ── Content fade-in ────────────────────────────────────── */
-  .lb-content { animation: lb-page-in 0.4s ease both; }
-  @keyframes lb-page-in {
-    from { opacity: 0; transform: translateY(14px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-
-  /* ── Row stagger ────────────────────────────────────────── */
-  .lb-row:nth-child(1)  { animation-delay:  0ms }
-  .lb-row:nth-child(2)  { animation-delay: 35ms }
-  .lb-row:nth-child(3)  { animation-delay: 70ms }
-  .lb-row:nth-child(4)  { animation-delay:105ms }
-  .lb-row:nth-child(5)  { animation-delay:140ms }
-  .lb-row:nth-child(6)  { animation-delay:175ms }
-  .lb-row:nth-child(7)  { animation-delay:210ms }
-  .lb-row:nth-child(8)  { animation-delay:245ms }
-  .lb-row:nth-child(9)  { animation-delay:280ms }
-  .lb-row:nth-child(10) { animation-delay:315ms }
-
-  /* ── Value glow ─────────────────────────────────────────── */
-  .lb-row--top10 .lb-row__val {
-    text-shadow: 0 0 14px rgba(68,238,255,0.45);
-  }
-
-  /* ── Map select: styled ─────────────────────────────────── */
-  .lb-map-select {
-    backdrop-filter: blur(12px);
-  }
-
-  /* ── Divider glow ───────────────────────────────────────── */
-  .lb-divider__line {
-    background: linear-gradient(90deg, transparent,
-      rgba(255,68,102,0.22) 40%, rgba(255,215,0,0.18) 60%, transparent);
-  }
-
-  /* ── 360px ultra-small ─────────────────────────────────── */
+  /* ── 360px — Small phone ────────────────────────────────── */
   @media (max-width: 360px) {
-    .lb-hero              { padding: 28px 12px 20px; }
-    .lb-hero-title        { font-size: clamp(20px, 9vw, 32px); }
-    .lb-hero-sub          { font-size: 11px; }
-    .lb-tabs              { padding: 0 12px 18px; gap: 3px; }
-    .lb-tab               { padding: 7px 10px; font-size: 8px; letter-spacing: 0.1em; }
-    .lb-map-row           { flex-wrap: wrap; justify-content: flex-start; gap: 8px; padding: 0 12px 16px; }
-    .lb-map-select        { min-width: 0; width: 100%; font-size: 9px; }
-    .lb-content           { padding: 0 10px; }
-    .lb-podium            { gap: 4px; padding: 0 4px; }
-    .lb-podium-card       { padding: 12px 6px 10px; border-radius: 12px; }
-    .lb-podium-name       { font-size: 8px; }
-    .lb-podium-value      { font-size: 11px; }
-    .lb-podium-avatar     { width: 32px; height: 32px; font-size: 11px; margin-bottom: 6px; }
-    .lb-podium-medal      { font-size: 24px; margin-bottom: 6px; }
-    .lb-row               { grid-template-columns: 36px 1fr 80px; padding: 10px 10px; border-radius: 8px; }
-    .lb-list-header       { grid-template-columns: 36px 1fr 80px; padding: 4px 10px 8px; }
-    .lb-row__val          { font-size: 10px; }
-    .lb-row__rank         { font-size: 10px; width: 24px; height: 24px; border-radius: 6px; }
-    .lb-not-ranked        { padding: 12px 16px; font-size: 13px; }
-    .lb-player-tag        { padding: 5px 14px; font-size: 10px; }
+    .lb-page { padding-bottom: 60px; }
+    .lb-hero { padding: 32px 12px 22px; }
+    .lb-hero-eyebrow { font-size: 8px; letter-spacing: 0.25em; }
+    .lb-hero-title { font-size: clamp(20px, 9vw, 28px); letter-spacing: 0.06em; }
+    .lb-hero-sub { font-size: 10px; letter-spacing: 0.12em; }
+    .lb-player-tag { padding: 7px 12px; font-size: 9px; margin-top: 16px; }
+    .lb-player-tag__dot { width: 6px; height: 6px; }
+
+    .lb-tabs-wrapper { padding: 0 8px 18px; }
+    .lb-tabs { gap: 4px; }
+    .lb-tab {
+      padding: 9px 10px;
+      font-size: 7px;
+      letter-spacing: 0.08em;
+      min-height: 40px;
+    }
+    .lb-tab__icon { font-size: 10px; margin-right: 3px; }
+
+    /* Map dropdown handled by custom dropdown responsive styles */
+
+    .lb-content { padding: 0 8px; }
+    .lb-podium { gap: 8px; padding: 0; margin-bottom: 28px; }
+    .lb-podium-card { padding: 12px 12px; border-radius: 12px; gap: 10px; }
+    .lb-podium-medal { font-size: 22px; }
+    .lb-podium-avatar { width: 34px; height: 34px; font-size: 12px; }
+    .lb-podium-info { gap: 1px; }
+    .lb-podium-name { font-size: 10px; }
+    .lb-podium-char { font-size: 8px; gap: 3px; }
+    .lb-podium-char-dot { width: 4px; height: 4px; }
+    .lb-podium-value { font-size: 12px; }
+    .lb-podium-you { font-size: 5px; padding: 2px 5px; top: 5px; right: 5px; border-radius: 4px; }
+
+    .lb-divider { gap: 10px; margin-bottom: 12px; }
+    .lb-divider__label { font-size: 8px; letter-spacing: 0.15em; }
+
+    .lb-list { gap: 3px; margin-bottom: 20px; }
+    .lb-list-header {
+      grid-template-columns: 36px 1fr 80px;
+      padding: 4px 10px 6px;
+      font-size: 7px;
+      letter-spacing: 0.15em;
+    }
+    .lb-row {
+      grid-template-columns: 36px 1fr 80px;
+      padding: 10px 10px;
+      border-radius: 8px;
+      gap: 6px;
+    }
+    .lb-row__rank { width: 26px; height: 26px; font-size: 9px; border-radius: 6px; }
+    .lb-row__name { font-size: 13px; gap: 5px; }
+    .lb-you-tag { font-size: 6px; padding: 2px 5px; border-radius: 3px; }
+    .lb-row__val { font-size: 10px; }
+
+    .lb-not-ranked { padding: 14px 14px; font-size: 12px; border-radius: 10px; }
+    .lb-empty { padding: 60px 16px; }
+    .lb-empty__glyph { font-size: 48px; margin-bottom: 16px; }
+    .lb-empty__title { font-size: 14px; }
+    .lb-empty__sub { font-size: 13px; }
+
+    .lb-loading { padding: 60px 16px; gap: 16px; }
+    .lb-spinner { width: 36px; height: 36px; }
+    .lb-loading-text { font-size: 10px; letter-spacing: 0.2em; }
+  }
+
+  /* ── Touch-friendly: ensure minimum tap targets ─────────── */
+  @media (pointer: coarse) {
+    .lb-tab,
+    .lb-error__retry,
+    .lb-map-select { min-height: 44px; }
+    .lb-row { min-height: 52px; }
+  }
+
+  /* ── Reduced motion preference ──────────────────────────── */
+  @media (prefers-reduced-motion: reduce) {
+    .lb-hero-title,
+    .lb-podium-medal,
+    .lb-podium-card--gold,
+    .lb-player-tag__dot,
+    .lb-spinner,
+    body::before,
+    body::after { animation: none; }
+    .lb-row,
+    .lb-podium-card,
+    .lb-tab { transition-duration: 0.1s; }
+  }
+
+  /* ══════════════════════════════════════════════════════════
+     CUSTOM MAP DROPDOWN — Premium Cyberpunk Style
+  ══════════════════════════════════════════════════════════ */
+
+  .lb-map-row {
+    display: flex;
+    justify-content: center;
+    padding: 0 24px 32px;
+  }
+
+  .map-dropdown {
+    position: relative;
+    width: 100%;
+    max-width: 320px;
+    z-index: 100;
+  }
+
+  .map-dropdown__hidden-select {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+    width: 0;
+    height: 0;
+  }
+
+  /* ── Trigger Button ─────────────────────────────────────── */
+  .map-dropdown__trigger {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 14px 20px;
+    min-height: 52px;
+    background:
+      linear-gradient(135deg, rgba(13,13,26,0.95) 0%, rgba(20,15,35,0.95) 100%);
+    border: 1px solid transparent;
+    border-radius: 14px;
+    cursor: pointer;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: #fff;
+    text-align: left;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+    /* Gradient border */
+    background-clip: padding-box;
+    box-shadow:
+      0 0 0 1px rgba(255,68,102,0.25),
+      0 4px 24px rgba(0,0,0,0.4),
+      0 0 40px rgba(255,68,102,0.05),
+      inset 0 1px 0 rgba(255,255,255,0.05);
+  }
+
+  /* Noise texture overlay */
+  .map-dropdown__trigger::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    opacity: 0.03;
+    pointer-events: none;
+    border-radius: inherit;
+  }
+
+  /* Top shimmer line */
+  .map-dropdown__trigger::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 20%;
+    right: 20%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,68,102,0.5), rgba(255,200,100,0.3), transparent);
+    opacity: 0.6;
+  }
+
+  .map-dropdown__trigger:hover {
+    box-shadow:
+      0 0 0 1px rgba(255,68,102,0.45),
+      0 6px 32px rgba(0,0,0,0.5),
+      0 0 60px rgba(255,68,102,0.1),
+      inset 0 1px 0 rgba(255,255,255,0.08);
+    transform: translateY(-1px);
+  }
+
+  .map-dropdown__trigger:focus {
+    outline: none;
+    box-shadow:
+      0 0 0 2px rgba(255,68,102,0.6),
+      0 0 0 4px rgba(255,68,102,0.15),
+      0 6px 32px rgba(0,0,0,0.5),
+      0 0 80px rgba(255,68,102,0.15),
+      inset 0 1px 0 rgba(255,255,255,0.1);
+  }
+
+  .map-dropdown.open .map-dropdown__trigger {
+    box-shadow:
+      0 0 0 2px rgba(255,68,102,0.5),
+      0 8px 40px rgba(0,0,0,0.6),
+      0 0 100px rgba(255,68,102,0.12),
+      inset 0 1px 0 rgba(255,255,255,0.1);
+    border-radius: 14px 14px 0 0;
+  }
+
+  .map-dropdown__icon {
+    font-size: 18px;
+    color: var(--pink);
+    text-shadow: 0 0 12px rgba(255,68,102,0.6);
+    flex-shrink: 0;
+    transition: all 0.3s ease;
+  }
+
+  .map-dropdown__trigger:hover .map-dropdown__icon {
+    text-shadow: 0 0 20px rgba(255,68,102,0.9);
+    transform: scale(1.1);
+  }
+
+  .map-dropdown__selected {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .map-dropdown__arrow {
+    width: 18px;
+    height: 18px;
+    color: var(--muted);
+    flex-shrink: 0;
+    transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), color 0.2s;
+  }
+
+  .map-dropdown.open .map-dropdown__arrow {
+    transform: rotate(180deg);
+    color: var(--pink);
+  }
+
+  /* ── Dropdown Panel ─────────────────────────────────────── */
+  .map-dropdown__panel {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    margin-top: -1px;
+    background:
+      linear-gradient(180deg, rgba(15,12,30,0.98) 0%, rgba(10,8,22,0.99) 100%);
+    border: 1px solid rgba(255,68,102,0.3);
+    border-top: none;
+    border-radius: 0 0 14px 14px;
+    box-shadow:
+      0 20px 60px rgba(0,0,0,0.7),
+      0 0 80px rgba(255,68,102,0.08),
+      inset 0 -1px 0 rgba(255,255,255,0.03);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    overflow: hidden;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px) scaleY(0.95);
+    transform-origin: top center;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 101;
+  }
+
+  /* Noise overlay */
+  .map-dropdown__panel::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    opacity: 0.025;
+    pointer-events: none;
+  }
+
+  .map-dropdown.open .map-dropdown__panel {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0) scaleY(1);
+  }
+
+  /* ── Search Input ───────────────────────────────────────── */
+  .map-dropdown__search {
+    position: relative;
+    padding: 12px 14px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .map-dropdown__search-icon {
+    position: absolute;
+    left: 26px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 16px;
+    height: 16px;
+    color: var(--muted);
+    pointer-events: none;
+  }
+
+  .map-dropdown__search-input {
+    width: 100%;
+    padding: 10px 14px 10px 38px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 8px;
+    color: #fff;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    transition: all 0.2s ease;
+  }
+
+  .map-dropdown__search-input::placeholder {
+    color: rgba(255,255,255,0.3);
+  }
+
+  .map-dropdown__search-input:focus {
+    outline: none;
+    background: rgba(255,255,255,0.06);
+    border-color: rgba(255,68,102,0.4);
+    box-shadow: 0 0 20px rgba(255,68,102,0.08);
+  }
+
+  /* ── List Container ─────────────────────────────────────── */
+  .map-dropdown__list {
+    max-height: 320px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 8px 0;
+
+    /* Custom scrollbar */
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255,68,102,0.4) rgba(255,255,255,0.03);
+  }
+
+  .map-dropdown__list::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .map-dropdown__list::-webkit-scrollbar-track {
+    background: rgba(255,255,255,0.03);
+    border-radius: 3px;
+  }
+
+  .map-dropdown__list::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, rgba(255,68,102,0.5), rgba(255,150,100,0.4));
+    border-radius: 3px;
+    box-shadow: 0 0 8px rgba(255,68,102,0.3);
+  }
+
+  .map-dropdown__list::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, rgba(255,68,102,0.7), rgba(255,150,100,0.6));
+  }
+
+  /* ── Group Labels ───────────────────────────────────────── */
+  .map-dropdown__group {
+    padding: 4px 0;
+  }
+
+  .map-dropdown__group:not(:first-child) {
+    border-top: 1px solid rgba(255,255,255,0.04);
+    margin-top: 4px;
+    padding-top: 8px;
+  }
+
+  .map-dropdown__group-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 18px 6px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    color: rgba(255,255,255,0.35);
+    text-transform: uppercase;
+  }
+
+  .map-dropdown__group-icon {
+    font-size: 10px;
+    opacity: 0.6;
+  }
+
+  /* ── Dropdown Items ─────────────────────────────────────── */
+  .map-dropdown__item {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 12px 18px;
+    min-height: 48px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: rgba(255,255,255,0.8);
+    text-align: left;
+    transition: all 0.2s ease;
+    overflow: hidden;
+
+    /* Stagger animation */
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+
+  .map-dropdown.open .map-dropdown__item {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  /* Staggered entrance */
+  .map-dropdown.open .map-dropdown__group:nth-child(1) .map-dropdown__item:nth-child(2) { transition-delay: 0.02s; }
+  .map-dropdown.open .map-dropdown__group:nth-child(1) .map-dropdown__item:nth-child(3) { transition-delay: 0.04s; }
+  .map-dropdown.open .map-dropdown__group:nth-child(1) .map-dropdown__item:nth-child(4) { transition-delay: 0.06s; }
+  .map-dropdown.open .map-dropdown__group:nth-child(1) .map-dropdown__item:nth-child(5) { transition-delay: 0.08s; }
+  .map-dropdown.open .map-dropdown__group:nth-child(2) .map-dropdown__item:nth-child(2) { transition-delay: 0.10s; }
+  .map-dropdown.open .map-dropdown__group:nth-child(2) .map-dropdown__item:nth-child(3) { transition-delay: 0.12s; }
+  .map-dropdown.open .map-dropdown__group:nth-child(2) .map-dropdown__item:nth-child(4) { transition-delay: 0.14s; }
+  .map-dropdown.open .map-dropdown__group:nth-child(3) .map-dropdown__item:nth-child(2) { transition-delay: 0.16s; }
+  .map-dropdown.open .map-dropdown__group:nth-child(3) .map-dropdown__item:nth-child(3) { transition-delay: 0.18s; }
+  .map-dropdown.open .map-dropdown__group:nth-child(3) .map-dropdown__item:nth-child(4) { transition-delay: 0.20s; }
+  .map-dropdown.open .map-dropdown__group:nth-child(4) .map-dropdown__item:nth-child(2) { transition-delay: 0.22s; }
+  .map-dropdown.open .map-dropdown__group:nth-child(4) .map-dropdown__item:nth-child(3) { transition-delay: 0.24s; }
+  .map-dropdown.open .map-dropdown__group:nth-child(4) .map-dropdown__item:nth-child(4) { transition-delay: 0.26s; }
+  .map-dropdown.open .map-dropdown__group:nth-child(4) .map-dropdown__item:nth-child(5) { transition-delay: 0.28s; }
+  .map-dropdown.open .map-dropdown__group:nth-child(5) .map-dropdown__item:nth-child(2) { transition-delay: 0.30s; }
+  .map-dropdown.open .map-dropdown__group:nth-child(5) .map-dropdown__item:nth-child(3) { transition-delay: 0.32s; }
+  .map-dropdown.open .map-dropdown__group:nth-child(5) .map-dropdown__item:nth-child(4) { transition-delay: 0.34s; }
+
+  /* Item glow (hidden by default) */
+  .map-dropdown__item-glow {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent, var(--item-color, rgba(255,68,102,0.1)), transparent);
+    opacity: 0;
+    transition: opacity 0.25s ease;
+    pointer-events: none;
+  }
+
+  .map-dropdown__item:hover .map-dropdown__item-glow {
+    opacity: 0.08;
+  }
+
+  .map-dropdown__item.selected .map-dropdown__item-glow {
+    opacity: 0.12;
+  }
+
+  .map-dropdown__item:hover {
+    background: rgba(255,255,255,0.04);
+    color: #fff;
+  }
+
+  .map-dropdown__item.selected {
+    background: rgba(255,68,102,0.08);
+    color: #fff;
+  }
+
+  .map-dropdown__item-icon {
+    font-size: 16px;
+    flex-shrink: 0;
+    transition: all 0.2s ease;
+    filter: drop-shadow(0 0 4px currentColor);
+  }
+
+  .map-dropdown__item:hover .map-dropdown__item-icon {
+    filter: drop-shadow(0 0 10px currentColor);
+    transform: scale(1.15);
+  }
+
+  .map-dropdown__item.selected .map-dropdown__item-icon {
+    filter: drop-shadow(0 0 12px currentColor);
+  }
+
+  .map-dropdown__item-name {
+    flex: 1;
+  }
+
+  .map-dropdown__item-check {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    opacity: 0;
+    transform: scale(0.5);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .map-dropdown__item-check svg {
+    width: 100%;
+    height: 100%;
+    stroke: var(--pink);
+    filter: drop-shadow(0 0 6px rgba(255,68,102,0.6));
+  }
+
+  .map-dropdown__item.selected .map-dropdown__item-check {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  /* Keyboard focus */
+  .map-dropdown__item:focus {
+    outline: none;
+    background: rgba(255,68,102,0.1);
+    box-shadow: inset 2px 0 0 var(--pink);
+  }
+
+  /* ── Empty State ────────────────────────────────────────── */
+  .map-dropdown__empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 32px 20px;
+    color: var(--muted);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 14px;
+    text-align: center;
+  }
+
+  .map-dropdown__empty-icon {
+    font-size: 28px;
+    opacity: 0.3;
+  }
+
+  /* ── Mobile Backdrop ────────────────────────────────────── */
+  .map-dropdown__backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 99;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+  }
+
+  /* ══════════════════════════════════════════════════════════
+     MAP DROPDOWN — Responsive Styles
+  ══════════════════════════════════════════════════════════ */
+
+  /* ── 768px — Tablet ─────────────────────────────────────── */
+  @media (max-width: 768px) {
+    .lb-map-row { padding: 0 16px 28px; }
+    .map-dropdown { max-width: 280px; }
+    .map-dropdown__trigger { padding: 12px 16px; min-height: 48px; font-size: 12px; }
+    .map-dropdown__icon { font-size: 16px; }
+    .map-dropdown__list { max-height: 280px; }
+    .map-dropdown__item { padding: 11px 16px; min-height: 46px; font-size: 14px; }
+  }
+
+  /* ── 480px — Mobile (Bottom Sheet Style) ────────────────── */
+  @media (max-width: 480px) {
+    .lb-map-row { padding: 0 12px 24px; }
+
+    .map-dropdown {
+      max-width: 100%;
+      position: static;
+    }
+
+    .map-dropdown__trigger {
+      padding: 14px 16px;
+      min-height: 52px;
+      font-size: 12px;
+      border-radius: 12px;
+    }
+
+    .map-dropdown.open .map-dropdown__trigger {
+      border-radius: 12px;
+    }
+
+    .map-dropdown__backdrop {
+      display: block;
+    }
+
+    .map-dropdown.open .map-dropdown__backdrop {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    /* Bottom sheet panel */
+    .map-dropdown__panel {
+      position: fixed;
+      top: auto;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      margin: 0;
+      max-height: 75vh;
+      border-radius: 24px 24px 0 0;
+      border: 1px solid rgba(255,68,102,0.25);
+      border-bottom: none;
+      transform: translateY(100%);
+      z-index: 1000;
+    }
+
+    .map-dropdown.open .map-dropdown__panel {
+      transform: translateY(0);
+    }
+
+    /* Handle bar */
+    .map-dropdown__panel::after {
+      content: '';
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 40px;
+      height: 4px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 2px;
+    }
+
+    .map-dropdown__search {
+      padding: 24px 16px 12px;
+    }
+
+    .map-dropdown__search-input {
+      padding: 12px 14px 12px 42px;
+      min-height: 48px;
+      font-size: 15px;
+    }
+
+    .map-dropdown__search-icon {
+      left: 30px;
+      width: 18px;
+      height: 18px;
+    }
+
+    .map-dropdown__list {
+      max-height: calc(75vh - 100px);
+      padding: 4px 0 24px;
+    }
+
+    .map-dropdown__item {
+      padding: 14px 20px;
+      min-height: 52px;
+      font-size: 16px;
+    }
+
+    .map-dropdown__item-icon { font-size: 18px; }
+    .map-dropdown__group-label { padding: 10px 20px 8px; font-size: 10px; }
+  }
+
+  /* ── 360px — Small phone ────────────────────────────────── */
+  @media (max-width: 360px) {
+    .lb-map-row { padding: 0 8px 20px; }
+
+    .map-dropdown__trigger {
+      padding: 12px 14px;
+      min-height: 48px;
+      font-size: 11px;
+      gap: 10px;
+    }
+
+    .map-dropdown__icon { font-size: 14px; }
+    .map-dropdown__arrow { width: 16px; height: 16px; }
+
+    .map-dropdown__panel {
+      max-height: 70vh;
+      border-radius: 20px 20px 0 0;
+    }
+
+    .map-dropdown__search { padding: 20px 12px 10px; }
+    .map-dropdown__search-input {
+      padding: 10px 12px 10px 38px;
+      min-height: 44px;
+      font-size: 14px;
+    }
+    .map-dropdown__search-icon { left: 24px; width: 16px; height: 16px; }
+
+    .map-dropdown__list { max-height: calc(70vh - 90px); }
+    .map-dropdown__item {
+      padding: 12px 16px;
+      min-height: 48px;
+      font-size: 15px;
+      gap: 10px;
+    }
+    .map-dropdown__item-icon { font-size: 16px; }
+    .map-dropdown__item-check { width: 16px; height: 16px; }
+    .map-dropdown__group-label { padding: 8px 16px 6px; font-size: 9px; letter-spacing: 0.15em; }
+  }
+
+  /* ── Touch-friendly targets ─────────────────────────────── */
+  @media (pointer: coarse) {
+    .map-dropdown__trigger { min-height: 52px; }
+    .map-dropdown__item { min-height: 52px; }
+    .map-dropdown__search-input { min-height: 48px; }
+  }
+
+  /* ── Reduced motion ─────────────────────────────────────── */
+  @media (prefers-reduced-motion: reduce) {
+    .map-dropdown__panel,
+    .map-dropdown__trigger,
+    .map-dropdown__item,
+    .map-dropdown__arrow,
+    .map-dropdown__backdrop { transition-duration: 0.1s; }
+    .map-dropdown.open .map-dropdown__item { transition-delay: 0s !important; }
   }
   </style>
 </head>
@@ -797,20 +1573,265 @@
     </div>
 
     <!-- ── Tabs ─────────────────────────────────────────── -->
-    <nav class="lb-tabs" role="tablist">
-      <button class="lb-tab active" data-board="kills">    <span class="lb-tab__icon">☠</span>KILLS</button>
-      <button class="lb-tab"        data-board="waves">    <span class="lb-tab__icon">◎</span>WAVES</button>
-      <button class="lb-tab"        data-board="level">    <span class="lb-tab__icon">◈</span>LEVEL</button>
-      <button class="lb-tab"        data-board="nex">      <span class="lb-tab__icon">⬢</span>NEX</button>
-      <button class="lb-tab"        data-board="campaign"> <span class="lb-tab__icon">◆</span>CAMPAIGN</button>
-      <button class="lb-tab"        data-board="map">      <span class="lb-tab__icon">⬡</span>MAP</button>
-    </nav>
+    <div class="lb-tabs-wrapper">
+      <nav class="lb-tabs" role="tablist">
+        <button class="lb-tab active" data-board="kills"><span class="lb-tab__icon">☠</span>KILLS</button>
+        <button class="lb-tab" data-board="waves"><span class="lb-tab__icon">◎</span>WAVES</button>
+        <button class="lb-tab" data-board="level"><span class="lb-tab__icon">◈</span>LEVEL</button>
+        <button class="lb-tab" data-board="nex"><span class="lb-tab__icon">⬢</span>NEX</button>
+        <button class="lb-tab" data-board="campaign"><span class="lb-tab__icon">◆</span>CAMPAIGN</button>
+        <button class="lb-tab" data-board="map"><span class="lb-tab__icon">⬡</span>MAP</button>
+      </nav>
+    </div>
 
-    <!-- ── Map selector ─────────────────────────────────── -->
+    <!-- ── Map selector (Custom Dropdown) ─────────────────── -->
     <div class="lb-map-row" id="lbMapRow" hidden>
-      <span class="lb-map-label">SELECT MAP</span>
-      <select class="lb-map-select" id="lbMapSelect">
-        <option value="neon_city">Neon City</option>
+      <div class="map-dropdown" id="mapDropdown">
+        <!-- Trigger button -->
+        <button class="map-dropdown__trigger" id="mapDropdownTrigger" type="button" aria-haspopup="listbox" aria-expanded="false">
+          <span class="map-dropdown__icon">⬡</span>
+          <span class="map-dropdown__selected" id="mapSelectedText">Neon City</span>
+          <svg class="map-dropdown__arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
+        </button>
+
+        <!-- Dropdown panel -->
+        <div class="map-dropdown__panel" id="mapDropdownPanel" role="listbox" aria-label="Select map">
+          <div class="map-dropdown__search">
+            <svg class="map-dropdown__search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input type="text" class="map-dropdown__search-input" id="mapSearchInput" placeholder="Search maps..." autocomplete="off">
+          </div>
+
+          <div class="map-dropdown__list" id="mapDropdownList">
+            <!-- Classic Maps -->
+            <div class="map-dropdown__group">
+              <div class="map-dropdown__group-label">
+                <span class="map-dropdown__group-icon">◈</span>
+                CLASSIC
+              </div>
+              <button class="map-dropdown__item selected" data-value="neon_city" data-color="#00FFFF" role="option" aria-selected="true">
+                <span class="map-dropdown__item-glow" style="--item-color: #00FFFF"></span>
+                <span class="map-dropdown__item-icon" style="color: #00FFFF">◆</span>
+                <span class="map-dropdown__item-name">Neon City</span>
+                <span class="map-dropdown__item-check">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </span>
+              </button>
+              <button class="map-dropdown__item" data-value="galactica" data-color="#9966FF" role="option">
+                <span class="map-dropdown__item-glow" style="--item-color: #9966FF"></span>
+                <span class="map-dropdown__item-icon" style="color: #9966FF">★</span>
+                <span class="map-dropdown__item-name">Galactica</span>
+                <span class="map-dropdown__item-check">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </span>
+              </button>
+              <button class="map-dropdown__item" data-value="arena" data-color="#FF6644" role="option">
+                <span class="map-dropdown__item-glow" style="--item-color: #FF6644"></span>
+                <span class="map-dropdown__item-icon" style="color: #FF6644">⬢</span>
+                <span class="map-dropdown__item-name">Arena</span>
+                <span class="map-dropdown__item-check">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </span>
+              </button>
+              <button class="map-dropdown__item" data-value="metropolis" data-color="#44DDFF" role="option">
+                <span class="map-dropdown__item-glow" style="--item-color: #44DDFF"></span>
+                <span class="map-dropdown__item-icon" style="color: #44DDFF">▣</span>
+                <span class="map-dropdown__item-name">Metropolis</span>
+                <span class="map-dropdown__item-check">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </span>
+              </button>
+            </div>
+
+            <!-- Survival Maps -->
+            <div class="map-dropdown__group">
+              <div class="map-dropdown__group-label">
+                <span class="map-dropdown__group-icon">☠</span>
+                SURVIVAL
+              </div>
+              <button class="map-dropdown__item" data-value="zombie" data-color="#66FF66" role="option">
+                <span class="map-dropdown__item-glow" style="--item-color: #66FF66"></span>
+                <span class="map-dropdown__item-icon" style="color: #66FF66">☣</span>
+                <span class="map-dropdown__item-name">Zombie</span>
+                <span class="map-dropdown__item-check">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </span>
+              </button>
+              <button class="map-dropdown__item" data-value="survival" data-color="#FFAA00" role="option">
+                <span class="map-dropdown__item-glow" style="--item-color: #FFAA00"></span>
+                <span class="map-dropdown__item-icon" style="color: #FFAA00">◎</span>
+                <span class="map-dropdown__item-name">Survival</span>
+                <span class="map-dropdown__item-check">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </span>
+              </button>
+              <button class="map-dropdown__item" data-value="wasteland" data-color="#CC8844" role="option">
+                <span class="map-dropdown__item-glow" style="--item-color: #CC8844"></span>
+                <span class="map-dropdown__item-icon" style="color: #CC8844">◐</span>
+                <span class="map-dropdown__item-name">Wasteland</span>
+                <span class="map-dropdown__item-check">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </span>
+              </button>
+            </div>
+
+            <!-- Hardcore Maps -->
+            <div class="map-dropdown__group">
+              <div class="map-dropdown__group-label">
+                <span class="map-dropdown__group-icon">⚡</span>
+                HARDCORE
+              </div>
+              <button class="map-dropdown__item" data-value="hardcore" data-color="#FF4466" role="option">
+                <span class="map-dropdown__item-glow" style="--item-color: #FF4466"></span>
+                <span class="map-dropdown__item-icon" style="color: #FF4466">✦</span>
+                <span class="map-dropdown__item-name">Hardcore</span>
+                <span class="map-dropdown__item-check">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </span>
+              </button>
+              <button class="map-dropdown__item" data-value="blitz" data-color="#FFDD00" role="option">
+                <span class="map-dropdown__item-glow" style="--item-color: #FFDD00"></span>
+                <span class="map-dropdown__item-icon" style="color: #FFDD00">⚡</span>
+                <span class="map-dropdown__item-name">Blitz</span>
+                <span class="map-dropdown__item-check">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </span>
+              </button>
+              <button class="map-dropdown__item" data-value="siege" data-color="#FF8800" role="option">
+                <span class="map-dropdown__item-glow" style="--item-color: #FF8800"></span>
+                <span class="map-dropdown__item-icon" style="color: #FF8800">⛊</span>
+                <span class="map-dropdown__item-name">Siege</span>
+                <span class="map-dropdown__item-check">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </span>
+              </button>
+            </div>
+
+            <!-- Environment Maps -->
+            <div class="map-dropdown__group">
+              <div class="map-dropdown__group-label">
+                <span class="map-dropdown__group-icon">◉</span>
+                ENVIRONMENTS
+              </div>
+              <button class="map-dropdown__item" data-value="frozen_tundra" data-color="#88DDFF" role="option">
+                <span class="map-dropdown__item-glow" style="--item-color: #88DDFF"></span>
+                <span class="map-dropdown__item-icon" style="color: #88DDFF">❄</span>
+                <span class="map-dropdown__item-name">Frozen Tundra</span>
+                <span class="map-dropdown__item-check">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </span>
+              </button>
+              <button class="map-dropdown__item" data-value="ocean_depths" data-color="#0088FF" role="option">
+                <span class="map-dropdown__item-glow" style="--item-color: #0088FF"></span>
+                <span class="map-dropdown__item-icon" style="color: #0088FF">≋</span>
+                <span class="map-dropdown__item-name">Ocean Depths</span>
+                <span class="map-dropdown__item-check">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </span>
+              </button>
+              <button class="map-dropdown__item" data-value="desert_sands" data-color="#FFCC66" role="option">
+                <span class="map-dropdown__item-glow" style="--item-color: #FFCC66"></span>
+                <span class="map-dropdown__item-icon" style="color: #FFCC66">☀</span>
+                <span class="map-dropdown__item-name">Desert Sands</span>
+                <span class="map-dropdown__item-check">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </span>
+              </button>
+              <button class="map-dropdown__item" data-value="jungle" data-color="#44DD66" role="option">
+                <span class="map-dropdown__item-glow" style="--item-color: #44DD66"></span>
+                <span class="map-dropdown__item-icon" style="color: #44DD66">♣</span>
+                <span class="map-dropdown__item-name">Jungle</span>
+                <span class="map-dropdown__item-check">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </span>
+              </button>
+            </div>
+
+            <!-- Special Maps -->
+            <div class="map-dropdown__group">
+              <div class="map-dropdown__group-label">
+                <span class="map-dropdown__group-icon">★</span>
+                SPECIAL
+              </div>
+              <button class="map-dropdown__item" data-value="lifemode" data-color="#FF66AA" role="option">
+                <span class="map-dropdown__item-glow" style="--item-color: #FF66AA"></span>
+                <span class="map-dropdown__item-icon" style="color: #FF66AA">♥</span>
+                <span class="map-dropdown__item-name">Life Mode</span>
+                <span class="map-dropdown__item-check">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </span>
+              </button>
+              <button class="map-dropdown__item" data-value="robot_city" data-color="#AAAACC" role="option">
+                <span class="map-dropdown__item-glow" style="--item-color: #AAAACC"></span>
+                <span class="map-dropdown__item-icon" style="color: #AAAACC">⚙</span>
+                <span class="map-dropdown__item-name">Robot City</span>
+                <span class="map-dropdown__item-check">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </span>
+              </button>
+              <button class="map-dropdown__item" data-value="campaign" data-color="#BB88FF" role="option">
+                <span class="map-dropdown__item-glow" style="--item-color: #BB88FF"></span>
+                <span class="map-dropdown__item-icon" style="color: #BB88FF">◆</span>
+                <span class="map-dropdown__item-name">Campaign</span>
+                <span class="map-dropdown__item-check">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </span>
+              </button>
+            </div>
+          </div>
+
+          <!-- No results message -->
+          <div class="map-dropdown__empty" id="mapDropdownEmpty" hidden>
+            <span class="map-dropdown__empty-icon">◎</span>
+            <span>No maps found</span>
+          </div>
+        </div>
+
+        <!-- Mobile backdrop -->
+        <div class="map-dropdown__backdrop" id="mapDropdownBackdrop"></div>
+      </div>
+
+      <!-- Hidden select for form compatibility -->
+      <select class="map-dropdown__hidden-select" id="lbMapSelect" aria-hidden="true" tabindex="-1">
+        <option value="neon_city" selected>Neon City</option>
         <option value="galactica">Galactica</option>
         <option value="lifemode">Life Mode</option>
         <option value="arena">Arena</option>
@@ -996,10 +2017,12 @@
                style="color:${c};border-color:${c}80;background:${c}15;box-shadow:0 0 16px ${c}30">
             ${charInitial(entry.characterId)}
           </div>
-          <div class="lb-podium-name lb-podium-name--${tier}">${_esc(entry.name || '?')}</div>
-          <div class="lb-podium-char">
-            <span class="lb-podium-char-dot" style="background:${c};box-shadow:0 0 6px ${c}"></span>
-            ${_esc(charLabel(entry.characterId))}
+          <div class="lb-podium-info">
+            <div class="lb-podium-name lb-podium-name--${tier}">${_esc(entry.name || '?')}</div>
+            <div class="lb-podium-char">
+              <span class="lb-podium-char-dot" style="background:${c};box-shadow:0 0 6px ${c}"></span>
+              ${_esc(charLabel(entry.characterId))}
+            </div>
           </div>
           <div class="lb-podium-value lb-podium-value--${tier}">${cfg.fmt(entry.value ?? 0)}</div>`;
 
@@ -1101,6 +2124,263 @@
 
   /* ── Init ────────────────────────────────────────────── */
   switchBoard('kills');
+
+  /* ══════════════════════════════════════════════════════════
+     CUSTOM MAP DROPDOWN CONTROLLER
+  ══════════════════════════════════════════════════════════ */
+  (function initMapDropdown() {
+    const dropdown = document.getElementById('mapDropdown');
+    const trigger = document.getElementById('mapDropdownTrigger');
+    const panel = document.getElementById('mapDropdownPanel');
+    const backdrop = document.getElementById('mapDropdownBackdrop');
+    const selectedText = document.getElementById('mapSelectedText');
+    const searchInput = document.getElementById('mapSearchInput');
+    const listContainer = document.getElementById('mapDropdownList');
+    const emptyState = document.getElementById('mapDropdownEmpty');
+    const hiddenSelect = document.getElementById('lbMapSelect');
+
+    let isOpen = false;
+    let focusedIndex = -1;
+
+    // Get all items
+    function getVisibleItems() {
+      return Array.from(listContainer.querySelectorAll('.map-dropdown__item:not([hidden])'));
+    }
+
+    // Open dropdown
+    function open() {
+      if (isOpen) return;
+      isOpen = true;
+      dropdown.classList.add('open');
+      trigger.setAttribute('aria-expanded', 'true');
+      panel.setAttribute('aria-hidden', 'false');
+
+      // Focus search input
+      setTimeout(() => {
+        searchInput.focus();
+        searchInput.select();
+      }, 100);
+
+      // Prevent body scroll on mobile
+      if (window.innerWidth <= 480) {
+        document.body.style.overflow = 'hidden';
+      }
+
+      // Reset focus index
+      focusedIndex = -1;
+    }
+
+    // Close dropdown
+    function close() {
+      if (!isOpen) return;
+      isOpen = false;
+      dropdown.classList.remove('open');
+      trigger.setAttribute('aria-expanded', 'false');
+      panel.setAttribute('aria-hidden', 'true');
+
+      // Restore body scroll
+      document.body.style.overflow = '';
+
+      // Clear search
+      searchInput.value = '';
+      filterItems('');
+
+      // Return focus to trigger
+      trigger.focus();
+    }
+
+    // Toggle dropdown
+    function toggle() {
+      isOpen ? close() : open();
+    }
+
+    // Select item
+    function selectItem(item) {
+      const value = item.dataset.value;
+      const name = item.querySelector('.map-dropdown__item-name').textContent;
+
+      // Update visual selection
+      listContainer.querySelectorAll('.map-dropdown__item').forEach(i => {
+        i.classList.remove('selected');
+        i.setAttribute('aria-selected', 'false');
+      });
+      item.classList.add('selected');
+      item.setAttribute('aria-selected', 'true');
+
+      // Update trigger text
+      selectedText.textContent = name;
+
+      // Update hidden select
+      hiddenSelect.value = value;
+
+      // Dispatch change event on hidden select
+      const event = new Event('change', { bubbles: true });
+      hiddenSelect.dispatchEvent(event);
+
+      // Close dropdown
+      close();
+    }
+
+    // Filter items by search
+    function filterItems(query) {
+      const q = query.toLowerCase().trim();
+      let hasResults = false;
+
+      listContainer.querySelectorAll('.map-dropdown__group').forEach(group => {
+        let groupHasVisible = false;
+
+        group.querySelectorAll('.map-dropdown__item').forEach(item => {
+          const name = item.querySelector('.map-dropdown__item-name').textContent.toLowerCase();
+          const matches = !q || name.includes(q);
+
+          item.hidden = !matches;
+          if (matches) {
+            groupHasVisible = true;
+            hasResults = true;
+          }
+        });
+
+        // Hide group label if no items visible
+        const label = group.querySelector('.map-dropdown__group-label');
+        if (label) label.hidden = !groupHasVisible;
+        group.hidden = !groupHasVisible;
+      });
+
+      // Show/hide empty state
+      emptyState.hidden = hasResults;
+      focusedIndex = -1;
+    }
+
+    // Keyboard navigation
+    function handleKeydown(e) {
+      const items = getVisibleItems();
+
+      switch (e.key) {
+        case 'ArrowDown':
+          e.preventDefault();
+          if (!isOpen) {
+            open();
+          } else {
+            focusedIndex = Math.min(focusedIndex + 1, items.length - 1);
+            items[focusedIndex]?.focus();
+          }
+          break;
+
+        case 'ArrowUp':
+          e.preventDefault();
+          if (isOpen) {
+            focusedIndex = Math.max(focusedIndex - 1, 0);
+            items[focusedIndex]?.focus();
+          }
+          break;
+
+        case 'Enter':
+          if (isOpen && focusedIndex >= 0 && items[focusedIndex]) {
+            e.preventDefault();
+            selectItem(items[focusedIndex]);
+          } else if (isOpen && document.activeElement === searchInput) {
+            // Select first visible item
+            const firstItem = items[0];
+            if (firstItem) {
+              e.preventDefault();
+              selectItem(firstItem);
+            }
+          }
+          break;
+
+        case 'Escape':
+          if (isOpen) {
+            e.preventDefault();
+            close();
+          }
+          break;
+
+        case 'Tab':
+          if (isOpen) {
+            close();
+          }
+          break;
+
+        case 'Home':
+          if (isOpen) {
+            e.preventDefault();
+            focusedIndex = 0;
+            items[0]?.focus();
+          }
+          break;
+
+        case 'End':
+          if (isOpen) {
+            e.preventDefault();
+            focusedIndex = items.length - 1;
+            items[focusedIndex]?.focus();
+          }
+          break;
+      }
+    }
+
+    // Event listeners
+    trigger.addEventListener('click', toggle);
+    trigger.addEventListener('keydown', handleKeydown);
+
+    backdrop.addEventListener('click', close);
+
+    searchInput.addEventListener('input', (e) => {
+      filterItems(e.target.value);
+    });
+
+    searchInput.addEventListener('keydown', handleKeydown);
+
+    listContainer.querySelectorAll('.map-dropdown__item').forEach(item => {
+      item.addEventListener('click', () => selectItem(item));
+
+      item.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          selectItem(item);
+        } else {
+          handleKeydown(e);
+        }
+      });
+
+      // Track hover for keyboard/mouse coordination
+      item.addEventListener('mouseenter', () => {
+        const items = getVisibleItems();
+        focusedIndex = items.indexOf(item);
+      });
+    });
+
+    // Close on outside click
+    document.addEventListener('click', (e) => {
+      if (isOpen && !dropdown.contains(e.target)) {
+        close();
+      }
+    });
+
+    // Close on resize (mobile orientation change)
+    let resizeTimeout;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(() => {
+        if (isOpen && window.innerWidth > 480) {
+          // Reset body overflow if resized to desktop
+          document.body.style.overflow = '';
+        }
+      }, 100);
+    });
+
+    // Scroll selected item into view when opening
+    const scrollToSelected = () => {
+      const selected = listContainer.querySelector('.map-dropdown__item.selected');
+      if (selected) {
+        setTimeout(() => {
+          selected.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        }, 150);
+      }
+    };
+
+    trigger.addEventListener('click', scrollToSelected);
+  })();
   </script>
 </body>
 </html>
