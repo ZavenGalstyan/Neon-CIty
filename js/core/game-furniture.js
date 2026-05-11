@@ -17222,11 +17222,75 @@ Game.prototype._renderMetropolisRoom = function(ctx, room, type, W, H, cx, topY,
     ctx.restore();
   };
 
+  // Ceiling light fixture + radial floor glow
+  const drawLight = (lx, ly, glowCol = 'rgba(255,220,140,0.13)', r = 72) => {
+    const g = ctx.createRadialGradient(lx, ly, 0, lx, ly, r);
+    g.addColorStop(0, glowCol); g.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(lx, ly, r, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#FFFFEE'; ctx.shadowColor = '#FFFFCC'; ctx.shadowBlur = 12;
+    rr(lx - 14, ly - 4, 28, 7, 2); ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,200,0.35)'; ctx.lineWidth = 0.5; ctx.stroke();
+    ctx.shadowBlur = 0;
+  };
+
+  // Top-down potted plant with leaves
+  const drawPlant = (px, py, size = 1) => {
+    const ps = size;
+    // pot
+    ctx.fillStyle = '#3a200a'; ctx.strokeStyle = '#6a3a14'; ctx.lineWidth = 1;
+    rr(px - 12*ps, py - 4*ps, 24*ps, 14*ps, 3); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#5a3218'; ctx.fillRect(px - 8*ps, py - 2*ps, 16*ps, 8*ps);
+    // soil
+    ctx.fillStyle = '#2a1808'; ctx.beginPath(); ctx.ellipse(px, py + 2*ps, 8*ps, 4*ps, 0, 0, Math.PI*2); ctx.fill();
+    // leaves
+    const leafC = ['#1a5a08','#226614','#2a7a18','#1a4a0c','#2d7a10','#165010'];
+    for (let li = 0; li < 7; li++) {
+      const la = (li/7)*Math.PI*2 + t*0.2, lr = (9+Math.sin(li*1.7)*3)*ps;
+      ctx.fillStyle = leafC[li%6]; ctx.globalAlpha = 0.92;
+      ctx.beginPath(); ctx.ellipse(px+Math.cos(la)*lr, py-6*ps+Math.sin(la)*4*ps, 6*ps, 3.5*ps, la, 0, Math.PI*2); ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+    // highlight vein
+    ctx.strokeStyle = 'rgba(100,200,60,0.3)'; ctx.lineWidth = 0.5;
+    ctx.beginPath(); ctx.moveTo(px, py - 6*ps); ctx.lineTo(px + Math.cos(t*0.2)*9*ps, py - 6*ps + Math.sin(t*0.2)*4*ps); ctx.stroke();
+  };
+
+  // Framed wall artwork / poster
+  const drawWallArt = (wx, wy, ww, wh, label, fgCol = '#FFEEAA', bgCol = '#080810') => {
+    ctx.fillStyle = '#2a2010'; ctx.strokeStyle = '#AA8822'; ctx.lineWidth = 2;
+    rr(wx - 3, wy - 3, ww + 6, wh + 6, 3); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = bgCol; ctx.fillRect(wx, wy, ww, wh);
+    ctx.strokeStyle = '#664422'; ctx.lineWidth = 0.5; ctx.strokeRect(wx, wy, ww, wh);
+    ctx.fillStyle = fgCol; ctx.font = 'bold 5px serif'; ctx.textAlign = 'center';
+    ctx.fillText(label, wx + ww/2, wy + wh/2 + 2);
+  };
+
+  // Wall trim: crown molding (top) + baseboard (bottom) + corner columns
+  const drawWallTrim = (accentCol = AMBER) => {
+    ctx.fillStyle = 'rgba(255,200,80,0.06)'; ctx.fillRect(0, 0, W, 10);
+    ctx.fillRect(0, H - 10, W, 10);
+    ctx.strokeStyle = accentCol + '40'; ctx.lineWidth = 1;
+    ctx.strokeRect(6, 6, W - 12, H - 12);
+    // corner column caps
+    for (const [cx3, cy3] of [[14, 14],[W-14,14],[14,H-14],[W-14,H-14]]) {
+      ctx.fillStyle = accentCol + '28'; ctx.strokeStyle = accentCol + '50'; ctx.lineWidth = 0.8;
+      rr(cx3 - 8, cy3 - 8, 16, 16, 2); ctx.fill(); ctx.stroke();
+    }
+  };
+
+  // Row of ceiling pendant lights
+  const drawCeilingRow = (y, count, glowCol) => {
+    const step = W / (count + 1);
+    for (let i = 1; i <= count; i++) drawLight(step * i, y, glowCol);
+  };
+
   ctx.save();
 
   if (type === 0 || type === 'restaurant') {
     // ═══ RESTAURANT: THE GOLDEN FORK ═══
     drawMetroFloor('#120e06', '#160e04');
+    drawWallTrim('#FF9933');
+    drawCeilingRow(midY - 40, 5, 'rgba(255,220,120,0.14)');
     drawMetroSign('THE GOLDEN FORK');
     // Back wall kitchen counter full-width
     const kcX = cx - W * 0.44, kcY = topY + 8;
@@ -17295,6 +17359,33 @@ Game.prototype._renderMetropolisRoom = function(ctx, room, type, W, H, cx, topY,
       ctx.beginPath(); ctx.moveTo(lx, 0); ctx.lineTo(lx, topY+2); ctx.stroke();
       ctx.shadowBlur = 0;
     }
+    // Corner plants
+    drawPlant(cx - W * 0.44 + 10, midY + 130);
+    drawPlant(cx + W * 0.42, midY + 130);
+    // Framed artwork above wine rack
+    drawWallArt(cx - W * 0.44 + 40, topY + 85, 70, 50, 'CHEF\'S TABLE\n1994', '#FFD080', '#1a0e06');
+    // Water glasses on tables — drawn circles
+    for (const [tx2, ty2] of [[cx-W*0.32,midY-80],[cx-W*0.04,midY-80],[cx+W*0.24,midY-80],[cx-W*0.32,midY+30],[cx-W*0.04,midY+30],[cx+W*0.24,midY+30]]) {
+      ctx.strokeStyle = 'rgba(180,220,255,0.45)'; ctx.lineWidth = 1;
+      for (let wgi = 0; wgi < 4; wgi++) {
+        const wga = (wgi/4)*Math.PI*2;
+        ctx.beginPath(); ctx.arc(tx2+42+Math.cos(wga)*32, ty2+24+Math.sin(wga)*17, 4, 0, Math.PI*2); ctx.stroke();
+      }
+    }
+    // Dessert display case near entrance
+    ctx.fillStyle = '#1a1208'; ctx.strokeStyle = '#CC8833'; ctx.lineWidth = 1.5;
+    rr(cx + W * 0.20, topY + 46, 64, 48, 4); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = 'rgba(255,230,180,0.08)'; ctx.fillRect(cx + W * 0.20 + 2, topY + 48, 60, 44);
+    ctx.font = '9px serif'; ctx.textAlign = 'center';
+    for (const [em, ex2, ey2] of [['🎂',cx+W*0.20+16,topY+70],['🍰',cx+W*0.20+34,topY+70],['🍮',cx+W*0.20+52,topY+70]])
+      ctx.fillText(em, ex2, ey2);
+    ctx.fillStyle = '#FFCC88'; ctx.font = 'bold 5px monospace';
+    ctx.fillText('DESSERTS', cx + W * 0.20 + 32, topY + 50);
+    // Salt/pepper shakers on each table
+    for (const [tx2, ty2] of [[cx-W*0.32,midY-80],[cx-W*0.04,midY-80],[cx+W*0.24,midY-80]]) {
+      ctx.fillStyle = '#FFFFFF'; rr(tx2+18, ty2+10, 6, 10, 2); ctx.fill();
+      ctx.fillStyle = '#333333'; rr(tx2+26, ty2+10, 6, 10, 2); ctx.fill();
+    }
     drawMetroHuman(cx - W * 0.42, midY + 10, '#CC3333', '#C8956A', '#1a0a00'); // chef
     drawMetroHuman(cx + W * 0.28, midY + 10, '#1a1a2a', '#FFDAB0', '#2a2020'); // waiter
     drawMetroHuman(cx + W * 0.36, midY + 44, '#2a1a0a', '#E0A878', '#4a2010'); // host
@@ -17302,6 +17393,8 @@ Game.prototype._renderMetropolisRoom = function(ctx, room, type, W, H, cx, topY,
   } else if (type === 1) {
     // ═══ OFFICE: AXIOM CORPORATE ═══
     drawMetroFloor('#080a14', '#0a0c18');
+    drawWallTrim('#2244AA');
+    drawCeilingRow(midY - 20, 6, 'rgba(80,140,255,0.10)');
     drawMetroSign('AXIOM CORP');
     // Company logo on back wall
     ctx.fillStyle = '#0a0d20'; ctx.strokeStyle = '#3355BB'; ctx.lineWidth = 2;
@@ -17364,6 +17457,32 @@ Game.prototype._renderMetropolisRoom = function(ctx, room, type, W, H, cx, topY,
     ctx.strokeStyle = '#AACCFF'; ctx.lineWidth = 1;
     ctx.beginPath(); ctx.moveTo(cx+W*0.40, topY+30); ctx.lineTo(cx+W*0.40, topY+18); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(cx+W*0.40, topY+30); ctx.lineTo(cx+W*0.40+8, topY+34); ctx.stroke();
+    // Office plants in corners
+    drawPlant(cx - W * 0.44 + 80, midY + 120);
+    drawPlant(cx + W * 0.36, midY + 120);
+    // Whiteboard
+    ctx.fillStyle = '#e8eef8'; ctx.strokeStyle = '#2244AA'; ctx.lineWidth = 1.5;
+    rr(cx - W * 0.10, topY + 82, 110, 60, 3); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#3355AA'; ctx.font = 'bold 6px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('Q3 TARGETS', cx - W * 0.10 + 55, topY + 96);
+    ctx.strokeStyle = '#4466BB'; ctx.lineWidth = 1;
+    for (let wl = 0; wl < 4; wl++) { ctx.beginPath(); ctx.moveTo(cx - W*0.10+8, topY+104+wl*10); ctx.lineTo(cx - W*0.10+102, topY+104+wl*10); ctx.stroke(); }
+    // Motivational poster
+    drawWallArt(cx + W * 0.32, topY + 82, 60, 54, 'INNOVATION\nACHIEVE', '#88AAFF', '#060c20');
+    // Coffee machine on side table
+    ctx.fillStyle = '#0a0e1a'; ctx.strokeStyle = '#3355AA'; ctx.lineWidth = 1;
+    rr(cx + W * 0.36 + 2, midY + 30, 32, 44, 3); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#1a2a44'; ctx.fillRect(cx + W * 0.36 + 5, midY + 34, 26, 22);
+    ctx.fillStyle = '#FF4400'; ctx.shadowColor = '#FF2200'; ctx.shadowBlur = 4;
+    ctx.beginPath(); ctx.arc(cx + W * 0.36 + 18, midY + 46, 4, 0, Math.PI*2); ctx.fill(); ctx.shadowBlur = 0;
+    ctx.fillStyle = '#4488FF'; ctx.font = 'bold 5px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('COFFEE', cx + W * 0.36 + 18, midY + 68);
+    // Sticky notes on monitors
+    const stickyC = ['#FFFF88','#FF88FF','#88FFFF'];
+    for (let si = 0; si < 3; si++) {
+      ctx.fillStyle = stickyC[si]; ctx.globalAlpha = 0.85;
+      ctx.fillRect(cx - W*0.34+64*si + 44, midY - 56, 12, 10); ctx.globalAlpha = 1;
+    }
     drawMetroHuman(cx - W * 0.22, midY - 12, '#2a3a5a', '#E0A878', '#1a0a00');
     drawMetroHuman(cx + W * 0.10, midY - 12, '#3a4a6a', '#FFDAB0', '#4a3020');
     drawMetroHuman(cx - W * 0.04, topY + 100, '#1a2a4a', '#C8956A', '#2a1010'); // receptionist
@@ -17371,6 +17490,8 @@ Game.prototype._renderMetropolisRoom = function(ctx, room, type, W, H, cx, topY,
   } else if (type === 2) {
     // ═══ HOTEL: CROWN PLAZA ═══
     drawMetroFloor('#100a14', '#14081a');
+    drawWallTrim('#9944CC');
+    drawCeilingRow(midY + 60, 5, 'rgba(180,100,255,0.09)');
     drawMetroSign('CROWN PLAZA HOTEL');
     // Front desk full-width
     ctx.fillStyle = '#140828'; ctx.strokeStyle = '#9966DD'; ctx.lineWidth = 1.5;
@@ -17436,12 +17557,45 @@ Game.prototype._renderMetropolisRoom = function(ctx, room, type, W, H, cx, topY,
     ctx.fillStyle = '#440066'; ctx.fillRect(cx + W * 0.12 + 3, topY + 11, 30, 40);
     ctx.fillStyle = '#CC88FF'; ctx.font = '5px monospace'; ctx.textAlign = 'center';
     ctx.fillText('SNACKS', cx + W * 0.12 + 18, topY + 70);
+    // Lobby plants
+    drawPlant(cx - W * 0.22, midY + 130, 1.2);
+    drawPlant(cx + W * 0.40, midY - 70, 1.0);
+    // Elevator doors
+    ctx.fillStyle = '#16082a'; ctx.strokeStyle = '#9944CC'; ctx.lineWidth = 1.5;
+    rr(cx - W * 0.42, midY + 100, 78, 68, 3); ctx.fill(); ctx.stroke();
+    // door split
+    ctx.strokeStyle = '#7733BB'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(cx - W * 0.42 + 39, midY + 102); ctx.lineTo(cx - W * 0.42 + 39, midY + 166); ctx.stroke();
+    // elevator button panel
+    ctx.fillStyle = '#0e0618'; ctx.fillRect(cx - W * 0.42 + 62, midY + 116, 12, 36);
+    for (let bi = 0; bi < 3; bi++) {
+      ctx.fillStyle = bi === 0 ? '#FFCC44' : '#442266';
+      ctx.beginPath(); ctx.arc(cx - W * 0.42 + 68, midY + 124 + bi * 10, 4, 0, Math.PI*2); ctx.fill();
+    }
+    ctx.fillStyle = '#FFCC44'; ctx.font = 'bold 7px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('LIFT', cx - W * 0.42 + 39, midY + 112);
+    // Floor number above lift
+    ctx.fillStyle = '#CC88FF'; ctx.shadowColor = '#AA44FF'; ctx.shadowBlur = 6;
+    ctx.font = 'bold 9px monospace';
+    ctx.fillText(`${Math.floor(t * 0.8) % 12 + 1}F`, cx - W * 0.42 + 39, midY + 104); ctx.shadowBlur = 0;
+    // Artwork/painting on wall
+    drawWallArt(cx + W * 0.10, topY + 80, 80, 60, '~ NEON CITY\nHORIZON ~', '#DDD0FF', '#0e0420');
+    // Floor carpet pattern in lobby
+    ctx.fillStyle = 'rgba(120,60,180,0.10)';
+    ctx.beginPath(); ctx.ellipse(cx - W * 0.16, midY - 12, 80, 44, 0, 0, Math.PI*2); ctx.fill();
+    ctx.strokeStyle = 'rgba(160,80,220,0.18)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.ellipse(cx - W * 0.16, midY - 12, 78, 42, 0, 0, Math.PI*2); ctx.stroke();
+    // Gold inlay on floor
+    ctx.strokeStyle = '#FFCC4430'; ctx.lineWidth = 0.8;
+    ctx.beginPath(); ctx.arc(cx - W * 0.16, midY - 12, 55, 0, Math.PI*2); ctx.stroke();
     drawMetroHuman(cx - W * 0.04, topY + 60, '#2a1a4a', '#C8956A', '#1a0a00'); // concierge
     drawMetroHuman(cx - W * 0.16, midY + 84, '#3a2050', '#FFDAB0', '#3a2010'); // bellhop
 
   } else if (type === 3) {
     // ═══ MARKET: METRO MARKET ═══
     drawMetroFloor('#060c08', '#080e0a');
+    drawWallTrim('#22AA44');
+    drawCeilingRow(midY - 30, 6, 'rgba(100,220,120,0.09)');
     drawMetroSign('METRO MARKET');
     // 5 product shelving aisles
     const pColors = ['#FF4444','#4488FF','#44CC44','#FFAA00','#FF44AA','#AA44FF','#FF7722','#22CCFF'];
@@ -17499,6 +17653,34 @@ Game.prototype._renderMetropolisRoom = function(ctx, room, type, W, H, cx, topY,
     ctx.fillStyle = '#001800'; ctx.fillRect(cx - W * 0.44 + 4, midY - 14, 28, 16);
     ctx.fillStyle = '#00FF66'; ctx.font = '4px monospace';
     ctx.fillText('$ CASH', cx - W * 0.44 + 18, midY - 4);
+    // Refrigerated section (blue glow)
+    ctx.fillStyle = 'rgba(100,180,255,0.07)';
+    ctx.fillRect(cx - W * 0.44, topY + 8, W * 0.10, H * 0.60);
+    ctx.strokeStyle = 'rgba(150,200,255,0.20)'; ctx.lineWidth = 0.8;
+    ctx.strokeRect(cx - W * 0.44, topY + 8, W * 0.10, H * 0.60);
+    ctx.fillStyle = '#66AAFF'; ctx.font = 'bold 5px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('❄ COLD', cx - W * 0.44 + W * 0.05, topY + 20);
+    // Basket stand at entrance
+    ctx.fillStyle = '#0e1a0e'; ctx.strokeStyle = '#44AA44'; ctx.lineWidth = 1;
+    rr(cx + W * 0.38, midY + 100, 36, 36, 3); ctx.fill(); ctx.stroke();
+    ctx.font = '10px serif'; ctx.textAlign = 'center';
+    for (const [em, ex2, ey2] of [['🛒',cx+W*0.38+8,midY+122],['🧺',cx+W*0.38+28,midY+122]]) ctx.fillText(em, ex2, ey2);
+    // Sale price tags on some aisles
+    for (let ai = 0; ai < 3; ai++) {
+      const ax2 = cx - W * 0.28 + ai * W * 0.17;
+      ctx.fillStyle = '#FF2222'; ctx.shadowColor = '#FF0000'; ctx.shadowBlur = 4;
+      rr(ax2 - 14, topY + 22 + ai * 40, 28, 14, 2); ctx.fill(); ctx.shadowBlur = 0;
+      ctx.fillStyle = '#FFFFFF'; ctx.font = 'bold 5px monospace'; ctx.textAlign = 'center';
+      ctx.fillText('SALE!', ax2, topY + 32 + ai * 40);
+    }
+    // CCTV dome camera
+    ctx.fillStyle = '#050e06'; ctx.strokeStyle = '#33AA33'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.arc(cx, topY - 8, 8, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#0044FF'; ctx.beginPath(); ctx.arc(cx, topY - 8, 4, 0, Math.PI*2); ctx.fill();
+    // Exit sign
+    ctx.fillStyle = '#22FF22'; ctx.shadowColor = '#00FF00'; ctx.shadowBlur = 6;
+    ctx.font = 'bold 7px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('EXIT ▶', cx + W * 0.38, midY + 94); ctx.shadowBlur = 0;
     drawMetroHuman(cx + W * 0.20 + 42, midY + 10, '#2a4a2a', '#FFDAB0', '#4a3020'); // deli worker
     drawMetroHuman(cx - W * 0.10 + 30, midY + 28, '#1a3a1a', '#8B5E3C', '#1a0a00'); // cashier
     drawMetroHuman(cx - W * 0.42, midY - 10, '#2a4030', '#C8956A', '#2a2010'); // stocker
@@ -17506,6 +17688,8 @@ Game.prototype._renderMetropolisRoom = function(ctx, room, type, W, H, cx, topY,
   } else if (type === 4) {
     // ═══ ARCADE: NEON ARCADE ═══
     drawMetroFloor('#0a0008', '#0e0010');
+    drawWallTrim('#FF0088');
+    drawCeilingRow(midY + 30, 5, 'rgba(255,0,200,0.08)');
     drawMetroSign('NEON ARCADE');
     const arcColors = ['#FF0088','#00FFCC','#FF4400','#8800FF','#FFCC00','#00CCFF'];
     // 10 arcade cabinets: 5 top row, 5 second row
@@ -17576,12 +17760,42 @@ Game.prototype._renderMetropolisRoom = function(ctx, room, type, W, H, cx, topY,
       ctx.font = '5px monospace';
       ctx.fillText(`${hi+1}. ${hsNames[hi]} ${99999 - hi*4321}`, cx - W*0.44+26, topY + 36 + hi * 16);
     }
+    // Neon wall art signs
+    const neonSigns = [['HIGH SCORE','#FF0088'],['PLAY MORE','#00FFCC'],['WINNERS','#FFCC00']];
+    for (let ni = 0; ni < 3; ni++) {
+      ctx.fillStyle = neonSigns[ni][1]; ctx.shadowColor = neonSigns[ni][1];
+      ctx.shadowBlur = 10*(0.5+0.5*Math.sin(t*2+ni));
+      ctx.font = 'bold 8px Orbitron, monospace'; ctx.textAlign = 'center';
+      ctx.fillText(neonSigns[ni][0], cx - W*0.44 + 26, topY + 30 + ni * 24); ctx.shadowBlur = 0;
+    }
+    // Ticket booth
+    ctx.fillStyle = '#0c0018'; ctx.strokeStyle = '#FF00CC'; ctx.lineWidth = 1.5;
+    rr(cx - W * 0.44, midY + 50, 46, 54, 3); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#FF44FF'; ctx.font = 'bold 6px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('TICKETS', cx - W * 0.44 + 23, midY + 62);
+    ctx.fillStyle = '#FFFF44'; ctx.font = '4px monospace';
+    ctx.fillText('REDEEM HERE', cx - W * 0.44 + 23, midY + 72);
+    // Hanging cables / wiring aesthetic (decorative)
+    ctx.strokeStyle = 'rgba(100,0,150,0.25)'; ctx.lineWidth = 1;
+    for (let ci = 0; ci < 5; ci++) {
+      ctx.beginPath();
+      const cx3 = cx - W*0.38 + ci * W*0.20;
+      ctx.moveTo(cx3, 0); ctx.quadraticCurveTo(cx3 + 20, 18, cx3 + 40, 0); ctx.stroke();
+    }
+    // Carpet star pattern on dance floor
+    ctx.strokeStyle = 'rgba(255,200,0,0.15)'; ctx.lineWidth = 0.5;
+    for (let si = 0; si < 8; si++) {
+      const sa = (si/8)*Math.PI*2;
+      ctx.beginPath(); ctx.moveTo(cx - W*0.20 + 65, midY + 50); ctx.lineTo(cx - W*0.20 + 65 + Math.cos(sa)*55, midY + 50 + Math.sin(sa)*35); ctx.stroke();
+    }
     drawMetroHuman(cx + W * 0.30 + 39, midY + 54, '#4a0a2a', '#C8956A', '#1a0a00'); // cashier
     drawMetroHuman(cx - W * 0.10, midY + 84, '#1a002a', '#FFDAB0', '#2a2020'); // player on dance pad
 
   } else if (type === 5) {
     // ═══ PHARMACY: METRO PHARMACY ═══
     drawMetroFloor('#040e0c', '#060e0a');
+    drawWallTrim('#22CCAA');
+    drawCeilingRow(midY - 10, 5, 'rgba(60,220,180,0.09)');
     drawMetroSign('METRO PHARMACY');
     // 4 shelving rows of medicine
     const shelfColors2 = ['#FF5566','#5577FF','#44FFCC','#FFCC44','#FF88FF','#44FF99','#FF7733','#88CCFF','#FFAA55','#55FFEE'];
@@ -17638,6 +17852,25 @@ Game.prototype._renderMetropolisRoom = function(ctx, room, type, W, H, cx, topY,
     }
     ctx.fillStyle = '#44CCAA'; ctx.font = 'bold 6px monospace'; ctx.textAlign = 'center';
     ctx.fillText('WAITING AREA', cx + W * 0.18, midY + 82);
+    // Corner plant
+    drawPlant(cx + W * 0.40, midY + 90);
+    // Health poster on wall
+    drawWallArt(cx + W * 0.16, midY + 54, 62, 50, 'STAY HEALTHY\nASK YOUR RX', '#88FFCC', '#030e0a');
+    // Eye test chart
+    ctx.fillStyle = '#040f0d'; ctx.strokeStyle = '#44CCAA'; ctx.lineWidth = 1;
+    rr(cx - W * 0.44 + 56, midY - 10, 44, 50, 2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#EEFFEE'; ctx.font = 'bold 7px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('E', cx - W * 0.44 + 78, midY + 4);
+    ctx.font = '6px monospace'; ctx.fillText('F P', cx - W * 0.44 + 78, midY + 14);
+    ctx.font = '5px monospace'; ctx.fillText('T O Z', cx - W * 0.44 + 78, midY + 22);
+    ctx.font = '4px monospace'; ctx.fillText('L P E D', cx - W * 0.44 + 78, midY + 30);
+    // Prescription counter number display
+    ctx.fillStyle = '#000800'; ctx.strokeStyle = '#44CCAA'; ctx.lineWidth = 1;
+    rr(cx + W * 0.32, midY + 54, 44, 28, 3); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#FF4400'; ctx.shadowColor = '#FF2200'; ctx.shadowBlur = 6;
+    ctx.font = 'bold 11px monospace'; ctx.textAlign = 'center';
+    ctx.fillText(`#${(Math.floor(t*0.3)+42) % 100}`, cx + W * 0.32 + 22, midY + 72); ctx.shadowBlur = 0;
+    ctx.fillStyle = '#44CCAA'; ctx.font = '5px monospace'; ctx.fillText('NOW SERVING', cx + W * 0.32 + 22, midY + 78);
     drawMetroHuman(cx + W * 0.30, topY + 100, '#a8c8cc', '#E0A878', '#4a3020'); // pharmacist
     drawMetroHuman(cx + W * 0.10, midY + 15, '#88b0b4', '#FFDAB0', '#1a0a00');  // assistant
     drawMetroHuman(cx + W * 0.08, midY + 66, '#2a3a30', '#C8956A', '#4a3020');  // customer
@@ -17645,6 +17878,8 @@ Game.prototype._renderMetropolisRoom = function(ctx, room, type, W, H, cx, topY,
   } else if (type === 6) {
     // ═══ GYM: IRON BODY GYM ═══
     drawMetroFloor('#100404', '#140404');
+    drawWallTrim('#CC2222');
+    drawCeilingRow(midY - 40, 6, 'rgba(255,60,60,0.08)');
     drawMetroSign('IRON BODY GYM');
     // 5 treadmills top row
     for (let ti = 0; ti < 5; ti++) {
@@ -17707,6 +17942,31 @@ Game.prototype._renderMetropolisRoom = function(ctx, room, type, W, H, cx, topY,
     ctx.fillRect(cx + W * 0.38 + 4, midY + 63, 28, 24); ctx.globalAlpha = 1;
     ctx.fillStyle = '#FF6666'; ctx.font = '5px monospace'; ctx.textAlign = 'center';
     ctx.fillText('WATER', cx + W * 0.38 + 18, midY + 94);
+    // Motivational wall posters
+    drawWallArt(cx + W * 0.38 + 14, topY + 8, 50, 44, 'NO PAIN\nNO GAIN', '#FF8888', '#140404');
+    drawWallArt(cx + W * 0.38 + 14, topY + 58, 50, 44, 'PUSH\nHARDER', '#FF4444', '#100404');
+    // Rubber mat texture (dark squares pattern)
+    ctx.fillStyle = 'rgba(60,10,10,0.35)';
+    for (let rx = 0; rx < 14; rx++) for (let ry = 0; ry < 9; ry++)
+      if ((rx+ry)%2===0) ctx.fillRect(cx - W*0.36 + rx*W*0.064, topY+52 + ry*H*0.056, W*0.062, H*0.054);
+    // Boxing heavy bag
+    ctx.fillStyle = '#2a0808'; ctx.strokeStyle = '#CC3333'; ctx.lineWidth = 1.5;
+    rr(cx + W * 0.22, midY - 8, 26, 52, 6); ctx.fill(); ctx.stroke();
+    ctx.strokeStyle = '#AA2222'; ctx.lineWidth = 1;
+    ctx.strokeRect(cx + W * 0.22 + 4, midY - 4, 18, 8);
+    ctx.strokeRect(cx + W * 0.22 + 4, midY + 14, 18, 8);
+    // Chain from bag to ceiling
+    ctx.strokeStyle = '#AA6622'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(cx + W * 0.22 + 13, midY - 8); ctx.lineTo(cx + W * 0.22 + 13, topY + 52); ctx.stroke();
+    // Jump rope on floor
+    ctx.strokeStyle = '#CC4444'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.ellipse(cx - W * 0.28, midY + 80, 24, 12, 0, 0, Math.PI*2); ctx.stroke();
+    // Clock timer on wall
+    ctx.strokeStyle = '#CC2222'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(cx - W * 0.44 + 80, topY + 174, 16, 0, Math.PI*2); ctx.stroke();
+    ctx.strokeStyle = '#FF4444'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(cx - W*0.44+80, topY+174); ctx.lineTo(cx - W*0.44+80, topY+162); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx - W*0.44+80, topY+174); ctx.lineTo(cx - W*0.44+90, topY+174); ctx.stroke();
     drawMetroHuman(cx - W * 0.42, midY + 6, '#2a0a0a', '#8B5E3C', '#1a0a00'); // trainer
     drawMetroHuman(cx + W * 0.40 + 6, midY + 6, '#3a0808', '#C8956A', '#2a1010'); // trainer2
     drawMetroHuman(cx - W * 0.04, midY + 52, '#1a0808', '#FFDAB0', '#4a3020'); // gym member
@@ -17714,6 +17974,8 @@ Game.prototype._renderMetropolisRoom = function(ctx, room, type, W, H, cx, topY,
   } else if (type === 7) {
     // ═══ BANK: METRO NATIONAL BANK ═══
     drawMetroFloor('#080810', '#0a0a14');
+    drawWallTrim('#FFCC44');
+    drawCeilingRow(midY + 20, 6, 'rgba(255,220,80,0.10)');
     drawMetroSign('METRO NATIONAL BANK');
     // Bank logo header
     ctx.fillStyle = '#0a0a1e'; ctx.strokeStyle = '#FFCC44'; ctx.lineWidth = 2;
@@ -17783,6 +18045,33 @@ Game.prototype._renderMetropolisRoom = function(ctx, room, type, W, H, cx, topY,
       ctx.fillStyle = '#CC2222'; ctx.shadowColor = '#FF0000'; ctx.shadowBlur = 6;
       ctx.beginPath(); ctx.arc(scx, scy, 4, 0, Math.PI*2); ctx.fill(); ctx.shadowBlur = 0;
     }
+    // Marble floor pattern (bank prestige)
+    ctx.strokeStyle = 'rgba(255,220,80,0.08)'; ctx.lineWidth = 0.8;
+    for (let mx2 = 0; mx2 < W; mx2 += 60) ctx.strokeRect(mx2, 0, 60, H);
+    for (let my2 = 0; my2 < H; my2 += 60) ctx.strokeRect(0, my2, W, 60);
+    // Lobby plants (grand bank)
+    drawPlant(cx - W * 0.44 + 100, midY + 112, 1.4);
+    drawPlant(cx + W * 0.14, midY + 112, 1.4);
+    // Safe deposit boxes section
+    ctx.fillStyle = '#080812'; ctx.strokeStyle = '#FFCC44'; ctx.lineWidth = 1;
+    rr(cx + W * 0.26 + 80, topY + 42, 60, H * 0.65, 2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#FFCC44'; ctx.font = 'bold 5px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('SAFE DEPOSIT', cx + W * 0.26 + 110, topY + 54);
+    for (let sdr = 0; sdr < 6; sdr++) for (let sdc = 0; sdc < 3; sdc++) {
+      ctx.fillStyle = '#0c0c1e'; ctx.strokeStyle = '#887722'; ctx.lineWidth = 0.5;
+      ctx.strokeRect(cx + W*0.26 + 82 + sdc*17, topY + 62 + sdr*16, 14, 12);
+      ctx.fillStyle = '#FFCC44'; ctx.beginPath(); ctx.arc(cx + W*0.26 + 82 + sdc*17 + 7, topY + 62 + sdr*16 + 6, 2, 0, Math.PI*2); ctx.fill();
+    }
+    // Gold coin/currency motif on floor
+    ctx.fillStyle = 'rgba(255,200,0,0.06)';
+    ctx.beginPath(); ctx.arc(cx, midY + 78, 60, 0, Math.PI*2); ctx.fill();
+    ctx.strokeStyle = 'rgba(255,200,0,0.12)'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.arc(cx, midY + 78, 58, 0, Math.PI*2); ctx.stroke();
+    // Security guard desk
+    ctx.fillStyle = '#0a0a18'; ctx.strokeStyle = '#3355AA'; ctx.lineWidth = 1.5;
+    rr(cx - W * 0.44 + 19 - 24, midY + 50, 48, 32, 3); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#3355AA'; ctx.font = 'bold 5px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('SECURITY', cx - W * 0.44 + 43, midY + 62);
     drawMetroHuman(cx - W * 0.28, topY + 120, '#0a1a4a', '#C8956A', '#1a0a00'); // teller
     drawMetroHuman(cx + W * 0.04, topY + 120, '#0a1a4a', '#FFDAB0', '#4a3020'); // teller
     drawMetroHuman(cx - W * 0.44 + 19, midY + 88, '#1a1a3a', '#E0A878', '#1a0a00'); // customer
@@ -17790,6 +18079,7 @@ Game.prototype._renderMetropolisRoom = function(ctx, room, type, W, H, cx, topY,
   } else if (type === 8) {
     // ═══ NIGHTCLUB: METRO NIGHTCLUB ═══
     drawMetroFloor('#0e0010', '#100014');
+    drawWallTrim('#CC00FF');
     drawMetroSign('METRO NIGHTCLUB');
     // DJ booth + stage back wall
     ctx.fillStyle = '#16002a'; ctx.strokeStyle = '#CC00FF'; ctx.lineWidth = 2;
@@ -17863,6 +18153,30 @@ Game.prototype._renderMetropolisRoom = function(ctx, room, type, W, H, cx, topY,
     // Mirror ball center ceiling
     ctx.fillStyle = '#FFFFFF'; ctx.shadowColor = '#FFFFFF'; ctx.shadowBlur = 20*(0.5+0.5*Math.sin(t*3));
     ctx.beginPath(); ctx.arc(cx, topY + 56, 8, 0, Math.PI*2); ctx.fill(); ctx.shadowBlur = 0;
+    // Fog machine haze at floor level
+    const fogG = ctx.createLinearGradient(0, H - 30, 0, H);
+    fogG.addColorStop(0, 'rgba(80,0,120,0.18)'); fogG.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = fogG; ctx.fillRect(0, H - 80, W, 80);
+    // Wall LED strips (vertical)
+    for (const lx of [cx - W * 0.44, cx + W * 0.40]) {
+      for (let ld = 0; ld < 20; ld++) {
+        const lc = ['#FF0088','#8800FF','#00FFCC','#FF4400','#0044FF'][ld % 5];
+        ctx.fillStyle = lc; ctx.shadowColor = lc; ctx.shadowBlur = 3;
+        ctx.fillRect(lx, topY + ld * 34, 5, 24); ctx.shadowBlur = 0;
+      }
+    }
+    // Cocktail glasses on VIP tables
+    for (const [vx2, vy2] of [[cx-W*0.44,topY+64+6],[cx-W*0.44,topY+64+78],[cx-W*0.44,topY+64+150]]) {
+      for (let gi = 0; gi < 3; gi++) {
+        ctx.strokeStyle = 'rgba(255,100,200,0.5)'; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(vx2 + 34 + gi*10, vy2 + 32); ctx.lineTo(vx2 + 30 + gi*10, vy2 + 50); ctx.stroke();
+        ctx.beginPath(); ctx.arc(vx2 + 34 + gi*10, vy2 + 32, 5, Math.PI, 0); ctx.stroke();
+      }
+    }
+    // Neon "METRO" sign on far wall
+    ctx.fillStyle = '#FF00FF'; ctx.shadowColor = '#FF00FF'; ctx.shadowBlur = 16*(0.5+0.5*Math.sin(t*1.8));
+    ctx.font = 'bold 14px Orbitron, monospace'; ctx.textAlign = 'center';
+    ctx.fillText('★ METRO ★', cx, topY - 4); ctx.shadowBlur = 0;
     drawMetroHuman(cx, topY + 80, '#2a0a3a', '#C8956A', '#1a0a00');           // DJ
     drawMetroHuman(cx - W * 0.44 + 34, midY - 10, '#1a0028', '#FFDAB0', '#4a3020'); // bartender
     drawMetroHuman(cx - W * 0.08, midY + 30, '#16002a', '#E0A878', '#1a1a1a'); // dancer
@@ -17870,6 +18184,8 @@ Game.prototype._renderMetropolisRoom = function(ctx, room, type, W, H, cx, topY,
   } else if (type === 9) {
     // ═══ HOSPITAL: METRO MEDICAL CENTER ═══
     drawMetroFloor('#040e06', '#040c04');
+    drawWallTrim('#44CC44');
+    drawCeilingRow(midY - 50, 6, 'rgba(60,200,80,0.08)');
     drawMetroSign('METRO MEDICAL CENTER');
     // Red cross back wall
     ctx.fillStyle = '#FF2222'; ctx.shadowColor = '#FF4444'; ctx.shadowBlur = 14*(0.6+0.4*Math.sin(t*1.5));
@@ -17935,6 +18251,38 @@ Game.prototype._renderMetropolisRoom = function(ctx, room, type, W, H, cx, topY,
     rr(cx + W * 0.10, midY + 55, 36, 44, 3); ctx.fill(); ctx.stroke();
     ctx.fillStyle = '#44CC66'; ctx.font = '5px monospace'; ctx.textAlign = 'center';
     ctx.fillText('♿', cx + W * 0.10 + 18, midY + 78);
+    // Clean tile grid accent
+    ctx.strokeStyle = 'rgba(200,255,200,0.07)'; ctx.lineWidth = 0.5;
+    for (let mx2 = 0; mx2 < W; mx2 += 48) ctx.strokeRect(mx2, 0, 48, H);
+    for (let my2 = 0; my2 < H; my2 += 48) ctx.strokeRect(0, my2, W, 48);
+    // Hand sanitizer dispensers
+    for (const [hx, hy] of [[cx - W*0.44 + 4, midY - 60],[cx + W*0.26 + 80, midY + 50]]) {
+      ctx.fillStyle = '#082014'; ctx.strokeStyle = '#44CC66'; ctx.lineWidth = 1;
+      rr(hx, hy, 20, 34, 3); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#44FF88'; ctx.shadowColor = '#22FF44'; ctx.shadowBlur = 4;
+      ctx.beginPath(); ctx.arc(hx + 10, hy + 8, 4, 0, Math.PI*2); ctx.fill(); ctx.shadowBlur = 0;
+      ctx.fillStyle = '#88FFAA'; ctx.font = '4px monospace'; ctx.textAlign = 'center';
+      ctx.fillText('SANITIZE', hx + 10, hy + 30);
+    }
+    // Vitals monitor waveform above a bed
+    ctx.fillStyle = '#040e06'; ctx.strokeStyle = '#44CC88'; ctx.lineWidth = 1;
+    rr(cx - W * 0.42 + 100, midY - 70 - 24, 80, 28, 3); ctx.fill(); ctx.stroke();
+    ctx.strokeStyle = '#22FF66'; ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (let xv = 0; xv < 76; xv++) {
+      const yv = midY - 70 - 24 + 14 + Math.sin((xv + t * 40) * 0.2) * 8;
+      if (xv === 0) ctx.moveTo(cx - W*0.42 + 102 + xv, yv); else ctx.lineTo(cx - W*0.42 + 102 + xv, yv);
+    }
+    ctx.stroke();
+    // IV bags hanging above beds
+    for (const [ix2, iy2] of [[cx - W*0.42 + 96, midY - 72],[cx - W*0.14 + 96, midY - 72]]) {
+      ctx.fillStyle = 'rgba(180,220,200,0.30)'; ctx.strokeStyle = '#44AA66'; ctx.lineWidth = 0.8;
+      rr(ix2, iy2, 14, 22, 3); ctx.fill(); ctx.stroke();
+      ctx.strokeStyle = '#44AA66'; ctx.lineWidth = 0.5;
+      ctx.beginPath(); ctx.moveTo(ix2 + 7, iy2 + 22); ctx.lineTo(ix2 + 7, iy2 + 40); ctx.stroke();
+    }
+    // Health poster
+    drawWallArt(cx + W * 0.26 + 82, midY + 20, 56, 44, 'WASH HANDS\nSTAY SAFE', '#88FFCC', '#040e06');
     drawMetroHuman(cx + W * 0.24, topY + 82, '#9ab8bc', '#FFDAB0', '#1a0a00'); // doctor
     drawMetroHuman(cx, topY + 82, '#a8c8cc', '#C8956A', '#4a3020');             // nurse
     drawMetroHuman(cx - W * 0.42, midY + 90, '#2a4a2a', '#E0A878', '#4a3020'); // orderly
@@ -17942,6 +18290,8 @@ Game.prototype._renderMetropolisRoom = function(ctx, room, type, W, H, cx, topY,
   } else if (type === 10) {
     // ═══ GARAGE: METRO AUTO GARAGE ═══
     drawMetroFloor('#0a0a08', '#0c0c0a');
+    drawWallTrim('#FFAA22');
+    drawCeilingRow(midY - 40, 5, 'rgba(255,170,50,0.10)');
     drawMetroSign('METRO AUTO GARAGE');
     // Garage sign + warning stripes
     ctx.fillStyle = '#FFAA22'; ctx.globalAlpha = 0.12;
@@ -18010,12 +18360,40 @@ Game.prototype._renderMetropolisRoom = function(ctx, room, type, W, H, cx, topY,
     // Exhaust vent on wall
     ctx.strokeStyle = '#666644'; ctx.lineWidth = 1;
     for (let vi = 0; vi < 6; vi++) ctx.strokeRect(cx + W * 0.42, topY + 20 + vi * 8, 14, 6);
+    // Grease stains on floor
+    ctx.fillStyle = 'rgba(30,20,0,0.35)';
+    ctx.beginPath(); ctx.ellipse(cx - W*0.18, midY + 30, 44, 16, 0.4, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(cx + W*0.14 + 50, midY - 10, 30, 10, -0.3, 0, Math.PI*2); ctx.fill();
+    // Diagnostic computer hooked to car
+    ctx.strokeStyle = '#FFAA22'; ctx.lineWidth = 1.5; ctx.setLineDash([3,3]);
+    ctx.beginPath(); ctx.moveTo(cx - W*0.18, midY - 32); ctx.lineTo(cx - W*0.44 + 83, midY - 32); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#14120a'; ctx.strokeStyle = '#FFAA22'; ctx.lineWidth = 1;
+    rr(cx - W*0.44 + 84, midY - 54, 48, 34, 3); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#001800'; ctx.fillRect(cx - W*0.44 + 87, midY - 51, 42, 24);
+    ctx.fillStyle = '#00FF88'; ctx.font = '4px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('>DIAG', cx - W*0.44 + 108, midY - 40);
+    ctx.fillText('OK: ABS', cx - W*0.44 + 108, midY - 32);
+    // Garage door graphic (back wall)
+    ctx.strokeStyle = '#554422'; ctx.lineWidth = 1;
+    for (let gp = 0; gp < 5; gp++) ctx.strokeRect(cx - W*0.44 + gp*W*0.18, topY + 200, W*0.17, 18);
+    ctx.fillStyle = '#FFAA22'; ctx.font = 'bold 5px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('GARAGE DOOR', cx, topY + 214);
+    // Air compressor
+    ctx.fillStyle = '#181408'; ctx.strokeStyle = '#CC8833'; ctx.lineWidth = 1.5;
+    rr(cx + W * 0.42, midY + 60, 26, 50, 4); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#FF6600'; ctx.font = '5px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('AIR', cx + W * 0.42 + 13, midY + 72);
+    ctx.fillStyle = '#884422'; ctx.strokeStyle = '#CC6622'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.arc(cx + W * 0.42 + 13, midY + 86, 10, 0, Math.PI*2); ctx.fill(); ctx.stroke();
     drawMetroHuman(cx - W * 0.20, midY + 60, '#3a2a10', '#C8956A', '#1a0a00'); // mechanic
     drawMetroHuman(cx + W * 0.14 + 50, midY + 16, '#2a1a08', '#8B5E3C', '#2a1a00'); // mechanic2
 
   } else if (type === 11) {
     // ═══ BAR: THE AMBER BAR ═══
     drawMetroFloor('#0e0804', '#120a04');
+    drawWallTrim('#FF9933');
+    drawCeilingRow(topY + 110, 5, 'rgba(255,160,60,0.11)');
     drawMetroSign('THE AMBER BAR');
     // Full back bar shelf with mirror panel
     ctx.fillStyle = 'rgba(255,180,80,0.04)';
@@ -18099,6 +18477,39 @@ Game.prototype._renderMetropolisRoom = function(ctx, room, type, W, H, cx, topY,
     }
     ctx.fillStyle = GOLD; ctx.font = 'bold 5px monospace'; ctx.textAlign = 'center';
     ctx.fillText('JUKEBOX', cx + W * 0.30 + 24, topY + 136);
+    // Dartboard on wall
+    ctx.fillStyle = '#1a0c04'; ctx.strokeStyle = '#884422'; ctx.lineWidth = 1.5;
+    rr(cx - W * 0.44, midY - 60, 48, 48, 2); ctx.fill(); ctx.stroke();
+    const dartRings = ['#CC2222','#1a1a1a','#22CC22','#1a1a1a','#CC2222'];
+    for (let dr = 0; dr < 5; dr++) {
+      ctx.fillStyle = dartRings[dr]; ctx.beginPath(); ctx.arc(cx - W*0.44+24, midY-36, 22 - dr*4, 0, Math.PI*2); ctx.fill();
+    }
+    ctx.fillStyle = '#225522'; ctx.beginPath(); ctx.arc(cx - W*0.44+24, midY-36, 4, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#FFCC44'; ctx.font = '5px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('DARTS', cx - W*0.44+24, midY - 12);
+    // TV screen on wall showing sports
+    ctx.fillStyle = '#0a0804'; ctx.strokeStyle = '#885522'; ctx.lineWidth = 1.5;
+    rr(cx - W * 0.44, midY - 115, 80, 48, 3); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#0a1a06'; ctx.fillRect(cx - W*0.44 + 3, midY - 112, 74, 36);
+    // soccer field on screen
+    ctx.strokeStyle = '#44CC44'; ctx.lineWidth = 0.5;
+    ctx.strokeRect(cx - W*0.44 + 8, midY - 108, 64, 28);
+    ctx.beginPath(); ctx.arc(cx - W*0.44 + 40, midY - 94, 8, 0, Math.PI*2); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx - W*0.44+40, midY - 108); ctx.lineTo(cx - W*0.44+40, midY - 80); ctx.stroke();
+    ctx.fillStyle = '#FFFFFF'; ctx.font = '5px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('METRO FC  2 - 1', cx - W*0.44+40, midY - 66);
+    // Chalk menu board
+    ctx.fillStyle = '#060402'; ctx.strokeStyle = '#664422'; ctx.lineWidth = 1;
+    rr(cx + W*0.18, topY + 80, 66, 70, 3); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#EEDDCC'; ctx.font = 'bold 6px serif'; ctx.textAlign = 'center';
+    ctx.fillText('HAPPY HOUR', cx + W*0.18 + 33, topY + 94);
+    ctx.font = '5px serif';
+    for (const [tl, ty3] of [['Beer $3',topY+108],['Shot $2',topY+118],['Wine $5',topY+128],['Mix $6',topY+138]]) {
+      ctx.fillStyle = '#CCBBAA'; ctx.fillText(tl, cx + W*0.18 + 33, ty3);
+    }
+    // Plants in booth corners
+    drawPlant(cx - W * 0.44 + 34, midY + 110, 0.9);
+    drawPlant(cx - W * 0.44 + 34, midY + 192, 0.9);
     drawMetroHuman(cx, topY + 108, '#3a2010', '#E0A878', '#1a0a00');          // bartender
     drawMetroHuman(cx - W * 0.36, midY + 40, '#2a1810', '#C8956A', '#4a2010'); // customer
     drawMetroHuman(cx + W * 0.08 + W*0.19, midY + 90, '#1a1008', '#FFDAB0', '#3a2010'); // pool player
@@ -18106,6 +18517,8 @@ Game.prototype._renderMetropolisRoom = function(ctx, room, type, W, H, cx, topY,
   } else if (type === 12) {
     // ═══ PAWNSHOP: CITY PAWN & TRADE ═══
     drawMetroFloor('#0e0e06', '#121006');
+    drawWallTrim('#CCAA33');
+    drawCeilingRow(topY + 80, 5, 'rgba(220,190,80,0.10)');
     drawMetroSign('CITY PAWN & TRADE');
     // 5 glass display cases
     const casePos = [[cx-W*0.42,topY+8],[cx-W*0.20,topY+8],[cx+W*0.02,topY+8],[cx-W*0.42,topY+78],[cx-W*0.20,topY+78]];
@@ -18155,12 +18568,29 @@ Game.prototype._renderMetropolisRoom = function(ctx, room, type, W, H, cx, topY,
     ctx.strokeRect(cx + W * 0.26 + 8, midY + 38, 62, 48);
     ctx.fillStyle = AMBER; ctx.font = 'bold 5px monospace'; ctx.textAlign = 'center';
     ctx.fillText('SECURE ROOM', cx + W * 0.26 + 39, midY + 96);
+    // Overhead spotlight on main case
+    drawLight(cx - W * 0.22, topY + 36, 'rgba(255,220,80,0.16)', 64);
+    // Old TV CCTV monitor at counter
+    ctx.fillStyle = '#121008'; ctx.strokeStyle = '#888844'; ctx.lineWidth = 1;
+    rr(cx - W * 0.42 + 50, midY + 44, 40, 30, 3); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#0a0a06'; ctx.fillRect(cx - W * 0.42 + 52, midY + 46, 36, 20);
+    ctx.fillStyle = '#888860'; ctx.font = '4px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('CCTV', cx - W * 0.42 + 70, midY + 58);
+    // Gold loan poster
+    drawWallArt(cx + W * 0.26 + 72, midY + 50, 56, 44, 'CASH FOR\nGOLD', '#FFDD44', '#0e0e06');
+    // Magnifying glass on counter
+    ctx.strokeStyle = '#FFCC44'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(cx - W * 0.10, midY + 50, 12, 0, Math.PI*2); ctx.stroke();
+    ctx.strokeStyle = '#AA8822'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(cx - W * 0.10 + 9, midY + 59); ctx.lineTo(cx - W * 0.10 + 18, midY + 72); ctx.stroke();
     drawMetroHuman(cx - W * 0.20, midY + 16, '#2a2818', '#C8956A', '#8a6040'); // pawnbroker
     drawMetroHuman(cx - W * 0.38, topY + 140, '#3a3020', '#FFDAB0', '#4a3020'); // appraiser
 
   } else if (type === 13) {
     // ═══ TECH LAB: APEX TECH LABS ═══
     drawMetroFloor('#020c10', '#020e12');
+    drawWallTrim('#00CCFF');
+    drawCeilingRow(midY + 50, 6, 'rgba(0,200,255,0.08)');
     drawMetroSign('APEX TECH LABS');
     // 6 server racks in two rows
     for (let si = 0; si < 6; si++) {
@@ -18219,6 +18649,24 @@ Game.prototype._renderMetropolisRoom = function(ctx, room, type, W, H, cx, topY,
     ctx.strokeStyle = '#00FF88'; ctx.lineWidth = 1; ctx.beginPath();
     for (let xo = 0; xo < 50; xo++) { const yo = midY + (xo < 25 ? 0 : -8); if (xo === 0) ctx.moveTo(cx+W*0.20+4+xo, topY+162+14+Math.sin(xo*0.4)*6); else ctx.lineTo(cx+W*0.20+4+xo, topY+162+14+Math.sin(xo*0.4)*6); }
     ctx.stroke();
+    // Floor cable management raised floor tiles
+    ctx.strokeStyle = 'rgba(0,180,255,0.12)'; ctx.lineWidth = 0.6;
+    for (let rx2 = 0; rx2 < W; rx2 += 52) ctx.strokeRect(rx2, 0, 52, H);
+    for (let ry2 = 0; ry2 < H; ry2 += 52) ctx.strokeRect(0, ry2, W, 52);
+    // ESD wrist straps hanging
+    for (const [sx2, sy2] of [[cx + W*0.20 + 12, midY + 52],[cx - W*0.26, midY + 52]]) {
+      ctx.strokeStyle = '#FFCC44'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(sx2, sy2); ctx.lineTo(sx2 + 20, sy2 + 8); ctx.stroke();
+      ctx.fillStyle = '#FFCC44'; ctx.beginPath(); ctx.arc(sx2+20, sy2+8, 3, 0, Math.PI*2); ctx.fill();
+    }
+    // Tech patent plaques on wall
+    for (let pi = 0; pi < 3; pi++) drawWallArt(cx + W*0.20 + 66, topY + 156 + pi * 58, 54, 44, `PATENT\n#${88200+pi*314}`, '#00CCFF', '#020c10');
+    // Component bin labels
+    ctx.fillStyle = '#0088AA'; ctx.font = 'bold 5px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('CLEAN ROOM →', cx + W*0.42, midY + 50);
+    // Clean room indicator (glow panel on right wall)
+    ctx.fillStyle = 'rgba(0,200,255,0.05)'; ctx.fillRect(cx + W*0.38, 0, W*0.06, H);
+    ctx.strokeStyle = 'rgba(0,200,255,0.15)'; ctx.lineWidth = 0.5; ctx.strokeRect(cx + W*0.38, 0, W*0.06, H);
     drawMetroHuman(cx - W * 0.28, midY + 68, '#0a1a2a', '#FFDAB0', '#4a3020'); // engineer
     drawMetroHuman(cx + W * 0.04, midY + 68, '#082032', '#C8956A', '#1a0a00');  // scientist
     drawMetroHuman(cx + W * 0.20 + 32, topY + 230, '#0a1828', '#E0A878', '#3a2010'); // tech
@@ -18226,6 +18674,8 @@ Game.prototype._renderMetropolisRoom = function(ctx, room, type, W, H, cx, topY,
   } else if (type === 14) {
     // ═══ WAREHOUSE: CITY WAREHOUSE ═══
     drawMetroFloor('#0a0a08', '#0c0c0a');
+    drawWallTrim('#FFAA22');
+    drawCeilingRow(midY, 5, 'rgba(255,160,50,0.09)');
     drawMetroSign('CITY WAREHOUSE');
     // Caution stripe floor at loading dock
     for (let si = 0; si < 8; si++) {
@@ -18291,6 +18741,26 @@ Game.prototype._renderMetropolisRoom = function(ctx, room, type, W, H, cx, topY,
       ctx.font = '14px serif'; ctx.textAlign = 'center'; ctx.fillText(lt, lx, ly); ctx.shadowBlur = 0;
     }
     // Workers with hi-vis vests
+    // Overhead girder/beam aesthetic
+    ctx.strokeStyle = 'rgba(180,140,60,0.18)'; ctx.lineWidth = 3;
+    for (let bx2 = cx - W*0.44; bx2 < cx + W*0.44; bx2 += W * 0.22) {
+      ctx.beginPath(); ctx.moveTo(bx2, 0); ctx.lineTo(bx2, H); ctx.stroke();
+    }
+    // Emergency exit sign
+    ctx.fillStyle = '#22FF22'; ctx.shadowColor = '#00FF00'; ctx.shadowBlur = 8;
+    ctx.font = 'bold 7px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('► EXIT', cx + W * 0.40, midY - 20); ctx.shadowBlur = 0;
+    // Fire extinguisher
+    ctx.fillStyle = '#CC1111'; ctx.strokeStyle = '#AA0000'; ctx.lineWidth = 1;
+    rr(cx + W * 0.42, midY + 10, 16, 36, 4); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#FF4444'; ctx.font = '5px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('FIRE', cx + W * 0.42 + 8, midY + 28);
+    ctx.fillText('EXT', cx + W * 0.42 + 8, midY + 36);
+    // Barcode scanner
+    ctx.fillStyle = '#141410'; ctx.strokeStyle = '#885522'; ctx.lineWidth = 1;
+    rr(cx - W * 0.44 + 70, midY + 66, 30, 20, 3); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#FF0000'; ctx.shadowColor = '#FF0000'; ctx.shadowBlur = 5;
+    ctx.beginPath(); ctx.moveTo(cx - W*0.44 + 73, midY + 74); ctx.lineTo(cx - W*0.44 + 97, midY + 74); ctx.stroke(); ctx.shadowBlur = 0;
     drawMetroHuman(cx + W * 0.22, midY + 22, '#3a4a10', '#8B5E3C', '#1a0a00');
     ctx.save(); ctx.translate(cx + W * 0.22, midY + 22);
     ctx.strokeStyle = '#FFAA22'; ctx.lineWidth = 1.5;
@@ -18305,6 +18775,8 @@ Game.prototype._renderMetropolisRoom = function(ctx, room, type, W, H, cx, topY,
   } else if (type === 15) {
     // ═══ POLICE STATION: METRO POLICE DEPT ═══
     drawMetroFloor('#040814', '#040a18');
+    drawWallTrim('#2255AA');
+    drawCeilingRow(midY + 10, 6, 'rgba(60,100,220,0.09)');
     drawMetroSign('METRO POLICE DEPT');
     // American flag / police banner
     ctx.fillStyle = '#0a0d22'; ctx.strokeStyle = '#3366CC'; ctx.lineWidth = 1.5;
@@ -18375,6 +18847,35 @@ Game.prototype._renderMetropolisRoom = function(ctx, room, type, W, H, cx, topY,
       ctx.fillStyle = '#FF8888'; ctx.font = '4px monospace';
       ctx.fillText(`SUSPECT ${wi+1}`, cx - W * 0.44 + 22, midY + 85 + wi * 16);
     }
+    // Police badge / emblem on floor
+    ctx.fillStyle = 'rgba(60,100,200,0.08)';
+    ctx.beginPath(); ctx.arc(cx, midY + 34, 50, 0, Math.PI*2); ctx.fill();
+    ctx.strokeStyle = 'rgba(100,150,255,0.15)'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.arc(cx, midY + 34, 48, 0, Math.PI*2); ctx.stroke();
+    ctx.fillStyle = 'rgba(100,150,255,0.08)'; ctx.font = 'bold 9px serif'; ctx.textAlign = 'center';
+    ctx.fillText('★', cx, midY + 38);
+    // Coffee machine (police station essential)
+    ctx.fillStyle = '#060c18'; ctx.strokeStyle = '#3355AA'; ctx.lineWidth = 1;
+    rr(cx - W * 0.44 + 46, midY + 84, 30, 44, 3); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#1a2a44'; ctx.fillRect(cx - W * 0.44 + 49, midY + 87, 24, 16);
+    ctx.fillStyle = '#FF4400'; ctx.shadowColor = '#FF2200'; ctx.shadowBlur = 3;
+    ctx.beginPath(); ctx.arc(cx - W * 0.44 + 58, midY + 97, 4, 0, Math.PI*2); ctx.fill(); ctx.shadowBlur = 0;
+    ctx.fillStyle = '#4488FF'; ctx.font = '4px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('COFFEE', cx - W * 0.44 + 61, midY + 118);
+    // Dispatch radio on wall
+    ctx.fillStyle = '#060c18'; ctx.strokeStyle = '#3355CC'; ctx.lineWidth = 1;
+    rr(cx + W * 0.26 + 78, topY + 42, 44, 36, 3); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#22AA44'; ctx.shadowColor = '#22AA44'; ctx.shadowBlur = 4*(0.5+0.5*Math.sin(t*2));
+    ctx.beginPath(); ctx.arc(cx + W*0.26 + 112, topY + 50, 4, 0, Math.PI*2); ctx.fill(); ctx.shadowBlur = 0;
+    ctx.fillStyle = '#4488FF'; ctx.font = 'bold 5px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('DISPATCH', cx + W*0.26 + 100, topY + 64);
+    ctx.fillText('ACTIVE', cx + W*0.26 + 100, topY + 72);
+    // Fingerprint scanner
+    ctx.fillStyle = '#060c18'; ctx.strokeStyle = '#4466CC'; ctx.lineWidth = 1;
+    rr(cx - W * 0.44 + 46, midY + 134, 36, 26, 3); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#0033AA'; ctx.fillRect(cx - W*0.44 + 49, midY + 137, 30, 14);
+    ctx.fillStyle = '#6699FF'; ctx.font = '4px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('FINGERPRINT', cx - W*0.44+64, midY+150);
     drawMetroHuman(cx - W * 0.14, midY + 54, '#0a1a3a', '#FFDAB0', '#1a0a00'); // officer
     drawMetroHuman(cx + W * 0.10, midY + 54, '#0a1a3a', '#C8956A', '#1a0a00'); // officer
     drawMetroHuman(cx - W * 0.38, midY + 54, '#0a1430', '#E0A878', '#4a3020'); // detective
@@ -18382,6 +18883,8 @@ Game.prototype._renderMetropolisRoom = function(ctx, room, type, W, H, cx, topY,
   } else if (type === 16) {
     // ═══ TATTOO PARLOR: IRON NEEDLE ═══
     drawMetroFloor('#0e0008', '#100008');
+    drawWallTrim('#AA2288');
+    drawCeilingRow(midY + 20, 4, 'rgba(200,40,180,0.09)');
     drawMetroSign('IRON NEEDLE TATTOO');
     // Flash art wall — 10 framed pieces
     const artD = ['☠','⚡','🔥','🌹','⚔','🐉','🦋','🗡','🦅','💀'];
@@ -18435,12 +18938,36 @@ Game.prototype._renderMetropolisRoom = function(ctx, room, type, W, H, cx, topY,
       rr(mx2, topY + 110, 48, 60, 2); ctx.fill();
       ctx.strokeStyle = '#884488'; ctx.lineWidth = 1; ctx.stroke();
     }
+    // Spotlight over each tattoo chair
+    drawLight(cx - W * 0.18, midY + 10, 'rgba(255,180,255,0.14)', 58);
+    drawLight(cx + W * 0.08, midY + 10, 'rgba(255,180,255,0.14)', 58);
+    // Appointment calendar on wall
+    drawWallArt(cx + W * 0.30 + 10, topY + 110, 54, 44, 'BOOK ONLINE\n★★★★★', '#FF88FF', '#0e0008');
+    // Lounge chairs waiting area
+    for (let wi = 0; wi < 3; wi++) {
+      ctx.fillStyle = '#200018'; ctx.strokeStyle = '#882266'; ctx.lineWidth = 1;
+      rr(cx - W * 0.42 + 58 + wi * 44, topY + 110, 36, 28, 5); ctx.fill(); ctx.stroke();
+    }
+    ctx.fillStyle = '#CC44FF'; ctx.font = 'bold 5px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('WAITING AREA', cx - W * 0.42 + 58 + 54, topY + 108);
+    // Portfolio books on shelf
+    ctx.fillStyle = '#100008'; ctx.strokeStyle = '#664488'; ctx.lineWidth = 1;
+    rr(cx - W * 0.42 + 58, topY + 144, 132, 22, 2); ctx.fill(); ctx.stroke();
+    const bookC2 = ['#FF0044','#4400FF','#000000','#FF00AA','#220044'];
+    for (let bi = 0; bi < 5; bi++) {
+      ctx.fillStyle = bookC2[bi]; ctx.fillRect(cx - W*0.42 + 62 + bi * 26, topY + 146, 22, 16);
+      ctx.strokeStyle = '#FFFFFF33'; ctx.lineWidth = 0.5; ctx.strokeRect(cx - W*0.42 + 62 + bi * 26, topY + 146, 22, 16);
+    }
+    ctx.fillStyle = '#FF88CC'; ctx.font = '5px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('PORTFOLIO', cx - W*0.42 + 58 + 66, topY + 162);
     drawMetroHuman(cx - W * 0.28, midY + 76, '#0a0a0a', '#8B5E3C', '#1a0a00'); // artist1
     drawMetroHuman(cx + W * 0.10, midY + 76, '#180010', '#C8956A', '#2a0010'); // artist2
 
   } else if (type === 17) {
     // ═══ AMMO DEPOT: METRO ARMORY ═══
     drawMetroFloor('#0e0e08', '#101008');
+    drawWallTrim('#CCAA00');
+    drawCeilingRow(midY - 20, 5, 'rgba(220,180,0,0.09)');
     drawMetroSign('METRO ARMORY');
     // Warning stripes on floor
     ctx.fillStyle = 'rgba(255,200,0,0.08)';
@@ -18493,6 +19020,27 @@ Game.prototype._renderMetropolisRoom = function(ctx, room, type, W, H, cx, topY,
     ctx.fillText('BODY ARMOR', cx + W * 0.26 + 34, midY + 32);
     ctx.font = '12px serif';
     for (let vi = 0; vi < 4; vi++) ctx.fillText('🛡️', cx + W * 0.26 + 10 + (vi%2)*32, midY + 52 + Math.floor(vi/2)*22);
+    // Target range diagram
+    ctx.fillStyle = '#1a1a08'; ctx.strokeStyle = '#886600'; ctx.lineWidth = 1;
+    rr(cx - W * 0.10 + 100, midY + 60, 60, 54, 3); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#FFCC44'; ctx.font = 'bold 5px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('TARGET', cx - W * 0.10 + 130, midY + 72);
+    for (let ri = 0; ri < 3; ri++) {
+      ctx.strokeStyle = ri === 0 ? '#FF4444' : '#CCAA00';
+      ctx.beginPath(); ctx.arc(cx - W * 0.10 + 130, midY + 90, 10 + ri * 10, 0, Math.PI*2); ctx.stroke();
+    }
+    // Metal detector gate at entrance
+    ctx.strokeStyle = '#FFCC44'; ctx.lineWidth = 2;
+    ctx.strokeRect(cx + W * 0.38, midY + 30, 8, 60);
+    ctx.strokeRect(cx + W * 0.38 + 34, midY + 30, 8, 60);
+    ctx.strokeStyle = '#FFCC00'; ctx.lineWidth = 1.5; ctx.shadowColor = '#FFCC00'; ctx.shadowBlur = 4*(0.5+0.5*Math.sin(t*2));
+    ctx.beginPath(); ctx.moveTo(cx + W*0.38 + 8, midY + 60); ctx.lineTo(cx + W*0.38 + 34, midY + 60); ctx.stroke(); ctx.shadowBlur = 0;
+    ctx.fillStyle = '#FFCC44'; ctx.font = '5px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('CHECKPOINT', cx + W*0.38 + 21, midY + 98);
+    // DANGER / NO SMOKING signage on wall
+    ctx.fillStyle = '#FF2222'; ctx.shadowColor = '#FF0000'; ctx.shadowBlur = 6*(0.5+0.5*Math.sin(t*2));
+    ctx.font = 'bold 7px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('⚠ DANGER ZONE ⚠', cx, topY + 130); ctx.shadowBlur = 0;
     drawMetroHuman(cx - W * 0.02, midY + 60, '#2a3a10', '#8B5E3C', '#2a2a2a'); // armorer
     drawMetroHuman(cx + W * 0.18, midY + 60, '#3a4a18', '#C8956A', '#1a0a00'); // guard
     drawMetroHuman(cx - W * 0.44 + 37, midY - 10, '#1a2a0a', '#E0A878', '#3a2000'); // stockman
@@ -18500,6 +19048,7 @@ Game.prototype._renderMetropolisRoom = function(ctx, room, type, W, H, cx, topY,
   } else if (type === 18) {
     // ═══ HACKER DEN: DARKNET HQ ═══
     drawMetroFloor('#020a04', '#020c04');
+    drawWallTrim('#00CC44');
     drawMetroSign('DARKNET HQ');
     // Scanline CRT ambient glow
     ctx.fillStyle = 'rgba(0,255,80,0.03)';
@@ -18562,6 +19111,36 @@ Game.prototype._renderMetropolisRoom = function(ctx, room, type, W, H, cx, topY,
     // Pizza boxes on floor (gag)
     ctx.fillStyle = '#1a1008'; ctx.strokeStyle = '#884400'; ctx.lineWidth = 0.5;
     for (let pi = 0; pi < 3; pi++) rr(cx - W * 0.10 + pi * 22, midY + 58, 20, 16, 1), ctx.fill(), ctx.stroke();
+    // Green glow ceiling lights (dim, coder atmosphere)
+    for (let li = 0; li < 3; li++) drawLight(cx - W*0.26 + li * W*0.26, midY - 60, 'rgba(0,200,60,0.07)', 80);
+    // Sticky hacking notes on wall
+    const noteC = ['#FFFF88','#88FF88','#88FFFF'];
+    const noteText = [['> rm -rf /','0x41414141','HEAP SPRAY'],['SUID FOUND','CVE-2024','ROOT PRIV'],['TOR: ON','VPN: PROXY','BTC: ANON']];
+    for (let ni = 0; ni < 9; ni++) {
+      const nx2 = cx - W * 0.44 + 66 + (ni%3)*22, ny2 = midY + 52 + Math.floor(ni/3)*16;
+      ctx.fillStyle = noteC[ni%3]; ctx.globalAlpha = 0.85;
+      ctx.fillRect(nx2, ny2, 20, 14); ctx.globalAlpha = 1;
+      ctx.fillStyle = '#000'; ctx.font = '3px monospace'; ctx.textAlign = 'center';
+      ctx.fillText(noteText[Math.floor(ni/3)][ni%3], nx2+10, ny2+8);
+    }
+    // UPS battery backup
+    ctx.fillStyle = '#030a06'; ctx.strokeStyle = '#00AA33'; ctx.lineWidth = 1.5;
+    rr(cx - W * 0.44, midY + 72, 64, 44, 3); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#00CC44'; ctx.font = 'bold 5px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('UPS BACKUP', cx - W * 0.44 + 32, midY + 85);
+    // battery level bar
+    ctx.fillStyle = '#001a08'; ctx.fillRect(cx - W*0.44+6, midY+90, 52, 12);
+    ctx.fillStyle = '#00FF44'; ctx.fillRect(cx - W*0.44+8, midY+92, 40, 8);
+    ctx.fillStyle = '#00FF44'; ctx.font = '4px monospace'; ctx.fillText('84% CHARGE', cx - W*0.44+32, midY+108);
+    // Fiber patch panel
+    ctx.fillStyle = '#020a06'; ctx.strokeStyle = '#00CC44'; ctx.lineWidth = 1;
+    rr(cx + W * 0.28 + 44 + 4, topY + 86, 36, 120, 3); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#00CC44'; ctx.font = 'bold 4px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('PATCH', cx + W * 0.28 + 62 + 4, topY + 98);
+    for (let pi = 0; pi < 16; pi++) {
+      const pc = pi % 3 === 0 ? '#00FF66' : '#004422';
+      ctx.fillStyle = pc; ctx.beginPath(); ctx.arc(cx+W*0.28+44+6+(pi%4)*8, topY+104+Math.floor(pi/4)*14, 2.5, 0, Math.PI*2); ctx.fill();
+    }
     drawMetroHuman(cx - W * 0.08, midY + 20, '#0a1a0a', '#C8956A', '#1a1a1a'); // hacker1
     drawMetroHuman(cx + W * 0.06, midY + 20, '#080e08', '#FFDAB0', '#0a0a0a'); // hacker2
     drawMetroHuman(cx - W * 0.30, midY + 72, '#0a1408', '#8B5E3C', '#1a1a1a'); // lookout
@@ -18569,6 +19148,7 @@ Game.prototype._renderMetropolisRoom = function(ctx, room, type, W, H, cx, topY,
   } else if (type === 19) {
     // ═══ DOJO: METRO DOJO ═══
     drawMetroFloor('#0a0804', '#0c0a06');
+    drawWallTrim('#CC6600');
     drawMetroSign('METRO DOJO');
     // Large tatami mat with markings
     ctx.fillStyle = '#1a1208'; ctx.strokeStyle = '#884400'; ctx.lineWidth = 2;
@@ -18628,6 +19208,37 @@ Game.prototype._renderMetropolisRoom = function(ctx, room, type, W, H, cx, topY,
     ctx.font = '14px serif'; ctx.textAlign = 'center'; ctx.fillText('🕯️', cx + W * 0.26 + 20, midY + 76); ctx.shadowBlur = 0;
     ctx.font = '14px serif'; ctx.fillText('🕯️', cx + W * 0.26 + 48, midY + 76);
     ctx.fillStyle = '#FFCC88'; ctx.font = '5px monospace'; ctx.textAlign = 'center'; ctx.fillText('ALTAR', cx + W * 0.26 + 34, midY + 92);
+    // Warm dojo lighting over mat
+    drawLight(cx, topY + 50 + H * 0.25, 'rgba(255,180,60,0.12)', 120);
+    // Bamboo stick / drum corner ambience
+    ctx.strokeStyle = '#5a3a10'; ctx.lineWidth = 3;
+    for (let bi = 0; bi < 3; bi++) {
+      ctx.beginPath(); ctx.moveTo(cx + W*0.26 + 22, midY + 42 + bi * 8); ctx.lineTo(cx + W*0.26 + 22, midY + 100 + bi * 4); ctx.stroke();
+    }
+    // Kata diagram poster on wall
+    drawWallArt(cx + W * 0.26 + 70, topY + 106, 54, 50, 'KATA\nDIAGRAM', '#FFCC88', '#0a0804');
+    // Student grade chart
+    ctx.fillStyle = '#120c06'; ctx.strokeStyle = '#664400'; ctx.lineWidth = 1;
+    rr(cx + W * 0.26 + 70, topY + 162, 54, 76, 2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#FFCC44'; ctx.font = 'bold 5px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('GRADES', cx + W * 0.26 + 97, topY + 174);
+    const gNames = ['Ryu','Ken','Akuma','Fei','Dan'];
+    for (let gi = 0; gi < 5; gi++) {
+      ctx.fillStyle = '#FFAA44'; ctx.font = '4px monospace'; ctx.textAlign = 'center';
+      ctx.fillText(`${gNames[gi]} - DAN ${gi+1}`, cx + W * 0.26 + 97, topY + 184 + gi * 10);
+    }
+    // Zen sand garden in corner
+    ctx.fillStyle = '#2a2010'; ctx.strokeStyle = '#664400'; ctx.lineWidth = 1;
+    rr(cx - W * 0.44, midY + 148, 50, 50, 3); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#D4C090'; ctx.globalAlpha = 0.35;
+    ctx.fillRect(cx - W*0.44+3, midY+151, 44, 44); ctx.globalAlpha = 1;
+    // sand rake lines
+    ctx.strokeStyle = '#C8B880'; ctx.lineWidth = 0.5;
+    for (let sl = 0; sl < 6; sl++) { ctx.beginPath(); ctx.moveTo(cx - W*0.44+4, midY+154+sl*7); ctx.lineTo(cx - W*0.44+46, midY+154+sl*7); ctx.stroke(); }
+    // rock in sand garden
+    ctx.fillStyle = '#666655'; ctx.beginPath(); ctx.ellipse(cx - W*0.44+28, midY+174, 6, 4, 0.5, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#CC6600'; ctx.font = '5px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('ZEN GARDEN', cx - W*0.44+25, midY+200);
     drawMetroHuman(cx - W * 0.16, topY + 50 + H * 0.30, '#e0e0c0', '#C8956A', '#1a0a00'); // sensei
     drawMetroHuman(cx + W * 0.08, topY + 50 + H * 0.30, '#c0c0a8', '#8B5E3C', '#1a0a00'); // student1
     drawMetroHuman(cx - W * 0.06, topY + 50 + H * 0.30, '#d0d0b0', '#FFDAB0', '#3a2010'); // student2
@@ -18635,6 +19246,8 @@ Game.prototype._renderMetropolisRoom = function(ctx, room, type, W, H, cx, topY,
   } else if (type === 20) {
     // ═══ SAFEHOUSE: METRO SAFEHOUSE ═══
     drawMetroFloor('#040408', '#06060c');
+    drawWallTrim('#444488');
+    drawCeilingRow(midY - 20, 4, 'rgba(80,80,200,0.08)');
     drawMetroSign('SAFEHOUSE');
     // Large planning / heist table
     ctx.fillStyle = '#0a0a14'; ctx.strokeStyle = '#4444AA'; ctx.lineWidth = 1.5;
@@ -18709,12 +19322,43 @@ Game.prototype._renderMetropolisRoom = function(ctx, room, type, W, H, cx, topY,
     ctx.fillStyle = '#4488FF'; ctx.font = 'bold 5px monospace'; ctx.textAlign = 'center';
     ctx.fillText('COMMS', cx + W * 0.12 + 26, midY + 86);
     ctx.fillText('ENCRYPTED', cx + W * 0.12 + 26, midY + 96);
+    // Dim single spotlight on planning table
+    drawLight(cx, topY + 62, 'rgba(100,100,255,0.14)', 90);
+    // Stacked burner phones
+    ctx.fillStyle = '#0a0816'; ctx.strokeStyle = '#334488'; ctx.lineWidth = 1;
+    rr(cx + W * 0.12 + 52 + 4, midY + 54, 40, 34, 3); ctx.fill(); ctx.stroke();
+    ctx.font = '9px serif'; ctx.textAlign = 'center';
+    for (const [em, ex2, ey2] of [['📱',cx+W*0.12+64+4,midY+68],['📱',cx+W*0.12+76+4,midY+72]])
+      ctx.fillText(em, ex2, ey2);
+    ctx.fillStyle = '#6688AA'; ctx.font = '5px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('BURNERS', cx + W * 0.12 + 60 + 4, midY + 82);
+    // Cash stacks on table
+    ctx.fillStyle = '#0a1408'; ctx.strokeStyle = '#22AA44'; ctx.lineWidth = 1;
+    for (let ci = 0; ci < 3; ci++) {
+      rr(cx - 68 + ci * 20, topY + 70, 16, 22, 2); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#44CC66'; ctx.font = '4px monospace'; ctx.textAlign = 'center';
+      ctx.fillText('$$$', cx - 68 + ci * 20 + 8, topY + 84);
+    }
+    // Escape route map on wall
+    drawWallArt(cx + W * 0.14, midY - 40, 100, 50, 'ESCAPE\nROUTE → ★', '#8888FF', '#040408');
+    // Blacked-out windows (painted over)
+    for (const wx2 of [cx - W*0.44, cx + W*0.28]) {
+      ctx.fillStyle = '#050508'; ctx.strokeStyle = '#222244'; ctx.lineWidth = 1.5;
+      rr(wx2 + 4, topY + 12, 40, 52, 2); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#1a1a28'; ctx.fillRect(wx2 + 6, topY + 14, 36, 48);
+      ctx.strokeStyle = '#333355'; ctx.lineWidth = 0.5;
+      ctx.strokeRect(wx2 + 6, topY + 14, 36, 24); ctx.strokeRect(wx2 + 6, topY + 38, 36, 24);
+      ctx.fillStyle = '#222244'; ctx.font = 'bold 5px monospace'; ctx.textAlign = 'center';
+      ctx.fillText('BLACKED OUT', wx2 + 26, topY + 68);
+    }
     drawMetroHuman(cx - W * 0.16, topY + 142, '#0a0a1a', '#C8956A', '#1a0a00'); // planner
     drawMetroHuman(cx + W * 0.04, midY + 54, '#0a0818', '#FFDAB0', '#2a1a2a'); // lookout
 
   } else if (type === 21) {
     // ═══ CHOP SHOP: CITY CHOP SHOP ═══
     drawMetroFloor('#08080a', '#0a0a0c');
+    drawWallTrim('#886622');
+    drawCeilingRow(midY - 30, 4, 'rgba(200,140,40,0.09)');
     drawMetroSign('CITY CHOP SHOP');
     // Oil stain floor marks
     ctx.fillStyle = 'rgba(40,30,0,0.4)';
@@ -18780,12 +19424,33 @@ Game.prototype._renderMetropolisRoom = function(ctx, room, type, W, H, cx, topY,
       ctx.fillStyle = sprayC[si]; ctx.globalAlpha = 0.85;
       rr(cx - W * 0.44 + 56 + si * 12, midY + 55, 10, 26, 3); ctx.fill(); ctx.globalAlpha = 1;
     }
+    // Spray booth curtain
+    ctx.fillStyle = 'rgba(50,50,80,0.18)';
+    ctx.fillRect(cx + W*0.20 + 0, topY + 8, 2, H * 0.70);
+    ctx.fillRect(cx + W*0.20 + W*0.24 - 2, topY + 8, 2, H * 0.70);
+    for (let ci = 0; ci < 4; ci++) ctx.fillRect(cx + W*0.20 + ci * W*0.06, topY + 8, W * 0.055, H * 0.70);
+    ctx.strokeStyle = '#554422'; ctx.lineWidth = 0.5;
+    ctx.strokeRect(cx + W*0.20 + 0, topY + 8, W*0.24, H * 0.70);
+    ctx.fillStyle = '#FFAA22'; ctx.font = 'bold 6px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('PAINT BOOTH', cx + W*0.20 + W*0.12, topY + 22);
+    // Stolen vehicle log
+    drawWallArt(cx - W * 0.44 + 52 + 4, midY + 56, 64, 44, 'VEHICLE\nLOG [REDACTED]', '#FF8844', '#08080a');
+    // Oxy-acetylene torch
+    ctx.fillStyle = '#1a1808'; ctx.strokeStyle = '#FF6600'; ctx.lineWidth = 1.5;
+    rr(cx - W * 0.44 + 56 + 52 + 4, midY + 56, 22, 44, 4); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#FF8800'; ctx.font = '5px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('TORCH', cx - W * 0.44 + 56 + 63 + 4, midY + 96);
+    // blue flame at top
+    ctx.fillStyle = '#4488FF'; ctx.shadowColor = '#2266FF'; ctx.shadowBlur = 8*(0.5+0.5*Math.sin(t*4));
+    ctx.beginPath(); ctx.ellipse(cx - W*0.44+56+63+4, midY + 56, 4, 7, 0, 0, Math.PI*2); ctx.fill(); ctx.shadowBlur = 0;
     drawMetroHuman(cx - W * 0.06, midY + 68, '#2a2010', '#C8956A', '#1a0a00'); // mechanic1
     drawMetroHuman(cx + W * 0.06, midY - 66, '#1a1a10', '#8B5E3C', '#2a1a00'); // mechanic2
 
   } else if (type === 22) {
     // ═══ RADIO STATION: METRO RADIO 99.1 FM ═══
     drawMetroFloor('#0a0418', '#0c0520');
+    drawWallTrim('#AA44FF');
+    drawCeilingRow(midY - 50, 4, 'rgba(180,60,255,0.08)');
     drawMetroSign('METRO RADIO 99.1 FM');
     // ON AIR animated sign above booth
     const pulse = Math.sin(t * 3) * 0.35 + 0.65;
@@ -18872,6 +19537,29 @@ Game.prototype._renderMetropolisRoom = function(ctx, room, type, W, H, cx, topY,
     ctx.fillText('NEON NIGHTS - METRO FM', cx - W * 0.10 + 40, midY + 46);
     ctx.fillText('REQUEST LINE: 555-9110', cx - W * 0.10 + 40, midY + 56);
     ctx.fillText('NEXT: CITY LIGHTS...', cx - W * 0.10 + 40, midY + 66);
+    // Acoustic foam panels on side walls
+    const foamC = ['#1a0828','#180626','#160422'];
+    for (let fi = 0; fi < 8; fi++) {
+      ctx.fillStyle = foamC[fi%3]; ctx.strokeStyle = '#3a1440'; ctx.lineWidth = 0.5;
+      rr(cx - W*0.44 + 70, topY + 124 + fi * 20, 28, 18, 2); ctx.fill(); ctx.stroke();
+      rr(cx + W*0.28 + 70, topY + 124 + fi * 20, 28, 18, 2); ctx.fill(); ctx.stroke();
+    }
+    ctx.fillStyle = '#AA44FF'; ctx.font = '5px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('ACOUSTIC FOAM', cx - W*0.44 + 84, topY + 284);
+    // Radio transmission wave animation
+    for (let rw = 1; rw <= 3; rw++) {
+      ctx.strokeStyle = `rgba(200,100,255,${0.12 / rw})`;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(cx, topY - 10, 30 * rw + (t * 20) % 60, 0, Math.PI*2);
+      ctx.stroke();
+    }
+    // Awards shelf
+    ctx.fillStyle = '#0c0218'; ctx.strokeStyle = '#AA44FF'; ctx.lineWidth = 1;
+    rr(cx - W * 0.44 + 70, midY + 32, 132, 30, 2); ctx.fill(); ctx.stroke();
+    ctx.font = '10px serif'; ctx.textAlign = 'center';
+    for (const [em, ex2] of [['🏆',cx-W*0.44+86],['🎵',cx-W*0.44+106],['🎤',cx-W*0.44+126],['🏅',cx-W*0.44+146],['🎸',cx-W*0.44+166]])
+      ctx.fillText(em, ex2, midY + 52);
     drawMetroHuman(cx - W * 0.10, midY - 68, '#1a0a2a', '#FFDAB0', '#1a1a1a'); // DJ on air
     drawMetroHuman(cx + W * 0.28 + 34, topY + 196, '#2a0840', '#C8956A', '#4a3020'); // producer
     drawMetroHuman(cx + W * 0.10, midY + 24, '#16062a', '#E0A878', '#2a1a30'); // engineer
@@ -18879,6 +19567,8 @@ Game.prototype._renderMetropolisRoom = function(ctx, room, type, W, H, cx, topY,
   } else if (type === 23) {
     // ═══ UNDERGROUND LAB: CLASSIFIED ═══
     drawMetroFloor('#020c08', '#020e08');
+    drawWallTrim('#44FFAA');
+    drawCeilingRow(midY - 60, 5, 'rgba(0,220,150,0.07)');
     drawMetroSign('UNDERGROUND LAB — CLASSIFIED');
     // Hazard stripe floor edges
     for (let si = 0; si < 12; si++) {
