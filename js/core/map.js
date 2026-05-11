@@ -5063,11 +5063,13 @@ class GameMap {
     const isDino        = !!this.config.dino;
     const isJungle      = !!this.config.jungle;
     const isDesert      = !!this.config.desert;
+    const isMetropolis  = !!this.config.metropolis;
     const isNeonDealer  = this.config.id === 'neon_city' && door.specialType === 'dealership';
     const isGalDealer   = isGalactica && door.specialType === 'dealership';
     const isWastelandDealer = !!this.config.wasteland && door.specialType === 'dealership';
     const isHardcoreDealer  = isHardcore && door.specialType === 'dealership';
     const isDinoDealer  = isDino && door.specialType === 'dealership';
+    const isMetroDealer = isMetropolis && door.specialType === 'dealership';
     const isDesertDealer = isDesert && door.specialType === 'dealership';
     const isNeonArcade  = this.config.id === 'neon_city' && door.bTypeIdx === 4;
     const isGalArcade   = isGalactica && door.bTypeIdx === 4;
@@ -5081,7 +5083,7 @@ class GameMap {
     const isZombieMap   = !!this.config.zombie;
     const isJungleDealer = isJungle && door.specialType === 'dealership';
     const isOceanDealer  = !!this.config.ocean && door.specialType === 'dealership';
-    const useLargeDealer = isNeonDealer || isGalDealer || isWastelandDealer || isHardcoreDealer || isDinoDealer || isDesertDealer || isJungleDealer || isOceanDealer;
+    const useLargeDealer = isNeonDealer || isGalDealer || isWastelandDealer || isHardcoreDealer || isDinoDealer || isDesertDealer || isJungleDealer || isOceanDealer || isMetroDealer;
     const useLargeArcade = isNeonArcade || isGalArcade;
     const useLargeMarket = isGalMarket;
     const useLargeClub   = isGalClub;
@@ -5096,7 +5098,8 @@ class GameMap {
     const useLargeHardcore = isHardcore;
     const useLargeUnderground = door.bTypeIdx === 23; // Underground Lab always large
     const useLargeDino  = isDino;
-    const useLarge = useLargeDealer || useLargeArcade || useLargeMarket || useLargeClub || useLargeRest || useLargePharm || useLargeRadio || useLargeZombie || useLargeBlitz || useLargeRobot || useLargeHardcore || useLargeUnderground || useLargeDino;
+    const useLargeMetropolis = isMetropolis; // all Metropolis buildings use large arcade rooms
+    const useLarge = useLargeDealer || useLargeArcade || useLargeMarket || useLargeClub || useLargeRest || useLargePharm || useLargeRadio || useLargeZombie || useLargeBlitz || useLargeRobot || useLargeHardcore || useLargeUnderground || useLargeDino || useLargeMetropolis;
     const layout = useLargeDealer ? ROOM_LAYOUT_DEALER_NEON
                  : useLargeArcade ? ROOM_LAYOUT_ARCADE_NEON
                  : useLargeMarket ? ROOM_LAYOUT_DEALER_NEON
@@ -5110,6 +5113,7 @@ class GameMap {
                  : useLargeHardcore   ? ROOM_LAYOUT_ARCADE_NEON
                  : useLargeUnderground? ROOM_LAYOUT_ARCADE_NEON
                  : useLargeDino       ? ROOM_LAYOUT_ARCADE_NEON
+                 : useLargeMetropolis ? ROOM_LAYOUT_ARCADE_NEON
                  : door.type === 2 ? ROOM_LAYOUT_2 : ROOM_LAYOUT_1;
     const RH     = layout.length;
     const RW     = layout[0].length;

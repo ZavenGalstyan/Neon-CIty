@@ -2777,6 +2777,13 @@ class Game {
             this._salespersons = [
               new Salesperson(spX, spY, "#00FFCC", "DIVE REP", "ocean"),
             ];
+          } else if (!!this.map.config.metropolis) {
+            // Metropolis: Urban amber-suited city dealer
+            const spX = room.roomW / 2;
+            const spY = room.roomH * 0.38;
+            this._salespersons = [
+              new Salesperson(spX, spY, "#FF9933", "CITY REP", "metropolis"),
+            ];
           } else {
             this._salespersons = [
               new Salesperson(
@@ -2917,6 +2924,7 @@ class Game {
           const isWasteland  = !!this.map?.config?.wasteland;
           const isHardcoreN  = !!this.map?.config?.hardcore;
           const isOceanN     = !!this.map?.config?.ocean;
+          const isMetropolis = !!this.map?.config?.metropolis;
           const isGalOrBlitz = isGalactica || isBlitz;
           const isSpecialMap = isNeonCity || isGalactica || isWasteland || isBlitz || isRobotCity || isHardcoreN;
           // Special positioning for Neon City / Galactica / Blitz / Wasteland / Zombie buildings
@@ -2969,6 +2977,18 @@ class Game {
             // Ocean: workers centered in room
             npcX = room.roomW / 2;
             npcY = room.roomH * 0.20;
+          } else if (isMetropolis && bType === 11) {
+            // Metropolis bar: NPC stands behind bar counter
+            npcX = room.roomW * 0.60;
+            npcY = room.roomH * 0.26;
+          } else if (isMetropolis && bType === 22) {
+            // Metropolis radio: NPC stands at broadcast desk
+            npcX = room.roomW * 0.50;
+            npcY = room.roomH * 0.28;
+          } else if (isMetropolis) {
+            // All other metropolis buildings: center NPC in large room
+            npcX = room.roomW / 2;
+            npcY = room.roomH * 0.68;
           }
           const useGirlRender = isGalOrBlitz && bType === 8;
           // Determine render type for BuildingNPC
@@ -2979,6 +2999,8 @@ class Game {
             npcRenderType = 'galactica'; // cosmic human bartender
           } else if (isOceanN) {
             npcRenderType = 'ocean'; // full underwater diver human
+          } else if (isMetropolis) {
+            npcRenderType = 'metropolis'; // amber human for all metropolis buildings
           } else if (isNeonCity || isZombie || isBlitz || isRobotCity || isHardcoreN || (isGalactica && (bType === 3 || bType === 8 || bType === 0 || bType === 5 || bType === 22))) {
             npcRenderType = true; // neonCity/robot city/hardcore/galactica style
           }

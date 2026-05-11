@@ -14,7 +14,8 @@ Game.prototype._renderDealershipIndoor = function(ctx, W, H, shake) {
     const isDino      = !!this.map.config.dino;
     const isDesert    = !!this.map.config.desert;
     const isJungle    = !!this.map.config.jungle;
-    const isOcean     = !!this.map.config.ocean;
+    const isOcean      = !!this.map.config.ocean;
+    const isMetropolis = !!this.map.config.metropolis;
     const t = performance.now() / 1000;
     const isCampaign = !!this.map.config.campaign;
 
@@ -35,6 +36,8 @@ Game.prototype._renderDealershipIndoor = function(ctx, W, H, shake) {
             ? "#020a01"
           : isOcean
             ? "#020e10"
+          : isMetropolis
+            ? "#050402"
             : "#06060a";
     ctx.fillRect(0, 0, W, H);
 
@@ -1788,6 +1791,149 @@ Game.prototype._renderDealershipIndoor = function(ctx, W, H, shake) {
       ctx.fillRect(S, S * 1.5, 3, room.roomH - S * 3);
       ctx.fillRect(room.roomW - S - 3, S * 1.5, 3, room.roomH - S * 3);
 
+    } else if (isMetropolis) {
+      // ═══ METROPOLIS: URBAN PREMIUM SHOWROOM ═══
+      const mA  = "#FF9933";   // amber – primary accent
+      const mB  = "#FF6600";   // deep orange – secondary accent
+      const mAr = "255,153,51";
+      const mBr = "255,102,0";
+      const mWall = "#0e0a06";
+      const mFlr  = "#080602";
+      const mC1   = "#2e1a08";
+      const mC2   = "#1e1004";
+      const mC3   = "#140c02";
+      const mCTop = "#3e2400";
+
+      // Floor + walls
+      for (let ty = 0; ty < room.H; ty++) {
+        for (let tx = 0; tx < room.W; tx++) {
+          const px = tx * S, py = ty * S, tile = room.layout[ty][tx];
+          if (tile === 1) {
+            ctx.fillStyle = mWall; ctx.fillRect(px, py, S, S);
+            if ((tx + ty) % 3 === 0) {
+              ctx.fillStyle = `rgba(${mAr},0.14)`;
+              ctx.fillRect(px + S / 2 - 1, py, 2, S);
+            }
+          } else {
+            ctx.fillStyle = mFlr; ctx.fillRect(px, py, S, S);
+            ctx.strokeStyle = `rgba(${mAr},0.07)`; ctx.lineWidth = 1;
+            ctx.strokeRect(px, py, S, S);
+            if ((tx + ty) % 4 === 0) {
+              const pulse = Math.sin(t * 2 + tx + ty) * 0.5 + 0.5;
+              ctx.fillStyle = `rgba(${mAr},${0.025 + pulse * 0.018})`;
+              ctx.fillRect(px + 4, py + 4, S - 8, S - 8);
+            }
+          }
+        }
+      }
+
+      // Room border
+      ctx.strokeStyle = mA; ctx.lineWidth = 2; ctx.shadowColor = mA; ctx.shadowBlur = 15;
+      ctx.strokeRect(S + 2, S + 2, room.roomW - S * 2 - 4, room.roomH - S * 2 - 4);
+      ctx.shadowBlur = 0;
+
+      // Top accent bar
+      const mTopGrad = ctx.createLinearGradient(0, S, room.roomW, S);
+      mTopGrad.addColorStop(0, `rgba(${mBr},0.3)`);
+      mTopGrad.addColorStop(0.5, `rgba(${mAr},0.5)`);
+      mTopGrad.addColorStop(1, `rgba(${mBr},0.3)`);
+      ctx.fillStyle = mTopGrad; ctx.fillRect(S, S, room.roomW - S * 2, 4);
+
+      // Showroom title
+      ctx.save();
+      ctx.font = "bold 20px Orbitron, monospace"; ctx.textAlign = "center";
+      ctx.fillStyle = mA; ctx.shadowColor = mA; ctx.shadowBlur = 25;
+      ctx.fillText("◈ METRO MOTORS ◈", room.roomW / 2, S - 20);
+      ctx.shadowBlur = 0; ctx.restore();
+
+      // ═══ CASHIER COUNTER ═══
+      const mCX = room.roomW / 2 - 75, mCY = S * 1.2;
+      const mCW = 150, mCH = 40;
+      ctx.fillStyle = "rgba(0,0,0,0.4)";
+      ctx.fillRect(mCX + 4, mCY + mCH + 2, mCW, 6);
+      const mCGrad = ctx.createLinearGradient(mCX, mCY, mCX, mCY + mCH);
+      mCGrad.addColorStop(0, mC1); mCGrad.addColorStop(0.5, mC2); mCGrad.addColorStop(1, mC3);
+      ctx.fillStyle = mCGrad; ctx.fillRect(mCX, mCY, mCW, mCH);
+      ctx.fillStyle = mCTop; ctx.fillRect(mCX - 5, mCY, mCW + 10, 6);
+      ctx.strokeStyle = mA; ctx.lineWidth = 2; ctx.shadowColor = mA; ctx.shadowBlur = 10;
+      ctx.beginPath(); ctx.moveTo(mCX - 5, mCY + 3); ctx.lineTo(mCX + mCW + 5, mCY + 3); ctx.stroke();
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = mA; ctx.shadowColor = mA; ctx.shadowBlur = 10;
+      ctx.font = "bold 12px Orbitron, monospace"; ctx.textAlign = "center";
+      ctx.fillText("CITY DESK", mCX + mCW / 2, mCY + 26);
+      ctx.shadowBlur = 0;
+
+      // ═══ DISPLAY CARS ON PLATFORMS ═══
+      const mCars = [
+        { x: room.roomW * 0.18, y: room.roomH * 0.45, color: "#FFD700", name: "CROWN"   },
+        { x: room.roomW * 0.38, y: room.roomH * 0.42, color: "#CC2200", name: "VENOM"   },
+        { x: room.roomW * 0.62, y: room.roomH * 0.42, color: "#99AABB", name: "PHANTOM" },
+        { x: room.roomW * 0.82, y: room.roomH * 0.45, color: "#FF6600", name: "APEX"    },
+        { x: room.roomW * 0.28, y: room.roomH * 0.58, color: "#994422", name: "STRIKER" },
+        { x: room.roomW * 0.72, y: room.roomH * 0.58, color: "#EED8BB", name: "ROYALE"  },
+      ];
+      for (const car of mCars) {
+        const pulse = Math.sin(t * 1.5 + car.x * 0.01) * 0.3 + 0.7;
+        ctx.save(); ctx.translate(car.x, car.y);
+        // Platform outer ring
+        ctx.beginPath(); ctx.arc(0, 15, 45, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${mAr},0.05)`; ctx.fill();
+        ctx.strokeStyle = `rgba(${mAr},${0.5 * pulse})`; ctx.lineWidth = 2; ctx.stroke();
+        // Inner ring
+        ctx.beginPath(); ctx.arc(0, 15, 35, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(${mBr},${0.3 * pulse})`; ctx.lineWidth = 1; ctx.stroke();
+        // Rotating light sweep
+        ctx.save(); ctx.translate(0, 15); ctx.rotate(t * 0.5);
+        for (let i = 0; i < 4; i++) {
+          ctx.fillStyle = `rgba(${mAr},${0.14 * pulse})`;
+          ctx.beginPath(); ctx.moveTo(0, 0);
+          ctx.arc(0, 0, 40, (i * Math.PI) / 2, (i * Math.PI) / 2 + 0.4);
+          ctx.closePath(); ctx.fill();
+        }
+        ctx.restore();
+        // Car body
+        ctx.save();
+        ctx.fillStyle = "rgba(0,0,0,0.4)"; ctx.beginPath(); ctx.ellipse(3, 18, 28, 12, 0, 0, Math.PI * 2); ctx.fill();
+        const mCarGrad = ctx.createLinearGradient(-25, -15, 25, 15);
+        mCarGrad.addColorStop(0, car.color); mCarGrad.addColorStop(0.5, car.color + "CC"); mCarGrad.addColorStop(1, car.color + "88");
+        ctx.fillStyle = mCarGrad;
+        ctx.beginPath(); ctx.moveTo(-22,-8); ctx.lineTo(-25,0); ctx.lineTo(-22,10); ctx.lineTo(22,10); ctx.lineTo(25,0); ctx.lineTo(22,-8); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = "#111008"; ctx.beginPath(); ctx.roundRect(-12,-5,24,12,3); ctx.fill();
+        ctx.fillStyle = "rgba(255,180,80,0.35)";
+        ctx.beginPath(); ctx.moveTo(-12,-4); ctx.lineTo(-8,-8); ctx.lineTo(8,-8); ctx.lineTo(12,-4); ctx.closePath(); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(-10,6); ctx.lineTo(-6,10); ctx.lineTo(6,10); ctx.lineTo(10,6); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = "#FFF8E0"; ctx.shadowColor = "#FFF8E0"; ctx.shadowBlur = 5;
+        ctx.fillRect(-20,-6,4,3); ctx.fillRect(16,-6,4,3); ctx.shadowBlur = 0;
+        ctx.fillStyle = "#CC3300"; ctx.shadowColor = "#CC3300"; ctx.shadowBlur = 4;
+        ctx.fillRect(-20,6,4,2); ctx.fillRect(16,6,4,2); ctx.shadowBlur = 0;
+        ctx.fillStyle = "#1a1a12";
+        ctx.beginPath(); ctx.arc(-16,-10,5,0,Math.PI*2); ctx.arc(16,-10,5,0,Math.PI*2); ctx.arc(-16,12,5,0,Math.PI*2); ctx.arc(16,12,5,0,Math.PI*2); ctx.fill();
+        ctx.fillStyle = "#4a3a20";
+        ctx.beginPath(); ctx.arc(-16,-10,3,0,Math.PI*2); ctx.arc(16,-10,3,0,Math.PI*2); ctx.arc(-16,12,3,0,Math.PI*2); ctx.arc(16,12,3,0,Math.PI*2); ctx.fill();
+        ctx.restore();
+        // Car label
+        ctx.fillStyle = "#FFF8E0"; ctx.shadowColor = car.color; ctx.shadowBlur = 8;
+        ctx.font = "bold 8px Orbitron, monospace"; ctx.textAlign = "center";
+        ctx.fillText(car.name, 0, 45); ctx.shadowBlur = 0;
+        ctx.fillStyle = mA; ctx.font = "7px Orbitron, monospace";
+        ctx.fillText("ON DISPLAY", 0, 54);
+        ctx.restore();
+      }
+
+      // Ambient particles
+      for (let i = 0; i < 8; i++) {
+        const px = (t * 28 + i * 110) % room.roomW;
+        const py = S * 1.5 + Math.sin(t + i * 2) * 20 + (i * (room.roomH - S * 3)) / 8;
+        const alpha = Math.sin(t * 2 + i) * 0.3 + 0.4;
+        ctx.fillStyle = i % 2 === 0 ? `rgba(${mAr},${alpha})` : `rgba(${mBr},${alpha})`;
+        ctx.beginPath(); ctx.arc(px, py, 1.5, 0, Math.PI * 2); ctx.fill();
+      }
+
+      // Side amber strips
+      ctx.fillStyle = `rgba(${mBr},0.20)`;
+      ctx.fillRect(S, S * 1.5, 3, room.roomH - S * 3);
+      ctx.fillRect(room.roomW - S - 3, S * 1.5, 3, room.roomH - S * 3);
+
     } else {
       // ═══ DEFAULT SHOWROOM (other maps) ═══
       for (let ty = 0; ty < room.H; ty++) {
@@ -1867,6 +2013,11 @@ Game.prototype._renderDealershipIndoor = function(ctx, W, H, shake) {
           ctx.shadowColor = "#00FFCC";
           ctx.shadowBlur = 14;
           ctx.fillText("[T] OPEN SHOP", nearSp.x, nearSp.y - 102);
+        } else if (isMetropolis) {
+          ctx.fillStyle = "#FF9933";
+          ctx.shadowColor = "#FF6600";
+          ctx.shadowBlur = 14;
+          ctx.fillText("[T] OPEN SHOP", nearSp.x, nearSp.y - 102);
         } else {
           ctx.fillStyle = "#FFFFAA";
           ctx.shadowColor = "#FFFF00";
@@ -1920,6 +2071,11 @@ Game.prototype._renderDealershipIndoor = function(ctx, W, H, shake) {
     } else if (isOcean) {
       ctx.fillStyle = "#00FFCC";
       ctx.shadowColor = "#00FFCC";
+      ctx.shadowBlur = 12;
+      ctx.fillText("[E] EXIT", room.entryX, room.roomH - 25);
+    } else if (isMetropolis) {
+      ctx.fillStyle = "#FF9933";
+      ctx.shadowColor = "#FF6600";
       ctx.shadowBlur = 12;
       ctx.fillText("[E] EXIT", room.entryX, room.roomH - 25);
     } else {
