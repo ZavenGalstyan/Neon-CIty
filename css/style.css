@@ -3039,6 +3039,370 @@ body {
 }
 
 /* ════════════════════════════════════════════════════════════
+   PROFILE PAGE — Comprehensive Responsive Styles
+   Breakpoints: 1440, 1024, 768, 480, 360
+   ════════════════════════════════════════════════════════════ */
+
+/* ── 1440px — Large desktop ─────────────────────────────────── */
+@media (max-width: 1440px) {
+  .profile-layout { max-width: 1100px; }
+}
+
+/* ── 1024px — Desktop/Tablet landscape ──────────────────────── */
+@media (max-width: 1024px) {
+  .profile-layout {
+    max-width: 100%;
+    padding: 20px 20px 50px;
+  }
+  .profile-hero-card {
+    padding: 22px 24px;
+    gap: 16px;
+  }
+  .profile-avatar-wrap,
+  .profile-avatar-inner {
+    width: 68px; height: 68px;
+  }
+  .profile-avatar-inner { font-size: 28px; }
+  .profile-username { font-size: clamp(18px, 2.5vw, 24px); }
+  .profile-badge { font-size: 9px; padding: 4px 9px; }
+  .profile-logout-btn {
+    font-size: 10px;
+    padding: 8px 18px;
+  }
+  .profile-stats-row { gap: 10px; }
+  .profile-stat-value { font-size: 16px; }
+  .profile-stat-icon { font-size: 18px; }
+
+  /* Battle pass adjustments */
+  .bp-section { padding: 24px 22px 28px; }
+  .bp-title { font-size: clamp(15px, 2vw, 18px); }
+  .bp-grid { gap: 5px; }
+}
+
+/* ── 768px — Tablet portrait ────────────────────────────────── */
+@media (max-width: 768px) {
+  .profile-page { padding-top: 70px; }
+  .profile-layout {
+    padding: 16px 16px 44px;
+    gap: 16px;
+  }
+  .profile-hero-card {
+    padding: 20px 18px;
+    flex-direction: row;
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+  .profile-hero-left {
+    gap: 14px;
+  }
+  .profile-avatar-wrap,
+  .profile-avatar-inner {
+    width: 62px; height: 62px;
+  }
+  .profile-avatar-inner { font-size: 26px; }
+  .profile-avatar-ring { inset: -2px; border-width: 1.5px; }
+  .profile-username {
+    font-size: clamp(16px, 3vw, 22px);
+    letter-spacing: 0.04em;
+  }
+  .profile-hero-meta { gap: 6px; flex-wrap: wrap; }
+  .profile-badge {
+    font-size: 8px;
+    padding: 3px 8px;
+    letter-spacing: 0.12em;
+  }
+  .profile-logout-btn {
+    position: relative;
+    top: auto; right: auto;
+    margin-left: auto;
+    font-size: 9px;
+    padding: 8px 16px;
+    min-height: 40px;
+  }
+  .profile-stats-row {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    padding: 10px 14px;
+    margin-top: 12px;
+  }
+  .profile-stat-chip { gap: 8px; }
+  .profile-stat-icon { font-size: 17px; }
+  .profile-stat-label { font-size: 8px; letter-spacing: 0.14em; }
+  .profile-stat-value { font-size: 15px; }
+  .profile-stat-xp-nums { font-size: 10px; }
+  .profile-stat-xp-sub { font-size: 10px; }
+  .profile-xp-track { height: 9px; }
+
+  /* Battle pass */
+  .bp-section { padding: 20px 16px 24px; border-radius: 14px; }
+  .bp-header { gap: 12px; margin-bottom: 18px; }
+  .bp-title { font-size: clamp(14px, 2.5vw, 17px); }
+  .bp-season { font-size: 9px; padding: 2px 8px; }
+  .bp-level-badge { padding: 6px 14px; }
+  .bp-lv-num { font-size: 20px; }
+  .bp-lv-tier { font-size: 9px; }
+  .bp-lv-xpcap { font-size: 8px; }
+  .bp-xp-wrap { margin-bottom: 22px; }
+  .bp-grid { grid-template-columns: repeat(5, 1fr); gap: 5px; }
+
+  /* Error banner */
+  .profile-error-banner {
+    padding: 12px 16px;
+    gap: 12px;
+    font-size: 12px;
+    border-radius: 8px;
+  }
+  .profile-retry-btn {
+    font-size: 9px;
+    padding: 6px 14px;
+    min-height: 40px;
+  }
+}
+
+/* ── 480px — Mobile landscape / large phone ─────────────────── */
+@media (max-width: 480px) {
+  .profile-page { padding-top: 62px; }
+  .profile-layout {
+    padding: 14px 12px 40px;
+    gap: 14px;
+  }
+  .profile-hero-card {
+    padding: 16px 14px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+    border-radius: 14px;
+  }
+  .profile-hero-left {
+    width: 100%;
+    gap: 12px;
+  }
+  .profile-avatar-wrap,
+  .profile-avatar-inner {
+    width: 54px; height: 54px;
+  }
+  .profile-avatar-inner { font-size: 22px; }
+  .profile-avatar-ring { inset: -2px; }
+  .profile-hero-info { flex: 1; min-width: 0; }
+  .profile-username {
+    font-size: clamp(15px, 4vw, 18px);
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+  }
+  .profile-hero-meta {
+    gap: 5px;
+    flex-wrap: wrap;
+  }
+  .profile-badge {
+    font-size: 7px;
+    padding: 3px 7px;
+    letter-spacing: 0.1em;
+  }
+  .profile-logout-btn {
+    width: 100%;
+    text-align: center;
+    font-size: 9px;
+    padding: 10px 16px;
+    min-height: 44px;
+    border-radius: 8px;
+  }
+  .profile-stats-row {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    padding: 10px 12px;
+    margin-top: 10px;
+    border-radius: 8px;
+  }
+  .profile-stat-chip { gap: 8px; }
+  .profile-stat-chip--xp {
+    padding-top: 8px;
+    border-top: 1px solid rgba(255,255,255,0.06);
+  }
+  .profile-stat-icon { font-size: 16px; }
+  .profile-stat-label { font-size: 8px; }
+  .profile-stat-value { font-size: 14px; }
+  .profile-stat-xp-top { margin-bottom: 5px; }
+  .profile-stat-xp-nums { font-size: 10px; }
+  .profile-stat-xp-sub { font-size: 9px; margin-top: 4px; }
+  .profile-xp-track { height: 8px; }
+
+  /* Battle pass */
+  .bp-section {
+    padding: 16px 12px 20px;
+    border-radius: 12px;
+  }
+  .bp-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .bp-header-left { width: 100%; }
+  .bp-title { font-size: 14px; }
+  .bp-season { font-size: 8px; }
+  .bp-level-badge {
+    width: 100%;
+    padding: 8px 12px;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+  }
+  .bp-lv-main { gap: 6px; }
+  .bp-lv-num { font-size: 18px; }
+  .bp-lv-tier { font-size: 8px; }
+  .bp-lv-xpcap { margin-top: 0; margin-left: auto; font-size: 8px; }
+  .bp-xp-wrap { margin-bottom: 18px; }
+  .bp-xp-row { gap: 8px; flex-wrap: nowrap; }
+  .bp-xp-lv-pill { padding: 5px 8px; min-width: 44px; }
+  .bp-xp-lv-num { font-size: 15px; }
+  .bp-xp-lv-label { font-size: 6px; }
+  .bp-xp-nums { font-size: 10px; margin-bottom: 6px; }
+  .bp-grid { grid-template-columns: repeat(5, 1fr); gap: 4px; }
+  .bp-level { padding: 6px 3px 5px; border-radius: 8px; }
+  .bp-tier-label { font-size: 5px; letter-spacing: 0.12em; }
+  .bp-lv-num-small { font-size: 12px; }
+
+  /* Loading & error states */
+  .bp-loading { padding: 36px 16px; gap: 12px; border-radius: 12px; }
+  .bp-loading-text { font-size: 10px; }
+  .profile-error-banner {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 12px 14px;
+    font-size: 12px;
+  }
+  .profile-retry-btn {
+    width: 100%;
+    text-align: center;
+    min-height: 44px;
+  }
+}
+
+/* ── 360px — Small phone ────────────────────────────────────── */
+@media (max-width: 360px) {
+  .profile-page { padding-top: 58px; }
+  .profile-layout {
+    padding: 10px 8px 36px;
+    gap: 12px;
+  }
+  .profile-hero-card {
+    padding: 14px 12px;
+    gap: 12px;
+    border-radius: 12px;
+  }
+  .profile-hero-left { gap: 10px; }
+  .profile-avatar-wrap,
+  .profile-avatar-inner {
+    width: 48px; height: 48px;
+  }
+  .profile-avatar-inner { font-size: 20px; }
+  .profile-avatar-ring { inset: -1.5px; border-width: 1.5px; }
+  .profile-username {
+    font-size: 14px;
+    letter-spacing: 0.03em;
+  }
+  .profile-hero-meta { gap: 4px; }
+  .profile-badge {
+    font-size: 6px;
+    padding: 2px 6px;
+    letter-spacing: 0.08em;
+    border-radius: 14px;
+  }
+  .profile-logout-btn {
+    font-size: 8px;
+    padding: 9px 14px;
+    min-height: 42px;
+    letter-spacing: 0.1em;
+  }
+  .profile-stats-row {
+    gap: 8px;
+    padding: 8px 10px;
+    border-radius: 8px;
+  }
+  .profile-stat-chip { gap: 6px; }
+  .profile-stat-chip--xp { padding-top: 6px; }
+  .profile-stat-icon { font-size: 14px; }
+  .profile-stat-label { font-size: 7px; letter-spacing: 0.12em; }
+  .profile-stat-value { font-size: 13px; }
+  .profile-stat-xp-top { margin-bottom: 4px; }
+  .profile-stat-xp-nums { font-size: 9px; }
+  .profile-stat-xp-sub { font-size: 8px; }
+  .profile-xp-track { height: 7px; }
+
+  /* Battle pass */
+  .bp-section {
+    padding: 12px 10px 16px;
+    border-radius: 10px;
+  }
+  .bp-section::before { left: 12px; right: 12px; }
+  .bp-header { gap: 8px; margin-bottom: 14px; }
+  .bp-header-left { gap: 8px; flex-wrap: wrap; }
+  .bp-title { font-size: 12px; letter-spacing: 0.08em; }
+  .bp-season { font-size: 7px; padding: 2px 6px; }
+  .bp-level-badge {
+    padding: 6px 10px;
+    border-radius: 8px;
+    gap: 8px;
+  }
+  .bp-lv-label { font-size: 7px; }
+  .bp-lv-num { font-size: 16px; }
+  .bp-lv-tier { font-size: 7px; }
+  .bp-lv-xpcap { font-size: 7px; }
+  .bp-xp-wrap { margin-bottom: 14px; }
+  .bp-xp-row { gap: 6px; }
+  .bp-xp-lv-pill { padding: 4px 6px; min-width: 38px; border-radius: 7px; }
+  .bp-xp-lv-num { font-size: 13px; }
+  .bp-xp-lv-label { font-size: 5px; }
+  .bp-xp-nums { font-size: 9px; margin-bottom: 5px; }
+  .bp-xp-track { height: 7px; }
+  .bp-grid { grid-template-columns: repeat(5, 1fr); gap: 3px; }
+  .bp-level {
+    padding: 4px 2px 3px;
+    border-radius: 6px;
+    min-height: 48px;
+  }
+  .bp-tier-label { font-size: 4px; letter-spacing: 0.1em; }
+  .bp-lv-num-small { font-size: 10px; }
+  .bp-medal { transform: scale(0.8); }
+  .bp-check { width: 16px; height: 16px; }
+
+  /* Loading & error states */
+  .bp-loading { padding: 28px 12px; gap: 10px; }
+  .bp-loading-text { font-size: 9px; letter-spacing: 0.15em; }
+  .profile-error-banner {
+    padding: 10px 12px;
+    font-size: 11px;
+    gap: 8px;
+    border-radius: 8px;
+  }
+  .profile-retry-btn {
+    font-size: 8px;
+    padding: 8px 12px;
+    min-height: 40px;
+  }
+}
+
+/* ── Touch-friendly: ensure minimum tap targets on touch devices ─ */
+@media (pointer: coarse) {
+  .profile-logout-btn,
+  .profile-retry-btn { min-height: 44px; }
+  .profile-badge { min-height: 28px; display: inline-flex; align-items: center; }
+}
+
+/* ── Reduced motion preference ──────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .profile-avatar-ring,
+  .profile-xp-fill,
+  .bp-xp-fill { animation: none; }
+  .profile-xp-fill,
+  .bp-xp-fill { transition-duration: 0.1s; }
+}
+
+/* ════════════════════════════════════════════════════════════
    LEADERBOARD PAGE  (leaderboard.html)
    ════════════════════════════════════════════════════════════ */
 

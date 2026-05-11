@@ -6,971 +6,1876 @@
   <title>DASH DREAD — Inventory</title>
   <link rel="stylesheet" href="css/style.css">
   <style>
-  /* ═══════════════════════════════════════════════════════════
-     INVENTORY — Premium self-contained styles
-  ═══════════════════════════════════════════════════════════ */
+  /* ═══════════════════════════════════════════════════════════════════
+     INVENTORY — ULTRA-PREMIUM AAA CYBERPUNK UI
+     Next-Gen Sci-Fi Game Interface
+     Inspired by: Destiny 2, Cyberpunk 2077, Valorant, Apex Legends
+  ═══════════════════════════════════════════════════════════════════ */
 
-  /* ── Ambient orbs ───────────────────────────────────────── */
-  .shop-page { position: relative; }
-  .shop-page::before, .shop-page::after {
+  :root {
+    /* Core palette */
+    --inv-cyan: #00F0FF;
+    --inv-magenta: #FF00AA;
+    --inv-gold: #FFD700;
+    --inv-purple: #AA66FF;
+    --inv-orange: #FF8844;
+    --inv-green: #44FF88;
+
+    /* Rarity colors */
+    --rarity-common: #8899AA;
+    --rarity-rare: #00AAFF;
+    --rarity-epic: #AA44FF;
+    --rarity-legendary: #FFD700;
+
+    /* Surfaces */
+    --inv-surface: rgba(8,6,18,0.92);
+    --inv-glass: rgba(15,12,30,0.8);
+    --inv-glass-hover: rgba(25,20,45,0.85);
+    --inv-border: rgba(255,255,255,0.06);
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════
+     ANIMATED BACKGROUND SYSTEM
+  ═══════════════════════════════════════════════════════════════════ */
+
+  .inv-page {
+    position: relative;
+    min-height: 100vh;
+    overflow: hidden;
+    background: linear-gradient(180deg, #030308 0%, #0a0815 40%, #0d0a1a 100%);
+  }
+
+  /* Holographic animated grid */
+  .inv-page::before {
     content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,240,255,0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,240,255,0.02) 1px, transparent 1px),
+      linear-gradient(rgba(170,100,255,0.015) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(170,100,255,0.015) 1px, transparent 1px);
+    background-size: 80px 80px, 80px 80px, 40px 40px, 40px 40px;
+    animation: grid-drift 50s linear infinite;
+    pointer-events: none;
+    z-index: 0;
+  }
+  @keyframes grid-drift {
+    0% { transform: translate(0, 0); }
+    100% { transform: translate(80px, 80px); }
+  }
+
+  /* Premium ambient orbs */
+  .inv-orb {
     position: fixed;
     border-radius: 50%;
     pointer-events: none;
-    z-index: 0;
     filter: blur(120px);
+    will-change: transform;
+    z-index: 0;
   }
-  .shop-page::before {
-    width: 650px; height: 650px;
-    top: -200px; right: -120px;
-    background: radial-gradient(circle, rgba(68,238,255,0.1) 0%, transparent 65%);
-    animation: inv-orb-a 22s ease-in-out infinite alternate;
+  .inv-orb--1 {
+    width: 800px; height: 800px;
+    top: -300px; right: -200px;
+    background: radial-gradient(circle, rgba(0,240,255,0.12) 0%, rgba(0,200,255,0.04) 40%, transparent 70%);
+    animation: orb-float-1 28s ease-in-out infinite alternate;
   }
-  .shop-page::after {
+  .inv-orb--2 {
+    width: 600px; height: 600px;
+    bottom: -200px; left: -150px;
+    background: radial-gradient(circle, rgba(170,100,255,0.1) 0%, rgba(255,0,170,0.03) 50%, transparent 70%);
+    animation: orb-float-2 32s ease-in-out infinite alternate;
+  }
+  .inv-orb--3 {
     width: 500px; height: 500px;
-    bottom: -120px; left: -80px;
-    background: radial-gradient(circle, rgba(204,136,255,0.1) 0%, transparent 65%);
-    animation: inv-orb-b 28s ease-in-out infinite alternate;
+    top: 50%; left: 30%;
+    background: radial-gradient(circle, rgba(255,215,0,0.06) 0%, transparent 60%);
+    animation: orb-float-3 25s ease-in-out infinite alternate;
   }
-  @keyframes inv-orb-a {
-    from { transform: translate(0,0) scale(1);         opacity: 0.7; }
-    to   { transform: translate(-60px,70px) scale(1.2); opacity: 1; }
+  @keyframes orb-float-1 {
+    0% { transform: translate(0, 0) scale(1); opacity: 0.8; }
+    50% { transform: translate(-80px, 60px) scale(1.15); opacity: 1; }
+    100% { transform: translate(-40px, 80px) scale(1.1); opacity: 0.9; }
   }
-  @keyframes inv-orb-b {
-    from { transform: translate(0,0) scale(1);         opacity: 0.6; }
-    to   { transform: translate(70px,-50px) scale(1.18); opacity: 1; }
+  @keyframes orb-float-2 {
+    0% { transform: translate(0, 0) scale(1); opacity: 0.7; }
+    50% { transform: translate(100px, -70px) scale(1.2); opacity: 1; }
+    100% { transform: translate(60px, -40px) scale(1.05); opacity: 0.85; }
+  }
+  @keyframes orb-float-3 {
+    0% { transform: translate(0, 0) scale(1); opacity: 0.5; }
+    50% { transform: translate(-50px, 80px) scale(1.25); opacity: 0.7; }
+    100% { transform: translate(30px, 50px) scale(1.1); opacity: 0.6; }
   }
 
-  /* ── Page wrap ──────────────────────────────────────────── */
-  .shop-wrap {
-    position: relative;
+  /* Floating particles */
+  .inv-particles {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
     z-index: 1;
-    width: 100%;
-    max-width: 1340px;
-    margin: 0 auto;
-    padding: 0 32px 120px;
+    overflow: hidden;
+  }
+  .inv-particle {
+    position: absolute;
+    width: 2px;
+    height: 2px;
+    border-radius: 50%;
+    opacity: 0;
+    animation: particle-rise 18s linear infinite;
+  }
+  .inv-particle:nth-child(1) { left: 10%; background: var(--inv-cyan); box-shadow: 0 0 8px var(--inv-cyan); animation-delay: 0s; animation-duration: 20s; }
+  .inv-particle:nth-child(2) { left: 22%; background: var(--inv-purple); box-shadow: 0 0 8px var(--inv-purple); animation-delay: 3s; animation-duration: 24s; }
+  .inv-particle:nth-child(3) { left: 38%; background: var(--inv-gold); box-shadow: 0 0 8px var(--inv-gold); animation-delay: 6s; animation-duration: 18s; }
+  .inv-particle:nth-child(4) { left: 52%; background: var(--inv-cyan); box-shadow: 0 0 8px var(--inv-cyan); animation-delay: 2s; animation-duration: 22s; }
+  .inv-particle:nth-child(5) { left: 65%; background: var(--inv-magenta); box-shadow: 0 0 8px var(--inv-magenta); animation-delay: 8s; animation-duration: 19s; }
+  .inv-particle:nth-child(6) { left: 78%; background: var(--inv-purple); box-shadow: 0 0 8px var(--inv-purple); animation-delay: 4s; animation-duration: 21s; }
+  .inv-particle:nth-child(7) { left: 88%; background: var(--inv-gold); box-shadow: 0 0 8px var(--inv-gold); animation-delay: 10s; animation-duration: 17s; }
+  .inv-particle:nth-child(8) { left: 95%; background: var(--inv-cyan); box-shadow: 0 0 8px var(--inv-cyan); animation-delay: 5s; animation-duration: 23s; }
+
+  @keyframes particle-rise {
+    0% { transform: translateY(100vh) scale(0); opacity: 0; }
+    10% { opacity: 0.9; transform: translateY(85vh) scale(1); }
+    85% { opacity: 0.5; }
+    100% { transform: translateY(-5vh) scale(0.4); opacity: 0; }
   }
 
-  /* ── HEADER ─────────────────────────────────────────────── */
-  .shop-header {
+  /* Energy streaks */
+  .inv-energy-streak {
+    position: fixed;
+    height: 1px;
+    pointer-events: none;
+    z-index: 1;
+    opacity: 0.35;
+    animation: streak-pulse 5s ease-in-out infinite;
+  }
+  .inv-energy-streak--1 {
+    top: 15%; left: 0; right: 50%;
+    background: linear-gradient(90deg, transparent, var(--inv-cyan), transparent);
+    animation-delay: 0s;
+  }
+  .inv-energy-streak--2 {
+    top: 42%; left: 40%; right: 0;
+    background: linear-gradient(90deg, transparent, var(--inv-purple), transparent);
+    animation-delay: 2s;
+  }
+  .inv-energy-streak--3 {
+    bottom: 25%; left: 0; right: 60%;
+    background: linear-gradient(90deg, transparent, var(--inv-gold), transparent);
+    animation-delay: 4s;
+  }
+  @keyframes streak-pulse {
+    0%, 100% { opacity: 0.2; transform: scaleX(0.85); }
+    50% { opacity: 0.45; transform: scaleX(1); }
+  }
+
+  /* HUD corner accents */
+  .inv-hud-corner {
+    position: fixed;
+    width: 130px;
+    height: 130px;
+    pointer-events: none;
+    z-index: 2;
+    opacity: 0.45;
+  }
+  .inv-hud-corner--tl { top: 0; left: 0; }
+  .inv-hud-corner--tr { top: 0; right: 0; transform: scaleX(-1); }
+  .inv-hud-corner--bl { bottom: 0; left: 0; transform: scaleY(-1); }
+  .inv-hud-corner--br { bottom: 0; right: 0; transform: scale(-1); }
+  .inv-hud-corner svg { width: 100%; height: 100%; }
+
+  /* ═══════════════════════════════════════════════════════════════════
+     PAGE WRAPPER
+  ═══════════════════════════════════════════════════════════════════ */
+
+  .inv-wrap {
+    position: relative;
+    z-index: 10;
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 40px 140px;
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════
+     CINEMATIC HEADER
+  ═══════════════════════════════════════════════════════════════════ */
+
+  .inv-header {
     position: relative;
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
-    padding: 60px 0 44px;
-    gap: 28px;
-    overflow: hidden;
+    padding: 80px 0 50px;
+    gap: 32px;
   }
-  .shop-header::after {
+
+  /* Gradient divider */
+  .inv-header::after {
     content: '';
     position: absolute;
-    bottom: 0; left: 0; right: 0; height: 1px;
-    background: linear-gradient(90deg, transparent 0%, rgba(68,238,255,0.3) 30%,
-                rgba(204,136,255,0.35) 65%, rgba(68,255,136,0.2) 90%, transparent 100%);
+    bottom: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg,
+      transparent 0%,
+      var(--inv-cyan) 15%,
+      var(--inv-purple) 35%,
+      var(--inv-gold) 55%,
+      var(--inv-magenta) 75%,
+      transparent 100%);
+    opacity: 0.5;
+    animation: header-line-glow 4s ease-in-out infinite alternate;
   }
-  .shop-title { display: flex; flex-direction: column; gap: 12px; }
-  .shop-title__main {
+  @keyframes header-line-glow {
+    0% { opacity: 0.35; filter: blur(0px); }
+    100% { opacity: 0.6; filter: blur(1px); }
+  }
+
+  .inv-title {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  /* Eyebrow label */
+  .inv-title__eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
     font-family: 'Orbitron', sans-serif;
-    font-size: clamp(34px, 5.5vw, 64px);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.45em;
+    color: var(--inv-cyan);
+    text-shadow: 0 0 25px var(--inv-cyan);
+    text-transform: uppercase;
+  }
+  .inv-title__eyebrow-icon {
+    animation: icon-pulse 2s ease-in-out infinite;
+  }
+  @keyframes icon-pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.85); }
+  }
+
+  /* Main title */
+  .inv-title__main {
+    font-family: 'Orbitron', sans-serif;
+    font-size: clamp(42px, 7vw, 80px);
     font-weight: 900;
-    letter-spacing: 0.07em;
-    line-height: 1;
-    background: linear-gradient(135deg, #ffffff 0%, #44EEFF 30%, #CC88FF 65%, #44FF88 100%);
+    letter-spacing: 0.1em;
+    line-height: 0.95;
+    background: linear-gradient(135deg,
+      #ffffff 0%,
+      #44EEFF 20%,
+      #00F0FF 35%,
+      #AA66FF 55%,
+      #CC88FF 70%,
+      #44FF88 85%,
+      #88FFAA 100%);
+    background-size: 200% 200%;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    filter: drop-shadow(0 0 40px rgba(68,238,255,0.2));
+    filter: drop-shadow(0 0 60px rgba(0,240,255,0.35));
+    animation: title-gradient 8s ease-in-out infinite;
   }
-  .shop-title__sub {
+  @keyframes title-gradient {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+  }
+
+  .inv-title__sub {
     font-family: 'Rajdhani', sans-serif;
-    font-size: 12px;
-    letter-spacing: 0.3em;
-    color: var(--muted);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.35em;
+    color: rgba(255,255,255,0.4);
     text-transform: uppercase;
   }
 
-  /* ── BALANCE CHIP ───────────────────────────────────────── */
-  .shop-balance {
+  /* ═══════════════════════════════════════════════════════════════════
+     PREMIUM BALANCE CARD
+  ═══════════════════════════════════════════════════════════════════ */
+
+  .inv-balance {
     position: relative;
     display: flex;
     align-items: center;
-    gap: 16px;
-    padding: 16px 26px;
-    background: linear-gradient(135deg, rgba(255,215,0,0.07) 0%, rgba(255,215,0,0.03) 100%);
-    border: 1px solid rgba(255,215,0,0.22);
-    border-radius: 18px;
-    box-shadow: 0 0 40px rgba(255,215,0,0.07), inset 0 1px 0 rgba(255,255,255,0.05);
+    gap: 18px;
+    padding: 20px 32px;
+    background: linear-gradient(135deg, rgba(255,215,0,0.08) 0%, rgba(255,180,50,0.03) 50%, rgba(255,215,0,0.02) 100%);
+    border: 1px solid rgba(255,215,0,0.28);
+    border-radius: 20px;
+    box-shadow:
+      0 0 60px rgba(255,215,0,0.1),
+      0 20px 40px rgba(0,0,0,0.4),
+      inset 0 1px 0 rgba(255,255,255,0.08);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
     flex-shrink: 0;
     overflow: hidden;
-    transition: border-color 0.3s, box-shadow 0.3s;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   }
-  .shop-balance:hover {
-    border-color: rgba(255,215,0,0.42);
-    box-shadow: 0 0 55px rgba(255,215,0,0.13), inset 0 1px 0 rgba(255,255,255,0.06);
-  }
-  .shop-balance::before {
+
+  /* Holographic sweep */
+  .inv-balance::before {
     content: '';
     position: absolute;
-    top: -40%; left: -80%;
-    width: 50%; height: 180%;
-    background: linear-gradient(105deg, transparent, rgba(255,215,0,0.08), transparent);
-    animation: balance-sweep 5s ease-in-out infinite;
+    top: -50%; left: -100%;
+    width: 60%; height: 200%;
+    background: linear-gradient(105deg, transparent, rgba(255,215,0,0.12), rgba(255,255,255,0.06), transparent);
+    animation: balance-sweep 6s ease-in-out infinite;
+    pointer-events: none;
   }
   @keyframes balance-sweep {
-    0%,40% { left: -80%; }
-    60%,100% { left: 180%; }
+    0%, 35% { left: -100%; }
+    65%, 100% { left: 200%; }
   }
-  .shop-balance__icon {
-    font-size: 30px;
-    color: var(--gold);
-    filter: drop-shadow(0 0 12px rgba(255,215,0,0.8));
+
+  .inv-balance:hover {
+    border-color: rgba(255,215,0,0.5);
+    box-shadow: 0 0 100px rgba(255,215,0,0.18), 0 25px 50px rgba(0,0,0,0.5);
+    transform: translateY(-2px);
+  }
+
+  .inv-balance__icon-wrap {
+    position: relative;
+    width: 56px; height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(circle, rgba(255,215,0,0.12) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+
+  .inv-balance__icon {
+    font-size: 36px;
+    color: var(--inv-gold);
+    filter: drop-shadow(0 0 16px rgba(255,215,0,0.9));
     animation: nex-pulse 3s ease-in-out infinite;
     line-height: 1;
   }
   @keyframes nex-pulse {
-    0%,100% { filter: drop-shadow(0 0 10px rgba(255,215,0,0.7)); }
-    50%      { filter: drop-shadow(0 0 22px rgba(255,215,0,1)); }
+    0%, 100% { filter: drop-shadow(0 0 12px rgba(255,215,0,0.8)); transform: scale(1); }
+    50% { filter: drop-shadow(0 0 28px rgba(255,215,0,1)); transform: scale(1.05); }
   }
-  .shop-balance__body { display: flex; flex-direction: column; gap: 4px; }
-  .shop-balance__label {
+
+  /* Rotating ring */
+  .inv-balance__icon-ring {
+    position: absolute;
+    inset: -4px;
+    border: 2px solid transparent;
+    border-top-color: rgba(255,215,0,0.6);
+    border-radius: 50%;
+    animation: ring-rotate 3s linear infinite;
+  }
+  @keyframes ring-rotate { to { transform: rotate(360deg); } }
+
+  .inv-balance__body {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .inv-balance__label {
     font-family: 'Orbitron', sans-serif;
     font-size: 9px;
-    letter-spacing: 0.3em;
-    color: var(--muted);
+    font-weight: 600;
+    letter-spacing: 0.35em;
+    color: rgba(255,255,255,0.45);
     text-transform: uppercase;
   }
-  .shop-balance__value {
+
+  .inv-balance__value {
     font-family: 'Orbitron', sans-serif;
-    font-size: 26px;
+    font-size: 32px;
     font-weight: 900;
-    color: var(--gold);
-    letter-spacing: 0.03em;
+    color: var(--inv-gold);
+    letter-spacing: 0.04em;
     line-height: 1;
-    text-shadow: 0 0 24px rgba(255,215,0,0.5);
+    text-shadow: 0 0 30px rgba(255,215,0,0.6);
   }
 
-  /* ── ERROR BANNER ───────────────────────────────────────── */
-  .shop-error {
+  /* ═══════════════════════════════════════════════════════════════════
+     NOTIFICATION BANNER
+  ═══════════════════════════════════════════════════════════════════ */
+
+  .inv-notification {
+    position: relative;
     display: flex;
     align-items: center;
-    gap: 14px;
-    margin: 0 0 28px;
-    padding: 16px 24px;
-    background: rgba(255,68,102,0.06);
-    border: 1px solid rgba(255,68,102,0.22);
+    gap: 18px;
+    margin: 0 0 32px;
+    padding: 20px 28px;
+    background: linear-gradient(135deg, rgba(255,68,102,0.08) 0%, rgba(255,100,50,0.03) 100%);
+    border: 1px solid rgba(255,68,102,0.3);
+    border-radius: 16px;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    overflow: hidden;
+    animation: notification-appear 0.4s ease;
+  }
+  @keyframes notification-appear {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Animated border glow */
+  .inv-notification::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(90deg, var(--inv-magenta), var(--inv-orange), var(--inv-magenta));
+    background-size: 200% 100%;
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: destination-out;
+    mask-composite: exclude;
+    animation: border-flow 4s linear infinite;
+    opacity: 0.5;
+  }
+  @keyframes border-flow {
+    0% { background-position: 0% 50%; }
+    100% { background-position: 200% 50%; }
+  }
+
+  .inv-notification__icon {
+    width: 48px; height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255,68,102,0.12);
+    border: 1px solid rgba(255,68,102,0.35);
     border-radius: 14px;
-    backdrop-filter: blur(12px);
+    font-size: 22px;
+    flex-shrink: 0;
+    animation: icon-pulse 2s ease-in-out infinite;
   }
-  .shop-error__msg {
+
+  .inv-notification__content {
     flex: 1;
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 14px;
-    color: var(--pink);
-    letter-spacing: 0.06em;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
   }
-  .shop-error__retry {
-    padding: 9px 22px;
-    background: rgba(255,68,102,0.1);
-    border: 1px solid rgba(255,68,102,0.38);
-    border-radius: 8px;
-    color: var(--pink);
+
+  .inv-notification__title {
     font-family: 'Orbitron', sans-serif;
-    font-size: 9px;
+    font-size: 10px;
     font-weight: 700;
     letter-spacing: 0.18em;
-    cursor: pointer;
-    transition: background 0.2s, box-shadow 0.2s;
-  }
-  .shop-error__retry:hover {
-    background: rgba(255,68,102,0.2);
-    box-shadow: 0 0 18px rgba(255,68,102,0.22);
+    color: var(--pink);
+    text-transform: uppercase;
   }
 
-  /* ── HINT BANNER ────────────────────────────────────────── */
-  .inv-hint {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 13px 22px;
-    margin: 0 0 24px;
-    background: rgba(68,238,255,0.04);
-    border: 1px solid rgba(68,238,255,0.11);
-    border-radius: 12px;
+  .inv-notification__msg {
     font-family: 'Rajdhani', sans-serif;
-    font-size: 13px;
-    letter-spacing: 0.1em;
-    color: rgba(224,224,240,0.42);
-    min-height: 46px;
-    transition: color 0.3s;
-  }
-  .inv-hint:not(:empty)::before {
-    content: '◈';
     font-size: 14px;
-    color: var(--cyan);
-    opacity: 0.55;
-    flex-shrink: 0;
-    filter: drop-shadow(0 0 6px rgba(68,238,255,0.5));
+    font-weight: 600;
+    color: rgba(255,136,153,0.9);
+    letter-spacing: 0.04em;
   }
 
-  /* ── TABS ───────────────────────────────────────────────── */
-  .shop-tabs {
-    display: flex;
-    gap: 8px;
-    padding: 30px 0 36px;
-    border-bottom: none;
-    flex-wrap: wrap;
-  }
-  .shop-tab {
-    position: relative;
-    padding: 11px 28px;
-    background: rgba(255,255,255,0.035);
-    border: 1px solid rgba(255,255,255,0.08);
-    border-radius: 100px;
+  .inv-notification__btn {
+    padding: 14px 30px;
+    background: linear-gradient(135deg, rgba(255,68,102,0.15) 0%, rgba(255,68,102,0.06) 100%);
+    border: 1px solid rgba(255,68,102,0.45);
+    border-radius: 12px;
+    color: var(--pink);
     font-family: 'Orbitron', sans-serif;
     font-size: 10px;
     font-weight: 700;
     letter-spacing: 0.2em;
-    color: var(--muted);
     cursor: pointer;
-    overflow: hidden;
-    transition: color 0.22s, border-color 0.22s, background 0.22s, box-shadow 0.22s;
+    transition: all 0.25s ease;
     white-space: nowrap;
+    overflow: hidden;
+    position: relative;
   }
-  .shop-tab::before {
+
+  .inv-notification__btn::before {
     content: '';
     position: absolute;
     inset: 0;
-    border-radius: 100px;
-    background: radial-gradient(ellipse at 50% -20%, rgba(68,238,255,0.16), transparent 65%);
+    background: linear-gradient(135deg, transparent, rgba(255,68,102,0.15), transparent);
     opacity: 0;
-    transition: opacity 0.22s;
+    transition: opacity 0.25s;
+  }
+
+  .inv-notification__btn:hover {
+    background: linear-gradient(135deg, rgba(255,68,102,0.25) 0%, rgba(255,68,102,0.12) 100%);
+    border-color: rgba(255,68,102,0.7);
+    box-shadow: 0 0 35px rgba(255,68,102,0.2);
+    transform: translateY(-1px);
+  }
+  .inv-notification__btn:hover::before { opacity: 1; }
+
+  /* ═══════════════════════════════════════════════════════════════════
+     PREMIUM CATEGORY TABS
+  ═══════════════════════════════════════════════════════════════════ */
+
+  .inv-tabs {
+    display: flex;
+    gap: 10px;
+    padding: 40px 0 36px;
+    flex-wrap: wrap;
+  }
+
+  .inv-tab {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 32px;
+    background: var(--inv-glass);
+    border: 1px solid var(--inv-border);
+    border-radius: 100px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    color: rgba(255,255,255,0.5);
+    cursor: pointer;
+    overflow: hidden;
+    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    white-space: nowrap;
+    text-transform: uppercase;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+
+  .inv-tab__icon {
+    font-size: 14px;
+    opacity: 0.7;
+    transition: all 0.3s ease;
+  }
+
+  /* Gradient shine overlay */
+  .inv-tab::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: radial-gradient(ellipse 80% 100% at 50% -30%, rgba(0,240,255,0.2), transparent 70%);
+    opacity: 0;
+    transition: opacity 0.3s;
     pointer-events: none;
   }
-  .shop-tab:hover { color: var(--text); border-color: rgba(255,255,255,0.18); }
-  .shop-tab:hover::before { opacity: 0.7; }
-  .shop-tab.active {
-    background: rgba(68,238,255,0.08);
-    border-color: rgba(68,238,255,0.45);
-    color: var(--cyan);
-    text-shadow: 0 0 14px rgba(68,238,255,0.6);
-    box-shadow: 0 0 22px rgba(68,238,255,0.1), inset 0 0 18px rgba(68,238,255,0.05);
-  }
-  .shop-tab.active::before { opacity: 1; }
 
-  /* ── ITEM GRID ──────────────────────────────────────────── */
-  .shop-grid {
+  /* Bottom accent line */
+  .inv-tab::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%) scaleX(0);
+    width: 60%;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--inv-cyan), transparent);
+    transition: transform 0.35s ease;
+  }
+
+  .inv-tab:hover {
+    color: rgba(255,255,255,0.9);
+    border-color: rgba(255,255,255,0.15);
+    background: var(--inv-glass-hover);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+  }
+  .inv-tab:hover::before { opacity: 0.6; }
+  .inv-tab:hover .inv-tab__icon { opacity: 1; transform: scale(1.1); }
+
+  .inv-tab.active {
+    background: linear-gradient(135deg, rgba(0,240,255,0.15) 0%, rgba(0,200,255,0.06) 100%);
+    border-color: rgba(0,240,255,0.5);
+    color: var(--inv-cyan);
+    text-shadow: 0 0 20px rgba(0,240,255,0.6);
+    box-shadow:
+      0 0 50px rgba(0,240,255,0.15),
+      0 10px 40px rgba(0,0,0,0.4),
+      inset 0 0 40px rgba(0,240,255,0.05);
+    animation: tab-active-pulse 3s ease-in-out infinite;
+  }
+  @keyframes tab-active-pulse {
+    0%, 100% { box-shadow: 0 0 40px rgba(0,240,255,0.12), 0 10px 40px rgba(0,0,0,0.4); }
+    50% { box-shadow: 0 0 60px rgba(0,240,255,0.22), 0 10px 40px rgba(0,0,0,0.4); }
+  }
+
+  .inv-tab.active::before { opacity: 1; }
+  .inv-tab.active::after { transform: translateX(-50%) scaleX(1); }
+  .inv-tab.active .inv-tab__icon {
+    opacity: 1;
+    filter: drop-shadow(0 0 10px var(--inv-cyan));
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════
+     INFO HUD STRIP
+  ═══════════════════════════════════════════════════════════════════ */
+
+  .inv-hud-strip {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 24px;
+    margin: 0 0 32px;
+    background: linear-gradient(135deg, rgba(0,240,255,0.04) 0%, rgba(0,200,255,0.01) 100%);
+    border: 1px solid rgba(0,240,255,0.12);
+    border-radius: 14px;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    transition: all 0.3s ease;
+  }
+
+  .inv-hud-strip:hover {
+    border-color: rgba(0,240,255,0.2);
+    box-shadow: 0 0 30px rgba(0,240,255,0.05);
+  }
+
+  .inv-hud-strip__icon {
+    width: 36px; height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,240,255,0.08);
+    border: 1px solid rgba(0,240,255,0.2);
+    border-radius: 10px;
+    font-size: 16px;
+    color: var(--inv-cyan);
+    flex-shrink: 0;
+    filter: drop-shadow(0 0 8px rgba(0,240,255,0.5));
+  }
+
+  .inv-hud-strip__text {
+    flex: 1;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    color: rgba(255,255,255,0.45);
+  }
+
+  .inv-hud-strip__divider {
+    width: 1px;
+    height: 24px;
+    background: linear-gradient(180deg, transparent, rgba(0,240,255,0.3), transparent);
+  }
+
+  .inv-hud-strip__badge {
+    padding: 6px 14px;
+    background: rgba(0,240,255,0.08);
+    border: 1px solid rgba(0,240,255,0.2);
+    border-radius: 8px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    color: var(--inv-cyan);
+    text-transform: uppercase;
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════
+     ITEM GRID
+  ═══════════════════════════════════════════════════════════════════ */
+
+  .inv-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
-    gap: 22px;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 24px;
     list-style: none;
     padding: 0;
     margin: 0;
   }
 
-  /* ── CARD BASE ──────────────────────────────────────────── */
-  .shop-card {
+  /* ═══════════════════════════════════════════════════════════════════
+     LEGENDARY ITEM CARDS
+  ═══════════════════════════════════════════════════════════════════ */
+
+  .inv-card {
+    --card-color: var(--inv-cyan);
+    --card-rarity: var(--rarity-common);
     position: relative;
     display: flex;
     flex-direction: column;
-    background: rgba(10,10,22,0.72);
-    border: 1px solid rgba(255,255,255,0.065);
-    border-radius: 20px;
+    background: linear-gradient(180deg, rgba(15,12,28,0.9) 0%, rgba(10,8,20,0.95) 100%);
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 24px;
     overflow: hidden;
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    transition: transform 0.28s cubic-bezier(.22,.68,0,1.2),
-                border-color 0.28s, box-shadow 0.28s;
-    animation: card-appear 0.5s cubic-bezier(.22,.68,0,1.2) both;
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: card-appear 0.5s cubic-bezier(0.4, 0, 0.2, 1) both;
   }
+
   @keyframes card-appear {
-    from { opacity: 0; transform: translateY(22px) scale(0.96); }
-    to   { opacity: 1; transform: translateY(0)    scale(1); }
-  }
-  .shop-card:nth-child(1)  { animation-delay:  0ms }
-  .shop-card:nth-child(2)  { animation-delay: 55ms }
-  .shop-card:nth-child(3)  { animation-delay:110ms }
-  .shop-card:nth-child(4)  { animation-delay:165ms }
-  .shop-card:nth-child(5)  { animation-delay:220ms }
-  .shop-card:nth-child(6)  { animation-delay:275ms }
-  .shop-card:nth-child(7)  { animation-delay:330ms }
-  .shop-card:nth-child(8)  { animation-delay:385ms }
-  .shop-card:nth-child(9)  { animation-delay:440ms }
-  .shop-card:nth-child(10) { animation-delay:495ms }
-  .shop-card:nth-child(11) { animation-delay:550ms }
-  .shop-card:nth-child(12) { animation-delay:605ms }
-
-  .shop-card::after {
-    content: '';
-    position: absolute;
-    top: 0; left: -100%;
-    width: 55%; height: 100%;
-    background: linear-gradient(105deg, transparent, rgba(255,255,255,0.028), transparent);
-    pointer-events: none;
-    z-index: 2;
-  }
-  .shop-card:hover { transform: translateY(-6px); }
-  .shop-card:hover::after { animation: card-sweep 0.55s ease forwards; }
-  @keyframes card-sweep {
-    from { left: -100%; }
-    to   { left: 180%; }
-  }
-  .shop-card:hover {
-    border-color: rgba(255,255,255,0.14);
-    box-shadow: 0 20px 60px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.04);
+    from { opacity: 0; transform: translateY(30px) scale(0.96); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
   }
 
-  /* ── ACCENT BAR ─────────────────────────────────────────── */
-  .shop-card__accent {
-    height: 3px;
-    background: linear-gradient(90deg,
-      var(--card-color, #44EEFF) 0%,
-      color-mix(in srgb, var(--card-color, #44EEFF) 40%, transparent) 60%,
-      transparent 100%);
-    flex-shrink: 0;
-  }
+  /* Stagger delays */
+  .inv-card:nth-child(1) { animation-delay: 0ms; }
+  .inv-card:nth-child(2) { animation-delay: 60ms; }
+  .inv-card:nth-child(3) { animation-delay: 120ms; }
+  .inv-card:nth-child(4) { animation-delay: 180ms; }
+  .inv-card:nth-child(5) { animation-delay: 240ms; }
+  .inv-card:nth-child(6) { animation-delay: 300ms; }
+  .inv-card:nth-child(7) { animation-delay: 360ms; }
+  .inv-card:nth-child(8) { animation-delay: 420ms; }
 
-  /* ── CARD BODY ──────────────────────────────────────────── */
-  .shop-card__body {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    padding: 24px 22px 18px;
-    flex: 1;
-  }
-
-  /* ── ICON ───────────────────────────────────────────────── */
-  .shop-card__icon {
-    width: 54px; height: 54px;
-    border-radius: 14px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 26px;
-    background: rgba(255,255,255,0.04);
-    border: 1px solid rgba(255,255,255,0.08);
-    flex-shrink: 0;
-    position: relative;
-    overflow: hidden;
-    transition: border-color 0.25s, box-shadow 0.25s;
-  }
-  .shop-card__icon::before {
+  /* Holographic border */
+  .inv-card::before {
     content: '';
     position: absolute;
     inset: 0;
-    background: radial-gradient(circle at 35% 25%, rgba(255,255,255,0.1) 0%, transparent 55%);
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(135deg,
+      var(--card-color) 0%,
+      transparent 30%,
+      transparent 70%,
+      color-mix(in srgb, var(--card-color) 50%, transparent) 100%);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: destination-out;
+    mask-composite: exclude;
+    opacity: 0.4;
+    transition: opacity 0.3s;
+  }
+
+  /* Shimmer sweep */
+  .inv-card::after {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%;
+    width: 60%; height: 100%;
+    background: linear-gradient(105deg, transparent, rgba(255,255,255,0.04), rgba(255,255,255,0.08), transparent);
+    pointer-events: none;
+    z-index: 2;
+    transform: skewX(-15deg);
+  }
+
+  .inv-card:hover {
+    transform: translateY(-8px) scale(1.01);
+    border-color: rgba(255,255,255,0.1);
+    box-shadow:
+      0 30px 80px rgba(0,0,0,0.5),
+      0 0 0 1px rgba(255,255,255,0.05),
+      0 0 60px color-mix(in srgb, var(--card-color) 15%, transparent);
+  }
+  .inv-card:hover::before { opacity: 0.7; }
+  .inv-card:hover::after { animation: card-sweep 0.7s ease forwards; }
+
+  @keyframes card-sweep {
+    from { left: -100%; }
+    to { left: 200%; }
+  }
+
+  /* Equipped state */
+  .inv-card.equipped {
+    --card-color: var(--inv-cyan);
+    box-shadow: 0 0 40px rgba(0,240,255,0.15), inset 0 0 60px rgba(0,240,255,0.03);
+  }
+
+  /* Rarity accent bar */
+  .inv-card__accent {
+    position: relative;
+    height: 4px;
+    background: linear-gradient(90deg,
+      var(--card-color) 0%,
+      color-mix(in srgb, var(--card-color) 60%, transparent) 50%,
+      transparent 100%);
+    flex-shrink: 0;
+  }
+  .inv-card__accent::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    animation: accent-shimmer 3s ease-in-out infinite;
+  }
+  @keyframes accent-shimmer {
+    0%, 100% { transform: translateX(-100%); }
+    50% { transform: translateX(100%); }
+  }
+
+  /* Inner glow */
+  .inv-card__glow {
+    position: absolute;
+    top: -50%; left: -25%;
+    width: 150%; height: 100%;
+    background: radial-gradient(ellipse at 50% 0%,
+      color-mix(in srgb, var(--card-color) 8%, transparent) 0%,
+      transparent 60%);
+    pointer-events: none;
+    transition: opacity 0.3s;
+    opacity: 0.5;
+  }
+  .inv-card:hover .inv-card__glow { opacity: 1; }
+
+  /* Card body */
+  .inv-card__body {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 28px 26px 20px;
+    flex: 1;
+    z-index: 1;
+  }
+
+  /* Icon container */
+  .inv-card__icon-wrap {
+    position: relative;
+    width: 68px; height: 68px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 4px;
+  }
+
+  .inv-card__icon {
+    width: 68px; height: 68px;
+    border-radius: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    background: linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%);
+    border: 1px solid rgba(255,255,255,0.08);
+    position: relative;
+    overflow: hidden;
+    transition: all 0.35s ease;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+  }
+
+  /* Icon inner glow */
+  .inv-card__icon::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 30% 20%, rgba(255,255,255,0.15) 0%, transparent 50%);
     pointer-events: none;
   }
-  .shop-card:hover .shop-card__icon {
-    border-color: rgba(255,255,255,0.14);
-    box-shadow: 0 0 16px rgba(255,255,255,0.04);
+
+  /* Icon holographic effect */
+  .inv-card__icon::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg,
+      color-mix(in srgb, var(--card-color) 10%, transparent) 0%,
+      transparent 50%);
+    opacity: 0;
+    transition: opacity 0.3s;
   }
 
-  /* ── NAME ───────────────────────────────────────────────── */
-  .shop-card__name {
+  .inv-card:hover .inv-card__icon {
+    border-color: color-mix(in srgb, var(--card-color) 40%, transparent);
+    box-shadow:
+      0 12px 32px rgba(0,0,0,0.4),
+      0 0 30px color-mix(in srgb, var(--card-color) 20%, transparent);
+    transform: scale(1.05);
+  }
+  .inv-card:hover .inv-card__icon::after { opacity: 1; }
+
+  /* Rarity badge */
+  .inv-card__rarity {
+    position: absolute;
+    top: -6px; right: -6px;
+    padding: 4px 10px;
+    background: linear-gradient(135deg, var(--card-rarity) 0%, color-mix(in srgb, var(--card-rarity) 70%, #000) 100%);
+    border-radius: 6px;
     font-family: 'Orbitron', sans-serif;
-    font-size: 13px;
+    font-size: 7px;
     font-weight: 700;
-    letter-spacing: 0.07em;
+    letter-spacing: 0.12em;
+    color: #fff;
+    text-transform: uppercase;
+    box-shadow: 0 4px 12px color-mix(in srgb, var(--card-rarity) 40%, transparent);
+  }
+
+  /* Name */
+  .inv-card__name {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
     color: #fff;
     line-height: 1.3;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.4);
   }
 
-  /* ── DESC ───────────────────────────────────────────────── */
-  .shop-card__desc {
+  /* Description */
+  .inv-card__desc {
     font-family: 'Rajdhani', sans-serif;
-    font-size: 13px;
-    line-height: 1.5;
-    color: rgba(224,224,240,0.38);
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.6;
+    color: rgba(200,200,220,0.5);
     flex: 1;
   }
 
-  /* ── STATS ──────────────────────────────────────────────── */
-  .shop-card__stats { display: flex; flex-wrap: wrap; gap: 6px; }
-  .shop-card__stat {
-    padding: 4px 11px;
-    background: rgba(255,255,255,0.045);
+  /* Stats */
+  .inv-card__stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 4px;
+  }
+
+  .inv-card__stat {
+    position: relative;
+    padding: 6px 14px;
+    background: linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%);
     border: 1px solid rgba(255,255,255,0.08);
-    border-radius: 7px;
+    border-radius: 8px;
     font-family: 'Orbitron', sans-serif;
     font-size: 9px;
     font-weight: 600;
-    letter-spacing: 0.1em;
-    color: rgba(255,255,255,0.5);
-    transition: border-color 0.2s, color 0.2s;
-  }
-  .shop-card:hover .shop-card__stat {
-    border-color: rgba(255,255,255,0.12);
-    color: rgba(255,255,255,0.65);
+    letter-spacing: 0.12em;
+    color: rgba(255,255,255,0.55);
+    transition: all 0.25s ease;
+    overflow: hidden;
   }
 
-  /* ── FOOTER ─────────────────────────────────────────────── */
-  .shop-card__footer {
-    padding: 14px 22px 20px;
+  .inv-card__stat::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, color-mix(in srgb, var(--card-color) 10%, transparent), transparent);
+    opacity: 0;
+    transition: opacity 0.25s;
+  }
+
+  .inv-card:hover .inv-card__stat {
+    border-color: rgba(255,255,255,0.15);
+    color: rgba(255,255,255,0.75);
+  }
+  .inv-card:hover .inv-card__stat::before { opacity: 1; }
+
+  /* Footer */
+  .inv-card__footer {
+    position: relative;
+    padding: 18px 26px 24px;
     border-top: 1px solid rgba(255,255,255,0.05);
+    background: linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.15) 100%);
+    z-index: 1;
   }
 
-  /* ── STATE BUTTONS ──────────────────────────────────────── */
-  .shop-card__btn {
-    display: inline-flex;
+  /* ═══════════════════════════════════════════════════════════════════
+     PREMIUM ACTION BUTTONS
+  ═══════════════════════════════════════════════════════════════════ */
+
+  .inv-card__btn {
+    position: relative;
+    display: flex;
     align-items: center;
     justify-content: center;
     width: 100%;
-    padding: 11px 20px;
-    background: linear-gradient(135deg, rgba(68,238,255,0.1) 0%, rgba(68,238,255,0.04) 100%);
-    border: 1px solid rgba(68,238,255,0.32);
-    border-radius: 10px;
+    padding: 14px 24px;
+    background: linear-gradient(135deg, rgba(0,240,255,0.12) 0%, rgba(0,200,255,0.05) 100%);
+    border: 1px solid rgba(0,240,255,0.35);
+    border-radius: 12px;
     font-family: 'Orbitron', sans-serif;
-    font-size: 9px;
+    font-size: 10px;
     font-weight: 700;
-    letter-spacing: 0.2em;
-    color: var(--cyan);
+    letter-spacing: 0.22em;
+    color: var(--inv-cyan);
     cursor: pointer;
-    transition: background 0.2s, border-color 0.2s, box-shadow 0.2s, transform 0.15s;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     white-space: nowrap;
-    box-shadow: 0 0 12px rgba(68,238,255,0.08);
-    position: relative;
     overflow: hidden;
+    box-shadow: 0 0 20px rgba(0,240,255,0.1);
+    text-transform: uppercase;
   }
-  .shop-card__btn::before {
+
+  /* Animated shine */
+  .inv-card__btn::before {
     content: '';
     position: absolute;
     top: -50%; left: -100%;
-    width: 55%; height: 200%;
-    background: linear-gradient(105deg, transparent, rgba(68,238,255,0.1), transparent);
+    width: 60%; height: 200%;
+    background: linear-gradient(105deg, transparent, rgba(255,255,255,0.2), transparent);
+    transform: skewX(-15deg);
     pointer-events: none;
   }
-  .shop-card__btn:hover:not(:disabled)::before { animation: btn-sweep 0.45s ease forwards; }
-  @keyframes btn-sweep {
+
+  .inv-card__btn::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, transparent, rgba(0,240,255,0.1), transparent);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .inv-card__btn:hover:not(:disabled) {
+    background: linear-gradient(135deg, rgba(0,240,255,0.22) 0%, rgba(0,200,255,0.1) 100%);
+    border-color: rgba(0,240,255,0.7);
+    color: #88FFFF;
+    box-shadow: 0 0 40px rgba(0,240,255,0.25), 0 8px 24px rgba(0,0,0,0.3);
+    transform: translateY(-2px);
+  }
+  .inv-card__btn:hover:not(:disabled)::before { animation: btn-shine 0.6s ease forwards; }
+  .inv-card__btn:hover:not(:disabled)::after { opacity: 1; }
+
+  @keyframes btn-shine {
     from { left: -100%; }
-    to   { left: 200%; }
-  }
-  .shop-card__btn:hover:not(:disabled) {
-    background: linear-gradient(135deg, rgba(68,238,255,0.18) 0%, rgba(68,238,255,0.08) 100%);
-    border-color: rgba(68,238,255,0.6);
-    box-shadow: 0 0 26px rgba(68,238,255,0.2);
-    color: #88f6ff;
-  }
-  .shop-card__btn:active:not(:disabled) { transform: scale(0.97); }
-  .shop-card__btn:disabled { cursor: default; }
-
-  .shop-card__btn--owned {
-    background: rgba(68,255,136,0.07);
-    border-color: rgba(68,255,136,0.28);
-    color: var(--green);
-    box-shadow: 0 0 10px rgba(68,255,136,0.06);
-  }
-  .shop-card__btn--equipped {
-    background: rgba(68,238,255,0.1);
-    border-color: rgba(68,238,255,0.45);
-    color: var(--cyan);
-    box-shadow: 0 0 16px rgba(68,238,255,0.14);
-    text-shadow: 0 0 10px rgba(68,238,255,0.5);
-  }
-  .shop-card__btn--cant-afford { opacity: 0.3; filter: grayscale(0.5); }
-
-  /* ── SKELETON ───────────────────────────────────────────── */
-  .shop-card--skeleton {
-    flex: unset; max-width: unset;
-    height: 250px;
-    background: rgba(255,255,255,0.022);
-    border-color: rgba(255,255,255,0.04);
-    animation: sk-breathe 2s ease-in-out infinite;
-  }
-  @keyframes sk-breathe {
-    0%,100% { opacity: 0.45; }
-    50%      { opacity: 0.8; }
+    to { left: 200%; }
   }
 
-  /* ── EMPTY STATE ────────────────────────────────────────── */
-  .shop-empty {
+  .inv-card__btn:active:not(:disabled) {
+    transform: translateY(0) scale(0.98);
+  }
+
+  .inv-card__btn:disabled {
+    cursor: default;
+  }
+
+  /* Equipped button */
+  .inv-card__btn--equipped {
+    background: linear-gradient(135deg, rgba(0,240,255,0.18) 0%, rgba(0,200,255,0.08) 100%);
+    border-color: rgba(0,240,255,0.55);
+    color: var(--inv-cyan);
+    text-shadow: 0 0 15px rgba(0,240,255,0.6);
+    box-shadow: 0 0 30px rgba(0,240,255,0.15);
+    animation: equipped-pulse 3s ease-in-out infinite;
+  }
+  @keyframes equipped-pulse {
+    0%, 100% { box-shadow: 0 0 25px rgba(0,240,255,0.12); }
+    50% { box-shadow: 0 0 40px rgba(0,240,255,0.22); }
+  }
+
+  /* Owned button */
+  .inv-card__btn--owned {
+    background: linear-gradient(135deg, rgba(68,255,136,0.1) 0%, rgba(68,255,136,0.04) 100%);
+    border-color: rgba(68,255,136,0.35);
+    color: var(--inv-green);
+    box-shadow: 0 0 16px rgba(68,255,136,0.08);
+  }
+
+  /* Locked button */
+  .inv-card__btn--locked {
+    opacity: 0.35;
+    filter: grayscale(0.6);
+    color: rgba(255,255,255,0.4);
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════
+     EMPTY STATE
+  ═══════════════════════════════════════════════════════════════════ */
+
+  .inv-empty {
     grid-column: 1 / -1;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 14px;
-    padding: 90px 24px;
+    gap: 20px;
+    padding: 120px 32px;
     text-align: center;
   }
-  .shop-empty strong {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 15px;
-    font-weight: 700;
-    letter-spacing: 0.12em;
-    color: var(--text);
+
+  .inv-empty__icon {
+    font-size: 72px;
+    opacity: 0.2;
+    animation: empty-float 3s ease-in-out infinite;
   }
-  .shop-empty small {
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 14px;
-    letter-spacing: 0.12em;
-    color: var(--muted);
+  @keyframes empty-float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
   }
 
-  /* ── TOAST ──────────────────────────────────────────────── */
-  .shop-toast {
+  .inv-empty__title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    color: rgba(255,255,255,0.8);
+  }
+
+  .inv-empty__sub {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 15px;
+    letter-spacing: 0.1em;
+    color: rgba(255,255,255,0.4);
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════
+     TOAST NOTIFICATIONS
+  ═══════════════════════════════════════════════════════════════════ */
+
+  .inv-toast {
     position: fixed;
-    bottom: 34px; left: 50%;
-    transform: translateX(-50%) translateY(18px);
-    padding: 13px 30px;
+    bottom: 40px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    padding: 16px 36px;
     border-radius: 100px;
     font-family: 'Orbitron', sans-serif;
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 700;
-    letter-spacing: 0.16em;
+    letter-spacing: 0.18em;
     opacity: 0;
-    transition: opacity 0.28s, transform 0.28s;
+    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
     z-index: 9999;
     pointer-events: none;
     white-space: nowrap;
-    backdrop-filter: blur(20px);
-  }
-  .shop-toast--visible { opacity: 1; transform: translateX(-50%) translateY(0); }
-  .shop-toast--ok {
-    background: rgba(68,255,136,0.1);
-    border: 1px solid rgba(68,255,136,0.38);
-    color: var(--green);
-    box-shadow: 0 8px 36px rgba(68,255,136,0.14);
-  }
-  .shop-toast--err {
-    background: rgba(255,68,102,0.1);
-    border: 1px solid rgba(255,68,102,0.38);
-    color: var(--pink);
-    box-shadow: 0 8px 36px rgba(255,68,102,0.14);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
   }
 
-  /* ── MOBILE ─────────────────────────────────────────────── */
-  @media (max-width: 720px) {
-    .shop-wrap { padding: 0 18px 80px; }
-    .shop-header { flex-direction: column; gap: 22px; padding: 36px 0 32px; }
-    .shop-balance { align-self: stretch; justify-content: space-between; }
-    .shop-tabs { gap: 6px; }
-    .shop-tab  { padding: 9px 18px; font-size: 9px; }
-    .shop-grid { grid-template-columns: 1fr 1fr; gap: 14px; }
-    .shop-card__body { padding: 18px 16px 14px; }
-    .shop-card__footer { padding: 12px 16px 16px; }
+  .inv-toast--visible {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
   }
-  @media (max-width: 430px) {
-    .shop-grid { grid-template-columns: 1fr; }
+
+  .inv-toast--ok {
+    background: linear-gradient(135deg, rgba(68,255,136,0.15) 0%, rgba(68,255,136,0.08) 100%);
+    border: 1px solid rgba(68,255,136,0.45);
+    color: var(--inv-green);
+    box-shadow: 0 12px 48px rgba(68,255,136,0.2), 0 0 60px rgba(68,255,136,0.1);
   }
+
+  .inv-toast--err {
+    background: linear-gradient(135deg, rgba(255,68,102,0.15) 0%, rgba(255,68,102,0.08) 100%);
+    border: 1px solid rgba(255,68,102,0.45);
+    color: var(--pink);
+    box-shadow: 0 12px 48px rgba(255,68,102,0.2), 0 0 60px rgba(255,68,102,0.1);
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════
+     RESPONSIVE DESIGN
+  ═══════════════════════════════════════════════════════════════════ */
+
+  @media (max-width: 1024px) {
+    .inv-wrap { padding: 0 28px 120px; }
+    .inv-header { padding: 60px 0 40px; }
+    .inv-title__main { font-size: clamp(36px, 6vw, 60px); }
+    .inv-grid { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+    .inv-hud-corner { width: 90px; height: 90px; opacity: 0.35; }
+  }
+
+  @media (max-width: 768px) {
+    .inv-wrap { padding: 0 20px 100px; }
+    .inv-header {
+      flex-direction: column;
+      gap: 28px;
+      padding: 44px 0 36px;
+    }
+    .inv-title__eyebrow { font-size: 10px; }
+    .inv-title__main { font-size: clamp(32px, 8vw, 48px); }
+    .inv-balance {
+      align-self: stretch;
+      justify-content: space-between;
+      padding: 18px 24px;
+    }
+    .inv-tabs { gap: 8px; padding: 32px 0; }
+    .inv-tab { padding: 12px 22px; font-size: 10px; }
+    .inv-grid { grid-template-columns: 1fr 1fr; gap: 16px; }
+    .inv-card__body { padding: 22px 20px 16px; }
+    .inv-card__icon { width: 58px; height: 58px; font-size: 28px; }
+    .inv-card__name { font-size: 14px; }
+    .inv-card__footer { padding: 16px 20px 20px; }
+    .inv-hud-corner { display: none; }
+    .inv-energy-streak { display: none; }
+  }
+
+  @media (max-width: 480px) {
+    .inv-wrap { padding: 0 14px 90px; }
+    .inv-header { padding: 36px 0 28px; gap: 20px; }
+    .inv-title__eyebrow { font-size: 9px; letter-spacing: 0.3em; }
+    .inv-title__main { font-size: clamp(28px, 10vw, 40px); }
+    .inv-title__sub { font-size: 11px; letter-spacing: 0.25em; }
+    .inv-balance {
+      padding: 14px 18px;
+      gap: 14px;
+      border-radius: 16px;
+    }
+    .inv-balance__icon-wrap { width: 48px; height: 48px; }
+    .inv-balance__icon { font-size: 28px; }
+    .inv-balance__value { font-size: 26px; }
+    .inv-tabs { gap: 6px; padding: 28px 0; }
+    .inv-tab { padding: 10px 16px; font-size: 8px; letter-spacing: 0.15em; }
+    .inv-tab__icon { font-size: 12px; }
+    .inv-hud-strip { padding: 14px 18px; gap: 12px; margin-bottom: 24px; }
+    .inv-hud-strip__icon { width: 32px; height: 32px; font-size: 14px; }
+    .inv-hud-strip__text { font-size: 12px; }
+    .inv-grid { grid-template-columns: 1fr; gap: 14px; }
+    .inv-card { border-radius: 20px; }
+    .inv-card__body { padding: 20px 18px 14px; gap: 12px; }
+    .inv-card__icon-wrap { width: 56px; height: 56px; }
+    .inv-card__icon { width: 56px; height: 56px; font-size: 26px; border-radius: 14px; }
+    .inv-card__name { font-size: 13px; }
+    .inv-card__desc { font-size: 13px; }
+    .inv-card__stat { padding: 5px 11px; font-size: 8px; }
+    .inv-card__footer { padding: 14px 18px 18px; }
+    .inv-card__btn { padding: 12px 22px; font-size: 9px; }
+    .inv-notification { flex-wrap: wrap; padding: 16px 18px; gap: 12px; }
+    .inv-notification__btn { width: 100%; text-align: center; }
+    .inv-toast {
+      font-size: 10px;
+      padding: 14px 24px;
+      max-width: calc(100vw - 28px);
+      white-space: normal;
+      text-align: center;
+    }
+    .inv-particles { display: none; }
+  }
+
   @media (max-width: 360px) {
-    .shop-wrap          { padding: 0 12px 80px; }
-    .shop-header        { padding: 24px 0 20px; gap: 14px; }
-    .shop-title__main   { font-size: clamp(22px, 9vw, 38px); }
-    .shop-title__sub    { font-size: 10px; letter-spacing: 0.2em; }
-    .shop-balance       { padding: 12px 16px; gap: 12px; border-radius: 14px; }
-    .shop-balance__icon { font-size: 22px; }
-    .shop-balance__value { font-size: 20px; }
-    .shop-tabs          { gap: 4px; padding-top: 22px; padding-bottom: 28px; }
-    .shop-tab           { padding: 8px 14px; font-size: 8px; letter-spacing: 0.14em; }
-    .shop-grid          { gap: 10px; }
-    .shop-card__body    { padding: 14px 12px 10px; gap: 10px; }
-    .shop-card__icon    { width: 44px; height: 44px; font-size: 22px; border-radius: 10px; }
-    .shop-card__name    { font-size: 11px; }
-    .shop-card__desc    { font-size: 12px; }
-    .shop-card__footer  { padding: 10px 12px 14px; }
-    .shop-card__price   { font-size: 14px; }
-    .shop-card__btn     { padding: 8px 14px; font-size: 8px; letter-spacing: 0.14em; }
-    .shop-toast         { font-size: 9px; padding: 10px 20px; white-space: normal; text-align: center; max-width: calc(100vw - 24px); }
+    .inv-wrap { padding: 0 10px 80px; }
+    .inv-header { padding: 28px 0 22px; gap: 16px; }
+    .inv-title__eyebrow { font-size: 8px; }
+    .inv-title__main { font-size: clamp(24px, 11vw, 34px); letter-spacing: 0.06em; }
+    .inv-title__sub { font-size: 10px; letter-spacing: 0.2em; }
+    .inv-balance {
+      padding: 12px 14px;
+      gap: 12px;
+      border-radius: 14px;
+    }
+    .inv-balance__icon-wrap { width: 42px; height: 42px; }
+    .inv-balance__icon { font-size: 24px; }
+    .inv-balance__label { font-size: 8px; }
+    .inv-balance__value { font-size: 22px; }
+    .inv-tabs { gap: 4px; padding: 22px 0; }
+    .inv-tab { padding: 9px 12px; font-size: 7px; letter-spacing: 0.12em; }
+    .inv-tab__icon { display: none; }
+    .inv-hud-strip { padding: 12px 14px; gap: 10px; margin-bottom: 20px; border-radius: 12px; }
+    .inv-hud-strip__icon { width: 28px; height: 28px; font-size: 12px; border-radius: 8px; }
+    .inv-hud-strip__text { font-size: 11px; letter-spacing: 0.05em; }
+    .inv-hud-strip__badge { display: none; }
+    .inv-grid { gap: 12px; }
+    .inv-card { border-radius: 16px; }
+    .inv-card__body { padding: 16px 14px 12px; gap: 10px; }
+    .inv-card__icon-wrap { width: 48px; height: 48px; }
+    .inv-card__icon { width: 48px; height: 48px; font-size: 22px; border-radius: 12px; }
+    .inv-card__rarity { font-size: 6px; padding: 3px 8px; }
+    .inv-card__name { font-size: 12px; }
+    .inv-card__desc { font-size: 12px; }
+    .inv-card__stat { padding: 4px 9px; font-size: 7px; }
+    .inv-card__footer { padding: 12px 14px 16px; }
+    .inv-card__btn { padding: 10px 18px; font-size: 8px; letter-spacing: 0.15em; border-radius: 10px; }
+    .inv-toast { font-size: 9px; padding: 12px 18px; }
+  }
+
+  /* Touch-friendly targets */
+  @media (pointer: coarse) {
+    .inv-tab { min-height: 48px; }
+    .inv-card__btn { min-height: 48px; }
+    .inv-notification__btn { min-height: 48px; }
+  }
+
+  /* Reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    .inv-page::before,
+    .inv-orb,
+    .inv-particle,
+    .inv-energy-streak,
+    .inv-balance::before,
+    .inv-balance__icon,
+    .inv-balance__icon-ring,
+    .inv-card__accent::after,
+    .inv-card__btn::before,
+    .inv-title__main { animation: none; }
+
+    .inv-card,
+    .inv-tab,
+    .inv-balance { transition-duration: 0.15s; }
   }
   </style>
 </head>
-<body class="select-screen shop-page">
+<body class="select-screen inv-page">
   <div class="bg-grid"></div>
   <div class="scanlines"></div>
 
-  <!-- ── Navbar ───────────────────────────────────────────── -->
+  <!-- ══ Ambient background orbs ══════════════════════════════════ -->
+  <div class="inv-orb inv-orb--1" aria-hidden="true"></div>
+  <div class="inv-orb inv-orb--2" aria-hidden="true"></div>
+  <div class="inv-orb inv-orb--3" aria-hidden="true"></div>
+
+  <!-- ══ Floating particles ═══════════════════════════════════════ -->
+  <div class="inv-particles" aria-hidden="true">
+    <div class="inv-particle"></div>
+    <div class="inv-particle"></div>
+    <div class="inv-particle"></div>
+    <div class="inv-particle"></div>
+    <div class="inv-particle"></div>
+    <div class="inv-particle"></div>
+    <div class="inv-particle"></div>
+    <div class="inv-particle"></div>
+  </div>
+
+  <!-- ══ Energy streaks ═══════════════════════════════════════════ -->
+  <div class="inv-energy-streak inv-energy-streak--1" aria-hidden="true"></div>
+  <div class="inv-energy-streak inv-energy-streak--2" aria-hidden="true"></div>
+  <div class="inv-energy-streak inv-energy-streak--3" aria-hidden="true"></div>
+
+  <!-- ══ HUD corner accents ═══════════════════════════════════════ -->
+  <div class="inv-hud-corner inv-hud-corner--tl" aria-hidden="true">
+    <svg viewBox="0 0 130 130" fill="none" stroke="rgba(0,240,255,0.4)" stroke-width="1">
+      <path d="M0 50 L0 12 Q0 0 12 0 L50 0" />
+      <path d="M0 75 L0 22 Q0 0 22 0 L75 0" stroke="rgba(170,100,255,0.25)" />
+      <circle cx="8" cy="8" r="2" fill="rgba(0,240,255,0.6)" />
+    </svg>
+  </div>
+  <div class="inv-hud-corner inv-hud-corner--tr" aria-hidden="true">
+    <svg viewBox="0 0 130 130" fill="none" stroke="rgba(255,215,0,0.4)" stroke-width="1">
+      <path d="M0 50 L0 12 Q0 0 12 0 L50 0" />
+      <path d="M0 75 L0 22 Q0 0 22 0 L75 0" stroke="rgba(0,240,255,0.25)" />
+      <circle cx="8" cy="8" r="2" fill="rgba(255,215,0,0.6)" />
+    </svg>
+  </div>
+  <div class="inv-hud-corner inv-hud-corner--bl" aria-hidden="true">
+    <svg viewBox="0 0 130 130" fill="none" stroke="rgba(170,100,255,0.4)" stroke-width="1">
+      <path d="M0 50 L0 12 Q0 0 12 0 L50 0" />
+    </svg>
+  </div>
+  <div class="inv-hud-corner inv-hud-corner--br" aria-hidden="true">
+    <svg viewBox="0 0 130 130" fill="none" stroke="rgba(68,255,136,0.4)" stroke-width="1">
+      <path d="M0 50 L0 12 Q0 0 12 0 L50 0" />
+    </svg>
+  </div>
+
+  <!-- ══ Navbar ═══════════════════════════════════════════════════ -->
   <nav class="site-nav">
     <a href="index.html" class="site-nav__logo"><span class="logo-dash">DASH</span><span class="logo-sep">✦</span><span class="logo-dread">DREAD</span></a>
     <div id="siteNav" class="site-nav__controls"></div>
   </nav>
 
-  <!-- ── Page content ─────────────────────────────────────── -->
-  <div class="shop-wrap">
+  <!-- ══ Page content ═════════════════════════════════════════════ -->
+  <div class="inv-wrap">
 
-    <header class="shop-header">
-      <div class="shop-title">
-        <span class="shop-title__main">INVENTORY</span>
-        <span class="shop-title__sub">YOUR OWNED ITEMS · EQUIP YOUR LOADOUT</span>
+    <!-- ══ Cinematic Header ═══════════════════════════════════════ -->
+    <header class="inv-header">
+      <div class="inv-title">
+        <span class="inv-title__eyebrow">
+          <span class="inv-title__eyebrow-icon">◈</span>
+          YOUR ARSENAL
+        </span>
+        <span class="inv-title__main">INVENTORY</span>
+        <span class="inv-title__sub">EQUIP YOUR LOADOUT · PREPARE FOR BATTLE</span>
       </div>
-      <div class="shop-balance" aria-label="Your NEX balance">
-        <span class="shop-balance__icon">⬢</span>
-        <div class="shop-balance__body">
-          <span class="shop-balance__label">NEX BALANCE</span>
-          <span class="shop-balance__value skeleton-text" id="invBalanceEl">000,000</span>
+
+      <!-- ══ Premium balance card ═════════════════════════════════ -->
+      <div class="inv-balance" aria-label="Your NEX balance">
+        <div class="inv-balance__icon-wrap">
+          <span class="inv-balance__icon">⬢</span>
+          <div class="inv-balance__icon-ring"></div>
+        </div>
+        <div class="inv-balance__body">
+          <span class="inv-balance__label">NEX BALANCE</span>
+          <span class="inv-balance__value skeleton-text" id="invBalanceEl">000,000</span>
         </div>
       </div>
     </header>
 
-    <div class="shop-error" id="invErrorEl" hidden role="alert">
-      <span class="shop-error__msg" id="invErrorMsg"></span>
-      <button class="shop-error__retry" id="invRetryBtn">RETRY</button>
+    <!-- ══ Notification banner (hidden by default) ════════════════ -->
+    <div class="inv-notification" id="invErrorEl" hidden role="alert">
+      <div class="inv-notification__icon">⚠</div>
+      <div class="inv-notification__content">
+        <span class="inv-notification__title">CONNECTION ERROR</span>
+        <span class="inv-notification__msg" id="invErrorMsg"></span>
+      </div>
+      <button class="inv-notification__btn" id="invRetryBtn">RETRY</button>
     </div>
 
-    <nav class="shop-tabs" role="tablist" aria-label="Inventory categories">
-      <button class="shop-tab active" role="tab" aria-selected="true"  data-tab="weapons">WEAPONS</button>
-      <button class="shop-tab"        role="tab" aria-selected="false" data-tab="upgrades">UPGRADES</button>
-      <button class="shop-tab"        role="tab" aria-selected="false" data-tab="characters">CHARACTERS</button>
-      <button class="shop-tab"        role="tab" aria-selected="false" data-tab="vehicles">VEHICLES</button>
+    <!-- ══ Premium Tabs ═══════════════════════════════════════════ -->
+    <nav class="inv-tabs" role="tablist" aria-label="Inventory categories">
+      <button class="inv-tab active" role="tab" aria-selected="true" data-tab="weapons">
+        <span class="inv-tab__icon">◎</span>WEAPONS
+      </button>
+      <button class="inv-tab" role="tab" aria-selected="false" data-tab="upgrades">
+        <span class="inv-tab__icon">◆</span>UPGRADES
+      </button>
+      <button class="inv-tab" role="tab" aria-selected="false" data-tab="characters">
+        <span class="inv-tab__icon">◈</span>CHARACTERS
+      </button>
+      <button class="inv-tab" role="tab" aria-selected="false" data-tab="vehicles">
+        <span class="inv-tab__icon">⬡</span>VEHICLES
+      </button>
     </nav>
 
-    <!-- Equip hint banner -->
-    <div class="inv-hint" id="invHint"></div>
+    <!-- ══ Info HUD strip ═════════════════════════════════════════ -->
+    <div class="inv-hud-strip" id="invHint">
+      <div class="inv-hud-strip__icon">◈</div>
+      <span class="inv-hud-strip__text" id="invHintText"></span>
+      <div class="inv-hud-strip__divider"></div>
+      <span class="inv-hud-strip__badge">TACTICAL INFO</span>
+    </div>
 
-    <main class="shop-grid" id="invGridEl" role="list" aria-live="polite"></main>
+    <!-- ══ Item grid ══════════════════════════════════════════════ -->
+    <main class="inv-grid" id="invGridEl" role="list" aria-live="polite"></main>
 
-  </div>
+  </div><!-- /.inv-wrap -->
 
   <script src="js/config.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/api.js"></script>
   <script>
-    /* ── Guard ─────────────────────────────────────────────── */
-    if (!Auth.isLoggedIn()) window.location.href = 'login.html';
-    Auth.mountNavbar();
+  'use strict';
 
-    /* ── State ─────────────────────────────────────────────── */
-    const state = {
-      nex: 0,
-      inventory: { weapons: [], upgrades: [], characters: [], vehicles: [] },
-      equippedWeapon: localStorage.getItem('equippedWeapon') || null,
-    };
+  /* ══════════════════════════════════════════════════════════════════
+     AUTH GUARD
+  ══════════════════════════════════════════════════════════════════ */
 
-    let activeTab = 'weapons';
+  if (!Auth.isLoggedIn()) window.location.href = 'login.html';
+  Auth.mountNavbar();
 
-    /* ── DOM refs ───────────────────────────────────────────── */
-    const balanceEl = document.getElementById('invBalanceEl');
-    const errorEl   = document.getElementById('invErrorEl');
-    const errorMsg  = document.getElementById('invErrorMsg');
-    const retryBtn  = document.getElementById('invRetryBtn');
-    const gridEl    = document.getElementById('invGridEl');
-    const hintEl    = document.getElementById('invHint');
+  /* ══════════════════════════════════════════════════════════════════
+     STATE
+  ══════════════════════════════════════════════════════════════════ */
 
-    /* ── Tab switching ──────────────────────────────────────── */
-    document.querySelectorAll('.shop-tab').forEach(tab => {
-      tab.addEventListener('click', () => {
-        document.querySelectorAll('.shop-tab').forEach(t => {
-          t.classList.remove('active');
-          t.setAttribute('aria-selected', 'false');
-        });
-        tab.classList.add('active');
-        tab.setAttribute('aria-selected', 'true');
-        activeTab = tab.dataset.tab;
-        updateHint();
-        renderTab();
+  const state = {
+    nex: 0,
+    inventory: { weapons: [], upgrades: [], characters: [], vehicles: [] },
+    equippedWeapon: localStorage.getItem('equippedWeapon') || null,
+  };
+
+  let activeTab = 'weapons';
+
+  /* ══════════════════════════════════════════════════════════════════
+     DOM REFERENCES
+  ══════════════════════════════════════════════════════════════════ */
+
+  const balanceEl = document.getElementById('invBalanceEl');
+  const errorEl   = document.getElementById('invErrorEl');
+  const errorMsg  = document.getElementById('invErrorMsg');
+  const retryBtn  = document.getElementById('invRetryBtn');
+  const gridEl    = document.getElementById('invGridEl');
+  const hintEl    = document.getElementById('invHint');
+  const hintText  = document.getElementById('invHintText');
+
+  /* ══════════════════════════════════════════════════════════════════
+     RARITY SYSTEM
+  ══════════════════════════════════════════════════════════════════ */
+
+  function getRarity(price) {
+    if (price >= 50000) return { name: 'LEGENDARY', color: '#FFD700' };
+    if (price >= 25000) return { name: 'EPIC', color: '#AA44FF' };
+    if (price >= 10000) return { name: 'RARE', color: '#00AAFF' };
+    return { name: 'COMMON', color: '#8899AA' };
+  }
+
+  /* ══════════════════════════════════════════════════════════════════
+     TAB SWITCHING
+  ══════════════════════════════════════════════════════════════════ */
+
+  document.querySelectorAll('.inv-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.inv-tab').forEach(t => {
+        t.classList.remove('active');
+        t.setAttribute('aria-selected', 'false');
       });
+      tab.classList.add('active');
+      tab.setAttribute('aria-selected', 'true');
+      activeTab = tab.dataset.tab;
+      updateHint();
+      renderTab();
+    });
+  });
+
+  /* ══════════════════════════════════════════════════════════════════
+     HINT MESSAGES
+  ══════════════════════════════════════════════════════════════════ */
+
+  const HINTS = {
+    weapons:    'Click EQUIP to set your starting weapon. Your selection persists across sessions.',
+    upgrades:   'Purchased upgrades activate automatically at the start of every game.',
+    characters: 'Unlocked characters are selectable in the game lobby. Visit the shop for more.',
+    vehicles:   'Owned vehicles spawn on the map during gameplay. Look for them near base.',
+  };
+
+  function updateHint() {
+    hintText.textContent = HINTS[activeTab] || '';
+  }
+
+  /* ══════════════════════════════════════════════════════════════════
+     BALANCE DISPLAY
+  ══════════════════════════════════════════════════════════════════ */
+
+  function updateBalanceDisplay() {
+    balanceEl.classList.remove('skeleton-text');
+    balanceEl.textContent = state.nex.toLocaleString();
+  }
+
+  /* ══════════════════════════════════════════════════════════════════
+     LOAD INVENTORY
+  ══════════════════════════════════════════════════════════════════ */
+
+  async function loadInventory() {
+    errorEl.hidden = true;
+    try {
+      const data = await API.getShopInventory();
+      state.nex = data.nex ?? data.nexBalance ?? 0;
+      const inv = data.inventory || data;
+      state.inventory.weapons    = inv.weapons    || [];
+      state.inventory.upgrades   = inv.upgrades   || [];
+      state.inventory.characters = inv.characters || inv.unlockedCharacters || [];
+      state.inventory.vehicles   = inv.vehicles   || [];
+
+      localStorage.setItem('nc_inventory', JSON.stringify(state.inventory));
+
+      updateBalanceDisplay();
+      updateHint();
+      renderTab();
+    } catch (err) {
+      showError(err.message || 'Could not load inventory. Is the server running?');
+    }
+  }
+
+  /* ══════════════════════════════════════════════════════════════════
+     ERROR HANDLING
+  ══════════════════════════════════════════════════════════════════ */
+
+  function showError(msg) {
+    errorMsg.textContent = msg;
+    errorEl.hidden = false;
+  }
+
+  retryBtn.addEventListener('click', loadInventory);
+
+  /* ══════════════════════════════════════════════════════════════════
+     RENDER TAB
+  ══════════════════════════════════════════════════════════════════ */
+
+  function renderTab() {
+    gridEl.innerHTML = '';
+    switch (activeTab) {
+      case 'weapons':    renderWeapons();    break;
+      case 'upgrades':   renderUpgrades();   break;
+      case 'characters': renderCharacters(); break;
+      case 'vehicles':   renderVehicles();   break;
+    }
+  }
+
+  /* ══════════════════════════════════════════════════════════════════
+     WEAPONS TAB
+  ══════════════════════════════════════════════════════════════════ */
+
+  function renderWeapons() {
+    const ownedIds = new Set([
+      'pistol',
+      ...state.inventory.weapons.map(w => typeof w === 'string' ? w : w.id),
+    ]);
+
+    const weapons = CONFIG.WEAPONS.filter(w => ownedIds.has(w.id));
+
+    if (weapons.length === 0) {
+      gridEl.appendChild(_emptyState('◎', 'No weapons purchased yet.', 'Visit the SHOP to buy weapons with NEX.'));
+      return;
+    }
+
+    if (!state.equippedWeapon) {
+      state.equippedWeapon = 'pistol';
+      localStorage.setItem('equippedWeapon', 'pistol');
+    }
+
+    weapons.forEach(w => {
+      const isEquipped = state.equippedWeapon === w.id;
+      const rarity = getRarity(w.price || 0);
+
+      const stats = w.melee
+        ? [['DMG', w.damage], ['RANGE', w.range + 'px']]
+        : [['DMG', w.damage || 'BASE'], ['FIRE', w.fireRate + 'ms'], ['SPD', w.bulletSpeed]];
+
+      const footerEl = isEquipped
+        ? _badge('✓ EQUIPPED — STARTING WEAPON', 'inv-card__btn--equipped')
+        : _equipBtn(w.id);
+
+      gridEl.appendChild(_buildCard({
+        icon: w.melee ? '⚔' : '◎',
+        iconColor: w.color,
+        name: w.name,
+        desc: w.desc || 'A powerful weapon for your arsenal.',
+        stats,
+        footerEl,
+        accentColor: w.color,
+        rarity,
+        isEquipped,
+      }));
+    });
+  }
+
+  /* ══════════════════════════════════════════════════════════════════
+     UPGRADES TAB
+  ══════════════════════════════════════════════════════════════════ */
+
+  function renderUpgrades() {
+    const owned = state.inventory.upgrades;
+    if (!owned || owned.length === 0) {
+      gridEl.appendChild(_emptyState('◆', 'No upgrades purchased yet.', 'Visit the SHOP to buy permanent upgrades with NEX.'));
+      return;
+    }
+
+    const levelMap = {};
+    owned.forEach(u => {
+      const id = typeof u === 'string' ? u : (u.id || u);
+      if (id) levelMap[id] = (levelMap[id] || 0) + 1;
     });
 
-    /* ── Hint banner ────────────────────────────────────────── */
-    const HINTS = {
-      weapons:    'Click EQUIP to set your starting weapon for the next game. Pistol is always available.',
-      upgrades:   'Purchased upgrades are automatically applied at the start of every game session.',
-      characters: 'Unlocked characters are selectable in the game lobby. Use the shop to unlock more.',
-      vehicles:   'Owned vehicles are available in-game. Look for them on the map or near spawn.',
-    };
-    function updateHint() {
-      hintEl.textContent = HINTS[activeTab] || '';
+    Object.entries(levelMap).forEach(([id, level]) => {
+      const cfg = CONFIG.UPGRADES.find(u => u.id === id);
+      const name  = cfg?.name  || id.toUpperCase();
+      const desc  = cfg?.desc  || 'Permanent upgrade for your character.';
+      const icon  = cfg?.icon  || '◆';
+      const color = cfg?.color || '#44EEFF';
+      const max   = cfg?.maxLevel || '?';
+      const price = cfg?.baseCost || 0;
+      const rarity = getRarity(price);
+
+      gridEl.appendChild(_buildCard({
+        icon,
+        iconColor: color,
+        name,
+        desc,
+        stats: [['LEVEL', `${level} / ${max}`], ['STATUS', 'PERMANENT']],
+        footerEl: _badge('⚡ AUTO-APPLIED AT GAME START', 'inv-card__btn--owned'),
+        accentColor: color,
+        rarity,
+      }));
+    });
+  }
+
+  /* ══════════════════════════════════════════════════════════════════
+     CHARACTERS TAB
+  ══════════════════════════════════════════════════════════════════ */
+
+  function renderCharacters() {
+    const ownedIds = new Set(state.inventory.characters.map(c => typeof c === 'string' ? c : c.id));
+    const visibleChars = CONFIG.CHARACTERS.filter(c => !c.locked || ownedIds.has(c.id));
+
+    if (visibleChars.length === 0) {
+      gridEl.appendChild(_emptyState('◈', 'No characters unlocked.', 'Visit the SHOP to unlock new characters with NEX.'));
+      return;
     }
 
-    /* ── Balance display ────────────────────────────────────── */
-    function updateBalanceDisplay() {
-      balanceEl.classList.remove('skeleton-text');
-      balanceEl.textContent = state.nex.toLocaleString();
+    visibleChars.forEach(c => {
+      const isUnlocked = !c.locked || ownedIds.has(c.id);
+      const rarity = getRarity(c.price || 0);
+
+      gridEl.appendChild(_buildCard({
+        icon: '◈',
+        iconColor: c.color,
+        name: c.name,
+        desc: c.lore || 'A unique fighter with special abilities.',
+        stats: [
+          ['SPD', c.stats?.speed ?? '—'],
+          ['HP',  c.stats?.health ?? '—'],
+          ['DMG', c.stats?.damage ?? '—'],
+        ],
+        footerEl: isUnlocked
+          ? _badge('◈ SELECT IN LOBBY', 'inv-card__btn--owned')
+          : _badge('LOCKED', 'inv-card__btn--locked'),
+        accentColor: c.color,
+        rarity,
+      }));
+    });
+  }
+
+  /* ══════════════════════════════════════════════════════════════════
+     VEHICLES TAB
+  ══════════════════════════════════════════════════════════════════ */
+
+  function renderVehicles() {
+    const owned = state.inventory.vehicles;
+    if (!owned || owned.length === 0) {
+      gridEl.appendChild(_emptyState('⬡', 'No vehicles purchased yet.', 'Visit the SHOP to buy vehicles with NEX.'));
+      return;
     }
 
-    /* ── Load inventory from backend ────────────────────────── */
-    async function loadInventory() {
-      errorEl.hidden = true;
-      try {
-        const data = await API.getShopInventory();
-        state.nex = data.nex ?? data.nexBalance ?? 0;
-        const inv = data.inventory || data;
-        state.inventory.weapons    = inv.weapons    || [];
-        state.inventory.upgrades   = inv.upgrades   || [];
-        state.inventory.characters = inv.characters || inv.unlockedCharacters || [];
-        state.inventory.vehicles   = inv.vehicles   || [];
+    owned.forEach(v => {
+      const vid = typeof v === 'string' ? v : v.id;
+      const cfg = CONFIG.CAR_DEALERSHIP?.find(c => c.id === vid);
+      const name = cfg?.name || vid.replace(/_/g, ' ').toUpperCase();
+      const desc = cfg?.desc || 'Your owned vehicle. Available in-game.';
+      const price = cfg?.price || 0;
+      const rarity = getRarity(price);
 
-        /* Cache to localStorage so game.js can read on next game start */
-        localStorage.setItem('nc_inventory', JSON.stringify(state.inventory));
+      const stats = [];
+      if (cfg?.hp)    stats.push(['HP',  cfg.hp]);
+      if (cfg?.speed) stats.push(['SPD', cfg.speed]);
 
-        updateBalanceDisplay();
-        updateHint();
-        renderTab();
-      } catch (err) {
-        showError(err.message || 'Could not load inventory. Is the server running?');
-      }
+      gridEl.appendChild(_buildCard({
+        icon: '⬡',
+        iconColor: cfg?.color || '#FF8844',
+        name,
+        desc,
+        stats,
+        footerEl: _badge('⬡ AVAILABLE IN GAME', 'inv-card__btn--owned'),
+        accentColor: cfg?.color || '#FF8844',
+        rarity,
+      }));
+    });
+  }
+
+  /* ══════════════════════════════════════════════════════════════════
+     EQUIP HANDLER
+  ══════════════════════════════════════════════════════════════════ */
+
+  function _handleEquip(weaponId) {
+    state.equippedWeapon = weaponId;
+    localStorage.setItem('equippedWeapon', weaponId);
+    renderTab();
+    const wName = CONFIG.WEAPONS.find(w => w.id === weaponId)?.name || weaponId;
+    _showToast(`${wName} set as starting weapon!`);
+  }
+
+  /* ══════════════════════════════════════════════════════════════════
+     CARD BUILDER
+  ══════════════════════════════════════════════════════════════════ */
+
+  function _buildCard({ icon, iconColor, name, desc, stats, footerEl, accentColor, rarity, isEquipped }) {
+    const li = document.createElement('li');
+    li.className = 'inv-card' + (isEquipped ? ' equipped' : '');
+    li.setAttribute('role', 'listitem');
+    li.style.setProperty('--card-color', accentColor || iconColor);
+    if (rarity) li.style.setProperty('--card-rarity', rarity.color);
+
+    // Accent bar
+    const accent = document.createElement('div');
+    accent.className = 'inv-card__accent';
+
+    // Inner glow
+    const glow = document.createElement('div');
+    glow.className = 'inv-card__glow';
+
+    // Body
+    const body = document.createElement('div');
+    body.className = 'inv-card__body';
+
+    // Icon container
+    const iconWrap = document.createElement('div');
+    iconWrap.className = 'inv-card__icon-wrap';
+
+    const iconEl = document.createElement('div');
+    iconEl.className = 'inv-card__icon';
+    iconEl.textContent = icon;
+    iconEl.style.color = iconColor;
+    iconEl.style.textShadow = `0 0 16px ${iconColor}`;
+
+    // Rarity badge
+    if (rarity) {
+      const rarityBadge = document.createElement('span');
+      rarityBadge.className = 'inv-card__rarity';
+      rarityBadge.textContent = rarity.name;
+      iconWrap.appendChild(rarityBadge);
     }
 
-    /* ── Error handling ─────────────────────────────────────── */
-    function showError(msg) {
-      errorMsg.textContent = msg;
-      errorEl.hidden = false;
-    }
+    iconWrap.appendChild(iconEl);
 
-    retryBtn.addEventListener('click', loadInventory);
+    const nameEl = document.createElement('div');
+    nameEl.className = 'inv-card__name';
+    nameEl.textContent = name;
 
-    /* ── Render current tab ─────────────────────────────────── */
-    function renderTab() {
-      gridEl.innerHTML = '';
-      switch (activeTab) {
-        case 'weapons':    renderWeapons();    break;
-        case 'upgrades':   renderUpgrades();   break;
-        case 'characters': renderCharacters(); break;
-        case 'vehicles':   renderVehicles();   break;
-      }
-    }
+    const descEl = document.createElement('div');
+    descEl.className = 'inv-card__desc';
+    descEl.textContent = desc;
 
-    /* ── WEAPONS tab ────────────────────────────────────────── */
-    function renderWeapons() {
-      const ownedIds = new Set([
-        'pistol',
-        ...state.inventory.weapons.map(w => typeof w === 'string' ? w : w.id),
-      ]);
-
-      const weapons = CONFIG.WEAPONS.filter(w => ownedIds.has(w.id));
-
-      if (weapons.length === 0) {
-        gridEl.appendChild(_emptyState('No weapons purchased yet.', 'Visit the SHOP to buy weapons with NEX.'));
-        return;
-      }
-
-      /* If no weapon is equipped, default to pistol */
-      if (!state.equippedWeapon) {
-        state.equippedWeapon = 'pistol';
-        localStorage.setItem('equippedWeapon', 'pistol');
-      }
-
-      weapons.forEach(w => {
-        const isEquipped = state.equippedWeapon === w.id;
-
-        const stats = w.melee
-          ? [['DMG', w.damage], ['RANGE', w.range + 'px']]
-          : [['DMG', w.damage || 'BASE'], ['FIRE', w.fireRate + 'ms'], ['SPD', w.bulletSpeed]];
-
-        const footerEl = isEquipped
-          ? _badge('✓  EQUIPPED — STARTING WEAPON', 'shop-card__btn--equipped')
-          : _equipBtn(w.id);
-
-        gridEl.appendChild(_buildCard({
-          icon: w.melee ? '⚔' : '◎',
-          iconColor: w.color,
-          name: w.name,
-          desc: w.desc,
-          stats,
-          footerEl,
-          accentColor: isEquipped ? w.color : null,
-        }));
+    const statsEl = document.createElement('div');
+    statsEl.className = 'inv-card__stats';
+    if (stats && stats.length) {
+      stats.forEach(([label, value]) => {
+        const stat = document.createElement('span');
+        stat.className = 'inv-card__stat';
+        stat.textContent = `${label}: ${value}`;
+        statsEl.appendChild(stat);
       });
     }
 
-    /* ── UPGRADES tab ───────────────────────────────────────── */
-    function renderUpgrades() {
-      const owned = state.inventory.upgrades;
-      if (!owned || owned.length === 0) {
-        gridEl.appendChild(_emptyState('No upgrades purchased yet.', 'Visit the SHOP to buy permanent upgrades with NEX.'));
-        return;
-      }
+    body.appendChild(iconWrap);
+    body.appendChild(nameEl);
+    body.appendChild(descEl);
+    body.appendChild(statsEl);
 
-      /* Tally levels: each duplicate entry counts as +1 level */
-      const levelMap = {};
-      owned.forEach(u => {
-        const id = typeof u === 'string' ? u : (u.id || u);
-        if (id) levelMap[id] = (levelMap[id] || 0) + 1;
-      });
+    // Footer
+    const footer = document.createElement('div');
+    footer.className = 'inv-card__footer';
+    footer.appendChild(footerEl);
 
-      Object.entries(levelMap).forEach(([id, level]) => {
-        const cfg = CONFIG.UPGRADES.find(u => u.id === id);
-        const name  = cfg?.name  || id.toUpperCase();
-        const desc  = cfg?.desc  || '';
-        const icon  = cfg?.icon  || '◆';
-        const color = cfg?.color || '#44EEFF';
-        const max   = cfg?.maxLevel || '?';
+    li.appendChild(accent);
+    li.appendChild(glow);
+    li.appendChild(body);
+    li.appendChild(footer);
 
-        gridEl.appendChild(_buildCard({
-          icon,
-          iconColor: color,
-          name,
-          desc,
-          stats: [['LEVEL', `${level} / ${max}`], ['STATUS', 'PERMANENT']],
-          footerEl: _badge('⚡ AUTO-APPLIED AT GAME START', 'shop-card__btn--owned'),
-          accentColor: color,
-        }));
-      });
-    }
+    return li;
+  }
 
-    /* ── CHARACTERS tab ─────────────────────────────────────── */
-    function renderCharacters() {
-      const ownedIds = new Set(state.inventory.characters.map(c => typeof c === 'string' ? c : c.id));
+  /* ══════════════════════════════════════════════════════════════════
+     BADGE (non-clickable label)
+  ══════════════════════════════════════════════════════════════════ */
 
-      /* Show free (non-locked) chars + any explicitly unlocked ones */
-      const visibleChars = CONFIG.CHARACTERS.filter(c => !c.locked || ownedIds.has(c.id));
+  function _badge(text, modifier) {
+    const span = document.createElement('span');
+    span.className = `inv-card__btn ${modifier}`;
+    span.textContent = text;
+    return span;
+  }
 
-      if (visibleChars.length === 0) {
-        gridEl.appendChild(_emptyState('No characters unlocked.', 'Visit the SHOP to unlock new characters with NEX.'));
-        return;
-      }
+  /* ══════════════════════════════════════════════════════════════════
+     EQUIP BUTTON
+  ══════════════════════════════════════════════════════════════════ */
 
-      visibleChars.forEach(c => {
-        const isUnlocked = !c.locked || ownedIds.has(c.id);
-        gridEl.appendChild(_buildCard({
-          icon: '◈',
-          iconColor: c.color,
-          name: c.name,
-          desc: c.lore || '',
-          stats: [
-            ['SPD', c.stats?.speed ?? '—'],
-            ['HP',  c.stats?.health ?? '—'],
-            ['DMG', c.stats?.damage ?? '—'],
-          ],
-          footerEl: isUnlocked
-            ? _badge('◈  SELECT IN LOBBY', 'shop-card__btn--owned')
-            : _badge('LOCKED', 'shop-card__btn--cant-afford'),
-          accentColor: c.color,
-        }));
-      });
-    }
+  function _equipBtn(id) {
+    const btn = document.createElement('button');
+    btn.className = 'inv-card__btn';
+    btn.textContent = 'EQUIP AS STARTER';
+    btn.addEventListener('click', () => _handleEquip(id));
+    return btn;
+  }
 
-    /* ── VEHICLES tab ───────────────────────────────────────── */
-    function renderVehicles() {
-      const owned = state.inventory.vehicles;
-      if (!owned || owned.length === 0) {
-        gridEl.appendChild(_emptyState('No vehicles purchased yet.', 'Visit the SHOP to buy vehicles with NEX.'));
-        return;
-      }
+  /* ══════════════════════════════════════════════════════════════════
+     EMPTY STATE
+  ══════════════════════════════════════════════════════════════════ */
 
-      owned.forEach(v => {
-        const vid = typeof v === 'string' ? v : v.id;
-        const cfg = CONFIG.CAR_DEALERSHIP?.find(c => c.id === vid);
-        const name = cfg?.name || vid.replace(/_/g, ' ').toUpperCase();
-        const desc = cfg?.desc || 'Your owned vehicle. Available in-game.';
+  function _emptyState(icon, title, subtitle) {
+    const div = document.createElement('div');
+    div.className = 'inv-empty';
 
-        const stats = [];
-        if (cfg?.hp)    stats.push(['HP',  cfg.hp]);
-        if (cfg?.speed) stats.push(['SPD', cfg.speed]);
+    const iconEl = document.createElement('span');
+    iconEl.className = 'inv-empty__icon';
+    iconEl.textContent = icon;
 
-        gridEl.appendChild(_buildCard({
-          icon: '⬡',
-          iconColor: '#FF8800',
-          name,
-          desc,
-          stats,
-          footerEl: _badge('⬡  AVAILABLE IN GAME', 'shop-card__btn--owned'),
-          accentColor: '#FF8800',
-        }));
-      });
-    }
+    const h = document.createElement('div');
+    h.className = 'inv-empty__title';
+    h.textContent = title;
 
-    /* ── Equip handler ──────────────────────────────────────── */
-    function _handleEquip(weaponId) {
-      state.equippedWeapon = weaponId;
-      localStorage.setItem('equippedWeapon', weaponId);
-      renderTab();
-      const wName = CONFIG.WEAPONS.find(w => w.id === weaponId)?.name || weaponId;
-      _showToast(`${wName} set as starting weapon!`);
-    }
+    const p = document.createElement('div');
+    p.className = 'inv-empty__sub';
+    p.textContent = subtitle;
 
-    /* ── Card builder ───────────────────────────────────────── */
-    function _buildCard({ icon, iconColor, name, desc, stats, footerEl, accentColor }) {
-      const li = document.createElement('li');
-      li.className = 'shop-card';
-      li.setAttribute('role', 'listitem');
+    div.appendChild(iconEl);
+    div.appendChild(h);
+    div.appendChild(p);
+    return div;
+  }
 
-      const accent = document.createElement('div');
-      accent.className = 'shop-card__accent';
-      if (accentColor) {
-        accent.style.background = `linear-gradient(90deg, ${accentColor}33, transparent)`;
-        li.style.borderColor = `${accentColor}44`;
-      }
-      li.appendChild(accent);
+  /* ══════════════════════════════════════════════════════════════════
+     TOAST NOTIFICATION
+  ══════════════════════════════════════════════════════════════════ */
 
-      const body = document.createElement('div');
-      body.className = 'shop-card__body';
+  let _toastTimer = null;
+  function _showToast(msg, isErr = false) {
+    document.querySelector('.inv-toast')?.remove();
+    clearTimeout(_toastTimer);
 
-      const iconEl = document.createElement('div');
-      iconEl.className = 'shop-card__icon';
-      iconEl.textContent = icon;
-      iconEl.style.color = iconColor;
-      iconEl.style.textShadow = `0 0 12px ${iconColor}`;
-      body.appendChild(iconEl);
+    const t = document.createElement('div');
+    t.className = `inv-toast inv-toast--${isErr ? 'err' : 'ok'}`;
+    t.textContent = msg;
+    document.body.appendChild(t);
 
-      const nameEl = document.createElement('div');
-      nameEl.className = 'shop-card__name';
-      nameEl.textContent = name;
-      body.appendChild(nameEl);
+    requestAnimationFrame(() => t.classList.add('inv-toast--visible'));
 
-      if (desc) {
-        const descEl = document.createElement('div');
-        descEl.className = 'shop-card__desc';
-        descEl.textContent = desc;
-        body.appendChild(descEl);
-      }
+    _toastTimer = setTimeout(() => {
+      t.classList.remove('inv-toast--visible');
+      setTimeout(() => t.remove(), 350);
+    }, 2800);
+  }
 
-      if (stats && stats.length) {
-        const statsEl = document.createElement('div');
-        statsEl.className = 'shop-card__stats';
-        stats.forEach(([label, value]) => {
-          const stat = document.createElement('span');
-          stat.className = 'shop-card__stat';
-          stat.textContent = `${label}: ${value}`;
-          statsEl.appendChild(stat);
-        });
-        body.appendChild(statsEl);
-      }
+  /* ══════════════════════════════════════════════════════════════════
+     INITIALIZE
+  ══════════════════════════════════════════════════════════════════ */
 
-      li.appendChild(body);
-
-      const footer = document.createElement('div');
-      footer.className = 'shop-card__footer';
-      footer.appendChild(footerEl);
-      li.appendChild(footer);
-
-      return li;
-    }
-
-    /* ── Badge (non-clickable label) ────────────────────────── */
-    function _badge(text, modifier) {
-      const span = document.createElement('span');
-      span.className = `shop-card__btn ${modifier}`;
-      span.textContent = text;
-      return span;
-    }
-
-    /* ── EQUIP button ───────────────────────────────────────── */
-    function _equipBtn(id) {
-      const btn = document.createElement('button');
-      btn.className = 'shop-card__btn';
-      btn.textContent = 'EQUIP AS STARTER';
-      btn.addEventListener('click', () => _handleEquip(id));
-      return btn;
-    }
-
-    /* ── Empty state ────────────────────────────────────────── */
-    function _emptyState(title, subtitle) {
-      const div = document.createElement('div');
-      div.className = 'shop-empty';
-      const h = document.createElement('strong');
-      h.textContent = title;
-      const p = document.createElement('small');
-      p.textContent = subtitle;
-      div.appendChild(h);
-      div.appendChild(document.createElement('br'));
-      div.appendChild(p);
-      return div;
-    }
-
-    /* ── Toast notification ─────────────────────────────────── */
-    function _showToast(msg, isErr = false) {
-      document.querySelector('.shop-toast')?.remove();
-      const t = document.createElement('div');
-      t.className = 'shop-toast shop-toast--visible ' + (isErr ? 'shop-toast--err' : 'shop-toast--ok');
-      t.textContent = msg;
-      document.body.appendChild(t);
-      setTimeout(() => {
-        t.classList.remove('shop-toast--visible');
-        setTimeout(() => t.remove(), 400);
-      }, 2500);
-    }
-
-    /* ── Init ───────────────────────────────────────────────── */
-    loadInventory();
+  loadInventory();
   </script>
 </body>
 </html>
