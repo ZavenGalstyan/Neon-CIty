@@ -2985,6 +2985,10 @@ class Game {
             // Metropolis radio: NPC stands at broadcast desk
             npcX = room.roomW * 0.50;
             npcY = room.roomH * 0.28;
+          } else if (isMetropolis) {
+            // All other metropolis buildings: center NPC in large room
+            npcX = room.roomW / 2;
+            npcY = room.roomH * 0.68;
           }
           const useGirlRender = isGalOrBlitz && bType === 8;
           // Determine render type for BuildingNPC
@@ -2995,8 +2999,8 @@ class Game {
             npcRenderType = 'galactica'; // cosmic human bartender
           } else if (isOceanN) {
             npcRenderType = 'ocean'; // full underwater diver human
-          } else if (isMetropolis && (bType === 11 || bType === 22)) {
-            npcRenderType = 'metropolis'; // amber human (bartender or radio host)
+          } else if (isMetropolis) {
+            npcRenderType = 'metropolis'; // amber human for all metropolis buildings
           } else if (isNeonCity || isZombie || isBlitz || isRobotCity || isHardcoreN || (isGalactica && (bType === 3 || bType === 8 || bType === 0 || bType === 5 || bType === 22))) {
             npcRenderType = true; // neonCity/robot city/hardcore/galactica style
           }

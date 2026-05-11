@@ -5098,9 +5098,8 @@ class GameMap {
     const useLargeHardcore = isHardcore;
     const useLargeUnderground = door.bTypeIdx === 23; // Underground Lab always large
     const useLargeDino  = isDino;
-    const useLargeMetroBar   = isMetropolis && door.bTypeIdx === 11; // Metropolis Bar — dealer-scale room
-    const useLargeMetroRadio = isMetropolis && door.bTypeIdx === 22; // Metropolis Radio Station — dealer-scale room
-    const useLarge = useLargeDealer || useLargeArcade || useLargeMarket || useLargeClub || useLargeRest || useLargePharm || useLargeRadio || useLargeZombie || useLargeBlitz || useLargeRobot || useLargeHardcore || useLargeUnderground || useLargeDino || useLargeMetroBar || useLargeMetroRadio;
+    const useLargeMetropolis = isMetropolis; // all Metropolis buildings use large arcade rooms
+    const useLarge = useLargeDealer || useLargeArcade || useLargeMarket || useLargeClub || useLargeRest || useLargePharm || useLargeRadio || useLargeZombie || useLargeBlitz || useLargeRobot || useLargeHardcore || useLargeUnderground || useLargeDino || useLargeMetropolis;
     const layout = useLargeDealer ? ROOM_LAYOUT_DEALER_NEON
                  : useLargeArcade ? ROOM_LAYOUT_ARCADE_NEON
                  : useLargeMarket ? ROOM_LAYOUT_DEALER_NEON
@@ -5114,8 +5113,7 @@ class GameMap {
                  : useLargeHardcore   ? ROOM_LAYOUT_ARCADE_NEON
                  : useLargeUnderground? ROOM_LAYOUT_ARCADE_NEON
                  : useLargeDino       ? ROOM_LAYOUT_ARCADE_NEON
-                 : useLargeMetroBar   ? ROOM_LAYOUT_DEALER_NEON
-                 : useLargeMetroRadio ? ROOM_LAYOUT_DEALER_NEON
+                 : useLargeMetropolis ? ROOM_LAYOUT_ARCADE_NEON
                  : door.type === 2 ? ROOM_LAYOUT_2 : ROOM_LAYOUT_1;
     const RH     = layout.length;
     const RW     = layout[0].length;

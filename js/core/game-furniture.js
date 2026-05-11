@@ -55,9 +55,10 @@ Game.prototype._renderIndoorFurniture = function(ctx, room) {
       ctx.restore();
     };
 
-    const isDino   = !!this.map?.config?.dino;
-    const isJungle = !!this.map?.config?.jungle;
-    const isDesert = !!this.map?.config?.desert;
+    const isDino       = !!this.map?.config?.dino;
+    const isJungle     = !!this.map?.config?.jungle;
+    const isDesert     = !!this.map?.config?.desert;
+    const isMetropolis = !!this.map?.config?.metropolis;
 
     // Floor tint per building type
     const _floorTints = {
@@ -96,6 +97,14 @@ Game.prototype._renderIndoorFurniture = function(ctx, room) {
 
     ctx.save();
     ctx.globalAlpha = 0.88;
+
+    // Metropolis: delegate to dedicated renderer, human workers, themed rooms
+    if (isMetropolis && type !== 'home') {
+      ctx.restore();
+      this._renderMetropolisRoom(ctx, room, type, W, H, cx, topY, midY);
+      ctx.globalAlpha = 1;
+      return;
+    }
 
     if (type === "home") {
       // ── Sofa (left-center) ───────────────────────
@@ -17132,4 +17141,1838 @@ Game.prototype._renderIndoorFurniture = function(ctx, room) {
     ctx.globalAlpha = 1;
     ctx.restore();
 };  // end Game.prototype._renderIndoorFurniture
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  METROPOLIS-ONLY building interiors — big rooms, themed items, human workers
+// ══════════════════════════════════════════════════════════════════════════════
+Game.prototype._renderMetropolisRoom = function(ctx, room, type, W, H, cx, topY, midY) {
+  const t = performance.now() / 1000;
+  const AMBER = '#FF9933', GOLD = '#FFCC44';
+
+  const rr = (x, y, w, h, r = 4) => { ctx.beginPath(); ctx.roundRect(x, y, w, h, r); };
+
+  // Top-down human figure: clothColor=torso/arms, skin=skin tone, hair=hair color
+  const drawMetroHuman = (px, py, clothColor, skin, hair) => {
+    ctx.save();
+    ctx.translate(px, py);
+    // Shadow
+    ctx.fillStyle = 'rgba(0,0,0,0.30)';
+    ctx.beginPath(); ctx.ellipse(0, 10, 12, 5, 0, 0, Math.PI * 2); ctx.fill();
+    // Dark trousers + shoes
+    ctx.fillStyle = '#1a1a28';
+    ctx.fillRect(-5, 2, 4, 14); ctx.fillRect(1, 2, 4, 14);
+    ctx.fillStyle = '#0a0a12';
+    ctx.fillRect(-6, 14, 6, 5); ctx.fillRect(0, 14, 6, 5);
+    // Torso
+    ctx.fillStyle = clothColor;
+    rr(-9, -14, 18, 20, 3); ctx.fill();
+    // Arms
+    ctx.strokeStyle = clothColor; ctx.lineWidth = 6; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(-9, -7); ctx.lineTo(-17, 2); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(9, -7); ctx.lineTo(17, 2); ctx.stroke();
+    ctx.lineCap = 'butt';
+    // Hands
+    ctx.fillStyle = skin;
+    ctx.beginPath(); ctx.arc(-17, 2, 3.5, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(17, 2, 3.5, 0, Math.PI * 2); ctx.fill();
+    // Neck + head
+    ctx.fillRect(-3, -16, 6, 5);
+    ctx.beginPath(); ctx.arc(0, -22, 9, 0, Math.PI * 2); ctx.fill();
+    // Eyes
+    ctx.fillStyle = '#fff';
+    ctx.beginPath(); ctx.ellipse(-3, -23, 2.2, 1.6, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(3, -23, 2.2, 1.6, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#222';
+    ctx.beginPath(); ctx.arc(-3, -23, 1.1, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(3, -23, 1.1, 0, Math.PI * 2); ctx.fill();
+    // Hair
+    ctx.fillStyle = hair;
+    ctx.beginPath(); ctx.arc(0, -27, 9.5, Math.PI, 0); ctx.fill();
+    ctx.restore();
+  };
+
+  // Amber-tiled metro floor
+  const drawMetroFloor = (c1 = '#0f0e18', c2 = '#131220') => {
+    const tW = Math.max(1, Math.floor(W / 14));
+    const tH = Math.max(1, Math.floor(H / 12));
+    for (let ty2 = 0; ty2 <= Math.ceil(H / tH); ty2++) {
+      for (let tx2 = 0; tx2 <= Math.ceil(W / tW); tx2++) {
+        ctx.fillStyle = (tx2 + ty2) % 2 === 0 ? c1 : c2;
+        ctx.fillRect(tx2 * tW, ty2 * tH, tW, tH);
+      }
+    }
+    ctx.strokeStyle = 'rgba(255,153,51,0.10)'; ctx.lineWidth = 1;
+    for (let ty2 = 0; ty2 <= Math.ceil(H / tH); ty2++) {
+      ctx.beginPath(); ctx.moveTo(0, ty2 * tH); ctx.lineTo(W, ty2 * tH); ctx.stroke();
+    }
+  };
+
+  // Glowing amber neon sign
+  const drawMetroSign = (label) => {
+    ctx.save();
+    const sw = Math.min(label.length * 11 + 28, W - 24);
+    const sx = W / 2 - sw / 2, sy = room.S - 22;
+    const sg = ctx.createLinearGradient(sx, sy, sx + sw, sy);
+    sg.addColorStop(0, 'rgba(28,18,6,0.96)'); sg.addColorStop(0.5, 'rgba(48,28,6,0.98)'); sg.addColorStop(1, 'rgba(28,18,6,0.96)');
+    ctx.fillStyle = sg; rr(sx, sy, sw, 26, 5); ctx.fill();
+    ctx.strokeStyle = `rgba(255,153,51,${0.65 + 0.35 * Math.sin(t * 2)})`; ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.font = 'bold 12px Orbitron, monospace'; ctx.textAlign = 'center';
+    ctx.fillStyle = GOLD; ctx.shadowColor = AMBER; ctx.shadowBlur = 14;
+    ctx.fillText(label, W / 2, sy + 17); ctx.shadowBlur = 0;
+    ctx.restore();
+  };
+
+  ctx.save();
+
+  if (type === 0 || type === 'restaurant') {
+    // ═══ RESTAURANT: THE GOLDEN FORK ═══
+    drawMetroFloor('#120e06', '#160e04');
+    drawMetroSign('THE GOLDEN FORK');
+    // Back wall kitchen counter full-width
+    const kcX = cx - W * 0.44, kcY = topY + 8;
+    ctx.fillStyle = '#1a1408'; ctx.strokeStyle = AMBER; ctx.lineWidth = 1.5;
+    rr(kcX, kcY, W * 0.88, 28, 4); ctx.fill(); ctx.stroke();
+    ctx.font = '13px serif'; ctx.textAlign = 'center';
+    for (const [ei, ex2] of [['🍜',kcX+W*0.10],['🍛',kcX+W*0.22],['🥩',kcX+W*0.34],['🔥',kcX+W*0.46],['🍝',kcX+W*0.58],['🥘',kcX+W*0.70],['🧂',kcX+W*0.80]])
+      ctx.fillText(ei, ex2, kcY + 20);
+    // Menu board on back wall
+    ctx.fillStyle = '#0e0a04'; ctx.strokeStyle = '#CC8833'; ctx.lineWidth = 1.5;
+    rr(cx - 50, topY + 42, 100, 36, 3); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#FFEECC'; ctx.font = 'bold 8px serif'; ctx.textAlign = 'center';
+    ctx.fillText('TODAY\'S SPECIAL', cx, topY + 56);
+    ctx.fillStyle = GOLD; ctx.font = '6px serif';
+    ctx.fillText('Neon Steak  $28 | Cyber Ramen  $18', cx, topY + 70);
+    // Wine rack left wall
+    ctx.fillStyle = '#150c04'; ctx.strokeStyle = '#882200'; ctx.lineWidth = 1;
+    rr(cx - W * 0.44, topY + 82, 36, 100, 3); ctx.fill(); ctx.stroke();
+    const wineC = ['#8B0000','#CC2200','#AA1100','#660000','#BB3300','#990000'];
+    for (let wi = 0; wi < 6; wi++) {
+      const wy = topY + 90 + wi * 14;
+      ctx.fillStyle = wineC[wi]; ctx.globalAlpha = 0.9;
+      rr(cx - W * 0.44 + 4, wy, 28, 10, 3); ctx.fill(); ctx.globalAlpha = 1;
+    }
+    // Host podium near entrance
+    ctx.fillStyle = '#2a1a08'; ctx.strokeStyle = '#FFAA44'; ctx.lineWidth = 1.5;
+    rr(cx + W * 0.36, midY + 80, 48, 36, 4); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = GOLD; ctx.font = 'bold 6px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('HOST', cx + W * 0.36 + 24, midY + 102);
+    // 6 dining tables in 2 rows × 3
+    const dtPos = [[cx-W*0.32,midY-80],[cx-W*0.04,midY-80],[cx+W*0.24,midY-80],[cx-W*0.32,midY+30],[cx-W*0.04,midY+30],[cx+W*0.24,midY+30]];
+    for (const [tx2, ty2] of dtPos) {
+      ctx.fillStyle = '#2a1c0c'; ctx.strokeStyle = '#6a4a20'; ctx.lineWidth = 1;
+      rr(tx2, ty2, 84, 48, 5); ctx.fill(); ctx.stroke();
+      // tablecloth
+      ctx.fillStyle = '#3a2814'; rr(tx2+4, ty2+4, 76, 40, 4); ctx.fill();
+      // plates
+      for (let pi = 0; pi < 4; pi++) {
+        const pa = (pi/4)*Math.PI*2;
+        ctx.fillStyle = '#EEE8D0'; ctx.strokeStyle = AMBER; ctx.lineWidth = 0.8;
+        ctx.beginPath(); ctx.arc(tx2+42+Math.cos(pa)*30, ty2+24+Math.sin(pa)*16, 7, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+      }
+      // candle
+      ctx.fillStyle = '#FFDD88'; ctx.shadowColor = '#FFAA44'; ctx.shadowBlur = 10;
+      ctx.beginPath(); ctx.arc(tx2+42, ty2+24, 3.5, 0, Math.PI*2); ctx.fill(); ctx.shadowBlur = 0;
+    }
+    // Corner plants
+    for (const [px2,py2] of [[cx-W*0.44,midY+110],[cx+W*0.40,midY+110]]) {
+      ctx.fillStyle = '#0a1a08'; ctx.strokeStyle = '#226622'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.arc(px2, py2, 16, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#1a3a14'; ctx.font = '18px serif'; ctx.textAlign = 'center';
+      ctx.fillText('🌿', px2, py2+6);
+    }
+    // Cash register at end of bar
+    ctx.fillStyle = '#1a1008'; ctx.strokeStyle = '#CC8833'; ctx.lineWidth = 1;
+    rr(cx + W * 0.36, topY + 8, 52, 32, 3); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#00FF88'; ctx.font = '5px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('$ 0.00', cx + W * 0.36 + 26, topY + 24);
+    ctx.fillStyle = '#FFAA44'; ctx.font = 'bold 6px monospace';
+    ctx.fillText('REGISTER', cx + W * 0.36 + 26, topY + 36);
+    // Pendant lights
+    for (const lx of [cx-W*0.32+42, cx-W*0.04+42, cx+W*0.24+42, cx-W*0.32+42+W*0.28, cx-W*0.04+42+W*0.28]) {
+      ctx.fillStyle = '#FFEEAA'; ctx.shadowColor = '#FFCC44'; ctx.shadowBlur = 16*(0.7+0.3*Math.sin(t*1.2));
+      ctx.beginPath(); ctx.arc(lx, topY+2, 5, 0, Math.PI*2); ctx.fill();
+      ctx.strokeStyle = '#886622'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(lx, 0); ctx.lineTo(lx, topY+2); ctx.stroke();
+      ctx.shadowBlur = 0;
+    }
+    drawMetroHuman(cx - W * 0.42, midY + 10, '#CC3333', '#C8956A', '#1a0a00'); // chef
+    drawMetroHuman(cx + W * 0.28, midY + 10, '#1a1a2a', '#FFDAB0', '#2a2020'); // waiter
+    drawMetroHuman(cx + W * 0.36, midY + 44, '#2a1a0a', '#E0A878', '#4a2010'); // host
+
+  } else if (type === 1) {
+    // ═══ OFFICE: AXIOM CORPORATE ═══
+    drawMetroFloor('#080a14', '#0a0c18');
+    drawMetroSign('AXIOM CORP');
+    // Company logo on back wall
+    ctx.fillStyle = '#0a0d20'; ctx.strokeStyle = '#3355BB'; ctx.lineWidth = 2;
+    rr(cx - 60, topY + 6, 120, 32, 5); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#4488FF'; ctx.font = 'bold 10px Orbitron,monospace'; ctx.textAlign = 'center';
+    ctx.shadowColor = '#4488FF'; ctx.shadowBlur = 10;
+    ctx.fillText('AXIOM CORP', cx, topY + 26); ctx.shadowBlur = 0;
+    // Reception desk center
+    ctx.fillStyle = '#0e1428'; ctx.strokeStyle = '#2244AA'; ctx.lineWidth = 1.5;
+    rr(cx - 80, topY + 44, 160, 30, 4); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#000c1c'; ctx.fillRect(cx - 68, topY + 50, 136, 16);
+    ctx.fillStyle = '#4466CC'; ctx.font = 'bold 7px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('RECEPTION', cx, topY + 62);
+    // 6 workstation pods in two rows
+    for (const [dx2, dy2] of [[cx-W*0.34,midY-60],[cx-W*0.08,midY-60],[cx+W*0.18,midY-60],[cx-W*0.34,midY+30],[cx-W*0.08,midY+30],[cx+W*0.18,midY+30]]) {
+      ctx.fillStyle = '#0c1020'; ctx.strokeStyle = '#2233AA'; ctx.lineWidth = 1;
+      rr(dx2-34, dy2, 68, 40, 3); ctx.fill(); ctx.stroke();
+      // monitor
+      ctx.fillStyle = '#0a0f1c'; ctx.strokeStyle = '#3355CC'; ctx.lineWidth = 1;
+      rr(dx2-20, dy2+4, 40, 24, 2); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#001a3a'; ctx.fillRect(dx2-16, dy2+7, 32, 16);
+      ctx.fillStyle = '#4499FF'; ctx.font = '4px monospace'; ctx.textAlign = 'center';
+      ctx.fillText('> RUN ANALYSIS', dx2, dy2+17);
+      // keyboard
+      ctx.fillStyle = '#151c2c'; ctx.fillRect(dx2-14, dy2+30, 28, 8);
+      ctx.strokeStyle = '#223355'; ctx.lineWidth = 0.5; ctx.strokeRect(dx2-14, dy2+30, 28, 8);
+    }
+    // Filing cabinets left wall
+    for (let fi = 0; fi < 5; fi++) {
+      const fx2 = cx - W * 0.44 + fi * 36;
+      ctx.fillStyle = '#111828'; ctx.strokeStyle = '#334466'; ctx.lineWidth = 1;
+      rr(fx2, topY + 80, 32, 64, 2); ctx.fill(); ctx.stroke();
+      for (let dr = 0; dr < 4; dr++) {
+        ctx.strokeStyle = '#2233AA'; ctx.lineWidth = 0.5;
+        ctx.strokeRect(fx2 + 3, topY + 84 + dr * 14, 26, 11);
+        ctx.fillStyle = '#FFCC44'; ctx.fillRect(fx2 + 12, topY + 88 + dr * 14, 8, 2);
+      }
+    }
+    // Conference table right side
+    ctx.fillStyle = '#0c1224'; ctx.strokeStyle = '#2244AA'; ctx.lineWidth = 1.5;
+    rr(cx + W * 0.20, midY - 70, 100, 60, 5); ctx.fill(); ctx.stroke();
+    for (let ci = 0; ci < 6; ci++) {
+      const ca = (ci/6)*Math.PI*2;
+      ctx.fillStyle = '#1a2a44'; ctx.strokeStyle = '#3355AA'; ctx.lineWidth = 0.5;
+      ctx.beginPath(); ctx.arc(cx+W*0.20+50+Math.cos(ca)*36, midY-70+30+Math.sin(ca)*22, 8, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+    }
+    // Water cooler
+    ctx.fillStyle = '#0e1428'; ctx.strokeStyle = '#6699DD'; ctx.lineWidth = 1;
+    rr(cx + W * 0.36, midY + 60, 24, 40, 3); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#99CCFF'; ctx.globalAlpha = 0.6;
+    ctx.fillRect(cx + W * 0.36 + 4, midY + 62, 16, 26); ctx.globalAlpha = 1;
+    // Printer
+    ctx.fillStyle = '#0c1020'; ctx.strokeStyle = '#2244AA'; ctx.lineWidth = 1;
+    rr(cx - W * 0.44, midY + 60, 52, 36, 3); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#4466FF'; ctx.font = '5px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('PRINTER', cx - W * 0.44 + 26, midY + 82);
+    // Wall clock
+    ctx.strokeStyle = '#4466CC'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.arc(cx + W * 0.40, topY + 30, 16, 0, Math.PI*2); ctx.stroke();
+    ctx.strokeStyle = '#AACCFF'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(cx+W*0.40, topY+30); ctx.lineTo(cx+W*0.40, topY+18); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx+W*0.40, topY+30); ctx.lineTo(cx+W*0.40+8, topY+34); ctx.stroke();
+    drawMetroHuman(cx - W * 0.22, midY - 12, '#2a3a5a', '#E0A878', '#1a0a00');
+    drawMetroHuman(cx + W * 0.10, midY - 12, '#3a4a6a', '#FFDAB0', '#4a3020');
+    drawMetroHuman(cx - W * 0.04, topY + 100, '#1a2a4a', '#C8956A', '#2a1010'); // receptionist
+
+  } else if (type === 2) {
+    // ═══ HOTEL: CROWN PLAZA ═══
+    drawMetroFloor('#100a14', '#14081a');
+    drawMetroSign('CROWN PLAZA HOTEL');
+    // Front desk full-width
+    ctx.fillStyle = '#140828'; ctx.strokeStyle = '#9966DD'; ctx.lineWidth = 1.5;
+    rr(cx - W * 0.30, topY + 8, W * 0.60, 30, 5); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = GOLD; ctx.font = 'bold 9px monospace'; ctx.textAlign = 'center';
+    ctx.shadowColor = AMBER; ctx.shadowBlur = 10;
+    ctx.fillText('CROWN PLAZA — FRONT DESK', cx, topY + 28); ctx.shadowBlur = 0;
+    // Computer + bell on desk
+    ctx.fillStyle = '#0c0618'; ctx.strokeStyle = '#7744AA'; ctx.lineWidth = 1;
+    rr(cx - 44, topY + 42, 88, 22, 3); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#001a2a'; ctx.fillRect(cx - 36, topY + 44, 72, 14);
+    ctx.fillStyle = '#9966FF'; ctx.font = '5px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('GUEST SERVICES', cx, topY + 55);
+    // Lobby seating area left
+    for (const [sx2, sy2] of [[cx-W*0.44,midY-60],[cx-W*0.44,midY],[cx-W*0.26,midY-30]]) {
+      ctx.fillStyle = '#1a0828'; ctx.strokeStyle = '#7744AA'; ctx.lineWidth = 1;
+      rr(sx2, sy2, 60, 36, 6); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#2a1038'; rr(sx2+4, sy2+4, 52, 20, 4); ctx.fill();
+    }
+    // Coffee table in lobby
+    ctx.fillStyle = '#180c2a'; ctx.strokeStyle = '#AA66DD'; ctx.lineWidth = 1;
+    rr(cx - W * 0.34, midY - 16, 52, 32, 4); ctx.fill(); ctx.stroke();
+    ctx.font = '12px serif'; ctx.textAlign = 'center';
+    ctx.fillText('☕', cx - W * 0.34 + 26, midY + 4);
+    // 3 hotel room doors right side
+    for (let di = 0; di < 3; di++) {
+      const dy2 = topY + 44 + di * 80;
+      ctx.fillStyle = '#1a0828'; ctx.strokeStyle = '#9966CC'; ctx.lineWidth = 1.5;
+      rr(cx + W * 0.32, dy2, 52, 66, 4); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#FFCC44'; ctx.font = 'bold 9px monospace'; ctx.textAlign = 'center';
+      ctx.fillText(`${di + 101}`, cx + W * 0.32 + 26, dy2 + 34);
+      ctx.fillStyle = '#FFCC44'; ctx.beginPath(); ctx.arc(cx + W * 0.32 + 42, dy2 + 33, 3, 0, Math.PI*2); ctx.fill();
+    }
+    // Beds (2 large double beds)
+    for (const bx of [cx - W * 0.06, cx + W * 0.18]) {
+      ctx.fillStyle = '#1a0a28'; ctx.strokeStyle = '#7744AA'; ctx.lineWidth = 1.5;
+      rr(bx - 46, midY + 10, 92, 58, 6); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#240f38'; rr(bx - 42, midY + 14, 72, 42, 4); ctx.fill();
+      // pillows
+      ctx.fillStyle = '#EEE8FF'; rr(bx + 22, midY + 16, 18, 14, 3); ctx.fill();
+      ctx.fillStyle = '#DDD0FF'; rr(bx + 4, midY + 16, 16, 14, 3); ctx.fill();
+      // blanket fold
+      ctx.fillStyle = '#B090E0'; ctx.fillRect(bx - 38, midY + 44, 60, 5);
+      // bedside lamp
+      ctx.fillStyle = '#FFEEAA'; ctx.shadowColor = '#FFDD88'; ctx.shadowBlur = 12;
+      ctx.beginPath(); ctx.arc(bx - 50, midY + 22, 5, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0;
+    }
+    // Key rack right wall
+    ctx.fillStyle = '#0e0818'; ctx.strokeStyle = '#6633AA'; ctx.lineWidth = 1;
+    rr(cx - W * 0.44, topY + 46, 48, 80, 3); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#9966DD'; ctx.font = 'bold 5px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('KEY RACK', cx - W * 0.44 + 24, topY + 56);
+    for (let ki = 0; ki < 8; ki++) {
+      const kx2 = cx - W * 0.44 + 8 + (ki % 4) * 10, ky2 = topY + 62 + Math.floor(ki / 4) * 22;
+      ctx.fillStyle = ki < 5 ? '#FFCC44' : '#555566';
+      ctx.beginPath(); ctx.arc(kx2, ky2, 3.5, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = '#AA8822'; ctx.lineWidth = 0.8;
+      ctx.beginPath(); ctx.moveTo(kx2, ky2 + 3.5); ctx.lineTo(kx2, ky2 + 9); ctx.stroke();
+    }
+    // Vending machine
+    ctx.fillStyle = '#12062a'; ctx.strokeStyle = '#8844CC'; ctx.lineWidth = 1.5;
+    rr(cx + W * 0.12, topY + 8, 36, 68, 3); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#440066'; ctx.fillRect(cx + W * 0.12 + 3, topY + 11, 30, 40);
+    ctx.fillStyle = '#CC88FF'; ctx.font = '5px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('SNACKS', cx + W * 0.12 + 18, topY + 70);
+    drawMetroHuman(cx - W * 0.04, topY + 60, '#2a1a4a', '#C8956A', '#1a0a00'); // concierge
+    drawMetroHuman(cx - W * 0.16, midY + 84, '#3a2050', '#FFDAB0', '#3a2010'); // bellhop
+
+  } else if (type === 3) {
+    // ═══ MARKET: METRO MARKET ═══
+    drawMetroFloor('#060c08', '#080e0a');
+    drawMetroSign('METRO MARKET');
+    // 5 product shelving aisles
+    const pColors = ['#FF4444','#4488FF','#44CC44','#FFAA00','#FF44AA','#AA44FF','#FF7722','#22CCFF'];
+    const aisleLabels = ['PRODUCE','DAIRY','SNACKS','BEVERAGES','FROZEN'];
+    for (let ai = 0; ai < 5; ai++) {
+      const ax2 = cx - W * 0.40 + ai * W * 0.17;
+      ctx.fillStyle = '#0c1a0e'; ctx.strokeStyle = '#226622'; ctx.lineWidth = 1;
+      rr(ax2 - 20, topY + 8, 40, H * 0.52, 3); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#004400'; ctx.font = 'bold 5px monospace'; ctx.textAlign = 'center';
+      ctx.fillText(aisleLabels[ai], ax2, topY + 18);
+      for (let si = 0; si < 5; si++) {
+        ctx.strokeStyle = '#1a3a1a'; ctx.lineWidth = 0.5;
+        ctx.strokeRect(ax2 - 18, topY + 22 + si * (H * 0.09), 36, 2);
+        for (let pi = 0; pi < 5; pi++) {
+          ctx.fillStyle = pColors[(ai * 5 + si + pi) % pColors.length];
+          ctx.globalAlpha = 0.88;
+          ctx.fillRect(ax2 - 16 + pi * 6.5, topY + 26 + si * (H * 0.09), 5, 9);
+          ctx.globalAlpha = 1;
+        }
+      }
+    }
+    // Fruit/veg display at entrance
+    ctx.fillStyle = '#081a0a'; ctx.strokeStyle = '#44AA44'; ctx.lineWidth = 1.5;
+    rr(cx - W * 0.44, midY + 50, W * 0.26, 40, 4); ctx.fill(); ctx.stroke();
+    ctx.font = '12px serif'; ctx.textAlign = 'center';
+    for (const [em, ex2] of [['🍎',cx-W*0.44+20],['🍊',cx-W*0.44+42],['🍋',cx-W*0.44+64],['🥦',cx-W*0.44+86],['🍇',cx-W*0.44+108]])
+      ctx.fillText(em, ex2, midY + 76);
+    // Deli counter
+    ctx.fillStyle = '#0a1a0c'; ctx.strokeStyle = '#55AA55'; ctx.lineWidth = 1.5;
+    rr(cx + W * 0.20, midY - 40, 84, 44, 4); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#00CC44'; ctx.font = 'bold 7px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('DELI COUNTER', cx + W * 0.20 + 42, midY - 24);
+    ctx.font = '5px monospace';
+    ctx.fillText('HOT FOODS · COLD CUTS', cx + W * 0.20 + 42, midY - 12);
+    // 3 checkout registers
+    for (let ci = 0; ci < 3; ci++) {
+      const coX = cx - W * 0.10 + ci * W * 0.16, coY = midY + 50;
+      ctx.fillStyle = '#0e1a0e'; ctx.strokeStyle = '#44AA44'; ctx.lineWidth = 1.5;
+      rr(coX, coY, 60, 32, 4); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#22CC44'; ctx.font = 'bold 6px monospace'; ctx.textAlign = 'center';
+      ctx.fillText(`LANE ${ci + 1}`, coX + 30, coY + 12);
+      ctx.fillStyle = '#00FF66'; ctx.font = '5px monospace';
+      ctx.fillText('$ 0.00', coX + 30, coY + 24);
+    }
+    // Shopping cart rack
+    ctx.fillStyle = '#0a1408'; ctx.strokeStyle = '#226622'; ctx.lineWidth = 1;
+    rr(cx + W * 0.32, midY + 60, 52, 38, 3); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#44AA44'; ctx.font = '7px serif'; ctx.textAlign = 'center';
+    ctx.fillText('🛒🛒🛒', cx + W * 0.32 + 26, midY + 84);
+    // ATM on wall
+    ctx.fillStyle = '#060e08'; ctx.strokeStyle = '#33AA33'; ctx.lineWidth = 1.5;
+    rr(cx - W * 0.44, midY - 40, 36, 58, 3); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#00CC44'; ctx.font = 'bold 5px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('ATM', cx - W * 0.44 + 18, midY - 20);
+    ctx.fillStyle = '#001800'; ctx.fillRect(cx - W * 0.44 + 4, midY - 14, 28, 16);
+    ctx.fillStyle = '#00FF66'; ctx.font = '4px monospace';
+    ctx.fillText('$ CASH', cx - W * 0.44 + 18, midY - 4);
+    drawMetroHuman(cx + W * 0.20 + 42, midY + 10, '#2a4a2a', '#FFDAB0', '#4a3020'); // deli worker
+    drawMetroHuman(cx - W * 0.10 + 30, midY + 28, '#1a3a1a', '#8B5E3C', '#1a0a00'); // cashier
+    drawMetroHuman(cx - W * 0.42, midY - 10, '#2a4030', '#C8956A', '#2a2010'); // stocker
+
+  } else if (type === 4) {
+    // ═══ ARCADE: NEON ARCADE ═══
+    drawMetroFloor('#0a0008', '#0e0010');
+    drawMetroSign('NEON ARCADE');
+    const arcColors = ['#FF0088','#00FFCC','#FF4400','#8800FF','#FFCC00','#00CCFF'];
+    // 10 arcade cabinets: 5 top row, 5 second row
+    const arcPos = [
+      [cx-W*0.42,topY+8],[cx-W*0.26,topY+8],[cx-W*0.10,topY+8],[cx+W*0.06,topY+8],[cx+W*0.22,topY+8],
+      [cx-W*0.42,topY+80],[cx-W*0.26,topY+80],[cx-W*0.10,topY+80],[cx+W*0.06,topY+80],[cx+W*0.22,topY+80]
+    ];
+    for (let ai = 0; ai < arcPos.length; ai++) {
+      const [ax2, ay2] = arcPos[ai], ac = arcColors[ai % arcColors.length];
+      ctx.fillStyle = '#080010'; ctx.strokeStyle = ac; ctx.lineWidth = 1.5;
+      ctx.shadowColor = ac; ctx.shadowBlur = 10 * (Math.sin(t * 2 + ai * 0.7) * 0.35 + 0.65);
+      rr(ax2, ay2, 44, 64, 4); ctx.fill(); ctx.stroke(); ctx.shadowBlur = 0;
+      // screen
+      ctx.fillStyle = '#000820'; ctx.fillRect(ax2 + 4, ay2 + 6, 36, 26);
+      ctx.fillStyle = ac + '60'; ctx.fillRect(ax2 + 4, ay2 + 6, 36, 26);
+      // score display
+      ctx.fillStyle = '#FFFFFF'; ctx.font = '4px monospace'; ctx.textAlign = 'center';
+      ctx.fillText(`${(ai * 1337 + 9999).toString()}`, ax2 + 22, ay2 + 22);
+      // joystick
+      ctx.fillStyle = '#222'; ctx.beginPath(); ctx.arc(ax2 + 12, ay2 + 42, 5, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#CC2222'; ctx.beginPath(); ctx.arc(ax2 + 12, ay2 + 42, 3, 0, Math.PI*2); ctx.fill();
+      // buttons
+      for (let bi = 0; bi < 3; bi++) {
+        ctx.fillStyle = ['#FF2222','#2222FF','#22FF22'][bi];
+        ctx.beginPath(); ctx.arc(ax2 + 24 + bi * 8, ay2 + 42, 3.5, 0, Math.PI*2); ctx.fill();
+      }
+      ctx.fillStyle = '#FFFF00'; ctx.font = '5px monospace';
+      ctx.fillText('INSERT COIN', ax2 + 22, ay2 + 60);
+    }
+    // Prize counter
+    ctx.fillStyle = '#12001c'; ctx.strokeStyle = '#FF00FF'; ctx.lineWidth = 1.5;
+    ctx.shadowColor = '#FF00FF'; ctx.shadowBlur = 8;
+    rr(cx + W * 0.30, midY + 10, 78, 36, 4); ctx.fill(); ctx.stroke(); ctx.shadowBlur = 0;
+    ctx.fillStyle = '#FF44FF'; ctx.font = 'bold 7px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('PRIZES', cx + W * 0.30 + 39, midY + 24);
+    ctx.font = '5px monospace';
+    ctx.fillText('TOKENS: $2 EA', cx + W * 0.30 + 39, midY + 36);
+    // Prize items
+    ctx.font = '10px serif';
+    for (const [em, ex2] of [['🎮',cx+W*0.30+14],['🧸',cx+W*0.30+39],['🏆',cx+W*0.30+64]])
+      ctx.fillText(em, ex2, midY + 8);
+    // Token machine
+    ctx.fillStyle = '#100018'; ctx.strokeStyle = '#CC00FF'; ctx.lineWidth = 1.5;
+    rr(cx + W * 0.30, midY - 50, 36, 54, 3); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#FF44FF'; ctx.font = 'bold 5px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('TOKENS', cx + W * 0.30 + 18, midY - 38);
+    ctx.fillText('$', cx + W * 0.30 + 18, midY - 26);
+    // Dance mat in center bottom
+    ctx.fillStyle = '#0c0018'; ctx.strokeStyle = '#8800FF'; ctx.lineWidth = 1.5;
+    rr(cx - W * 0.20, midY + 10, 130, 80, 5); ctx.fill(); ctx.stroke();
+    const dmCols = ['#FF0088','#00FFCC','#FFCC00','#FF4400'];
+    for (let dy2 = 0; dy2 < 4; dy2++) for (let dx2 = 0; dx2 < 4; dx2++) {
+      ctx.fillStyle = dmCols[(dx2+dy2)%4] + '55';
+      ctx.fillRect(cx - W*0.20 + 4 + dx2*31, midY+14 + dy2*18, 29, 16);
+      ctx.strokeStyle = dmCols[(dx2+dy2)%4]; ctx.lineWidth = 0.5;
+      ctx.strokeRect(cx - W*0.20 + 4 + dx2*31, midY+14 + dy2*18, 29, 16);
+    }
+    ctx.fillStyle = '#FF00FF'; ctx.font = 'bold 8px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('DANCE PAD', cx - W * 0.20 + 65, midY + 100);
+    // High score board on wall
+    ctx.fillStyle = '#080014'; ctx.strokeStyle = '#FF0088'; ctx.lineWidth = 1.5;
+    rr(cx - W * 0.44, topY + 8, 52, 110, 3); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#FF44CC'; ctx.font = 'bold 6px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('TOP SCORES', cx - W * 0.44 + 26, topY + 22);
+    const hsNames = ['ZAX','NEO','KAI','RYX','VEX'];
+    for (let hi = 0; hi < 5; hi++) {
+      ctx.fillStyle = hi === 0 ? '#FFCC00' : '#CC88FF';
+      ctx.font = '5px monospace';
+      ctx.fillText(`${hi+1}. ${hsNames[hi]} ${99999 - hi*4321}`, cx - W*0.44+26, topY + 36 + hi * 16);
+    }
+    drawMetroHuman(cx + W * 0.30 + 39, midY + 54, '#4a0a2a', '#C8956A', '#1a0a00'); // cashier
+    drawMetroHuman(cx - W * 0.10, midY + 84, '#1a002a', '#FFDAB0', '#2a2020'); // player on dance pad
+
+  } else if (type === 5) {
+    // ═══ PHARMACY: METRO PHARMACY ═══
+    drawMetroFloor('#040e0c', '#060e0a');
+    drawMetroSign('METRO PHARMACY');
+    // 4 shelving rows of medicine
+    const shelfColors2 = ['#FF5566','#5577FF','#44FFCC','#FFCC44','#FF88FF','#44FF99','#FF7733','#88CCFF','#FFAA55','#55FFEE'];
+    const shelfLabels = ['PAIN RELIEF','VITAMINS','COLD & FLU','FIRST AID'];
+    for (let row = 0; row < 4; row++) {
+      const shY = topY + 12 + row * 60;
+      ctx.fillStyle = '#080f0d'; ctx.strokeStyle = '#228866'; ctx.lineWidth = 1;
+      rr(cx - W * 0.44, shY, W * 0.54, 48, 3); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#004433'; ctx.font = 'bold 5px monospace'; ctx.textAlign = 'left';
+      ctx.fillText(shelfLabels[row], cx - W * 0.44 + 4, shY + 10);
+      // shelf divider
+      ctx.strokeStyle = '#114433'; ctx.lineWidth = 0.5;
+      ctx.strokeRect(cx - W * 0.44, shY + 18, W * 0.54, 1.5);
+      ctx.strokeRect(cx - W * 0.44, shY + 34, W * 0.54, 1.5);
+      for (let bi = 0; bi < 12; bi++) {
+        const bc = shelfColors2[(row * 12 + bi) % shelfColors2.length];
+        const bx2 = cx - W * 0.44 + 4 + bi * W * 0.044;
+        const bH2 = 12 + (bi % 4) * 3;
+        ctx.fillStyle = bc; ctx.globalAlpha = 0.88;
+        rr(bx2, shY + 4, 8, bH2, 2); ctx.fill(); ctx.globalAlpha = 1;
+        ctx.strokeStyle = 'rgba(255,255,255,0.25)'; ctx.lineWidth = 0.4; ctx.stroke();
+      }
+    }
+    // Rx prescription counter
+    ctx.fillStyle = '#060f0d'; ctx.strokeStyle = '#44CCAA'; ctx.lineWidth = 1.5;
+    rr(cx + W * 0.16, topY + 12, W * 0.28, 70, 4); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#44CCAA'; ctx.font = 'bold 8px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('Rx COUNTER', cx + W * 0.30, topY + 28);
+    // prescription computer
+    ctx.fillStyle = '#040c0a'; ctx.strokeStyle = '#229977'; ctx.lineWidth = 1;
+    rr(cx + W * 0.20, topY + 34, 56, 36, 3); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#001a14'; ctx.fillRect(cx + W * 0.20 + 3, topY + 37, 50, 22);
+    ctx.fillStyle = '#00FFAA'; ctx.font = '4px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('PRESCRIPTION DB', cx + W * 0.20 + 28, topY + 50);
+    // Green cross / first aid display
+    ctx.fillStyle = '#00FF44'; ctx.shadowColor = '#00FF44'; ctx.shadowBlur = 14*(0.6+0.4*Math.sin(t*2));
+    ctx.fillRect(cx + W * 0.40, topY + 20, 8, 24); ctx.fillRect(cx + W * 0.40 - 8, topY + 28, 24, 8); ctx.shadowBlur = 0;
+    // Blood pressure machine
+    ctx.fillStyle = '#060f0d'; ctx.strokeStyle = '#44CCAA'; ctx.lineWidth = 1;
+    rr(cx - W * 0.44, midY + 40, 52, 52, 3); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#44CCAA'; ctx.font = 'bold 5px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('BP MONITOR', cx - W * 0.44 + 26, midY + 52);
+    ctx.fillStyle = '#00FF88'; ctx.font = '5px monospace';
+    ctx.fillText('120 / 80', cx - W * 0.44 + 26, midY + 66);
+    // Scale
+    ctx.fillStyle = '#080f0d'; ctx.strokeStyle = '#33BBAA'; ctx.lineWidth = 1;
+    rr(cx - W * 0.44, midY - 10, 48, 44, 3); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#44CCAA'; ctx.font = '5px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('SCALE', cx - W * 0.44 + 24, midY + 8);
+    // Waiting chairs
+    for (let ci = 0; ci < 4; ci++) {
+      ctx.fillStyle = '#0a1a18'; ctx.strokeStyle = '#226644'; ctx.lineWidth = 1;
+      rr(cx + W * 0.02 + ci * 36, midY + 40, 28, 28, 4); ctx.fill(); ctx.stroke();
+    }
+    ctx.fillStyle = '#44CCAA'; ctx.font = 'bold 6px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('WAITING AREA', cx + W * 0.18, midY + 82);
+    drawMetroHuman(cx + W * 0.30, topY + 100, '#a8c8cc', '#E0A878', '#4a3020'); // pharmacist
+    drawMetroHuman(cx + W * 0.10, midY + 15, '#88b0b4', '#FFDAB0', '#1a0a00');  // assistant
+    drawMetroHuman(cx + W * 0.08, midY + 66, '#2a3a30', '#C8956A', '#4a3020');  // customer
+
+  } else if (type === 6) {
+    // ═══ GYM: IRON BODY GYM ═══
+    drawMetroFloor('#100404', '#140404');
+    drawMetroSign('IRON BODY GYM');
+    // 5 treadmills top row
+    for (let ti = 0; ti < 5; ti++) {
+      const tx2 = cx - W * 0.40 + ti * W * 0.18, ty2 = topY + 8;
+      ctx.fillStyle = '#1a0808'; ctx.strokeStyle = '#CC2222'; ctx.lineWidth = 1.5;
+      rr(tx2 - 24, ty2, 52, 40, 4); ctx.fill(); ctx.stroke();
+      // belt
+      ctx.fillStyle = '#2a0a0a'; ctx.fillRect(tx2 - 20, ty2 + 12, 44, 14);
+      ctx.strokeStyle = '#FF4444'; ctx.lineWidth = 0.5;
+      for (let li = 0; li < 5; li++) ctx.strokeRect(tx2 - 20 + li * 8.8, ty2 + 12, 8.8, 14);
+      // speed display
+      ctx.fillStyle = '#FF2222'; ctx.shadowColor = '#FF0000'; ctx.shadowBlur = 5;
+      ctx.font = '5px monospace'; ctx.textAlign = 'center';
+      ctx.fillText(`${(ti + 6)}.0 KM/H`, tx2, ty2 + 38); ctx.shadowBlur = 0;
+    }
+    // Bench press stations
+    for (const [bpx, bpy] of [[cx - W*0.34, midY - 50],[cx - W*0.04, midY - 50],[cx + W*0.26, midY - 50]]) {
+      ctx.fillStyle = '#1a0c0c'; ctx.strokeStyle = '#882222'; ctx.lineWidth = 1.5;
+      rr(bpx - 44, bpy, 88, 44, 4); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#CC2222'; ctx.fillRect(bpx - 44, bpy + 12, 88, 12);
+      // barbell
+      ctx.fillStyle = '#3a1a1a'; ctx.strokeStyle = '#551111'; ctx.lineWidth = 1;
+      ctx.fillRect(bpx - 46, bpy + 4, 92, 6);
+      ctx.fillStyle = '#441111';
+      ctx.beginPath(); ctx.ellipse(bpx - 46, bpy + 7, 7, 5, 0, 0, Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(bpx + 46, bpy + 7, 7, 5, 0, 0, Math.PI*2); ctx.fill();
+    }
+    // Dumbbell rack
+    ctx.fillStyle = '#1a0c0c'; ctx.strokeStyle = '#AA2222'; ctx.lineWidth = 1.5;
+    rr(cx - W * 0.44, topY + 54, 44, 120, 3); ctx.fill(); ctx.stroke();
+    for (let di = 0; di < 6; di++) {
+      const dy2 = topY + 62 + di * 17;
+      const dbx = cx - W * 0.44 + 4;
+      ctx.fillStyle = '#2a1010'; ctx.strokeStyle = '#881111'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.ellipse(dbx + 8, dy2, 6, 4, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.beginPath(); ctx.ellipse(dbx + 28, dy2, 6, 4, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#3a1a1a'; ctx.fillRect(dbx + 8, dy2 - 2, 20, 4);
+      ctx.fillStyle = '#FF8888'; ctx.font = '4px monospace'; ctx.textAlign = 'center';
+      ctx.fillText(`${(di+1)*5}kg`, dbx + 18, dy2 + 12);
+    }
+    // Pull-up bars
+    ctx.strokeStyle = '#CC2222'; ctx.lineWidth = 3;
+    for (const px2 of [cx - W * 0.06, cx + W * 0.24]) {
+      ctx.beginPath(); ctx.moveTo(px2 - 24, midY + 30); ctx.lineTo(px2 + 24, midY + 30); ctx.stroke();
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(px2 - 24, midY + 30); ctx.lineTo(px2 - 24, midY + 55); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(px2 + 24, midY + 30); ctx.lineTo(px2 + 24, midY + 55); ctx.stroke();
+      ctx.lineWidth = 3;
+    }
+    // Mirror wall indicator (right side)
+    ctx.fillStyle = 'rgba(200,220,255,0.06)';
+    ctx.fillRect(cx + W * 0.38, topY + 8, 12, H * 0.75);
+    ctx.strokeStyle = '#99BBDD'; ctx.lineWidth = 0.5;
+    ctx.strokeRect(cx + W * 0.38, topY + 8, 12, H * 0.75);
+    ctx.fillStyle = '#AACCFF'; ctx.font = 'bold 5px monospace'; ctx.textAlign = 'center';
+    // Water fountain
+    ctx.fillStyle = '#1a0808'; ctx.strokeStyle = '#CC4444'; ctx.lineWidth = 1;
+    rr(cx + W * 0.38, midY + 60, 36, 40, 3); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#4499FF'; ctx.globalAlpha = 0.6;
+    ctx.fillRect(cx + W * 0.38 + 4, midY + 63, 28, 24); ctx.globalAlpha = 1;
+    ctx.fillStyle = '#FF6666'; ctx.font = '5px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('WATER', cx + W * 0.38 + 18, midY + 94);
+    drawMetroHuman(cx - W * 0.42, midY + 6, '#2a0a0a', '#8B5E3C', '#1a0a00'); // trainer
+    drawMetroHuman(cx + W * 0.40 + 6, midY + 6, '#3a0808', '#C8956A', '#2a1010'); // trainer2
+    drawMetroHuman(cx - W * 0.04, midY + 52, '#1a0808', '#FFDAB0', '#4a3020'); // gym member
+
+  } else if (type === 7) {
+    // ═══ BANK: METRO NATIONAL BANK ═══
+    drawMetroFloor('#080810', '#0a0a14');
+    drawMetroSign('METRO NATIONAL BANK');
+    // Bank logo header
+    ctx.fillStyle = '#0a0a1e'; ctx.strokeStyle = '#FFCC44'; ctx.lineWidth = 2;
+    rr(cx - 70, topY + 4, 140, 36, 5); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = GOLD; ctx.font = 'bold 10px Orbitron,monospace'; ctx.textAlign = 'center';
+    ctx.shadowColor = AMBER; ctx.shadowBlur = 12;
+    ctx.fillText('METRO NATIONAL BANK', cx, topY + 26); ctx.shadowBlur = 0;
+    // Security velvet rope barrier
+    ctx.strokeStyle = '#CC2222'; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.moveTo(cx - W * 0.30, topY + 46); ctx.lineTo(cx + W * 0.14, topY + 46); ctx.stroke();
+    for (const px2 of [cx - W * 0.30, cx - W * 0.08, cx + W * 0.14]) {
+      ctx.fillStyle = '#FFCC44'; ctx.beginPath(); ctx.arc(px2, topY + 46, 5, 0, Math.PI*2); ctx.fill();
+    }
+    // 5 teller windows
+    for (let ti = 0; ti < 5; ti++) {
+      const tx2 = cx - W * 0.38 + ti * W * 0.19;
+      ctx.fillStyle = '#0c0c1a'; ctx.strokeStyle = '#FFCC44'; ctx.lineWidth = 1.5;
+      rr(tx2 - 30, topY + 54, 60, 46, 4); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#FFCC44'; ctx.font = 'bold 6px monospace'; ctx.textAlign = 'center';
+      ctx.fillText(`TELLER ${ti + 1}`, tx2, topY + 66);
+      // teller screen
+      ctx.fillStyle = '#000c1c'; ctx.fillRect(tx2 - 22, topY + 70, 44, 18);
+      ctx.fillStyle = '#00FF88'; ctx.font = '4px monospace';
+      ctx.fillText(`$ ${(12345 + ti * 5678).toLocaleString()}`, tx2, topY + 82);
+      // glass divider
+      ctx.strokeStyle = 'rgba(180,220,255,0.20)'; ctx.lineWidth = 1;
+      ctx.strokeRect(tx2 - 30, topY + 54, 60, 46);
+    }
+    // Vault (large, centered right)
+    const vx = cx + W * 0.22, vy = midY - 10;
+    ctx.fillStyle = '#0a0a14'; ctx.strokeStyle = '#FFDD44'; ctx.lineWidth = 2.5;
+    rr(vx, vy, 80, 90, 8); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.arc(vx + 40, vy + 40, 28, 0, Math.PI * 2);
+    ctx.strokeStyle = '#CC9922'; ctx.lineWidth = 2; ctx.stroke();
+    ctx.beginPath(); ctx.arc(vx + 40, vy + 40, 14, 0, Math.PI * 2);
+    ctx.strokeStyle = '#FFDD44'; ctx.lineWidth = 1.5; ctx.stroke();
+    for (let sp = 0; sp < 8; sp++) {
+      const sa = (sp / 8) * Math.PI * 2;
+      ctx.beginPath(); ctx.moveTo(vx + 40 + Math.cos(sa) * 14, vy + 40 + Math.sin(sa) * 14);
+      ctx.lineTo(vx + 40 + Math.cos(sa) * 28, vy + 40 + Math.sin(sa) * 28);
+      ctx.strokeStyle = '#FFDD44'; ctx.lineWidth = 1; ctx.stroke();
+    }
+    ctx.fillStyle = '#FFDD44'; ctx.font = 'bold 9px monospace'; ctx.textAlign = 'center';
+    ctx.shadowColor = AMBER; ctx.shadowBlur = 8;
+    ctx.fillText('VAULT', vx + 40, vy + 76); ctx.shadowBlur = 0;
+    // ATMs row
+    for (let ai = 0; ai < 4; ai++) {
+      const ax2 = cx - W * 0.44 + ai * 44;
+      ctx.fillStyle = '#080812'; ctx.strokeStyle = '#4444AA'; ctx.lineWidth = 1.5;
+      rr(ax2, midY - 10, 38, 60, 3); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#001022'; ctx.fillRect(ax2 + 4, midY - 4, 30, 20);
+      ctx.fillStyle = '#FFCC44'; ctx.font = 'bold 5px monospace'; ctx.textAlign = 'center';
+      ctx.fillText('ATM', ax2 + 19, midY + 8);
+      ctx.fillStyle = '#00FF88'; ctx.font = '4px monospace';
+      ctx.fillText('$ CASH', ax2 + 19, midY + 18);
+      ctx.fillStyle = '#336699'; ctx.fillRect(ax2 + 12, midY + 22, 14, 4);
+    }
+    // Waiting chairs
+    for (let ci = 0; ci < 5; ci++) {
+      ctx.fillStyle = '#0c0c1c'; ctx.strokeStyle = '#3333AA'; ctx.lineWidth = 0.8;
+      rr(cx - W * 0.36 + ci * 52, midY + 60, 40, 30, 4); ctx.fill(); ctx.stroke();
+    }
+    ctx.fillStyle = '#6688CC'; ctx.font = 'bold 6px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('WAITING AREA', cx - W * 0.04, midY + 100);
+    // Security camera markers
+    for (const [scx, scy] of [[cx-W*0.44,topY+4],[cx+W*0.40,topY+4],[cx,topY+4]]) {
+      ctx.fillStyle = '#CC2222'; ctx.shadowColor = '#FF0000'; ctx.shadowBlur = 6;
+      ctx.beginPath(); ctx.arc(scx, scy, 4, 0, Math.PI*2); ctx.fill(); ctx.shadowBlur = 0;
+    }
+    drawMetroHuman(cx - W * 0.28, topY + 120, '#0a1a4a', '#C8956A', '#1a0a00'); // teller
+    drawMetroHuman(cx + W * 0.04, topY + 120, '#0a1a4a', '#FFDAB0', '#4a3020'); // teller
+    drawMetroHuman(cx - W * 0.44 + 19, midY + 88, '#1a1a3a', '#E0A878', '#1a0a00'); // customer
+
+  } else if (type === 8) {
+    // ═══ NIGHTCLUB: METRO NIGHTCLUB ═══
+    drawMetroFloor('#0e0010', '#100014');
+    drawMetroSign('METRO NIGHTCLUB');
+    // DJ booth + stage back wall
+    ctx.fillStyle = '#16002a'; ctx.strokeStyle = '#CC00FF'; ctx.lineWidth = 2;
+    ctx.shadowColor = '#CC00FF'; ctx.shadowBlur = 14;
+    rr(cx - W * 0.24, topY + 6, W * 0.48, 50, 8); ctx.fill(); ctx.stroke(); ctx.shadowBlur = 0;
+    ctx.fillStyle = '#FF00FF'; ctx.font = 'bold 11px Orbitron, monospace'; ctx.textAlign = 'center';
+    ctx.shadowColor = '#FF00FF'; ctx.shadowBlur = 12;
+    ctx.fillText('DJ BOOTH', cx, topY + 24); ctx.shadowBlur = 0;
+    // Mixing board on DJ booth
+    ctx.fillStyle = '#0c0018'; ctx.strokeStyle = '#8833DD'; ctx.lineWidth = 1;
+    rr(cx - W * 0.20, topY + 30, W * 0.40, 20, 3); ctx.fill(); ctx.stroke();
+    for (let fi = 0; fi < 12; fi++) {
+      const fx2 = cx - W * 0.18 + fi * W * 0.03;
+      ctx.fillStyle = '#3a1a5a'; ctx.fillRect(fx2, topY + 32, 6, 14);
+      ctx.fillStyle = '#CC88FF'; ctx.fillRect(fx2 - 1, topY + 34 + (fi % 6) * 2, 8, 4);
+    }
+    // Spot lights
+    const spotC = ['#FF0088','#00FFCC','#8800FF','#FF4400'];
+    for (let si = 0; si < 4; si++) {
+      const sx2 = cx - W * 0.40 + si * W * 0.27;
+      ctx.fillStyle = spotC[si]; ctx.globalAlpha = 0.12 + 0.08 * Math.sin(t*2.5+si);
+      ctx.beginPath(); ctx.moveTo(sx2, topY + 56); ctx.lineTo(sx2 - 40, H * 0.85); ctx.lineTo(sx2 + 40, H * 0.85); ctx.fill();
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = spotC[si]; ctx.shadowColor = spotC[si]; ctx.shadowBlur = 8;
+      ctx.beginPath(); ctx.arc(sx2, topY + 56, 6, 0, Math.PI*2); ctx.fill(); ctx.shadowBlur = 0;
+    }
+    // Dance floor large with animated tiles
+    const dfX = cx - W * 0.28, dfY = midY - 60, dfW = W * 0.56, dfH = 90, dfN = 7;
+    const dCols = ['#FF0088','#8800FF','#00FFCC','#FF4400','#0044FF','#FFCC00','#FF44AA'];
+    for (let dy2 = 0; dy2 < dfN; dy2++) for (let dx2 = 0; dx2 < dfN; dx2++) {
+      ctx.fillStyle = dCols[(dx2 + dy2 + Math.floor(t * 4)) % dfN] + '3a';
+      ctx.fillRect(dfX + dx2 * (dfW/dfN), dfY + dy2 * (dfH/dfN), dfW/dfN - 1, dfH/dfN - 1);
+    }
+    ctx.strokeStyle = 'rgba(255,0,200,0.5)'; ctx.lineWidth = 1.5; ctx.strokeRect(dfX, dfY, dfW, dfH);
+    ctx.fillStyle = 'rgba(255,0,255,0.15)'; ctx.fillRect(dfX, dfY, dfW, dfH);
+    // Bar counter left
+    ctx.fillStyle = '#1a0028'; ctx.strokeStyle = '#8800FF'; ctx.lineWidth = 1.5;
+    rr(cx - W * 0.44, topY + 60, 68, H * 0.40, 4); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#FF44FF'; ctx.font = 'bold 7px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('BAR', cx - W * 0.44 + 34, topY + 72);
+    // Bottles on bar
+    const bC2 = ['#FF0055','#8800FF','#FF4400','#0044FF','#FFCC00','#00CCFF'];
+    for (let bi = 0; bi < 6; bi++) {
+      ctx.fillStyle = bC2[bi]; ctx.globalAlpha = 0.85;
+      rr(cx - W * 0.44 + 4 + bi * 10, topY + 76, 8, 20, 2); ctx.fill(); ctx.globalAlpha = 1;
+    }
+    // Bar stools
+    for (let si = 0; si < 3; si++) {
+      const sy2 = topY + 90 + si * 50;
+      ctx.fillStyle = '#2a003a'; ctx.strokeStyle = '#CC00FF'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.arc(cx - W * 0.46, sy2, 10, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+    }
+    // 3 VIP booths right
+    for (let vi = 0; vi < 3; vi++) {
+      const vy2 = topY + 64 + vi * 72;
+      ctx.fillStyle = '#16001c'; ctx.strokeStyle = '#8800FF'; ctx.lineWidth = 1;
+      rr(cx + W * 0.28, vy2, 80, 60, 5); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#2a0038'; rr(cx + W * 0.28 + 6, vy2 + 6, 68, 42, 4); ctx.fill();
+      ctx.fillStyle = '#FF44FF'; ctx.font = 'bold 7px monospace'; ctx.textAlign = 'center';
+      ctx.fillText('VIP', cx + W * 0.28 + 40, vy2 + 30);
+      // table in booth
+      ctx.fillStyle = '#220033'; ctx.strokeStyle = '#AA44FF'; ctx.lineWidth = 0.8;
+      rr(cx + W * 0.28 + 22, vy2 + 36, 36, 22, 3); ctx.fill(); ctx.stroke();
+    }
+    // Laser beams (decorative)
+    for (let li = 0; li < 3; li++) {
+      const lc = ['rgba(255,0,136,0.25)','rgba(0,255,204,0.2)','rgba(136,0,255,0.22)'][li];
+      ctx.strokeStyle = lc; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(cx, topY + 56); ctx.lineTo(cx - W*0.30 + li * W*0.30, midY + 30); ctx.stroke();
+    }
+    // Mirror ball center ceiling
+    ctx.fillStyle = '#FFFFFF'; ctx.shadowColor = '#FFFFFF'; ctx.shadowBlur = 20*(0.5+0.5*Math.sin(t*3));
+    ctx.beginPath(); ctx.arc(cx, topY + 56, 8, 0, Math.PI*2); ctx.fill(); ctx.shadowBlur = 0;
+    drawMetroHuman(cx, topY + 80, '#2a0a3a', '#C8956A', '#1a0a00');           // DJ
+    drawMetroHuman(cx - W * 0.44 + 34, midY - 10, '#1a0028', '#FFDAB0', '#4a3020'); // bartender
+    drawMetroHuman(cx - W * 0.08, midY + 30, '#16002a', '#E0A878', '#1a1a1a'); // dancer
+
+  } else if (type === 9) {
+    // ═══ HOSPITAL: METRO MEDICAL CENTER ═══
+    drawMetroFloor('#040e06', '#040c04');
+    drawMetroSign('METRO MEDICAL CENTER');
+    // Red cross back wall
+    ctx.fillStyle = '#FF2222'; ctx.shadowColor = '#FF4444'; ctx.shadowBlur = 14*(0.6+0.4*Math.sin(t*1.5));
+    ctx.fillRect(cx - 6, topY + 6, 12, 36); ctx.fillRect(cx - 18, topY + 18, 36, 12); ctx.shadowBlur = 0;
+    // Nurses station / reception desk
+    ctx.fillStyle = '#061408'; ctx.strokeStyle = '#44CC44'; ctx.lineWidth = 1.5;
+    rr(cx - W * 0.26, topY + 48, W * 0.52, 28, 4); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#22CC44'; ctx.font = 'bold 7px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('NURSES STATION', cx, topY + 62);
+    ctx.fillStyle = '#001800'; ctx.fillRect(cx - 40, topY + 50, 80, 18);
+    ctx.fillStyle = '#00FF88'; ctx.font = '5px monospace';
+    ctx.fillText('PATIENT RECORDS', cx, topY + 63);
+    // 4 hospital beds
+    const bedPos = [[cx-W*0.42,midY-70],[cx-W*0.14,midY-70],[cx-W*0.42,midY+20],[cx-W*0.14,midY+20]];
+    for (const [bx, by] of bedPos) {
+      ctx.fillStyle = '#0a1e0e'; ctx.strokeStyle = '#44AA66'; ctx.lineWidth = 1.5;
+      rr(bx, by, 100, 54, 6); ctx.fill(); ctx.stroke();
+      // mattress
+      ctx.fillStyle = '#0f2a14'; rr(bx + 4, by + 4, 76, 42, 4); ctx.fill();
+      // pillow
+      ctx.fillStyle = '#E8F4E8'; rr(bx + 74, by + 6, 20, 16, 3); ctx.fill();
+      // sheet
+      ctx.fillStyle = '#C8E0D0'; ctx.fillRect(bx + 4, by + 38, 76, 6);
+      // patient lump (body under sheet)
+      ctx.fillStyle = '#0c2010'; ctx.fillRect(bx + 10, by + 16, 60, 18);
+      // IV stand indicator
+      ctx.strokeStyle = '#44CC44'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(bx + 96, by + 4); ctx.lineTo(bx + 96, by + 50); ctx.stroke();
+      ctx.fillStyle = '#00FF66'; ctx.shadowColor = '#00FF66'; ctx.shadowBlur = 6;
+      ctx.beginPath(); ctx.arc(bx + 96, by + 4, 4, 0, Math.PI*2); ctx.fill(); ctx.shadowBlur = 0;
+      // heart monitor
+      ctx.fillStyle = '#22FF44'; ctx.shadowColor = '#22FF44'; ctx.shadowBlur = 5;
+      ctx.beginPath(); ctx.arc(bx + 108, by + 20, 3, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0;
+    }
+    // Medicine cabinet left wall
+    ctx.fillStyle = '#040e06'; ctx.strokeStyle = '#44CC44'; ctx.lineWidth = 1.5;
+    rr(cx - W * 0.44, topY + 82, 52, 130, 3); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#22CC44'; ctx.font = 'bold 5px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('MEDICINE', cx - W * 0.44 + 26, topY + 92);
+    const medC = ['#FF5566','#5577FF','#44FFCC','#FFCC44','#FF88FF','#44FF99'];
+    for (let mi2 = 0; mi2 < 12; mi2++) {
+      ctx.fillStyle = medC[mi2 % medC.length]; ctx.globalAlpha = 0.85;
+      rr(cx - W * 0.44 + 3 + (mi2 % 4) * 12, topY + 98 + Math.floor(mi2/4) * 22, 10, 16, 2);
+      ctx.fill(); ctx.globalAlpha = 1;
+    }
+    // X-ray lightbox right wall
+    ctx.fillStyle = '#060f08'; ctx.strokeStyle = '#44CCAA'; ctx.lineWidth = 1.5;
+    rr(cx + W * 0.28, topY + 48, 80, 100, 3); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = 'rgba(180,220,200,0.08)'; ctx.fillRect(cx + W * 0.28 + 4, topY + 52, 72, 72);
+    ctx.fillStyle = '#44CCAA'; ctx.font = 'bold 5px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('X-RAY VIEW', cx + W * 0.28 + 40, topY + 66);
+    ctx.strokeStyle = 'rgba(200,240,220,0.2)'; ctx.lineWidth = 0.5;
+    ctx.beginPath(); ctx.ellipse(cx + W * 0.28 + 40, topY + 96, 20, 30, 0, 0, Math.PI*2); ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(cx + W * 0.28 + 40, topY + 76, 10, 8, 0, 0, Math.PI*2); ctx.stroke();
+    // Defibrillator
+    ctx.fillStyle = '#061408'; ctx.strokeStyle = '#FF4444'; ctx.lineWidth = 1.5;
+    rr(cx + W * 0.28, midY + 50, 48, 44, 3); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#FF4444'; ctx.shadowColor = '#FF2222'; ctx.shadowBlur = 6;
+    ctx.font = 'bold 6px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('AED', cx + W * 0.28 + 24, midY + 74); ctx.shadowBlur = 0;
+    // Wheelchair
+    ctx.fillStyle = '#080e0a'; ctx.strokeStyle = '#33AA55'; ctx.lineWidth = 1;
+    rr(cx + W * 0.10, midY + 55, 36, 44, 3); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#44CC66'; ctx.font = '5px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('♿', cx + W * 0.10 + 18, midY + 78);
+    drawMetroHuman(cx + W * 0.24, topY + 82, '#9ab8bc', '#FFDAB0', '#1a0a00'); // doctor
+    drawMetroHuman(cx, topY + 82, '#a8c8cc', '#C8956A', '#4a3020');             // nurse
+    drawMetroHuman(cx - W * 0.42, midY + 90, '#2a4a2a', '#E0A878', '#4a3020'); // orderly
+
+  } else if (type === 10) {
+    // ═══ GARAGE: METRO AUTO GARAGE ═══
+    drawMetroFloor('#0a0a08', '#0c0c0a');
+    drawMetroSign('METRO AUTO GARAGE');
+    // Garage sign + warning stripes
+    ctx.fillStyle = '#FFAA22'; ctx.globalAlpha = 0.12;
+    for (let si = 0; si < 12; si++) ctx.fillRect(si * 90 - 30, 0, 45, H);
+    ctx.globalAlpha = 1;
+    // 2 cars on hydraulic lifts
+    for (const [cx3, lift] of [[cx - W * 0.22, true],[cx + W * 0.14, false]]) {
+      // lift pillars
+      if (lift) {
+        ctx.strokeStyle = '#884400'; ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.moveTo(cx3 - 50, midY + 30); ctx.lineTo(cx3 - 50, midY + 80); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(cx3 + 50, midY + 30); ctx.lineTo(cx3 + 50, midY + 80); ctx.stroke();
+        ctx.strokeStyle = '#FFAA22'; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(cx3 - 52, midY + 30); ctx.lineTo(cx3 + 52, midY + 30); ctx.stroke();
+      }
+      // car body
+      ctx.fillStyle = lift ? '#1e1a10' : '#181418'; ctx.strokeStyle = lift ? '#FFAA22' : '#885522'; ctx.lineWidth = 2;
+      rr(cx3 - 54, midY - 32, 108, 56, 6); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = lift ? '#2a2010' : '#221420'; ctx.strokeStyle = '#6a5020'; ctx.lineWidth = 1;
+      rr(cx3 - 46, midY - 26, 86, 38, 8); ctx.fill(); ctx.stroke();
+      // windshield
+      ctx.fillStyle = 'rgba(100,180,220,0.2)'; rr(cx3 - 20, midY - 24, 40, 18, 3); ctx.fill();
+      // wheels
+      for (const [wx2, wy2] of [[cx3 - 32, midY + 26],[cx3 + 32, midY + 26]]) {
+        ctx.fillStyle = '#1a1a14'; ctx.beginPath(); ctx.arc(wx2, wy2, 13, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = '#555'; ctx.lineWidth = 2; ctx.stroke();
+        ctx.strokeStyle = '#888'; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.arc(wx2, wy2, 6, 0, Math.PI*2); ctx.stroke();
+      }
+    }
+    // Large tool cabinet
+    ctx.fillStyle = '#14120a'; ctx.strokeStyle = '#AA6622'; ctx.lineWidth = 1.5;
+    rr(cx - W * 0.44, topY + 8, 66, 100, 3); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#FFAA22'; ctx.font = 'bold 5px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('TOOL CHEST', cx - W * 0.44 + 33, topY + 18);
+    for (let di = 0; di < 6; di++) {
+      ctx.strokeStyle = '#664411'; ctx.lineWidth = 0.5;
+      ctx.strokeRect(cx - W * 0.44 + 4, topY + 22 + di * 13, 58, 11);
+      ctx.fillStyle = '#FFAA22'; ctx.fillRect(cx - W * 0.44 + 28, topY + 26 + di * 13, 10, 2);
+    }
+    // Tool pegboard
+    ctx.fillStyle = '#121008'; ctx.strokeStyle = '#664411'; ctx.lineWidth = 1;
+    rr(cx - W * 0.44, topY + 114, 66, 80, 2); ctx.fill(); ctx.stroke();
+    ctx.font = '11px serif'; ctx.textAlign = 'center';
+    for (const [ti, tx2, ty3] of [['🔧',cx-W*0.44+11,topY+132],['🔩',cx-W*0.44+33,topY+132],['🪛',cx-W*0.44+55,topY+132],['🔨',cx-W*0.44+11,topY+158],['⚙',cx-W*0.44+33,topY+158],['🔦',cx-W*0.44+55,topY+158]])
+      ctx.fillText(ti, tx2, ty3);
+    // Oil drums + coolant cans right
+    for (let oi = 0; oi < 5; oi++) {
+      const ox2 = cx + W * 0.28 + (oi % 3) * 22, oy2 = topY + 10 + Math.floor(oi/3) * 32;
+      ctx.fillStyle = '#1a1408'; ctx.strokeStyle = oi < 3 ? '#FF6600' : '#4488FF'; ctx.lineWidth = 1;
+      rr(ox2, oy2, 18, 28, 3); ctx.fill(); ctx.stroke();
+      ctx.strokeStyle = '#884400'; ctx.lineWidth = 2; ctx.strokeRect(ox2, oy2 + 10, 18, 2);
+      ctx.fillStyle = oi < 3 ? '#FF8800' : '#6699FF'; ctx.font = '4px monospace'; ctx.textAlign = 'center';
+      ctx.fillText(oi < 3 ? 'OIL' : 'H2O', ox2 + 9, oy2 + 24);
+    }
+    // Tire stack
+    for (let ti = 0; ti < 4; ti++) {
+      ctx.strokeStyle = '#333'; ctx.lineWidth = 8;
+      ctx.beginPath(); ctx.arc(cx + W * 0.38, midY + 40 + ti * 4, 16, 0, Math.PI*2); ctx.stroke();
+    }
+    // Workbench
+    ctx.fillStyle = '#1a1408'; ctx.strokeStyle = '#886622'; ctx.lineWidth = 1.5;
+    rr(cx + W * 0.14, midY + 50, 100, 36, 3); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#FFAA22'; ctx.font = 'bold 5px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('WORKBENCH', cx + W * 0.14 + 50, midY + 72);
+    // Exhaust vent on wall
+    ctx.strokeStyle = '#666644'; ctx.lineWidth = 1;
+    for (let vi = 0; vi < 6; vi++) ctx.strokeRect(cx + W * 0.42, topY + 20 + vi * 8, 14, 6);
+    drawMetroHuman(cx - W * 0.20, midY + 60, '#3a2a10', '#C8956A', '#1a0a00'); // mechanic
+    drawMetroHuman(cx + W * 0.14 + 50, midY + 16, '#2a1a08', '#8B5E3C', '#2a1a00'); // mechanic2
+
+  } else if (type === 11) {
+    // ═══ BAR: THE AMBER BAR ═══
+    drawMetroFloor('#0e0804', '#120a04');
+    drawMetroSign('THE AMBER BAR');
+    // Full back bar shelf with mirror panel
+    ctx.fillStyle = 'rgba(255,180,80,0.04)';
+    ctx.fillRect(cx - W * 0.44, topY + 8, W * 0.88, 64);
+    ctx.strokeStyle = AMBER; ctx.lineWidth = 0.5;
+    ctx.strokeRect(cx - W * 0.44, topY + 8, W * 0.88, 64);
+    const bbX = cx - W * 0.44, bbY = topY + 14;
+    ctx.fillStyle = '#1a1008'; ctx.strokeStyle = AMBER; ctx.lineWidth = 1.5;
+    rr(bbX, bbY, W * 0.88, 24, 4); ctx.fill(); ctx.stroke();
+    // 14 bottles on the shelf
+    const btlC = ['#CC2200','#FF6600','#DDAA00','#662200','#FF8800','#AA4400','#FF4400','#884400','#CC6600','#FF3300','#BBAA00','#992200','#FF9900','#773300'];
+    for (let bi = 0; bi < 14; bi++) {
+      const bx2 = bbX + 10 + bi * (W * 0.88 - 20) / 13;
+      ctx.fillStyle = btlC[bi]; ctx.globalAlpha = 0.92;
+      rr(bx2 - 5, bbY + 2, 10, 18, 2); ctx.fill(); ctx.globalAlpha = 1;
+      ctx.strokeStyle = btlC[bi] + '88'; ctx.lineWidth = 0.5; ctx.stroke();
+      ctx.fillStyle = '#FFEECC'; ctx.fillRect(bx2 - 3, bbY + 1, 6, 3);
+    }
+    // Second bottle shelf above
+    ctx.fillStyle = '#1a1008'; ctx.strokeStyle = '#AA6622'; ctx.lineWidth = 1;
+    rr(bbX, topY + 40, W * 0.88, 14, 2); ctx.fill(); ctx.stroke();
+    for (let bi = 0; bi < 10; bi++) {
+      const bx2 = bbX + 14 + bi * (W * 0.88 - 28) / 9;
+      ctx.fillStyle = btlC[(bi + 5) % btlC.length]; ctx.globalAlpha = 0.8;
+      rr(bx2 - 4, topY + 41, 8, 12, 2); ctx.fill(); ctx.globalAlpha = 1;
+    }
+    // Long bar counter
+    ctx.fillStyle = '#2a1a08'; ctx.strokeStyle = AMBER; ctx.lineWidth = 2;
+    rr(cx - W * 0.44, topY + 78, W * 0.88, 22, 4); ctx.fill(); ctx.stroke();
+    // Bar top surface
+    ctx.fillStyle = '#3a2510'; ctx.fillRect(cx - W * 0.44 + 2, topY + 80, W * 0.88 - 4, 16);
+    // Beer taps
+    for (let bi = 0; bi < 4; bi++) {
+      const bx2 = cx - W * 0.20 + bi * W * 0.14;
+      ctx.strokeStyle = '#FFCC44'; ctx.lineWidth = 2.5;
+      ctx.beginPath(); ctx.moveTo(bx2, topY + 78); ctx.lineTo(bx2, topY + 68); ctx.stroke();
+      ctx.fillStyle = '#FFAA22'; ctx.beginPath(); ctx.arc(bx2, topY + 66, 4, 0, Math.PI*2); ctx.fill();
+    }
+    // 7 Bar stools
+    for (let si = 0; si < 7; si++) {
+      const sx2 = cx - W * 0.36 + si * W * 0.11, sy2 = topY + 110;
+      ctx.fillStyle = '#2a1808'; ctx.strokeStyle = '#8a5020'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.arc(sx2, sy2, 10, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.strokeStyle = '#6a3810'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(sx2, sy2 + 10); ctx.lineTo(sx2, sy2 + 26); ctx.stroke();
+    }
+    // Booths with benches on left
+    for (let bi = 0; bi < 2; bi++) {
+      const by2 = midY + 10 + bi * 80;
+      ctx.fillStyle = '#1a1008'; ctx.strokeStyle = '#6a3810'; ctx.lineWidth = 1.5;
+      rr(cx - W * 0.44, by2, 80, 64, 5); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#2a1808'; rr(cx - W * 0.44 + 4, by2 + 4, 72, 24, 4); ctx.fill();
+      // booth table
+      ctx.fillStyle = '#3a2010'; ctx.strokeStyle = AMBER; ctx.lineWidth = 0.8;
+      rr(cx - W * 0.44 + 14, by2 + 30, 52, 22, 3); ctx.fill(); ctx.stroke();
+      ctx.font = '8px serif'; ctx.textAlign = 'center';
+      ctx.fillText('🍺', cx - W * 0.44 + 26, by2 + 46);
+      ctx.fillText('🍺', cx - W * 0.44 + 54, by2 + 46);
+    }
+    // Pool table
+    ctx.fillStyle = '#0a1808'; ctx.strokeStyle = '#226622'; ctx.lineWidth = 2;
+    rr(cx + W * 0.08, midY + 10, W * 0.38, H * 0.16, 4); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#0f2a10'; ctx.fillRect(cx + W * 0.12, midY + 16, W * 0.30, H * 0.12);
+    // pocket circles
+    for (const [px2, py2] of [[cx+W*0.12,midY+16],[cx+W*0.42,midY+16],[cx+W*0.27,midY+16],[cx+W*0.12,midY+16+H*0.12],[cx+W*0.42,midY+16+H*0.12],[cx+W*0.27,midY+16+H*0.12]])
+      { ctx.fillStyle = '#050e06'; ctx.beginPath(); ctx.arc(px2, py2, 5, 0, Math.PI*2); ctx.fill(); }
+    const bClrs = ['#FFFF00','#FF0000','#0000FF','#FF6600','#880088','#006600','#FF0000','#000000'];
+    for (let bi = 0; bi < 8; bi++) {
+      const ba = (bi / 8) * Math.PI * 2;
+      ctx.fillStyle = bClrs[bi];
+      ctx.beginPath(); ctx.arc(cx + W * 0.27 + Math.cos(ba) * 20, midY + 16 + H * 0.06 + Math.sin(ba) * 12, 5, 0, Math.PI * 2); ctx.fill();
+    }
+    // Jukebox right corner
+    ctx.fillStyle = '#1a0c04'; ctx.strokeStyle = '#FFAA22'; ctx.lineWidth = 1.5;
+    ctx.shadowColor = AMBER; ctx.shadowBlur = 8;
+    rr(cx + W * 0.30, topY + 78, 48, 72, 6); ctx.fill(); ctx.stroke(); ctx.shadowBlur = 0;
+    ctx.fillStyle = '#0a0602'; ctx.fillRect(cx + W * 0.30 + 6, topY + 86, 36, 30);
+    for (let jc = 0; jc < 3; jc++) {
+      ctx.fillStyle = ['#FF4400','#FFCC00','#FF0088'][jc]; ctx.globalAlpha = 0.7;
+      ctx.fillRect(cx + W * 0.30 + 6, topY + 86 + jc * 10, 36, 9); ctx.globalAlpha = 1;
+    }
+    ctx.fillStyle = GOLD; ctx.font = 'bold 5px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('JUKEBOX', cx + W * 0.30 + 24, topY + 136);
+    drawMetroHuman(cx, topY + 108, '#3a2010', '#E0A878', '#1a0a00');          // bartender
+    drawMetroHuman(cx - W * 0.36, midY + 40, '#2a1810', '#C8956A', '#4a2010'); // customer
+    drawMetroHuman(cx + W * 0.08 + W*0.19, midY + 90, '#1a1008', '#FFDAB0', '#3a2010'); // pool player
+
+  } else if (type === 12) {
+    // ═══ PAWNSHOP: CITY PAWN & TRADE ═══
+    drawMetroFloor('#0e0e06', '#121006');
+    drawMetroSign('CITY PAWN & TRADE');
+    // 5 glass display cases
+    const casePos = [[cx-W*0.42,topY+8],[cx-W*0.20,topY+8],[cx+W*0.02,topY+8],[cx-W*0.42,topY+78],[cx-W*0.20,topY+78]];
+    const caseItems = [['💍','⌚','📿','🪙'],['💎','🏅','🔮','👑'],['🔫','🗡️','📻','🎸'],['🥊','🪖','🎯','🔑'],['📱','💻','🎮','📡']];
+    const caseLabels = ['JEWELRY','VALUABLES','WEAPONS','COLLECTIBLES','ELECTRONICS'];
+    for (let ci = 0; ci < 5; ci++) {
+      const [cx3, cy3] = casePos[ci];
+      ctx.fillStyle = '#141410'; ctx.strokeStyle = '#AA9922'; ctx.lineWidth = 1.5;
+      rr(cx3, cy3, W * 0.20, 62, 4); ctx.fill(); ctx.stroke();
+      // glass tint
+      ctx.fillStyle = 'rgba(200,200,150,0.07)'; ctx.fillRect(cx3 + 2, cy3 + 2, W * 0.20 - 4, 58);
+      ctx.fillStyle = '#FFDD44'; ctx.font = 'bold 5px monospace'; ctx.textAlign = 'center';
+      ctx.fillText(caseLabels[ci], cx3 + W * 0.10, cy3 + 11);
+      // price tags per item
+      ctx.font = '10px serif';
+      for (let ii = 0; ii < 4; ii++) {
+        const ix2 = cx3 + W * 0.025 + (ii % 2) * W * 0.10, iy2 = cy3 + 26 + Math.floor(ii/2) * 22;
+        ctx.fillText(caseItems[ci][ii], ix2, iy2);
+      }
+      ctx.fillStyle = '#CC9933'; ctx.font = 'bold 4px monospace';
+      ctx.fillText('FOR SALE', cx3 + W * 0.10, cy3 + 58);
+    }
+    // Wall-mounted item rack right side
+    ctx.fillStyle = '#101008'; ctx.strokeStyle = '#886622'; ctx.lineWidth = 1.5;
+    rr(cx + W * 0.26, topY + 8, 68, H * 0.56, 3); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#FFDD44'; ctx.font = 'bold 5px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('WALL DISPLAY', cx + W * 0.26 + 34, topY + 20);
+    ctx.font = '12px serif';
+    for (const [em, ex2, ey2] of [['🎸',cx+W*0.26+18,topY+44],['🥁',cx+W*0.26+52,topY+44],['🗡️',cx+W*0.26+18,topY+80],['🏹',cx+W*0.26+52,topY+80],['🔭',cx+W*0.26+18,topY+116],['📷',cx+W*0.26+52,topY+116],['🧨',cx+W*0.26+18,topY+152],['🎺',cx+W*0.26+52,topY+152]])
+      ctx.fillText(em, ex2, ey2);
+    // Counter / cash register
+    ctx.fillStyle = '#1a1808'; ctx.strokeStyle = '#AA8822'; ctx.lineWidth = 1.5;
+    rr(cx - W * 0.42, midY + 40, W * 0.46, 36, 4); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#000c00'; ctx.fillRect(cx - W * 0.38, midY + 44, 80, 20);
+    ctx.fillStyle = '#00FF88'; ctx.font = '5px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('$ 0.00', cx - W * 0.38 + 40, midY + 57);
+    ctx.fillStyle = '#FFCC44'; ctx.font = 'bold 7px monospace';
+    ctx.fillText('CASH REGISTER', cx - W * 0.38 + 40, midY + 68);
+    // Appraisal scale
+    ctx.fillStyle = '#141210'; ctx.strokeStyle = '#FFCC44'; ctx.lineWidth = 1;
+    rr(cx - W * 0.14, midY + 42, 40, 32, 3); ctx.fill(); ctx.stroke();
+    ctx.font = '10px serif'; ctx.textAlign = 'center';
+    ctx.fillText('⚖️', cx - W * 0.14 + 20, midY + 62);
+    // Barred window right wall
+    ctx.strokeStyle = '#8a6020'; ctx.lineWidth = 2;
+    for (let bi = 0; bi < 4; bi++) ctx.strokeRect(cx + W * 0.26 + 10 + bi * 15, midY + 40, 11, 44);
+    ctx.strokeRect(cx + W * 0.26 + 8, midY + 38, 62, 48);
+    ctx.fillStyle = AMBER; ctx.font = 'bold 5px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('SECURE ROOM', cx + W * 0.26 + 39, midY + 96);
+    drawMetroHuman(cx - W * 0.20, midY + 16, '#2a2818', '#C8956A', '#8a6040'); // pawnbroker
+    drawMetroHuman(cx - W * 0.38, topY + 140, '#3a3020', '#FFDAB0', '#4a3020'); // appraiser
+
+  } else if (type === 13) {
+    // ═══ TECH LAB: APEX TECH LABS ═══
+    drawMetroFloor('#020c10', '#020e12');
+    drawMetroSign('APEX TECH LABS');
+    // 6 server racks in two rows
+    for (let si = 0; si < 6; si++) {
+      const sx2 = cx - W * 0.42 + (si % 3) * W * 0.29, sy2 = topY + 8 + Math.floor(si/3) * 76;
+      ctx.fillStyle = '#060e14'; ctx.strokeStyle = '#00CCFF'; ctx.lineWidth = 1.5;
+      ctx.shadowColor = '#00CCFF'; ctx.shadowBlur = 7 * (Math.sin(t * 1.5 + si * 0.5) * 0.3 + 0.7);
+      rr(sx2, sy2, 50, 68, 3); ctx.fill(); ctx.stroke(); ctx.shadowBlur = 0;
+      // Rack label
+      ctx.fillStyle = '#00CCFF'; ctx.font = 'bold 4px monospace'; ctx.textAlign = 'center';
+      ctx.fillText(`RACK-${si+1}`, sx2 + 25, sy2 + 10);
+      for (let bi = 0; bi < 6; bi++) {
+        const ledCol = bi % 3 === 0 ? '#00FF88' : (bi % 3 === 1 ? '#FF4444' : '#FFCC00');
+        ctx.fillStyle = ledCol; ctx.shadowColor = ledCol; ctx.shadowBlur = 3;
+        ctx.beginPath(); ctx.arc(sx2 + 8, sy2 + 16 + bi * 9, 2, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0;
+        ctx.fillStyle = '#0a0f18'; ctx.fillRect(sx2 + 14, sy2 + 20 + bi * 9, 32, 5);
+        ctx.strokeStyle = '#1a2a3a'; ctx.lineWidth = 0.5; ctx.stroke();
+        // activity bars
+        ctx.fillStyle = ledCol + '66'; ctx.fillRect(sx2 + 14, sy2 + 20 + bi * 9, (10 + (si*bi*7 % 20)), 5);
+      }
+    }
+    // Triple monitor workstation
+    ctx.fillStyle = '#040c14'; ctx.strokeStyle = '#0088CC'; ctx.lineWidth = 1.5;
+    rr(cx - 90, midY + 10, 180, 42, 4); ctx.fill(); ctx.stroke();
+    for (let mi2 = 0; mi2 < 3; mi2++) {
+      const mx3 = cx - 80 + mi2 * 52, my3 = midY + 12;
+      ctx.fillStyle = '#020a12'; ctx.strokeStyle = '#0066AA'; ctx.lineWidth = 1;
+      rr(mx3, my3, 44, 28, 2); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#001a2a'; ctx.fillRect(mx3 + 2, my3 + 2, 40, 20);
+      ctx.fillStyle = '#00FFCC'; ctx.font = '4px monospace'; ctx.textAlign = 'center';
+      const lines2 = [['> COMPILING','PROGRESS: 74%'],['> ANALYZING','DATA: 2.4TB'],['> DEPLOY','STATUS: OK']];
+      ctx.fillText(lines2[mi2][0], mx3 + 22, my3 + 11);
+      ctx.fillStyle = '#00AA88';
+      ctx.fillText(lines2[mi2][1], mx3 + 22, my3 + 20);
+    }
+    // Electronics workbench
+    ctx.fillStyle = '#040e14'; ctx.strokeStyle = '#0066AA'; ctx.lineWidth = 1.5;
+    rr(cx - W * 0.44, midY + 60, W * 0.36, 38, 3); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#00CCFF'; ctx.font = 'bold 5px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('ELECTRONICS BENCH', cx - W * 0.26, midY + 72);
+    ctx.font = '9px serif';
+    for (const [em, ex2] of [['🔬',cx-W*0.40],['🧪',cx-W*0.30],['⚡',cx-W*0.20],['🔭',cx-W*0.10]])
+      ctx.fillText(em, ex2, midY + 86);
+    // 3D printer
+    ctx.fillStyle = '#040e14'; ctx.strokeStyle = '#00FFCC'; ctx.lineWidth = 1.5;
+    ctx.shadowColor = '#00FFCC'; ctx.shadowBlur = 6;
+    rr(cx + W * 0.20, midY + 10, 64, 72, 4); ctx.fill(); ctx.stroke(); ctx.shadowBlur = 0;
+    ctx.fillStyle = '#00FFCC'; ctx.font = 'bold 5px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('3D PRINTER', cx + W * 0.20 + 32, midY + 24);
+    // print bed
+    ctx.fillStyle = '#001a2a'; ctx.fillRect(cx + W * 0.20 + 6, midY + 30, 52, 36);
+    ctx.fillStyle = '#00FFCC'; ctx.globalAlpha = 0.3; ctx.fillRect(cx + W * 0.20 + 14, midY + 36, 36, 24); ctx.globalAlpha = 1;
+    // Oscilloscope
+    ctx.fillStyle = '#040c14'; ctx.strokeStyle = '#00CCFF'; ctx.lineWidth = 1;
+    rr(cx + W * 0.20, topY + 8 + 152, 58, 44, 3); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#001a2a'; ctx.fillRect(cx + W * 0.20 + 4, topY + 162, 50, 28);
+    ctx.strokeStyle = '#00FF88'; ctx.lineWidth = 1; ctx.beginPath();
+    for (let xo = 0; xo < 50; xo++) { const yo = midY + (xo < 25 ? 0 : -8); if (xo === 0) ctx.moveTo(cx+W*0.20+4+xo, topY+162+14+Math.sin(xo*0.4)*6); else ctx.lineTo(cx+W*0.20+4+xo, topY+162+14+Math.sin(xo*0.4)*6); }
+    ctx.stroke();
+    drawMetroHuman(cx - W * 0.28, midY + 68, '#0a1a2a', '#FFDAB0', '#4a3020'); // engineer
+    drawMetroHuman(cx + W * 0.04, midY + 68, '#082032', '#C8956A', '#1a0a00');  // scientist
+    drawMetroHuman(cx + W * 0.20 + 32, topY + 230, '#0a1828', '#E0A878', '#3a2010'); // tech
+
+  } else if (type === 14) {
+    // ═══ WAREHOUSE: CITY WAREHOUSE ═══
+    drawMetroFloor('#0a0a08', '#0c0c0a');
+    drawMetroSign('CITY WAREHOUSE');
+    // Caution stripe floor at loading dock
+    for (let si = 0; si < 8; si++) {
+      ctx.fillStyle = si % 2 === 0 ? 'rgba(255,170,34,0.12)' : 'rgba(0,0,0,0)';
+      ctx.fillRect(cx + W * 0.10 + si * 22, midY - 40, 22, 80);
+    }
+    ctx.strokeStyle = '#FFAA22'; ctx.lineWidth = 1.5;
+    ctx.strokeRect(cx + W * 0.10, midY - 40, W * 0.32, 80);
+    ctx.fillStyle = '#FFAA22'; ctx.font = 'bold 8px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('LOADING DOCK', cx + W * 0.26, midY + 6);
+    // 5 tall shelving units
+    for (let si = 0; si < 5; si++) {
+      const sx2 = cx - W * 0.44 + si * W * 0.17;
+      ctx.fillStyle = '#141412'; ctx.strokeStyle = '#665522'; ctx.lineWidth = 1;
+      rr(sx2, topY + 8, W * 0.14, H * 0.54, 2); ctx.fill(); ctx.stroke();
+      // shelf dividers
+      for (let bi = 0; bi < 5; bi++) {
+        ctx.strokeStyle = '#4a3a14'; ctx.lineWidth = 0.5;
+        ctx.strokeRect(sx2 + 2, topY + 10 + bi * (H * 0.10), W * 0.14 - 4, H * 0.09);
+        // boxes on shelf
+        const boxC = ['#6b4d22','#7a5828','#5a3e1a','#8a6030','#9a7040'][bi % 5];
+        ctx.fillStyle = boxC; ctx.globalAlpha = 0.85;
+        rr(sx2 + 3, topY + 13 + bi * (H * 0.10), W * 0.11, H * 0.065, 2); ctx.fill();
+        ctx.globalAlpha = 1;
+        // label on box
+        ctx.fillStyle = '#FFDD44'; ctx.font = '4px monospace'; ctx.textAlign = 'center';
+        const boxLabels = ['BOX','FRAG','CRATE','PKG','PALLET'];
+        ctx.fillText(boxLabels[bi], sx2 + W * 0.07, topY + 24 + bi * (H * 0.10));
+      }
+    }
+    // Forklift
+    ctx.fillStyle = '#1a1808'; ctx.strokeStyle = '#FFAA22'; ctx.lineWidth = 1.5;
+    rr(cx + W * 0.10 - 24, midY + 50, 46, 32, 3); ctx.fill(); ctx.stroke();
+    // forklift forks
+    ctx.strokeStyle = '#CC8822'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(cx + W * 0.10 + 22, midY + 58); ctx.lineTo(cx + W * 0.10 + 48, midY + 58); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx + W * 0.10 + 22, midY + 68); ctx.lineTo(cx + W * 0.10 + 48, midY + 68); ctx.stroke();
+    ctx.fillStyle = '#FFAA22'; ctx.font = '5px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('FORKLIFT', cx + W * 0.10 - 1, midY + 72);
+    // Pallet stacks
+    for (let pi = 0; pi < 3; pi++) {
+      const px2 = cx + W * 0.28 + pi * 28, py2 = midY + 50;
+      ctx.fillStyle = '#3a2a10'; ctx.strokeStyle = '#6a4a1a'; ctx.lineWidth = 1;
+      rr(px2, py2, 24, 8, 1); ctx.fill(); ctx.stroke();
+      for (let li = 0; li < 3; li++) {
+        ctx.strokeStyle = '#4a3a14'; ctx.lineWidth = 0.4;
+        ctx.strokeRect(px2 + 2 + li * 6, py2, 4, 8);
+      }
+      // boxes on pallet
+      ctx.fillStyle = '#7a5828'; ctx.globalAlpha = 0.85;
+      rr(px2 + 2, py2 - 16, 20, 14, 2); ctx.fill(); ctx.globalAlpha = 1;
+    }
+    // Inventory computer desk
+    ctx.fillStyle = '#141410'; ctx.strokeStyle = '#885522'; ctx.lineWidth = 1.5;
+    rr(cx - W * 0.44, midY + 60, 70, 40, 3); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#001200'; ctx.fillRect(cx - W * 0.44 + 6, midY + 64, 58, 22);
+    ctx.fillStyle = '#00FF88'; ctx.font = '4px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('INVENTORY MGMT', cx - W * 0.44 + 35, midY + 72);
+    ctx.fillText('STOCK: 4,821 UNITS', cx - W * 0.44 + 35, midY + 80);
+    // Safety signs on wall
+    for (const [lx, ly, lc, lt] of [[cx+W*0.42,topY+20,'#FFAA22','⚠'],[cx+W*0.42,topY+56,'#FF4444','🚫'],[cx+W*0.42,topY+92,'#22CC44','✓']]) {
+      ctx.fillStyle = lc; ctx.shadowColor = lc; ctx.shadowBlur = 5;
+      ctx.font = '14px serif'; ctx.textAlign = 'center'; ctx.fillText(lt, lx, ly); ctx.shadowBlur = 0;
+    }
+    // Workers with hi-vis vests
+    drawMetroHuman(cx + W * 0.22, midY + 22, '#3a4a10', '#8B5E3C', '#1a0a00');
+    ctx.save(); ctx.translate(cx + W * 0.22, midY + 22);
+    ctx.strokeStyle = '#FFAA22'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(-8, -8); ctx.lineTo(8, -8); ctx.stroke();
+    ctx.restore();
+    drawMetroHuman(cx - W * 0.44 + 35, midY + 26, '#2a3a08', '#C8956A', '#2a1800');
+    ctx.save(); ctx.translate(cx - W * 0.44 + 35, midY + 26);
+    ctx.strokeStyle = '#FFAA22'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(-8, -8); ctx.lineTo(8, -8); ctx.stroke();
+    ctx.restore();
+
+  } else if (type === 15) {
+    // ═══ POLICE STATION: METRO POLICE DEPT ═══
+    drawMetroFloor('#040814', '#040a18');
+    drawMetroSign('METRO POLICE DEPT');
+    // American flag / police banner
+    ctx.fillStyle = '#0a0d22'; ctx.strokeStyle = '#3366CC'; ctx.lineWidth = 1.5;
+    rr(cx - 60, topY + 4, 120, 32, 4); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#2244AA'; ctx.font = 'bold 8px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('METRO POLICE DEPT', cx, topY + 22);
+    // Large evidence / case board
+    ctx.fillStyle = '#060c18'; ctx.strokeStyle = '#3366CC'; ctx.lineWidth = 1.5;
+    rr(cx - W * 0.30, topY + 42, W * 0.60, 100, 4); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#EEEEFF'; ctx.font = 'bold 7px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('EVIDENCE BOARD', cx, topY + 55);
+    // Evidence photos + pins + string connections
+    const pinC = ['#FF4444','#FFFF00','#FF8800','#FF44AA','#44FFCC'];
+    const pinPos = [];
+    for (let pi = 0; pi < 8; pi++) {
+      const px2 = cx - W * 0.24 + (pi % 4) * W * 0.15, py2 = topY + 68 + Math.floor(pi/4) * 36;
+      pinPos.push([px2, py2]);
+      // photo rect
+      ctx.fillStyle = '#0a1428'; ctx.strokeStyle = '#334466'; ctx.lineWidth = 0.5;
+      rr(px2 - 10, py2 - 8, 20, 14, 1); ctx.fill(); ctx.stroke();
+      // pin
+      ctx.fillStyle = pinC[pi % pinC.length]; ctx.beginPath(); ctx.arc(px2, py2, 3, 0, Math.PI * 2); ctx.fill();
+    }
+    // String connections between some pins
+    ctx.strokeStyle = '#FF444488'; ctx.lineWidth = 0.6;
+    for (const [[ax2,ay2],[bx2,by2]] of [[pinPos[0],pinPos[2]],[pinPos[2],pinPos[5]],[pinPos[1],pinPos[4]],[pinPos[3],pinPos[6]]]) {
+      ctx.beginPath(); ctx.moveTo(ax2, ay2); ctx.lineTo(bx2, by2); ctx.stroke();
+    }
+    // 4 officer desks
+    for (const [dx2, dy2] of [[cx-W*0.38,midY+10],[cx-W*0.14,midY+10],[cx+W*0.10,midY+10],[cx-W*0.38,midY+80]]) {
+      ctx.fillStyle = '#080c1a'; ctx.strokeStyle = '#2255AA'; ctx.lineWidth = 1;
+      rr(dx2 - 30, dy2, 60, 40, 3); ctx.fill(); ctx.stroke();
+      // desktop computer
+      ctx.fillStyle = '#0a1428'; ctx.fillRect(dx2 - 20, dy2 + 4, 40, 24);
+      ctx.fillStyle = '#4488FF'; ctx.font = '4px monospace'; ctx.textAlign = 'center';
+      ctx.fillText('CRIME DB', dx2, dy2 + 14);
+      ctx.fillText('+DATABASE', dx2, dy2 + 22);
+      // nameplate
+      ctx.fillStyle = '#FFCC44'; ctx.fillRect(dx2 - 14, dy2 + 32, 28, 5);
+    }
+    // Holding cell right side
+    ctx.fillStyle = '#040810'; ctx.strokeStyle = '#4466AA'; ctx.lineWidth = 2;
+    rr(cx + W * 0.26, topY + 42, 76, 140, 3); ctx.fill(); ctx.stroke();
+    // bars
+    ctx.strokeStyle = '#556688'; ctx.lineWidth = 2;
+    for (let bi = 0; bi < 5; bi++) {
+      ctx.beginPath(); ctx.moveTo(cx + W * 0.26 + 8 + bi * 12, topY + 44); ctx.lineTo(cx + W * 0.26 + 8 + bi * 12, topY + 44 + 136); ctx.stroke();
+    }
+    // horizontal bar dividers
+    for (let hi = 0; hi < 3; hi++) ctx.strokeRect(cx + W * 0.26, topY + 42 + hi * 46, 76, 46);
+    ctx.fillStyle = '#AABBCC'; ctx.font = 'bold 6px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('HOLDING', cx + W * 0.26 + 38, topY + 52);
+    // Gun rack left wall
+    ctx.fillStyle = '#060c18'; ctx.strokeStyle = '#3355AA'; ctx.lineWidth = 1.5;
+    rr(cx - W * 0.44, topY + 42, 44, 120, 3); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#6688CC'; ctx.font = 'bold 5px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('ARMORY', cx - W * 0.44 + 22, topY + 54);
+    ctx.font = '11px serif';
+    for (const [em, ey2] of [['🔫',topY+74],['🔫',topY+98],['🔫',topY+122],['🛡️',topY+146]])
+      ctx.fillText(em, cx - W * 0.44 + 22, ey2);
+    // Wanted board
+    ctx.fillStyle = '#0a0818'; ctx.strokeStyle = '#CC2222'; ctx.lineWidth = 1.5;
+    rr(cx - W * 0.44, midY + 60, 44, 70, 3); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#FF4444'; ctx.font = 'bold 5px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('WANTED', cx - W * 0.44 + 22, midY + 72);
+    for (let wi = 0; wi < 3; wi++) {
+      ctx.fillStyle = '#0a0414'; ctx.fillRect(cx - W * 0.44 + 6, midY + 76 + wi * 16, 32, 12);
+      ctx.fillStyle = '#FF8888'; ctx.font = '4px monospace';
+      ctx.fillText(`SUSPECT ${wi+1}`, cx - W * 0.44 + 22, midY + 85 + wi * 16);
+    }
+    drawMetroHuman(cx - W * 0.14, midY + 54, '#0a1a3a', '#FFDAB0', '#1a0a00'); // officer
+    drawMetroHuman(cx + W * 0.10, midY + 54, '#0a1a3a', '#C8956A', '#1a0a00'); // officer
+    drawMetroHuman(cx - W * 0.38, midY + 54, '#0a1430', '#E0A878', '#4a3020'); // detective
+
+  } else if (type === 16) {
+    // ═══ TATTOO PARLOR: IRON NEEDLE ═══
+    drawMetroFloor('#0e0008', '#100008');
+    drawMetroSign('IRON NEEDLE TATTOO');
+    // Flash art wall — 10 framed pieces
+    const artD = ['☠','⚡','🔥','🌹','⚔','🐉','🦋','🗡','🦅','💀'];
+    for (let ai = 0; ai < 10; ai++) {
+      const ax2 = cx - W * 0.44 + (ai % 5) * W * 0.18, ay2 = topY + 8 + Math.floor(ai/5) * 52;
+      ctx.fillStyle = '#0a0008'; ctx.strokeStyle = ai < 5 ? '#6622AA' : '#AA2266'; ctx.lineWidth = 1.5;
+      rr(ax2, ay2, W * 0.16, 46, 3); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = 'rgba(100,50,120,0.12)'; ctx.fillRect(ax2+2, ay2+2, W*0.16-4, 42);
+      ctx.font = '18px serif'; ctx.textAlign = 'center';
+      ctx.fillText(artD[ai], ax2 + W * 0.08, ay2 + 30);
+      // price tag
+      ctx.fillStyle = '#FF44CC'; ctx.font = 'bold 4px monospace';
+      ctx.fillText(`$${(ai+1)*50}`, ax2 + W*0.08, ay2 + 43);
+    }
+    // 2 Tattoo chairs (reclinable)
+    for (const [cx3, cy3] of [[cx - W * 0.18, midY + 10],[cx + W * 0.08, midY + 10]]) {
+      ctx.fillStyle = '#1a0010'; ctx.strokeStyle = '#AA2288'; ctx.lineWidth = 2;
+      rr(cx3 - 48, cy3 - 24, 96, 48, 8); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#2a0018'; ctx.fillRect(cx3 - 42, cy3 - 18, 84, 30);
+      // pillow end
+      ctx.fillStyle = '#3a0028'; rr(cx3 + 34, cy3 - 16, 20, 22, 4); ctx.fill();
+      ctx.fillStyle = '#FF44CC'; ctx.font = '6px monospace'; ctx.textAlign = 'center';
+      ctx.fillText('TATTOO CHAIR', cx3, cy3 + 6);
+      // arm rest
+      ctx.fillStyle = '#1a0014'; ctx.strokeStyle = '#882266'; ctx.lineWidth = 1;
+      rr(cx3 - 52, cy3 - 10, 12, 18, 3); ctx.fill(); ctx.stroke();
+    }
+    // Ink station / tray table
+    ctx.fillStyle = '#120008'; ctx.strokeStyle = '#882288'; ctx.lineWidth = 1.5;
+    rr(cx - W * 0.44, midY + 10, 50, 70, 3); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#FF44CC'; ctx.font = 'bold 5px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('INK STATION', cx - W * 0.44 + 25, midY + 22);
+    const inkC = ['#FF0000','#0000FF','#000000','#FF00FF','#00FF00','#FFFF00','#FF6600','#00FFFF','#FFFFFF','#FF00AA'];
+    for (let ii = 0; ii < 10; ii++) {
+      const ix2 = cx - W * 0.44 + 4 + (ii % 5) * 9, iy2 = midY + 26 + Math.floor(ii/5) * 24;
+      ctx.fillStyle = inkC[ii]; ctx.globalAlpha = 0.88;
+      rr(ix2, iy2, 7, 18, 2); ctx.fill(); ctx.globalAlpha = 1;
+      ctx.strokeStyle = inkC[ii] + '88'; ctx.lineWidth = 0.4; ctx.stroke();
+    }
+    // Autoclave sterilizer
+    ctx.fillStyle = '#100008'; ctx.strokeStyle = '#AA44AA'; ctx.lineWidth = 1.5;
+    rr(cx + W * 0.30, midY + 10, 52, 46, 4); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#DD88CC'; ctx.font = 'bold 5px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('STERILIZER', cx + W * 0.30 + 26, midY + 24);
+    // green light
+    ctx.fillStyle = '#22FF44'; ctx.shadowColor = '#22FF44'; ctx.shadowBlur = 6;
+    ctx.beginPath(); ctx.arc(cx + W * 0.30 + 36, midY + 32, 4, 0, Math.PI*2); ctx.fill(); ctx.shadowBlur = 0;
+    // Mirrors on back wall
+    for (const mx2 of [cx - W * 0.44, cx + W * 0.26]) {
+      ctx.fillStyle = 'rgba(180,120,200,0.07)';
+      rr(mx2, topY + 110, 48, 60, 2); ctx.fill();
+      ctx.strokeStyle = '#884488'; ctx.lineWidth = 1; ctx.stroke();
+    }
+    drawMetroHuman(cx - W * 0.28, midY + 76, '#0a0a0a', '#8B5E3C', '#1a0a00'); // artist1
+    drawMetroHuman(cx + W * 0.10, midY + 76, '#180010', '#C8956A', '#2a0010'); // artist2
+
+  } else if (type === 17) {
+    // ═══ AMMO DEPOT: METRO ARMORY ═══
+    drawMetroFloor('#0e0e08', '#101008');
+    drawMetroSign('METRO ARMORY');
+    // Warning stripes on floor
+    ctx.fillStyle = 'rgba(255,200,0,0.08)';
+    for (let si = 0; si < 10; si++) if (si%2===0) ctx.fillRect(si * 108, 0, 54, H);
+    // 4 rows of ammo crates
+    for (let row = 0; row < 4; row++) {
+      for (let col = 0; col < 7; col++) {
+        const ax2 = cx - W * 0.44 + col * W * 0.13, ay2 = topY + 8 + row * 30;
+        ctx.fillStyle = '#4a3a16'; ctx.strokeStyle = '#8a6028'; ctx.lineWidth = 1;
+        rr(ax2, ay2, W * 0.10, 26, 2); ctx.fill(); ctx.stroke();
+        // Military crate marking
+        ctx.fillStyle = '#FFD700'; ctx.fillRect(ax2, ay2, W * 0.10, 4);
+        for (let ss = 0; ss < 3; ss += 2) { ctx.fillStyle = '#1a1a00'; ctx.fillRect(ax2 + ss * (W * 0.10/5), ay2, W * 0.02, 4); }
+        ctx.fillStyle = '#CCAA22'; ctx.font = '4px monospace'; ctx.textAlign = 'center';
+        const ammoTypes = ['5.56','9mm','12G','7.62','.50','RKT','GREN'];
+        ctx.fillText(ammoTypes[col % ammoTypes.length], ax2 + W * 0.05, ay2 + 20);
+        // stencil skull on some
+        if (row === 0 || col === 0) { ctx.font = '8px serif'; ctx.fillText('☠', ax2 + W * 0.05, ay2 + 22); }
+      }
+    }
+    // Large weapon display wall left
+    ctx.fillStyle = '#0e0e08'; ctx.strokeStyle = '#886600'; ctx.lineWidth = 1.5;
+    rr(cx - W * 0.44, topY + 132, 74, 130, 3); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#FFCC44'; ctx.font = 'bold 5px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('WEAPON RACK', cx - W * 0.44 + 37, topY + 144);
+    // vertical slots
+    for (let wi = 0; wi < 5; wi++) { ctx.fillStyle = '#4a4020'; ctx.fillRect(cx - W * 0.44 + 8 + wi * 12, topY + 148, 6, 98); }
+    ctx.font = '11px serif';
+    for (const [em, ex2, ey2] of [['🔫',cx-W*0.44+14,topY+182],['🔫',cx-W*0.44+26,topY+182],['🔫',cx-W*0.44+38,topY+182],['🔫',cx-W*0.44+50,topY+182],['🔫',cx-W*0.44+62,topY+182],['🏹',cx-W*0.44+14,topY+218],['🪃',cx-W*0.44+38,topY+218],['🗡️',cx-W*0.44+62,topY+218]])
+      ctx.fillText(em, ex2, ey2);
+    // Blast-proof counter / sales desk
+    ctx.fillStyle = '#14140a'; ctx.strokeStyle = '#AA8800'; ctx.lineWidth = 1.5;
+    rr(cx - W * 0.10, midY + 20, W * 0.52, 36, 4); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#000c00'; ctx.fillRect(cx - W * 0.06, midY + 24, 80, 22);
+    ctx.fillStyle = '#00FF88'; ctx.font = '5px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('INVENTORY SYSTEM', cx - W * 0.06 + 40, midY + 36);
+    ctx.fillStyle = '#FFCC44'; ctx.font = 'bold 7px monospace';
+    ctx.fillText('SALES COUNTER', cx + W * 0.20, midY + 50);
+    // Grenade display case
+    ctx.fillStyle = '#1a1a0a'; ctx.strokeStyle = '#CC9922'; ctx.lineWidth = 1.5;
+    rr(cx + W * 0.26, topY + 132, 68, 80, 4); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#FFCC44'; ctx.font = 'bold 5px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('GRENADES', cx + W * 0.26 + 34, topY + 144);
+    ctx.font = '12px serif';
+    for (let gi = 0; gi < 6; gi++) ctx.fillText('💣', cx + W * 0.26 + 12 + (gi%3)*22, topY + 164 + Math.floor(gi/3)*26);
+    // Ballistic vests rack
+    ctx.fillStyle = '#141410'; ctx.strokeStyle = '#886622'; ctx.lineWidth = 1;
+    rr(cx + W * 0.26, midY + 20, 68, 70, 3); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#FFAA44'; ctx.font = 'bold 5px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('BODY ARMOR', cx + W * 0.26 + 34, midY + 32);
+    ctx.font = '12px serif';
+    for (let vi = 0; vi < 4; vi++) ctx.fillText('🛡️', cx + W * 0.26 + 10 + (vi%2)*32, midY + 52 + Math.floor(vi/2)*22);
+    drawMetroHuman(cx - W * 0.02, midY + 60, '#2a3a10', '#8B5E3C', '#2a2a2a'); // armorer
+    drawMetroHuman(cx + W * 0.18, midY + 60, '#3a4a18', '#C8956A', '#1a0a00'); // guard
+    drawMetroHuman(cx - W * 0.44 + 37, midY - 10, '#1a2a0a', '#E0A878', '#3a2000'); // stockman
+
+  } else if (type === 18) {
+    // ═══ HACKER DEN: DARKNET HQ ═══
+    drawMetroFloor('#020a04', '#020c04');
+    drawMetroSign('DARKNET HQ');
+    // Scanline CRT ambient glow
+    ctx.fillStyle = 'rgba(0,255,80,0.03)';
+    for (let li = 0; li < H; li += 4) ctx.fillRect(0, li, W, 2);
+    // 7 monitor setup — top row
+    for (let mi2 = 0; mi2 < 7; mi2++) {
+      const mx3 = cx - W * 0.44 + mi2 * W * 0.13, my3 = topY + 8;
+      ctx.fillStyle = '#020808'; ctx.strokeStyle = '#00AA33'; ctx.lineWidth = 1;
+      ctx.shadowColor = '#00FF66'; ctx.shadowBlur = 6 * (Math.sin(t * 2 + mi2 * 0.6) * 0.3 + 0.7);
+      rr(mx3, my3, W * 0.11, 70, 2); ctx.fill(); ctx.stroke(); ctx.shadowBlur = 0;
+      ctx.fillStyle = '#001c08'; ctx.fillRect(mx3 + 3, my3 + 3, W * 0.11 - 6, 56);
+      ctx.fillStyle = '#00FF66'; ctx.font = '4px monospace'; ctx.textAlign = 'left';
+      const codeLines = [
+        ['> INIT','PROBE..','BYPASS.','INJECT.','PAYLOAD','ROUTE..','DONE OK'],
+        ['HELLO','01100011','SSH CONN','PKT CAP','EXFIL..','ENCRYPT','SECURE.'],
+        ['> RUN','COMPILE','LINK OK','DEPLOY.','SERVER.','RESPOND','200 OK.'],
+        ['> HACK','SCAN IP','VULNCHK','EXPLOIT','PRIVESC','SHELL..','ROOT OK'],
+        ['DATA>>','STREAM.','DECODE.','ANALYZE','MATCH..','FLAG!..','REPORT.'],
+        ['> MAIN','IMPORT.','PARSE..','RENDER.','OUTPUT.','FLUSH..','EXIT 0.'],
+        ['> CMD','TUNNEL.','VPN ON.','TOR OK.','ONION..','ANON..','READY..'],
+      ][mi2 % 7];
+      for (let li = 0; li < 7; li++) {
+        ctx.fillStyle = li === 6 ? '#00FFAA' : '#00CC66';
+        ctx.fillText(codeLines[li], mx3 + 4, my3 + 10 + li * 8);
+      }
+    }
+    // L-shaped main workstation desk
+    ctx.fillStyle = '#040c08'; ctx.strokeStyle = '#00CC44'; ctx.lineWidth = 1.5;
+    rr(cx - W * 0.44, midY - 14, W * 0.74, 30, 4); ctx.fill(); ctx.stroke();
+    rr(cx - W * 0.44, midY + 16, W * 0.30, 36, 4); ctx.fill(); ctx.stroke();
+    // Laptop on desk
+    ctx.fillStyle = '#020a06'; ctx.strokeStyle = '#00AA44'; ctx.lineWidth = 1;
+    rr(cx - W * 0.20, midY - 10, 44, 24, 2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#001a08'; ctx.fillRect(cx - W * 0.20 + 2, midY - 8, 40, 16);
+    ctx.fillStyle = '#00FF66'; ctx.font = '4px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('ROOT@METRO:~$_', cx - W * 0.20 + 22, midY + 2);
+    // 2 server towers
+    for (const stx of [cx + W * 0.22, cx + W * 0.36]) {
+      ctx.fillStyle = '#020a06'; ctx.strokeStyle = '#00CC44'; ctx.lineWidth = 1.5;
+      rr(stx, topY + 84, 44, 130, 3); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#00CC44'; ctx.font = 'bold 4px monospace'; ctx.textAlign = 'center';
+      ctx.fillText('SERVER', stx + 22, topY + 94);
+      for (let bi = 0; bi < 10; bi++) {
+        const lc = bi % 3 === 0 ? '#00FF66' : (bi % 3 === 1 ? '#FFCC00' : '#006622');
+        ctx.fillStyle = lc; ctx.shadowColor = lc; ctx.shadowBlur = lc !== '#006622' ? 3 : 0;
+        ctx.beginPath(); ctx.arc(stx + 8, topY + 102 + bi * 11, 2.5, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0;
+        // drive slot
+        ctx.fillStyle = '#041008'; ctx.fillRect(stx + 16, topY + 99 + bi * 11, 24, 8);
+        ctx.strokeStyle = '#1a3a18'; ctx.lineWidth = 0.4; ctx.stroke();
+      }
+    }
+    // Hacking tools box
+    ctx.fillStyle = '#030c06'; ctx.strokeStyle = '#00CC44'; ctx.lineWidth = 1;
+    rr(cx - W * 0.44, midY + 52, 58, 44, 3); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#00CC44'; ctx.font = 'bold 5px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('TOOL KIT', cx - W * 0.44 + 29, midY + 64);
+    ctx.font = '10px serif';
+    for (const [em, ex2, ey2] of [['💾',cx-W*0.44+14,midY+84],['🔌',cx-W*0.44+29,midY+84],['📡',cx-W*0.44+44,midY+84]])
+      ctx.fillText(em, ex2, ey2);
+    // Pizza boxes on floor (gag)
+    ctx.fillStyle = '#1a1008'; ctx.strokeStyle = '#884400'; ctx.lineWidth = 0.5;
+    for (let pi = 0; pi < 3; pi++) rr(cx - W * 0.10 + pi * 22, midY + 58, 20, 16, 1), ctx.fill(), ctx.stroke();
+    drawMetroHuman(cx - W * 0.08, midY + 20, '#0a1a0a', '#C8956A', '#1a1a1a'); // hacker1
+    drawMetroHuman(cx + W * 0.06, midY + 20, '#080e08', '#FFDAB0', '#0a0a0a'); // hacker2
+    drawMetroHuman(cx - W * 0.30, midY + 72, '#0a1408', '#8B5E3C', '#1a1a1a'); // lookout
+
+  } else if (type === 19) {
+    // ═══ DOJO: METRO DOJO ═══
+    drawMetroFloor('#0a0804', '#0c0a06');
+    drawMetroSign('METRO DOJO');
+    // Large tatami mat with markings
+    ctx.fillStyle = '#1a1208'; ctx.strokeStyle = '#884400'; ctx.lineWidth = 2;
+    rr(cx - W * 0.36, topY + 50, W * 0.72, H * 0.50, 4); ctx.fill(); ctx.stroke();
+    // Mat lane dividers
+    ctx.strokeStyle = '#CC6600'; ctx.lineWidth = 1;
+    for (let li = 1; li < 5; li++) {
+      ctx.beginPath(); ctx.moveTo(cx - W * 0.36, topY + 50 + li * (H * 0.10)); ctx.lineTo(cx + W * 0.36, topY + 50 + li * (H * 0.10)); ctx.stroke();
+    }
+    // Yin yang / circle on mat center
+    ctx.beginPath(); ctx.arc(cx, topY + 50 + H * 0.25, 48, 0, Math.PI * 2);
+    ctx.strokeStyle = '#DD8800'; ctx.lineWidth = 2; ctx.stroke();
+    ctx.beginPath(); ctx.arc(cx, topY + 50 + H * 0.25, 24, 0, Math.PI * 2);
+    ctx.strokeStyle = '#CC6600'; ctx.lineWidth = 1; ctx.stroke();
+    // Cardinal direction markers
+    for (const [nx2, ny2, nl] of [[cx,topY+56,'N'],[cx,topY+50+H*0.50-8,'S'],[cx-W*0.36+8,topY+50+H*0.25,'W'],[cx+W*0.36-8,topY+50+H*0.25,'E']]) {
+      ctx.fillStyle = '#FFAA44'; ctx.font = 'bold 7px monospace'; ctx.textAlign = 'center';
+      ctx.fillText(nl, nx2, ny2);
+    }
+    // Weapon rack left
+    ctx.fillStyle = '#120c06'; ctx.strokeStyle = '#664400'; ctx.lineWidth = 1.5;
+    rr(cx - W * 0.44, topY + 8, 50, 160, 3); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#FFAA44'; ctx.font = 'bold 5px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('WEAPONS', cx - W * 0.44 + 25, topY + 20);
+    ctx.font = '13px serif';
+    for (const [em, ey2] of [['🥋',topY+38],['⚔',topY+62],['🗡',topY+86],['🏹',topY+110],['🪃',topY+134],['🔱',topY+158]])
+      ctx.fillText(em, cx - W * 0.44 + 25, ey2);
+    // Bokken / wooden swords on separate rack
+    ctx.fillStyle = '#1a1008'; ctx.strokeStyle = '#664400'; ctx.lineWidth = 1;
+    rr(cx - W * 0.44, topY + 170, 50, 56, 2); ctx.fill(); ctx.stroke();
+    for (let bi = 0; bi < 5; bi++) {
+      ctx.fillStyle = '#5a3e14'; ctx.fillRect(cx - W * 0.44 + 7 + bi * 8, topY + 178, 5, 42);
+    }
+    ctx.fillStyle = '#FFCC44'; ctx.font = '5px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('BOKKEN', cx - W * 0.44 + 25, topY + 224);
+    // Trophy shelf right
+    ctx.fillStyle = '#120c06'; ctx.strokeStyle = '#FFCC44'; ctx.lineWidth = 1;
+    rr(cx + W * 0.26, topY + 8, 68, 90, 3); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = GOLD; ctx.font = 'bold 5px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('HALL OF HONOR', cx + W * 0.26 + 34, topY + 20);
+    ctx.font = '14px serif';
+    for (const [em, ex2, ey2] of [['🏆',cx+W*0.26+16,topY+44],['🥈',cx+W*0.26+52,topY+44],['🥉',cx+W*0.26+16,topY+72],['🎖',cx+W*0.26+52,topY+72]])
+      ctx.fillText(em, ex2, ey2);
+    // Belt display
+    ctx.fillStyle = '#120c06'; ctx.strokeStyle = '#664400'; ctx.lineWidth = 1;
+    rr(cx + W * 0.26, topY + 102, 68, 80, 3); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#FFCC44'; ctx.font = 'bold 5px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('BELT RANKS', cx + W * 0.26 + 34, topY + 114);
+    const beltC = ['#FFFFFF','#FFFF00','#FF8800','#22AA22','#0000CC','#8B0000','#2a0010'];
+    for (let bi = 0; bi < 7; bi++) {
+      ctx.fillStyle = beltC[bi]; ctx.fillRect(cx + W * 0.26 + 6, topY + 118 + bi * 9, 56, 6);
+    }
+    // Incense / altar corner
+    ctx.fillStyle = '#1a1008'; ctx.strokeStyle = '#CC6600'; ctx.lineWidth = 1;
+    rr(cx + W * 0.26, midY + 40, 68, 60, 3); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#FF8800'; ctx.shadowColor = '#FF8800'; ctx.shadowBlur = 8*(0.6+0.4*Math.sin(t*2));
+    ctx.font = '14px serif'; ctx.textAlign = 'center'; ctx.fillText('🕯️', cx + W * 0.26 + 20, midY + 76); ctx.shadowBlur = 0;
+    ctx.font = '14px serif'; ctx.fillText('🕯️', cx + W * 0.26 + 48, midY + 76);
+    ctx.fillStyle = '#FFCC88'; ctx.font = '5px monospace'; ctx.textAlign = 'center'; ctx.fillText('ALTAR', cx + W * 0.26 + 34, midY + 92);
+    drawMetroHuman(cx - W * 0.16, topY + 50 + H * 0.30, '#e0e0c0', '#C8956A', '#1a0a00'); // sensei
+    drawMetroHuman(cx + W * 0.08, topY + 50 + H * 0.30, '#c0c0a8', '#8B5E3C', '#1a0a00'); // student1
+    drawMetroHuman(cx - W * 0.06, topY + 50 + H * 0.30, '#d0d0b0', '#FFDAB0', '#3a2010'); // student2
+
+  } else if (type === 20) {
+    // ═══ SAFEHOUSE: METRO SAFEHOUSE ═══
+    drawMetroFloor('#040408', '#06060c');
+    drawMetroSign('SAFEHOUSE');
+    // Large planning / heist table
+    ctx.fillStyle = '#0a0a14'; ctx.strokeStyle = '#4444AA'; ctx.lineWidth = 1.5;
+    rr(cx - 80, topY + 12, 160, 100, 4); ctx.fill(); ctx.stroke();
+    // Map spread on table
+    ctx.fillStyle = '#0e1428'; ctx.fillRect(cx - 74, topY + 16, 148, 88);
+    // map grid lines
+    ctx.strokeStyle = '#2255AA'; ctx.lineWidth = 0.6;
+    for (let ml = 0; ml < 8; ml++) {
+      ctx.beginPath(); ctx.moveTo(cx - 74 + ml * 19, topY + 16); ctx.lineTo(cx - 74 + ml * 19, topY + 104); ctx.stroke();
+    }
+    for (let ml = 0; ml < 6; ml++) {
+      ctx.beginPath(); ctx.moveTo(cx - 74, topY + 16 + ml * 15); ctx.lineTo(cx + 74, topY + 16 + ml * 15); ctx.stroke();
+    }
+    // target / location markers
+    ctx.fillStyle = '#FF4444'; ctx.beginPath(); ctx.arc(cx + 20, topY + 48, 5, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#FFCC44'; ctx.beginPath(); ctx.arc(cx - 30, topY + 68, 4, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#4444FF'; ctx.beginPath(); ctx.arc(cx + 44, topY + 80, 3, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = '#FF444488'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(cx - 30, topY + 68); ctx.lineTo(cx + 20, topY + 48); ctx.lineTo(cx + 44, topY + 80); ctx.stroke();
+    ctx.fillStyle = '#44FF88'; ctx.font = 'bold 6px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('TARGET', cx + 20, topY + 43);
+    // 6 surveillance monitors 2x3 grid
+    for (let mi2 = 0; mi2 < 6; mi2++) {
+      const mx3 = cx + W * 0.14 + (mi2 % 3) * 56, my3 = topY + 8 + Math.floor(mi2 / 3) * 60;
+      ctx.fillStyle = '#060612'; ctx.strokeStyle = '#2244AA'; ctx.lineWidth = 1;
+      rr(mx3, my3, 50, 52, 2); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#080820'; ctx.fillRect(mx3 + 3, my3 + 3, 44, 36);
+      const camG = 0.4 + Math.random() * 0.2;
+      ctx.fillStyle = `rgba(0,${Math.floor(camG*255)},80,0.3)`;
+      ctx.fillRect(mx3 + 3, my3 + 3, 44, 36);
+      ctx.fillStyle = '#44FF44'; ctx.font = '4px monospace'; ctx.textAlign = 'center';
+      ctx.fillText(`CAM ${mi2 + 1}`, mx3 + 25, mx3 > cx + W * 0.25 ? my3 + 22 : my3 + 22);
+      ctx.fillText('LIVE', mx3 + 25, my3 + 30);
+      // red recording dot
+      ctx.fillStyle = '#FF2222'; ctx.shadowColor = '#FF0000'; ctx.shadowBlur = 4*(0.5+0.5*Math.sin(t*3+mi2));
+      ctx.beginPath(); ctx.arc(mx3 + 42, my3 + 8, 3, 0, Math.PI*2); ctx.fill(); ctx.shadowBlur = 0;
+      ctx.fillStyle = '#AAAAAA'; ctx.font = '5px monospace'; ctx.textAlign = 'center';
+      ctx.fillText(`CAM${mi2+1}`, mx3 + 25, my3 + 48);
+    }
+    // Heavy vault / safe
+    ctx.fillStyle = '#0a0a14'; ctx.strokeStyle = '#888888'; ctx.lineWidth = 2;
+    rr(cx - W * 0.44, midY + 10, 64, 64, 6); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.arc(cx - W * 0.44 + 32, midY + 42, 20, 0, Math.PI * 2);
+    ctx.strokeStyle = '#BBBBBB'; ctx.lineWidth = 2; ctx.stroke();
+    // dial ticks
+    for (let di = 0; di < 12; di++) {
+      const da = (di/12)*Math.PI*2;
+      ctx.strokeStyle = '#888'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(cx-W*0.44+32+Math.cos(da)*14, midY+42+Math.sin(da)*14); ctx.lineTo(cx-W*0.44+32+Math.cos(da)*20, midY+42+Math.sin(da)*20); ctx.stroke();
+    }
+    ctx.fillStyle = '#CCCCCC'; ctx.font = 'bold 7px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('SAFE', cx - W * 0.44 + 32, midY + 66);
+    // Weapons locker
+    ctx.fillStyle = '#080810'; ctx.strokeStyle = '#4444AA'; ctx.lineWidth = 1.5;
+    rr(cx - W * 0.44, midY - 50, 64, 54, 3); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#6688CC'; ctx.font = 'bold 5px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('ARMORY', cx - W * 0.44 + 32, midY - 38);
+    ctx.font = '11px serif';
+    for (const [em, ex2, ey2] of [['🔫',cx-W*0.44+14,midY-20],['🔫',cx-W*0.44+50,midY-20],['💣',cx-W*0.44+14,midY-2],['🗡️',cx-W*0.44+50,midY-2]])
+      ctx.fillText(em, ex2, ey2);
+    // Cot / bunk
+    ctx.fillStyle = '#0a0814'; ctx.strokeStyle = '#3333AA'; ctx.lineWidth = 1;
+    rr(cx - W * 0.10, midY + 10, 80, 44, 4); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#14122a'; rr(cx - W * 0.10 + 4, midY + 14, 62, 28, 3); ctx.fill();
+    ctx.fillStyle = '#DDD8FF'; rr(cx - W * 0.10 + 58, midY + 16, 16, 12, 2); ctx.fill();
+    // Radio comms equipment
+    ctx.fillStyle = '#080810'; ctx.strokeStyle = '#4444AA'; ctx.lineWidth = 1;
+    rr(cx + W * 0.12, midY + 64, 52, 42, 3); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#22AA44'; ctx.shadowColor = '#22AA44'; ctx.shadowBlur = 4*(0.5+0.5*Math.sin(t*2));
+    ctx.beginPath(); ctx.arc(cx + W * 0.12 + 40, midY + 72, 4, 0, Math.PI*2); ctx.fill(); ctx.shadowBlur = 0;
+    ctx.fillStyle = '#4488FF'; ctx.font = 'bold 5px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('COMMS', cx + W * 0.12 + 26, midY + 86);
+    ctx.fillText('ENCRYPTED', cx + W * 0.12 + 26, midY + 96);
+    drawMetroHuman(cx - W * 0.16, topY + 142, '#0a0a1a', '#C8956A', '#1a0a00'); // planner
+    drawMetroHuman(cx + W * 0.04, midY + 54, '#0a0818', '#FFDAB0', '#2a1a2a'); // lookout
+
+  } else if (type === 21) {
+    // ═══ CHOP SHOP: CITY CHOP SHOP ═══
+    drawMetroFloor('#08080a', '#0a0a0c');
+    drawMetroSign('CITY CHOP SHOP');
+    // Oil stain floor marks
+    ctx.fillStyle = 'rgba(40,30,0,0.4)';
+    ctx.beginPath(); ctx.ellipse(cx - 10, midY + 40, 60, 20, 0.3, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(cx + W * 0.20, topY + 180, 30, 12, -0.5, 0, Math.PI*2); ctx.fill();
+    // 2 dismantled cars
+    for (const [cx3, cy3, col] of [[cx - W * 0.18, midY - 30, '#1e1e10'],[cx + W * 0.14, midY - 30, '#1a141a']]) {
+      ctx.fillStyle = col; ctx.strokeStyle = '#666644'; ctx.lineWidth = 1.5;
+      rr(cx3 - 58, cy3, 116, 56, 6); ctx.fill(); ctx.stroke();
+      // stripped interior lines
+      ctx.strokeStyle = '#4a4a30'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(cx3 - 30, cy3 + 8); ctx.lineTo(cx3 + 30, cy3 + 8); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(cx3 - 50, cy3 + 20); ctx.lineTo(cx3 + 50, cy3 + 20); ctx.stroke();
+      // missing wheels (only outlines)
+      for (const [wx2, wy2] of [[cx3 - 38, cy3 + 56], [cx3 + 38, cy3 + 56]]) {
+        ctx.strokeStyle = '#554422'; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(wx2, wy2, 14, 0, Math.PI * 2); ctx.stroke();
+        ctx.fillStyle = '#1a1408'; ctx.beginPath(); ctx.arc(wx2, wy2, 5, 0, Math.PI * 2); ctx.fill();
+      }
+      // vin number scratched off
+      ctx.fillStyle = '#333320'; ctx.fillRect(cx3 - 20, cy3 + 26, 40, 10);
+      ctx.fillStyle = '#888880'; ctx.font = '4px monospace'; ctx.textAlign = 'center';
+      ctx.fillText('VIN: ??????????', cx3, cy3 + 34);
+    }
+    // Tool wall left
+    ctx.fillStyle = '#101010'; ctx.strokeStyle = '#554411'; ctx.lineWidth = 1;
+    rr(cx - W * 0.44, topY + 8, 52, H * 0.60, 2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#FFAA22'; ctx.font = 'bold 5px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('TOOLS', cx - W * 0.44 + 26, topY + 20);
+    ctx.font = '12px serif';
+    for (const [ti, tix2, tiy2] of [['🔧',cx-W*0.44+14,topY+40],['🔩',cx-W*0.44+38,topY+40],['🔨',cx-W*0.44+14,topY+66],['⚙',cx-W*0.44+38,topY+66],['🪛',cx-W*0.44+14,topY+92],['🔦',cx-W*0.44+38,topY+92],['🪚',cx-W*0.44+14,topY+118],['🪤',cx-W*0.44+38,topY+118]])
+      ctx.fillText(ti, tix2, tiy2);
+    // Parts bins (6 — more variety)
+    const partLabels = ['ENG','TRN','EXH','BRK','SUS','ELC'];
+    for (let pi = 0; pi < 6; pi++) {
+      const px2 = cx + W * 0.20 + (pi % 3) * 34, py2 = topY + 8 + Math.floor(pi/3) * 56;
+      ctx.fillStyle = '#1a1810'; ctx.strokeStyle = '#665522'; ctx.lineWidth = 1;
+      rr(px2, py2, 28, 48, 2); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#3a3028'; ctx.fillRect(px2 + 2, py2 + 8, 24, 30);
+      // junk in bins
+      ctx.font = '8px serif'; ctx.textAlign = 'center';
+      ctx.fillText('⚙', px2 + 14, py2 + 26);
+      ctx.fillStyle = '#FFAA22'; ctx.font = '4px monospace';
+      ctx.fillText(partLabels[pi], px2 + 14, py2 + 44);
+    }
+    // VIN grinder / power tool
+    ctx.fillStyle = '#141410'; ctx.strokeStyle = '#886622'; ctx.lineWidth = 1.5;
+    rr(cx - W * 0.44, midY + 55, 52, 44, 3); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#FFCC44'; ctx.font = 'bold 5px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('GRINDER', cx - W * 0.44 + 26, midY + 68);
+    ctx.font = '11px serif'; ctx.fillText('🔧', cx - W * 0.44 + 26, midY + 86);
+    // Police scanner on desk
+    ctx.fillStyle = '#0c0c10'; ctx.strokeStyle = '#3344AA'; ctx.lineWidth = 1;
+    rr(cx - W * 0.20, midY + 60, 50, 38, 3); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#22FF44'; ctx.shadowColor = '#22FF44'; ctx.shadowBlur = 4*(0.5+0.5*Math.sin(t*3));
+    ctx.beginPath(); ctx.arc(cx - W * 0.20 + 40, midY + 68, 4, 0, Math.PI*2); ctx.fill(); ctx.shadowBlur = 0;
+    ctx.fillStyle = '#4488FF'; ctx.font = 'bold 5px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('POLICE', cx - W * 0.20 + 25, midY + 84);
+    ctx.fillText('SCANNER', cx - W * 0.20 + 25, midY + 92);
+    // Spray paint cans
+    const sprayC = ['#FF2200','#2244FF','#22CC22','#FFCC00','#FF00FF'];
+    for (let si = 0; si < 5; si++) {
+      ctx.fillStyle = sprayC[si]; ctx.globalAlpha = 0.85;
+      rr(cx - W * 0.44 + 56 + si * 12, midY + 55, 10, 26, 3); ctx.fill(); ctx.globalAlpha = 1;
+    }
+    drawMetroHuman(cx - W * 0.06, midY + 68, '#2a2010', '#C8956A', '#1a0a00'); // mechanic1
+    drawMetroHuman(cx + W * 0.06, midY - 66, '#1a1a10', '#8B5E3C', '#2a1a00'); // mechanic2
+
+  } else if (type === 22) {
+    // ═══ RADIO STATION: METRO RADIO 99.1 FM ═══
+    drawMetroFloor('#0a0418', '#0c0520');
+    drawMetroSign('METRO RADIO 99.1 FM');
+    // ON AIR animated sign above booth
+    const pulse = Math.sin(t * 3) * 0.35 + 0.65;
+    ctx.fillStyle = `rgba(255,0,0,${pulse})`; ctx.shadowColor = '#FF0000'; ctx.shadowBlur = 16 * pulse;
+    ctx.font = 'bold 13px Orbitron, monospace'; ctx.textAlign = 'center';
+    ctx.fillText('● ON AIR', cx, topY - 2); ctx.shadowBlur = 0;
+    // Broadcast booth (main desk area)
+    ctx.fillStyle = '#100418'; ctx.strokeStyle = '#AA44FF'; ctx.lineWidth = 2;
+    ctx.shadowColor = '#AA44FF'; ctx.shadowBlur = 12;
+    rr(cx - 110, midY - 30, 220, 44, 8); ctx.fill(); ctx.stroke(); ctx.shadowBlur = 0;
+    // Large mixing board
+    ctx.fillStyle = '#0c0216'; ctx.strokeStyle = '#8833DD'; ctx.lineWidth = 1;
+    rr(cx - 100, midY - 22, 200, 28, 3); ctx.fill(); ctx.stroke();
+    for (let fi = 0; fi < 14; fi++) {
+      const fx2 = cx - 92 + fi * 14;
+      ctx.fillStyle = '#3a1a5a'; ctx.fillRect(fx2 - 2, midY - 20, 4, 20);
+      ctx.fillStyle = '#CC88FF'; ctx.fillRect(fx2 - 3, midY - 10 + (fi % 7) * 2, 6, 5);
+    }
+    // VU meter display
+    ctx.fillStyle = '#000820'; ctx.fillRect(cx - 30, midY - 26, 60, 12);
+    for (let vi = 0; vi < 14; vi++) {
+      const vc = vi < 10 ? '#00FF66' : vi < 12 ? '#FFCC00' : '#FF2222';
+      const active = vi < (8 + Math.floor(Math.sin(t*3+vi)*4));
+      ctx.fillStyle = active ? vc : vc + '33';
+      ctx.fillRect(cx - 28 + vi * 4, midY - 24, 3, 8);
+    }
+    // 2 large studio microphones
+    for (const [mx2, dir] of [[cx - 36, 1],[cx + 36, -1]]) {
+      ctx.fillStyle = '#1a1028'; ctx.strokeStyle = '#FF44FF'; ctx.lineWidth = 1.5;
+      ctx.shadowColor = '#FF44FF'; ctx.shadowBlur = 8*(0.6+0.4*Math.sin(t*2));
+      ctx.beginPath(); ctx.ellipse(mx2, midY - 48, 9, 14, dir*0.3, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); ctx.shadowBlur = 0;
+      // mic arm
+      ctx.strokeStyle = '#AA44FF'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(mx2, midY - 34); ctx.lineTo(mx2 + dir * 20, midY - 26); ctx.lineTo(mx2 + dir * 20, midY - 20); ctx.stroke();
+    }
+    // Pop shields
+    for (const mx2 of [cx - 36, cx + 36]) {
+      ctx.strokeStyle = 'rgba(200,100,255,0.4)'; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.ellipse(mx2, midY - 56, 13, 13, 0, 0, Math.PI*2); ctx.stroke();
+    }
+    // 2 large studio monitor speakers
+    for (const sxOff of [-W * 0.44, W * 0.28]) {
+      ctx.fillStyle = '#080114'; ctx.strokeStyle = '#8833DD'; ctx.lineWidth = 1.5;
+      ctx.shadowColor = '#8833DD'; ctx.shadowBlur = 6*(0.5+0.5*Math.sin(t));
+      rr(cx + sxOff, topY + 8, 68, 106, 4); ctx.fill(); ctx.stroke(); ctx.shadowBlur = 0;
+      // tweeter
+      ctx.beginPath(); ctx.arc(cx + sxOff + 34, topY + 28, 12, 0, Math.PI * 2);
+      ctx.strokeStyle = '#6622BB'; ctx.lineWidth = 1.5; ctx.stroke();
+      ctx.beginPath(); ctx.arc(cx + sxOff + 34, topY + 28, 5, 0, Math.PI * 2); ctx.stroke();
+      ctx.fillStyle = '#AA44FF'; ctx.beginPath(); ctx.arc(cx + sxOff + 34, topY + 28, 2.5, 0, Math.PI * 2); ctx.fill();
+      // woofer
+      ctx.beginPath(); ctx.arc(cx + sxOff + 34, topY + 70, 24, 0, Math.PI * 2);
+      ctx.strokeStyle = '#5511AA'; ctx.lineWidth = 2; ctx.stroke();
+      ctx.beginPath(); ctx.arc(cx + sxOff + 34, topY + 70, 12, 0, Math.PI * 2);
+      ctx.strokeStyle = '#7722CC'; ctx.lineWidth = 1; ctx.stroke();
+      ctx.fillStyle = '#6600AA'; ctx.beginPath(); ctx.arc(cx + sxOff + 34, topY + 70, 4, 0, Math.PI * 2); ctx.fill();
+    }
+    // Vinyl record wall display
+    ctx.fillStyle = '#08020e'; ctx.strokeStyle = '#6622AA'; ctx.lineWidth = 1;
+    rr(cx - W * 0.44, topY + 120, 68, 120, 3); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#AA44FF'; ctx.font = 'bold 5px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('VINYL ARCHIVE', cx - W * 0.44 + 34, topY + 132);
+    for (let vi = 0; vi < 6; vi++) {
+      const vx2 = cx - W * 0.44 + 10 + (vi%3) * 20, vy2 = topY + 140 + Math.floor(vi/3) * 32;
+      ctx.fillStyle = '#1a0a2a'; ctx.strokeStyle = '#884488'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.arc(vx2, vy2, 10, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#AA44FF'; ctx.beginPath(); ctx.arc(vx2, vy2, 3, 0, Math.PI*2); ctx.fill();
+    }
+    // Producer booth glass window (right)
+    ctx.fillStyle = 'rgba(80,0,100,0.12)';
+    rr(cx + W * 0.28, topY + 120, 68, 110, 3); ctx.fill();
+    ctx.strokeStyle = '#8833DD'; ctx.lineWidth = 1; ctx.stroke();
+    ctx.fillStyle = '#CC88FF'; ctx.font = 'bold 5px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('PRODUCER', cx + W * 0.28 + 34, topY + 132);
+    ctx.fillText('BOOTH', cx + W * 0.28 + 34, topY + 142);
+    // headphone hook
+    ctx.font = '11px serif'; ctx.fillText('🎧', cx + W * 0.28 + 34, topY + 174);
+    // Playlist / request board
+    ctx.fillStyle = '#100030'; ctx.strokeStyle = '#AA44FF'; ctx.lineWidth = 1;
+    rr(cx - W * 0.10, midY + 24, 80, 60, 3); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#FF44FF'; ctx.font = 'bold 5px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('NOW PLAYING', cx - W * 0.10 + 40, midY + 36);
+    ctx.fillStyle = '#CC88FF'; ctx.font = '4px monospace';
+    ctx.fillText('NEON NIGHTS - METRO FM', cx - W * 0.10 + 40, midY + 46);
+    ctx.fillText('REQUEST LINE: 555-9110', cx - W * 0.10 + 40, midY + 56);
+    ctx.fillText('NEXT: CITY LIGHTS...', cx - W * 0.10 + 40, midY + 66);
+    drawMetroHuman(cx - W * 0.10, midY - 68, '#1a0a2a', '#FFDAB0', '#1a1a1a'); // DJ on air
+    drawMetroHuman(cx + W * 0.28 + 34, topY + 196, '#2a0840', '#C8956A', '#4a3020'); // producer
+    drawMetroHuman(cx + W * 0.10, midY + 24, '#16062a', '#E0A878', '#2a1a30'); // engineer
+
+  } else if (type === 23) {
+    // ═══ UNDERGROUND LAB: CLASSIFIED ═══
+    drawMetroFloor('#020c08', '#020e08');
+    drawMetroSign('UNDERGROUND LAB — CLASSIFIED');
+    // Hazard stripe floor edges
+    for (let si = 0; si < 12; si++) {
+      ctx.fillStyle = si % 2 === 0 ? 'rgba(255,200,0,0.10)' : 'rgba(0,0,0,0)';
+      ctx.fillRect(si * 90 - 30, 0, 45, 16);
+      ctx.fillRect(si * 90 - 30, H - 16, 45, 16);
+    }
+    // 7 glowing chemical tanks
+    const tkC = ['#00FFCC','#FF4444','#FFCC00','#4488FF','#FF44AA','#88FF00','#FF8800'];
+    for (let ti = 0; ti < 7; ti++) {
+      const tx2 = cx - W * 0.44 + ti * W * 0.13, ty2 = topY + 6;
+      ctx.fillStyle = '#040e0c'; ctx.strokeStyle = tkC[ti]; ctx.lineWidth = 1.5;
+      ctx.shadowColor = tkC[ti]; ctx.shadowBlur = 8 * (Math.sin(t * 1.8 + ti * 0.6) * 0.3 + 0.7);
+      rr(tx2, ty2, W * 0.11, 76, 6); ctx.fill(); ctx.stroke(); ctx.shadowBlur = 0;
+      // liquid level (animated)
+      const lv = 0.35 + Math.sin(t * 0.4 + ti) * 0.15;
+      ctx.fillStyle = tkC[ti] + '40';
+      ctx.fillRect(tx2 + 3, ty2 + 76 * (1 - lv), W * 0.11 - 6, 76 * lv - 4);
+      // bubbles
+      for (let bi = 0; bi < 3; bi++) {
+        ctx.fillStyle = tkC[ti] + '80';
+        const bx2 = tx2 + 6 + (bi * 15 + Math.sin(t*2+bi+ti)*8);
+        const by2 = ty2 + 76 * (1 - lv) + (Math.sin(t*1.5+bi*2) * 10 + 20);
+        if (by2 > ty2 + 4 && by2 < ty2 + 72) {
+          ctx.beginPath(); ctx.arc(bx2, by2, 2.5, 0, Math.PI*2); ctx.fill();
+        }
+      }
+      // label
+      ctx.fillStyle = tkC[ti]; ctx.font = 'bold 7px monospace'; ctx.textAlign = 'center';
+      ctx.fillText(['α','β','γ','δ','ε','ζ','η'][ti], tx2 + W * 0.055, ty2 + 68);
+    }
+    // Main lab workbench
+    ctx.fillStyle = '#040c08'; ctx.strokeStyle = '#44CCAA'; ctx.lineWidth = 1.5;
+    rr(cx - W * 0.40, midY - 20, W * 0.80, 36, 4); ctx.fill(); ctx.stroke();
+    // Lab glassware on bench
+    ctx.font = '11px serif'; ctx.textAlign = 'center';
+    for (const [em, ex2] of [['⚗',cx-W*0.36],['🧪',cx-W*0.24],['🧫',cx-W*0.12],['🔬',cx],['🧬',cx+W*0.12],['💊',cx+W*0.24],['🧲',cx+W*0.36]])
+      ctx.fillText(em, ex2, midY + 2);
+    // Centrifuge
+    ctx.fillStyle = '#0a1810'; ctx.strokeStyle = '#00FFAA'; ctx.lineWidth = 1.5;
+    ctx.shadowColor = '#00FFAA'; ctx.shadowBlur = 8;
+    ctx.beginPath(); ctx.arc(cx - W * 0.44 + 34, midY + 50, 26, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); ctx.shadowBlur = 0;
+    for (let ci = 0; ci < 8; ci++) {
+      const ca = (ci / 8) * Math.PI * 2 + t * 6;
+      ctx.fillStyle = '#00FFAA'; ctx.beginPath(); ctx.arc(cx - W * 0.44 + 34 + Math.cos(ca) * 14, midY + 50 + Math.sin(ca) * 14, 4, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.fillStyle = '#00FFAA'; ctx.font = '5px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('CENTRIFUGE', cx - W * 0.44 + 34, midY + 86);
+    // DNA sequencer / large machine
+    ctx.fillStyle = '#030a06'; ctx.strokeStyle = '#44FFAA'; ctx.lineWidth = 2;
+    ctx.shadowColor = '#44FFAA'; ctx.shadowBlur = 8*(0.5+0.5*Math.sin(t*1.5));
+    rr(cx + W * 0.24, midY + 20, 80, 100, 6); ctx.fill(); ctx.stroke(); ctx.shadowBlur = 0;
+    ctx.fillStyle = '#001a10'; ctx.fillRect(cx + W * 0.24 + 6, midY + 26, 68, 48);
+    ctx.fillStyle = '#00FFCC'; ctx.font = '4px monospace'; ctx.textAlign = 'left';
+    const seqLines = ['>SEQUENCE','READS: 4.2M','MATCH: 98.1','COMPILE OK','MUTATION?'];
+    for (let li = 0; li < 5; li++) ctx.fillText(seqLines[li], cx + W * 0.24 + 8, midY + 36 + li * 8);
+    ctx.fillStyle = '#00FFAA'; ctx.font = 'bold 6px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('DNA SEQUENCER', cx + W * 0.24 + 40, midY + 84);
+    // Biohazard sign
+    ctx.fillStyle = '#FFCC00'; ctx.shadowColor = '#FFCC00'; ctx.shadowBlur = 12*(0.5+0.5*Math.sin(t*2));
+    ctx.font = '28px serif'; ctx.textAlign = 'center'; ctx.fillText('☣', cx + W * 0.12, midY + 100); ctx.shadowBlur = 0;
+    ctx.fillStyle = '#FFCC00'; ctx.font = 'bold 7px monospace'; ctx.fillText('BIOHAZARD', cx + W * 0.12, midY + 114);
+    // Radiation sign
+    ctx.fillStyle = '#FFAA00'; ctx.shadowColor = '#FF8800'; ctx.shadowBlur = 6;
+    ctx.font = '18px serif'; ctx.fillText('☢', cx - W * 0.20, midY + 100); ctx.shadowBlur = 0;
+    // Gas cylinders
+    for (let gi = 0; gi < 4; gi++) {
+      const gx2 = cx - W * 0.44 + 66 + gi * 18, gy2 = midY + 26;
+      ctx.fillStyle = '#1a2818'; ctx.strokeStyle = '#44CCAA'; ctx.lineWidth = 1;
+      rr(gx2, gy2, 14, 50, 4); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = ['#00FFCC','#FF4444','#FFCC00','#4488FF'][gi]; ctx.font = '4px monospace'; ctx.textAlign = 'center';
+      ctx.fillText(['O₂','N₂','H₂','CO₂'][gi], gx2 + 7, gy2 + 34);
+      // valve on top
+      ctx.fillStyle = '#888888'; ctx.fillRect(gx2 + 4, gy2 - 6, 6, 6);
+    }
+    // Fume hood / containment box left
+    ctx.fillStyle = '#030c08'; ctx.strokeStyle = '#44CCAA'; ctx.lineWidth = 1.5;
+    rr(cx - W * 0.44, midY + 100, 62, 66, 4); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = 'rgba(0,200,150,0.12)'; ctx.fillRect(cx - W * 0.44 + 4, midY + 104, 54, 40);
+    ctx.fillStyle = '#44CCAA'; ctx.font = 'bold 5px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('FUME HOOD', cx - W * 0.44 + 31, midY + 116);
+    ctx.font = '10px serif'; ctx.fillText('⚗️', cx - W * 0.44 + 31, midY + 136);
+    // Scientists with hazmat suits (mask overlay)
+    drawMetroHuman(cx - W * 0.18, midY + 52, '#889898', '#FFDAB0', '#4a3020');
+    ctx.fillStyle = 'rgba(160,200,200,0.72)'; ctx.strokeStyle = '#888'; ctx.lineWidth = 0.5;
+    rr(cx - W * 0.18 - 7, midY + 52 - 26, 14, 9, 2); ctx.fill(); ctx.stroke();
+    drawMetroHuman(cx + W * 0.10, midY + 52, '#7a9090', '#C8956A', '#1a0a00');
+    ctx.fillStyle = 'rgba(160,200,200,0.72)'; ctx.strokeStyle = '#888'; ctx.lineWidth = 0.5;
+    rr(cx + W * 0.10 - 7, midY + 52 - 26, 14, 9, 2); ctx.fill(); ctx.stroke();
+    drawMetroHuman(cx - W * 0.44 + 31, midY - 40, '#6a8888', '#E0A878', '#3a2010'); // lab director
+    ctx.fillStyle = 'rgba(150,190,190,0.72)'; ctx.strokeStyle = '#888'; ctx.lineWidth = 0.5;
+    rr(cx - W * 0.44 + 31 - 7, midY - 40 - 26, 14, 9, 2); ctx.fill(); ctx.stroke();
+  }
+
+  ctx.restore();
+};  // end Game.prototype._renderMetropolisRoom
 
