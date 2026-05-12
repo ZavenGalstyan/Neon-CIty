@@ -640,6 +640,19 @@ class GameMap {
     const p2y = ryArr[ryArr.length - 3]   ?? ryArr[ryArr.length - 1];
     this.portals.push({ x: (p1x + 0.5) * S, y: (p1y + 0.5) * S, paired: 1, _animT: 0 });
     this.portals.push({ x: (p2x + 0.5) * S, y: (p2y + 0.5) * S, paired: 0, _animT: 1.5 });
+
+    // ── Sidewalk spawn positions for CityNPCs ─────────────────
+    // Pre-collect all sidewalk tiles so NPCs never spawn at road intersections
+    this._sidewalkTiles = [];
+    for (let sy2 = 1; sy2 < H - 1; sy2++) {
+      for (let sx2 = 1; sx2 < W - 1; sx2++) {
+        if (this.tiles[sy2][sx2] === TILE.SIDEWALK &&
+            !this._parkTiles.has(`${sx2},${sy2}`)) {
+          this._sidewalkTiles.push({ tx: sx2, ty: sy2 });
+        }
+      }
+    }
+
     this._buildStreetLights(); this._buildCacti();
   }
 
@@ -1072,6 +1085,15 @@ class GameMap {
     const roads = [];
     for (let i = 0; i < this.W; i++) if (i % R === 0) roads.push(i);
     return new Vec2((rndChoice(roads) + 0.5) * S, (rndChoice(roads) + 0.5) * S);
+  }
+
+  // Returns a random sidewalk position (metropolis: never at a road intersection)
+  randomSidewalkPos() {
+    if (this._sidewalkTiles && this._sidewalkTiles.length) {
+      const t = this._sidewalkTiles[Math.floor(Math.random() * this._sidewalkTiles.length)];
+      return new Vec2((t.tx + 0.5) * this.S, (t.ty + 0.5) * this.S);
+    }
+    return this.randomRoadPos();
   }
 
   // ── Door animation update ─────────────────────────────────

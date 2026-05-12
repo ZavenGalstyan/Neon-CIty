@@ -186,13 +186,14 @@ Game.prototype._render = function() {
       for (const p of this._portals) {
         const pulse = Math.sin(p._animT * 3.5) * 0.35 + 0.65;
         const near = Math.hypot(p.x - this.player.x, p.y - this.player.y) < 55;
-        const isNeonCity  = this.map.config.id === "neon_city";
-        const isWasteland = !!this.map.config.wasteland;
-        const isGalactica = !!this.map.config.galactica || !!this.map.config.blitz;
-        const isSnow = !!this.map.config.snow;
-        const isRobotCity = !!this.map.config.robot;
-        const isDesert = !!this.map.config.desert;
-        const isOcean = !!this.map.config.ocean;
+        const isNeonCity   = this.map.config.id === "neon_city";
+        const isMetropolis = !!this.map.config.metropolis;
+        const isWasteland  = !!this.map.config.wasteland;
+        const isGalactica  = !!this.map.config.galactica || !!this.map.config.blitz;
+        const isSnow       = !!this.map.config.snow;
+        const isRobotCity  = !!this.map.config.robot;
+        const isDesert     = !!this.map.config.desert;
+        const isOcean      = !!this.map.config.ocean;
         ctx.save();
         ctx.translate(p.x, p.y);
 
@@ -810,8 +811,8 @@ Game.prototype._render = function() {
             ctx.shadowBlur = 14;
             ctx.fillText("[E]  ENTER GATE", 0, -66);
           }
-        } else if (isNeonCity || isRobotCity) {
-          // ── NEON CITY: Cyber warp gate — cyan / magenta ───────────
+        } else if (isNeonCity || isRobotCity || isMetropolis) {
+          // ── NEON CITY / METROPOLIS: Cyber warp gate — cyan / magenta ─
           const t = p._animT;
           const pulse2 = Math.sin(t * 2.2) * 0.3 + 0.7;
           const pulse3 = Math.sin(t * 4.5) * 0.2 + 0.8;
@@ -926,7 +927,7 @@ Game.prototype._render = function() {
           ctx.textAlign = "center";
           ctx.shadowColor = "#00FFFF";
           ctx.shadowBlur = 12;
-          ctx.fillText("◈ CYBER GATE ◈", 0, -52);
+          ctx.fillText(isMetropolis ? "◈ CITY GATE ◈" : "◈ CYBER GATE ◈", 0, -52);
           if (near) {
             ctx.fillStyle = "#AAFFFF";
             ctx.shadowColor = "#00FFFF";
