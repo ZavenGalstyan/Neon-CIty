@@ -349,7 +349,7 @@ class Game {
     if (this._towerMode) {
       this._startTowerFloor();
     }
-    if (this._lifeMode || this._metropolisMode) this._spawnCityNpcs();
+    if (this._lifeMode) this._spawnCityNpcs();
     if (this._campaignMode) this._startCampaignLevel();
     this._spawnAmbientTraffic();
 
@@ -2517,7 +2517,9 @@ class Game {
     const base = this._metropolisMode ? 28 : 14;
     const count = base + Math.floor(Math.random() * 10);
     for (let i = 0; i < count; i++) {
-      const pos = this.map.randomRoadPos();
+      const pos = this._metropolisMode
+        ? this.map.randomSidewalkPos()
+        : this.map.randomRoadPos();
       this._cityNpcs.push(new CityNPC(pos.x, pos.y, this.map));
     }
   }
