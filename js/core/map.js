@@ -653,6 +653,29 @@ class GameMap {
       }
     }
 
+    // ── Per-block visual style map (6 styles, one per road block) ─
+    // Each block between roads gets one of 6 themed building styles:
+    // 0=Neon City, 1=Desert, 2=Ocean, 3=Frozen, 4=Robot, 5=Jungle
+    const _blockCol = new Uint8Array(W);
+    let _mbi = 0;
+    for (let _x = 0; _x < W; _x++) {
+      while (_mbi < rxArr.length - 1 && rxArr[_mbi + 1] <= _x) _mbi++;
+      _blockCol[_x] = _mbi;
+    }
+    const _blockRow = new Uint8Array(H);
+    let _mbj = 0;
+    for (let _y = 0; _y < H; _y++) {
+      while (_mbj < ryArr.length - 1 && ryArr[_mbj + 1] <= _y) _mbj++;
+      _blockRow[_y] = _mbj;
+    }
+    this._metroTileStyle = new Uint8Array(W * H);
+    for (let _y = 0; _y < H; _y++) {
+      for (let _x = 0; _x < W; _x++) {
+        const _h = (_blockCol[_x] * 2654435761 + _blockRow[_y] * 1234567891) >>> 0;
+        this._metroTileStyle[_y * W + _x] = _h % 8;
+      }
+    }
+
     this._buildStreetLights(); this._buildCacti();
   }
 
@@ -4732,6 +4755,510 @@ class GameMap {
               ctx.fillRect(wx+S*0.35,wy+S*0.80,S*0.30,S*0.05);
             }
 
+          } else if (this._metroTileStyle) {
+            // ── METROPOLIS: 8 beautiful themed building styles ────────
+            const _ms  = this._metroTileStyle[y * this.W + x];
+            const _ts2 = ((x * 41 + y * 59) | 0) >>> 0;
+            const _bs  = _ts2 % 8;
+            const _b2  = (_ts2 >>> 4) % 6;
+
+            if (_ms === 0) {
+              // ════════════════════════════════════════════════════
+              // STYLE 0 · NEON CYBER TOWER
+              // ════════════════════════════════════════════════════
+              // Gradient base: deep navy top → midnight bottom
+              const _g0 = ctx.createLinearGradient(wx,wy, wx,wy+S);
+              _g0.addColorStop(0,'#0a1535'); _g0.addColorStop(0.5,'#07102a'); _g0.addColorStop(1,'#040c1c');
+              ctx.fillStyle=_g0; ctx.fillRect(wx,wy,S,S);
+              // Glass curtain — 6 alternating bright/dark bands
+              const _bh0=Math.round((S-6)/6);
+              for (let _i=0;_i<6;_i++) {
+                ctx.fillStyle=_i%2===0?'rgba(18,75,160,0.35)':'rgba(5,22,75,0.44)';
+                ctx.fillRect(wx+3, wy+3+_i*_bh0, S-6, _bh0-1);
+              }
+              // Holographic diagonal shimmer
+              ctx.fillStyle=_bs%2===0?'rgba(0,200,255,0.07)':'rgba(180,0,255,0.07)';
+              ctx.beginPath();
+              ctx.moveTo(wx,wy+S*0.28); ctx.lineTo(wx+S*0.72,wy);
+              ctx.lineTo(wx+S,wy); ctx.lineTo(wx+S,wy+S*0.44);
+              ctx.lineTo(wx+S*0.28,wy+S); ctx.lineTo(wx,wy+S);
+              ctx.closePath(); ctx.fill();
+              // Thin bright separator lines across glass bands
+              ctx.fillStyle='rgba(0,200,255,0.22)';
+              for (let _i=0;_i<3;_i++) ctx.fillRect(wx+3, wy+S*0.24+_i*S*0.22, S-6, 1);
+              // LED neon sign bar at top (with colour variation)
+              const _nc0=['rgba(0,240,255,0.75)','rgba(220,0,255,0.70)','rgba(0,255,140,0.68)','rgba(255,60,180,0.70)'];
+              ctx.fillStyle=_nc0[_b2%_nc0.length]; ctx.fillRect(wx+6,wy+4,S-12,Math.round(S*0.07));
+              // Vertical neon accent strip on one edge
+              ctx.fillStyle=_bs%2===0?'rgba(0,240,255,0.55)':'rgba(200,0,255,0.50)';
+              ctx.fillRect(_bs%2===0?wx+S-5:wx+2, wy+10, 3, S-20);
+              // Dual-tone edge: cyan outer, magenta inner
+              ctx.strokeStyle=`rgba(0,220,255,${0.52+_bs*0.02})`; ctx.lineWidth=1.5;
+              ctx.strokeRect(wx+1,wy+1,S-2,S-2);
+              ctx.strokeStyle='rgba(210,0,255,0.36)'; ctx.lineWidth=1;
+              ctx.strokeRect(wx+4,wy+4,S-8,S-8);
+              // Rooftop antenna with crossbar + globe
+              ctx.strokeStyle='rgba(0,200,255,0.68)'; ctx.lineWidth=1;
+              ctx.beginPath(); ctx.moveTo(wx+S/2,wy); ctx.lineTo(wx+S/2,wy-S*0.12); ctx.stroke();
+              ctx.beginPath(); ctx.moveTo(wx+S/2-S*0.07,wy-S*0.06); ctx.lineTo(wx+S/2+S*0.07,wy-S*0.06); ctx.stroke();
+              ctx.fillStyle='rgba(0,255,220,0.90)';
+              ctx.beginPath(); ctx.arc(wx+S/2,wy-S*0.12,3,0,Math.PI*2); ctx.fill();
+              // Windows 3×3 grid with glow halos
+              if (this.buildingWindows[y][x]) {
+                for (let _r=0;_r<3;_r++) for (let _c=0;_c<3;_c++) {
+                  if (Math.sin(x*6.1+y*3.7+_c*4.4+_r*8.8)>-0.28) {
+                    const _wx0=wx+S*0.08+_c*S*0.30, _wy0=wy+S*0.18+_r*S*0.23;
+                    const _alt=(_r+_c+_bs)%2===0;
+                    ctx.fillStyle=_alt?'rgba(0,255,240,0.18)':'rgba(210,40,255,0.16)';
+                    ctx.fillRect(_wx0-2,_wy0-2,S*0.16+4,S*0.12+4);
+                    ctx.fillStyle=_alt?'rgba(0,255,240,0.80)':'rgba(210,40,255,0.74)';
+                    ctx.fillRect(_wx0,_wy0,S*0.16,S*0.12);
+                  }
+                }
+              }
+
+            } else if (_ms === 1) {
+              // ════════════════════════════════════════════════════
+              // STYLE 1 · DESERT PALACE — Sandstone, arches, warm gold
+              // ════════════════════════════════════════════════════
+              const _g1=ctx.createLinearGradient(wx,wy,wx+S,wy+S);
+              _g1.addColorStop(0,'#9e7520'); _g1.addColorStop(0.4,'#7a5a0e'); _g1.addColorStop(1,'#4e3808');
+              ctx.fillStyle=_g1; ctx.fillRect(wx,wy,S,S);
+              // Stone block courses with alternating joint offsets
+              ctx.fillStyle='rgba(0,0,0,0.18)';
+              for (let _i=0;_i<5;_i++) ctx.fillRect(wx,wy+S*0.12+_i*S*0.17,S,2);
+              const _jOff=(_bs%2===0);
+              for (let _i=0;_i<5;_i++) {
+                const _jx=_jOff?S*0.33:S*0.50;
+                ctx.fillRect(wx+_jx*(_i%2),wy+S*0.12+_i*S*0.17,2,S*0.17);
+              }
+              // Sunlit top highlight + shadow base
+              const _hg1=ctx.createLinearGradient(wx,wy,wx,wy+S*0.12);
+              _hg1.addColorStop(0,'rgba(255,230,140,0.48)'); _hg1.addColorStop(1,'rgba(255,220,100,0)');
+              ctx.fillStyle=_hg1; ctx.fillRect(wx,wy,S,S*0.12);
+              ctx.fillStyle='rgba(30,15,0,0.32)'; ctx.fillRect(wx,wy+S*0.85,S,S*0.15);
+              // 3 horseshoe arches
+              ctx.strokeStyle='rgba(255,210,90,0.62)'; ctx.lineWidth=2;
+              for (let _i=0;_i<3;_i++) {
+                const _ax=wx+S*0.13+_i*S*0.31;
+                ctx.beginPath(); ctx.arc(_ax+S*0.08,wy+S*0.50,S*0.11,Math.PI,0); ctx.stroke();
+                ctx.beginPath(); ctx.arc(_ax+S*0.08,wy+S*0.50,S*0.065,Math.PI,0); ctx.stroke();
+              }
+              // Geometric mosaic band in middle
+              ctx.fillStyle='rgba(255,185,50,0.28)'; ctx.fillRect(wx,wy+S*0.44,S,S*0.07);
+              ctx.fillStyle='rgba(200,130,30,0.38)';
+              for (let _i=0;_i<8;_i++) ctx.fillRect(wx+_i*S*0.125,wy+S*0.44,S*0.06,S*0.07);
+              // Slender columns with caps
+              ctx.fillStyle='rgba(255,195,65,0.32)';
+              ctx.fillRect(wx+S*0.02,wy,S*0.09,S);
+              ctx.fillRect(wx+S*0.89,wy,S*0.09,S);
+              ctx.fillStyle='rgba(255,215,100,0.44)';
+              ctx.fillRect(wx,wy+S*0.05,S*0.13,S*0.06);
+              ctx.fillRect(wx+S*0.87,wy+S*0.05,S*0.13,S*0.06);
+              // Crenellated parapet
+              ctx.fillStyle='rgba(255,200,80,0.50)';
+              const _cw=Math.round(S/7);
+              for (let _i=0;_i<4;_i++) ctx.fillRect(wx+_i*_cw*2,wy,_cw,Math.round(S*0.09));
+              // Amber dual edge
+              ctx.strokeStyle='rgba(255,185,50,0.45)'; ctx.lineWidth=1.5;
+              ctx.strokeRect(wx+1,wy+1,S-2,S-2);
+              ctx.strokeStyle='rgba(200,140,30,0.25)'; ctx.lineWidth=1;
+              ctx.strokeRect(wx+4,wy+4,S-8,S-8);
+              // Arched windows with glow halo + inner bright core
+              if (this.buildingWindows[y][x]) {
+                for (let _i=0;_i<3;_i++) {
+                  const _awx=wx+S*0.10+_i*S*0.31, _awy=wy+S*0.62, _awr=S*0.075;
+                  ctx.fillStyle='rgba(255,170,40,0.22)';
+                  ctx.beginPath(); ctx.arc(_awx+_awr,_awy,_awr+4,0,Math.PI*2); ctx.fill();
+                  ctx.fillStyle='rgba(255,150,20,0.75)'; ctx.fillRect(_awx,_awy,_awr*2,S*0.13);
+                  ctx.fillStyle='rgba(255,210,120,0.90)';
+                  ctx.beginPath(); ctx.arc(_awx+_awr,_awy,_awr,Math.PI,0); ctx.fill();
+                }
+              }
+
+            } else if (_ms === 2) {
+              // ════════════════════════════════════════════════════
+              // STYLE 2 · DEEP OCEAN — Bioluminescent coral, anemone, portholes
+              // ════════════════════════════════════════════════════
+              const _g2=ctx.createRadialGradient(wx+S*0.5,wy+S*0.4,0,wx+S*0.5,wy+S*0.4,S*0.72);
+              _g2.addColorStop(0,'#044055'); _g2.addColorStop(0.5,'#021a2e'); _g2.addColorStop(1,'#010810');
+              ctx.fillStyle=_g2; ctx.fillRect(wx,wy,S,S);
+              // Bioluminescent central spine (gradient bar)
+              const _sg2=ctx.createLinearGradient(wx+S/2-3,wy,wx+S/2-3,wy+S);
+              _sg2.addColorStop(0,'rgba(0,220,200,0.55)'); _sg2.addColorStop(0.5,'rgba(0,180,200,0.38)'); _sg2.addColorStop(1,'rgba(0,0,0,0)');
+              ctx.fillStyle=_sg2; ctx.fillRect(wx+S/2-3,wy,6,S*0.85);
+              // Coral fin triangles (3 per side)
+              ctx.fillStyle='rgba(0,200,175,0.32)';
+              for (let _i=0;_i<3;_i++) {
+                ctx.beginPath();
+                ctx.moveTo(wx,wy+S*(0.85-_i*0.22)); ctx.lineTo(wx+S*0.22,wy+S*(0.65-_i*0.22)); ctx.lineTo(wx,wy+S*(0.65-_i*0.22)); ctx.fill();
+                ctx.beginPath();
+                ctx.moveTo(wx+S,wy+S*(0.85-_i*0.22)); ctx.lineTo(wx+S*0.78,wy+S*(0.65-_i*0.22)); ctx.lineTo(wx+S,wy+S*(0.65-_i*0.22)); ctx.fill();
+              }
+              // Sea anemone crown (5 ellipses at top)
+              ctx.fillStyle='rgba(0,200,170,0.48)';
+              for (let _i=0;_i<5;_i++) {
+                const _ae=(Math.PI*2/5)*_i-Math.PI/2;
+                ctx.beginPath(); ctx.ellipse(wx+S/2+Math.cos(_ae)*S*0.19,wy+S*0.12+Math.sin(_ae)*S*0.08,S*0.065,S*0.12,_ae,0,Math.PI*2); ctx.fill();
+              }
+              // Seaweed bezier stalks
+              ctx.strokeStyle='rgba(20,180,120,0.45)'; ctx.lineWidth=1.5;
+              for (let _i=0;_i<3;_i++) {
+                const _sx=wx+S*0.14+_i*S*0.28;
+                ctx.beginPath(); ctx.moveTo(_sx,wy+S);
+                ctx.bezierCurveTo(_sx+S*0.08,wy+S*0.70,_sx-S*0.08,wy+S*0.45,_sx+S*0.05,wy+S*0.22); ctx.stroke();
+              }
+              // Multi-colour bioluminescent dots
+              const _dc=8+_bs%4;
+              for (let _i=0;_i<_dc;_i++) {
+                const _ddx=wx+S*0.06+((_i*67+_bs*13)%Math.round(S*0.88));
+                const _ddy=wy+S*0.08+((_i*47+_bs*19)%Math.round(S*0.84));
+                ctx.fillStyle=_i%3===0?'rgba(80,255,220,0.85)':_i%3===1?'rgba(40,200,255,0.75)':'rgba(140,255,180,0.70)';
+                ctx.beginPath(); ctx.arc(_ddx,_ddy,1.2+(_i%4)*0.7,0,Math.PI*2); ctx.fill();
+              }
+              // Glowing hydrothermal vent cluster at base
+              ctx.fillStyle='rgba(0,255,200,0.18)';
+              ctx.beginPath(); ctx.ellipse(wx+S*0.5,wy+S*0.92,S*0.22,S*0.07,0,0,Math.PI*2); ctx.fill();
+              // Bio-glow triple edge
+              ctx.strokeStyle='rgba(0,220,190,0.38)'; ctx.lineWidth=2;
+              ctx.strokeRect(wx+1,wy+1,S-2,S-2);
+              ctx.strokeStyle='rgba(0,200,240,0.22)'; ctx.lineWidth=1;
+              ctx.strokeRect(wx+4,wy+4,S-8,S-8);
+              // Triple-ring porthole windows with inner bright core
+              if (this.buildingWindows[y][x]) {
+                for (let _i=0;_i<2;_i++) {
+                  const _pcx=wx+S*0.22+_i*S*0.46, _pcy=wy+S*0.66, _pr=S*0.10;
+                  ctx.fillStyle='rgba(0,200,200,0.22)';
+                  ctx.beginPath(); ctx.arc(_pcx,_pcy,_pr+6,0,Math.PI*2); ctx.fill();
+                  ctx.fillStyle='rgba(0,240,210,0.55)';
+                  ctx.beginPath(); ctx.arc(_pcx,_pcy,_pr,0,Math.PI*2); ctx.fill();
+                  ctx.fillStyle='rgba(120,255,240,0.90)';
+                  ctx.beginPath(); ctx.arc(_pcx,_pcy,_pr*0.45,0,Math.PI*2); ctx.fill();
+                  ctx.strokeStyle='rgba(0,210,185,0.80)'; ctx.lineWidth=1.5;
+                  ctx.beginPath(); ctx.arc(_pcx,_pcy,_pr+2,0,Math.PI*2); ctx.stroke();
+                  ctx.strokeStyle='rgba(0,200,220,0.40)'; ctx.lineWidth=1;
+                  ctx.beginPath(); ctx.arc(_pcx,_pcy,_pr+5,0,Math.PI*2); ctx.stroke();
+                }
+              }
+
+            } else if (_ms === 3) {
+              // ════════════════════════════════════════════════════
+              // STYLE 3 · FROZEN CRYSTAL — Facets, icicles, aurora shimmer
+              // ════════════════════════════════════════════════════
+              const _g3=ctx.createLinearGradient(wx,wy,wx,wy+S);
+              _g3.addColorStop(0,'#c8e8ff'); _g3.addColorStop(0.3,'#6ab4e8'); _g3.addColorStop(0.7,'#2060a0'); _g3.addColorStop(1,'#0a2848');
+              ctx.fillStyle=_g3; ctx.fillRect(wx,wy,S,S);
+              // Ice facet panel overlays
+              ctx.fillStyle='rgba(200,235,255,0.14)'; ctx.fillRect(wx,wy,S*0.55,S);
+              ctx.fillStyle='rgba(100,170,220,0.10)'; ctx.fillRect(wx+S*0.55,wy,S*0.45,S);
+              // 4 diagonal crystal fracture lines
+              ctx.strokeStyle='rgba(200,230,255,0.55)'; ctx.lineWidth=1;
+              ctx.beginPath();
+              ctx.moveTo(wx+S*0.08,wy); ctx.lineTo(wx+S*0.42,wy+S*0.60);
+              ctx.moveTo(wx+S*0.52,wy); ctx.lineTo(wx+S*0.18,wy+S*0.60);
+              ctx.moveTo(wx+S*0.70,wy); ctx.lineTo(wx+S,wy+S*0.48);
+              ctx.moveTo(wx,wy+S*0.38); ctx.lineTo(wx+S*0.36,wy+S*0.80);
+              ctx.stroke();
+              // Gradient snow cap (7-point polygon)
+              const _scg=ctx.createLinearGradient(wx,wy,wx,wy+S*0.20);
+              _scg.addColorStop(0,'rgba(240,250,255,0.96)'); _scg.addColorStop(1,'rgba(200,230,255,0.60)');
+              ctx.fillStyle=_scg;
+              ctx.beginPath();
+              ctx.moveTo(wx,wy+S*0.16); ctx.lineTo(wx+S*0.14,wy+S*0.06);
+              ctx.lineTo(wx+S*0.28,wy+S*0.13); ctx.lineTo(wx+S*0.50,wy);
+              ctx.lineTo(wx+S*0.72,wy+S*0.10); ctx.lineTo(wx+S*0.86,wy+S*0.04);
+              ctx.lineTo(wx+S,wy+S*0.15); ctx.fill();
+              // Gradient icicles (7 varied lengths)
+              for (let _i=0;_i<7;_i++) {
+                const _ix=wx+_i*S/7+S/14, _ih=S*0.08+(_bs%4+_i%4)*S*0.035;
+                const _ig=ctx.createLinearGradient(_ix,wy+S,_ix,wy+S-_ih);
+                _ig.addColorStop(0,'rgba(200,230,255,0.0)'); _ig.addColorStop(1,'rgba(220,245,255,0.85)');
+                ctx.fillStyle=_ig;
+                ctx.beginPath(); ctx.moveTo(_ix-S*0.04,wy+S); ctx.lineTo(_ix,wy+S-_ih); ctx.lineTo(_ix+S*0.04,wy+S); ctx.fill();
+              }
+              // Aurora gradient band
+              const _ag3=ctx.createLinearGradient(wx,wy+S*0.30,wx,wy+S*0.52);
+              _ag3.addColorStop(0,'rgba(0,0,0,0)');
+              _ag3.addColorStop(0.5,_bs%2===0?'rgba(100,255,180,0.12)':'rgba(160,100,255,0.12)');
+              _ag3.addColorStop(1,'rgba(0,0,0,0)');
+              ctx.fillStyle=_ag3; ctx.fillRect(wx,wy+S*0.30,S,S*0.22);
+              // Ice corner triangles
+              ctx.fillStyle='rgba(180,220,255,0.22)';
+              ctx.beginPath(); ctx.moveTo(wx,wy); ctx.lineTo(wx+S*0.22,wy); ctx.lineTo(wx,wy+S*0.22); ctx.fill();
+              ctx.beginPath(); ctx.moveTo(wx+S,wy); ctx.lineTo(wx+S-S*0.22,wy); ctx.lineTo(wx+S,wy+S*0.22); ctx.fill();
+              // Ice blue dual edge
+              ctx.strokeStyle='rgba(160,215,255,0.55)'; ctx.lineWidth=2;
+              ctx.strokeRect(wx+1,wy+1,S-2,S-2);
+              ctx.strokeStyle='rgba(200,235,255,0.28)'; ctx.lineWidth=1;
+              ctx.strokeRect(wx+4,wy+4,S-8,S-8);
+              // Cross-pane windows with glow halo
+              if (this.buildingWindows[y][x]) {
+                for (let _r=0;_r<2;_r++) for (let _c=0;_c<2;_c++) {
+                  const _wrx=wx+S*0.07+_c*S*0.47, _wry=wy+S*0.22+_r*S*0.35;
+                  const _ww=S*0.25, _wh=S*0.18;
+                  ctx.fillStyle='rgba(140,200,255,0.20)'; ctx.fillRect(_wrx-3,_wry-3,_ww+6,_wh+6);
+                  ctx.fillStyle='rgba(190,230,255,0.72)'; ctx.fillRect(_wrx,_wry,_ww,_wh);
+                  ctx.fillStyle='rgba(230,248,255,0.90)'; ctx.fillRect(_wrx+_ww*0.35,_wry,_ww*0.30,_wh);
+                  ctx.fillStyle='rgba(100,175,240,0.55)';
+                  ctx.fillRect(_wrx+_ww/2-0.5,_wry,1,_wh);
+                  ctx.fillRect(_wrx,_wry+_wh/2-0.5,_ww,1);
+                }
+              }
+
+            } else if (_ms === 4) {
+              // ════════════════════════════════════════════════════
+              // STYLE 4 · ROBOT FORTRESS — Steel, circuit grid, scanner dome
+              // ════════════════════════════════════════════════════
+              const _g4=ctx.createLinearGradient(wx,wy,wx+S,wy+S);
+              _g4.addColorStop(0,'#1c2228'); _g4.addColorStop(0.5,'#0e1418'); _g4.addColorStop(1,'#060c10');
+              ctx.fillStyle=_g4; ctx.fillRect(wx,wy,S,S);
+              // Panel segment overlays (5 horizontal ribs + shadow lines)
+              ctx.fillStyle='rgba(255,255,255,0.06)';
+              for (let _i=0;_i<5;_i++) ctx.fillRect(wx,wy+S*0.08+_i*S*0.18,S,3);
+              ctx.fillStyle='rgba(0,0,0,0.22)';
+              for (let _i=0;_i<5;_i++) ctx.fillRect(wx,wy+S*0.11+_i*S*0.18,S,1);
+              // Vertical center seam
+              ctx.fillStyle='rgba(80,120,150,0.25)'; ctx.fillRect(wx+S/2-1,wy,2,S);
+              // Power conduit with gradient glow + nodes
+              const _pcol=_bs%2===0?['rgba(0,220,180,','rgba(0,255,180,']:['rgba(0,180,255,','rgba(80,220,255,'];
+              const _pcxr=wx+S*0.10+(_bs%4)*S*0.17;
+              ctx.fillStyle=_pcol[0]+'0.35)'; ctx.fillRect(_pcxr-2,wy+S*0.05,5,S*0.90);
+              const _pg4=ctx.createLinearGradient(_pcxr,wy+S*0.05,_pcxr,wy+S*0.95);
+              _pg4.addColorStop(0,_pcol[1]+'0.80)'); _pg4.addColorStop(1,_pcol[0]+'0.20)');
+              ctx.fillStyle=_pg4; ctx.fillRect(_pcxr-1,wy+S*0.05,3,S*0.90);
+              ctx.fillStyle=_pcol[1]+'0.90)';
+              for (let _i=0;_i<5;_i++) { ctx.beginPath(); ctx.arc(_pcxr,wy+S*0.10+_i*S*0.18,3,0,Math.PI*2); ctx.fill(); }
+              // LED status strip top + bottom
+              ctx.fillStyle=_pcol[0]+'0.72)'; ctx.fillRect(wx+S*0.05,wy+S*0.03,S*0.90,S*0.05);
+              ctx.fillStyle=_pcol[0]+'0.40)'; ctx.fillRect(wx+S*0.05,wy+S*0.92,S*0.90,S*0.04);
+              // Scanner dome at top center with sweep line
+              ctx.fillStyle='rgba(255,255,255,0.10)';
+              ctx.beginPath(); ctx.arc(wx+S/2,wy+S*0.15,S*0.12,Math.PI,0); ctx.fill();
+              ctx.strokeStyle=_pcol[0]+'0.55)'; ctx.lineWidth=1;
+              ctx.beginPath(); ctx.arc(wx+S/2,wy+S*0.15,S*0.12,Math.PI,0); ctx.stroke();
+              ctx.strokeStyle=_pcol[1]+'0.60)'; ctx.lineWidth=1.5;
+              ctx.beginPath(); ctx.moveTo(wx+S/2,wy+S*0.15);
+              ctx.lineTo(wx+S/2+Math.cos(_bs*0.7)*S*0.12,wy+S*0.15-Math.abs(Math.sin(_bs*0.7))*S*0.12); ctx.stroke();
+              // Warning diagonal stripes at base
+              ctx.fillStyle='rgba(255,180,0,0.28)'; ctx.fillRect(wx,wy+S*0.91,S,S*0.09);
+              ctx.fillStyle='rgba(0,0,0,0.40)';
+              for (let _i=0;_i<8;_i++) ctx.fillRect(wx+_i*S*0.125,wy+S*0.91,S*0.062,S*0.09);
+              // Circuit trace L-path
+              ctx.strokeStyle='rgba(0,200,180,0.30)'; ctx.lineWidth=1;
+              ctx.beginPath();
+              ctx.moveTo(wx+S*0.65,wy+S*0.25); ctx.lineTo(wx+S*0.82,wy+S*0.25);
+              ctx.lineTo(wx+S*0.82,wy+S*0.40); ctx.lineTo(wx+S*0.72,wy+S*0.40); ctx.stroke();
+              // Steel dual edge
+              ctx.strokeStyle='rgba(80,130,160,0.36)'; ctx.lineWidth=1.5;
+              ctx.strokeRect(wx+1,wy+1,S-2,S-2);
+              ctx.strokeStyle='rgba(60,100,130,0.20)'; ctx.lineWidth=1;
+              ctx.strokeRect(wx+4,wy+4,S-8,S-8);
+              // 2-row 3-col LED windows with glow halos
+              if (this.buildingWindows[y][x]) {
+                const _lc4=_bs%3===0?['rgba(0,255,180,','rgba(0,200,140,']:
+                            _bs%3===1?['rgba(0,210,255,','rgba(0,160,220,']:
+                                      ['rgba(255,80,60,','rgba(220,40,20,'];
+                for (let _r=0;_r<2;_r++) for (let _c=0;_c<3;_c++) {
+                  const _lx=wx+S*0.24+_c*S*0.21, _ly=wy+S*0.46+_r*S*0.18;
+                  ctx.fillStyle=_lc4[1]+'0.22)'; ctx.fillRect(_lx-2,_ly-2,S*0.14+4,S*0.09+4);
+                  ctx.fillStyle=_lc4[0]+'0.80)'; ctx.fillRect(_lx,_ly,S*0.14,S*0.09);
+                }
+              }
+
+            } else if (_ms === 5) {
+              // ════════════════════════════════════════════════════
+              // STYLE 5 · JUNGLE TEMPLE — Stone, vines, torch glow, organic
+              // ════════════════════════════════════════════════════
+              const _g5=ctx.createLinearGradient(wx,wy,wx,wy+S);
+              _g5.addColorStop(0,'#1a3a0a'); _g5.addColorStop(0.5,'#0e2206'); _g5.addColorStop(1,'#061204');
+              ctx.fillStyle=_g5; ctx.fillRect(wx,wy,S,S);
+              // Mossy stone bands with mortar lines
+              for (let _i=0;_i<4;_i++) {
+                ctx.fillStyle=_i%2===0?'rgba(40,100,15,0.20)':'rgba(30,80,10,0.14)';
+                ctx.fillRect(wx,wy+S*0.12+_i*S*0.22,S,S*0.22);
+                ctx.fillStyle='rgba(0,0,0,0.20)'; ctx.fillRect(wx,wy+S*0.12+_i*S*0.22,S,2);
+              }
+              // Thick vine trunks (left + right edges)
+              ctx.strokeStyle='rgba(30,140,15,0.60)'; ctx.lineWidth=3;
+              ctx.beginPath(); ctx.moveTo(wx+S*0.08,wy); ctx.bezierCurveTo(wx+S*0.12,wy+S*0.45,wx+S*0.04,wy+S*0.75,wx+S*0.10,wy+S); ctx.stroke();
+              ctx.beginPath(); ctx.moveTo(wx+S*0.92,wy); ctx.bezierCurveTo(wx+S*0.88,wy+S*0.45,wx+S*0.96,wy+S*0.75,wx+S*0.90,wy+S); ctx.stroke();
+              // Thin tendrils
+              ctx.strokeStyle='rgba(50,170,20,0.40)'; ctx.lineWidth=1;
+              for (let _i=0;_i<3;_i++) {
+                const _tx=wx+S*0.22+_i*S*0.22;
+                ctx.beginPath(); ctx.moveTo(_tx,wy); ctx.bezierCurveTo(_tx+S*0.06,wy+S*0.35,_tx-S*0.06,wy+S*0.65,_tx+S*0.03,wy+S); ctx.stroke();
+              }
+              // 5 overlapping tropical leaf ellipses at crown
+              const _lc5=['rgba(50,200,20,0.55)','rgba(70,220,30,0.50)','rgba(40,170,15,0.48)','rgba(80,210,25,0.45)','rgba(55,195,20,0.52)'];
+              for (let _i=0;_i<5;_i++) {
+                const _la=(Math.PI*2/5)*_i-Math.PI*0.5;
+                ctx.fillStyle=_lc5[_i];
+                ctx.beginPath(); ctx.ellipse(wx+S/2+Math.cos(_la)*S*0.22,wy+S*0.10+Math.sin(_la)*S*0.08,S*0.18,S*0.09,_la,0,Math.PI*2); ctx.fill();
+              }
+              // 2 tropical flowers with pistil
+              for (let _i=0;_i<2;_i++) {
+                const _fx5=wx+S*(0.28+_i*0.44), _fy5=wy+S*(0.30+(_bs%3)*0.06);
+                ctx.fillStyle='rgba(255,70,110,0.62)'; ctx.beginPath(); ctx.arc(_fx5,_fy5,S*0.075,0,Math.PI*2); ctx.fill();
+                ctx.fillStyle='rgba(255,215,0,0.75)'; ctx.beginPath(); ctx.arc(_fx5,_fy5,S*0.028,0,Math.PI*2); ctx.fill();
+              }
+              // Circular stone carving (center)
+              ctx.strokeStyle='rgba(140,200,60,0.38)'; ctx.lineWidth=1.5;
+              ctx.beginPath(); ctx.arc(wx+S/2,wy+S*0.55,S*0.12,0,Math.PI*2); ctx.stroke();
+              ctx.strokeStyle='rgba(100,170,40,0.25)'; ctx.lineWidth=1;
+              ctx.beginPath(); ctx.arc(wx+S/2,wy+S*0.55,S*0.07,0,Math.PI*2); ctx.stroke();
+              // Radial torch glow circles at base corners
+              const _tg5a=ctx.createRadialGradient(wx+S*0.09,wy+S*0.90,0,wx+S*0.09,wy+S*0.90,S*0.13);
+              _tg5a.addColorStop(0,'rgba(255,140,0,0.55)'); _tg5a.addColorStop(1,'rgba(255,80,0,0)');
+              ctx.fillStyle=_tg5a; ctx.beginPath(); ctx.arc(wx+S*0.09,wy+S*0.90,S*0.13,0,Math.PI*2); ctx.fill();
+              const _tg5b=ctx.createRadialGradient(wx+S*0.91,wy+S*0.90,0,wx+S*0.91,wy+S*0.90,S*0.13);
+              _tg5b.addColorStop(0,'rgba(255,140,0,0.55)'); _tg5b.addColorStop(1,'rgba(255,80,0,0)');
+              ctx.fillStyle=_tg5b; ctx.beginPath(); ctx.arc(wx+S*0.91,wy+S*0.90,S*0.13,0,Math.PI*2); ctx.fill();
+              // Green dual edge glow
+              ctx.strokeStyle='rgba(60,190,25,0.38)'; ctx.lineWidth=1.5;
+              ctx.strokeRect(wx+1,wy+1,S-2,S-2);
+              ctx.strokeStyle='rgba(40,150,15,0.22)'; ctx.lineWidth=1;
+              ctx.strokeRect(wx+4,wy+4,S-8,S-8);
+              // Round organic windows with glow halo + inner bright core
+              if (this.buildingWindows[y][x]) {
+                for (let _i=0;_i<3;_i++) {
+                  const _wcx=wx+S*0.18+_i*S*0.32, _wcy=wy+S*0.65, _wr5=S*0.09;
+                  ctx.fillStyle='rgba(160,240,40,0.18)'; ctx.beginPath(); ctx.arc(_wcx,_wcy,_wr5+5,0,Math.PI*2); ctx.fill();
+                  ctx.fillStyle='rgba(180,255,60,0.62)'; ctx.beginPath(); ctx.arc(_wcx,_wcy,_wr5,0,Math.PI*2); ctx.fill();
+                  ctx.fillStyle='rgba(230,255,140,0.90)'; ctx.beginPath(); ctx.arc(_wcx,_wcy,_wr5*0.45,0,Math.PI*2); ctx.fill();
+                }
+              }
+
+            } else if (_ms === 6) {
+              // ════════════════════════════════════════════════════
+              // STYLE 6 · WASTELAND RUINS — Concrete, rebar, scorch, graffiti
+              // ════════════════════════════════════════════════════
+              const _g6=ctx.createLinearGradient(wx,wy,wx,wy+S);
+              _g6.addColorStop(0,'#2a2018'); _g6.addColorStop(0.6,'#1a1410'); _g6.addColorStop(1,'#0e0c08');
+              ctx.fillStyle=_g6; ctx.fillRect(wx,wy,S,S);
+              // Concrete damage patches (varied opacity)
+              ctx.fillStyle='rgba(0,0,0,0.32)'; ctx.fillRect(wx+S*0.06,wy+S*0.04,S*0.36,S*0.22);
+              ctx.fillStyle='rgba(255,255,255,0.04)'; ctx.fillRect(wx+S*0.06,wy+S*0.04,S*0.36,S*0.22);
+              ctx.fillStyle='rgba(0,0,0,0.24)'; ctx.fillRect(wx+S*0.60,wy+S*0.36,S*0.32,S*0.28);
+              // Dual crack path systems
+              ctx.strokeStyle='rgba(0,0,0,0.55)'; ctx.lineWidth=1.2;
+              ctx.beginPath();
+              ctx.moveTo(wx+S*0.18,wy+S*0.08); ctx.lineTo(wx+S*0.32,wy+S*0.42); ctx.lineTo(wx+S*0.22,wy+S*0.78); ctx.lineTo(wx+S*0.28,wy+S);
+              ctx.moveTo(wx+S*0.70,wy+S*0.18); ctx.lineTo(wx+S*0.56,wy+S*0.52); ctx.lineTo(wx+S*0.68,wy+S*0.85); ctx.stroke();
+              ctx.strokeStyle='rgba(0,0,0,0.28)'; ctx.lineWidth=0.8;
+              ctx.beginPath();
+              ctx.moveTo(wx+S*0.22,wy+S*0.42); ctx.lineTo(wx+S*0.38,wy+S*0.50);
+              ctx.moveTo(wx+S*0.56,wy+S*0.52); ctx.lineTo(wx+S*0.40,wy+S*0.65); ctx.stroke();
+              // 3 rebar diagonals
+              ctx.strokeStyle='rgba(90,68,45,0.68)'; ctx.lineWidth=1.8;
+              ctx.beginPath();
+              ctx.moveTo(wx+S*0.10,wy+S*0.04); ctx.lineTo(wx+S*0.28,wy+S*0.35);
+              ctx.moveTo(wx+S*0.84,wy+S*0.04); ctx.lineTo(wx+S*0.68,wy+S*0.32);
+              ctx.moveTo(wx+S*0.42,wy+S*0.60); ctx.lineTo(wx+S*0.58,wy+S*0.90); ctx.stroke();
+              // Radial gradient scorch mark
+              const _sg6=ctx.createRadialGradient(wx+S*0.50+(_bs%3)*S*0.12,wy+S*0.42,0,wx+S*0.50+(_bs%3)*S*0.12,wy+S*0.42,S*0.28);
+              _sg6.addColorStop(0,'rgba(10,6,2,0.60)'); _sg6.addColorStop(0.6,'rgba(30,18,8,0.28)'); _sg6.addColorStop(1,'rgba(0,0,0,0)');
+              ctx.fillStyle=_sg6; ctx.beginPath(); ctx.arc(wx+S*0.50+(_bs%3)*S*0.12,wy+S*0.42,S*0.28,0,Math.PI*2); ctx.fill();
+              // Water stain gradient strip
+              const _wsg=ctx.createLinearGradient(wx+S*0.60,wy,wx+S*0.60,wy+S*0.45);
+              _wsg.addColorStop(0,'rgba(80,100,120,0.18)'); _wsg.addColorStop(1,'rgba(60,80,100,0)');
+              ctx.fillStyle=_wsg; ctx.fillRect(wx+S*0.55,wy,S*0.15,S*0.45);
+              // Graffiti lines + arrow fill
+              const _gc=_bs%3===0?'rgba(255,50,50,0.68)':_bs%3===1?'rgba(40,210,255,0.62)':'rgba(255,215,0,0.62)';
+              ctx.strokeStyle=_gc; ctx.lineWidth=2;
+              ctx.beginPath();
+              ctx.moveTo(wx+S*0.34,wy+S*0.68); ctx.lineTo(wx+S*0.52,wy+S*0.60); ctx.lineTo(wx+S*0.46,wy+S*0.78); ctx.stroke();
+              ctx.fillStyle=_gc;
+              ctx.beginPath(); ctx.moveTo(wx+S*0.52,wy+S*0.60); ctx.lineTo(wx+S*0.44,wy+S*0.56); ctx.lineTo(wx+S*0.46,wy+S*0.64); ctx.fill();
+              // Rubble rects at base
+              ctx.fillStyle='rgba(80,62,42,0.48)';
+              for (let _i=0;_i<6;_i++) {
+                const _rw=S*0.06+(_i%3)*S*0.04, _rh=S*0.04+(_i%2)*S*0.03;
+                ctx.fillRect(wx+_i*S*0.165+(_bs%3)*S*0.04,wy+S-_rh,_rw,_rh);
+              }
+              // Dark dual edge
+              ctx.strokeStyle='rgba(80,62,44,0.38)'; ctx.lineWidth=1.5;
+              ctx.strokeRect(wx+1,wy+1,S-2,S-2);
+              // Broken window with 3-line crack pattern
+              if (this.buildingWindows[y][x]) {
+                const _bwx=wx+S*0.26+(_bs%3)*S*0.10, _bwy=wy+S*0.36;
+                const _bww=S*0.26, _bwh=S*0.18;
+                ctx.fillStyle='rgba(15,12,8,0.88)'; ctx.fillRect(_bwx,_bwy,_bww,_bwh);
+                ctx.strokeStyle='rgba(100,78,55,0.60)'; ctx.lineWidth=1; ctx.strokeRect(_bwx,_bwy,_bww,_bwh);
+                ctx.strokeStyle='rgba(130,105,80,0.70)'; ctx.lineWidth=0.8;
+                ctx.beginPath();
+                ctx.moveTo(_bwx+_bww*0.18,_bwy); ctx.lineTo(_bwx+_bww*0.50,_bwy+_bwh*0.60); ctx.lineTo(_bwx+_bww*0.85,_bwy+_bwh);
+                ctx.moveTo(_bwx+_bww*0.50,_bwy+_bwh*0.60); ctx.lineTo(_bwx,_bwy+_bwh*0.80);
+                ctx.moveTo(_bwx+_bww*0.50,_bwy+_bwh*0.60); ctx.lineTo(_bwx+_bww*0.70,_bwy+_bwh*0.30);
+                ctx.stroke();
+              }
+
+            } else {
+              // ════════════════════════════════════════════════════
+              // STYLE 7 · STEAMPUNK FOUNDRY — Brass, copper, boiler, pipes, gears
+              // ════════════════════════════════════════════════════
+              const _g7=ctx.createLinearGradient(wx,wy,wx+S,wy+S);
+              _g7.addColorStop(0,'#2a1c08'); _g7.addColorStop(0.5,'#1c1006'); _g7.addColorStop(1,'#100804');
+              ctx.fillStyle=_g7; ctx.fillRect(wx,wy,S,S);
+              // Boiler cylinder (center block with horizontal gradient)
+              const _bcx=wx+S*0.40, _bcy=wy+S*0.28, _bcw=S*0.26, _bch=S*0.50;
+              const _bcg=ctx.createLinearGradient(_bcx,_bcy,_bcx+_bcw,_bcy);
+              _bcg.addColorStop(0,'rgba(90,55,15,0.70)'); _bcg.addColorStop(0.3,'rgba(180,120,40,0.65)'); _bcg.addColorStop(0.7,'rgba(140,90,28,0.55)'); _bcg.addColorStop(1,'rgba(60,35,8,0.62)');
+              ctx.fillStyle=_bcg; ctx.fillRect(_bcx,_bcy,_bcw,_bch);
+              // Ellipse cap on boiler top
+              ctx.fillStyle='rgba(200,140,50,0.55)';
+              ctx.beginPath(); ctx.ellipse(_bcx+_bcw/2,_bcy,_bcw/2,S*0.06,0,0,Math.PI*2); ctx.fill();
+              ctx.strokeStyle='rgba(220,160,60,0.50)'; ctx.lineWidth=1;
+              ctx.beginPath(); ctx.ellipse(_bcx+_bcw/2,_bcy,_bcw/2,S*0.06,0,0,Math.PI*2); ctx.stroke();
+              // Riveted panel grid
+              ctx.fillStyle='rgba(160,100,25,0.20)';
+              for (let _i=0;_i<4;_i++) ctx.fillRect(wx,wy+S*0.18+_i*S*0.22,S,3);
+              ctx.fillRect(wx+S/2-1,wy,2,S);
+              // Copper rivet dots (3×2 grid)
+              ctx.fillStyle='rgba(200,130,38,0.72)';
+              for (let _r=0;_r<3;_r++) for (let _c=0;_c<2;_c++) {
+                ctx.beginPath(); ctx.arc(wx+S*0.10+_c*S*0.48,wy+S*0.14+_r*S*0.28,2.5,0,Math.PI*2); ctx.fill();
+              }
+              // Vertical brass pipe (left) with gradient + flanges
+              const _vpg=ctx.createLinearGradient(wx+S*0.07,wy,wx+S*0.17,wy);
+              _vpg.addColorStop(0,'rgba(160,100,28,0.55)'); _vpg.addColorStop(0.35,'rgba(210,145,55,0.55)'); _vpg.addColorStop(1,'rgba(110,70,15,0.50)');
+              ctx.fillStyle=_vpg; ctx.fillRect(wx+S*0.07,wy+S*0.10,S*0.10,S*0.78);
+              ctx.fillStyle='rgba(140,88,18,0.70)';
+              for (let _i=0;_i<4;_i++) ctx.fillRect(wx+S*0.04,wy+S*0.18+_i*S*0.20,S*0.16,S*0.05);
+              // Horizontal cross-pipe with highlight
+              ctx.fillStyle='rgba(150,95,25,0.48)'; ctx.fillRect(wx+S*0.17,wy+S*0.42,S*0.68,S*0.08);
+              ctx.fillStyle='rgba(200,140,52,0.30)'; ctx.fillRect(wx+S*0.17,wy+S*0.42,S*0.68,S*0.025);
+              // Chimney at top-right + smoke puffs
+              ctx.fillStyle='rgba(80,55,20,0.65)'; ctx.fillRect(wx+S*0.76,wy,S*0.12,S*0.22);
+              ctx.fillStyle='rgba(200,180,160,0.20)';
+              ctx.beginPath(); ctx.arc(wx+S*0.82,wy-S*0.04,S*0.06,0,Math.PI*2); ctx.fill();
+              ctx.beginPath(); ctx.arc(wx+S*0.78,wy-S*0.09,S*0.04,0,Math.PI*2); ctx.fill();
+              // Steam vent circle with ring
+              ctx.fillStyle='rgba(120,88,42,0.55)';
+              ctx.beginPath(); ctx.arc(wx+S*0.30,wy+S*0.14,S*0.10,0,Math.PI*2); ctx.fill();
+              ctx.strokeStyle='rgba(180,130,50,0.60)'; ctx.lineWidth=1.5;
+              ctx.beginPath(); ctx.arc(wx+S*0.30,wy+S*0.14,S*0.10,0,Math.PI*2); ctx.stroke();
+              // Copper/brass dual edge
+              ctx.strokeStyle='rgba(180,112,32,0.42)'; ctx.lineWidth=1.5;
+              ctx.strokeRect(wx+1,wy+1,S-2,S-2);
+              ctx.strokeStyle='rgba(200,138,48,0.24)'; ctx.lineWidth=1;
+              ctx.strokeRect(wx+4,wy+4,S-8,S-8);
+              // Radial-gradient fire porthole + inner core + gear teeth
+              if (this.buildingWindows[y][x]) {
+                const _pwx=wx+S*0.60+(_bs%2)*S*0.10, _pwy=wy+S*0.56, _pw7=S*0.12;
+                const _frg=ctx.createRadialGradient(_pwx,_pwy,0,_pwx,_pwy,_pw7);
+                _frg.addColorStop(0,'rgba(255,240,160,0.95)'); _frg.addColorStop(0.45,'rgba(255,140,20,0.80)'); _frg.addColorStop(1,'rgba(180,60,0,0.55)');
+                ctx.fillStyle=_frg; ctx.beginPath(); ctx.arc(_pwx,_pwy,_pw7,0,Math.PI*2); ctx.fill();
+                ctx.fillStyle='rgba(255,255,200,0.90)'; ctx.beginPath(); ctx.arc(_pwx,_pwy,_pw7*0.35,0,Math.PI*2); ctx.fill();
+                ctx.strokeStyle='rgba(180,110,28,0.85)'; ctx.lineWidth=2;
+                ctx.beginPath(); ctx.arc(_pwx,_pwy,_pw7+2,0,Math.PI*2); ctx.stroke();
+                ctx.fillStyle='rgba(160,100,24,0.65)';
+                for (let _i=0;_i<8;_i++) {
+                  const _ga7=(Math.PI*2/8)*_i;
+                  ctx.fillRect(_pwx+Math.cos(_ga7)*(_pw7+4)-1.5,_pwy+Math.sin(_ga7)*(_pw7+4)-1.5,3,3);
+                }
+              }
+            }
+
           } else {
             ctx.fillStyle = this.buildingColors[y][x];
             ctx.fillRect(wx, wy, S, S);
@@ -4741,35 +5268,9 @@ class GameMap {
             ctx.fillRect(wx, wy, 3, S);
           }
 
-          // ── Metropolis zone-specific building decoration ────
-          if (this._rxSet && !cfg.robot) {
-            const zx2 = x / this.W, zy2 = y / this.H;
-            const isComm = zy2 < 0.35 && zx2 < 0.45;
-            const isRes  = zy2 < 0.35 && zx2 >= 0.45;
-            const isInd  = zy2 > 0.68 && zx2 < 0.52;
-            // Commercial: glass curtain wall (blue shimmer)
-            if (isComm && (x + y) % 3 < 2) {
-              ctx.fillStyle = 'rgba(40,100,160,0.18)';
-              ctx.fillRect(wx + 2, wy + 2, S - 4, S - 4);
-            }
-            // Residential: balconies (small protrusions on even tiles)
-            if (isRes && (x * y) % 4 === 0) {
-              ctx.fillStyle = 'rgba(180,130,70,0.30)';
-              ctx.fillRect(wx + S/2 - 8, wy + S - 10, 16, 6);
-              ctx.fillRect(wx + S/2 - 8, wy + S/2 - 10, 16, 4);
-            }
-            // Industrial: rust and corrugation lines
-            if (isInd) {
-              ctx.fillStyle = 'rgba(80,40,20,0.25)';
-              for (let li = 0; li < 4; li++) {
-                ctx.fillRect(wx + 2, wy + 12 + li * 16, S - 4, 3);
-              }
-            }
-          }
-
-          // Windows (not in robot/jungle/desert/neon_city/dino) — no shadowBlur for performance
-          // Neon City / dino have custom windows in the building shapes above
-          if (!cfg.robot && !cfg.jungle && !cfg.desert && !cfg.galactica && !cfg.zombie && !cfg.dino && cfg.id !== 'neon_city' && this.buildingWindows[y][x]) {
+          // Windows (not in robot/jungle/desert/neon_city/dino/metropolis) — no shadowBlur for performance
+          // Metropolis / Neon City / dino handle windows inside their own building style blocks
+          if (!cfg.robot && !cfg.jungle && !cfg.desert && !cfg.galactica && !cfg.zombie && !cfg.dino && cfg.id !== 'neon_city' && !this._metroTileStyle && this.buildingWindows[y][x]) {
             const wc = cfg.windowColors[(Math.floor(x/2) + Math.floor(y/2)) % cfg.windowColors.length];
             ctx.fillStyle = wc + 'CC';
             for (let wy2 = 0; wy2 < 2; wy2++) {
@@ -4780,9 +5281,9 @@ class GameMap {
               }
             }
           }
-          // Neon sign strips (not in robot/jungle/desert/neon_city/dino) — no shadowBlur for performance
-          // Neon City / dino have custom neon effects in building shapes
-          if (!cfg.robot && !cfg.jungle && !cfg.desert && !cfg.galactica && !cfg.zombie && !cfg.dino && cfg.id !== 'neon_city' && (x + y) % cfg.neonFreq === 0) {
+          // Neon sign strips (not in robot/jungle/desert/neon_city/dino/metropolis) — no shadowBlur for performance
+          // Metropolis / Neon City / dino have custom neon effects in their own building style blocks
+          if (!cfg.robot && !cfg.jungle && !cfg.desert && !cfg.galactica && !cfg.zombie && !cfg.dino && cfg.id !== 'neon_city' && !this._metroTileStyle && (x + y) % cfg.neonFreq === 0) {
             const nc = cfg.neonColors[(x * 3 + y) % cfg.neonColors.length];
             ctx.globalAlpha = 0.65;
             ctx.strokeStyle = nc; ctx.lineWidth = 2;
