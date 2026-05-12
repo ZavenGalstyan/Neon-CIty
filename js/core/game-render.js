@@ -1649,7 +1649,8 @@ Game.prototype._render = function() {
       if (this._waypointDoor)
         this.hud.renderWaypointNav(this.player, this._waypointDoor, this.map);
       this.hud.renderHealthBar(this.player);
-      this.hud.renderControls(this._arenaMode, this._isMobile);
+      this.hud.renderHelpButton(this._helpPanelOpen, this._isMobile);
+      if (this._helpPanelOpen) this.hud.renderHelpPanel(this._arenaMode);
       if (this._isMobile) this.hud.renderMobileHints(this._arenaMode);
       this.hud.renderMoney(this.money);
       this.hud.renderKills(this.kills);
@@ -1759,48 +1760,41 @@ Game.prototype._render = function() {
       }
     }
 
-    // ACH button click (bottom-right area: W-136, H-66, 124×26)
+    // Button clicks while playing
     if (this.input.mouseJustDown && this.state === "playing") {
       const mx = this.input.mouseScreen.x,
         my = this.input.mouseScreen.y;
-      const ax = W - 136,
-        ay = H - 66;
-      if (mx >= ax && mx <= ax + 124 && my >= ay && my <= ay + 26) {
+      // ACH button (bottom-right: W-136, H-66, 124×26)
+      if (mx >= W - 136 && mx <= W - 12 && my >= H - 66 && my <= H - 40) {
         this._achPanelOpen = !this._achPanelOpen;
+      }
+      // Help button (bottom-left, bounds stored by renderHelpButton)
+      const hb = this.hud._helpBtnBounds;
+      if (hb && mx >= hb.x && mx <= hb.x + hb.w && my >= hb.y && my <= hb.y + hb.h) {
+        this._helpPanelOpen = !this._helpPanelOpen;
       }
     }
 
     if (this.state === "paused") {
       const mx = this.input.mouseScreen.x,
         my = this.input.mouseScreen.y;
-      const pauseButtons = this.hud.renderPause(mx, my);
+      const pauseButtons = this.hud.renderPause(
+        mx, my,
+        window.audio ? window.audio.isMuted : false
+      );
 
-      // Handle button clicks
       if (this.input.mouseJustDown && pauseButtons) {
-        // Check Resume button
-        if (pauseButtons.resume) {
-          const btn = pauseButtons.resume;
-          if (
-            mx >= btn.x &&
-            mx <= btn.x + btn.w &&
-            my >= btn.y &&
-            my <= btn.y + btn.h
-          ) {
-            this.state = "playing";
-          }
+        const _hit = btn => btn && mx >= btn.x && mx <= btn.x + btn.w && my >= btn.y && my <= btn.y + btn.h;
+
+        if (_hit(pauseButtons.resume)) {
+          this.state = "playing";
         }
-        // Check Back to Maps button
-        if (pauseButtons.maps) {
-          const btn = pauseButtons.maps;
-          if (
-            mx >= btn.x &&
-            mx <= btn.x + btn.w &&
-            my >= btn.y &&
-            my <= btn.y + btn.h
-          ) {
-            this._destroy();
-            window.location.href = "index.html";
-          }
+        if (_hit(pauseButtons.maps)) {
+          this._destroy();
+          window.location.href = "index.html";
+        }
+        if (_hit(pauseButtons.mute) && window.audio) {
+          window.audio.toggleMute();
         }
       }
     }

@@ -291,6 +291,7 @@ class Game {
     ]);
     this._vehiclesUsed = new Set();
     this._sessionSaved = false;
+    this._helpPanelOpen = false;
     // ── Ambient Traffic (disabled) ────────────────────────────
     this._ambientCars = [];
     this._ambientSpawnT = 0;
@@ -411,6 +412,10 @@ class Game {
     }
     if (e.code === "KeyF" && this.state === "playing") {
       this._toggleVehicle();
+      return;
+    }
+    if (e.code === "KeyC" && (this.state === "playing" || this.state === "paused")) {
+      this._helpPanelOpen = !this._helpPanelOpen;
       return;
     }
     if (e.code === "KeyB") {
