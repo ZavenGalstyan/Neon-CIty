@@ -1682,9 +1682,9 @@ Game.prototype._render = function() {
         );
       }
       if (this._wantedLevel > 0 && !this._zombieMode) {
-        this.hud.renderWantedLevel(this._wantedLevel, this._wantedDecay);
+        this.hud.renderWantedLevel(this._wantedLevel, this._wantedDecay, this._isMobile);
       }
-      this.hud.renderWeaponInfo(this.player);
+      this.hud.renderWeaponInfo(this.player, this._isMobile);
       if (this._grenadeCount > 0)
         this.hud.renderGrenadeCount(this._grenadeCount);
       if (
@@ -1712,7 +1712,7 @@ Game.prototype._render = function() {
         this.hud.renderCompanionHP(this.player.companion, this._isMobile);
       if (this.player._buffs && this.player._buffs.size > 0)
         this.hud.renderActiveBuffs(this.player._buffs);
-      this.hud.renderAchButton(this._achPanelOpen);
+      this.hud.renderAchButton(this._achPanelOpen, this._isMobile);
       if (!this._zombieMode && !this._lifeMode)
         this.hud.renderDayNight(this._nightAlpha, this._gameTime);
       if (this._globalEvent)
@@ -1773,6 +1773,13 @@ Game.prototype._render = function() {
       const hb = this.hud._helpBtnBounds;
       if (hb && mx >= hb.x && mx <= hb.x + hb.w && my >= hb.y && my <= hb.y + hb.h) {
         this._helpPanelOpen = !this._helpPanelOpen;
+      }
+      // Weapon cycle arrows (mobile)
+      if (this._isMobile && this.hud._mobileWeaponBtns) {
+        const wb = this.hud._mobileWeaponBtns;
+        const _hitBtn = btn => btn && mx >= btn.x && mx <= btn.x + btn.w && my >= btn.y && my <= btn.y + btn.h;
+        if (_hitBtn(wb.prev)) this.player.cycleWeapon(-1);
+        if (_hitBtn(wb.next)) this.player.cycleWeapon(1);
       }
     }
 

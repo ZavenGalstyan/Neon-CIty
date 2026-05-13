@@ -470,33 +470,38 @@ class HUD {
   }
 
   // ── Wanted level ───────────────────────────────────────────────────────────
-  renderWantedLevel(level, decayTimer) {
+  renderWantedLevel(level, decayTimer, isMobile = false) {
     if (level === 0) return;
     const ctx = this.ctx;
+    const H   = this.canvas.height;
     ctx.save();
     ctx.textAlign = 'left';
 
+    // On mobile: draw below the health bar panel (H - 96 + 26 = H - 70), 8px gap
+    const lx = HUD_PAD;
+    const ly = isMobile ? H - 58 : 38;
+
     // Label
     ctx.font = 'bold 8px Orbitron, monospace';
-    ctx.fillStyle = 'rgba(255,200,0,0.55)'; ctx.shadowBlur = 0;
-    ctx.fillText('WANTED', 16, 38);
+    ctx.fillStyle = 'rgba(255,200,0,0.65)'; ctx.shadowBlur = 0;
+    ctx.fillText('WANTED', lx, ly);
 
     // Stars
     for (let i = 0; i < 4; i++) {
       const filled = i < level;
-      ctx.font = 'bold 17px monospace';
+      ctx.font = isMobile ? 'bold 15px monospace' : 'bold 17px monospace';
       ctx.fillStyle   = filled ? '#FFD700' : 'rgba(255,255,255,0.14)';
       ctx.shadowColor = filled ? '#FFD700' : 'transparent';
-      ctx.shadowBlur  = filled ? 12 : 0;
-      ctx.fillText('★', 16 + i * 21, 57);
+      ctx.shadowBlur  = filled ? 10 : 0;
+      ctx.fillText('★', lx + i * (isMobile ? 19 : 21), ly + (isMobile ? 16 : 19));
     }
 
-    // Decay bar (full = 0s, empty = 10s → stars drop)
+    // Decay bar
     const pct = Math.max(0, 1 - decayTimer / 10.0);
-    const bw = 84, bh = 3;
+    const bw = isMobile ? 76 : 84, bh = 3;
     ctx.shadowBlur = 0;
-    ctx.fillStyle = '#1a1a1a'; ctx.fillRect(16, 62, bw, bh);
-    ctx.fillStyle = '#FFD700'; ctx.fillRect(16, 62, bw * pct, bh);
+    ctx.fillStyle = '#1a1a1a'; ctx.fillRect(lx, ly + (isMobile ? 21 : 24), bw, bh);
+    ctx.fillStyle = '#FFD700'; ctx.fillRect(lx, ly + (isMobile ? 21 : 24), bw * pct, bh);
     ctx.restore();
   }
 
@@ -1199,42 +1204,87 @@ class HUD {
   }
 
   // ── Bottom-right: current weapon + shop button ─────────────────────────────
-  renderWeaponInfo(player) {
+  renderWeaponInfo(player, isMobile = false) {
     const ctx = this.ctx;
     const W   = this.canvas.width;
     const H   = this.canvas.height;
     const w   = player._weapon;
     const wColor = w.color;
-
-    // Panel bg
-    const wpW = this._s(188), wpH = this._s(52);
     ctx.save();
-    ctx.fillStyle   = 'rgba(0,0,0,0.65)';
-    ctx.strokeStyle = `rgba(${this._rgb(wColor)},0.3)`;
-    ctx.lineWidth   = 1;
-    this._rr(ctx, W - wpW - 12, H - wpH - this._s(36), wpW, wpH, 6);
-    ctx.fill(); ctx.stroke();
 
-    // Weapon color left bar
-    ctx.fillStyle = wColor;
-    ctx.fillRect(W - wpW - 12, H - wpH - this._s(36) + this._s(8), 3, wpH - this._s(16));
+    if (isMobile) {
+      // Compact badge below the district/street names panel (top-right)
+      const badgeW = this._s(140), badgeH = this._s(36);
+      const bx = W - badgeW - HUD_PAD;
+      const by = this._s(220); // below district HUD
+      ctx.fillStyle   = 'rgba(0,0,0,0.68)';
+      ctx.strokeStyle = `rgba(${this._rgb(wColor)},0.55)`;
+      ctx.lineWidth   = 1.5;
+      this._rr(ctx, bx, by, badgeW, badgeH, 6); ctx.fill(); ctx.stroke();
+      // Colored left bar
+      ctx.fillStyle = wColor;
+      ctx.fillRect(bx, by + this._s(6), 3, badgeH - this._s(12));
+      // Weapon name
+      ctx.font = `bold ${this._s(12)}px Orbitron, monospace`;
+      ctx.fillStyle = wColor; ctx.shadowColor = wColor; ctx.shadowBlur = 8;
+      ctx.textAlign = 'right';
+      ctx.fillText(w.name, W - HUD_PAD - 6, by + this._s(16));
+      ctx.shadowBlur = 0;
+      // DMG line
+      const dmg0 = w.damage > 0 ? w.damage : player.charData.damage;
+      ctx.font = `${this._s(9)}px Orbitron, monospace`;
+      ctx.fillStyle = 'rgba(255,255,255,0.38)';
+      ctx.fillText(`DMG ${Math.round(dmg0 * player.damageMult)}`, W - HUD_PAD - 6, by + this._s(28));
 
-    ctx.font = `bold ${this._s(13)}px Orbitron, monospace`;
-    ctx.fillStyle = wColor; ctx.shadowColor = wColor; ctx.shadowBlur = 10;
-    ctx.textAlign = 'right';
-    ctx.fillText(w.name, W - 16, H - this._s(63));
+      // Weapon cycle arrows (only when player owns multiple weapons)
+      const weaponCount = player.ownedWeapons ? player.ownedWeapons.size : 1;
+      const btnSz  = this._s(34);
+      const btnGap = this._s(6);
+      const arrowY = by + badgeH + this._s(7);
+      const nextX  = W - HUD_PAD - btnSz;
+      const prevX  = nextX - btnGap - btnSz;
+      this._mobileWeaponBtns = weaponCount > 1
+        ? { prev: { x: prevX, y: arrowY, w: btnSz, h: btnSz },
+            next: { x: nextX, y: arrowY, w: btnSz, h: btnSz } }
+        : null;
 
-    ctx.shadowBlur = 0;
-    ctx.font = `${this._s(10)}px Orbitron, monospace`; ctx.fillStyle = 'rgba(255,255,255,0.35)';
-    const dmg = w.damage > 0 ? w.damage : player.charData.damage;
-    const fr  = w.fireRate > 0 ? w.fireRate : player.charData.fireRate;
-    const eff = Math.round(dmg * player.damageMult);
-    ctx.fillText(`DMG ${eff}   RPM ${Math.round(60000/fr)}${w.bullets>1?`   ×${w.bullets}`:''}`, W - 16, H - this._s(47));
-
-    // Damage mult indicator
-    if (player.damageMult > 1) {
-      ctx.fillStyle = '#FF4455';
-      ctx.fillText(`×${player.damageMult.toFixed(2)} DMG`, W - 16, H - this._s(35));
+      if (weaponCount > 1) {
+        const _drawArrowBtn = (ax, label, hovered) => {
+          ctx.fillStyle   = hovered ? `rgba(${this._rgb(wColor)},0.28)` : 'rgba(0,0,0,0.60)';
+          ctx.strokeStyle = `rgba(${this._rgb(wColor)},0.55)`;
+          ctx.lineWidth   = 1.5;
+          this._rr(ctx, ax, arrowY, btnSz, btnSz, 8); ctx.fill(); ctx.stroke();
+          ctx.font      = `bold ${this._s(14)}px Orbitron, monospace`;
+          ctx.fillStyle = wColor; ctx.textAlign = 'center';
+          ctx.fillText(label, ax + btnSz / 2, arrowY + btnSz / 2 + this._s(5));
+        };
+        _drawArrowBtn(prevX, '◀', false);
+        _drawArrowBtn(nextX, '▶', false);
+      }
+    } else {
+      // Desktop: full panel at bottom-right
+      const wpW = this._s(188), wpH = this._s(52);
+      ctx.fillStyle   = 'rgba(0,0,0,0.65)';
+      ctx.strokeStyle = `rgba(${this._rgb(wColor)},0.3)`;
+      ctx.lineWidth   = 1;
+      this._rr(ctx, W - wpW - 12, H - wpH - this._s(36), wpW, wpH, 6);
+      ctx.fill(); ctx.stroke();
+      ctx.fillStyle = wColor;
+      ctx.fillRect(W - wpW - 12, H - wpH - this._s(36) + this._s(8), 3, wpH - this._s(16));
+      ctx.font = `bold ${this._s(13)}px Orbitron, monospace`;
+      ctx.fillStyle = wColor; ctx.shadowColor = wColor; ctx.shadowBlur = 10;
+      ctx.textAlign = 'right';
+      ctx.fillText(w.name, W - 16, H - this._s(63));
+      ctx.shadowBlur = 0;
+      ctx.font = `${this._s(10)}px Orbitron, monospace`; ctx.fillStyle = 'rgba(255,255,255,0.35)';
+      const dmg = w.damage > 0 ? w.damage : player.charData.damage;
+      const fr  = w.fireRate > 0 ? w.fireRate : player.charData.fireRate;
+      const eff = Math.round(dmg * player.damageMult);
+      ctx.fillText(`DMG ${eff}   RPM ${Math.round(60000/fr)}${w.bullets>1?`   ×${w.bullets}`:''}`, W - 16, H - this._s(47));
+      if (player.damageMult > 1) {
+        ctx.fillStyle = '#FF4455';
+        ctx.fillText(`×${player.damageMult.toFixed(2)} DMG`, W - 16, H - this._s(35));
+      }
     }
     ctx.restore();
   }
@@ -1254,7 +1304,8 @@ class HUD {
     ctx.restore();
   }
 
-  renderAchButton(panelOpen) {
+  renderAchButton(panelOpen, isMobile = false) {
+    if (isMobile) return;
     const ctx = this.ctx;
     const W   = this.canvas.width;
     const H   = this.canvas.height;
