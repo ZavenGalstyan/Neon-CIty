@@ -1,0 +1,3030 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DASH DREAD — Clans</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+  /* ═══════════════════════════════════════════════════════════════════
+     CLANS SYSTEM — NEXT-GEN IN-GAME UI
+     Real-Time Rendered Futuristic Game Engine Interface
+     Military Tactical • Holographic • Cinematic
+  ═══════════════════════════════════════════════════════════════════ */
+
+  :root {
+    /* Core palette */
+    --clan-cyan: #00F0FF;
+    --clan-magenta: #FF00AA;
+    --clan-gold: #FFD700;
+    --clan-purple: #AA66FF;
+    --clan-orange: #FF8844;
+    --clan-green: #44FF88;
+    --clan-pink: #FF4466;
+    --clan-red: #FF3355;
+    --clan-blue: #4488FF;
+
+    /* Surfaces */
+    --clan-bg: #030308;
+    --clan-surface: rgba(8,6,18,0.95);
+    --clan-glass: rgba(10,8,20,0.92);
+    --clan-glass-hover: rgba(18,14,32,0.95);
+    --clan-border: rgba(255,255,255,0.04);
+    --clan-border-active: rgba(0,240,255,0.3);
+
+    /* HUD colors */
+    --hud-line: rgba(0,240,255,0.15);
+    --hud-glow: rgba(0,240,255,0.08);
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════
+     GLOBAL ANIMATIONS
+  ═══════════════════════════════════════════════════════════════════ */
+
+  @keyframes holo-flicker {
+    0%, 100% { opacity: 1; }
+    92% { opacity: 1; }
+    93% { opacity: 0.7; }
+    94% { opacity: 1; }
+    96% { opacity: 0.85; }
+    97% { opacity: 1; }
+  }
+
+  @keyframes scan-line {
+    0% { transform: translateY(-100%); }
+    100% { transform: translateY(100vh); }
+  }
+
+  @keyframes data-stream {
+    0% { background-position: 0% 0%; }
+    100% { background-position: 0% 100%; }
+  }
+
+  @keyframes pulse-glow {
+    0%, 100% { opacity: 0.5; filter: blur(20px); }
+    50% { opacity: 0.8; filter: blur(30px); }
+  }
+
+  @keyframes energy-flow {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  @keyframes corner-pulse {
+    0%, 100% { opacity: 0.6; }
+    50% { opacity: 1; }
+  }
+
+  @keyframes emblem-rotate {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  @keyframes emblem-counter-rotate {
+    0% { transform: rotate(360deg); }
+    100% { transform: rotate(0deg); }
+  }
+
+  @keyframes particle-orbit {
+    0% { transform: rotate(0deg) translateX(40px) rotate(0deg); opacity: 0.8; }
+    50% { opacity: 0.3; }
+    100% { transform: rotate(360deg) translateX(40px) rotate(-360deg); opacity: 0.8; }
+  }
+
+  @keyframes text-glitch {
+    0%, 100% { transform: translate(0); filter: none; }
+    20% { transform: translate(-1px, 1px); filter: hue-rotate(90deg); }
+    40% { transform: translate(1px, -1px); filter: hue-rotate(-90deg); }
+    60% { transform: translate(-1px, -1px); }
+    80% { transform: translate(1px, 1px); }
+  }
+
+  @keyframes transmission-static {
+    0%, 100% { opacity: 0; }
+    10% { opacity: 0.03; }
+    20% { opacity: 0; }
+    30% { opacity: 0.02; }
+    50% { opacity: 0; }
+    70% { opacity: 0.04; }
+    90% { opacity: 0; }
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════
+     PAGE BASE — GAME ENGINE RENDERED
+  ═══════════════════════════════════════════════════════════════════ */
+
+  .clan-page {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    background:
+      radial-gradient(ellipse 120% 80% at 50% -20%, rgba(0,240,255,0.03) 0%, transparent 50%),
+      radial-gradient(ellipse 100% 60% at 80% 100%, rgba(255,0,170,0.04) 0%, transparent 40%),
+      linear-gradient(180deg, #020206 0%, #080612 30%, #0a0818 60%, #06040f 100%);
+    overflow: hidden;
+    z-index: 9999;
+  }
+
+  /* Holographic grid with perspective */
+  .clan-page::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,240,255,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,240,255,0.025) 1px, transparent 1px),
+      linear-gradient(rgba(255,0,170,0.012) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,0,170,0.012) 1px, transparent 1px);
+    background-size: 100px 100px, 100px 100px, 50px 50px, 50px 50px;
+    animation: grid-drift 80s linear infinite;
+    mask-image: linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.3) 20%, rgba(0,0,0,0.5) 50%, rgba(0,0,0,0.3) 80%, transparent 100%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Scan line overlay */
+  .clan-page::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.03) 2px,
+      rgba(0,0,0,0.03) 4px
+    );
+    pointer-events: none;
+    z-index: 9998;
+    animation: transmission-static 8s linear infinite;
+  }
+
+  @keyframes grid-drift {
+    0% { transform: translate(0, 0); }
+    100% { transform: translate(100px, 100px); }
+  }
+
+  /* Moving scan beam */
+  .clan-scan-beam {
+    position: fixed;
+    left: 0; right: 0;
+    height: 100px;
+    background: linear-gradient(180deg,
+      transparent 0%,
+      rgba(0,240,255,0.03) 40%,
+      rgba(0,240,255,0.06) 50%,
+      rgba(0,240,255,0.03) 60%,
+      transparent 100%);
+    pointer-events: none;
+    z-index: 2;
+    animation: scan-line 8s linear infinite;
+  }
+
+  /* Ambient orbs with pulse */
+  .clan-orb {
+    position: fixed;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .clan-orb--1 {
+    width: 700px; height: 700px;
+    top: -250px; left: -200px;
+    background: radial-gradient(circle, rgba(255,0,170,0.08) 0%, transparent 60%);
+    filter: blur(80px);
+    animation: pulse-glow 12s ease-in-out infinite, orb-float 30s ease-in-out infinite alternate;
+  }
+  .clan-orb--2 {
+    width: 600px; height: 600px;
+    bottom: -200px; right: -150px;
+    background: radial-gradient(circle, rgba(0,240,255,0.06) 0%, transparent 60%);
+    filter: blur(80px);
+    animation: pulse-glow 15s ease-in-out infinite 3s, orb-float 35s ease-in-out infinite alternate-reverse;
+  }
+  .clan-orb--3 {
+    width: 400px; height: 400px;
+    top: 40%; left: 50%;
+    transform: translate(-50%, -50%);
+    background: radial-gradient(circle, rgba(170,100,255,0.04) 0%, transparent 60%);
+    filter: blur(60px);
+    animation: pulse-glow 10s ease-in-out infinite 1.5s;
+  }
+  @keyframes orb-float {
+    0% { transform: translate(0, 0) scale(1); }
+    100% { transform: translate(60px, 40px) scale(1.15); }
+  }
+
+  /* Energy particles */
+  .clan-particles {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1;
+    overflow: hidden;
+  }
+  .clan-particle {
+    position: absolute;
+    width: 2px;
+    height: 2px;
+    border-radius: 50%;
+    opacity: 0;
+    animation: particle-rise 25s linear infinite;
+  }
+  .clan-particle:nth-child(1) { left: 10%; background: var(--clan-cyan); box-shadow: 0 0 8px var(--clan-cyan); animation-delay: 0s; animation-duration: 22s; }
+  .clan-particle:nth-child(2) { left: 25%; background: var(--clan-magenta); box-shadow: 0 0 8px var(--clan-magenta); animation-delay: 3s; animation-duration: 28s; }
+  .clan-particle:nth-child(3) { left: 45%; background: var(--clan-gold); box-shadow: 0 0 8px var(--clan-gold); animation-delay: 7s; animation-duration: 24s; }
+  .clan-particle:nth-child(4) { left: 65%; background: var(--clan-purple); box-shadow: 0 0 8px var(--clan-purple); animation-delay: 2s; animation-duration: 26s; }
+  .clan-particle:nth-child(5) { left: 80%; background: var(--clan-cyan); box-shadow: 0 0 8px var(--clan-cyan); animation-delay: 5s; animation-duration: 20s; }
+  .clan-particle:nth-child(6) { left: 92%; background: var(--clan-green); box-shadow: 0 0 8px var(--clan-green); animation-delay: 9s; animation-duration: 30s; }
+
+  @keyframes particle-rise {
+    0% { transform: translateY(100vh) scale(0); opacity: 0; }
+    5% { opacity: 0.9; transform: translateY(90vh) scale(1); }
+    50% { opacity: 0.5; }
+    95% { opacity: 0.3; }
+    100% { transform: translateY(-5vh) scale(0.2); opacity: 0; }
+  }
+
+  /* Data stream lines */
+  .clan-data-streams {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1;
+    overflow: hidden;
+  }
+  .clan-data-stream {
+    position: absolute;
+    width: 1px;
+    height: 100%;
+    background: linear-gradient(180deg,
+      transparent 0%,
+      rgba(0,240,255,0.3) 10%,
+      transparent 20%,
+      transparent 100%
+    );
+    background-size: 1px 200px;
+    animation: data-stream 4s linear infinite;
+  }
+  .clan-data-stream:nth-child(1) { left: 5%; animation-delay: 0s; opacity: 0.3; }
+  .clan-data-stream:nth-child(2) { left: 15%; animation-delay: 1.2s; opacity: 0.2; }
+  .clan-data-stream:nth-child(3) { left: 85%; animation-delay: 0.6s; opacity: 0.25; }
+  .clan-data-stream:nth-child(4) { left: 95%; animation-delay: 1.8s; opacity: 0.15; }
+
+  /* ═══════════════════════════════════════════════════════════════════
+     CINEMATIC HEADER — TACTICAL HUD STYLE
+  ═══════════════════════════════════════════════════════════════════ */
+
+  .clan-header {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    padding: 18px 32px;
+    background:
+      linear-gradient(135deg, rgba(0,240,255,0.02) 0%, transparent 50%),
+      linear-gradient(180deg, rgba(12,10,22,0.98) 0%, rgba(8,6,16,0.95) 100%);
+    border-bottom: 1px solid rgba(0,240,255,0.1);
+    z-index: 100;
+    clip-path: polygon(0 0, 100% 0, 100% calc(100% - 8px), calc(100% - 120px) 100%, 0 100%);
+  }
+
+  /* Diagonal accent cut */
+  .clan-header::before {
+    content: '';
+    position: absolute;
+    bottom: 0; right: 0;
+    width: 120px; height: 100%;
+    background: linear-gradient(135deg, transparent 50%, rgba(0,240,255,0.03) 50%);
+    pointer-events: none;
+  }
+
+  /* Animated energy line */
+  .clan-header::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg,
+      transparent 0%,
+      var(--clan-cyan) 15%,
+      var(--clan-magenta) 35%,
+      var(--clan-gold) 50%,
+      var(--clan-cyan) 65%,
+      var(--clan-purple) 85%,
+      transparent 100%);
+    background-size: 300% 100%;
+    animation: energy-flow 8s linear infinite;
+  }
+
+  /* HUD corner brackets */
+  .clan-header-corner {
+    position: absolute;
+    width: 20px; height: 20px;
+    pointer-events: none;
+  }
+  .clan-header-corner--tl { top: 8px; left: 8px; border-top: 2px solid rgba(0,240,255,0.4); border-left: 2px solid rgba(0,240,255,0.4); }
+  .clan-header-corner--tr { top: 8px; right: 130px; border-top: 2px solid rgba(0,240,255,0.4); border-right: 2px solid rgba(0,240,255,0.4); }
+  .clan-header-corner--bl { bottom: 8px; left: 8px; border-bottom: 2px solid rgba(0,240,255,0.4); border-left: 2px solid rgba(0,240,255,0.4); }
+
+  /* HOLOGRAPHIC EMBLEM — LAYERED PROJECTION */
+  .clan-header__emblem-wrap {
+    position: relative;
+    width: 70px; height: 70px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Outer rotating ring */
+  .clan-header__emblem-ring {
+    position: absolute;
+    inset: -8px;
+    border: 2px dashed rgba(255,215,0,0.3);
+    border-radius: 50%;
+    animation: emblem-rotate 20s linear infinite;
+  }
+
+  /* Second ring - counter rotate */
+  .clan-header__emblem-ring2 {
+    position: absolute;
+    inset: -4px;
+    border: 1px solid rgba(0,240,255,0.2);
+    border-radius: 50%;
+    animation: emblem-counter-rotate 15s linear infinite;
+  }
+
+  /* Core emblem */
+  .clan-header__emblem {
+    position: relative;
+    width: 56px; height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background:
+      radial-gradient(circle at 30% 30%, rgba(255,215,0,0.3) 0%, transparent 50%),
+      linear-gradient(135deg, rgba(255,215,0,0.2) 0%, rgba(255,180,50,0.05) 100%);
+    border: 2px solid rgba(255,215,0,0.6);
+    border-radius: 16px;
+    font-size: 30px;
+    color: var(--clan-gold);
+    box-shadow:
+      0 0 40px rgba(255,215,0,0.3),
+      inset 0 0 20px rgba(255,215,0,0.1);
+    animation: holo-flicker 4s linear infinite;
+    z-index: 2;
+  }
+
+  /* Emblem holographic shimmer */
+  .clan-header__emblem::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.2) 50%, transparent 60%);
+    animation: emblem-shine 3s ease-in-out infinite;
+  }
+  @keyframes emblem-shine {
+    0%, 100% { opacity: 0; transform: translateX(-100%) rotate(45deg); }
+    50% { opacity: 1; transform: translateX(100%) rotate(45deg); }
+  }
+
+  /* Floating particles around emblem */
+  .clan-header__emblem-particle {
+    position: absolute;
+    width: 4px; height: 4px;
+    background: var(--clan-gold);
+    border-radius: 50%;
+    box-shadow: 0 0 8px var(--clan-gold);
+    animation: particle-orbit 6s linear infinite;
+  }
+  .clan-header__emblem-particle:nth-child(2) { animation-delay: -2s; width: 3px; height: 3px; }
+  .clan-header__emblem-particle:nth-child(3) { animation-delay: -4s; width: 2px; height: 2px; }
+
+  .clan-header__info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .clan-header__title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 26px;
+    font-weight: 900;
+    letter-spacing: 0.25em;
+    background: linear-gradient(90deg, #fff 0%, var(--clan-cyan) 30%, var(--clan-gold) 60%, var(--clan-magenta) 100%);
+    background-size: 300% 100%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    filter: drop-shadow(0 0 25px rgba(0,240,255,0.4));
+    animation: title-shimmer 8s linear infinite;
+    text-transform: uppercase;
+  }
+  @keyframes title-shimmer {
+    0% { background-position: 0% 50%; }
+    100% { background-position: 300% 50%; }
+  }
+
+  .clan-header__tag {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.4);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+
+  .clan-header__tag-badge {
+    position: relative;
+    padding: 4px 14px;
+    background: linear-gradient(135deg, rgba(255,215,0,0.15) 0%, rgba(255,215,0,0.05) 100%);
+    border: 1px solid rgba(255,215,0,0.4);
+    font-family: 'Orbitron', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--clan-gold);
+    letter-spacing: 0.1em;
+    clip-path: polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%);
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════
+     CLOSE BUTTON - TOP RIGHT CORNER
+  ═══════════════════════════════════════════════════════════════════ */
+
+  .clan-close-btn {
+    position: absolute !important;
+    top: 18px !important;
+    right: 20px !important;
+    left: auto !important;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(12, 10, 24, 0.95);
+    border: 1px solid rgba(170, 102, 255, 0.45);
+    border-radius: 8px;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 15px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    z-index: 99999 !important;
+  }
+
+  .clan-close-btn:hover {
+    border-color: rgba(170, 102, 255, 0.8);
+    color: #AA66FF;
+    background: rgba(20, 16, 36, 1);
+    box-shadow: 0 0 15px rgba(170, 102, 255, 0.3);
+  }
+
+  .clan-close-btn:active {
+    transform: scale(0.95);
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════
+     MAIN LAYOUT
+  ═══════════════════════════════════════════════════════════════════ */
+
+  .clan-body {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+    position: relative;
+    z-index: 10;
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════
+     SIDEBAR NAVIGATION — MILITARY TACTICAL
+  ═══════════════════════════════════════════════════════════════════ */
+
+  .clan-sidebar {
+    position: relative;
+    width: 240px;
+    display: flex;
+    flex-direction: column;
+    padding: 28px 18px;
+    background:
+      linear-gradient(135deg, rgba(0,240,255,0.015) 0%, transparent 50%),
+      linear-gradient(180deg, rgba(10,8,20,0.98) 0%, rgba(6,4,14,0.98) 100%);
+    border-right: 1px solid rgba(0,240,255,0.08);
+    flex-shrink: 0;
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, 0 calc(100% - 40px), 15px calc(100% - 55px), 15px 0);
+  }
+
+  /* Sidebar energy line */
+  .clan-sidebar::before {
+    content: '';
+    position: absolute;
+    top: 0; right: 0;
+    width: 1px; height: 100%;
+    background: linear-gradient(180deg,
+      var(--clan-cyan) 0%,
+      rgba(0,240,255,0.3) 30%,
+      rgba(0,240,255,0.1) 70%,
+      transparent 100%);
+  }
+
+  /* HUD decoration */
+  .clan-sidebar::after {
+    content: 'NAVIGATION';
+    position: absolute;
+    top: 12px; left: 18px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 8px;
+    font-weight: 700;
+    letter-spacing: 0.3em;
+    color: rgba(0,240,255,0.3);
+    text-transform: uppercase;
+  }
+
+  .clan-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 20px;
+  }
+
+  .clan-nav__item {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 16px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.03);
+    font-family: 'Orbitron', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    color: rgba(255,255,255,0.45);
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+    text-transform: uppercase;
+    clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px));
+  }
+
+  /* Angular corner accents */
+  .clan-nav__item::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 20px; height: 20px;
+    border-top: 1px solid var(--nav-color, rgba(255,255,255,0.1));
+    border-left: 1px solid var(--nav-color, rgba(255,255,255,0.1));
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .clan-nav__item::after {
+    content: '';
+    position: absolute;
+    bottom: 0; right: 0;
+    width: 20px; height: 20px;
+    border-bottom: 1px solid var(--nav-color, rgba(255,255,255,0.1));
+    border-right: 1px solid var(--nav-color, rgba(255,255,255,0.1));
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  /* Active indicator bar */
+  .clan-nav__indicator {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: var(--nav-color, var(--clan-cyan));
+    transform: scaleY(0);
+    transition: transform 0.3s ease;
+    box-shadow: 0 0 10px var(--nav-color, var(--clan-cyan));
+  }
+
+  .clan-nav__icon {
+    font-size: 18px;
+    opacity: 0.6;
+    transition: all 0.3s ease;
+    filter: drop-shadow(0 0 0 transparent);
+  }
+
+  .clan-nav__item:hover {
+    background: rgba(255,255,255,0.04);
+    border-color: rgba(255,255,255,0.08);
+    color: rgba(255,255,255,0.8);
+  }
+  .clan-nav__item:hover::before,
+  .clan-nav__item:hover::after { opacity: 0.5; }
+  .clan-nav__item:hover .clan-nav__icon {
+    opacity: 1;
+    filter: drop-shadow(0 0 10px var(--nav-color, var(--clan-magenta)));
+  }
+
+  .clan-nav__item.active {
+    background: linear-gradient(135deg, rgba(0,240,255,0.08) 0%, rgba(0,240,255,0.02) 100%);
+    border-color: rgba(0,240,255,0.25);
+    color: #fff;
+    box-shadow:
+      0 0 30px rgba(0,240,255,0.08),
+      inset 0 0 20px rgba(0,240,255,0.03);
+  }
+
+  .clan-nav__item.active::before,
+  .clan-nav__item.active::after { opacity: 1; border-color: var(--nav-color, var(--clan-cyan)); }
+  .clan-nav__item.active .clan-nav__indicator { transform: scaleY(1); }
+  .clan-nav__item.active .clan-nav__icon {
+    opacity: 1;
+    color: var(--nav-color, var(--clan-cyan));
+    filter: drop-shadow(0 0 12px var(--nav-color, var(--clan-cyan)));
+    animation: holo-flicker 3s linear infinite;
+  }
+
+  /* Nav item color variants */
+  .clan-nav__item[data-view="myclan"] { --nav-color: var(--clan-cyan); }
+  .clan-nav__item[data-view="myclan"].active {
+    background: linear-gradient(135deg, rgba(0,240,255,0.1) 0%, rgba(0,240,255,0.02) 100%);
+    border-color: rgba(0,240,255,0.3);
+  }
+
+  .clan-nav__item[data-view="chat"] { --nav-color: var(--clan-magenta); }
+  .clan-nav__item[data-view="chat"].active {
+    background: linear-gradient(135deg, rgba(255,0,170,0.1) 0%, rgba(255,0,170,0.02) 100%);
+    border-color: rgba(255,0,170,0.3);
+  }
+
+  .clan-nav__item[data-view="browse"] { --nav-color: var(--clan-purple); }
+  .clan-nav__item[data-view="browse"].active {
+    background: linear-gradient(135deg, rgba(170,100,255,0.1) 0%, rgba(170,100,255,0.02) 100%);
+    border-color: rgba(170,100,255,0.3);
+  }
+
+  /* Sidebar divider */
+  .clan-sidebar__divider {
+    position: relative;
+    margin: 24px 0;
+    height: 1px;
+    background: linear-gradient(90deg, var(--clan-cyan) 0%, rgba(0,240,255,0.2) 50%, transparent 100%);
+  }
+  .clan-sidebar__divider::before {
+    content: '◆';
+    position: absolute;
+    left: 0; top: 50%;
+    transform: translateY(-50%);
+    font-size: 6px;
+    color: var(--clan-cyan);
+    text-shadow: 0 0 8px var(--clan-cyan);
+  }
+
+  /* Sidebar footer */
+  .clan-sidebar__footer {
+    margin-top: auto;
+    padding-top: 20px;
+  }
+
+  .clan-sidebar__status {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    background: linear-gradient(135deg, rgba(68,255,136,0.06) 0%, rgba(68,255,136,0.02) 100%);
+    border: 1px solid rgba(68,255,136,0.2);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    color: var(--clan-green);
+    text-transform: uppercase;
+    clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px));
+  }
+
+  .clan-sidebar__status::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(68,255,136,0.1), transparent);
+    animation: scan-shimmer 3s ease-in-out infinite;
+  }
+  @keyframes scan-shimmer {
+    0%, 100% { transform: translateX(-100%); }
+    50% { transform: translateX(100%); }
+  }
+
+  .clan-sidebar__status-dot {
+    position: relative;
+    width: 10px; height: 10px;
+    background: var(--clan-green);
+    border-radius: 50%;
+    box-shadow: 0 0 15px var(--clan-green), 0 0 30px rgba(68,255,136,0.3);
+    animation: status-pulse 1.5s ease-in-out infinite;
+  }
+  .clan-sidebar__status-dot::after {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border: 1px solid rgba(68,255,136,0.4);
+    border-radius: 50%;
+    animation: status-ring 1.5s ease-in-out infinite;
+  }
+  @keyframes status-pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.6; transform: scale(0.85); }
+  }
+  @keyframes status-ring {
+    0%, 100% { transform: scale(1); opacity: 0.6; }
+    50% { transform: scale(1.3); opacity: 0; }
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════
+     MAIN CONTENT AREA
+  ═══════════════════════════════════════════════════════════════════ */
+
+  .clan-content {
+    position: relative;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 24px 28px;
+    overflow: hidden;
+  }
+
+  /* Subtle background decorations - Cyberpunk geometric patterns */
+  .clan-content::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      /* Crosshair/target elements */
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Ccircle cx='60' cy='60' r='20' fill='none' stroke='%23AA66FF' stroke-width='0.5' opacity='0.04'/%3E%3Cline x1='60' y1='30' x2='60' y2='45' stroke='%23AA66FF' stroke-width='0.5' opacity='0.03'/%3E%3Cline x1='60' y1='75' x2='60' y2='90' stroke='%23AA66FF' stroke-width='0.5' opacity='0.03'/%3E%3Cline x1='30' y1='60' x2='45' y2='60' stroke='%23AA66FF' stroke-width='0.5' opacity='0.03'/%3E%3Cline x1='75' y1='60' x2='90' y2='60' stroke='%23AA66FF' stroke-width='0.5' opacity='0.03'/%3E%3C/svg%3E"),
+      /* Sharp angular shapes */
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 200 200'%3E%3Cpath d='M10 100 L50 80 L50 120 Z' fill='none' stroke='%2300F0FF' stroke-width='0.4' opacity='0.025'/%3E%3Cpath d='M190 100 L150 80 L150 120 Z' fill='none' stroke='%2300F0FF' stroke-width='0.4' opacity='0.025'/%3E%3Cpath d='M100 10 L80 50 L120 50 Z' fill='none' stroke='%23FF00AA' stroke-width='0.4' opacity='0.02'/%3E%3C/svg%3E"),
+      /* Diagonal cyber lines */
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300' viewBox='0 0 300 300'%3E%3Cline x1='0' y1='0' x2='100' y2='100' stroke='%23AA66FF' stroke-width='0.3' opacity='0.025'/%3E%3Cline x1='200' y1='0' x2='300' y2='100' stroke='%2300F0FF' stroke-width='0.3' opacity='0.02'/%3E%3Cline x1='0' y1='200' x2='100' y2='300' stroke='%23FF00AA' stroke-width='0.3' opacity='0.02'/%3E%3Crect x='130' y='130' width='40' height='40' fill='none' stroke='%23AA66FF' stroke-width='0.3' opacity='0.02' transform='rotate(45 150 150)'/%3E%3C/svg%3E"),
+      /* Hexagonal grid pattern */
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='52' viewBox='0 0 60 52'%3E%3Cpath d='M30 0 L60 15 L60 37 L30 52 L0 37 L0 15 Z' fill='none' stroke='%23AA66FF' stroke-width='0.2' opacity='0.018'/%3E%3C/svg%3E");
+    background-position: 0 0, 100px 50px, 0 0, 0 0;
+    background-size: 240px 240px, 400px 400px, 600px 600px, 120px 104px;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.9;
+  }
+
+  /* Additional floating geometric accents */
+  .clan-content::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      /* Weapon silhouette hints - abstract blade shapes */
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400' viewBox='0 0 400 400'%3E%3Cpath d='M50 200 L100 195 L200 190 L180 200 L200 210 L100 205 Z' fill='none' stroke='%2300F0FF' stroke-width='0.3' opacity='0.02'/%3E%3Cpath d='M350 180 L300 185 L280 195 L290 200 L280 205 L300 215 L350 220' fill='none' stroke='%23FF00AA' stroke-width='0.3' opacity='0.018'/%3E%3Ccircle cx='200' cy='350' r='30' fill='none' stroke='%23AA66FF' stroke-width='0.3' opacity='0.015'/%3E%3Ccircle cx='200' cy='350' r='20' fill='none' stroke='%23AA66FF' stroke-width='0.2' opacity='0.012'/%3E%3C/svg%3E"),
+      /* Sharp angular brackets */
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='500' height='500' viewBox='0 0 500 500'%3E%3Cpath d='M20 20 L60 20 L60 30 L30 30 L30 60 L20 60 Z' fill='none' stroke='%2300F0FF' stroke-width='0.4' opacity='0.025'/%3E%3Cpath d='M480 20 L440 20 L440 30 L470 30 L470 60 L480 60 Z' fill='none' stroke='%2300F0FF' stroke-width='0.4' opacity='0.025'/%3E%3Cpath d='M20 480 L60 480 L60 470 L30 470 L30 440 L20 440 Z' fill='none' stroke='%23AA66FF' stroke-width='0.4' opacity='0.02'/%3E%3Cpath d='M480 480 L440 480 L440 470 L470 470 L470 440 L480 440 Z' fill='none' stroke='%23AA66FF' stroke-width='0.4' opacity='0.02'/%3E%3C/svg%3E");
+    background-position: 50px 50px, 0 0;
+    background-size: 800px 800px, 1000px 1000px;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.85;
+  }
+
+  .clan-view {
+    display: none;
+    flex: 1;
+    flex-direction: column;
+    animation: view-fade-in 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    z-index: 1;
+  }
+  .clan-view.active { display: flex; }
+
+  @keyframes view-fade-in {
+    from { opacity: 0; transform: translateY(15px) scale(0.98); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════
+     MY CLAN VIEW — TACTICAL COMMAND CENTER
+  ═══════════════════════════════════════════════════════════════════ */
+
+  .myclan {
+    display: flex;
+    gap: 24px;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  /* Clan Profile Panel — Angular Design */
+  .myclan__profile {
+    position: relative;
+    width: 380px;
+    display: flex;
+    flex-direction: column;
+    background:
+      linear-gradient(135deg, rgba(255,215,0,0.02) 0%, transparent 30%),
+      var(--clan-glass);
+    border: 1px solid rgba(255,215,0,0.15);
+    overflow: hidden;
+    flex-shrink: 0;
+    clip-path: polygon(0 0, calc(100% - 30px) 0, 100% 30px, 100% 100%, 30px 100%, 0 calc(100% - 30px));
+  }
+
+  /* Corner decorations */
+  .myclan__profile::before {
+    content: '';
+    position: absolute;
+    top: 0; right: 0;
+    width: 60px; height: 60px;
+    background: linear-gradient(135deg, transparent 50%, rgba(255,215,0,0.1) 50%);
+    pointer-events: none;
+    z-index: 5;
+  }
+  .myclan__profile::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0;
+    width: 60px; height: 60px;
+    background: linear-gradient(-45deg, transparent 50%, rgba(255,215,0,0.1) 50%);
+    pointer-events: none;
+    z-index: 5;
+  }
+
+  /* Clan Banner with scan effect */
+  .myclan__banner {
+    position: relative;
+    height: 150px;
+    background:
+      linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.5) 100%),
+      linear-gradient(135deg, rgba(255,68,102,0.25) 0%, rgba(170,100,255,0.2) 50%, rgba(0,240,255,0.15) 100%);
+    overflow: hidden;
+  }
+
+  .myclan__banner::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,0.1) 3px, rgba(0,0,0,0.1) 4px),
+      url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  }
+
+  /* Scan sweep effect */
+  .myclan__banner-scan {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, transparent 0%, rgba(255,215,0,0.1) 50%, transparent 100%);
+    animation: banner-scan 4s ease-in-out infinite;
+  }
+  @keyframes banner-scan {
+    0%, 100% { transform: translateY(-100%); opacity: 0; }
+    50% { transform: translateY(100%); opacity: 1; }
+  }
+
+  /* Ambient lighting effect */
+  .myclan__banner::after {
+    content: '';
+    position: absolute;
+    bottom: -60%; left: 50%;
+    transform: translateX(-50%);
+    width: 250%;
+    height: 120%;
+    background: radial-gradient(ellipse at center, rgba(255,215,0,0.2) 0%, transparent 50%);
+    pointer-events: none;
+  }
+
+  /* HOLOGRAPHIC CLAN EMBLEM */
+  .myclan__emblem-container {
+    position: absolute;
+    bottom: -50px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 110px; height: 110px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+  }
+
+  /* Outer rotating hexagon */
+  .myclan__emblem-hex {
+    position: absolute;
+    inset: 0;
+    border: 2px dashed rgba(255,215,0,0.25);
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+    animation: emblem-rotate 25s linear infinite;
+  }
+
+  /* Energy ring */
+  .myclan__emblem-ring {
+    position: absolute;
+    inset: 8px;
+    border: 1px solid rgba(0,240,255,0.3);
+    border-radius: 50%;
+    animation: emblem-counter-rotate 18s linear infinite;
+  }
+
+  /* Core emblem */
+  .myclan__emblem {
+    position: relative;
+    width: 80px; height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background:
+      radial-gradient(circle at 30% 30%, rgba(255,215,0,0.4) 0%, transparent 50%),
+      linear-gradient(135deg, rgba(20,15,35,0.98) 0%, rgba(12,10,25,0.98) 100%);
+    border: 3px solid rgba(255,215,0,0.6);
+    font-size: 40px;
+    color: var(--clan-gold);
+    box-shadow:
+      0 0 60px rgba(255,215,0,0.3),
+      0 0 100px rgba(255,215,0,0.1),
+      inset 0 0 30px rgba(255,215,0,0.15);
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+    animation: holo-flicker 5s linear infinite;
+  }
+
+  /* Holographic shimmer */
+  .myclan__emblem::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, transparent 30%, rgba(255,255,255,0.3) 50%, transparent 70%);
+    animation: emblem-shine 4s ease-in-out infinite;
+  }
+
+  .myclan__profile-body {
+    padding: 65px 24px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    flex: 1;
+  }
+
+  .myclan__name {
+    text-align: center;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 22px;
+    font-weight: 900;
+    letter-spacing: 0.12em;
+    color: #fff;
+    text-shadow: 0 0 30px rgba(255,255,255,0.3);
+    animation: text-glitch 10s linear infinite;
+  }
+
+  .myclan__tag-display {
+    text-align: center;
+    padding: 6px 18px;
+    background: linear-gradient(135deg, rgba(255,215,0,0.12) 0%, rgba(255,215,0,0.04) 100%);
+    border: 1px solid rgba(255,215,0,0.35);
+    font-family: 'Orbitron', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--clan-gold);
+    letter-spacing: 0.18em;
+    align-self: center;
+    clip-path: polygon(10px 0, calc(100% - 10px) 0, 100% 50%, calc(100% - 10px) 100%, 10px 100%, 0 50%);
+  }
+
+  .myclan__desc {
+    text-align: center;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 13px;
+    line-height: 1.7;
+    color: rgba(255,255,255,0.4);
+    padding: 0 12px;
+  }
+
+  /* Stats grid — Tactical readout */
+  .myclan__stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-top: 8px;
+  }
+
+  .myclan__stat {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 16px 12px;
+    background: rgba(0,240,255,0.03);
+    border: 1px solid rgba(0,240,255,0.1);
+    transition: all 0.3s ease;
+    overflow: hidden;
+    clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));
+  }
+
+  .myclan__stat::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--clan-cyan), transparent);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .myclan__stat:hover {
+    background: rgba(0,240,255,0.06);
+    border-color: rgba(0,240,255,0.2);
+    box-shadow: 0 0 25px rgba(0,240,255,0.1);
+  }
+  .myclan__stat:hover::before { opacity: 1; }
+
+  .myclan__stat-value {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 20px;
+    font-weight: 900;
+    color: var(--clan-cyan);
+    text-shadow: 0 0 20px rgba(0,240,255,0.5);
+    animation: holo-flicker 4s linear infinite;
+  }
+
+  .myclan__stat-label {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    color: rgba(255,255,255,0.35);
+    text-transform: uppercase;
+  }
+
+  /* Leader display — Command card */
+  .myclan__leader {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 18px;
+    background: linear-gradient(135deg, rgba(255,215,0,0.08) 0%, rgba(255,215,0,0.02) 100%);
+    border: 1px solid rgba(255,215,0,0.25);
+    margin-top: auto;
+    clip-path: polygon(0 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%);
+    overflow: hidden;
+  }
+
+  .myclan__leader::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: var(--clan-gold);
+    box-shadow: 0 0 15px var(--clan-gold);
+  }
+
+  .myclan__leader-avatar {
+    position: relative;
+    width: 46px; height: 46px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255,215,0,0.15);
+    border: 2px solid rgba(255,215,0,0.5);
+    font-family: 'Orbitron', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--clan-gold);
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  }
+
+  .myclan__leader-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .myclan__leader-role {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 8px;
+    font-weight: 700;
+    letter-spacing: 0.25em;
+    color: var(--clan-gold);
+    text-transform: uppercase;
+    text-shadow: 0 0 10px rgba(255,215,0,0.4);
+  }
+
+  .myclan__leader-name {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: #fff;
+  }
+
+  /* Members Panel — Tactical Roster */
+  .myclan__members {
+    position: relative;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background:
+      linear-gradient(135deg, rgba(0,240,255,0.02) 0%, transparent 30%),
+      var(--clan-glass);
+    border: 1px solid rgba(0,240,255,0.12);
+    overflow: hidden;
+    clip-path: polygon(30px 0, 100% 0, 100% calc(100% - 30px), calc(100% - 30px) 100%, 0 100%, 0 30px);
+  }
+
+  /* Corner decorations */
+  .myclan__members::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 60px; height: 60px;
+    background: linear-gradient(135deg, rgba(0,240,255,0.08) 50%, transparent 50%);
+    pointer-events: none;
+    z-index: 5;
+  }
+  .myclan__members::after {
+    content: '';
+    position: absolute;
+    bottom: 0; right: 0;
+    width: 60px; height: 60px;
+    background: linear-gradient(-45deg, rgba(0,240,255,0.08) 50%, transparent 50%);
+    pointer-events: none;
+    z-index: 5;
+  }
+
+  .myclan__members-header {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 24px;
+    border-bottom: 1px solid rgba(0,240,255,0.1);
+    background: rgba(0,240,255,0.02);
+  }
+
+  .myclan__members-header::before {
+    content: 'ROSTER';
+    position: absolute;
+    top: 8px; right: 24px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 7px;
+    font-weight: 700;
+    letter-spacing: 0.3em;
+    color: rgba(0,240,255,0.3);
+  }
+
+  .myclan__members-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    color: #fff;
+    text-transform: uppercase;
+  }
+
+  .myclan__members-count {
+    padding: 5px 14px;
+    background: linear-gradient(135deg, rgba(0,240,255,0.12) 0%, rgba(0,240,255,0.04) 100%);
+    border: 1px solid rgba(0,240,255,0.3);
+    font-family: 'Orbitron', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--clan-cyan);
+    clip-path: polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%);
+  }
+
+  /* Invite input — Tactical */
+  .myclan__invite {
+    display: flex;
+    gap: 10px;
+    padding: 14px 20px;
+    border-bottom: 1px solid rgba(0,240,255,0.08);
+    background: rgba(0,0,0,0.2);
+  }
+
+  .myclan__invite-input {
+    flex: 1;
+    padding: 12px 16px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.06);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: #fff;
+    outline: none;
+    transition: all 0.3s ease;
+    clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));
+  }
+  .myclan__invite-input::placeholder {
+    color: rgba(255,255,255,0.25);
+    letter-spacing: 0.05em;
+  }
+  .myclan__invite-input:focus {
+    background: rgba(68,255,136,0.04);
+    border-color: rgba(68,255,136,0.35);
+    box-shadow: 0 0 25px rgba(68,255,136,0.1), inset 0 0 15px rgba(68,255,136,0.03);
+  }
+
+  /* Premium tactical button */
+  .myclan__invite-btn {
+    position: relative;
+    padding: 12px 22px;
+    background: linear-gradient(135deg, rgba(68,255,136,0.15) 0%, rgba(68,255,136,0.05) 100%);
+    border: 1px solid rgba(68,255,136,0.4);
+    font-family: 'Orbitron', sans-serif;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    color: var(--clan-green);
+    cursor: pointer;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    white-space: nowrap;
+    clip-path: polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%);
+  }
+
+  /* Metallic shine sweep */
+  .myclan__invite-btn::before {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%;
+    width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.5s ease;
+  }
+
+  /* Edge glow */
+  .myclan__invite-btn::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, transparent 40%, rgba(68,255,136,0.2) 50%, transparent 60%);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .myclan__invite-btn:hover {
+    background: linear-gradient(135deg, rgba(68,255,136,0.25) 0%, rgba(68,255,136,0.1) 100%);
+    border-color: rgba(68,255,136,0.7);
+    box-shadow: 0 0 35px rgba(68,255,136,0.25), inset 0 0 20px rgba(68,255,136,0.08);
+    text-shadow: 0 0 10px var(--clan-green);
+  }
+  .myclan__invite-btn:hover::before { left: 100%; }
+  .myclan__invite-btn:hover::after { opacity: 1; }
+
+  /* Members list with scan lines */
+  .myclan__members-list {
+    position: relative;
+    flex: 1;
+    overflow-y: auto;
+    padding: 14px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  /* Subtle scan line overlay */
+  .myclan__members-list::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 3px,
+      rgba(0,0,0,0.05) 3px,
+      rgba(0,0,0,0.05) 4px
+    );
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .myclan__member {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 14px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.04);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px));
+  }
+
+  .myclan__member::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 2px;
+    background: transparent;
+    transition: background 0.3s;
+  }
+
+  .myclan__member:hover {
+    background: rgba(0,240,255,0.04);
+    border-color: rgba(0,240,255,0.15);
+    transform: translateX(6px);
+    box-shadow: 0 0 20px rgba(0,240,255,0.08);
+  }
+  .myclan__member:hover::before { background: var(--clan-cyan); box-shadow: 0 0 10px var(--clan-cyan); }
+
+  .myclan__member-avatar {
+    position: relative;
+    width: 42px; height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%);
+    border: 1px solid rgba(255,255,255,0.12);
+    font-family: 'Orbitron', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.7);
+    flex-shrink: 0;
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  }
+
+  .myclan__member-status {
+    position: absolute;
+    bottom: -3px; right: -3px;
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    border: 2px solid var(--clan-bg);
+  }
+  .myclan__member-status--online {
+    background: var(--clan-green);
+    box-shadow: 0 0 12px var(--clan-green);
+    animation: status-pulse 2s ease-in-out infinite;
+  }
+  .myclan__member-status--offline {
+    background: rgba(255,255,255,0.25);
+  }
+
+  .myclan__member-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  .myclan__member-name {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .myclan__member-role {
+    padding: 3px 10px;
+    background: rgba(170,100,255,0.1);
+    border: 1px solid rgba(170,100,255,0.25);
+    font-family: 'Orbitron', sans-serif;
+    font-size: 7px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    color: var(--clan-purple);
+    align-self: flex-start;
+    clip-path: polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%);
+  }
+  .myclan__member-role--leader {
+    background: rgba(255,215,0,0.12);
+    border-color: rgba(255,215,0,0.35);
+    color: var(--clan-gold);
+  }
+  .myclan__member-role--officer {
+    background: rgba(0,240,255,0.1);
+    border-color: rgba(0,240,255,0.3);
+    color: var(--clan-cyan);
+  }
+
+  .myclan__member-kills {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--clan-cyan);
+    text-shadow: 0 0 12px rgba(0,240,255,0.5);
+    flex-shrink: 0;
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════
+     CLAN CHAT VIEW — ENCRYPTED TRANSMISSION TERMINAL
+  ═══════════════════════════════════════════════════════════════════ */
+
+  .chat {
+    position: relative;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background:
+      linear-gradient(135deg, rgba(255,0,170,0.02) 0%, transparent 30%),
+      var(--clan-glass);
+    border: 1px solid rgba(255,0,170,0.15);
+    overflow: hidden;
+    clip-path: polygon(0 0, calc(100% - 40px) 0, 100% 40px, 100% 100%, 40px 100%, 0 calc(100% - 40px));
+  }
+
+  /* Corner brackets */
+  .chat::before {
+    content: '';
+    position: absolute;
+    top: 0; right: 0;
+    width: 80px; height: 80px;
+    background: linear-gradient(135deg, transparent 50%, rgba(255,0,170,0.06) 50%);
+    pointer-events: none;
+    z-index: 5;
+  }
+  .chat::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0;
+    width: 80px; height: 80px;
+    background: linear-gradient(-45deg, transparent 50%, rgba(255,0,170,0.06) 50%);
+    pointer-events: none;
+    z-index: 5;
+  }
+
+  .chat__header {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 24px;
+    border-bottom: 1px solid rgba(255,0,170,0.12);
+    background:
+      linear-gradient(90deg, rgba(255,0,170,0.04) 0%, transparent 50%),
+      rgba(0,0,0,0.3);
+  }
+
+  /* Transmission indicator */
+  .chat__header::before {
+    content: 'SECURE CHANNEL';
+    position: absolute;
+    top: 8px; right: 24px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 7px;
+    font-weight: 700;
+    letter-spacing: 0.3em;
+    color: rgba(255,0,170,0.4);
+    animation: holo-flicker 3s linear infinite;
+  }
+
+  .chat__header-icon {
+    position: relative;
+    width: 44px; height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255,0,170,0.1);
+    border: 1px solid rgba(255,0,170,0.35);
+    font-size: 20px;
+    color: var(--clan-magenta);
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+    animation: holo-flicker 5s linear infinite;
+  }
+
+  /* Pulsing ring */
+  .chat__header-icon::after {
+    content: '';
+    position: absolute;
+    inset: -6px;
+    border: 1px solid rgba(255,0,170,0.3);
+    border-radius: 50%;
+    animation: status-ring 2s ease-in-out infinite;
+  }
+
+  .chat__header-info {
+    flex: 1;
+  }
+
+  .chat__header-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    color: #fff;
+    text-transform: uppercase;
+  }
+
+  .chat__header-sub {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 11px;
+    color: rgba(255,255,255,0.35);
+    letter-spacing: 0.1em;
+  }
+
+  .chat__online {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 16px;
+    background: linear-gradient(135deg, rgba(68,255,136,0.1) 0%, rgba(68,255,136,0.03) 100%);
+    border: 1px solid rgba(68,255,136,0.25);
+    font-family: 'Orbitron', sans-serif;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    color: var(--clan-green);
+    clip-path: polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%);
+  }
+  .chat__online-dot {
+    width: 8px; height: 8px;
+    background: var(--clan-green);
+    border-radius: 50%;
+    box-shadow: 0 0 10px var(--clan-green);
+    animation: status-pulse 1.5s ease-in-out infinite;
+  }
+
+  /* Messages area — Terminal style */
+  .chat__messages {
+    position: relative;
+    flex: 1;
+    overflow-y: auto;
+    padding: 18px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    background:
+      repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px),
+      linear-gradient(180deg, rgba(0,0,0,0.2) 0%, transparent 50%);
+  }
+
+  /* Data transmission noise overlay */
+  .chat__messages::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    opacity: 0.015;
+    pointer-events: none;
+    animation: transmission-static 5s linear infinite;
+  }
+
+  /* Empty state */
+  .chat__empty {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    color: rgba(255,255,255,0.25);
+  }
+
+  .chat__empty-icon {
+    position: relative;
+    font-size: 56px;
+    opacity: 0.25;
+    animation: empty-float 4s ease-in-out infinite;
+  }
+  .chat__empty-icon::after {
+    content: '';
+    position: absolute;
+    inset: -20px;
+    border: 1px dashed rgba(255,0,170,0.2);
+    border-radius: 50%;
+    animation: emblem-rotate 15s linear infinite;
+  }
+  @keyframes empty-float {
+    0%, 100% { transform: translateY(0) scale(1); }
+    50% { transform: translateY(-12px) scale(1.02); }
+  }
+
+  .chat__empty-text {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+  }
+
+  /* Message bubble — Encrypted packet style */
+  .chat__message {
+    display: flex;
+    gap: 14px;
+    animation: msg-appear 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  @keyframes msg-appear {
+    from { opacity: 0; transform: translateY(15px) scale(0.98); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  .chat__message-avatar {
+    width: 40px; height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%);
+    border: 1px solid rgba(255,255,255,0.12);
+    font-family: 'Orbitron', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.6);
+    flex-shrink: 0;
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  }
+
+  .chat__message-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .chat__message-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .chat__message-name {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--clan-magenta);
+    text-shadow: 0 0 10px rgba(255,0,170,0.4);
+  }
+
+  .chat__message-time {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 8px;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    color: rgba(255,255,255,0.2);
+  }
+
+  /* Encrypted transmission packet */
+  .chat__message-text {
+    position: relative;
+    padding: 12px 16px;
+    background: rgba(255,0,170,0.03);
+    border: 1px solid rgba(255,0,170,0.12);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1.6;
+    color: rgba(255,255,255,0.85);
+    clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px));
+  }
+
+  /* Corner accent */
+  .chat__message-text::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 8px; height: 8px;
+    border-top: 1px solid rgba(255,0,170,0.4);
+    border-left: 1px solid rgba(255,0,170,0.4);
+  }
+
+  /* Input area — Transmission terminal */
+  .chat__input-area {
+    display: flex;
+    gap: 12px;
+    padding: 14px 22px 18px;
+    border-top: 1px solid rgba(255,0,170,0.1);
+    background: rgba(0,0,0,0.25);
+  }
+
+  .chat__input {
+    flex: 1;
+    padding: 14px 18px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.06);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: #fff;
+    outline: none;
+    transition: all 0.3s ease;
+    clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px));
+  }
+  .chat__input::placeholder {
+    color: rgba(255,255,255,0.25);
+    letter-spacing: 0.08em;
+  }
+  .chat__input:focus {
+    background: rgba(255,0,170,0.03);
+    border-color: rgba(255,0,170,0.3);
+    box-shadow: 0 0 30px rgba(255,0,170,0.1), inset 0 0 15px rgba(255,0,170,0.02);
+  }
+
+  /* Premium send button */
+  .chat__send-btn {
+    position: relative;
+    width: 54px; height: 54px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, rgba(255,0,170,0.2) 0%, rgba(255,0,170,0.08) 100%);
+    border: 1px solid rgba(255,0,170,0.5);
+    font-size: 18px;
+    color: var(--clan-magenta);
+    cursor: pointer;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 0 25px rgba(255,0,170,0.15);
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  }
+
+  /* Metallic shine */
+  .chat__send-btn::before {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%;
+    width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
+    transition: left 0.4s ease;
+  }
+
+  /* Inner glow */
+  .chat__send-btn::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at center, rgba(255,0,170,0.3), transparent 70%);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .chat__send-btn:hover {
+    background: linear-gradient(135deg, rgba(255,0,170,0.35) 0%, rgba(255,0,170,0.15) 100%);
+    border-color: rgba(255,0,170,0.8);
+    box-shadow: 0 0 50px rgba(255,0,170,0.3);
+    text-shadow: 0 0 15px var(--clan-magenta);
+  }
+  .chat__send-btn:hover::before { left: 100%; }
+  .chat__send-btn:hover::after { opacity: 1; }
+  .chat__send-btn:active { transform: scale(0.92); }
+
+  /* ═══════════════════════════════════════════════════════════════════
+     BROWSE CLANS VIEW — TACTICAL DATABASE
+  ═══════════════════════════════════════════════════════════════════ */
+
+  .browse {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    overflow: hidden;
+  }
+
+  /* Search bar — Clean design */
+  .browse__search {
+    display: flex;
+    gap: 14px;
+  }
+
+  .browse__search-wrap {
+    position: relative;
+    flex: 1;
+  }
+
+  .browse__search-icon {
+    position: absolute;
+    left: 18px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 18px;
+    height: 18px;
+    color: rgba(170, 100, 255, 0.45);
+    pointer-events: none;
+  }
+
+  .browse__search-input {
+    width: 100%;
+    padding: 15px 20px 15px 50px;
+    background: rgba(14, 12, 26, 0.8);
+    border: 1px solid rgba(170, 100, 255, 0.18);
+    border-radius: 12px;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: #fff;
+    outline: none;
+    transition: all 0.3s ease;
+  }
+
+  .browse__search-input::placeholder {
+    color: rgba(255, 255, 255, 0.25);
+    letter-spacing: 0.05em;
+  }
+
+  .browse__search-input:focus {
+    background: rgba(18, 14, 32, 0.95);
+    border-color: rgba(170, 100, 255, 0.4);
+    box-shadow: 0 0 25px rgba(170, 100, 255, 0.1);
+  }
+
+  .browse__filter-btn {
+    position: relative;
+    padding: 15px 24px;
+    background: rgba(14, 12, 26, 0.8);
+    border: 1px solid rgba(170, 100, 255, 0.2);
+    border-radius: 12px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    color: rgba(255, 255, 255, 0.5);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    overflow: hidden;
+  }
+
+  .browse__filter-btn:hover {
+    background: rgba(170, 100, 255, 0.1);
+    border-color: rgba(170, 100, 255, 0.35);
+    color: var(--clan-purple);
+  }
+
+  /* Clans grid */
+  .browse__grid {
+    flex: 1;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+    overflow-y: auto;
+    padding-right: 10px;
+    padding-bottom: 10px;
+  }
+
+  /* CLAN CARD — Premium Design */
+  .clan-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    background: linear-gradient(165deg, rgba(14, 12, 26, 0.95) 0%, rgba(8, 6, 18, 0.98) 100%);
+    border: 1px solid var(--card-color, rgba(170,100,255,0.18));
+    border-radius: 16px;
+    overflow: hidden;
+    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: card-appear 0.5s cubic-bezier(0.4, 0, 0.2, 1) both;
+  }
+
+  @keyframes card-appear {
+    from { opacity: 0; transform: translateY(20px) scale(0.97); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  .clan-card:nth-child(1) { animation-delay: 0ms; }
+  .clan-card:nth-child(2) { animation-delay: 50ms; }
+  .clan-card:nth-child(3) { animation-delay: 100ms; }
+  .clan-card:nth-child(4) { animation-delay: 150ms; }
+  .clan-card:nth-child(5) { animation-delay: 200ms; }
+  .clan-card:nth-child(6) { animation-delay: 250ms; }
+
+  /* Subtle top gradient accent */
+  .clan-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 80px;
+    background: linear-gradient(180deg, var(--card-color, rgba(170,100,255,0.06)) 0%, transparent 100%);
+    pointer-events: none;
+    z-index: 1;
+    transition: background 0.35s ease;
+  }
+
+  /* Corner accent */
+  .clan-card::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 60px;
+    height: 60px;
+    background: radial-gradient(circle at top right, var(--card-color, rgba(170,100,255,0.12)) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 1;
+    transition: background 0.35s ease;
+  }
+
+  /* Premium hover effect - Battle Pass style neon glow */
+  .clan-card:hover {
+    transform: translateY(-8px) scale(1.02);
+    border-color: var(--card-text, rgba(170,100,255,0.7));
+    box-shadow:
+      0 25px 60px rgba(0, 0, 0, 0.5),
+      0 0 0 1px var(--card-text, rgba(170,100,255,0.3)),
+      0 0 30px var(--card-glow, rgba(170,100,255,0.25)),
+      0 0 60px var(--card-glow, rgba(170,100,255,0.15)),
+      inset 0 0 40px var(--card-glow, rgba(170,100,255,0.05));
+  }
+
+  .clan-card:hover::before {
+    background: linear-gradient(180deg, var(--card-color, rgba(170,100,255,0.12)) 0%, transparent 100%);
+  }
+
+  .clan-card:hover::after {
+    background: radial-gradient(circle at top right, var(--card-color, rgba(170,100,255,0.25)) 0%, transparent 60%);
+  }
+
+  .clan-card:hover .clan-card__name {
+    text-shadow: 0 0 25px rgba(255, 255, 255, 0.25);
+  }
+
+  .clan-card:hover .clan-card__stat-value {
+    text-shadow: 0 0 20px rgba(0, 240, 255, 0.5);
+  }
+
+  /* Card header with emblem */
+  .clan-card__header {
+    position: relative;
+    padding: 24px 20px 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: linear-gradient(180deg, var(--card-color, rgba(170,100,255,0.05)) 0%, transparent 100%);
+  }
+
+  /* Subtle top accent line */
+  .clan-card__header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 20px;
+    right: 20px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--card-color, rgba(170,100,255,0.25)), transparent);
+  }
+
+  /* Clan Card Emblem - Clean Circular Design */
+  .clan-card__emblem {
+    position: relative;
+    width: 56px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(145deg, rgba(20, 16, 32, 0.95) 0%, rgba(12, 10, 24, 0.98) 100%);
+    border: 2px solid var(--card-color, rgba(170,100,255,0.45));
+    border-radius: 50%;
+    font-size: 24px;
+    flex-shrink: 0;
+    box-shadow:
+      0 0 25px var(--card-glow, rgba(170,100,255,0.2)),
+      inset 0 0 15px rgba(0, 0, 0, 0.4);
+    transition: all 0.3s ease;
+    overflow: hidden;
+  }
+
+  /* Inner glow ring */
+  .clan-card__emblem::before {
+    content: '';
+    position: absolute;
+    inset: 3px;
+    border: 1px solid var(--card-color, rgba(170,100,255,0.25));
+    border-radius: 50%;
+    pointer-events: none;
+    transition: all 0.35s ease;
+  }
+
+  /* Outer decorative ring */
+  .clan-card__emblem::after {
+    content: '';
+    position: absolute;
+    inset: -5px;
+    border: 1px solid var(--card-color, rgba(170,100,255,0.15));
+    border-radius: 50%;
+    pointer-events: none;
+    opacity: 0.6;
+    transition: all 0.35s ease;
+  }
+
+  .clan-card:hover .clan-card__emblem {
+    box-shadow:
+      0 0 40px var(--card-glow, rgba(170,100,255,0.45)),
+      0 0 60px var(--card-glow, rgba(170,100,255,0.2)),
+      inset 0 0 20px rgba(0, 0, 0, 0.2);
+    border-color: var(--card-text, rgba(170,100,255,0.8));
+    transform: scale(1.05);
+  }
+
+  .clan-card:hover .clan-card__emblem::before {
+    border-color: var(--card-color, rgba(170,100,255,0.4));
+  }
+
+  .clan-card:hover .clan-card__emblem::after {
+    border-color: var(--card-color, rgba(170,100,255,0.3));
+    transform: scale(1.1);
+  }
+
+  .clan-card__info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+    justify-content: center;
+  }
+
+  .clan-card__name {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-shadow: 0 0 20px rgba(255,255,255,0.15);
+    line-height: 1.3;
+  }
+
+  .clan-card__desc {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.4);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.4;
+  }
+
+  .clan-card__tag {
+    padding: 4px 10px;
+    background: var(--card-color, rgba(170,100,255,0.1));
+    border: 1px solid var(--card-color, rgba(170,100,255,0.3));
+    border-radius: 4px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    color: var(--card-text, var(--clan-purple));
+    align-self: flex-start;
+  }
+
+  /* Activity indicator */
+  .clan-card__activity {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    padding: 5px 10px;
+    background: rgba(68, 255, 136, 0.1);
+    border: 1px solid rgba(68, 255, 136, 0.25);
+    border-radius: 6px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 8px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    color: var(--clan-green);
+    z-index: 2;
+    box-shadow: 0 0 10px rgba(68, 255, 136, 0.1);
+  }
+
+  /* Subtle pulse for active clans */
+  .clan-card__activity:not(.clan-card__activity--inactive) {
+    position: relative;
+    padding-left: 16px;
+  }
+
+  .clan-card__activity:not(.clan-card__activity--inactive)::before {
+    content: '';
+    position: absolute;
+    left: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 5px;
+    height: 5px;
+    background: var(--clan-green);
+    border-radius: 50%;
+    box-shadow: 0 0 8px var(--clan-green);
+    animation: activity-pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes activity-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  .clan-card__activity--inactive {
+    background: rgba(255, 255, 255, 0.03);
+    border-color: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.3);
+    box-shadow: none;
+  }
+
+  /* Card stats — Clean design */
+  .clan-card__stats {
+    display: flex;
+    gap: 8px;
+    padding: 0 18px 16px;
+  }
+
+  .clan-card__stat {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    padding: 12px 8px;
+    background: rgba(0, 240, 255, 0.03);
+    border: 1px solid rgba(0, 240, 255, 0.08);
+    border-radius: 10px;
+    transition: all 0.25s ease;
+  }
+
+  .clan-card__stat:hover {
+    background: rgba(0, 240, 255, 0.06);
+    border-color: rgba(0, 240, 255, 0.15);
+  }
+
+  .clan-card__stat-value {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--clan-cyan);
+    text-shadow: 0 0 15px rgba(0, 240, 255, 0.35);
+  }
+
+  .clan-card__stat-label {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    color: rgba(255, 255, 255, 0.35);
+    text-transform: uppercase;
+  }
+
+  /* Card footer */
+  .clan-card__footer {
+    padding: 14px 18px 18px;
+    border-top: 1px solid rgba(255, 255, 255, 0.04);
+    background: rgba(0, 0, 0, 0.12);
+  }
+
+  /* Elegant join button */
+  .clan-card__join-btn {
+    position: relative;
+    width: 100%;
+    padding: 13px 20px;
+    background: linear-gradient(135deg, var(--card-color, rgba(170,100,255,0.12)) 0%, var(--card-color-dim, rgba(170,100,255,0.04)) 100%);
+    border: 1px solid var(--card-color, rgba(170,100,255,0.35));
+    border-radius: 10px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    color: var(--card-text, var(--clan-purple));
+    cursor: pointer;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Shine sweep effect */
+  .clan-card__join-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
+    transition: left 0.5s ease;
+  }
+
+  .clan-card__join-btn:hover {
+    background: linear-gradient(135deg, var(--card-color, rgba(170,100,255,0.2)) 0%, var(--card-color-dim, rgba(170,100,255,0.08)) 100%);
+    border-color: var(--card-color, rgba(170,100,255,0.55));
+    box-shadow: 0 0 25px var(--card-glow, rgba(170,100,255,0.18));
+    transform: translateY(-2px);
+  }
+
+  .clan-card__join-btn:hover::before {
+    left: 100%;
+  }
+
+  .clan-card__join-btn:active {
+    transform: translateY(0);
+    transition: transform 0.1s ease;
+  }
+
+  /* Button glow on card hover */
+  .clan-card:hover .clan-card__join-btn {
+    border-color: var(--card-color, rgba(170,100,255,0.5));
+    box-shadow: 0 0 20px var(--card-glow, rgba(170,100,255,0.15));
+  }
+
+  /* Empty state */
+  .browse__empty {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    padding: 80px 20px;
+    color: rgba(255,255,255,0.25);
+  }
+  .browse__empty-icon {
+    position: relative;
+    font-size: 60px;
+    opacity: 0.2;
+  }
+  .browse__empty-icon::after {
+    content: '';
+    position: absolute;
+    inset: -25px;
+    border: 1px dashed rgba(170,100,255,0.2);
+    border-radius: 50%;
+    animation: emblem-rotate 20s linear infinite;
+  }
+  .browse__empty-text {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════
+     NO CLAN STATE — RECRUITMENT CENTER
+  ═══════════════════════════════════════════════════════════════════ */
+
+  .no-clan {
+    position: relative;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 28px;
+    text-align: center;
+    padding: 50px;
+  }
+
+  /* Background grid pattern */
+  .no-clan::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(170,100,255,0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(170,100,255,0.02) 1px, transparent 1px);
+    background-size: 50px 50px;
+    mask-image: radial-gradient(ellipse 60% 60% at center, rgba(0,0,0,0.3) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .no-clan__icon {
+    position: relative;
+    font-size: 70px;
+    opacity: 0.2;
+    animation: empty-float 4s ease-in-out infinite;
+  }
+
+  /* Rotating rings around icon */
+  .no-clan__icon::before {
+    content: '';
+    position: absolute;
+    inset: -30px;
+    border: 2px dashed rgba(170,100,255,0.2);
+    border-radius: 50%;
+    animation: emblem-rotate 20s linear infinite;
+  }
+  .no-clan__icon::after {
+    content: '';
+    position: absolute;
+    inset: -50px;
+    border: 1px solid rgba(0,240,255,0.1);
+    border-radius: 50%;
+    animation: emblem-counter-rotate 25s linear infinite;
+  }
+
+  .no-clan__title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 22px;
+    font-weight: 900;
+    letter-spacing: 0.2em;
+    color: #fff;
+    text-shadow: 0 0 30px rgba(255,255,255,0.2);
+    text-transform: uppercase;
+  }
+
+  .no-clan__sub {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 14px;
+    line-height: 1.7;
+    color: rgba(255,255,255,0.35);
+    max-width: 420px;
+  }
+
+  .no-clan__actions {
+    display: flex;
+    gap: 14px;
+    margin-top: 20px;
+  }
+
+  /* Premium tactical buttons */
+  .no-clan__btn {
+    position: relative;
+    padding: 14px 30px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+    clip-path: polygon(12px 0, calc(100% - 12px) 0, 100% 50%, calc(100% - 12px) 100%, 12px 100%, 0 50%);
+  }
+
+  /* Shine sweep */
+  .no-clan__btn::before {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%;
+    width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.5s ease;
+  }
+
+  .no-clan__btn--primary {
+    background: linear-gradient(135deg, rgba(170,100,255,0.2) 0%, rgba(170,100,255,0.08) 100%);
+    border: 1px solid rgba(170,100,255,0.5);
+    color: var(--clan-purple);
+  }
+  .no-clan__btn--primary:hover {
+    background: linear-gradient(135deg, rgba(170,100,255,0.35) 0%, rgba(170,100,255,0.15) 100%);
+    box-shadow: 0 0 50px rgba(170,100,255,0.25), inset 0 0 20px rgba(170,100,255,0.08);
+    text-shadow: 0 0 10px var(--clan-purple);
+  }
+  .no-clan__btn--primary:hover::before { left: 100%; }
+
+  .no-clan__btn--secondary {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: rgba(255,255,255,0.5);
+  }
+  .no-clan__btn--secondary:hover {
+    background: rgba(0,240,255,0.06);
+    border-color: rgba(0,240,255,0.3);
+    color: var(--clan-cyan);
+  }
+  .no-clan__btn--secondary:hover::before { left: 100%; }
+
+  /* ═══════════════════════════════════════════════════════════════════
+     RESPONSIVE DESIGN
+  ═══════════════════════════════════════════════════════════════════ */
+
+  @media (max-width: 1200px) {
+    .clan-sidebar { width: 210px; padding: 24px 14px; }
+    .clan-nav__item { padding: 12px 14px; font-size: 9px; }
+    .myclan__profile { width: 340px; }
+  }
+
+  @media (max-width: 1024px) {
+    .clan-sidebar { width: 180px; padding: 20px 12px; }
+    .clan-sidebar::after { display: none; }
+    .clan-nav__item { padding: 12px 12px; font-size: 9px; gap: 10px; }
+    .clan-content { padding: 18px; }
+    .myclan { gap: 18px; }
+    .myclan__profile { width: 300px; }
+
+    .clan-header { clip-path: none; }
+    .clan-header::before { display: none; }
+    .clan-header-corner { display: none; }
+  }
+
+  @media (max-width: 768px) {
+    .clan-header { padding: 14px 18px; gap: 14px; }
+    .clan-header__emblem-wrap { width: 54px; height: 54px; }
+    .clan-header__emblem { width: 44px; height: 44px; font-size: 22px; }
+    .clan-header__emblem-ring, .clan-header__emblem-ring2 { display: none; }
+    .clan-header__emblem-particle { display: none; }
+    .clan-header__title { font-size: 20px; letter-spacing: 0.15em; }
+
+    .clan-sidebar {
+      position: fixed;
+      left: 0; top: 0; bottom: 0;
+      width: 220px;
+      transform: translateX(-100%);
+      transition: transform 0.3s ease;
+      z-index: 1000;
+      clip-path: none;
+    }
+    .clan-sidebar.open { transform: translateX(0); }
+
+    .clan-content { padding: 14px; }
+
+    .myclan { flex-direction: column; }
+    .myclan__profile { width: 100%; clip-path: none; }
+    .myclan__profile::before, .myclan__profile::after { display: none; }
+    .myclan__banner { height: 110px; }
+    .myclan__emblem-container { width: 90px; height: 90px; bottom: -40px; }
+    .myclan__emblem { width: 70px; height: 70px; font-size: 34px; }
+    .myclan__profile-body { padding: 50px 18px 18px; }
+
+    .myclan__members { clip-path: none; }
+    .myclan__members::before, .myclan__members::after { display: none; }
+
+    .chat { clip-path: none; }
+    .chat::before, .chat::after { display: none; }
+
+    .browse__grid { grid-template-columns: 1fr; }
+    .clan-card::before, .clan-card::after { display: none; }
+
+    /* Hide background decorations on mobile for performance */
+    .clan-content::before, .clan-content::after { display: none; }
+  }
+
+  @media (max-width: 480px) {
+    .clan-header { padding: 12px 14px; }
+    .clan-header__emblem-wrap { width: 44px; height: 44px; }
+    .clan-header__emblem { width: 38px; height: 38px; font-size: 18px; clip-path: none; border-radius: 10px; }
+    .clan-header__title { font-size: 16px; letter-spacing: 0.12em; }
+    .clan-header__tag { font-size: 10px; gap: 8px; }
+    .clan-close-btn { width: 34px; height: 34px; font-size: 13px; top: 10px !important; right: 10px !important; }
+
+    .clan-content { padding: 10px; }
+
+    .myclan__stats { gap: 8px; }
+    .myclan__stat { padding: 12px 10px; clip-path: none; border-radius: 10px; }
+    .myclan__stat-value { font-size: 18px; }
+
+    .chat__input-area { padding: 12px 14px 14px; gap: 10px; }
+    .chat__input { padding: 12px 14px; font-size: 13px; clip-path: none; border-radius: 10px; }
+    .chat__send-btn { width: 48px; height: 48px; font-size: 16px; clip-path: none; border-radius: 12px; }
+
+    .clan-card__header { padding: 16px 14px 12px; }
+    .clan-card__emblem { width: 48px; height: 48px; font-size: 22px; }
+    .clan-card__emblem::after { display: none; }
+    .clan-card__stats { padding: 0 14px 12px; gap: 8px; }
+    .clan-card__stat { clip-path: none; border-radius: 8px; }
+    .clan-card__footer { padding: 12px 14px 14px; }
+    .clan-card__join-btn { clip-path: none; border-radius: 10px; }
+
+    .browse__search-input { clip-path: none; border-radius: 10px; padding: 12px 16px 12px 46px; }
+    .browse__filter-btn { clip-path: none; border-radius: 10px; }
+
+    .no-clan__btn { clip-path: none; border-radius: 10px; }
+  }
+
+  @media (max-width: 360px) {
+    .clan-header__title { font-size: 14px; }
+    .clan-header__tag-badge { display: none; }
+
+    .myclan__name { font-size: 16px; }
+    .myclan__stat-value { font-size: 16px; }
+    .myclan__stat-label { font-size: 9px; }
+
+    .clan-card__name { font-size: 12px; }
+    .clan-card__stat-value { font-size: 12px; }
+  }
+
+  /* Touch-friendly */
+  @media (pointer: coarse) {
+    .clan-nav__item { min-height: 50px; }
+    .chat__input { min-height: 50px; }
+    .chat__send-btn { min-width: 50px; min-height: 50px; }
+    .clan-card__join-btn { min-height: 50px; }
+    .myclan__invite-btn { min-height: 48px; }
+    .no-clan__btn { min-height: 50px; }
+  }
+
+  /* Reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    .clan-page::before,
+    .clan-page::after,
+    .clan-scan-beam,
+    .clan-orb,
+    .clan-particle,
+    .clan-data-stream,
+    .clan-header::after,
+    .clan-header__emblem,
+    .clan-header__emblem::before,
+    .clan-header__emblem-ring,
+    .clan-header__emblem-ring2,
+    .clan-header__emblem-particle,
+    .clan-nav__item.active .clan-nav__icon,
+    .clan-sidebar__status::before,
+    .clan-sidebar__status-dot,
+    .clan-sidebar__status-dot::after,
+    .myclan__emblem,
+    .myclan__emblem::before,
+    .myclan__emblem-hex,
+    .myclan__emblem-ring,
+    .myclan__banner-scan,
+    .myclan__stat-value,
+    .chat__empty-icon,
+    .chat__empty-icon::after,
+    .chat__header-icon,
+    .chat__header-icon::after,
+    .clan-card__emblem,
+    .clan-card__emblem::before,
+    .no-clan__icon::before,
+    .no-clan__icon::after,
+    .browse__empty-icon::after { animation: none; }
+
+    .clan-card,
+    .clan-nav__item,
+    .chat__message,
+    .myclan__member { transition-duration: 0.15s; }
+  }
+  </style>
+</head>
+<body>
+  <div class="clan-page">
+    <!-- ══ Ambient orbs ═══════════════════════════════════════════ -->
+    <div class="clan-orb clan-orb--1" aria-hidden="true"></div>
+    <div class="clan-orb clan-orb--2" aria-hidden="true"></div>
+    <div class="clan-orb clan-orb--3" aria-hidden="true"></div>
+
+    <!-- ══ Moving scan beam ═══════════════════════════════════════ -->
+    <div class="clan-scan-beam" aria-hidden="true"></div>
+
+    <!-- ══ Data stream lines ══════════════════════════════════════ -->
+    <div class="clan-data-streams" aria-hidden="true">
+      <div class="clan-data-stream"></div>
+      <div class="clan-data-stream"></div>
+      <div class="clan-data-stream"></div>
+      <div class="clan-data-stream"></div>
+    </div>
+
+    <!-- ══ Floating particles ═════════════════════════════════════ -->
+    <div class="clan-particles" aria-hidden="true">
+      <div class="clan-particle"></div>
+      <div class="clan-particle"></div>
+      <div class="clan-particle"></div>
+      <div class="clan-particle"></div>
+      <div class="clan-particle"></div>
+      <div class="clan-particle"></div>
+    </div>
+
+    <!-- ══ Cinematic Header — Tactical HUD ════════════════════════ -->
+    <header class="clan-header">
+      <!-- HUD corner brackets -->
+      <div class="clan-header-corner clan-header-corner--tl"></div>
+      <div class="clan-header-corner clan-header-corner--tr"></div>
+      <div class="clan-header-corner clan-header-corner--bl"></div>
+
+      <!-- Holographic emblem with orbiting particles -->
+      <div class="clan-header__emblem-wrap">
+        <div class="clan-header__emblem-ring"></div>
+        <div class="clan-header__emblem-ring2"></div>
+        <div class="clan-header__emblem" id="clanEmblem">★</div>
+        <div class="clan-header__emblem-particle"></div>
+        <div class="clan-header__emblem-particle"></div>
+        <div class="clan-header__emblem-particle"></div>
+      </div>
+
+      <div class="clan-header__info">
+        <h1 class="clan-header__title">CLANS</h1>
+        <div class="clan-header__tag">
+          <span class="clan-header__tag-badge" id="clanTagBadge">[NONE]</span>
+          <span id="clanNameHeader">Join or create a clan</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Close Button - Fixed Top Right Corner -->
+    <button class="clan-close-btn" id="closeBtn" title="Close">✕</button>
+
+    <!-- ══ Main Body ══════════════════════════════════════════════ -->
+    <div class="clan-body">
+      <!-- ══ Sidebar Navigation — Military Tactical ═════════════════ -->
+      <aside class="clan-sidebar">
+        <nav class="clan-nav">
+          <button class="clan-nav__item active" data-view="myclan">
+            <span class="clan-nav__indicator"></span>
+            <span class="clan-nav__icon">◈</span>
+            My Clan
+          </button>
+          <button class="clan-nav__item" data-view="chat">
+            <span class="clan-nav__indicator"></span>
+            <span class="clan-nav__icon">⬢</span>
+            Clan Chat
+          </button>
+          <button class="clan-nav__item" data-view="browse">
+            <span class="clan-nav__indicator"></span>
+            <span class="clan-nav__icon">◎</span>
+            Browse
+          </button>
+        </nav>
+
+        <div class="clan-sidebar__divider"></div>
+
+        <div class="clan-sidebar__footer">
+          <div class="clan-sidebar__status">
+            <span class="clan-sidebar__status-dot"></span>
+            <span>CONNECTED</span>
+          </div>
+        </div>
+      </aside>
+
+      <!-- ══ Main Content ═════════════════════════════════════════ -->
+      <main class="clan-content">
+        <!-- ══ MY CLAN VIEW ═══════════════════════════════════════ -->
+        <section class="clan-view active" id="view-myclan">
+          <!-- Content populated by JS -->
+        </section>
+
+        <!-- ══ CLAN CHAT VIEW ═════════════════════════════════════ -->
+        <section class="clan-view" id="view-chat">
+          <div class="chat">
+            <div class="chat__header">
+              <div class="chat__header-icon">💬</div>
+              <div class="chat__header-info">
+                <div class="chat__header-title">CLAN CHAT</div>
+                <div class="chat__header-sub">Communicate with your clan</div>
+              </div>
+              <div class="chat__online">
+                <span class="chat__online-dot"></span>
+                <span id="onlineCount">0 Online</span>
+              </div>
+            </div>
+            <div class="chat__messages" id="chatMessages">
+              <div class="chat__empty">
+                <span class="chat__empty-icon">💬</span>
+                <span class="chat__empty-text">Chat with your clan!</span>
+              </div>
+            </div>
+            <div class="chat__input-area">
+              <input class="chat__input" id="chatInput" type="text" placeholder="Message your clan..." maxlength="500">
+              <button class="chat__send-btn" id="chatSendBtn" title="Send message">➤</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- ══ BROWSE CLANS VIEW ══════════════════════════════════ -->
+        <section class="clan-view" id="view-browse">
+          <div class="browse">
+            <div class="browse__search">
+              <div class="browse__search-wrap">
+                <svg class="browse__search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <path d="m21 21-4.35-4.35"></path>
+                </svg>
+                <input class="browse__search-input" id="clanSearch" type="text" placeholder="Search clans by name or tag...">
+              </div>
+              <button class="browse__filter-btn">
+                <span>⚙</span> FILTERS
+              </button>
+            </div>
+            <div class="browse__grid" id="clansGrid">
+              <!-- Clan cards populated by JS -->
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/api.js"></script>
+  <script>
+  'use strict';
+
+  /* ══════════════════════════════════════════════════════════════════
+     STATE
+  ══════════════════════════════════════════════════════════════════ */
+
+  const state = {
+    hasClan: false,
+    clan: null,
+    members: [],
+    messages: [],
+    allClans: [],
+  };
+
+  /* ══════════════════════════════════════════════════════════════════
+     DOM REFERENCES
+  ══════════════════════════════════════════════════════════════════ */
+
+  const closeBtn = document.getElementById('closeBtn');
+  const clanEmblem = document.getElementById('clanEmblem');
+  const clanTagBadge = document.getElementById('clanTagBadge');
+  const clanNameHeader = document.getElementById('clanNameHeader');
+  const chatMessages = document.getElementById('chatMessages');
+  const chatInput = document.getElementById('chatInput');
+  const chatSendBtn = document.getElementById('chatSendBtn');
+  const clansGrid = document.getElementById('clansGrid');
+  const clanSearch = document.getElementById('clanSearch');
+
+  /* ══════════════════════════════════════════════════════════════════
+     CLOSE BUTTON
+  ══════════════════════════════════════════════════════════════════ */
+
+  closeBtn.addEventListener('click', () => {
+    window.location.href = 'index.html';
+  });
+
+  /* ══════════════════════════════════════════════════════════════════
+     VIEW NAVIGATION
+  ══════════════════════════════════════════════════════════════════ */
+
+  document.querySelectorAll('.clan-nav__item').forEach(item => {
+    item.addEventListener('click', () => {
+      document.querySelectorAll('.clan-nav__item').forEach(i => i.classList.remove('active'));
+      item.classList.add('active');
+
+      const viewId = `view-${item.dataset.view}`;
+      document.querySelectorAll('.clan-view').forEach(v => v.classList.remove('active'));
+      document.getElementById(viewId)?.classList.add('active');
+    });
+  });
+
+  /* ══════════════════════════════════════════════════════════════════
+     MOCK DATA
+  ══════════════════════════════════════════════════════════════════ */
+
+  // Check if user has clan from localStorage or API
+  const session = Auth.getSession();
+
+  // Mock clan data for demonstration
+  state.hasClan = true;
+  state.clan = {
+    name: 'AdminsClan',
+    tag: 'ADNIM',
+    emblem: '★',
+    description: 'Elite players dominating the neon streets. Join us and become a legend.',
+    members: 24,
+    kills: 158420,
+    rank: 3,
+    leader: 'NeonMaster',
+  };
+  state.members = [
+    { name: 'NeonMaster', role: 'leader', kills: 45230, online: true },
+    { name: 'CyberHawk', role: 'officer', kills: 32100, online: true },
+    { name: 'ShadowByte', role: 'officer', kills: 28450, online: false },
+    { name: 'QuantumRush', role: 'member', kills: 21300, online: true },
+    { name: 'VoltRunner', role: 'member', kills: 18920, online: false },
+    { name: 'NightPulse', role: 'member', kills: 12420, online: true },
+  ];
+
+  state.allClans = [
+    { name: 'Neon Warriors', tag: 'NEON', emblem: '⚔', members: 48, kills: 524000, rank: 1, activity: 'active', color: '#FF4466' },
+    { name: 'Cyber Legion', tag: 'CLEG', emblem: '◆', members: 35, kills: 412000, rank: 2, activity: 'active', color: '#00F0FF' },
+    { name: 'AdminsClan', tag: 'ADNIM', emblem: '★', members: 24, kills: 158420, rank: 3, activity: 'active', color: '#FFD700' },
+    { name: 'Shadow Network', tag: 'SHAD', emblem: '◎', members: 31, kills: 298000, rank: 4, activity: 'active', color: '#AA66FF' },
+    { name: 'Quantum Flux', tag: 'FLUX', emblem: '⬡', members: 18, kills: 145000, rank: 8, activity: 'moderate', color: '#44FF88' },
+    { name: 'Ghost Protocol', tag: 'GHST', emblem: '◈', members: 12, kills: 89000, rank: 15, activity: 'inactive', color: '#8899AA' },
+  ];
+
+  /* ══════════════════════════════════════════════════════════════════
+     RENDER MY CLAN VIEW
+  ══════════════════════════════════════════════════════════════════ */
+
+  function renderMyClan() {
+    const container = document.getElementById('view-myclan');
+
+    if (!state.hasClan) {
+      container.innerHTML = `
+        <div class="no-clan">
+          <span class="no-clan__icon">◈</span>
+          <h2 class="no-clan__title">NO CLAN YET</h2>
+          <p class="no-clan__sub">Join an existing clan or create your own to team up with other players and dominate the leaderboards.</p>
+          <div class="no-clan__actions">
+            <button class="no-clan__btn no-clan__btn--primary" onclick="switchToView('browse')">BROWSE CLANS</button>
+            <button class="no-clan__btn no-clan__btn--secondary">CREATE CLAN</button>
+          </div>
+        </div>
+      `;
+      return;
+    }
+
+    // Update header
+    clanEmblem.textContent = state.clan.emblem;
+    clanTagBadge.textContent = `[${state.clan.tag}]`;
+    clanNameHeader.textContent = state.clan.name;
+
+    const onlineCount = state.members.filter(m => m.online).length;
+
+    container.innerHTML = `
+      <div class="myclan">
+        <div class="myclan__profile">
+          <div class="myclan__banner">
+            <div class="myclan__banner-scan"></div>
+          </div>
+          <div class="myclan__emblem-container">
+            <div class="myclan__emblem-hex"></div>
+            <div class="myclan__emblem-ring"></div>
+            <div class="myclan__emblem">${state.clan.emblem}</div>
+          </div>
+          <div class="myclan__profile-body">
+            <h2 class="myclan__name">${state.clan.name}</h2>
+            <span class="myclan__tag-display">[${state.clan.tag}]</span>
+            <p class="myclan__desc">${state.clan.description}</p>
+
+            <div class="myclan__stats">
+              <div class="myclan__stat">
+                <span class="myclan__stat-value">${state.clan.members}</span>
+                <span class="myclan__stat-label">Members</span>
+              </div>
+              <div class="myclan__stat">
+                <span class="myclan__stat-value">${(state.clan.kills / 1000).toFixed(1)}K</span>
+                <span class="myclan__stat-label">Total Kills</span>
+              </div>
+              <div class="myclan__stat">
+                <span class="myclan__stat-value">#${state.clan.rank}</span>
+                <span class="myclan__stat-label">Clan Rank</span>
+              </div>
+              <div class="myclan__stat">
+                <span class="myclan__stat-value">${onlineCount}</span>
+                <span class="myclan__stat-label">Online Now</span>
+              </div>
+            </div>
+
+            <div class="myclan__leader">
+              <div class="myclan__leader-avatar">${state.clan.leader[0]}</div>
+              <div class="myclan__leader-info">
+                <span class="myclan__leader-role">CLAN LEADER</span>
+                <span class="myclan__leader-name">${state.clan.leader}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="myclan__members">
+          <div class="myclan__members-header">
+            <h3 class="myclan__members-title">CLAN ROSTER</h3>
+            <span class="myclan__members-count">${state.members.length} / 50</span>
+          </div>
+
+          <div class="myclan__invite">
+            <input class="myclan__invite-input" type="text" placeholder="Enter player name to invite...">
+            <button class="myclan__invite-btn">SEND INVITE</button>
+          </div>
+
+          <div class="myclan__members-list">
+            ${state.members.map(m => `
+              <div class="myclan__member">
+                <div class="myclan__member-avatar">
+                  ${m.name[0]}
+                  <span class="myclan__member-status myclan__member-status--${m.online ? 'online' : 'offline'}"></span>
+                </div>
+                <div class="myclan__member-info">
+                  <span class="myclan__member-name">${m.name}</span>
+                  <span class="myclan__member-role myclan__member-role--${m.role}">${m.role.toUpperCase()}</span>
+                </div>
+                <span class="myclan__member-kills">${m.kills.toLocaleString()}</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  /* ══════════════════════════════════════════════════════════════════
+     RENDER BROWSE VIEW
+  ══════════════════════════════════════════════════════════════════ */
+
+  function renderBrowse(filter = '') {
+    const filtered = state.allClans.filter(c =>
+      c.name.toLowerCase().includes(filter.toLowerCase()) ||
+      c.tag.toLowerCase().includes(filter.toLowerCase())
+    );
+
+    if (filtered.length === 0) {
+      clansGrid.innerHTML = `
+        <div class="browse__empty">
+          <span class="browse__empty-icon">◎</span>
+          <span class="browse__empty-text">No clans found matching "${filter}"</span>
+        </div>
+      `;
+      return;
+    }
+
+    clansGrid.innerHTML = filtered.map(clan => `
+      <div class="clan-card" style="--card-color: ${clan.color}50; --card-glow: ${clan.color}25; --card-text: ${clan.color}; --card-color-dim: ${clan.color}18;">
+        <div class="clan-card__header">
+          <div class="clan-card__emblem" style="border-color: ${clan.color}70; box-shadow: 0 0 25px ${clan.color}20, inset 0 0 15px rgba(0,0,0,0.4);">
+            ${clan.emblem}
+          </div>
+          <div class="clan-card__info">
+            <h3 class="clan-card__name">${clan.name}</h3>
+            <span class="clan-card__tag" style="background: ${clan.color}12; border-color: ${clan.color}35; color: ${clan.color};">[${clan.tag}]</span>
+            ${clan.desc ? `<p class="clan-card__desc">${clan.desc}</p>` : ''}
+          </div>
+          <span class="clan-card__activity ${clan.activity === 'inactive' ? 'clan-card__activity--inactive' : ''}">${clan.activity.toUpperCase()}</span>
+        </div>
+        <div class="clan-card__stats">
+          <div class="clan-card__stat">
+            <span class="clan-card__stat-value">${clan.members}</span>
+            <span class="clan-card__stat-label">Members</span>
+          </div>
+          <div class="clan-card__stat">
+            <span class="clan-card__stat-value">${(clan.kills / 1000).toFixed(0)}K</span>
+            <span class="clan-card__stat-label">Kills</span>
+          </div>
+          <div class="clan-card__stat">
+            <span class="clan-card__stat-value">#${clan.rank}</span>
+            <span class="clan-card__stat-label">Rank</span>
+          </div>
+        </div>
+        <div class="clan-card__footer">
+          <button class="clan-card__join-btn" style="background: linear-gradient(135deg, ${clan.color}18, ${clan.color}08); border-color: ${clan.color}40; color: ${clan.color};">
+            ${state.clan?.tag === clan.tag ? 'YOUR CLAN' : 'OPEN'}
+          </button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  /* ══════════════════════════════════════════════════════════════════
+     CHAT FUNCTIONALITY
+  ══════════════════════════════════════════════════════════════════ */
+
+  function sendMessage() {
+    const text = chatInput.value.trim();
+    if (!text) return;
+
+    const msg = {
+      id: Date.now(),
+      sender: session?.name || 'You',
+      text,
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    };
+
+    state.messages.push(msg);
+    renderMessages();
+    chatInput.value = '';
+  }
+
+  function renderMessages() {
+    if (state.messages.length === 0) {
+      chatMessages.innerHTML = `
+        <div class="chat__empty">
+          <span class="chat__empty-icon">💬</span>
+          <span class="chat__empty-text">Chat with your clan!</span>
+        </div>
+      `;
+      return;
+    }
+
+    chatMessages.innerHTML = state.messages.map(msg => `
+      <div class="chat__message">
+        <div class="chat__message-avatar">${msg.sender[0]}</div>
+        <div class="chat__message-content">
+          <div class="chat__message-header">
+            <span class="chat__message-name">${msg.sender}</span>
+            <span class="chat__message-time">${msg.time}</span>
+          </div>
+          <div class="chat__message-text">${escapeHtml(msg.text)}</div>
+        </div>
+      </div>
+    `).join('');
+
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
+
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  chatSendBtn.addEventListener('click', sendMessage);
+  chatInput.addEventListener('keypress', e => {
+    if (e.key === 'Enter') sendMessage();
+  });
+
+  /* ══════════════════════════════════════════════════════════════════
+     SEARCH FUNCTIONALITY
+  ══════════════════════════════════════════════════════════════════ */
+
+  clanSearch.addEventListener('input', e => {
+    renderBrowse(e.target.value);
+  });
+
+  /* ══════════════════════════════════════════════════════════════════
+     HELPER - Switch view programmatically
+  ══════════════════════════════════════════════════════════════════ */
+
+  window.switchToView = function(viewName) {
+    document.querySelectorAll('.clan-nav__item').forEach(item => {
+      item.classList.toggle('active', item.dataset.view === viewName);
+    });
+    document.querySelectorAll('.clan-view').forEach(v => {
+      v.classList.toggle('active', v.id === `view-${viewName}`);
+    });
+  };
+
+  /* ══════════════════════════════════════════════════════════════════
+     UPDATE ONLINE COUNT
+  ══════════════════════════════════════════════════════════════════ */
+
+  function updateOnlineCount() {
+    const count = state.members.filter(m => m.online).length;
+    document.getElementById('onlineCount').textContent = `${count} Online`;
+  }
+
+  /* ══════════════════════════════════════════════════════════════════
+     INITIALIZE
+  ══════════════════════════════════════════════════════════════════ */
+
+  renderMyClan();
+  renderBrowse();
+  updateOnlineCount();
+  </script>
+</body>
+</html>
