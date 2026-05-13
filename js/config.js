@@ -539,6 +539,7 @@ const CONFIG = {
         big:    [{ body:'#440000', accent:'#880000' }, { body:'#330000', accent:'#660000' }],
       },
     },
+    /* LIFE MODE — disabled
     {
       id: 'lifemode', name: 'LIFE MODE',
       desc: 'Peaceful city. Buy a home, eat out, explore and drive freely.',
@@ -559,6 +560,7 @@ const CONFIG = {
         big:    [{ body:'#224477', accent:'#336699' }],
       },
     },
+    */
     {
       id: 'zombie', name: 'ZOMBIE OUTBREAK',
       desc: 'Neon City has fallen. The infected never stop coming.',

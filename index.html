@@ -681,7 +681,7 @@
       <div class="page-nav">
         <button class="page-tab active" id="pageTab1" data-page="1">PAGE 1 · CLASSIC MAPS</button>
         <button class="page-tab" id="pageTab2" data-page="2">PAGE 2 · NEW MAPS &amp; MODES</button>
-        <button class="page-tab" id="pageTab3" data-page="3">PAGE 3 · PREHISTORIC</button>
+        <!-- <button class="page-tab" id="pageTab3" data-page="3">PAGE 3 · PREHISTORIC</button> -->
       </div>
 
       <!-- ─── PAGE 1 ─────────────────────────── -->
@@ -862,38 +862,9 @@
 
       </div><!-- end .maps-grid -->
 
-      <!-- Life Mode + Arena + Zombie — all in one row -->
+      <!-- Arena + Zombie + Dino World -->
       <div class="special-maps-row">
 
-        <!-- Life Mode — COMING SOON -->
-        <div class="map-card map-card--life char-card-locked" data-map="lifemode" data-coming-soon="true" style="cursor:default;">
-          <div class="char-coming-soon-overlay">
-            <span style="font-size:28px;margin-bottom:4px">🏙</span>
-            <span class="cs-badge" style="font-size:13px;letter-spacing:0.2em">COMING SOON</span>
-            <span style="font-family:'Orbitron',sans-serif;font-size:9px;color:rgba(136,221,255,0.6);letter-spacing:0.1em;margin-top:6px">LIFE MODE</span>
-          </div>
-          <div class="map-preview" style="--mg:14px;--mbg:#04090d;--mr:rgba(136,221,255,0.38);">
-            <div class="map-preview-inner">
-              <div class="road-dot" style="top:20%;left:20%;background:#88DDFF;box-shadow:0 0 6px #88DDFF"></div>
-              <div class="road-dot" style="top:20%;left:80%;background:#88DDFF;box-shadow:0 0 6px #88DDFF"></div>
-              <div class="road-dot" style="top:50%;left:50%;background:#AAEEFF;box-shadow:0 0 10px #AAEEFF;width:8px;height:8px;margin:-4px 0 0 -4px"></div>
-              <div class="road-dot" style="top:80%;left:20%;background:#88DDFF;box-shadow:0 0 6px #88DDFF"></div>
-              <div class="road-dot" style="top:80%;left:80%;background:#88DDFF;box-shadow:0 0 6px #88DDFF"></div>
-            </div>
-          </div>
-          <div class="map-info">
-            <div class="map-header">
-              <h4 class="map-name" style="color:#88DDFF;text-shadow:0 0 10px #88DDFF">🏙 LIFE MODE</h4>
-              <span class="map-num" style="color:#88DDFF">02</span>
-            </div>
-            <p class="map-desc">Peaceful sandbox city. Buy a home, eat out, drive freely. No enemies.</p>
-            <div class="map-tags">
-              <span class="map-tag" style="--tc:#88DDFF">PEACEFUL</span>
-              <span class="map-tag" style="--tc:#88DDFF">SANDBOX</span>
-              <span class="map-tag" style="--tc:#88DDFF">60×60</span>
-            </div>
-          </div>
-        </div>
         <div class="map-card map-card--arena" data-map="arena">
           <div class="map-preview" style="--mg:24px;--mbg:#0a0004;--mr:rgba(255,0,68,0.55);">
             <div class="map-preview-inner">
@@ -942,6 +913,32 @@
               <span class="map-tag" style="--tc:#44FF88">ENDLESS</span>
               <span class="map-tag" style="--tc:#44FF88">MELEE HORDES</span>
               <span class="map-tag" style="--tc:#44FF88">36×36</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="map-card map-card--experimental" data-map="dino_world">
+          <div class="experimental-badge" style="background:linear-gradient(90deg,#44AA22,#88FF44);box-shadow:0 0 14px rgba(100,220,40,0.8);color:#000">🦕 PREHISTORIC</div>
+          <div class="map-preview" style="--mg:18px;--mbg:#060e04;--mr:rgba(80,200,40,0.55);">
+            <div class="map-preview-inner">
+              <div class="road-dot" style="top:20%;left:20%;background:#66DD44;box-shadow:0 0 8px #44CC22"></div>
+              <div class="road-dot" style="top:20%;left:75%;background:#66DD44;box-shadow:0 0 8px #44CC22"></div>
+              <div class="road-dot" style="top:50%;left:50%;background:#88FF44;box-shadow:0 0 14px #66FF00;width:10px;height:10px;margin:-5px 0 0 -5px"></div>
+              <div class="road-dot" style="top:75%;left:25%;background:#44BBFF;box-shadow:0 0 8px #2299DD"></div>
+              <div class="road-dot" style="top:75%;left:75%;background:#66DD44;box-shadow:0 0 8px #44CC22"></div>
+            </div>
+          </div>
+          <div class="map-info">
+            <div class="map-header">
+              <h4 class="map-name" style="color:#66DD44;text-shadow:0 0 12px #44FF22">🦕 DINO WORLD</h4>
+              <span class="map-num" style="color:#66DD44">05</span>
+            </div>
+            <p class="map-desc">Primordial earth reborn. Raptors, water dinos and pterosaurs hunt you. Survive to face the Rex King.</p>
+            <div class="map-tags">
+              <span class="map-tag" style="--tc:#66DD44">DINOSAURS</span>
+              <span class="map-tag" style="--tc:#44BBFF">WATER</span>
+              <span class="map-tag" style="--tc:#88FF44">PREHISTORIC</span>
+              <span class="map-tag" style="--tc:#66DD44">44×44</span>
             </div>
           </div>
         </div>
@@ -1265,47 +1262,6 @@
         </div><!-- end special-maps-row -->
       </div><!-- end #mapPage2 -->
 
-      <!-- ─── PAGE 3 ─────────────────────────── -->
-      <div id="mapPage3" style="display:none">
-        <div class="maps-grid">
-
-          <!-- DINO WORLD -->
-          <div class="map-card map-card--experimental" data-map="dino_world" style="grid-column: span 3;">
-            <div class="experimental-badge" style="background:linear-gradient(90deg,#44AA22,#88FF44);box-shadow:0 0 14px rgba(100,220,40,0.8);color:#000">🦕 PREHISTORIC</div>
-            <div class="map-preview" style="--mg:14px;--mbg:#060e04;--mr:rgba(80,200,40,0.55);height:160px;">
-              <div class="map-preview-inner">
-                <!-- Water rivers -->
-                <div style="position:absolute;top:30%;left:0;right:0;height:14%;background:linear-gradient(90deg,transparent,rgba(30,120,200,0.50),rgba(50,160,230,0.60),rgba(30,120,200,0.50),transparent);border-radius:4px;"></div>
-                <div style="position:absolute;top:0;bottom:0;left:38%;width:8%;background:linear-gradient(180deg,transparent,rgba(30,130,210,0.45),rgba(50,160,230,0.55),rgba(30,130,210,0.45),transparent);border-radius:4px;"></div>
-                <!-- Jungle dots -->
-                <div class="road-dot" style="top:15%;left:12%;background:#66DD44;box-shadow:0 0 8px #44CC22"></div>
-                <div class="road-dot" style="top:15%;left:62%;background:#66DD44;box-shadow:0 0 8px #44CC22"></div>
-                <div class="road-dot" style="top:55%;left:20%;background:#44BBFF;box-shadow:0 0 8px #2299DD"></div>
-                <div class="road-dot" style="top:55%;left:55%;background:#44BBFF;box-shadow:0 0 8px #2299DD"></div>
-                <div class="road-dot" style="top:75%;left:80%;background:#66DD44;box-shadow:0 0 8px #44CC22"></div>
-                <div class="road-dot" style="top:50%;left:50%;background:#88FF44;box-shadow:0 0 16px #66FF00;width:14px;height:14px;margin:-7px 0 0 -7px"></div>
-                <!-- Dino silhouettes -->
-                <div style="position:absolute;top:8%;left:28%;width:18px;height:10px;background:#44CC22;border-radius:50% 50% 30% 30%;opacity:0.7;"></div>
-                <div style="position:absolute;top:64%;left:70%;width:16px;height:9px;background:#55BB33;border-radius:50% 50% 30% 30%;opacity:0.6;"></div>
-              </div>
-            </div>
-            <div class="map-info">
-              <div class="map-header">
-                <h4 class="map-name" style="color:#66DD44;text-shadow:0 0 14px #44FF22">🦕 DINO WORLD</h4>
-                <span class="map-num" style="color:#66DD44">P3-01</span>
-              </div>
-              <p class="map-desc">Primordial earth reborn. Raptors hunt through ancient ferns, water dinos patrol the rivers, pterosaurs dive from above. Survive long enough to face the Rex King — the apex predator.</p>
-              <div class="map-tags">
-                <span class="map-tag" style="--tc:#66DD44">DINOSAURS</span>
-                <span class="map-tag" style="--tc:#44BBFF">WATER</span>
-                <span class="map-tag" style="--tc:#88FF44">PREHISTORIC</span>
-                <span class="map-tag" style="--tc:#66DD44">44×44</span>
-              </div>
-            </div>
-          </div>
-
-        </div>
-      </div><!-- end #mapPage3 -->
 
     </div><!-- end .map-section -->
 
@@ -1448,7 +1404,7 @@
     const MAPS = [
       'neon_city','galactica','wasteland','robot_city','campaign',
       'survival','hardcore','blitz','siege','frozen_tundra',
-      'ocean_depths','metropolis','desert_sands','jungle','arena','zombie','lifemode'
+      'ocean_depths','metropolis','desert_sands','jungle','arena','zombie'
     ];
 
     function open() {

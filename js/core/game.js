@@ -257,8 +257,8 @@ class Game {
     this._glitchPortalTimer = 0;
     // ── Bodyguards ────────────────────────────────────────────
     this._bodyguards = [];
-    // ── Life Mode ─────────────────────────────────────────────
-    this._lifeMode = !!this.map.config.lifeMode;
+    // ── Life Mode — disabled ──────────────────────────────────
+    this._lifeMode = false; // was: !!this.map.config.lifeMode
     this._metropolisMode = !!this.map.config.metropolis;
     this._cityNpcs = [];
     // ── Special Modes ─────────────────────────────────────────
