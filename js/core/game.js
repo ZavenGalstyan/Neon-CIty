@@ -498,6 +498,10 @@ class Game {
       return;
     }
     if (e.code === "Escape") {
+      if (this._helpPanelOpen) {
+        this._helpPanelOpen = false;
+        return;
+      }
       if (this.state === "bigmap") {
         this.state = "playing";
         return;
@@ -583,7 +587,7 @@ class Game {
     this._lastTime = timestamp;
 
     try {
-      if (this.state === "playing" || this.state === "blackmarket")
+      if ((this.state === "playing" || this.state === "blackmarket") && !this._helpPanelOpen)
         this._update(dt);
       if (this.state === "shop" || this.state === "paused")
         this.shop.update(dt);

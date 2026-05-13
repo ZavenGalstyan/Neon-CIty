@@ -4754,6 +4754,44 @@ class GameMap {
               ctx.fillRect(wx+S*0.38,wy+S*0.72,S*0.24,S*0.05);
               ctx.fillRect(wx+S*0.35,wy+S*0.80,S*0.30,S*0.05);
             }
+            // ── Sandstone architectural corner pillars ──
+            {
+              const cSz = Math.round(S * 0.16);
+              const cPositions = [
+                [wx,         wy        ],  // top-left
+                [wx + S - cSz, wy      ],  // top-right
+                [wx,         wy + S - cSz], // bottom-left
+                [wx + S - cSz, wy + S - cSz], // bottom-right
+              ];
+              const cBase  = sandPal[bseed];
+              const cShad  = shadowPal[bseed];
+              for (const [cx3, cy3] of cPositions) {
+                // Stone block base
+                ctx.fillStyle = cBase;
+                ctx.fillRect(cx3, cy3, cSz, cSz);
+                // Right shadow face
+                ctx.fillStyle = cShad;
+                ctx.fillRect(cx3 + cSz * 0.62, cy3, cSz * 0.38, cSz);
+                // Bottom shadow face
+                ctx.fillRect(cx3, cy3 + cSz * 0.62, cSz, cSz * 0.38);
+                // Top highlight
+                ctx.fillStyle = 'rgba(255,235,150,0.50)';
+                ctx.fillRect(cx3, cy3, cSz, cSz * 0.14);
+                // Left highlight
+                ctx.fillRect(cx3, cy3, cSz * 0.14, cSz);
+                // Border
+                ctx.strokeStyle = 'rgba(140,80,0,0.50)';
+                ctx.lineWidth   = 0.8;
+                ctx.strokeRect(cx3 + 0.5, cy3 + 0.5, cSz - 1, cSz - 1);
+                // Inner carved line (horizontal)
+                ctx.strokeStyle = 'rgba(100,55,0,0.35)';
+                ctx.lineWidth   = 0.6;
+                ctx.beginPath();
+                ctx.moveTo(cx3 + 2, cy3 + cSz * 0.5);
+                ctx.lineTo(cx3 + cSz - 2, cy3 + cSz * 0.5);
+                ctx.stroke();
+              }
+            }
 
           } else if (this._metroTileStyle) {
             // ── METROPOLIS: 8 beautiful themed building styles ────────
