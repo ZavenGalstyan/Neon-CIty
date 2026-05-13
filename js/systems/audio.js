@@ -8,12 +8,23 @@
  */
 class AudioManager {
   constructor() {
-    this._ctx        = null;
-    this._out        = null;   // master gain → destination
-    this.enabled     = true;
-    // Per-sound last-played timestamps (ms) — prevent spam
-    this._ts = {};
+    this._ctx    = null;
+    this._out    = null;
+    this.enabled = true;
+    this._muted  = false;
+    this._ts     = {};
+    try { if (localStorage.getItem('nc_muted') === '1') { this._muted = true; this.enabled = false; } } catch(_) {}
   }
+
+  toggleMute() {
+    this._muted  = !this._muted;
+    this.enabled = !this._muted;
+    if (this._out) this._out.gain.value = this._muted ? 0 : 0.72;
+    try { localStorage.setItem('nc_muted', this._muted ? '1' : '0'); } catch(_) {}
+    return this._muted;
+  }
+
+  get isMuted() { return this._muted; }
 
   // ── Internal helpers ──────────────────────────────────────
 
@@ -23,7 +34,7 @@ class AudioManager {
     try {
       this._ctx = new (window.AudioContext || window.webkitAudioContext)();
       this._out = this._ctx.createGain();
-      this._out.gain.value = 0.72;
+      this._out.gain.value = this._muted ? 0 : 0.72;
       this._out.connect(this._ctx.destination);
     } catch (_) { return null; }
     return this._ctx;

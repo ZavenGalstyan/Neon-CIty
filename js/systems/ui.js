@@ -492,73 +492,128 @@ class HUD {
   }
 
   // ── Controls panel ─────────────────────────────────────────────────────────
-  renderControls(arenaMode = false, isMobile = false) {
-    // On mobile, touch buttons replace keyboard controls — skip this panel
+  renderHelpButton(open = false, isMobile = false) {
     if (isMobile) return;
+    const ctx = this.ctx;
+    const H   = this.canvas.height;
+    const bx  = HUD_PAD, by = H - HUD_PAD - 28, bw = 90, bh = 28;
+    this._helpBtnBounds = { x: bx, y: by, w: bw, h: bh };
+    ctx.save();
+    ctx.fillStyle   = open ? 'rgba(68,238,255,0.18)' : 'rgba(0,0,0,0.65)';
+    ctx.strokeStyle = open ? '#44EEFF' : 'rgba(68,238,255,0.35)';
+    ctx.lineWidth   = open ? 1.5 : 1;
+    ctx.shadowColor = open ? '#44EEFF' : 'transparent';
+    ctx.shadowBlur  = open ? 10 : 0;
+    this._rr(ctx, bx, by, bw, bh, 6); ctx.fill(); ctx.stroke();
+    ctx.shadowBlur = 0;
+    ctx.font      = 'bold 10px Orbitron, monospace';
+    ctx.fillStyle = open ? '#44EEFF' : 'rgba(255,255,255,0.55)';
+    ctx.textAlign = 'center';
+    ctx.fillText(open ? '[C] CLOSE' : '[C] CONTROLS', bx + bw / 2, by + bh / 2 + 4);
+    ctx.restore();
+  }
 
-    const ctx  = this.ctx;
-    const H    = this.canvas.height;
-    const x    = HUD_PAD;
-    const panelH = 70;
-    const y    = H - HUD_PAD - panelH;
+  renderHelpPanel(arenaMode = false) {
+    const ctx = this.ctx;
+    const W   = this.canvas.width;
+    const H   = this.canvas.height;
 
     const controls = arenaMode ? [
-      { key:'WASD',  desc:'Move'   },
-      { key:'CLICK', desc:'Shoot'  },
-      { key:'F',     desc:'Car'    },
-      { key:'SCROLL',desc:'Weapon' },
-      { key:'P/ESC', desc:'Pause'  },
-      { key:'ARENA', desc:'No Shop'},
+      { key: 'WASD',    desc: 'Move'                 },
+      { key: 'CLICK',   desc: 'Shoot / Attack'        },
+      { key: 'SCROLL',  desc: 'Cycle Weapon'          },
+      { key: 'E',       desc: 'Enter Building / Portal'},
+      { key: 'F',       desc: 'Vehicle In / Out'      },
+      { key: 'G',       desc: 'Throw Grenade'         },
+      { key: 'TAB',     desc: 'Achievements'            },
+      { key: 'C',       desc: 'Toggle Controls Help'   },
+      { key: 'P / ESC', desc: 'Pause Game'             },
     ] : [
-      { key:'WASD',  desc:'Move'   },
-      { key:'CLICK', desc:'Shoot'  },
-      { key:'F',     desc:'Car'    },
-      { key:'B',     desc:'Shop'   },
-      { key:'V',     desc:'Drone'  },
-      { key:'N',     desc:'B.Mkt'  },
-      { key:'SCROLL',desc:'Weapon' },
-      { key:'P/ESC', desc:'Pause'  },
+      { key: 'WASD',    desc: 'Move'                   },
+      { key: 'CLICK',   desc: 'Shoot / Attack'         },
+      { key: 'SCROLL',  desc: 'Cycle Weapon'           },
+      { key: 'E',       desc: 'Enter Building / Portal'},
+      { key: 'F',       desc: 'Vehicle In / Out'       },
+      { key: 'B',       desc: 'Open Shop'              },
+      { key: 'G',       desc: 'Throw Grenade'          },
+      { key: 'V',       desc: 'Deploy Drone'           },
+      { key: 'N',       desc: 'Black Market'           },
+      { key: 'T',       desc: 'Talk to NPC'            },
+      { key: 'TAB',     desc: 'Achievements'           },
+      { key: 'C',       desc: 'Toggle Controls Help'   },
+      { key: 'P / ESC', desc: 'Pause Game'             },
+      { key: 'M',       desc: 'Main Menu (paused)'    },
     ];
-    const cols = 2;
-    const rowH = panelH / Math.ceil(controls.length / cols);
-    const colW = HUD_MM_W / cols;
 
-    // Panel bg
+    const cols    = 2;
+    const rows    = Math.ceil(controls.length / cols);
+    const rowH    = 34;
+    const kbW     = 72;   // key badge width
+    const colW    = 230;
+    const panW    = cols * colW + 40;
+    const panH    = rows * rowH + 80;
+    const px      = W / 2 - panW / 2;
+    const py      = H / 2 - panH / 2;
+
     ctx.save();
-    ctx.fillStyle   = 'rgba(0,0,0,0.62)';
-    ctx.strokeStyle = 'rgba(255,255,255,0.06)';
-    ctx.lineWidth   = 1;
-    this._rr(ctx, x - 4, y - 4, HUD_MM_W + 8, panelH + 8, 6);
-    ctx.fill(); ctx.stroke();
-    ctx.restore();
 
+    // Panel background
+    ctx.fillStyle   = 'rgba(0,2,12,0.92)';
+    ctx.strokeStyle = '#44EEFF';
+    ctx.lineWidth   = 1.5;
+    ctx.shadowColor = '#44EEFF';
+    ctx.shadowBlur  = 22;
+    this._rr(ctx, px, py, panW, panH, 14); ctx.fill(); ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    // Corner accents
+    const corners = [[px+10,py+10],[px+panW-10,py+10],[px+10,py+panH-10],[px+panW-10,py+panH-10]];
+    for (const [cx2,cy2] of corners) {
+      ctx.fillStyle = 'rgba(68,238,255,0.12)'; ctx.strokeStyle = 'rgba(68,238,255,0.4)'; ctx.lineWidth = 1;
+      this._rr(ctx, cx2-6, cy2-6, 12, 12, 2); ctx.fill(); ctx.stroke();
+    }
+
+    // Title
+    ctx.textAlign   = 'center';
+    ctx.font        = 'bold 20px Orbitron, monospace';
+    ctx.fillStyle   = '#44EEFF';
+    ctx.shadowColor = '#44EEFF'; ctx.shadowBlur = 18;
+    ctx.fillText('CONTROLS', W / 2, py + 32);
+    ctx.shadowBlur  = 0;
+
+    // Divider under title
+    ctx.strokeStyle = 'rgba(68,238,255,0.2)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(px + 20, py + 44); ctx.lineTo(px + panW - 20, py + 44); ctx.stroke();
+
+    // Control rows
+    const startY = py + 58;
     controls.forEach((c, i) => {
       const col  = i % cols;
       const row  = Math.floor(i / cols);
-      const cx   = x + col * colW;
-      const cy   = y + row * rowH + rowH * 0.65;
+      const ex   = px + 20 + col * colW;
+      const ey   = startY + row * rowH;
 
-      ctx.save();
       // Key badge
-      const kw = 42;
-      ctx.fillStyle   = 'rgba(68,238,255,0.07)';
-      ctx.strokeStyle = 'rgba(68,238,255,0.2)';
-      ctx.lineWidth   = 0.8;
-      this._rr(ctx, cx, cy - 11, kw, 14, 3);
-      ctx.fill(); ctx.stroke();
+      ctx.fillStyle   = 'rgba(68,238,255,0.1)';
+      ctx.strokeStyle = 'rgba(68,238,255,0.45)';
+      ctx.lineWidth   = 1;
+      this._rr(ctx, ex, ey, kbW, 24, 5); ctx.fill(); ctx.stroke();
 
-      ctx.font      = '8px Orbitron, monospace';
+      ctx.font      = 'bold 12px Orbitron, monospace';
       ctx.fillStyle = '#44EEFF';
       ctx.textAlign = 'center';
-      ctx.fillText(c.key, cx + kw / 2, cy);
+      ctx.shadowColor = '#44EEFF'; ctx.shadowBlur = 6;
+      ctx.fillText(c.key, ex + kbW / 2, ey + 16);
+      ctx.shadowBlur = 0;
 
       // Description
-      ctx.font      = '9px Rajdhani, monospace';
-      ctx.fillStyle = 'rgba(255,255,255,0.38)';
+      ctx.font      = '13px Rajdhani, monospace';
+      ctx.fillStyle = 'rgba(255,255,255,0.82)';
       ctx.textAlign = 'left';
-      ctx.fillText(c.desc, cx + kw + 5, cy);
-      ctx.restore();
+      ctx.fillText(c.desc, ex + kbW + 10, ey + 16);
     });
+
+    ctx.restore();
   }
 
   // ── Mobile controls hint (shown instead of keyboard panel on touch devices) ─
@@ -1551,113 +1606,130 @@ class HUD {
     return this._gameOverButtons;
   }
 
-  renderPause(mouseX = 0, mouseY = 0) {
+  renderPause(mouseX = 0, mouseY = 0, muted = false) {
     const ctx = this.ctx;
     const W = this.canvas.width, H = this.canvas.height;
+    const cx = W / 2;
 
-    // Dark overlay with blur effect
-    ctx.fillStyle = 'rgba(0,0,0,0.75)';
+    // Dark overlay
+    ctx.fillStyle = 'rgba(0,0,0,0.78)';
     ctx.fillRect(0, 0, W, H);
-
-    // Decorative border glow
-    ctx.save();
-    ctx.strokeStyle = 'rgba(68,238,255,0.15)';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(W/2 - 200, H/2 - 140, 400, 320);
-    ctx.restore();
 
     ctx.save();
     ctx.textAlign = 'center';
 
-    // Title with glow
+    // Panel border
+    ctx.strokeStyle = 'rgba(68,238,255,0.18)';
+    ctx.lineWidth = 1.5;
+    this._rr(ctx, cx - 215, H/2 - 148, 430, 358, 14);
+    ctx.stroke();
+
+    // PAUSED title
     ctx.shadowColor = '#44EEFF';
     ctx.shadowBlur = 40;
     ctx.font = 'bold 52px Orbitron, monospace';
     ctx.fillStyle = '#44EEFF';
-    ctx.fillText('PAUSED', W/2, H/2 - 80);
+    ctx.fillText('PAUSED', cx, H/2 - 82);
     ctx.shadowBlur = 0;
 
-    // Subtitle
     ctx.font = '14px Orbitron, monospace';
-    ctx.fillStyle = 'rgba(255,255,255,0.5)';
-    ctx.fillText('Game is paused', W/2, H/2 - 50);
+    ctx.fillStyle = 'rgba(255,255,255,0.45)';
+    ctx.fillText('Game is paused', cx, H/2 - 52);
 
-    // Button dimensions
     const btnW = 220, btnH = 45;
-    const btnSpacing = 60;
-
-    // Store button bounds for click detection
     this._pauseButtons = {};
 
-    // ─── RESUME Button ───
-    const resumeBtnX = W/2 - btnW/2;
-    const resumeBtnY = H/2 - 10;
-    const resumeHovered = mouseX >= resumeBtnX && mouseX <= resumeBtnX + btnW &&
-                          mouseY >= resumeBtnY && mouseY <= resumeBtnY + btnH;
+    // ─── RESUME ───
+    const resumeX = cx - btnW / 2, resumeY = H/2 - 22;
+    const resumeHov = mouseX >= resumeX && mouseX <= resumeX + btnW &&
+                      mouseY >= resumeY && mouseY <= resumeY + btnH;
+    this._pauseButtons.resume = { x: resumeX, y: resumeY, w: btnW, h: btnH };
+    ctx.fillStyle = resumeHov ? 'rgba(68,238,255,0.25)' : 'rgba(68,238,255,0.08)';
+    ctx.strokeStyle = resumeHov ? '#44EEFF' : 'rgba(68,238,255,0.4)';
+    ctx.lineWidth = resumeHov ? 2 : 1;
+    if (resumeHov) { ctx.shadowColor = '#44EEFF'; ctx.shadowBlur = 14; }
+    this._rr(ctx, resumeX, resumeY, btnW, btnH, 8); ctx.fill(); ctx.stroke();
+    ctx.shadowBlur = 0;
+    ctx.font = 'bold 16px Orbitron, monospace';
+    ctx.fillStyle = resumeHov ? '#FFF' : 'rgba(255,255,255,0.82)';
+    ctx.fillText('RESUME', cx, resumeY + btnH / 2 + 6);
+    ctx.font = '10px Orbitron, monospace';
+    ctx.fillStyle = 'rgba(255,255,255,0.35)';
+    ctx.fillText('[ESC]', cx, resumeY + btnH + 14);
 
-    this._pauseButtons.resume = { x: resumeBtnX, y: resumeBtnY, w: btnW, h: btnH };
+    // ─── BACK TO MAPS ───
+    const mapsX = cx - btnW / 2, mapsY = resumeY + 68;
+    const mapsHov = mouseX >= mapsX && mouseX <= mapsX + btnW &&
+                    mouseY >= mapsY && mouseY <= mapsY + btnH;
+    this._pauseButtons.maps = { x: mapsX, y: mapsY, w: btnW, h: btnH };
+    ctx.fillStyle = mapsHov ? 'rgba(255,100,100,0.25)' : 'rgba(255,100,100,0.08)';
+    ctx.strokeStyle = mapsHov ? '#FF6666' : 'rgba(255,100,100,0.4)';
+    ctx.lineWidth = mapsHov ? 2 : 1;
+    if (mapsHov) { ctx.shadowColor = '#FF6666'; ctx.shadowBlur = 14; }
+    this._rr(ctx, mapsX, mapsY, btnW, btnH, 8); ctx.fill(); ctx.stroke();
+    ctx.shadowBlur = 0;
+    ctx.font = 'bold 16px Orbitron, monospace';
+    ctx.fillStyle = mapsHov ? '#FFF' : 'rgba(255,255,255,0.82)';
+    ctx.fillText('BACK TO MAPS', cx, mapsY + btnH / 2 + 6);
+    ctx.font = '10px Orbitron, monospace';
+    ctx.fillStyle = 'rgba(255,255,255,0.35)';
+    ctx.fillText('[M]', cx, mapsY + btnH + 14);
 
-    // Button background
-    if (resumeHovered) {
-      ctx.fillStyle = 'rgba(68,238,255,0.25)';
-      ctx.shadowColor = '#44EEFF';
-      ctx.shadowBlur = 15;
-    } else {
-      ctx.fillStyle = 'rgba(68,238,255,0.08)';
-    }
-    ctx.strokeStyle = resumeHovered ? '#44EEFF' : 'rgba(68,238,255,0.4)';
-    ctx.lineWidth = resumeHovered ? 2 : 1;
-    this._rr(ctx, resumeBtnX, resumeBtnY, btnW, btnH, 8);
-    ctx.fill();
-    ctx.stroke();
+    // ─── Divider ───
+    const divY = mapsY + btnH + 28;
+    ctx.strokeStyle = 'rgba(68,238,255,0.12)';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(cx - 170, divY); ctx.lineTo(cx + 170, divY); ctx.stroke();
+
+    // ─── Mute icon button (centered) ────────────────────────────
+    const iconSz  = 64;
+    const iconRowY = divY + 14;
+    const muteX   = cx - iconSz / 2, muteY = iconRowY;
+    const muteHov = mouseX >= muteX && mouseX <= muteX + iconSz &&
+                    mouseY >= muteY && mouseY <= muteY + iconSz;
+    this._pauseButtons.mute = { x: muteX, y: muteY, w: iconSz, h: iconSz };
+
+    const muteAcc = muted ? '#FF5555' : '#44EEFF';
+    ctx.fillStyle   = muteHov ? muteAcc + '38' : muteAcc + '12';
+    ctx.strokeStyle = muteHov ? muteAcc : muteAcc + '66';
+    ctx.lineWidth   = muteHov ? 2 : 1;
+    if (muteHov) { ctx.shadowColor = muteAcc; ctx.shadowBlur = 14; }
+    this._rr(ctx, muteX, muteY, iconSz, iconSz, 12); ctx.fill(); ctx.stroke();
     ctx.shadowBlur = 0;
 
-    // Button text
-    ctx.font = 'bold 16px Orbitron, monospace';
-    ctx.fillStyle = resumeHovered ? '#FFFFFF' : 'rgba(255,255,255,0.8)';
-    ctx.fillText('RESUME', W/2, resumeBtnY + btnH/2 + 6);
-    ctx.font = '11px Orbitron, monospace';
-    ctx.fillStyle = 'rgba(255,255,255,0.4)';
-    ctx.fillText('[ESC]', W/2, resumeBtnY + btnH + 15);
+    // Speaker icon (centered inside button)
+    const sx = muteX + iconSz / 2 - 8, sy = muteY + iconSz / 2;
+    ctx.fillStyle = muted ? '#FF7777' : '#AAFFEE';
+    ctx.beginPath();
+    ctx.moveTo(sx - 9, sy - 6); ctx.lineTo(sx - 3, sy - 6);
+    ctx.lineTo(sx + 5, sy - 13); ctx.lineTo(sx + 5, sy + 13);
+    ctx.lineTo(sx - 3, sy + 6); ctx.lineTo(sx - 9, sy + 6);
+    ctx.closePath(); ctx.fill();
 
-    // ─── BACK TO MAPS Button ───
-    const mapsBtnX = W/2 - btnW/2;
-    const mapsBtnY = resumeBtnY + btnSpacing + 25;
-    const mapsHovered = mouseX >= mapsBtnX && mouseX <= mapsBtnX + btnW &&
-                        mouseY >= mapsBtnY && mouseY <= mapsBtnY + btnH;
-
-    this._pauseButtons.maps = { x: mapsBtnX, y: mapsBtnY, w: btnW, h: btnH };
-
-    // Button background
-    if (mapsHovered) {
-      ctx.fillStyle = 'rgba(255,100,100,0.25)';
-      ctx.shadowColor = '#FF6666';
-      ctx.shadowBlur = 15;
+    if (!muted) {
+      ctx.strokeStyle = '#AAFFEE'; ctx.lineWidth = 1.8;
+      for (let wi = 1; wi <= 3; wi++) {
+        ctx.globalAlpha = 1.06 - wi * 0.28;
+        ctx.beginPath(); ctx.arc(sx + 5, sy, wi * 6, -0.85, 0.85); ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
     } else {
-      ctx.fillStyle = 'rgba(255,100,100,0.08)';
+      ctx.strokeStyle = '#FF7777'; ctx.lineWidth = 2.5;
+      ctx.beginPath(); ctx.moveTo(sx + 8, sy - 8); ctx.lineTo(sx + 19, sy + 8); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(sx + 19, sy - 8); ctx.lineTo(sx + 8, sy + 8); ctx.stroke();
     }
-    ctx.strokeStyle = mapsHovered ? '#FF6666' : 'rgba(255,100,100,0.4)';
-    ctx.lineWidth = mapsHovered ? 2 : 1;
-    this._rr(ctx, mapsBtnX, mapsBtnY, btnW, btnH, 8);
-    ctx.fill();
-    ctx.stroke();
-    ctx.shadowBlur = 0;
 
-    // Button text
-    ctx.font = 'bold 16px Orbitron, monospace';
-    ctx.fillStyle = mapsHovered ? '#FFFFFF' : 'rgba(255,255,255,0.8)';
-    ctx.fillText('BACK TO MAPS', W/2, mapsBtnY + btnH/2 + 6);
+    ctx.font      = 'bold 10px Orbitron, monospace';
+    ctx.fillStyle = muted ? '#FF8888' : 'rgba(180,255,255,0.7)';
+    ctx.textAlign = 'center';
+    ctx.fillText(muted ? 'MUTED' : 'SOUND ON', cx, muteY + iconSz + 16);
+
+    // Shop hint
     ctx.font = '11px Orbitron, monospace';
-    ctx.fillStyle = 'rgba(255,255,255,0.4)';
-    ctx.fillText('[M]', W/2, mapsBtnY + btnH + 15);
-
-    // Bottom hint
-    ctx.font = '12px Orbitron, monospace';
-    ctx.fillStyle = 'rgba(255,255,255,0.3)';
-    ctx.fillText('[B] Open Shop', W/2, H/2 + 130);
+    ctx.fillStyle = 'rgba(255,255,255,0.28)';
+    ctx.fillText('[B] Open Shop', cx, muteY + iconSz + 34);
 
     ctx.restore();
-
     return this._pauseButtons;
   }
 
