@@ -214,8 +214,16 @@ const SocialUI = (() => {
           <!-- Right: chat window -->
           <div class="ncs-chat-window" id="ncsChatWindow">
             <div class="ncs-no-conv" id="ncsNoChatSel">
-              <div class="ncs-no-conv-icon">💬</div>
-              <div>Select a conversation<br>or message a friend</div>
+              <div class="ncs-no-conv-icon">
+                <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5" width="48" height="48" style="color:rgba(68,238,255,0.4)">
+                  <path d="M8 12a4 4 0 0 1 4-4h24a4 4 0 0 1 4 4v20a4 4 0 0 1-4 4H16l-8 8V12z"/>
+                  <circle cx="16" cy="22" r="2" fill="currentColor"/>
+                  <circle cx="24" cy="22" r="2" fill="currentColor"/>
+                  <circle cx="32" cy="22" r="2" fill="currentColor"/>
+                </svg>
+              </div>
+              <div class="ncs-no-conv-title">AWAITING TRANSMISSION</div>
+              <div>Select a conversation to start messaging<br>or choose a friend to begin</div>
             </div>
           </div>
         </div>
@@ -828,7 +836,18 @@ const SocialUI = (() => {
 
   function _buildMsgHTML() {
     if (!S.dmMessages.length) {
-      return `<div class="ncs-no-conv" style="flex:1"><div class="ncs-no-conv-icon" style="font-size:36px;opacity:.2">💬</div><div>Say hello!</div></div>`;
+      return `
+        <div class="ncs-no-conv" style="flex:1">
+          <div class="ncs-no-conv-icon">
+            <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5" width="44" height="44" style="color:rgba(68,238,255,0.35)">
+              <path d="M42 24c0 9.94-8.06 18-18 18a17.9 17.9 0 0 1-9-2.4L6 42l2.4-9A17.9 17.9 0 0 1 6 24c0-9.94 8.06-18 18-18s18 8.06 18 18z"/>
+              <path d="M16 22h16M16 28h10" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="ncs-no-conv-title">START CONVERSATION</div>
+          <div>Send a message to begin chatting</div>
+        </div>
+      `;
     }
     let html = '';
     if (S.dmHasMore) html += `<button class="ncs-load-more-btn" id="ncsDmLoadMore">Load older messages</button>`;
