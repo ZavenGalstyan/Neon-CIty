@@ -40,16 +40,9 @@
     <div id="joystickZone">
       <div id="joystickKnob"></div>
     </div>
-    <!-- Right: action buttons -->
+    <!-- Right: fire button only -->
     <div id="touchButtons">
-      <!-- Row 1 -->
-      <button class="touch-btn btn-enter"  id="tbEnter"  >E</button>
-      <button class="touch-btn btn-sprint" id="tbSprint" >⇧</button>
-      <!-- Row 2: big fire button spanning both cols -->
-      <button class="touch-btn btn-fire"   id="tbFire"   >🔥</button>
-      <!-- Row 3 -->
-      <button class="touch-btn btn-gren"   id="tbGren"   >G</button>
-      <button class="touch-btn btn-car"    id="tbCar"    >F</button>
+      <button class="touch-btn btn-fire" id="tbFire">🔥</button>
     </div>
   </div>
 
@@ -103,18 +96,6 @@
         return window._gameInstance && window._gameInstance.input;
       }
 
-      const btnMap = [
-        ['tbEnter',  'KeyE'],
-        ['tbSprint', 'ShiftLeft'],
-        ['tbGren',   'KeyG'],
-        ['tbCar',    'KeyF'],
-      ];
-      btnMap.forEach(([id, code]) => {
-        const btn = document.getElementById(id);
-        if (!btn) return;
-        btn.addEventListener('touchstart', e => { const inp = getInput(); if (inp) inp._virtualKeys.add(code);    e.preventDefault(); }, { passive: false });
-        btn.addEventListener('touchend',   e => { const inp = getInput(); if (inp) inp._virtualKeys.delete(code); e.preventDefault(); }, { passive: false });
-      });
 
       const fbtn = document.getElementById('tbFire');
       if (fbtn) {

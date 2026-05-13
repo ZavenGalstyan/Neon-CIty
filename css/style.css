@@ -1412,30 +1412,27 @@ body {
   pointer-events: none; transition: transform 0.05s;
 }
 
-/* Right action buttons */
+/* Right: fire button only */
 #touchButtons {
-  position: absolute; bottom: 20px; right: 16px;
-  display: grid; grid-template-columns: 44px 44px;
-  grid-template-rows: 44px 44px 44px;
-  gap: 8px; pointer-events: all;
-}
-.touch-btn {
-  border-radius: 50%; border: 1.5px solid rgba(255,255,255,0.22);
-  background: rgba(0,0,0,0.55); backdrop-filter: blur(4px);
+  position: absolute; bottom: 20px; right: 20px;
   display: flex; align-items: center; justify-content: center;
-  font-family: 'Orbitron', monospace; font-size: 9px; font-weight: 700;
-  color: rgba(255,255,255,0.75); user-select: none; -webkit-user-select: none;
-  cursor: pointer; pointer-events: all;
-  transition: background 0.1s;
+  pointer-events: all;
 }
-.touch-btn:active { background: rgba(68,238,255,0.22); border-color: #44EEFF; }
-.touch-btn.btn-fire { background: rgba(255,44,44,0.3); border-color: rgba(255,88,88,0.55); font-size: 16px; width: 54px; height: 54px; border-radius: 50%; align-self: center; justify-self: center; grid-column: 1 / -1; }
-.touch-btn.btn-fire:active { background: rgba(255,44,44,0.6); }
-.touch-btn.btn-enter  { border-color: rgba(255,255,136,0.5); color: #FFFFAA; }
-.touch-btn.btn-sprint { border-color: rgba(68,255,136,0.5);  color: #44FF88; }
-.touch-btn.btn-gren   { border-color: rgba(255,136,0,0.5);   color: #FF8800; }
-.touch-btn.btn-shop   { border-color: rgba(100,200,255,0.5); color: #44DDFF; }
-.touch-btn.btn-car    { border-color: rgba(255,220,44,0.5);  color: #FFDD44; }
+.touch-btn.btn-fire {
+  width: 72px; height: 72px; border-radius: 50%;
+  background: radial-gradient(circle at 38% 38%, rgba(255,80,44,0.55), rgba(200,20,10,0.45));
+  border: 2px solid rgba(255,100,80,0.7);
+  box-shadow: 0 0 18px rgba(255,60,30,0.45), inset 0 0 8px rgba(255,120,80,0.15);
+  backdrop-filter: blur(4px);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px; pointer-events: all;
+  user-select: none; -webkit-user-select: none;
+  cursor: pointer; transition: box-shadow 0.08s, background 0.08s;
+}
+.touch-btn.btn-fire:active {
+  background: radial-gradient(circle at 38% 38%, rgba(255,120,60,0.75), rgba(220,40,10,0.65));
+  box-shadow: 0 0 28px rgba(255,80,30,0.7), inset 0 0 12px rgba(255,140,80,0.25);
+}
 
 /* ════════════════════════════════════════════════════════════
    SITE NAVBAR  (DASH DREAD — premium redesign)
@@ -3600,31 +3597,18 @@ body {
   object-fit: contain;
 }
 
-/* On phone: slightly larger touch controls */
+/* Phone touch controls */
 @media (max-width: 480px) {
-  #joystickZone {
-    width: 110px; height: 110px;
-    bottom: 16px; left: 16px;
-  }
-  #joystickKnob {
-    width: 44px; height: 44px;
-  }
-  #touchButtons {
-    grid-template-columns: 40px 40px;
-    grid-template-rows: 40px 40px 40px;
-    gap: 6px;
-    bottom: 16px; right: 14px;
-  }
-  .touch-btn        { font-size: 8px; }
-  .touch-btn.btn-fire { width: 50px; height: 50px; font-size: 15px; }
+  #joystickZone { width: 110px; height: 110px; bottom: 16px; left: 16px; }
+  #joystickKnob { width: 44px; height: 44px; }
+  #touchButtons { bottom: 16px; right: 16px; }
+  .touch-btn.btn-fire { width: 64px; height: 64px; font-size: 24px; }
 }
-
-/* Very small phone: even tighter controls */
 @media (max-width: 360px) {
-  #joystickZone  { width: 96px; height: 96px; bottom: 12px; left: 12px; }
-  #joystickKnob  { width: 38px; height: 38px; }
-  #touchButtons  { grid-template-columns: 36px 36px; grid-template-rows: 36px 36px 36px; gap: 5px; bottom: 12px; right: 10px; }
-  .touch-btn.btn-fire { width: 44px; height: 44px; font-size: 13px; }
+  #joystickZone { width: 96px; height: 96px; bottom: 12px; left: 12px; }
+  #joystickKnob { width: 38px; height: 38px; }
+  #touchButtons { bottom: 12px; right: 12px; }
+  .touch-btn.btn-fire { width: 56px; height: 56px; font-size: 20px; }
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -4040,38 +4024,12 @@ body {
 }
 
 /* ── 4: Fix touch button grid — fire button overflow fix ──── */
-/* fire btn is 54 px but the middle grid row was only 44 px   */
-/* → buttons above/below overlapped. Fix the row heights.     */
-#touchButtons {
-  grid-template-rows: 44px 60px 44px; /* middle row = fire btn height */
-}
-/* Keep fire button centred in the taller row */
-.touch-btn.btn-fire {
-  width: 54px; height: 54px;
-  align-self: center; justify-self: center;
-}
-
-/* ── 5: Touch controls — tablet  (481px – 767px) ─────────── */
+/* ── 5: Touch controls — tablet (481px – 767px) ──────────── */
 @media (min-width: 481px) and (max-width: 767px) {
-  #joystickZone  { width: 118px; height: 118px; bottom: 18px; left: 18px; }
-  #joystickKnob  { width: 46px;  height: 46px; }
-  #touchButtons  {
-    grid-template-columns: 48px 48px;
-    grid-template-rows:    48px 64px 48px;
-    gap: 8px; bottom: 18px; right: 14px;
-  }
-  .touch-btn              { font-size: 9px; }
-  .touch-btn.btn-fire     { width: 56px; height: 56px; font-size: 16px; }
-}
-
-/* ── 6: Phone touch controls — tighter sizes ─────────────── */
-@media (max-width: 480px) {
-  #touchButtons { grid-template-rows: 40px 54px 40px; }
-  .touch-btn.btn-fire { width: 50px; height: 50px; }
-}
-@media (max-width: 360px) {
-  #touchButtons { grid-template-rows: 36px 48px 36px; }
-  .touch-btn.btn-fire { width: 44px; height: 44px; font-size: 13px; }
+  #joystickZone { width: 118px; height: 118px; bottom: 18px; left: 18px; }
+  #joystickKnob { width: 46px;  height: 46px; }
+  #touchButtons { bottom: 18px; right: 18px; }
+  .touch-btn.btn-fire { width: 76px; height: 76px; font-size: 30px; }
 }
 
 /* ── 7: Game body — robust mobile full-screen ─────────────── */
