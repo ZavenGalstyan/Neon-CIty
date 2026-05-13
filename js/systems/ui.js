@@ -42,6 +42,19 @@ class HUD {
     this._shakeAmt = 0;
   }
 
+  // ── Screen scale factor — shrinks HUD on small screens ────────────────────
+  // Returns 1.0 on wide screens, scales down for tablet/phone.
+  get _sc() {
+    const W = this.canvas.width;
+    if (W <= 400) return 0.60;
+    if (W <= 550) return 0.72;
+    if (W <= 768) return 0.82;
+    if (W <= 1024) return 0.90;
+    return 1.0;
+  }
+  // Convenience: scale a value
+  _s(v) { return Math.round(v * this._sc); }
+
   // ── Damage numbers ─────────────────────────────────────────────────────────
   addDamageNumber(worldX, worldY, value, camX, camY, color = '#FF4444') {
     this._dmgNums.push({
@@ -139,27 +152,29 @@ class HUD {
   }
 
   // ── Minimap ────────────────────────────────────────────────────────────────
-  renderMinimap(gameMap, player, bots, camX, camY, boss = null, districtLayout = null, vehicles = []) {
+  renderMinimap(gameMap, player, bots, camX, camY, boss = null, districtLayout = null, vehicles = [], isMobile = false) {
     const ctx  = this.ctx;
     const H    = this.canvas.height;
-    const W    = this.canvas.width;
     const mmX  = HUD_PAD;
-    const mmY  = H - HUD_PAD - 82 - 10 - HUD_MM_H - 22; // leave room for health + controls below
-    const mmW  = HUD_MM_W;
-    const mmH  = HUD_MM_H;
-    const sx   = gameMap.mmScaleX;
-    const sy   = gameMap.mmScaleY;
+    const mmW  = this._s(HUD_MM_W);
+    const mmH  = this._s(HUD_MM_H);
+    const mmY  = isMobile
+      ? this._s(HUD_PAD) + this._s(28)
+      : H - this._s(HUD_PAD) - this._s(82) - this._s(10) - mmH - this._s(22);
+    // sx/sy: convert world → displayed minimap pixels (accounts for display scaling)
+    const sx   = gameMap.mmScaleX * (mmW / HUD_MM_W);
+    const sy   = gameMap.mmScaleY * (mmH / HUD_MM_H);
 
     // Panel background
     ctx.save();
     ctx.fillStyle = 'rgba(0,0,0,0.72)';
     ctx.strokeStyle = 'rgba(68,238,255,0.22)';
     ctx.lineWidth = 1;
-    this._rr(ctx, mmX - 4, mmY - 20, mmW + 8, mmH + 28, 6);
+    this._rr(ctx, mmX - 4, mmY - this._s(20), mmW + 8, mmH + this._s(28), 6);
     ctx.fill(); ctx.stroke();
 
     // Label
-    ctx.font = 'bold 9px Orbitron, monospace';
+    ctx.font = `bold ${this._s(9)}px Orbitron, monospace`;
     ctx.fillStyle = 'rgba(68,238,255,0.65)';
     ctx.textAlign = 'left';
     ctx.fillText('▸ MINIMAP', mmX, mmY - 6);
@@ -263,11 +278,11 @@ class HUD {
   renderDistrictHUD(districtLayout, reputation, currentDistrict, shopDiscount) {
     const ctx = this.ctx;
     const W   = this.canvas.width;
-    const panW = 184;
-    const rowH = 22;
-    const panH = districtLayout.length * rowH + 10 + (shopDiscount > 0 ? 18 : 0);
+    const panW = this._s(184);
+    const rowH = this._s(22);
+    const panH = districtLayout.length * rowH + this._s(10) + (shopDiscount > 0 ? this._s(18) : 0);
     const px   = W - panW - HUD_PAD;
-    const py   = 100;  // below kills (y=88)
+    const py   = this._s(100);
 
     // Panel background
     ctx.save();
@@ -378,36 +393,46 @@ class HUD {
   }
 
   // ── Health bar ─────────────────────────────────────────────────────────────
-  renderHealthBar(player) {
+  renderHealthBar(player, isMobile = false) {
     const ctx  = this.ctx;
     const H    = this.canvas.height;
-    const barW = HUD_MM_W;
-    const barH = 18;
+    const barW = this._s(HUD_MM_W);
+    const barH = this._s(18);
     const x    = HUD_PAD;
-    const y    = H - HUD_PAD - 82;   // sits above controls panel
+    const mmPanelBottom = this._s(HUD_PAD) + this._s(28) + this._s(HUD_MM_H) + this._s(8);
+    const y    = isMobile
+      ? mmPanelBottom + this._s(16)
+      : H - this._s(HUD_PAD) - this._s(82);
     const pct  = player.health / player.maxHealth;
+
+    const sc   = this._sc;
+    const fs1  = Math.round(10 * sc);  // char name font
+    const fs2  = Math.round(9  * sc);  // label font
+    const fs3  = Math.round(11 * sc);  // value font
+    const panH = this._s(34);
+    const panYoff = this._s(26);
 
     // Panel bg
     ctx.save();
     ctx.fillStyle   = 'rgba(0,0,0,0.68)';
     ctx.strokeStyle = 'rgba(255,255,255,0.07)';
     ctx.lineWidth   = 1;
-    this._rr(ctx, x - 4, y - 26, barW + 8, barH + 34, 6);
+    this._rr(ctx, x - 4, y - panYoff, barW + 8, barH + panH, 6);
     ctx.fill(); ctx.stroke();
 
     // Char name
-    ctx.font = '10px Orbitron, monospace';
+    ctx.font = `${fs1}px Orbitron, monospace`;
     ctx.fillStyle   = player.color;
     ctx.shadowColor = player.color;
     ctx.shadowBlur  = 6;
     ctx.textAlign   = 'left';
-    ctx.fillText(player.charData.name, x, y - 10);
+    ctx.fillText(player.charData.name, x, y - this._s(10));
 
     // Label
-    ctx.font = '9px Orbitron, monospace';
+    ctx.font = `${fs2}px Orbitron, monospace`;
     ctx.fillStyle = 'rgba(255,255,255,0.3)';
     ctx.shadowBlur = 0;
-    ctx.fillText('HEALTH', x + barW - 42, y - 10);
+    ctx.fillText('HEALTH', x + barW - this._s(42), y - this._s(10));
 
     // Bar bg
     ctx.fillStyle = '#111122';
@@ -431,7 +456,7 @@ class HUD {
     ctx.strokeRect(x, y, barW, barH);
 
     // Value
-    ctx.font = 'bold 11px Orbitron, monospace';
+    ctx.font = `bold ${fs3}px Orbitron, monospace`;
     ctx.fillStyle = '#fff'; ctx.textAlign = 'center';
     ctx.fillText(`${Math.ceil(player.health)} / ${player.maxHealth}${player.armor > 0 ? `  ⬡ ${Math.round(player.armor*100)}%` : ''}`, x + barW/2, y + barH - 3);
 
@@ -496,7 +521,8 @@ class HUD {
     if (isMobile) return;
     const ctx = this.ctx;
     const H   = this.canvas.height;
-    const bx  = HUD_PAD, by = H - HUD_PAD - 28, bw = 90, bh = 28;
+    const bw  = this._s(90), bh = this._s(28);
+    const bx  = HUD_PAD, by = H - this._s(HUD_PAD) - bh;
     this._helpBtnBounds = { x: bx, y: by, w: bw, h: bh };
     ctx.save();
     ctx.fillStyle   = open ? 'rgba(68,238,255,0.18)' : 'rgba(0,0,0,0.65)';
@@ -758,15 +784,16 @@ class HUD {
     const t   = performance.now() / 1000;
     ctx.save();
 
-    // Layout
-    const iconSize = 32;
+    // Layout — scale icon/font for small screens
+    const iconSize = this._s(32);
+    const moneyFontSz = this._s(28);
     const moneyTxt = money.toLocaleString();
-    ctx.font = 'bold 28px Orbitron, monospace';
+    ctx.font = `bold ${moneyFontSz}px Orbitron, monospace`;
     const textW = ctx.measureText(moneyTxt).width;
     this._lastMoneyW = textW + iconSize + 16;
 
     const iconX = W - 16 - textW - iconSize / 2 - 12;
-    const iconY = 40;
+    const iconY = this._s(40);
     const r = iconSize / 2;
 
     // Animation phases
@@ -930,14 +957,14 @@ class HUD {
     ctx.shadowColor = '#00E5FF';
     ctx.shadowBlur = 22;
     ctx.fillStyle = '#00E5FF';
-    ctx.font = 'bold 28px Orbitron, monospace';
-    ctx.fillText(moneyTxt, W - 16, 48);
+    ctx.font = `bold ${moneyFontSz}px Orbitron, monospace`;
+    ctx.fillText(moneyTxt, W - 16, iconY + this._s(8));
 
     // NEX label with subtle glow
     ctx.shadowBlur = 6;
-    ctx.font = 'bold 9px Orbitron, monospace';
+    ctx.font = `bold ${this._s(9)}px Orbitron, monospace`;
     ctx.fillStyle = 'rgba(0,229,255,0.5)';
-    ctx.fillText('NEX', W - 16, 62);
+    ctx.fillText('NEX', W - 16, iconY + this._s(22));
 
     ctx.restore();
   }
@@ -1155,19 +1182,19 @@ class HUD {
     const ctx = this.ctx;
     const W   = this.canvas.width;
     ctx.save();
-    ctx.font = 'bold 18px Orbitron, monospace'; ctx.textAlign = 'right';
+    ctx.font = `bold ${this._s(18)}px Orbitron, monospace`; ctx.textAlign = 'right';
     ctx.shadowColor = '#FF4444'; ctx.shadowBlur = 10; ctx.fillStyle = '#FF6666';
-    ctx.fillText(`☠ ${kills}`, W - 16, 88);
+    ctx.fillText(`☠ ${kills}`, W - 16, this._s(88));
     ctx.restore();
   }
 
   renderWave(wave, botCount, bossAlive = false) {
     const ctx = this.ctx;
     ctx.save();
-    ctx.font = '11px Orbitron, monospace'; ctx.fillStyle = 'rgba(255,255,255,0.35)';
+    ctx.font = `${this._s(11)}px Orbitron, monospace`; ctx.fillStyle = 'rgba(255,255,255,0.35)';
     ctx.textAlign = 'left';
     const bossTag = bossAlive ? '  ☠ BOSS' : (wave >= 3 ? '  ☠ INCOMING...' : '  ☠ WAVE 3');
-    ctx.fillText(`WAVE ${wave}   ENEMIES: ${botCount}${wave < 3 ? '' : bossTag}`, 16, 22);
+    ctx.fillText(`WAVE ${wave}   ENEMIES: ${botCount}${wave < 3 ? '' : bossTag}`, 16, this._s(22));
     ctx.restore();
   }
 
@@ -1180,33 +1207,34 @@ class HUD {
     const wColor = w.color;
 
     // Panel bg
+    const wpW = this._s(188), wpH = this._s(52);
     ctx.save();
     ctx.fillStyle   = 'rgba(0,0,0,0.65)';
     ctx.strokeStyle = `rgba(${this._rgb(wColor)},0.3)`;
     ctx.lineWidth   = 1;
-    this._rr(ctx, W - 200, H - 88, 188, 52, 6);
+    this._rr(ctx, W - wpW - 12, H - wpH - this._s(36), wpW, wpH, 6);
     ctx.fill(); ctx.stroke();
 
     // Weapon color left bar
     ctx.fillStyle = wColor;
-    ctx.fillRect(W - 200, H - 88 + 8, 3, 52 - 16);
+    ctx.fillRect(W - wpW - 12, H - wpH - this._s(36) + this._s(8), 3, wpH - this._s(16));
 
-    ctx.font = 'bold 13px Orbitron, monospace';
+    ctx.font = `bold ${this._s(13)}px Orbitron, monospace`;
     ctx.fillStyle = wColor; ctx.shadowColor = wColor; ctx.shadowBlur = 10;
     ctx.textAlign = 'right';
-    ctx.fillText(w.name, W - 16, H - 63);
+    ctx.fillText(w.name, W - 16, H - this._s(63));
 
     ctx.shadowBlur = 0;
-    ctx.font = '10px Orbitron, monospace'; ctx.fillStyle = 'rgba(255,255,255,0.35)';
+    ctx.font = `${this._s(10)}px Orbitron, monospace`; ctx.fillStyle = 'rgba(255,255,255,0.35)';
     const dmg = w.damage > 0 ? w.damage : player.charData.damage;
     const fr  = w.fireRate > 0 ? w.fireRate : player.charData.fireRate;
     const eff = Math.round(dmg * player.damageMult);
-    ctx.fillText(`DMG ${eff}   RPM ${Math.round(60000/fr)}${w.bullets>1?`   ×${w.bullets}`:''}`, W - 16, H - 47);
+    ctx.fillText(`DMG ${eff}   RPM ${Math.round(60000/fr)}${w.bullets>1?`   ×${w.bullets}`:''}`, W - 16, H - this._s(47));
 
     // Damage mult indicator
     if (player.damageMult > 1) {
       ctx.fillStyle = '#FF4455';
-      ctx.fillText(`×${player.damageMult.toFixed(2)} DMG`, W - 16, H - 35);
+      ctx.fillText(`×${player.damageMult.toFixed(2)} DMG`, W - 16, H - this._s(35));
     }
     ctx.restore();
   }
@@ -1214,15 +1242,15 @@ class HUD {
   renderGrenadeCount(count) {
     const ctx = this.ctx;
     const H   = this.canvas.height;
-    const x   = HUD_PAD + HUD_MM_W + 10;
-    const y   = H - HUD_PAD - 50;
+    const x   = HUD_PAD + this._s(HUD_MM_W) + 10;
+    const y   = H - this._s(HUD_PAD) - this._s(50);
     ctx.save();
     ctx.fillStyle   = 'rgba(0,0,0,0.65)';
     ctx.strokeStyle = '#FF8800'; ctx.lineWidth = 1;
-    this._rr(ctx, x, y, 80, 22, 5); ctx.fill(); ctx.stroke();
-    ctx.font      = 'bold 10px Orbitron, monospace';
+    this._rr(ctx, x, y, this._s(80), this._s(22), 5); ctx.fill(); ctx.stroke();
+    ctx.font      = `bold ${this._s(10)}px Orbitron, monospace`;
     ctx.fillStyle = '#FF8800'; ctx.textAlign = 'left';
-    ctx.fillText(`\u{1F4A3} x${count}`, x + 8, y + 15);
+    ctx.fillText(`\u{1F4A3} x${count}`, x + 8, y + this._s(15));
     ctx.restore();
   }
 
@@ -1230,21 +1258,22 @@ class HUD {
     const ctx = this.ctx;
     const W   = this.canvas.width;
     const H   = this.canvas.height;
+    const abW = this._s(124), abH = this._s(26);
     ctx.save();
     ctx.fillStyle   = panelOpen ? 'rgba(255,204,0,0.18)' : 'rgba(0,0,0,0.6)';
     ctx.strokeStyle = panelOpen ? '#FFCC00' : 'rgba(255,204,0,0.25)';
     ctx.lineWidth   = panelOpen ? 1.5 : 1;
     ctx.shadowColor = panelOpen ? '#FFCC00' : 'transparent';
     ctx.shadowBlur  = panelOpen ? 12 : 0;
-    this._rr(ctx, W - 136, H - 66, 124, 26, 5);
+    this._rr(ctx, W - abW - 12, H - this._s(66), abW, abH, 5);
     ctx.fill(); ctx.stroke();
 
-    ctx.font      = 'bold 10px Orbitron, monospace';
+    ctx.font      = `bold ${this._s(10)}px Orbitron, monospace`;
     ctx.fillStyle = panelOpen ? '#FFCC00' : 'rgba(255,255,255,0.5)';
     ctx.textAlign = 'center';
     ctx.shadowColor = panelOpen ? '#FFCC00' : 'transparent';
     ctx.shadowBlur  = panelOpen ? 8 : 0;
-    ctx.fillText('[TAB]  ACHIEVEMENTS', W - 74, H - 49);
+    ctx.fillText('[TAB]  ACHIEVEMENTS', W - abW / 2 - 12, H - this._s(49));
     ctx.restore();
   }
 
@@ -1463,11 +1492,13 @@ class HUD {
   }
 
   // ── Companion HP badge ──────────────────────────────────────────────────────
-  renderCompanionHP(companion) {
+  renderCompanionHP(companion, isMobile = false) {
     const ctx = this.ctx;
     const H   = this.canvas.height;
-    const x   = HUD_PAD + HUD_MM_W + 10;
-    const y   = H - HUD_PAD - 80;
+    const mmPanelBottom = this._s(HUD_PAD) + this._s(28) + this._s(HUD_MM_H) + this._s(8);
+    // health bar panel bottom on mobile: mmPanelBottom + _s(16+26) = mmPanelBottom + _s(42)
+    const x   = isMobile ? HUD_PAD : HUD_PAD + HUD_MM_W + 10;
+    const y   = isMobile ? mmPanelBottom + this._s(42) + this._s(8) : H - HUD_PAD - 80;
     const pct = companion.hp / companion.maxHp;
     const col = pct > 0.5 ? '#44FF88' : pct > 0.25 ? '#FFCC00' : '#FF4444';
     ctx.save();

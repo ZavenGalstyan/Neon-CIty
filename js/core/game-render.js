@@ -1645,10 +1645,11 @@ Game.prototype._render = function() {
         this.boss,
         this._districtLayout,
         this.vehicles,
+        this._isMobile,
       );
       if (this._waypointDoor)
         this.hud.renderWaypointNav(this.player, this._waypointDoor, this.map);
-      this.hud.renderHealthBar(this.player);
+      this.hud.renderHealthBar(this.player, this._isMobile);
       this.hud.renderHelpButton(this._helpPanelOpen, this._isMobile);
       if (this._helpPanelOpen) this.hud.renderHelpPanel(this._arenaMode);
       if (this._isMobile) this.hud.renderMobileHints(this._arenaMode);
@@ -1708,7 +1709,7 @@ Game.prototype._render = function() {
         );
       if (this._towerMode) this._renderTowerHUD(ctx, W, H);
       if (this.player.companion && !this.player.companion.dead)
-        this.hud.renderCompanionHP(this.player.companion);
+        this.hud.renderCompanionHP(this.player.companion, this._isMobile);
       if (this.player._buffs && this.player._buffs.size > 0)
         this.hud.renderActiveBuffs(this.player._buffs);
       this.hud.renderAchButton(this._achPanelOpen);

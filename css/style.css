@@ -3986,3 +3986,168 @@ body {
 .mp-toast { padding: 11px 16px; border-radius: 10px; font-family: 'Rajdhani', sans-serif; font-size: 13px; margin-bottom: 14px; }
 .mp-toast.error { background: rgba(255,60,60,0.12); border: 1px solid rgba(255,60,60,0.3); color: #FF8888; }
 .mp-toast.info  { background: rgba(68,238,255,0.08); border: 1px solid rgba(68,238,255,0.2); color: #88EEFF; }
+
+/* ════════════════════════════════════════════════════════════
+   COMPREHENSIVE RESPONSIVE FIX  — all screens < 1600px
+   ════════════════════════════════════════════════════════════ */
+
+/* ── 1: Notebook / small desktop  (1025px – 1599px) ──────── */
+@media (max-width: 1599px) and (min-width: 1025px) {
+  .select-container          { max-width: 1080px; }
+  .char-card                 { height: 112px; }
+  .char-info h3              { font-size: 10px; letter-spacing: 0.06em; }
+  .characters-grid           { gap: 10px; }
+  .maps-grid                 { gap: 10px; }
+  .map-card                  { height: 130px; }
+  .map-preview               { height: 68px; }
+  .map-card--neon-city,
+  .map-card--wasteland,
+  .map-card--jungle,
+  .map-card--robot-city,
+  .map-card--desert          { min-height: 155px; }
+}
+
+/* ── 2: Fix wide map cards (inline "span 3") on 2-col grid ─ */
+/* At 760px the grid switches to 2 cols; span-3 inline style  */
+/* creates an implicit 3rd track and breaks the layout.        */
+@media (max-width: 760px) {
+  /* Force full-width (1/-1 = all available columns) */
+  .maps-grid > [data-map="neon_city"],
+  .maps-grid > [data-map="wasteland"] {
+    grid-column: 1 / -1 !important;
+    flex-direction: column   !important;
+    min-height: auto         !important;
+    padding: 12px            !important;
+    gap: 0                   !important;
+  }
+  .maps-grid > [data-map="neon_city"] .map-preview,
+  .maps-grid > [data-map="wasteland"] .map-preview {
+    width: 100%     !important;
+    height: 80px    !important;
+    min-height: 80px !important;
+  }
+  /* feature-maps-row: 2 cols on large tablet instead of jumping to 1 */
+  .feature-maps-row { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* ── 3: Phone (≤ 480px) map layout ───────────────────────── */
+@media (max-width: 480px) {
+  /* feature-maps-row: single column on phone */
+  .feature-maps-row           { grid-template-columns: 1fr; }
+  /* wide cards stay full-width (already 1-col grid) */
+  .maps-grid > [data-map="neon_city"],
+  .maps-grid > [data-map="wasteland"] { grid-column: 1 / -1 !important; }
+}
+
+/* ── 4: Fix touch button grid — fire button overflow fix ──── */
+/* fire btn is 54 px but the middle grid row was only 44 px   */
+/* → buttons above/below overlapped. Fix the row heights.     */
+#touchButtons {
+  grid-template-rows: 44px 60px 44px; /* middle row = fire btn height */
+}
+/* Keep fire button centred in the taller row */
+.touch-btn.btn-fire {
+  width: 54px; height: 54px;
+  align-self: center; justify-self: center;
+}
+
+/* ── 5: Touch controls — tablet  (481px – 767px) ─────────── */
+@media (min-width: 481px) and (max-width: 767px) {
+  #joystickZone  { width: 118px; height: 118px; bottom: 18px; left: 18px; }
+  #joystickKnob  { width: 46px;  height: 46px; }
+  #touchButtons  {
+    grid-template-columns: 48px 48px;
+    grid-template-rows:    48px 64px 48px;
+    gap: 8px; bottom: 18px; right: 14px;
+  }
+  .touch-btn              { font-size: 9px; }
+  .touch-btn.btn-fire     { width: 56px; height: 56px; font-size: 16px; }
+}
+
+/* ── 6: Phone touch controls — tighter sizes ─────────────── */
+@media (max-width: 480px) {
+  #touchButtons { grid-template-rows: 40px 54px 40px; }
+  .touch-btn.btn-fire { width: 50px; height: 50px; }
+}
+@media (max-width: 360px) {
+  #touchButtons { grid-template-rows: 36px 48px 36px; }
+  .touch-btn.btn-fire { width: 44px; height: 44px; font-size: 13px; }
+}
+
+/* ── 7: Game body — robust mobile full-screen ─────────────── */
+/* position:fixed + inset:0 prevents iOS rubber-band scroll   */
+/* and keeps the canvas glued to the viewport at all times.   */
+.game-body {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;   /* fixed + inset:0 is enough; keep for safety */
+  overflow: hidden;
+  touch-action: none;
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: auto; /* disable iOS momentum scroll */
+}
+#gameCanvas {
+  position: absolute;
+  inset: 0;
+  width: 100%  !important;
+  height: 100% !important;
+  display: block;
+  touch-action: none;
+}
+
+/* ── 8: Fullscreen button — move to top-right on phone ────── */
+/* Top-left overlaps the HUD minimap area on narrow screens.   */
+@media (max-width: 480px) {
+  #fsBtn {
+    top: 8px;
+    left: auto;
+    right: 8px;
+    width: 34px; height: 34px;
+    padding: 6px;
+  }
+}
+
+/* ── 9: Select screen — prevent horizontal overflow ──────── */
+.select-screen,
+.select-container { overflow-x: hidden; }
+
+/* ── 10: Map card previews on wide cards — tablet fix ─────── */
+@media (max-width: 760px) {
+  /* jungle / robot-city / desert: switch to column layout */
+  .map-card--jungle,
+  .map-card--robot-city,
+  .map-card--desert {
+    flex-direction: column !important;
+    min-height: auto       !important;
+    padding: 12px          !important;
+  }
+  .map-card--jungle .map-preview,
+  .map-card--robot-city .map-preview,
+  .map-card--desert .map-preview {
+    width: 100%     !important;
+    height: 75px    !important;
+    min-height: 75px !important;
+  }
+}
+
+/* ── 11: Char cards — min readable size on tiny screens ───── */
+@media (max-width: 360px) {
+  .char-card  { min-height: 76px; }
+  .char-avatar { width: 44px !important; min-width: 44px !important; }
+}
+
+/* ── 12: HUD — fsBtn safe-area for notch phones ─────────── */
+@supports (padding-top: env(safe-area-inset-top)) {
+  @media (max-width: 480px) {
+    #fsBtn {
+      top: calc(8px + env(safe-area-inset-top));
+      right: calc(8px + env(safe-area-inset-right));
+    }
+    #touchControls {
+      padding-bottom: env(safe-area-inset-bottom);
+      padding-left:   env(safe-area-inset-left);
+      padding-right:  env(safe-area-inset-right);
+    }
+  }
+}
