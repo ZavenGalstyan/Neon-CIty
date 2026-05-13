@@ -17,8 +17,10 @@ const SocialUI = (() => {
     clanView: 'browse',
     searchResults: [],
     unreadNotif: 0,
+    notifications: [],
+    notifFilter: 'all', // 'all' | 'unread'
     heartbeatTimer: null,
-    activePage: null,   // 'friends' | 'chat' | 'clans' | 'profile' | 'ranks'
+    activePage: null,   // 'friends' | 'chat' | 'clans' | 'profile' | 'ranks' | 'notifications'
     profileData: null,
     rankType: 'kills',
     rankData: [],
@@ -101,7 +103,7 @@ const SocialUI = (() => {
       notifBtn.id = 'ncsNavNotifBtn';
       notifBtn.title = 'Notifications';
       notifBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="17" height="17"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><span class="ncs-nav-badge" id="ncsNavNotifBadge" style="display:none">0</span>`;
-      notifBtn.onclick = () => openPage('friends'); // opens friends with requests visible
+      notifBtn.onclick = () => openPage('notifications');
 
       // PROFILE
       const profileBtn = document.createElement('button');
@@ -267,6 +269,41 @@ const SocialUI = (() => {
         </div>
       </div>
 
+      <!-- ══ NOTIFICATIONS PAGE ════════════════════════════════ -->
+      <div class="ncs-page" id="ncsPageNotifications">
+        <div class="ncs-topbar">
+          <span class="ncs-topbar-icon">🔔</span>
+          <div>
+            <div class="ncs-topbar-title">NOTIFICATIONS</div>
+            <div class="ncs-topbar-sub" id="ncsNotifSub">System alerts & updates</div>
+          </div>
+          <button class="ncs-close-btn" data-close="notifications">✕</button>
+        </div>
+        <div class="ncs-page-body ncs-notif-body">
+          <!-- Header with filters -->
+          <div class="ncs-notif-header">
+            <div class="ncs-notif-filters">
+              <button class="ncs-notif-filter-btn ncs-active" id="ncsNotifFilterAll" data-filter="all">All</button>
+              <button class="ncs-notif-filter-btn" id="ncsNotifFilterUnread" data-filter="unread">Unread</button>
+            </div>
+            <div class="ncs-notif-actions">
+              <button class="ncs-btn ncs-btn-sm ncs-btn-ghost" id="ncsNotifMarkAllRead">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="20 6 9 17 4 12"/></svg>
+                Mark all read
+              </button>
+              <button class="ncs-btn ncs-btn-sm ncs-btn-ghost" id="ncsNotifClearRead">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                Clear read
+              </button>
+            </div>
+          </div>
+          <!-- Notifications list -->
+          <div class="ncs-notif-list" id="ncsNotifList">
+            <div class="ncs-empty"><div class="ncs-empty-icon">🔔</div>Loading notifications…</div>
+          </div>
+        </div>
+      </div>
+
       <!-- Toasts -->
       <div class="ncs-toast-container" id="ncsToasts"></div>
     `;
@@ -292,11 +329,12 @@ const SocialUI = (() => {
   }
 
   function _pageId(p) {
-    if (p === 'friends') return 'ncsPageFriends';
-    if (p === 'chat')    return 'ncsPageChat';
-    if (p === 'clans')   return 'ncsPageClans';
-    if (p === 'profile') return 'ncsPageProfile';
-    if (p === 'ranks')   return 'ncsPageRanks';
+    if (p === 'friends')       return 'ncsPageFriends';
+    if (p === 'chat')          return 'ncsPageChat';
+    if (p === 'clans')         return 'ncsPageClans';
+    if (p === 'profile')       return 'ncsPageProfile';
+    if (p === 'ranks')         return 'ncsPageRanks';
+    if (p === 'notifications') return 'ncsPageNotifications';
     return 'ncsPageFriends';
   }
 
@@ -305,11 +343,12 @@ const SocialUI = (() => {
   }
 
   function _renderPage(page) {
-    if (page === 'friends') _renderFriendsPage();
-    if (page === 'chat')    _renderChatPage();
-    if (page === 'clans')   _renderClansPage();
-    if (page === 'profile') _renderProfilePage();
-    if (page === 'ranks')   _renderRanksPage(S.rankType);
+    if (page === 'friends')       _renderFriendsPage();
+    if (page === 'chat')          _renderChatPage();
+    if (page === 'clans')         _renderClansPage();
+    if (page === 'profile')       _renderProfilePage();
+    if (page === 'ranks')         _renderRanksPage(S.rankType);
+    if (page === 'notifications') _renderNotificationsPage();
   }
 
   /* ── FAB drag-to-reposition ─────────────────────────────── */
@@ -1464,6 +1503,161 @@ const SocialUI = (() => {
       f.isOnline = online;
       if (S.activePage === 'friends') _renderFriendsPage();
       if (S.activeDM?.friendName === name && S.activePage === 'chat') _renderChatWindow();
+    }
+  }
+
+  /* ══════════════════════════════════════════════════════════
+     NOTIFICATIONS PAGE RENDER
+  ══════════════════════════════════════════════════════════ */
+  async function _renderNotificationsPage() {
+    const subEl = document.getElementById('ncsNotifSub');
+    const listEl = document.getElementById('ncsNotifList');
+    if (!listEl) return;
+
+    // Show loading state
+    listEl.innerHTML = `<div class="ncs-empty"><div class="ncs-empty-icon">🔔</div>Loading notifications…</div>`;
+
+    // Fetch notifications
+    try {
+      const unreadOnly = S.notifFilter === 'unread';
+      const data = await Social.Notifications.list(50, unreadOnly);
+      S.notifications = data.notifications || data || [];
+    } catch (e) {
+      listEl.innerHTML = `<div class="ncs-empty"><div class="ncs-empty-icon">⚠️</div>Failed to load notifications</div>`;
+      return;
+    }
+
+    // Update subtitle
+    const unreadCount = S.notifications.filter(n => !n.read).length;
+    if (subEl) subEl.textContent = unreadCount > 0 ? `${unreadCount} unread` : 'All caught up!';
+
+    // Bind filter buttons
+    document.getElementById('ncsNotifFilterAll')?.addEventListener('click', () => _setNotifFilter('all'));
+    document.getElementById('ncsNotifFilterUnread')?.addEventListener('click', () => _setNotifFilter('unread'));
+    document.getElementById('ncsNotifMarkAllRead')?.addEventListener('click', _markAllNotificationsRead);
+    document.getElementById('ncsNotifClearRead')?.addEventListener('click', _clearReadNotifications);
+
+    // Update filter button states
+    document.getElementById('ncsNotifFilterAll')?.classList.toggle('ncs-active', S.notifFilter === 'all');
+    document.getElementById('ncsNotifFilterUnread')?.classList.toggle('ncs-active', S.notifFilter === 'unread');
+
+    // Render list
+    if (!S.notifications.length) {
+      listEl.innerHTML = `
+        <div class="ncs-empty ncs-notif-empty">
+          <div class="ncs-notif-empty-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="48" height="48">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+            </svg>
+          </div>
+          <div class="ncs-notif-empty-title">${S.notifFilter === 'unread' ? 'No unread notifications' : 'No notifications yet'}</div>
+          <div class="ncs-notif-empty-desc">You're all caught up! Check back later for updates.</div>
+        </div>
+      `;
+      return;
+    }
+
+    listEl.innerHTML = S.notifications.map(n => _htmlNotificationCard(n)).join('');
+
+    // Bind notification actions
+    listEl.querySelectorAll('[data-notif-action]').forEach(el => {
+      el.addEventListener('click', _handleNotificationAction);
+    });
+  }
+
+  function _htmlNotificationCard(n) {
+    const iconMap = {
+      friend_request: '👤',
+      friend_accepted: '🤝',
+      clan_invite: '⭐',
+      clan_kicked: '⚠️',
+      achievement: '🏆',
+      system: '📢',
+      dm: '💬',
+      level_up: '⬆️',
+      reward: '🎁',
+    };
+    const icon = iconMap[n.type] || '🔔';
+    const time = _timeAgo(n.createdAt || n.timestamp);
+    const unreadClass = n.read ? '' : 'ncs-notif-unread';
+
+    return `
+      <div class="ncs-notif-card ${unreadClass}" data-notif-id="${n.id || n._id}">
+        <div class="ncs-notif-icon-wrap">
+          <span class="ncs-notif-icon">${icon}</span>
+          ${!n.read ? '<span class="ncs-notif-dot"></span>' : ''}
+        </div>
+        <div class="ncs-notif-content">
+          <div class="ncs-notif-title">${_esc(n.title || _notifTypeTitle(n.type))}</div>
+          <div class="ncs-notif-message">${_esc(n.message || n.content || '')}</div>
+          <div class="ncs-notif-time">${time}</div>
+        </div>
+        <div class="ncs-notif-actions">
+          ${!n.read ? `<button class="ncs-notif-action-btn" data-notif-action="read" data-notif-id="${n.id || n._id}" title="Mark as read">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg>
+          </button>` : ''}
+        </div>
+      </div>
+    `;
+  }
+
+  function _notifTypeTitle(type) {
+    const titles = {
+      friend_request: 'Friend Request',
+      friend_accepted: 'Friend Accepted',
+      clan_invite: 'Clan Invitation',
+      clan_kicked: 'Removed from Clan',
+      achievement: 'Achievement Unlocked',
+      system: 'System Message',
+      dm: 'New Message',
+      level_up: 'Level Up!',
+      reward: 'Reward Received',
+    };
+    return titles[type] || 'Notification';
+  }
+
+  function _setNotifFilter(filter) {
+    S.notifFilter = filter;
+    _renderNotificationsPage();
+  }
+
+  async function _markAllNotificationsRead() {
+    try {
+      await Social.Notifications.markAllRead();
+      S.notifications.forEach(n => n.read = true);
+      S.unreadNotif = 0;
+      _refreshBadges();
+      _renderNotificationsPage();
+      toast('All notifications marked as read', 'friend');
+    } catch (e) {
+      toast('Failed to mark notifications as read', 'error');
+    }
+  }
+
+  async function _clearReadNotifications() {
+    // Filter out read notifications from display (frontend only)
+    S.notifications = S.notifications.filter(n => !n.read);
+    _renderNotificationsPage();
+    toast('Read notifications cleared', 'friend');
+  }
+
+  async function _handleNotificationAction(e) {
+    const btn = e.currentTarget;
+    const action = btn.dataset.notifAction;
+    const notifId = btn.dataset.notifId;
+
+    if (action === 'read' && notifId) {
+      try {
+        await Social.Notifications.markRead(notifId);
+        const notif = S.notifications.find(n => (n.id || n._id) === notifId);
+        if (notif) notif.read = true;
+        S.unreadNotif = Math.max(0, S.unreadNotif - 1);
+        _refreshBadges();
+        _renderNotificationsPage();
+      } catch (e) {
+        toast('Failed to mark as read', 'error');
+      }
     }
   }
 
