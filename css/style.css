@@ -1006,6 +1006,64 @@ body {
   50%       { opacity: 1;    transform: scale(1.6); }
 }
 
+/* Hover zoom — scene zooms in slightly when hovering a card */
+.map-preview { transition: transform 0.55s ease; }
+.map-card:hover .map-preview { transform: scale(1.07); }
+
+/* Frozen Tundra — falling snow particles */
+.snow-particle {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(220,240,255,0.88);
+  box-shadow: 0 0 3px rgba(180,220,255,0.5);
+  animation: snowFall var(--sf, 3s) linear infinite;
+  animation-delay: var(--sfdelay, 0s);
+}
+@keyframes snowFall {
+  0%   { transform: translateY(-8px) translateX(0);              opacity: 0; }
+  12%  { opacity: 0.9; }
+  88%  { opacity: 0.45; }
+  100% { transform: translateY(185px) translateX(var(--sfx,8px)); opacity: 0; }
+}
+
+/* Desert Sands — drifting sand particles */
+.sand-particle {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(210,160,50,0.65);
+  animation: sandDrift var(--sd, 3.5s) linear infinite;
+  animation-delay: var(--sddelay, 0s);
+}
+@keyframes sandDrift {
+  0%   { transform: translateX(0)     translateY(0);              opacity: 0; }
+  12%  { opacity: 0.75; }
+  88%  { opacity: 0.3; }
+  100% { transform: translateX(220px) translateY(var(--sdy, 4px)); opacity: 0; }
+}
+
+/* Arena — torch flame flicker */
+.torch-flame {
+  position: absolute;
+  border-radius: 50% 50% 40% 40%;
+  animation: torchFlicker var(--tf, 0.35s) ease-in-out infinite alternate;
+  animation-delay: var(--tfdelay, 0s);
+}
+@keyframes torchFlicker {
+  0%   { opacity: 0.78; transform: scaleY(1)    scaleX(1); }
+  100% { opacity: 1;    transform: scaleY(1.18) scaleX(0.86); }
+}
+
+/* Sky Realm — cloud drift */
+.cloud-drift {
+  position: absolute;
+  animation: cloudDrift var(--cd, 9s) ease-in-out infinite;
+  animation-delay: var(--cddelay, 0s);
+}
+@keyframes cloudDrift {
+  0%, 100% { transform: translateX(0); }
+  50%       { transform: translateX(10px); }
+}
+
 /* ── Start button ───────────────────────────────────────── */
 .start-btn {
   font-family: 'Orbitron', sans-serif; font-size: 16px; font-weight: 700;
