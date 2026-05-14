@@ -147,10 +147,8 @@ const Auth = (() => {
           </a>
         </div>
         <div class="nav-auth">
-          <button class="nav-btn nav-btn--ghost" id="navLogout">LOGOUT</button>
         </div>`;
 
-      document.getElementById('navLogout').addEventListener('click', logout);
     } else {
       // Guest state
       nav.innerHTML = `
@@ -222,8 +220,7 @@ const Auth = (() => {
         <a href="shop.html"        class="nav-mobile-item gold"><span class="nav-mobile-item-icon">⬡</span>ITEM SHOP</a>
         <a href="inventory.html"   class="nav-mobile-item"><span class="nav-mobile-item-icon">▦</span>INVENTORY</a>
         <a href="leaderboard.html" class="nav-mobile-item pink"><span class="nav-mobile-item-icon">▲</span>LEADERBOARDS</a>
-        <div class="nav-mobile-section">ACCOUNT</div>
-        <button class="nav-mobile-item pink" id="navMobileLogout"><span class="nav-mobile-item-icon">⏻</span>LOGOUT</button>`;
+        <div class="nav-mobile-section">ACCOUNT</div>`;
     } else {
       menu.innerHTML = `
         <div class="nav-mobile-section">NAVIGATE</div>
@@ -260,9 +257,6 @@ const Auth = (() => {
     // Close on nav link click
     menu.querySelectorAll('a').forEach(a => a.addEventListener('click', closeMenu));
 
-    // Logout inside mobile menu
-    const mobileLogout = document.getElementById('navMobileLogout');
-    if (mobileLogout) mobileLogout.addEventListener('click', logout);
   }
 
   /* Minimal HTML-escape to prevent XSS when injecting a username */
