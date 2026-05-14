@@ -677,31 +677,26 @@
         <span class="section-label">SELECT MAP</span>
       </div>
 
-      <!-- Page navigation tabs -->
-      <div class="page-nav">
-        <button class="page-tab active" id="pageTab1" data-page="1">PAGE 1 · CLASSIC MAPS</button>
-        <button class="page-tab" id="pageTab2" data-page="2">PAGE 2 · NEW MAPS &amp; MODES</button>
-        <!-- <button class="page-tab" id="pageTab3" data-page="3">PAGE 3 · PREHISTORIC</button> -->
-      </div>
-
-      <!-- ─── PAGE 1 ─────────────────────────── -->
-      <div id="mapPage1">
       <div class="maps-grid">
 
         <!-- NEON CITY - Unified map with color themes -->
-        <div class="map-card map-card--neon-city selected" data-map="neon_city" style="grid-column: span 3;">
-          <div class="map-preview" id="neonCityPreview" style="--mg:16px;--mbg:#080812;--mr:rgba(68,238,255,0.4);height:140px;">
+        <div class="map-card map-card--neon-city selected" data-map="neon_city">
+          <div class="map-preview" id="neonCityPreview" style="--mg:16px;--mbg:#080812;--mr:rgba(68,238,255,0.4);">
             <div class="map-preview-inner">
-              <!-- Animated neon dots -->
-              <div class="road-dot" id="neonDot1" style="top:20%;left:20%"></div>
-              <div class="road-dot" id="neonDot2" style="top:20%;left:50%"></div>
-              <div class="road-dot" id="neonDot3" style="top:20%;left:80%"></div>
-              <div class="road-dot" id="neonDot4" style="top:50%;left:20%"></div>
-              <div class="road-dot" id="neonDot5" style="top:50%;left:50%;width:10px;height:10px;margin:-5px 0 0 -5px"></div>
-              <div class="road-dot" id="neonDot6" style="top:50%;left:80%"></div>
-              <div class="road-dot" id="neonDot7" style="top:80%;left:20%"></div>
-              <div class="road-dot" id="neonDot8" style="top:80%;left:50%"></div>
-              <div class="road-dot" id="neonDot9" style="top:80%;left:80%"></div>
+              <!-- City building silhouettes -->
+              <div style="position:absolute;bottom:0;left:2%;width:13%;height:55%;background:rgba(0,10,30,0.92);border-top:2px solid rgba(68,238,255,0.7);box-shadow:0 0 8px rgba(68,238,255,0.3)"></div>
+              <div style="position:absolute;bottom:0;left:17%;width:9%;height:72%;background:rgba(0,8,25,0.95);border-top:2px solid rgba(68,238,255,0.85);box-shadow:0 0 10px rgba(68,238,255,0.4)"></div>
+              <div style="position:absolute;bottom:0;left:28%;width:14%;height:44%;background:rgba(0,12,32,0.9);border-top:2px solid rgba(68,238,255,0.55)"></div>
+              <div style="position:absolute;bottom:0;left:44%;width:10%;height:68%;background:rgba(0,8,25,0.95);border-top:2px solid rgba(255,68,100,0.8);box-shadow:0 0 10px rgba(255,68,100,0.35)"></div>
+              <div style="position:absolute;bottom:0;left:57%;width:15%;height:50%;background:rgba(0,10,30,0.9);border-top:2px solid rgba(68,238,255,0.6)"></div>
+              <div style="position:absolute;bottom:0;left:74%;width:11%;height:62%;background:rgba(0,8,25,0.95);border-top:2px solid rgba(68,238,255,0.75);box-shadow:0 0 8px rgba(68,238,255,0.3)"></div>
+              <div style="position:absolute;bottom:0;left:87%;width:13%;height:40%;background:rgba(0,12,32,0.9);border-top:2px solid rgba(68,238,255,0.5)"></div>
+              <!-- Window glows -->
+              <div style="position:absolute;bottom:44%;left:5%;width:3px;height:3px;background:#44EEFF;box-shadow:0 0 8px #44EEFF,0 0 16px rgba(68,238,255,0.5)"></div>
+              <div style="position:absolute;bottom:59%;left:20%;width:3px;height:3px;background:#44EEFF;box-shadow:0 0 8px #44EEFF"></div>
+              <div style="position:absolute;bottom:53%;left:47%;width:3px;height:3px;background:#FF4464;box-shadow:0 0 8px #FF4464"></div>
+              <div style="position:absolute;bottom:38%;left:60%;width:3px;height:3px;background:#44EEFF;box-shadow:0 0 8px #44EEFF"></div>
+              <div style="position:absolute;bottom:49%;left:78%;width:3px;height:3px;background:#FF4464;box-shadow:0 0 8px #FF4464"></div>
             </div>
           </div>
           <div class="map-info">
@@ -712,7 +707,7 @@
             <p class="map-desc">The ultimate neon playground. Choose your color theme below.</p>
 
             <!-- Color Theme Selector -->
-            <div class="neon-color-selector" style="display:flex;gap:8px;margin:10px 0;justify-content:center;flex-wrap:wrap;">
+            <div class="neon-color-selector" style="display:flex;gap:6px;margin:6px 0;flex-wrap:wrap;">
               <button class="neon-theme-btn active" data-theme="cyan" style="--btn-color:#44EEFF" title="Cyan Neon">
                 <span class="theme-color" style="background:#44EEFF;box-shadow:0 0 12px #44EEFF"></span>
               </button>
@@ -742,12 +737,9 @@
         </div>
 
 
-        <!-- GALACTICA · THE TOWER · SKY REALM — one row of three feature cards -->
-        <div class="feature-maps-row">
-
         <!-- GALACTICA -->
         <div class="map-card map-card--galactica" data-map="galactica">
-          <div class="map-preview" style="position:relative;overflow:hidden;background:#020010;width:100%;height:130px;">
+          <div class="map-preview">
             <!-- Star field dots -->
             <div style="position:absolute;top:12%;left:18%;width:2px;height:2px;border-radius:50%;background:#FFFFFF;box-shadow:0 0 4px #FFFFFF;opacity:0.9"></div>
             <div style="position:absolute;top:28%;left:55%;width:1.5px;height:1.5px;border-radius:50%;background:#AADDFF;box-shadow:0 0 4px #AADDFF;opacity:0.7"></div>
@@ -787,7 +779,7 @@
 
         <!-- THE TOWER -->
         <div class="map-card map-card--tower" data-map="tower">
-          <div class="map-preview" style="position:relative;overflow:hidden;background:#1a1210;width:100%;height:130px;">
+          <div class="map-preview">
             <!-- Floor plan tiles -->
             <div style="position:absolute;inset:0;background:repeating-linear-gradient(0deg,rgba(200,160,60,0.06) 0px,rgba(200,160,60,0.06) 1px,transparent 1px,transparent 14px),repeating-linear-gradient(90deg,rgba(200,160,60,0.06) 0px,rgba(200,160,60,0.06) 1px,transparent 1px,transparent 14px)"></div>
             <!-- Outer walls -->
@@ -821,7 +813,7 @@
 
         <!-- SKY REALM -->
         <div class="map-card map-card--sky" data-map="sky_realm">
-          <div class="map-preview" style="position:relative;overflow:hidden;background:linear-gradient(180deg,#1a3a6a 0%,#2a5a9a 40%,#4a8abf 100%);width:100%;height:130px;">
+          <div class="map-preview">
             <!-- Sun glow -->
             <div style="position:absolute;top:10%;right:14%;width:30px;height:30px;background:radial-gradient(circle,#FFE87A 30%,rgba(255,220,80,0.3) 70%,transparent 100%);border-radius:50%;box-shadow:0 0 18px rgba(255,230,80,0.7)"></div>
             <!-- Horizon haze -->
@@ -858,21 +850,21 @@
           </div>
         </div>
 
-        </div><!-- end .feature-maps-row -->
-
-      </div><!-- end .maps-grid -->
-
-      <!-- Arena + Zombie + Dino World -->
-      <div class="special-maps-row">
+        <!-- Arena + Zombie + Dino World -->
 
         <div class="map-card map-card--arena" data-map="arena">
           <div class="map-preview" style="--mg:24px;--mbg:#0a0004;--mr:rgba(255,0,68,0.55);">
             <div class="map-preview-inner">
-              <div class="road-dot" style="top:33%;left:33%;background:#FF0044;box-shadow:0 0 8px #FF0044"></div>
-              <div class="road-dot" style="top:33%;left:67%;background:#FF0044;box-shadow:0 0 8px #FF0044"></div>
-              <div class="road-dot" style="top:67%;left:33%;background:#FF0044;box-shadow:0 0 8px #FF0044"></div>
-              <div class="road-dot" style="top:67%;left:67%;background:#FF0044;box-shadow:0 0 8px #FF0044"></div>
-              <div class="road-dot" style="top:50%;left:50%;background:#FF2200;box-shadow:0 0 12px #FF2200;width:10px;height:10px;margin:-5px 0 0 -5px"></div>
+              <!-- Arena circle floor -->
+              <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:75%;height:62%;border:2px solid rgba(255,0,60,0.5);border-radius:50%;box-shadow:0 0 16px rgba(255,0,40,0.35),inset 0 0 20px rgba(255,0,30,0.1)"></div>
+              <!-- Crossed swords -->
+              <div style="position:absolute;top:14%;left:50%;transform:translateX(-50%);font-size:38px;line-height:1">⚔️</div>
+              <!-- Skull center -->
+              <div style="position:absolute;top:42%;left:50%;transform:translateX(-50%);font-size:22px;line-height:1;opacity:0.75">☠️</div>
+              <!-- Blood splatter -->
+              <div style="position:absolute;top:32%;left:18%;width:5px;height:5px;border-radius:50%;background:rgba(255,0,50,0.7)"></div>
+              <div style="position:absolute;top:48%;right:16%;width:4px;height:4px;border-radius:50%;background:rgba(255,0,40,0.6)"></div>
+              <div style="position:absolute;bottom:22%;left:28%;width:6px;height:6px;border-radius:50%;background:rgba(200,0,30,0.65)"></div>
             </div>
           </div>
           <div class="map-info">
@@ -894,11 +886,18 @@
           <div class="experimental-badge">⚗ EXPERIMENTAL</div>
           <div class="map-preview" style="--mg:18px;--mbg:#030a03;--mr:rgba(30,180,60,0.5);">
             <div class="map-preview-inner">
-              <div class="road-dot" style="top:30%;left:25%;background:#44FF88;box-shadow:0 0 8px #44FF88"></div>
-              <div class="road-dot" style="top:50%;left:50%;background:#88FF44;box-shadow:0 0 12px #88FF44;width:10px;height:10px;margin:-5px 0 0 -5px"></div>
-              <div class="road-dot" style="top:70%;left:75%;background:#44FF88;box-shadow:0 0 8px #44FF88"></div>
-              <div class="road-dot" style="top:35%;left:70%;background:#22CC55;box-shadow:0 0 6px #22CC55"></div>
-              <div class="road-dot" style="top:65%;left:30%;background:#22CC55;box-shadow:0 0 6px #22CC55"></div>
+              <!-- Ground fog -->
+              <div style="position:absolute;bottom:0;left:0;right:0;height:35%;background:linear-gradient(to top,rgba(10,140,40,0.45),rgba(20,160,50,0.15),transparent)"></div>
+              <!-- Zombie character -->
+              <div style="position:absolute;bottom:18%;left:50%;transform:translateX(-50%);font-size:46px;line-height:1">🧟</div>
+              <!-- Smaller zombie -->
+              <div style="position:absolute;bottom:14%;left:14%;font-size:26px;line-height:1;opacity:0.7">🧟</div>
+              <div style="position:absolute;bottom:14%;right:12%;font-size:22px;line-height:1;opacity:0.6;transform:scaleX(-1)">🧟</div>
+              <!-- Gravestones -->
+              <div style="position:absolute;bottom:14%;left:38%;width:11px;height:18px;background:rgba(30,70,25,0.8);border-radius:6px 6px 0 0"></div>
+              <div style="position:absolute;bottom:14%;right:28%;width:9px;height:15px;background:rgba(30,65,20,0.75);border-radius:5px 5px 0 0"></div>
+              <!-- Biohazard -->
+              <div style="position:absolute;top:12%;right:12%;font-size:18px;opacity:0.55">☣️</div>
             </div>
           </div>
           <div class="map-info">
@@ -921,11 +920,17 @@
           <div class="experimental-badge" style="background:linear-gradient(90deg,#44AA22,#88FF44);box-shadow:0 0 14px rgba(100,220,40,0.8);color:#000">🦕 PREHISTORIC</div>
           <div class="map-preview" style="--mg:18px;--mbg:#060e04;--mr:rgba(80,200,40,0.55);">
             <div class="map-preview-inner">
-              <div class="road-dot" style="top:20%;left:20%;background:#66DD44;box-shadow:0 0 8px #44CC22"></div>
-              <div class="road-dot" style="top:20%;left:75%;background:#66DD44;box-shadow:0 0 8px #44CC22"></div>
-              <div class="road-dot" style="top:50%;left:50%;background:#88FF44;box-shadow:0 0 14px #66FF00;width:10px;height:10px;margin:-5px 0 0 -5px"></div>
-              <div class="road-dot" style="top:75%;left:25%;background:#44BBFF;box-shadow:0 0 8px #2299DD"></div>
-              <div class="road-dot" style="top:75%;left:75%;background:#66DD44;box-shadow:0 0 8px #44CC22"></div>
+              <!-- Ground jungle floor -->
+              <div style="position:absolute;bottom:0;left:0;right:0;height:28%;background:linear-gradient(to top,rgba(15,70,8,0.7),transparent)"></div>
+              <!-- T-Rex — main creature -->
+              <div style="position:absolute;bottom:18%;left:50%;transform:translateX(-50%);font-size:52px;line-height:1">🦖</div>
+              <!-- Sauropod at side -->
+              <div style="position:absolute;bottom:14%;left:5%;font-size:24px;line-height:1;opacity:0.7">🦕</div>
+              <!-- Pterodactyl flying -->
+              <div style="position:absolute;top:10%;right:10%;font-size:20px;line-height:1;opacity:0.75">🦅</div>
+              <!-- Palm trees -->
+              <div style="position:absolute;bottom:16%;right:4%;font-size:26px;line-height:1;opacity:0.65">🌴</div>
+              <div style="position:absolute;bottom:14%;left:32%;font-size:18px;line-height:1;opacity:0.5">🌿</div>
             </div>
           </div>
           <div class="map-info">
@@ -942,23 +947,24 @@
             </div>
           </div>
         </div>
-      </div>
-      </div><!-- end #mapPage1 -->
-
-      <!-- ─── PAGE 2 ─────────────────────────── -->
-      <div id="mapPage2" style="display:none">
-        <div class="maps-grid">
+        <!-- PAGE 2 MAPS -->
 
           <!-- WASTELAND - Unified map with big buildings and color themes -->
-          <div class="map-card map-card--wasteland" data-map="wasteland" style="grid-column: span 3;">
-            <div class="map-preview" id="wastelandPreview" style="--mg:25px;--mbg:#0a0602;--mr:rgba(255,102,34,0.38);height:140px;">
+          <div class="map-card map-card--wasteland" data-map="wasteland">
+            <div class="map-preview" id="wastelandPreview" style="--mg:25px;--mbg:#0a0602;--mr:rgba(255,102,34,0.38);">
               <div class="map-preview-inner">
-                <!-- Sparse dots to show big buildings/open terrain -->
-                <div class="road-dot" id="wastelandDot1" style="top:15%;left:15%;background:#FF6622;box-shadow:0 0 8px #FF6622"></div>
-                <div class="road-dot" id="wastelandDot2" style="top:15%;left:85%;background:#FF6622;box-shadow:0 0 8px #FF6622"></div>
-                <div class="road-dot" id="wastelandDot3" style="top:50%;left:50%;background:#FF6622;box-shadow:0 0 12px #FF6622;width:12px;height:12px;margin:-6px 0 0 -6px"></div>
-                <div class="road-dot" id="wastelandDot4" style="top:85%;left:15%;background:#FF6622;box-shadow:0 0 8px #FF6622"></div>
-                <div class="road-dot" id="wastelandDot5" style="top:85%;left:85%;background:#FF6622;box-shadow:0 0 8px #FF6622"></div>
+                <!-- Cracked ground -->
+                <div style="position:absolute;bottom:0;left:0;right:0;height:22%;background:linear-gradient(to top,rgba(100,40,10,0.5),transparent)"></div>
+                <!-- Ruined buildings silhouettes -->
+                <div style="position:absolute;bottom:0;left:4%;width:16%;height:48%;background:rgba(60,25,8,0.8);clip-path:polygon(0 100%,0 20%,30% 0,60% 15%,100% 0,100% 100%)"></div>
+                <div style="position:absolute;bottom:0;right:5%;width:18%;height:55%;background:rgba(70,30,10,0.75);clip-path:polygon(0 100%,0 0,40% 25%,75% 5%,100% 20%,100% 100%)"></div>
+                <div style="position:absolute;bottom:0;left:38%;width:24%;height:38%;background:rgba(50,20,5,0.7);clip-path:polygon(0 100%,0 30%,50% 0,100% 30%,100% 100%)"></div>
+                <!-- Skull in dust -->
+                <div style="position:absolute;top:12%;left:50%;transform:translateX(-50%);font-size:30px;line-height:1;opacity:0.7">💀</div>
+                <!-- Cactus -->
+                <div style="position:absolute;bottom:14%;left:24%;font-size:18px;line-height:1;opacity:0.6">🌵</div>
+                <!-- Dust cloud line -->
+                <div style="position:absolute;top:50%;left:5%;right:5%;height:1px;background:linear-gradient(90deg,transparent,rgba(180,80,20,0.5),transparent)"></div>
               </div>
             </div>
             <div class="map-info">
@@ -969,7 +975,7 @@
               <p class="map-desc">Massive open terrain with huge buildings. Choose your color theme below.</p>
 
               <!-- Color Theme Selector -->
-              <div class="wasteland-color-selector" style="display:flex;gap:8px;margin:10px 0;justify-content:center;flex-wrap:wrap;">
+              <div class="wasteland-color-selector" style="display:flex;gap:6px;margin:6px 0;flex-wrap:wrap;">
                 <button class="wasteland-theme-btn" data-theme="teal" style="--btn-color:#00CCDD" title="Teal Harbor">
                   <span class="theme-color" style="background:#00CCDD;box-shadow:0 0 12px #00CCDD"></span>
                 </button>
@@ -997,10 +1003,16 @@
             <div class="experimental-badge" style="background:#FF2200;box-shadow:0 0 14px rgba(255,34,0,0.7);">⚡ 3× SPEED</div>
             <div class="map-preview" style="--mg:7px;--mbg:#0a0002;--mr:rgba(255,34,0,0.65);">
               <div class="map-preview-inner">
-                <div class="road-dot" style="top:20%;left:20%;background:#FF2200;box-shadow:0 0 8px #FF2200"></div>
-                <div class="road-dot" style="top:20%;left:80%;background:#FF4400;box-shadow:0 0 8px #FF4400"></div>
-                <div class="road-dot" style="top:80%;left:50%;background:#FF2200;box-shadow:0 0 8px #FF2200"></div>
-                <div class="road-dot" style="top:50%;left:50%;background:#FF0000;box-shadow:0 0 16px #FF0000;width:10px;height:10px;margin:-5px 0 0 -5px"></div>
+                <!-- Speed streaks -->
+                <div style="position:absolute;top:30%;left:0;right:0;height:3px;background:linear-gradient(to right,transparent,rgba(255,60,0,0.9),rgba(255,100,0,0.6),transparent)"></div>
+                <div style="position:absolute;top:42%;left:0;right:0;height:2px;background:linear-gradient(to right,transparent 10%,rgba(255,40,0,0.7),rgba(255,80,0,0.4),transparent 90%)"></div>
+                <div style="position:absolute;top:54%;left:0;right:0;height:2px;background:linear-gradient(to right,transparent 20%,rgba(255,50,0,0.65),transparent 80%)"></div>
+                <div style="position:absolute;top:66%;left:0;right:0;height:1px;background:linear-gradient(to right,transparent 30%,rgba(255,40,0,0.5),transparent 70%)"></div>
+                <!-- Giant lightning bolt -->
+                <div style="position:absolute;top:4%;left:50%;transform:translateX(-50%);font-size:58px;line-height:1;text-shadow:0 0 20px rgba(255,80,0,0.8)">⚡</div>
+                <!-- Small bolts -->
+                <div style="position:absolute;top:10%;left:12%;font-size:20px;line-height:1;opacity:0.65">⚡</div>
+                <div style="position:absolute;top:14%;right:14%;font-size:16px;line-height:1;opacity:0.55">⚡</div>
               </div>
             </div>
             <div class="map-info">
@@ -1023,17 +1035,19 @@
             <div class="experimental-badge" style="background:linear-gradient(90deg,#44AADD,#AADDFF);box-shadow:0 0 14px rgba(136,221,255,0.75);color:#000">❄ WINTER</div>
             <div class="map-preview" style="--mg:16px;--mbg:#030c14;--mr:rgba(136,221,255,0.40);">
               <div class="map-preview-inner">
-                <!-- Snowflake dots -->
-                <div class="road-dot" style="top:25%;left:25%;background:#88DDFF;box-shadow:0 0 8px #88DDFF"></div>
-                <div class="road-dot" style="top:25%;left:75%;background:#AAEEFF;box-shadow:0 0 8px #AAEEFF"></div>
-                <div class="road-dot" style="top:75%;left:25%;background:#66CCFF;box-shadow:0 0 8px #66CCFF"></div>
-                <div class="road-dot" style="top:75%;left:75%;background:#88DDFF;box-shadow:0 0 8px #88DDFF"></div>
-                <div class="road-dot" style="top:50%;left:50%;background:#CCFFFF;box-shadow:0 0 18px #88DDFF;width:12px;height:12px;margin:-6px 0 0 -6px"></div>
-                <!-- Snow particles -->
-                <div style="position:absolute;top:15%;left:40%;width:3px;height:3px;border-radius:50%;background:rgba(200,235,255,0.7)"></div>
-                <div style="position:absolute;top:60%;left:18%;width:2px;height:2px;border-radius:50%;background:rgba(200,235,255,0.6)"></div>
-                <div style="position:absolute;top:38%;left:82%;width:3px;height:3px;border-radius:50%;background:rgba(200,235,255,0.65)"></div>
-                <div style="position:absolute;top:80%;left:60%;width:2px;height:2px;border-radius:50%;background:rgba(200,235,255,0.55)"></div>
+                <!-- Ice ground -->
+                <div style="position:absolute;bottom:0;left:0;right:0;height:25%;background:linear-gradient(to top,rgba(80,180,240,0.4),rgba(100,200,255,0.15),transparent)"></div>
+                <!-- Big snowflake center -->
+                <div style="position:absolute;top:8%;left:50%;transform:translateX(-50%);font-size:46px;line-height:1;text-shadow:0 0 18px rgba(136,221,255,0.8)">❄️</div>
+                <!-- Smaller snowflakes -->
+                <div style="position:absolute;top:16%;left:10%;font-size:18px;line-height:1;opacity:0.7">❄️</div>
+                <div style="position:absolute;top:20%;right:12%;font-size:14px;line-height:1;opacity:0.6">❄️</div>
+                <div style="position:absolute;top:44%;left:6%;font-size:12px;line-height:1;opacity:0.5">❄️</div>
+                <div style="position:absolute;top:38%;right:8%;font-size:10px;line-height:1;opacity:0.45">❄️</div>
+                <!-- Snowflake particles -->
+                <div style="position:absolute;top:28%;left:36%;width:3px;height:3px;border-radius:50%;background:rgba(200,235,255,0.8)"></div>
+                <div style="position:absolute;top:52%;left:72%;width:2px;height:2px;border-radius:50%;background:rgba(200,235,255,0.7)"></div>
+                <div style="position:absolute;top:62%;left:22%;width:3px;height:3px;border-radius:50%;background:rgba(200,235,255,0.75)"></div>
               </div>
             </div>
             <div class="map-info">
@@ -1055,19 +1069,18 @@
             <div class="experimental-badge" style="background:linear-gradient(90deg,#0066AA,#00CCFF);box-shadow:0 0 14px rgba(0,136,204,0.75);color:#fff">🌊 OCEAN</div>
             <div class="map-preview" style="--mg:18px;--mbg:#001828;--mr:rgba(0,136,204,0.50);">
               <div class="map-preview-inner">
-                <!-- Wave patterns -->
-                <div class="road-dot" style="top:20%;left:25%;background:#00CCFF;box-shadow:0 0 10px #00CCFF"></div>
-                <div class="road-dot" style="top:25%;left:75%;background:#0099DD;box-shadow:0 0 8px #0099DD"></div>
-                <div class="road-dot" style="top:70%;left:30%;background:#44DDFF;box-shadow:0 0 8px #44DDFF"></div>
-                <div class="road-dot" style="top:75%;left:70%;background:#00FFFF;box-shadow:0 0 10px #00FFFF"></div>
-                <div class="road-dot" style="top:50%;left:50%;background:#88EEFF;box-shadow:0 0 20px #00CCFF;width:14px;height:14px;margin:-7px 0 0 -7px"></div>
-                <!-- Fish silhouettes -->
-                <div style="position:absolute;top:35%;left:18%;width:10px;height:4px;border-radius:50%;background:rgba(0,180,220,0.28)"></div>
-                <div style="position:absolute;top:55%;left:78%;width:8px;height:3px;border-radius:50%;background:rgba(0,180,220,0.22)"></div>
-                <div style="position:absolute;top:18%;left:55%;width:12px;height:4px;border-radius:50%;background:rgba(0,180,220,0.25)"></div>
+                <!-- Deep water floor -->
+                <div style="position:absolute;bottom:0;left:0;right:0;height:30%;background:linear-gradient(to top,rgba(0,80,160,0.5),transparent)"></div>
                 <!-- Wave lines -->
-                <div style="position:absolute;top:40%;left:10%;right:10%;height:1px;background:linear-gradient(90deg,transparent,rgba(0,200,255,0.3),transparent);"></div>
-                <div style="position:absolute;top:60%;left:15%;right:15%;height:1px;background:linear-gradient(90deg,transparent,rgba(0,200,255,0.25),transparent);"></div>
+                <div style="position:absolute;top:32%;left:5%;right:5%;height:1px;background:linear-gradient(90deg,transparent,rgba(0,200,255,0.45),transparent)"></div>
+                <div style="position:absolute;top:48%;left:10%;right:10%;height:1px;background:linear-gradient(90deg,transparent,rgba(0,200,255,0.35),transparent)"></div>
+                <div style="position:absolute;top:62%;left:8%;right:8%;height:1px;background:linear-gradient(90deg,transparent,rgba(0,200,255,0.3),transparent)"></div>
+                <!-- Main fish -->
+                <div style="position:absolute;top:12%;left:50%;transform:translateX(-50%);font-size:44px;line-height:1">🦈</div>
+                <!-- Smaller fish -->
+                <div style="position:absolute;top:36%;left:12%;font-size:18px;line-height:1;opacity:0.75">🐠</div>
+                <div style="position:absolute;top:40%;right:14%;font-size:14px;line-height:1;opacity:0.65;transform:scaleX(-1)">🐟</div>
+                <div style="position:absolute;top:22%;right:8%;font-size:16px;line-height:1;opacity:0.6">🐡</div>
               </div>
             </div>
             <div class="map-info">
@@ -1089,19 +1102,21 @@
             <div class="experimental-badge" style="background:linear-gradient(90deg,#FF6600,#FFCC00);box-shadow:0 0 14px rgba(255,153,51,0.8);color:#000">🌆 OPEN WORLD</div>
             <div class="map-preview" style="--mg:12px;--mbg:#060408;--mr:rgba(255,153,51,0.40);">
               <div class="map-preview-inner">
-                <!-- Commercial NW -->
-                <div class="road-dot" style="top:20%;left:20%;background:#FF9933;box-shadow:0 0 8px #FF9933"></div>
-                <!-- Residential NE -->
-                <div class="road-dot" style="top:20%;left:75%;background:#FFCC44;box-shadow:0 0 8px #FFCC44"></div>
-                <!-- Industrial SW -->
-                <div class="road-dot" style="top:75%;left:20%;background:#886622;box-shadow:0 0 6px #886622"></div>
-                <!-- Slums SE -->
-                <div class="road-dot" style="top:75%;left:75%;background:#FF6600;box-shadow:0 0 6px #FF6600"></div>
-                <!-- Center intersection -->
-                <div class="road-dot" style="top:50%;left:50%;background:#FFAA22;box-shadow:0 0 18px #FF9933;width:14px;height:14px;margin:-7px 0 0 -7px"></div>
-                <!-- Grid streets -->
-                <div style="position:absolute;top:50%;left:0;right:0;height:1px;background:rgba(255,153,51,0.3)"></div>
-                <div style="position:absolute;top:0;bottom:0;left:50%;width:1px;background:rgba(255,153,51,0.3)"></div>
+                <!-- City skyline silhouettes -->
+                <div style="position:absolute;bottom:0;left:0%;width:11%;height:60%;background:rgba(30,10,0,0.9);border-top:2px solid rgba(255,120,30,0.7)"></div>
+                <div style="position:absolute;bottom:0;left:13%;width:8%;height:75%;background:rgba(25,8,0,0.92);border-top:2px solid rgba(255,150,40,0.8);box-shadow:0 0 8px rgba(255,100,20,0.3)"></div>
+                <div style="position:absolute;bottom:0;left:23%;width:12%;height:50%;background:rgba(30,10,0,0.88);border-top:2px solid rgba(255,100,20,0.6)"></div>
+                <div style="position:absolute;bottom:0;left:37%;width:9%;height:68%;background:rgba(20,8,0,0.92);border-top:2px solid rgba(255,140,30,0.75)"></div>
+                <div style="position:absolute;bottom:0;left:48%;width:13%;height:44%;background:rgba(28,10,0,0.88);border-top:2px solid rgba(255,100,20,0.55)"></div>
+                <div style="position:absolute;bottom:0;left:63%;width:10%;height:70%;background:rgba(22,8,0,0.92);border-top:2px solid rgba(255,150,40,0.8);box-shadow:0 0 8px rgba(255,100,20,0.25)"></div>
+                <div style="position:absolute;bottom:0;left:75%;width:14%;height:55%;background:rgba(28,10,0,0.88);border-top:2px solid rgba(255,110,20,0.65)"></div>
+                <div style="position:absolute;bottom:0;left:91%;width:9%;height:48%;background:rgba(25,8,0,0.9);border-top:2px solid rgba(255,100,20,0.6)"></div>
+                <!-- Window lights -->
+                <div style="position:absolute;bottom:50%;left:16%;width:3px;height:3px;background:#FFAA33;box-shadow:0 0 6px #FFAA33"></div>
+                <div style="position:absolute;bottom:42%;left:40%;width:3px;height:3px;background:#FF9922;box-shadow:0 0 6px #FF9922"></div>
+                <div style="position:absolute;bottom:56%;left:65%;width:3px;height:3px;background:#FFCC44;box-shadow:0 0 6px #FFCC44"></div>
+                <!-- City grid roads -->
+                <div style="position:absolute;top:0;bottom:0;left:50%;width:1px;background:rgba(255,140,30,0.2)"></div>
               </div>
             </div>
             <div class="map-info">
@@ -1123,11 +1138,18 @@
             <div class="experimental-badge" style="background:#44AA22;box-shadow:0 0 14px rgba(68,170,34,0.7);color:#fff">🌴 WILD</div>
             <div class="map-preview" style="--mg:12px;--mbg:#0a1808;--mr:rgba(68,170,34,0.35);">
               <div class="map-preview-inner">
-                <div class="road-dot" style="top:20%;left:20%;background:#8B6914;box-shadow:0 0 8px #8B6914"></div>
-                <div class="road-dot" style="top:30%;left:70%;background:#5a8a22;box-shadow:0 0 10px #44AA22"></div>
-                <div class="road-dot" style="top:55%;left:40%;background:#FFCC44;box-shadow:0 0 12px #FFAA00;width:10px;height:10px;margin:-5px 0 0 -5px"></div>
-                <div class="road-dot" style="top:75%;left:75%;background:#8B6914;box-shadow:0 0 8px #8B6914"></div>
-                <div class="road-dot" style="top:80%;left:20%;background:#44AA22;box-shadow:0 0 8px #44AA22"></div>
+                <!-- Jungle ground -->
+                <div style="position:absolute;bottom:0;left:0;right:0;height:26%;background:linear-gradient(to top,rgba(15,65,5,0.65),transparent)"></div>
+                <!-- Main predator — lion/tiger -->
+                <div style="position:absolute;bottom:18%;left:50%;transform:translateX(-50%);font-size:48px;line-height:1">🦁</div>
+                <!-- Secondary animals -->
+                <div style="position:absolute;bottom:14%;right:8%;font-size:22px;line-height:1;opacity:0.7">🐆</div>
+                <div style="position:absolute;top:10%;left:8%;font-size:20px;line-height:1;opacity:0.65">🦍</div>
+                <!-- Palm trees -->
+                <div style="position:absolute;bottom:15%;left:4%;font-size:28px;line-height:1;opacity:0.7">🌴</div>
+                <div style="position:absolute;bottom:13%;right:2%;font-size:24px;line-height:1;opacity:0.65">🌴</div>
+                <!-- Leaves -->
+                <div style="position:absolute;top:14%;right:16%;font-size:16px;line-height:1;opacity:0.5">🌿</div>
               </div>
             </div>
             <div class="map-info">
@@ -1149,16 +1171,18 @@
             <div class="experimental-badge" style="background:linear-gradient(90deg,#8B6914,#D4A017);box-shadow:0 0 14px rgba(212,160,23,0.7);color:#1a0e00">🏜 ANCIENT</div>
             <div class="map-preview" style="--mg:12px;--mbg:#180e00;--mr:rgba(200,158,70,0.38);">
               <div class="map-preview-inner">
-                <!-- Pyramid silhouettes -->
-                <div style="position:absolute;bottom:20%;left:8%;width:0;height:0;border-left:14px solid transparent;border-right:14px solid transparent;border-bottom:22px solid rgba(139,105,20,0.75)"></div>
-                <div style="position:absolute;bottom:20%;left:35%;width:0;height:0;border-left:20px solid transparent;border-right:20px solid transparent;border-bottom:30px solid rgba(160,128,30,0.65)"></div>
-                <div style="position:absolute;bottom:20%;left:65%;width:0;height:0;border-left:15px solid transparent;border-right:15px solid transparent;border-bottom:24px solid rgba(139,105,20,0.70)"></div>
-                <!-- Sand road dots -->
-                <div class="road-dot" style="top:22%;left:20%;background:#c8a050;box-shadow:0 0 8px rgba(200,160,80,0.6)"></div>
-                <div class="road-dot" style="top:35%;left:72%;background:#D4A017;box-shadow:0 0 10px rgba(212,160,23,0.7)"></div>
-                <div class="road-dot" style="top:55%;left:48%;background:#FFD700;box-shadow:0 0 14px rgba(255,215,0,0.65);width:10px;height:10px;margin:-5px 0 0 -5px"></div>
+                <!-- Blazing sun -->
+                <div style="position:absolute;top:8%;right:10%;width:26px;height:26px;border-radius:50%;background:radial-gradient(circle,#FFE050 30%,rgba(255,190,30,0.5) 70%,transparent 100%);box-shadow:0 0 18px rgba(255,200,0,0.7)"></div>
+                <!-- Pyramid silhouettes (larger, more dramatic) -->
+                <div style="position:absolute;bottom:18%;left:4%;width:0;height:0;border-left:18px solid transparent;border-right:18px solid transparent;border-bottom:28px solid rgba(160,120,20,0.85)"></div>
+                <div style="position:absolute;bottom:18%;left:32%;width:0;height:0;border-left:26px solid transparent;border-right:26px solid transparent;border-bottom:38px solid rgba(185,145,28,0.8)"></div>
+                <div style="position:absolute;bottom:18%;left:62%;width:0;height:0;border-left:20px solid transparent;border-right:20px solid transparent;border-bottom:30px solid rgba(160,120,20,0.82)"></div>
+                <!-- Scorpion -->
+                <div style="position:absolute;top:14%;left:14%;font-size:18px;line-height:1;opacity:0.7">🦂</div>
+                <!-- Camel -->
+                <div style="position:absolute;bottom:30%;right:6%;font-size:22px;line-height:1;opacity:0.65">🐪</div>
                 <!-- Sandstorm streak -->
-                <div style="position:absolute;top:48%;left:5%;right:5%;height:1px;background:linear-gradient(90deg,transparent,rgba(200,160,60,0.28),transparent)"></div>
+                <div style="position:absolute;top:46%;left:5%;right:5%;height:1px;background:linear-gradient(90deg,transparent,rgba(210,165,60,0.45),transparent)"></div>
               </div>
             </div>
             <div class="map-info">
@@ -1175,21 +1199,25 @@
             </div>
           </div>
 
-        </div><!-- end .maps-grid -->
-
-        <!-- Special Modes Row — Page 2 -->
-        <div class="special-maps-row">
+          <!-- Special Maps: Robot City, Hardcore, Campaign -->
 
           <!-- Robot City -->
           <div class="map-card map-card--experimental" data-map="robot_city">
             <div class="experimental-badge" style="background:#00DDFF;box-shadow:0 0 14px rgba(0,221,255,0.7);color:#000">⚡ ROBOTS</div>
             <div class="map-preview" style="--mg:12px;--mbg:#050c14;--mr:rgba(0,180,220,0.4);">
               <div class="map-preview-inner">
-                <div class="road-dot" style="top:20%;left:20%;background:#00DDFF;box-shadow:0 0 10px #00DDFF;width:10px;height:10px;margin:-5px 0 0 -5px"></div>
-                <div class="road-dot" style="top:30%;left:65%;background:#44EEFF;box-shadow:0 0 8px #44EEFF"></div>
-                <div class="road-dot" style="top:50%;left:40%;background:#00FFCC;box-shadow:0 0 14px #00FFCC;width:12px;height:12px;margin:-6px 0 0 -6px"></div>
-                <div class="road-dot" style="top:70%;left:80%;background:#0099FF;box-shadow:0 0 10px #0099FF"></div>
-                <div class="road-dot" style="top:80%;left:20%;background:#00DDFF;box-shadow:0 0 8px #00DDFF"></div>
+                <!-- Circuit lines -->
+                <div style="position:absolute;top:35%;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(0,200,255,0.5),transparent)"></div>
+                <div style="position:absolute;top:0;bottom:0;left:35%;width:1px;background:linear-gradient(180deg,transparent,rgba(0,200,255,0.4),transparent)"></div>
+                <div style="position:absolute;top:0;bottom:0;left:65%;width:1px;background:linear-gradient(180deg,transparent,rgba(0,200,255,0.35),transparent)"></div>
+                <!-- Main robot -->
+                <div style="position:absolute;bottom:16%;left:50%;transform:translateX(-50%);font-size:50px;line-height:1;text-shadow:0 0 14px rgba(0,200,255,0.6)">🤖</div>
+                <!-- Side robots -->
+                <div style="position:absolute;bottom:12%;left:8%;font-size:24px;line-height:1;opacity:0.7">🤖</div>
+                <div style="position:absolute;bottom:12%;right:6%;font-size:20px;line-height:1;opacity:0.6">🤖</div>
+                <!-- Electric sparks -->
+                <div style="position:absolute;top:12%;left:16%;font-size:14px;line-height:1;opacity:0.65">⚡</div>
+                <div style="position:absolute;top:16%;right:18%;font-size:12px;line-height:1;opacity:0.55">⚡</div>
               </div>
             </div>
             <div class="map-info">
@@ -1211,11 +1239,16 @@
             <div class="experimental-badge" style="background:#FF8800;box-shadow:0 0 14px rgba(255,136,0,0.7);color:#000">⚡ HARDCORE</div>
             <div class="map-preview" style="--mg:16px;--mbg:#080400;--mr:rgba(255,136,0,0.5);">
               <div class="map-preview-inner">
-                <div class="road-dot" style="top:25%;left:25%;background:#FF8800;box-shadow:0 0 8px #FF8800"></div>
-                <div class="road-dot" style="top:25%;left:75%;background:#FF8800;box-shadow:0 0 8px #FF8800"></div>
-                <div class="road-dot" style="top:75%;left:25%;background:#FF8800;box-shadow:0 0 8px #FF8800"></div>
-                <div class="road-dot" style="top:75%;left:75%;background:#FF8800;box-shadow:0 0 8px #FF8800"></div>
-                <div class="road-dot" style="top:50%;left:50%;background:#FFAA00;box-shadow:0 0 14px #FFAA00;width:10px;height:10px;margin:-5px 0 0 -5px"></div>
+                <!-- Fire floor -->
+                <div style="position:absolute;bottom:0;left:0;right:0;height:40%;background:linear-gradient(to top,rgba(255,70,0,0.55),rgba(255,110,0,0.2),transparent)"></div>
+                <!-- Skull — main symbol -->
+                <div style="position:absolute;top:6%;left:50%;transform:translateX(-50%);font-size:48px;line-height:1;text-shadow:0 0 18px rgba(255,80,0,0.8)">💀</div>
+                <!-- Flames row -->
+                <div style="position:absolute;bottom:10%;left:10%;font-size:28px;line-height:1;opacity:0.85">🔥</div>
+                <div style="position:absolute;bottom:10%;left:40%;font-size:32px;line-height:1;opacity:0.9">🔥</div>
+                <div style="position:absolute;bottom:10%;right:8%;font-size:26px;line-height:1;opacity:0.8">🔥</div>
+                <!-- Crossed swords -->
+                <div style="position:absolute;bottom:32%;left:50%;transform:translateX(-50%);font-size:18px;line-height:1;opacity:0.6">⚔️</div>
               </div>
             </div>
             <div class="map-info">
@@ -1237,11 +1270,21 @@
             <div class="experimental-badge" style="background:#FFDD00;box-shadow:0 0 14px rgba(255,221,0,0.7);color:#000">★ 100 LEVELS</div>
             <div class="map-preview" style="--mg:16px;--mbg:#080600;--mr:rgba(255,221,0,0.5);">
               <div class="map-preview-inner">
-                <div class="road-dot" style="top:25%;left:25%;background:#FFDD00;box-shadow:0 0 8px #FFDD00"></div>
-                <div class="road-dot" style="top:25%;left:75%;background:#FFDD00;box-shadow:0 0 8px #FFDD00"></div>
-                <div class="road-dot" style="top:75%;left:25%;background:#FFDD00;box-shadow:0 0 8px #FFDD00"></div>
-                <div class="road-dot" style="top:75%;left:75%;background:#FFDD00;box-shadow:0 0 8px #FFDD00"></div>
-                <div class="road-dot" style="top:50%;left:50%;background:#FFD700;box-shadow:0 0 16px #FFD700;width:12px;height:12px;margin:-6px 0 0 -6px"></div>
+                <!-- Crown — top centerpiece -->
+                <div style="position:absolute;top:6%;left:50%;transform:translateX(-50%);font-size:44px;line-height:1;text-shadow:0 0 18px rgba(255,210,0,0.8)">👑</div>
+                <!-- Journey path -->
+                <div style="position:absolute;top:52%;left:12%;right:12%;height:2px;background:linear-gradient(to right,rgba(255,200,0,0.6),rgba(255,220,0,0.4),rgba(255,200,0,0.5))"></div>
+                <!-- Path waypoint markers -->
+                <div style="position:absolute;top:44%;left:18%;width:7px;height:7px;border-radius:50%;background:rgba(255,210,0,0.8);box-shadow:0 0 8px rgba(255,200,0,0.6)"></div>
+                <div style="position:absolute;top:44%;left:42%;width:7px;height:7px;border-radius:50%;background:rgba(255,210,0,0.7)"></div>
+                <div style="position:absolute;top:44%;left:66%;width:7px;height:7px;border-radius:50%;background:rgba(255,210,0,0.65)"></div>
+                <div style="position:absolute;top:44%;right:14%;width:7px;height:7px;border-radius:50%;background:rgba(255,210,0,0.6)"></div>
+                <!-- Stars -->
+                <div style="position:absolute;top:14%;left:10%;font-size:14px;line-height:1;opacity:0.7">⭐</div>
+                <div style="position:absolute;top:16%;right:12%;font-size:16px;line-height:1;opacity:0.65">⭐</div>
+                <div style="position:absolute;top:26%;left:60%;font-size:11px;line-height:1;opacity:0.55">⭐</div>
+                <!-- Shield -->
+                <div style="position:absolute;bottom:20%;left:50%;transform:translateX(-50%);font-size:20px;line-height:1;opacity:0.65">🛡️</div>
               </div>
             </div>
             <div class="map-info">
@@ -1259,9 +1302,7 @@
           </div>
 
 
-        </div><!-- end special-maps-row -->
-      </div><!-- end #mapPage2 -->
-
+      </div><!-- end .maps-grid -->
 
     </div><!-- end .map-section -->
 
