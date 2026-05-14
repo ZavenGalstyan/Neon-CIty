@@ -683,8 +683,32 @@
         <div class="map-card map-card--neon-city selected" data-map="neon_city">
           <div class="map-preview" id="neonCityPreview" style="--mg:16px;--mbg:#080812;--mr:rgba(68,238,255,0.4);">
             <div class="map-preview-inner">
-              <!-- City building silhouettes -->
-              <div style="position:absolute;bottom:0;left:2%;width:13%;height:55%;background:rgba(0,10,30,0.92);border-top:2px solid rgba(68,238,255,0.7);box-shadow:0 0 8px rgba(68,238,255,0.3)"></div>
+              <svg viewBox="0 0 200 150" xmlns="http://www.w3.org/2000/svg" style="position:absolute;inset:0;width:100%;height:100%;overflow:hidden">
+                <!-- Far skyline layer -->
+                <path fill="#020b1e" d="M0,150 0,88 6,88 6,72 10,72 10,60 14,60 14,52 18,52 18,44 22,44 22,52 26,52 26,62 32,62 32,48 36,48 36,36 40,36 40,30 44,30 44,36 48,36 48,48 54,48 54,58 58,58 58,44 62,44 62,32 66,32 66,24 70,24 70,32 74,32 74,44 80,44 80,54 84,54 84,40 88,40 88,28 92,28 92,20 96,20 96,28 100,28 100,40 106,40 106,52 110,52 110,38 114,38 114,26 118,26 118,20 122,20 122,26 126,26 126,38 132,38 132,50 136,50 136,36 140,36 140,24 144,24 144,36 148,36 148,48 154,48 154,60 158,60 158,46 162,46 162,34 166,34 166,42 170,42 170,52 176,52 176,62 182,62 182,72 188,72 188,80 194,80 194,88 200,88 200,150Z"/>
+                <!-- Neon top edges -->
+                <line x1="40" y1="30" x2="48" y2="30" stroke="#44EEFF" stroke-width="1.8" opacity="0.95"/>
+                <line x1="66" y1="24" x2="74" y2="24" stroke="#44EEFF" stroke-width="1.8" opacity="0.9"/>
+                <line x1="92" y1="20" x2="100" y2="20" stroke="#FF4464" stroke-width="2" opacity="1"/>
+                <line x1="118" y1="20" x2="126" y2="20" stroke="#44EEFF" stroke-width="1.8" opacity="0.9"/>
+                <line x1="140" y1="24" x2="148" y2="24" stroke="#44EEFF" stroke-width="1.8" opacity="0.85"/>
+                <line x1="162" y1="34" x2="170" y2="34" stroke="#FF4464" stroke-width="1.5" opacity="0.8"/>
+                <!-- Near buildings -->
+                <path fill="#010610" d="M0,150 0,112 8,112 8,98 14,98 14,88 20,88 20,98 28,98 28,112 36,112 36,98 42,98 42,86 48,86 48,98 56,98 56,112 68,112 68,98 74,98 74,86 80,86 80,98 88,98 88,112 100,112 100,98 106,98 106,86 112,86 112,98 120,98 120,112 132,112 132,98 138,98 138,86 144,86 144,98 152,98 152,112 164,112 164,98 170,98 170,86 176,86 176,98 184,98 184,112 192,112 192,102 200,102 200,150Z"/>
+                <!-- Window lights -->
+                <rect x="42" y="33" width="2.5" height="2" fill="#44EEFF" opacity="0.95"/>
+                <rect x="68" y="27" width="2.5" height="2" fill="#44EEFF" opacity="0.9"/>
+                <rect x="94" y="23" width="2.5" height="2" fill="#FF4464" opacity="1"/>
+                <rect x="120" y="23" width="2.5" height="2" fill="#44EEFF" opacity="0.9"/>
+                <rect x="142" y="27" width="2.5" height="2" fill="#44EEFF" opacity="0.85"/>
+                <rect x="44" y="92" width="2" height="2" fill="#FFAA22" opacity="0.75"/>
+                <rect x="76" y="90" width="2" height="2" fill="#44EEFF" opacity="0.8"/>
+                <rect x="108" y="90" width="2" height="2" fill="#FF4464" opacity="0.75"/>
+                <rect x="140" y="90" width="2" height="2" fill="#44EEFF" opacity="0.75"/>
+                <rect x="172" y="90" width="2" height="2" fill="#44EEFF" opacity="0.7"/>
+                <!-- Street glow -->
+                <ellipse cx="100" cy="152" rx="130" ry="20" fill="rgba(68,238,255,0.14)"/>
+              </svg>
               <div style="position:absolute;bottom:0;left:17%;width:9%;height:72%;background:rgba(0,8,25,0.95);border-top:2px solid rgba(68,238,255,0.85);box-shadow:0 0 10px rgba(68,238,255,0.4)"></div>
               <div style="position:absolute;bottom:0;left:28%;width:14%;height:44%;background:rgba(0,12,32,0.9);border-top:2px solid rgba(68,238,255,0.55)"></div>
               <div style="position:absolute;bottom:0;left:44%;width:10%;height:68%;background:rgba(0,8,25,0.95);border-top:2px solid rgba(255,68,100,0.8);box-shadow:0 0 10px rgba(255,68,100,0.35)"></div>
@@ -855,8 +879,32 @@
         <div class="map-card map-card--arena" data-map="arena">
           <div class="map-preview" style="--mg:24px;--mbg:#0a0004;--mr:rgba(255,0,68,0.55);">
             <div class="map-preview-inner">
-              <!-- Arena circle floor -->
-              <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:75%;height:62%;border:2px solid rgba(255,0,60,0.5);border-radius:50%;box-shadow:0 0 16px rgba(255,0,40,0.35),inset 0 0 20px rgba(255,0,30,0.1)"></div>
+              <svg viewBox="0 0 200 150" xmlns="http://www.w3.org/2000/svg" style="position:absolute;inset:0;width:100%;height:100%;overflow:hidden">
+                <!-- Spectator stands top arc -->
+                <path fill="rgba(70,0,10,0.55)" d="M0,0 Q100,-18 200,0 L200,52 Q100,28 0,52 Z"/>
+                <!-- Outer arena wall -->
+                <ellipse cx="100" cy="112" rx="88" ry="32" fill="#0f0004" stroke="rgba(255,0,50,0.55)" stroke-width="2"/>
+                <!-- Inner arena floor -->
+                <ellipse cx="100" cy="110" rx="72" ry="24" fill="#140008" stroke="rgba(255,0,40,0.3)" stroke-width="1"/>
+                <!-- Center blood pool -->
+                <ellipse cx="100" cy="110" rx="20" ry="8" fill="rgba(160,0,18,0.55)"/>
+                <!-- Crossed swords (drawn as thick lines) -->
+                <line x1="58" y1="38" x2="142" y2="108" stroke="#707080" stroke-width="6" stroke-linecap="round"/>
+                <line x1="60" y1="38" x2="142" y2="105" stroke="rgba(190,190,210,0.35)" stroke-width="2" stroke-linecap="round"/>
+                <line x1="142" y1="38" x2="58" y2="108" stroke="#707080" stroke-width="6" stroke-linecap="round"/>
+                <line x1="140" y1="38" x2="58" y2="105" stroke="rgba(190,190,210,0.35)" stroke-width="2" stroke-linecap="round"/>
+                <!-- Crossguards -->
+                <rect x="76" y="61" width="48" height="8" rx="4" fill="#555560" transform="rotate(52,100,65)"/>
+                <rect x="76" y="61" width="48" height="8" rx="4" fill="#555560" transform="rotate(-52,100,65)"/>
+                <!-- Red spotlights from ceiling -->
+                <path fill="rgba(255,0,30,0.07)" d="M48,0 L24,92 L72,92 Z"/>
+                <path fill="rgba(255,0,30,0.07)" d="M152,0 L128,92 L176,92 Z"/>
+                <!-- Blood spatters -->
+                <circle cx="62" cy="116" r="5" fill="rgba(180,0,18,0.6)"/>
+                <circle cx="132" cy="112" r="4" fill="rgba(180,0,18,0.55)"/>
+                <circle cx="88" cy="122" r="3" fill="rgba(160,0,14,0.5)"/>
+                <circle cx="118" cy="120" r="2.5" fill="rgba(160,0,14,0.45)"/>
+              </svg>
               <!-- Crossed swords -->
               <div style="position:absolute;top:14%;left:50%;transform:translateX(-50%);font-size:38px;line-height:1">⚔️</div>
               <!-- Skull center -->
@@ -886,8 +934,39 @@
           <div class="experimental-badge">⚗ EXPERIMENTAL</div>
           <div class="map-preview" style="--mg:18px;--mbg:#030a03;--mr:rgba(30,180,60,0.5);">
             <div class="map-preview-inner">
-              <!-- Ground fog -->
-              <div style="position:absolute;bottom:0;left:0;right:0;height:35%;background:linear-gradient(to top,rgba(10,140,40,0.45),rgba(20,160,50,0.15),transparent)"></div>
+              <svg viewBox="0 0 200 150" xmlns="http://www.w3.org/2000/svg" style="position:absolute;inset:0;width:100%;height:100%;overflow:hidden">
+                <!-- Ruined city silhouette -->
+                <path fill="#050d05" d="M0,150 0,82 5,82 5,65 9,65 9,55 13,55 11,48 16,42 21,48 19,55 22,55 22,65 28,65 28,78 33,78 33,62 37,62 35,52 40,46 45,52 43,62 46,62 46,72 52,72 52,60 56,60 54,50 59,44 64,50 62,60 65,60 65,70 70,70 70,55 74,55 72,48 76,42 81,48 79,55 82,55 82,65 88,65 88,74 93,74 93,60 97,60 95,52 100,45 105,52 103,60 106,60 106,68 112,68 112,56 116,56 114,48 118,42 123,48 121,56 124,56 124,65 130,65 130,74 135,74 135,62 139,62 137,55 142,48 147,55 145,62 148,62 148,72 154,72 154,60 158,60 156,52 162,46 167,52 165,60 168,60 168,70 174,70 174,80 180,80 180,88 186,88 186,80 192,80 192,88 200,88 200,150Z"/>
+                <!-- Green toxic fog layer -->
+                <rect x="0" y="108" width="200" height="42" fill="rgba(15,100,30,0.22)"/>
+                <ellipse cx="60" cy="125" rx="75" ry="22" fill="rgba(15,130,40,0.18)"/>
+                <ellipse cx="155" cy="128" rx="65" ry="18" fill="rgba(12,110,35,0.15)"/>
+                <!-- Gravestones -->
+                <rect x="25" y="108" width="10" height="17" rx="5" fill="rgba(35,70,25,0.85)"/>
+                <rect x="82" y="112" width="9" height="14" rx="4" fill="rgba(30,65,22,0.8)"/>
+                <rect x="145" y="110" width="10" height="16" rx="5" fill="rgba(35,70,25,0.82)"/>
+                <!-- Cross marks on gravestones -->
+                <line x1="29" y1="105" x2="29" y2="112" stroke="rgba(40,85,28,0.7)" stroke-width="2"/>
+                <line x1="26" y1="108" x2="33" y2="108" stroke="rgba(40,85,28,0.7)" stroke-width="2"/>
+                <!-- Zombie center — body -->
+                <path fill="rgba(25,90,18,0.92)" d="M93,102 L90,92 L88,84 L88,76 L93,72 L100,70 L107,72 L112,76 L112,84 L110,92 L107,102Z"/>
+                <!-- Zombie head -->
+                <ellipse cx="100" cy="67" rx="10" ry="11" fill="rgba(28,95,20,0.95)"/>
+                <!-- Zombie arms raised (menacing) -->
+                <path fill="rgba(22,80,15,0.88)" d="M88,84 L74,72 L70,67 L75,64 L82,70 L88,80Z"/>
+                <path fill="rgba(22,80,15,0.88)" d="M112,84 L126,72 L130,67 L125,64 L118,70 L112,80Z"/>
+                <!-- Zombie legs -->
+                <rect x="92" y="102" width="8" height="18" rx="2" fill="rgba(20,75,14,0.88)"/>
+                <rect x="102" y="102" width="8" height="16" rx="2" fill="rgba(20,75,14,0.85)"/>
+                <!-- Small zombie left -->
+                <ellipse cx="32" cy="100" rx="7" ry="8" fill="rgba(22,80,15,0.72)"/>
+                <rect x="28" y="108" width="8" height="14" rx="2" fill="rgba(20,75,14,0.68)"/>
+                <line x1="28" y1="112" x2="18" y2="104" stroke="rgba(20,75,14,0.65)" stroke-width="4" stroke-linecap="round"/>
+                <!-- Small zombie right -->
+                <ellipse cx="164" cy="102" rx="7" ry="8" fill="rgba(22,80,15,0.68)"/>
+                <rect x="160" y="110" width="8" height="14" rx="2" fill="rgba(20,75,14,0.65)"/>
+                <line x1="168" y1="114" x2="178" y2="106" stroke="rgba(20,75,14,0.6)" stroke-width="4" stroke-linecap="round"/>
+              </svg>
               <!-- Zombie character -->
               <div style="position:absolute;bottom:18%;left:50%;transform:translateX(-50%);font-size:46px;line-height:1">🧟</div>
               <!-- Smaller zombie -->
@@ -920,8 +999,30 @@
           <div class="experimental-badge" style="background:linear-gradient(90deg,#44AA22,#88FF44);box-shadow:0 0 14px rgba(100,220,40,0.8);color:#000">🦕 PREHISTORIC</div>
           <div class="map-preview" style="--mg:18px;--mbg:#060e04;--mr:rgba(80,200,40,0.55);">
             <div class="map-preview-inner">
-              <!-- Ground jungle floor -->
-              <div style="position:absolute;bottom:0;left:0;right:0;height:28%;background:linear-gradient(to top,rgba(15,70,8,0.7),transparent)"></div>
+              <svg viewBox="0 0 200 150" xmlns="http://www.w3.org/2000/svg" style="position:absolute;inset:0;width:100%;height:100%;overflow:hidden">
+                <!-- Far jungle canopy -->
+                <path fill="#041602" d="M0,55 Q15,38 32,46 Q48,32 65,42 Q80,28 98,38 Q114,24 132,36 Q148,22 165,34 Q182,28 200,38 L200,55Z"/>
+                <!-- Mid canopy layer -->
+                <path fill="#051c04" d="M0,72 Q18,55 38,64 Q55,48 74,58 Q92,44 112,56 Q128,42 148,54 Q165,44 185,56 L200,62 L200,72Z"/>
+                <!-- T-Rex body -->
+                <path fill="#0a2c04" d="M52,118 L52,102 L56,90 L62,80 L70,70 L80,62 L90,56 L98,50 L108,45 L122,40 L136,38 L150,37 L162,36 L172,40 L176,48 L166,54 L152,54 L140,50 L128,54 L120,60 L114,66 L110,72 L108,78 L110,84 L106,88 L100,86 L96,82 L92,88 L96,102 L100,118 L94,118 L90,115 L88,118 L82,118 L82,115 L84,110 L82,102 L78,90 L70,88 L64,92 L62,104 L62,116 L60,118Z"/>
+                <!-- T-Rex tail -->
+                <path fill="#092804" d="M52,102 L38,98 L22,100 L12,108 L10,116 L24,113 L46,106Z"/>
+                <!-- T-Rex arm stub -->
+                <path fill="#0a2c04" d="M108,72 L118,70 L122,76 L116,82Z"/>
+                <!-- Ground shadow -->
+                <ellipse cx="78" cy="122" rx="45" ry="6" fill="rgba(4,16,2,0.7)"/>
+                <!-- Ground jungle floor -->
+                <rect x="0" y="118" width="200" height="32" fill="#030e02"/>
+                <path fill="#041004" d="M0,118 Q25,113 50,118 Q75,113 100,118 Q125,113 150,118 Q175,113 200,118 L200,124 L0,124Z"/>
+                <!-- Small sauropod far left -->
+                <path fill="rgba(8,30,4,0.75)" d="M18,118 L18,108 L22,102 L28,100 L34,102 L38,108 L38,118Z"/>
+                <!-- Sauropod neck/head -->
+                <path fill="rgba(8,30,4,0.75)" d="M34,102 L40,94 L48,90 L52,93 L46,98 L38,104Z"/>
+                <!-- Pterosaur flying -->
+                <path fill="rgba(7,25,3,0.72)" d="M152,20 L142,30 L152,27 L164,32 L170,24 L160,22Z"/>
+                <line x1="152" y1="20" x2="164" y2="32" stroke="rgba(7,25,3,0.7)" stroke-width="1.5"/>
+              </svg>
               <!-- T-Rex — main creature -->
               <div style="position:absolute;bottom:18%;left:50%;transform:translateX(-50%);font-size:52px;line-height:1">🦖</div>
               <!-- Sauropod at side -->
@@ -953,8 +1054,27 @@
           <div class="map-card map-card--wasteland" data-map="wasteland">
             <div class="map-preview" id="wastelandPreview" style="--mg:25px;--mbg:#0a0602;--mr:rgba(255,102,34,0.38);">
               <div class="map-preview-inner">
-                <!-- Cracked ground -->
-                <div style="position:absolute;bottom:0;left:0;right:0;height:22%;background:linear-gradient(to top,rgba(100,40,10,0.5),transparent)"></div>
+                <svg viewBox="0 0 200 150" xmlns="http://www.w3.org/2000/svg" style="position:absolute;inset:0;width:100%;height:100%;overflow:hidden">
+                  <!-- Ruined city skyline -->
+                  <path fill="#180800" d="M0,150 0,92 6,92 6,75 8,72 10,68 14,72 16,75 18,75 18,62 20,58 22,52 26,48 30,44 34,48 36,52 38,58 38,68 40,68 40,78 46,78 46,65 48,60 50,55 52,50 56,48 60,50 62,55 64,60 64,70 66,70 66,80 72,80 72,68 74,60 76,55 78,52 82,50 86,52 88,55 90,60 90,70 92,70 92,80 98,80 98,68 100,60 102,55 106,50 110,52 112,55 114,60 114,70 116,70 116,80 122,80 122,68 124,62 126,56 128,50 132,46 136,50 138,56 140,62 140,72 142,72 142,80 148,80 148,68 150,62 152,56 154,52 158,50 162,52 164,56 166,62 166,72 168,72 168,82 174,82 174,90 180,90 180,82 186,82 186,90 192,90 192,82 200,82 200,150Z"/>
+                  <!-- Sun/dust horizon haze -->
+                  <ellipse cx="100" cy="78" rx="90" ry="22" fill="rgba(210,70,10,0.18)"/>
+                  <!-- Cracked earth ground -->
+                  <rect x="0" y="122" width="200" height="28" fill="#120600"/>
+                  <path fill="#160800" d="M0,122 L0,130 L18,126 L36,130 L54,126 L72,130 L90,126 L108,130 L126,126 L144,130 L162,126 L180,130 L200,127 L200,122Z"/>
+                  <!-- Crack lines in ground -->
+                  <line x1="38" y1="122" x2="48" y2="148" stroke="rgba(160,55,8,0.4)" stroke-width="1.2"/>
+                  <line x1="98" y1="122" x2="88" y2="150" stroke="rgba(160,55,8,0.35)" stroke-width="1"/>
+                  <line x1="162" y1="122" x2="168" y2="148" stroke="rgba(160,55,8,0.3)" stroke-width="1"/>
+                  <!-- Skull -->
+                  <ellipse cx="100" cy="96" rx="16" ry="15" fill="#1c0a02"/>
+                  <ellipse cx="100" cy="93" rx="12" ry="11" fill="rgba(80,35,8,0.75)"/>
+                  <ellipse cx="93" cy="93" rx="4" ry="4.5" fill="rgba(170,70,15,0.5)"/>
+                  <ellipse cx="107" cy="93" rx="4" ry="4.5" fill="rgba(170,70,15,0.5)"/>
+                  <polygon points="100,100 97,106 103,106" fill="rgba(140,55,10,0.5)"/>
+                  <!-- Dust storm sweep -->
+                  <path fill="rgba(190,75,12,0.14)" d="M0,105 Q50,95 100,100 Q150,95 200,100 L200,114 Q150,106 100,112 Q50,106 0,112Z"/>
+                </svg>
                 <!-- Ruined buildings silhouettes -->
                 <div style="position:absolute;bottom:0;left:4%;width:16%;height:48%;background:rgba(60,25,8,0.8);clip-path:polygon(0 100%,0 20%,30% 0,60% 15%,100% 0,100% 100%)"></div>
                 <div style="position:absolute;bottom:0;right:5%;width:18%;height:55%;background:rgba(70,30,10,0.75);clip-path:polygon(0 100%,0 0,40% 25%,75% 5%,100% 20%,100% 100%)"></div>
@@ -1003,8 +1123,28 @@
             <div class="experimental-badge" style="background:#FF2200;box-shadow:0 0 14px rgba(255,34,0,0.7);">⚡ 3× SPEED</div>
             <div class="map-preview" style="--mg:7px;--mbg:#0a0002;--mr:rgba(255,34,0,0.65);">
               <div class="map-preview-inner">
-                <!-- Speed streaks -->
-                <div style="position:absolute;top:30%;left:0;right:0;height:3px;background:linear-gradient(to right,transparent,rgba(255,60,0,0.9),rgba(255,100,0,0.6),transparent)"></div>
+                <svg viewBox="0 0 200 150" xmlns="http://www.w3.org/2000/svg" style="position:absolute;inset:0;width:100%;height:100%;overflow:hidden">
+                  <!-- Speed lines (horizontal streaks) -->
+                  <line x1="0" y1="35" x2="200" y2="35" stroke="rgba(255,50,0,0.28)" stroke-width="1"/>
+                  <line x1="0" y1="44" x2="200" y2="44" stroke="rgba(255,55,0,0.5)" stroke-width="1.8"/>
+                  <line x1="0" y1="54" x2="200" y2="54" stroke="rgba(255,65,0,0.72)" stroke-width="2.5"/>
+                  <line x1="0" y1="65" x2="200" y2="65" stroke="rgba(255,60,0,0.88)" stroke-width="3.5"/>
+                  <line x1="0" y1="76" x2="200" y2="76" stroke="rgba(255,55,0,0.7)" stroke-width="2.5"/>
+                  <line x1="0" y1="86" x2="200" y2="86" stroke="rgba(255,45,0,0.45)" stroke-width="1.8"/>
+                  <line x1="0" y1="95" x2="200" y2="95" stroke="rgba(255,40,0,0.25)" stroke-width="1"/>
+                  <!-- Red glow at center -->
+                  <ellipse cx="100" cy="65" rx="55" ry="32" fill="rgba(255,40,0,0.18)"/>
+                  <!-- Main lightning bolt -->
+                  <path fill="#EE2200" d="M114,5 L80,68 L100,68 L86,145 L132,72 L110,72Z" opacity="0.95"/>
+                  <!-- Bolt inner highlight -->
+                  <path fill="rgba(255,160,60,0.55)" d="M112,10 L86,65 L102,65 L93,120 L120,75 L108,75Z"/>
+                  <!-- Glow aura around bolt -->
+                  <path fill="none" stroke="rgba(255,100,20,0.22)" stroke-width="10" d="M114,5 L80,68 L100,68 L86,145"/>
+                  <!-- Secondary small bolt -->
+                  <path fill="rgba(255,60,0,0.65)" d="M162,22 L150,56 L158,56 L148,100 L172,60 L162,60Z"/>
+                  <!-- Ground explosion -->
+                  <ellipse cx="90" cy="148" rx="32" ry="8" fill="rgba(255,70,0,0.35)"/>
+                </svg>
                 <div style="position:absolute;top:42%;left:0;right:0;height:2px;background:linear-gradient(to right,transparent 10%,rgba(255,40,0,0.7),rgba(255,80,0,0.4),transparent 90%)"></div>
                 <div style="position:absolute;top:54%;left:0;right:0;height:2px;background:linear-gradient(to right,transparent 20%,rgba(255,50,0,0.65),transparent 80%)"></div>
                 <div style="position:absolute;top:66%;left:0;right:0;height:1px;background:linear-gradient(to right,transparent 30%,rgba(255,40,0,0.5),transparent 70%)"></div>
@@ -1035,19 +1175,63 @@
             <div class="experimental-badge" style="background:linear-gradient(90deg,#44AADD,#AADDFF);box-shadow:0 0 14px rgba(136,221,255,0.75);color:#000">❄ WINTER</div>
             <div class="map-preview" style="--mg:16px;--mbg:#030c14;--mr:rgba(136,221,255,0.40);">
               <div class="map-preview-inner">
-                <!-- Ice ground -->
-                <div style="position:absolute;bottom:0;left:0;right:0;height:25%;background:linear-gradient(to top,rgba(80,180,240,0.4),rgba(100,200,255,0.15),transparent)"></div>
-                <!-- Big snowflake center -->
-                <div style="position:absolute;top:8%;left:50%;transform:translateX(-50%);font-size:46px;line-height:1;text-shadow:0 0 18px rgba(136,221,255,0.8)">❄️</div>
-                <!-- Smaller snowflakes -->
-                <div style="position:absolute;top:16%;left:10%;font-size:18px;line-height:1;opacity:0.7">❄️</div>
-                <div style="position:absolute;top:20%;right:12%;font-size:14px;line-height:1;opacity:0.6">❄️</div>
-                <div style="position:absolute;top:44%;left:6%;font-size:12px;line-height:1;opacity:0.5">❄️</div>
-                <div style="position:absolute;top:38%;right:8%;font-size:10px;line-height:1;opacity:0.45">❄️</div>
-                <!-- Snowflake particles -->
-                <div style="position:absolute;top:28%;left:36%;width:3px;height:3px;border-radius:50%;background:rgba(200,235,255,0.8)"></div>
-                <div style="position:absolute;top:52%;left:72%;width:2px;height:2px;border-radius:50%;background:rgba(200,235,255,0.7)"></div>
-                <div style="position:absolute;top:62%;left:22%;width:3px;height:3px;border-radius:50%;background:rgba(200,235,255,0.75)"></div>
+                <svg viewBox="0 0 200 150" xmlns="http://www.w3.org/2000/svg" style="position:absolute;inset:0;width:100%;height:100%;overflow:hidden">
+                  <!-- Aurora borealis -->
+                  <path fill="none" stroke="rgba(0,255,180,0.18)" stroke-width="12" d="M0,38 Q50,22 100,32 Q150,42 200,26"/>
+                  <path fill="none" stroke="rgba(68,220,255,0.14)" stroke-width="10" d="M0,28 Q50,15 100,22 Q150,30 200,18"/>
+                  <path fill="none" stroke="rgba(136,100,255,0.12)" stroke-width="8" d="M0,48 Q60,35 110,42 Q160,50 200,38"/>
+                  <!-- Far snow-capped buildings -->
+                  <path fill="#04121e" d="M0,150 0,92 5,92 5,78 10,78 10,65 14,65 14,72 18,72 18,56 22,56 22,72 26,72 26,62 30,62 30,78 38,78 38,84 42,84 42,70 46,70 46,58 50,58 50,48 54,48 54,58 58,58 58,62 62,62 62,78 70,78 70,88 74,88 74,72 78,72 78,60 82,60 82,72 86,72 86,78 94,78 94,68 98,68 98,55 102,55 102,68 106,68 106,74 114,74 114,80 118,80 118,68 122,68 122,56 126,56 126,48 130,48 130,56 134,56 134,68 138,68 138,74 148,74 148,80 152,80 152,68 158,68 158,60 162,60 162,68 166,68 166,80 170,80 170,88 176,88 176,78 180,78 180,65 184,65 184,78 188,78 188,90 192,90 192,100 200,100 200,150Z"/>
+                  <!-- Snow caps -->
+                  <path fill="rgba(210,235,255,0.7)" d="M18,72 L22,56 L26,72 L26,65 L22,58 L18,65Z"/>
+                  <path fill="rgba(210,235,255,0.68)" d="M46,70 L50,58 L54,48 L58,58 L58,62 L54,52 L50,62 L46,74Z"/>
+                  <path fill="rgba(210,235,255,0.7)" d="M78,72 L82,60 L86,72 L82,65Z"/>
+                  <path fill="rgba(210,235,255,0.68)" d="M94,68 L98,55 L102,55 L106,68 L102,60 L98,60Z"/>
+                  <path fill="rgba(210,235,255,0.7)" d="M122,68 L126,56 L130,48 L134,56 L134,62 L130,52 L126,60 L122,72Z"/>
+                  <path fill="rgba(210,235,255,0.68)" d="M152,68 L158,60 L162,68 L158,64Z"/>
+                  <path fill="rgba(210,235,255,0.7)" d="M176,78 L180,65 L184,65 L188,78 L184,70 L180,70Z"/>
+                  <!-- Near buildings (darker) -->
+                  <path fill="#010c18" d="M0,150 0,108 8,108 8,96 14,96 14,106 20,106 20,88 26,88 26,100 30,100 30,86 36,86 36,100 40,100 40,108 52,108 52,95 56,95 56,105 60,105 60,88 68,88 68,96 72,96 72,108 80,108 80,98 84,98 84,108 92,108 92,92 98,92 98,108 106,108 106,96 110,96 110,88 116,88 116,102 124,102 124,92 128,92 128,108 136,108 136,98 140,98 140,108 148,108 148,96 154,96 154,108 162,108 162,92 168,92 168,102 176,102 176,92 180,92 180,108 188,108 188,96 194,96 194,108 200,108 200,150Z"/>
+                  <!-- Ice ground -->
+                  <rect x="0" y="132" width="200" height="18" fill="rgba(40,100,180,0.3)"/>
+                  <path fill="rgba(140,210,255,0.18)" d="M0,132 Q50,128 100,132 Q150,136 200,132 L200,136 Q150,140 100,136 Q50,132 0,136Z"/>
+                  <!-- Large central SVG snowflake -->
+                  <g transform="translate(100,60)" opacity="0.85">
+                    <line x1="0" y1="-14" x2="0" y2="14" stroke="rgba(180,230,255,0.9)" stroke-width="1.5"/>
+                    <line x1="-12.1" y1="-7" x2="12.1" y2="7" stroke="rgba(180,230,255,0.9)" stroke-width="1.5"/>
+                    <line x1="12.1" y1="-7" x2="-12.1" y2="7" stroke="rgba(180,230,255,0.9)" stroke-width="1.5"/>
+                    <line x1="0" y1="-10" x2="-4" y2="-6" stroke="rgba(180,230,255,0.7)" stroke-width="1"/>
+                    <line x1="0" y1="-10" x2="4" y2="-6" stroke="rgba(180,230,255,0.7)" stroke-width="1"/>
+                    <line x1="0" y1="10" x2="-4" y2="6" stroke="rgba(180,230,255,0.7)" stroke-width="1"/>
+                    <line x1="0" y1="10" x2="4" y2="6" stroke="rgba(180,230,255,0.7)" stroke-width="1"/>
+                    <line x1="-10.5" y1="-6" x2="-6.5" y2="-3" stroke="rgba(180,230,255,0.7)" stroke-width="1"/>
+                    <line x1="-10.5" y1="-6" x2="-8" y2="-10" stroke="rgba(180,230,255,0.7)" stroke-width="1"/>
+                    <line x1="10.5" y1="6" x2="6.5" y2="3" stroke="rgba(180,230,255,0.7)" stroke-width="1"/>
+                    <line x1="10.5" y1="6" x2="8" y2="10" stroke="rgba(180,230,255,0.7)" stroke-width="1"/>
+                  </g>
+                  <!-- Small snowflake top-left -->
+                  <g transform="translate(28,32)" opacity="0.72">
+                    <line x1="0" y1="-7" x2="0" y2="7" stroke="rgba(180,230,255,0.85)" stroke-width="1.1"/>
+                    <line x1="-6.1" y1="-3.5" x2="6.1" y2="3.5" stroke="rgba(180,230,255,0.85)" stroke-width="1.1"/>
+                    <line x1="6.1" y1="-3.5" x2="-6.1" y2="3.5" stroke="rgba(180,230,255,0.85)" stroke-width="1.1"/>
+                    <line x1="0" y1="-5" x2="-2.5" y2="-2.5" stroke="rgba(180,230,255,0.6)" stroke-width="0.8"/>
+                    <line x1="0" y1="-5" x2="2.5" y2="-2.5" stroke="rgba(180,230,255,0.6)" stroke-width="0.8"/>
+                  </g>
+                  <!-- Small snowflake top-right -->
+                  <g transform="translate(168,26)" opacity="0.65">
+                    <line x1="0" y1="-6" x2="0" y2="6" stroke="rgba(180,230,255,0.8)" stroke-width="1"/>
+                    <line x1="-5.2" y1="-3" x2="5.2" y2="3" stroke="rgba(180,230,255,0.8)" stroke-width="1"/>
+                    <line x1="5.2" y1="-3" x2="-5.2" y2="3" stroke="rgba(180,230,255,0.8)" stroke-width="1"/>
+                  </g>
+                  <!-- Tiny snow particles -->
+                  <circle cx="45" cy="44" r="1.3" fill="rgba(200,235,255,0.75)"/>
+                  <circle cx="152" cy="40" r="1" fill="rgba(200,235,255,0.7)"/>
+                  <circle cx="80" cy="30" r="1.2" fill="rgba(200,235,255,0.65)"/>
+                  <circle cx="130" cy="55" r="1" fill="rgba(200,235,255,0.6)"/>
+                  <circle cx="62" cy="22" r="0.9" fill="rgba(200,235,255,0.6)"/>
+                  <circle cx="165" cy="48" r="1.1" fill="rgba(200,235,255,0.55)"/>
+                  <circle cx="20" cy="52" r="0.9" fill="rgba(200,235,255,0.5)"/>
+                </svg>
               </div>
             </div>
             <div class="map-info">
