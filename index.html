@@ -1343,138 +1343,131 @@
 
         <div class="map-card map-card--experimental" data-map="dino_world">
           <div class="experimental-badge" style="background:linear-gradient(90deg,#44AA22,#88FF44);box-shadow:0 0 14px rgba(100,220,40,0.8);color:#000">🦕 PREHISTORIC</div>
-          <div class="map-preview" style="--mg:18px;--mbg:#060e04;--mr:rgba(255,80,10,0.65);">
+          <div class="map-preview" style="--mg:18px;--mbg:#060110;--mr:rgba(255,155,28,0.55);">
             <div class="map-preview-inner">
               <svg viewBox="0 0 200 160" xmlns="http://www.w3.org/2000/svg" style="position:absolute;inset:0;width:100%;height:100%;overflow:hidden">
                 <defs>
                   <linearGradient id="dinoSky" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%"   stop-color="#020601"/>
-                    <stop offset="18%"  stop-color="#0a1802"/>
-                    <stop offset="42%"  stop-color="#1c1204"/>
-                    <stop offset="66%"  stop-color="#3a1202"/>
-                    <stop offset="84%"  stop-color="#661a04"/>
-                    <stop offset="100%" stop-color="#8e2a06"/>
+                    <stop offset="0%"   stop-color="#060110"/>
+                    <stop offset="20%"  stop-color="#180630"/>
+                    <stop offset="46%"  stop-color="#5c1408"/>
+                    <stop offset="72%"  stop-color="#a02a06"/>
+                    <stop offset="88%"  stop-color="#ce4a08"/>
+                    <stop offset="100%" stop-color="#e85c10"/>
                   </linearGradient>
-                  <radialGradient id="lavaPit" cx="50%" cy="100%" r="65%">
-                    <stop offset="0%"  stop-color="rgba(255,80,8,0.7)"/>
-                    <stop offset="55%" stop-color="rgba(255,60,5,0.3)"/>
+                  <radialGradient id="sunGlw" cx="25%" cy="92%" r="50%">
+                    <stop offset="0%"   stop-color="rgba(255,218,55,0.92)"/>
+                    <stop offset="28%"  stop-color="rgba(255,158,18,0.65)"/>
+                    <stop offset="60%"  stop-color="rgba(215,82,6,0.32)"/>
                     <stop offset="100%" stop-color="transparent" stop-opacity="0"/>
                   </radialGradient>
                 </defs>
-                <!-- Volcanic sky — rich amber/olive/smoke -->
+                <!-- Sky background — deep violet → blood orange → amber horizon -->
                 <rect x="0" y="0" width="200" height="160" fill="url(#dinoSky)"/>
-                <!-- Lava horizon bloom (3 layers deep) -->
-                <ellipse cx="100" cy="162" rx="150" ry="60" fill="rgba(255,72,5,0.42)"/>
-                <ellipse cx="100" cy="162" rx="110" ry="44" fill="rgba(255,95,12,0.32)"/>
-                <ellipse cx="100" cy="162" rx="70"  ry="28" fill="rgba(255,120,20,0.22)"/>
-                <!-- Volcanic radial glow from lava below -->
-                <rect x="0" y="0" width="200" height="160" fill="url(#lavaPit)" opacity="0.85"/>
-                <!-- Thick ash / smoke clouds across sky -->
-                <ellipse cx="26"  cy="20" rx="30" ry="13" fill="rgba(28,22,8,0.58)"/>
-                <ellipse cx="22"  cy="15" rx="20" ry="14" fill="rgba(34,26,10,0.52)"/>
-                <ellipse cx="42"  cy="12" rx="16" ry="9"  fill="rgba(30,24,9,0.46)"/>
-                <ellipse cx="82"  cy="14" rx="26" ry="10" fill="rgba(26,20,7,0.52)"/>
-                <ellipse cx="78"  cy="10" rx="18" ry="11" fill="rgba(32,26,10,0.48)"/>
-                <ellipse cx="148" cy="18" rx="28" ry="11" fill="rgba(28,22,8,0.55)"/>
-                <ellipse cx="152" cy="12" rx="20" ry="13" fill="rgba(34,28,11,0.5)"/>
-                <ellipse cx="170" cy="8"  rx="16" ry="9"  fill="rgba(30,24,9,0.44)"/>
-                <!-- Warm amber atmospheric haze bands -->
-                <path fill="rgba(210,72,8,0.18)" d="M0,82 Q50,72 100,80 Q150,88 200,74 L200,98 Q150,92 100,98 Q50,92 0,100Z"/>
-                <path fill="rgba(190,60,6,0.12)" d="M0,62 Q60,54 110,62 Q160,70 200,58 L200,76 Q160,82 110,76 Q60,70 0,76Z"/>
-                <!-- Red embers drifting from volcano (small glowing dots) -->
-                <circle cx="182" cy="58" r="1.5" fill="rgba(255,110,20,0.7)"/>
-                <circle cx="175" cy="68" r="1.2" fill="rgba(255,90,15,0.65)"/>
-                <circle cx="168" cy="52" r="1"   fill="rgba(255,120,25,0.6)"/>
-                <circle cx="188" cy="46" r="1.3" fill="rgba(255,100,18,0.62)"/>
-                <circle cx="162" cy="72" r="0.9" fill="rgba(255,80,12,0.58)"/>
-                <!-- VOLCANO far right -->
-                <path fill="#080e03" d="M160,160 L162,82 Q165,72 170,62 Q173,54 176,46 Q179,54 182,62 Q186,72 188,82 L192,160Z"/>
-                <!-- Lava crater glow -->
-                <ellipse cx="176" cy="46" rx="16" ry="7"  fill="rgba(255,95,15,0.6)"/>
-                <ellipse cx="176" cy="48" rx="9"  ry="4.5" fill="rgba(255,140,35,0.5)"/>
-                <circle  cx="176" cy="46" r="4"   fill="rgba(255,170,50,0.45)"/>
-                <!-- Ash smoke plumes -->
-                <ellipse cx="172" cy="36" rx="8"  ry="14" fill="rgba(45,28,8,0.52)"/>
-                <ellipse cx="179" cy="30" rx="9"  ry="16" fill="rgba(40,25,6,0.44)"/>
-                <ellipse cx="174" cy="22" rx="10" ry="10" fill="rgba(50,32,10,0.38)"/>
-                <!-- Lava rivers (glowing cracks) on ground -->
-                <path fill="rgba(255,75,10,0.55)" d="M0,148 Q12,144 22,148 Q26,144 30,150 Q24,152 16,148 Q8,152 0,150Z"/>
-                <path fill="rgba(255,90,15,0.48)" d="M52,144 Q62,140 70,144 Q72,142 76,146 Q70,148 64,144 Q56,148 52,146Z"/>
-                <path fill="rgba(255,75,10,0.42)" d="M112,142 Q122,138 130,142 Q132,140 136,144 Q130,146 124,142 Q116,146 112,144Z"/>
-                <!-- Far dense jungle canopy -->
-                <path fill="#061202" d="M0,72 Q10,52 24,62 Q38,44 54,56 Q68,38 84,50 Q98,34 116,46 Q130,32 148,44 Q158,52 165,60 Q155,70 152,80 L0,80Z"/>
-                <!-- Giant prehistoric cycad trees (silhouettes) -->
-                <rect x="20" y="58" width="5" height="52" fill="#060f02"/>
-                <path fill="#091804" d="M22,58 Q10,48 8,38 Q15,42 20,52 Q22,56 24,54 Q28,44 34,38 Q36,46 30,56Z"/>
-                <path fill="#081504" d="M22,46 Q12,36 10,26 Q17,30 22,42Z"/>
-                <path fill="#081504" d="M22,46 Q32,36 34,28 Q28,32 22,44Z"/>
-                <rect x="46" y="50" width="5" height="60" fill="#050e02"/>
-                <path fill="#091804" d="M48,50 Q36,40 34,30 Q42,34 46,46 Q48,50 50,48 Q54,38 60,32 Q62,40 56,50Z"/>
-                <!-- Mid-ground jungle foliage mass -->
-                <path fill="#051504" d="M0,88 Q16,72 34,82 Q50,66 68,76 Q84,62 104,74 Q120,60 140,70 Q155,76 165,86 L165,96 L0,96Z"/>
-                <!-- Giant fern shapes (foreground left) -->
-                <path fill="rgba(16,88,8,0.72)"  d="M28,120 Q18,108 12,94 Q22,98 26,112Z"/>
-                <path fill="rgba(20,100,10,0.68)" d="M28,120 Q20,106 22,92 Q30,98 32,114Z"/>
-                <path fill="rgba(16,88,8,0.72)"  d="M28,120 Q30,106 38,94 Q40,102 34,116Z"/>
-                <path fill="rgba(20,100,10,0.65)" d="M28,120 Q36,108 46,96 Q46,106 40,118Z"/>
-                <!-- Giant fern shapes right -->
-                <path fill="rgba(16,88,8,0.7)"   d="M138,122 Q130,110 124,96 Q134,100 136,114Z"/>
-                <path fill="rgba(20,100,10,0.65)" d="M138,122 Q132,108 136,94 Q144,100 142,116Z"/>
-                <path fill="rgba(16,88,8,0.7)"   d="M138,122 Q142,108 150,96 Q152,106 146,120Z"/>
-                <!-- T-REX (dominant center — detailed build) -->
+                <!-- Sun glow (left horizon warmth) -->
+                <rect x="0" y="0" width="200" height="160" fill="url(#sunGlw)" opacity="0.90"/>
+                <!-- Setting sun disc (large, left side of horizon) -->
+                <ellipse cx="48" cy="140" rx="26" ry="24" fill="rgba(255,222,55,0.88)"/>
+                <ellipse cx="48" cy="140" rx="18" ry="16" fill="rgba(255,242,130,0.76)"/>
+                <ellipse cx="48" cy="140" rx="42" ry="36" fill="rgba(255,148,18,0.20)"/>
+                <!-- God rays from left setting sun -->
+                <path fill="rgba(255,198,35,0.052)" d="M48,126 L0,0 L22,0Z"/>
+                <path fill="rgba(255,182,25,0.045)" d="M48,128 L54,0 L72,0Z"/>
+                <path fill="rgba(255,188,28,0.040)" d="M48,130 L92,0 L108,0Z"/>
+                <path fill="rgba(255,168,18,0.034)" d="M48,133 L126,10 L142,16Z"/>
+                <!-- Storm clouds upper right (deep violet with amber lit bellies) -->
+                <ellipse cx="142" cy="14" rx="42" ry="18" fill="rgba(14,4,28,0.85)"/>
+                <ellipse cx="130" cy="7"  rx="28" ry="20" fill="rgba(12,5,25,0.78)"/>
+                <ellipse cx="168" cy="10" rx="26" ry="14" fill="rgba(10,4,22,0.74)"/>
+                <ellipse cx="154" cy="28" rx="38" ry="12" fill="rgba(12,4,24,0.70)"/>
+                <ellipse cx="142" cy="30" rx="40" ry="8"  fill="rgba(190,82,18,0.28)"/>
+                <ellipse cx="110" cy="9"  rx="20" ry="10" fill="rgba(14,5,26,0.70)"/>
+                <ellipse cx="104" cy="4"  rx="15" ry="11" fill="rgba(12,4,22,0.65)"/>
+                <ellipse cx="114" cy="19" rx="22" ry="8"  fill="rgba(175,70,16,0.26)"/>
+                <!-- Atmospheric amber haze band -->
+                <path fill="rgba(218,96,18,0.07)" d="M0,88 Q50,78 100,84 Q150,90 200,80 L200,98 Q150,102 100,97 Q50,92 0,98Z"/>
+                <!-- BRACHIOSAURUS — hero silhouette, large, left-center, neck soaring high -->
                 <!-- Main body mass -->
-                <path fill="#0e3006" d="M68,130 L64,114 L62,98 L63,82 L68,70 L76,60 L86,52 L98,46 L112,42 L128,38 L144,36 L158,34 L168,36 L176,42 L178,50 L172,58 L158,60 L144,56 L130,60 L120,66 L112,74 L108,82 L110,90 L106,96 L98,94 L92,88 L88,96 L90,110 L94,126 L88,128 L86,124 L84,128 L78,128 L78,124 L80,116 L78,108 L72,96 L65,94 L60,100 L58,114 L60,128 L54,130Z"/>
-                <!-- T-Rex neck detail -->
-                <path fill="#0c2a05" d="M148,36 L160,34 L170,36 L178,42 L178,48 Q172,52 164,50 Q156,50 150,44Z"/>
-                <!-- T-Rex head (wide menacing jaw) -->
-                <path fill="#102e06" d="M168,36 L180,40 L188,44 L192,48 L194,46 L196,40 L192,34 L184,30 L174,28 L164,30 L158,34Z"/>
-                <!-- Upper jaw separate -->
-                <path fill="#0c2a05" d="M178,42 L192,40 L196,46 L192,50 L182,52 L172,50 L164,46Z"/>
-                <!-- T-Rex eye (amber, glowing) -->
-                <circle cx="188" cy="36" r="3.5"  fill="rgba(255,190,0,0.9)"/>
-                <circle cx="188" cy="36" r="1.8"  fill="rgba(20,8,0,0.95)"/>
-                <circle cx="188" cy="36" r="5.5"  fill="rgba(255,160,0,0.18)"/>
-                <!-- Eye highlight -->
-                <circle cx="189" cy="35" r="0.8"  fill="rgba(255,240,200,0.7)"/>
-                <!-- Teeth (jagged upper jaw) -->
-                <path fill="rgba(210,230,190,0.72)" d="M178,50 L180,56 L183,50 L186,56 L189,50 L192,54 L193,50Z"/>
-                <!-- Lower jaw teeth -->
-                <path fill="rgba(190,210,170,0.5)"  d="M175,52 L177,57 L180,53 L183,58 L186,53 L188,57Z"/>
-                <!-- Nostril -->
-                <circle cx="192" cy="42" r="1.2" fill="rgba(8,20,4,0.8)"/>
-                <!-- T-Rex tiny arms -->
-                <path fill="#0c2a05" d="M108,78 L120,74 L126,82 L120,90 L112,86Z"/>
-                <!-- Claw tips on arms -->
-                <path fill="rgba(180,200,150,0.5)" d="M126,82 L130,79 L128,85Z"/>
-                <!-- T-Rex massive legs -->
-                <path fill="#0c2a05" d="M68,128 L62,118 L56,130 L54,150 L60,150 L62,138 L66,130Z"/>
-                <path fill="#0c2a05" d="M88,128 L82,118 L80,130 L78,150 L84,150 L86,138 L90,130Z"/>
+                <path fill="#091a04" d="M38,118 Q38,104 48,100 Q62,98 78,100 Q94,102 104,108 Q112,114 112,124 Q110,138 100,143 Q84,147 68,145 Q52,143 42,137 Q36,130 36,124 Q36,120 38,118Z"/>
+                <!-- Long elegant neck (S-curve, sweeps up into sky) -->
+                <path fill="#0a1c04" d="M56,108 Q52,90 46,70 Q40,50 35,32 Q31,18 28,8 Q32,5 36,6 Q40,14 44,30 Q50,48 56,68 Q62,88 64,108Z"/>
+                <!-- Head (small, at top) -->
+                <ellipse cx="30" cy="7" rx="7" ry="5" fill="#0a1c04"/>
+                <ellipse cx="35" cy="5" rx="5" ry="3.5" fill="#091a04"/>
+                <!-- Amber eye -->
+                <circle cx="35" cy="5" r="1.6" fill="rgba(255,200,40,0.75)"/>
+                <circle cx="35" cy="5" r="0.7" fill="rgba(8,3,0,0.92)"/>
+                <!-- Front legs -->
+                <path fill="#081804" d="M50,140 L48,154 L54,154 L56,142Z"/>
+                <path fill="#081804" d="M62,142 L60,155 L66,155 L68,144Z"/>
+                <!-- Back legs -->
+                <path fill="#081804" d="M82,143 L80,155 L86,155 L88,145Z"/>
+                <path fill="#081804" d="M94,141 L94,154 L100,154 L100,143Z"/>
+                <!-- Tail trailing right -->
+                <path fill="#091a04" d="M104,122 Q116,117 128,119 Q134,124 132,130 Q120,128 108,128Z"/>
+                <!-- Body ground shadow -->
+                <ellipse cx="76" cy="150" rx="44" ry="7" fill="rgba(2,5,1,0.58)"/>
+                <!-- T-REX — right side, smaller, open jaw -->
+                <!-- Body -->
+                <path fill="#0c2004" d="M150,106 Q154,96 164,92 Q174,90 180,96 Q184,103 182,113 Q177,122 166,124 Q155,126 149,119Z"/>
+                <!-- Neck -->
+                <path fill="#0a1c04" d="M164,92 Q168,84 172,78 L180,74 L186,76 Q190,80 192,88 Q190,94 184,95 Q176,95 168,91Z"/>
+                <!-- Upper jaw (open, menacing) -->
+                <path fill="#091a04" d="M180,76 L188,74 L195,76 L197,83 L193,89 L186,87 L180,83Z"/>
+                <!-- Glowing amber eye -->
+                <circle cx="189" cy="78" r="3.2" fill="rgba(255,185,0,0.92)"/>
+                <circle cx="189" cy="78" r="1.5" fill="rgba(8,3,0,0.96)"/>
+                <circle cx="189" cy="78" r="5"   fill="rgba(255,140,0,0.15)"/>
+                <circle cx="190" cy="77" r="0.9" fill="rgba(255,242,200,0.60)"/>
+                <!-- Jagged teeth -->
+                <path fill="rgba(205,222,178,0.65)" d="M182,89 L184,95 L187,89 L190,95 L193,89 L195,93 L197,89Z"/>
+                <!-- Tiny arms -->
+                <path fill="#0a1c04" d="M164,100 L170,96 L175,103 L169,109Z"/>
+                <!-- Legs -->
+                <path fill="#091a04" d="M150,119 L148,136 L155,138 L156,121Z"/>
+                <path fill="#091a04" d="M164,121 L163,138 L170,138 L170,123Z"/>
                 <!-- Foot claws -->
-                <path fill="rgba(180,200,150,0.45)" d="M54,150 L50,155 L58,152Z"/>
-                <path fill="rgba(180,200,150,0.45)" d="M78,150 L74,155 L82,152Z"/>
-                <!-- T-Rex tail extending left -->
-                <path fill="#0e3006" d="M54,114 L38,108 L22,110 L10,118 L8,126 L22,122 L44,116Z"/>
-                <!-- Ground shadow beneath Rex -->
-                <ellipse cx="78" cy="134" rx="55" ry="9" fill="rgba(3,12,1,0.7)"/>
-                <!-- BRACHIOSAURUS neck peeking left background -->
-                <path fill="rgba(7,22,3,0.78)" d="M10,125 L10,112 L14,102 L20,92 L28,84 L36,78 L40,80 L36,88 L28,96 L22,106 L18,118 L16,128Z"/>
-                <path fill="rgba(7,22,3,0.74)" d="M36,78 L44,66 L52,54 L48,50 L42,58 L36,70 L34,80Z"/>
-                <!-- Brachio head -->
-                <ellipse cx="52" cy="52" rx="6" ry="5" fill="rgba(7,22,3,0.72)"/>
-                <circle cx="55" cy="50" r="1.2" fill="rgba(200,220,100,0.55)"/>
-                <!-- PTEROSAURS in smoky sky -->
-                <path fill="rgba(6,18,2,0.75)" d="M72,16 L62,26 L72,23 L84,28 L90,20 L80,16Z"/>
-                <ellipse cx="89" cy="19" rx="3.5" ry="2.5" fill="rgba(6,18,2,0.72)"/>
-                <path fill="rgba(6,18,2,0.68)" d="M112,10 L104,20 L112,17 L122,22 L128,14 L118,10Z"/>
-                <ellipse cx="127" cy="13" rx="3" ry="2.2" fill="rgba(6,18,2,0.65)"/>
-                <path fill="rgba(6,18,2,0.6)"  d="M142,20 L136,28 L142,26 L150,30 L154,24 L148,20Z"/>
-                <!-- Ground jungle floor (rich dark) -->
-                <rect x="0" y="132" width="200" height="28" fill="#030d01"/>
-                <path fill="#041004" d="M0,132 Q25,126 50,132 Q75,126 100,132 Q125,126 150,132 Q175,126 200,132 L200,138 L0,138Z"/>
-                <!-- Ground mist/fog -->
-                <ellipse cx="100" cy="148" rx="120" ry="20" fill="rgba(28,80,12,0.4)"/>
-                <ellipse cx="55"  cy="155" rx="90"  ry="18" fill="rgba(22,65,8,0.32)"/>
-                <ellipse cx="158" cy="152" rx="78"  ry="16" fill="rgba(18,60,6,0.26)"/>
+                <path fill="rgba(165,185,135,0.42)" d="M148,136 L143,142 L152,138Z"/>
+                <path fill="rgba(165,185,135,0.42)" d="M163,138 L158,144 L167,140Z"/>
+                <!-- Tail -->
+                <path fill="#0c2004" d="M182,113 L194,111 L200,113 L200,119 L188,119 L182,119Z"/>
+                <!-- T-Rex shadow -->
+                <ellipse cx="162" cy="143" rx="29" ry="5.5" fill="rgba(2,5,1,0.52)"/>
+                <!-- PTEROSAURS — 3 in diagonal V-formation -->
+                <path fill="rgba(8,16,3,0.82)" d="M64,24 L54,34 L64,31 L76,36 L82,27 L72,24Z"/>
+                <ellipse cx="81" cy="26" rx="3.2" ry="2.2" fill="rgba(8,16,3,0.80)"/>
+                <path fill="rgba(8,16,3,0.70)" d="M84,15 L76,25 L84,22 L94,27 L100,19 L90,15Z"/>
+                <ellipse cx="99" cy="18" rx="2.8" ry="2.0" fill="rgba(8,16,3,0.68)"/>
+                <path fill="rgba(8,16,3,0.58)" d="M106,7 L100,16 L106,14 L114,19 L118,12 L112,7Z"/>
+                <ellipse cx="117" cy="11" rx="2.4" ry="1.8" fill="rgba(8,16,3,0.56)"/>
+                <!-- Reflective puddle (sunset glowing on water) -->
+                <ellipse cx="122" cy="152" rx="30" ry="6.5" fill="rgba(200,78,16,0.30)"/>
+                <ellipse cx="122" cy="152" rx="20" ry="4.2" fill="rgba(255,148,28,0.22)"/>
+                <ellipse cx="122" cy="152" rx="10" ry="2.2" fill="rgba(255,215,55,0.20)"/>
+                <path stroke="rgba(255,180,35,0.16)" stroke-width="0.8" fill="none" d="M100,151 Q122,149 144,151"/>
+                <path stroke="rgba(255,158,22,0.12)" stroke-width="0.5" fill="none" d="M104,153 Q122,151 140,153"/>
+                <!-- Dense prehistoric jungle floor -->
+                <rect x="0" y="142" width="200" height="18" fill="#030c01"/>
+                <path fill="#041004" d="M0,142 Q22,135 44,142 Q66,135 88,142 Q110,135 132,142 Q154,135 176,142 Q188,138 200,142 L200,148 L0,148Z"/>
+                <!-- Cycad palm left -->
+                <rect x="14" y="120" width="5" height="42" fill="#040e02"/>
+                <path fill="#061404" d="M16,122 Q6,112 4,100 Q10,104 14,118Z"/>
+                <path fill="#061404" d="M16,122 Q26,112 28,100 Q22,104 16,118Z"/>
+                <path fill="#051204" d="M16,114 Q8,104 6,92 Q12,96 16,110Z"/>
+                <path fill="#051204" d="M16,114 Q24,104 26,92 Q20,96 16,110Z"/>
+                <!-- Cycad palm right -->
+                <rect x="182" y="118" width="5" height="44" fill="#040e02"/>
+                <path fill="#061404" d="M184,120 Q174,110 172,98 Q178,102 182,116Z"/>
+                <path fill="#061404" d="M184,120 Q194,110 196,98 Q190,102 184,116Z"/>
+                <!-- Foreground fern sprigs -->
+                <path fill="rgba(14,70,6,0.65)" d="M28,148 Q20,138 14,126 Q22,130 26,144Z"/>
+                <path fill="rgba(14,70,6,0.60)" d="M28,148 Q22,136 24,122 Q32,128 30,144Z"/>
+                <path fill="rgba(12,65,5,0.62)" d="M28,148 Q34,138 42,126 Q42,134 36,146Z"/>
+                <path fill="rgba(14,70,6,0.58)" d="M168,148 Q162,138 156,126 Q162,132 166,144Z"/>
+                <path fill="rgba(14,70,6,0.55)" d="M168,148 Q170,136 178,124 Q178,134 172,146Z"/>
+                <!-- Ground mist (dark amber-green) -->
+                <ellipse cx="100" cy="157" rx="128" ry="15" fill="rgba(20,62,8,0.40)"/>
+                <ellipse cx="52"  cy="160" rx="96"  ry="13" fill="rgba(14,48,5,0.28)"/>
               </svg>
             </div>
           </div>

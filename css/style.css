@@ -773,15 +773,14 @@ body {
     linear-gradient(180deg, #010a01 0%, #030e03 100%);
 }
 
-/* Dino World — volcanic primordial earth */
+/* Dino World — prehistoric sunset (violet sky, amber horizon, left sun glow) */
 [data-map="dino_world"] .map-preview {
   background:
-    radial-gradient(ellipse at 50% 100%, rgba(255,68,5,0.75)   0%, transparent 52%),
-    radial-gradient(ellipse at 88% 78%,  rgba(255,92,10,0.58)  0%, transparent 42%),
-    radial-gradient(ellipse at 10% 82%,  rgba(218,52,5,0.42)   0%, transparent 36%),
-    radial-gradient(ellipse at 86% 16%,  rgba(200,80,8,0.28)   0%, transparent 32%),
-    radial-gradient(ellipse at 58% 50%,  rgba(85,38,4,0.45)    0%, transparent 55%),
-    linear-gradient(180deg, #020701 0%, #0d1c02 28%, #2e0e01 64%, #1f0900 100%);
+    radial-gradient(ellipse at 25% 92%, rgba(255,215,55,0.72)  0%, transparent 44%),
+    radial-gradient(ellipse at 25% 88%, rgba(255,135,18,0.56)  0%, transparent 37%),
+    radial-gradient(ellipse at 62% 58%, rgba(148,32,8,0.36)    0%, transparent 52%),
+    radial-gradient(ellipse at 8%  8%,  rgba(4,1,18,0.55)      0%, transparent 32%),
+    linear-gradient(180deg, #060110 0%, #180630 22%, #5c1408 46%, #a02a06 70%, #ce4a08 86%, #e85c10 100%);
 }
 
 /* Wasteland — orange barren badlands */
