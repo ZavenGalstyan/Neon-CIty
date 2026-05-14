@@ -114,8 +114,8 @@ body {
 
 .select-container {
   position: relative; z-index: 1;
-  width: 100%; max-width: 1180px;
-  padding: 0 24px;
+  width: 100%; max-width: 100%;
+  padding: 0 20px;
   display: flex; flex-direction: column; gap: 10px;
 }
 
@@ -476,86 +476,55 @@ body {
    ════════════════════════════════════════════════════════════ */
 .maps-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
 }
-@media (max-width: 760px) { .maps-grid { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 420px) { .maps-grid { grid-template-columns: 1fr; } }
+@media (max-width: 900px) { .maps-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 540px) { .maps-grid { grid-template-columns: repeat(2, 1fr); } }
 
+/* ═══════════════════════════════════════════════
+   MAP CARD — full-cover preview with glass info overlay
+   ═══════════════════════════════════════════════ */
 .map-card {
   position: relative;
-  display: flex; flex-direction: column;
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 10px; overflow: hidden;
-  cursor: pointer; height: 138px;
-  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+  overflow: hidden;
+  cursor: pointer;
+  height: 148px;
+  border-radius: 14px;
+  border: 1.5px solid rgba(255,255,255,0.1);
+  background: #04040e;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 .map-card::before {
-  content: ''; position: absolute; inset: 0;
-  background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, transparent 55%);
-  pointer-events: none; z-index: 2;
+  content: ''; position: absolute; inset: 0; z-index: 1;
+  background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, transparent 50%);
+  pointer-events: none;
 }
-.map-card:hover { transform: translateY(-4px); }
+.map-card:hover { transform: translateY(-5px); }
 
 /* Per-map hover + selected colours */
-.map-card[data-map="neon_city"]:hover  { border-color: rgba(68,238,255,0.4);  box-shadow: 0 8px 30px rgba(0,0,0,0.5); }
-.map-card[data-map="arena"]:hover      { border-color: rgba(255,0,68,0.55);   box-shadow: 0 8px 36px rgba(255,0,68,0.22); }
+.map-card[data-map="neon_city"]:hover  { border-color: rgba(68,238,255,0.5);  box-shadow: 0 8px 28px rgba(68,238,255,0.2); }
+.map-card[data-map="arena"]:hover      { border-color: rgba(255,0,68,0.6);    box-shadow: 0 8px 28px rgba(255,0,68,0.25); }
 
-.map-card[data-map="neon_city"].selected  { transform: translateY(-5px); border-color: var(--neon-theme-color, #44EEFF); box-shadow: 0 0 24px var(--neon-theme-glow, rgba(68,238,255,0.5)), 0 12px 40px rgba(0,0,0,0.6); }
-.map-card[data-map="arena"].selected      { transform: translateY(-4px); border-color: #FF0044; box-shadow: 0 0 30px rgba(255,0,68,0.6),  0 12px 40px rgba(0,0,0,0.7); }
+.map-card[data-map="neon_city"].selected  { transform: translateY(-5px); border-color: var(--neon-theme-color, #44EEFF); box-shadow: 0 0 22px var(--neon-theme-glow, rgba(68,238,255,0.5)), 0 8px 28px rgba(0,0,0,0.6); }
+.map-card[data-map="arena"].selected      { transform: translateY(-5px); border-color: #FF0044; box-shadow: 0 0 24px rgba(255,0,68,0.6), 0 8px 28px rgba(0,0,0,0.7); }
 
 /* Neon City color theme selector */
 .map-card--neon-city {
-  position: relative;
-  display: flex;
-  flex-direction: row;
-  align-items: stretch;
-  gap: 20px;
-  padding: 16px 20px;
-  min-height: 180px;
-  background: linear-gradient(135deg, rgba(20,20,35,0.95) 0%, rgba(10,10,20,0.98) 100%);
+  background: #080818;
+  height: 168px;
 }
-.map-card--neon-city .map-preview {
-  width: 200px;
-  flex-shrink: 0;
-  height: auto;
-  min-height: 140px;
-}
-.map-card--neon-city .map-info {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-.map-card--neon-city .map-name {
-  font-size: 22px;
-  letter-spacing: 0.15em;
-}
-.map-card--neon-city .map-desc {
-  font-size: 13px;
-  margin: 6px 0 10px 0;
-}
-@media (max-width: 600px) {
-  .map-card--neon-city {
-    flex-direction: column;
-    min-height: auto;
-    padding: 12px;
-  }
-  .map-card--neon-city .map-preview {
-    width: 100%;
-    height: 80px;
-    min-height: 80px;
-  }
-}
-.neon-color-selector { padding: 4px 0; }
+.map-card--neon-city .map-preview { height: 100%; }
+.map-card--neon-city .map-name { font-size: 11px; letter-spacing: 0.1em; }
+.neon-color-selector { margin: 2px 0 3px; }
+.neon-color-selector { padding: 2px 0; }
 .neon-theme-btn {
-  width: 36px; height: 36px;
+  width: 28px; height: 28px;
   border: 2px solid rgba(255,255,255,0.15);
   border-radius: 50%;
   background: rgba(0,0,0,0.6);
   cursor: pointer;
-  padding: 4px;
+  padding: 3px;
   transition: all 0.2s ease;
   position: relative;
 }
@@ -589,46 +558,23 @@ body {
 
 /* Wasteland map card styling */
 .map-card--wasteland {
-  position: relative;
-  display: flex;
-  flex-direction: row;
-  align-items: stretch;
-  gap: 20px;
-  padding: 16px 20px;
-  min-height: 180px;
-  background: linear-gradient(135deg, rgba(30,20,10,0.95) 0%, rgba(15,10,5,0.98) 100%);
+  background: #0e0804;
+  height: 164px;
 }
-.map-card--wasteland .map-preview {
-  width: 200px;
-  flex-shrink: 0;
-  height: auto;
-  min-height: 140px;
-}
-.map-card--wasteland .map-info {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-.map-card--wasteland .map-name {
-  font-size: 22px;
-  letter-spacing: 0.15em;
-}
-.map-card--wasteland .map-desc {
-  font-size: 13px;
-  margin: 6px 0 10px 0;
-}
-.map-card[data-map="wasteland"]:hover { border-color: rgba(255,102,34,0.4); box-shadow: 0 8px 30px rgba(0,0,0,0.5); }
-.map-card[data-map="wasteland"].selected { transform: translateY(-5px); border-color: var(--wasteland-theme-color, #FF6622); box-shadow: 0 0 24px var(--wasteland-theme-glow, rgba(255,102,34,0.5)), 0 12px 40px rgba(0,0,0,0.6); }
+.map-card--wasteland .map-preview { height: 100%; }
+.map-card--wasteland .map-name { font-size: 11px; letter-spacing: 0.1em; }
+.wasteland-color-selector { margin: 2px 0 3px; }
+.map-card[data-map="wasteland"]:hover { border-color: rgba(255,102,34,0.4); box-shadow: 0 8px 24px rgba(0,0,0,0.6); }
+.map-card[data-map="wasteland"].selected { transform: translateY(-5px); border-color: var(--wasteland-theme-color, #FF6622); box-shadow: 0 0 28px var(--wasteland-theme-glow, rgba(255,102,34,0.5)), 0 8px 24px rgba(0,0,0,0.6); }
 
 /* Wasteland theme buttons */
 .wasteland-theme-btn {
-  width: 36px; height: 36px;
+  width: 28px; height: 28px;
   border: 2px solid rgba(255,255,255,0.15);
   border-radius: 50%;
   background: rgba(0,0,0,0.6);
   cursor: pointer;
-  padding: 4px;
+  padding: 3px;
   transition: all 0.2s ease;
   position: relative;
 }
@@ -651,301 +597,312 @@ body {
   animation: themePulse 1.5s ease-in-out infinite;
 }
 
-@media (max-width: 600px) {
-  .map-card--wasteland {
-    flex-direction: column;
-    min-height: auto;
-    padding: 12px;
-  }
-  .map-card--wasteland .map-preview {
-    width: 100%;
-    height: 80px;
-    min-height: 80px;
-  }
-}
-
 /* Jungle map card styling */
 .map-card--jungle {
-  position: relative;
-  display: flex;
-  flex-direction: row;
-  align-items: stretch;
-  gap: 20px;
-  padding: 16px 20px;
-  min-height: 180px;
-  background: linear-gradient(135deg, rgba(10,30,15,0.95) 0%, rgba(5,20,10,0.98) 100%);
-  border: 1px solid rgba(68,170,34,0.3);
+  border-color: rgba(68,170,34,0.3);
+  background: #060e04;
 }
 .map-card--jungle .map-preview {
-  width: 200px;
-  flex-shrink: 0;
-  height: auto;
-  min-height: 140px;
+  height: 100%;
   background-image: none;
   background-color: #0a1808;
 }
-.map-card--jungle .map-info {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-.map-card--jungle .map-name {
-  font-size: 22px;
-  letter-spacing: 0.12em;
-}
-.map-card--jungle .map-desc {
-  font-size: 13px;
-  margin: 6px 0 10px 0;
-}
-.map-card[data-map="jungle"]:hover { border-color: rgba(68,170,34,0.5); box-shadow: 0 8px 30px rgba(0,0,0,0.5), 0 0 20px rgba(68,170,34,0.15); }
-.map-card[data-map="jungle"].selected { transform: translateY(-5px); border-color: #44AA22; box-shadow: 0 0 24px rgba(68,170,34,0.5), 0 12px 40px rgba(0,0,0,0.6); }
+.map-card[data-map="jungle"]:hover { border-color: rgba(68,170,34,0.5); box-shadow: 0 8px 24px rgba(0,0,0,0.6), 0 0 20px rgba(68,170,34,0.15); }
+.map-card[data-map="jungle"].selected { transform: translateY(-5px); border-color: #44AA22; box-shadow: 0 0 28px rgba(68,170,34,0.5), 0 8px 24px rgba(0,0,0,0.6); }
 
-/* Robot City — wide card like wasteland */
+/* Robot City card */
 .map-card--robot-city {
-  position: relative;
-  display: flex;
-  flex-direction: row;
-  align-items: stretch;
-  gap: 20px;
-  padding: 16px 20px;
-  min-height: 180px;
-  height: auto;
-  background: linear-gradient(135deg, rgba(5,12,20,0.95) 0%, rgba(0,5,12,0.98) 100%);
-  border: 1px solid rgba(0,180,220,0.25);
+  background: #020810;
+  border-color: rgba(0,180,220,0.25);
 }
-.map-card--robot-city .map-preview {
-  width: 200px;
-  flex-shrink: 0;
-  height: auto;
-  min-height: 140px;
-}
-.map-card--robot-city .map-info {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-.map-card--robot-city .map-name { font-size: 22px; letter-spacing: 0.15em; }
-.map-card--robot-city .map-desc { font-size: 13px; margin: 6px 0 10px 0; }
-.map-card[data-map="robot_city"]:hover   { border-color: rgba(0,221,255,0.45); box-shadow: 0 8px 30px rgba(0,0,0,0.5), 0 0 20px rgba(0,221,255,0.12); }
-.map-card[data-map="robot_city"].selected { transform: translateY(-5px); border-color: #00DDFF; box-shadow: 0 0 24px rgba(0,221,255,0.5), 0 12px 40px rgba(0,0,0,0.6); }
-@media (max-width: 600px) {
-  .map-card--robot-city { flex-direction: column; min-height: auto; padding: 12px; }
-  .map-card--robot-city .map-preview { width: 100%; height: 80px; min-height: 80px; }
-}
+.map-card--robot-city .map-preview { height: 100%; }
+.map-card[data-map="robot_city"]:hover   { border-color: rgba(0,221,255,0.45); box-shadow: 0 8px 24px rgba(0,0,0,0.6), 0 0 20px rgba(0,221,255,0.12); }
+.map-card[data-map="robot_city"].selected { transform: translateY(-5px); border-color: #00DDFF; box-shadow: 0 0 28px rgba(0,221,255,0.5), 0 8px 24px rgba(0,0,0,0.6); }
 
-@media (max-width: 600px) {
-  .map-card--jungle {
-    flex-direction: column;
-    min-height: auto;
-    padding: 12px;
-  }
-  .map-card--jungle .map-preview {
-    width: 100%;
-    height: 80px;
-    min-height: 80px;
-  }
-}
-
-/* Desert Sands — wide card */
+/* Desert Sands card */
 .map-card--desert {
-  position: relative;
-  display: flex;
-  flex-direction: row;
-  align-items: stretch;
-  gap: 20px;
-  padding: 16px 20px;
-  min-height: 180px;
-  height: auto;
-  background: linear-gradient(135deg, rgba(28,18,4,0.97) 0%, rgba(18,10,2,0.99) 100%);
-  border: 1px solid rgba(212,160,23,0.30);
+  background: #100800;
+  border-color: rgba(212,160,23,0.30);
 }
 .map-card--desert .map-preview {
-  width: 200px;
-  flex-shrink: 0;
-  height: auto;
-  min-height: 140px;
+  height: 100%;
   background-color: #180e00;
 }
-.map-card--desert .map-info {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-.map-card--desert .map-name { font-size: 22px; letter-spacing: 0.14em; }
-.map-card--desert .map-desc { font-size: 13px; margin: 6px 0 10px 0; }
-.map-card[data-map="desert_sands"]:hover   { border-color: rgba(212,160,23,0.55); box-shadow: 0 8px 30px rgba(0,0,0,0.5), 0 0 22px rgba(212,160,23,0.15); }
-.map-card[data-map="desert_sands"].selected { transform: translateY(-5px); border-color: #D4A017; box-shadow: 0 0 28px rgba(212,160,23,0.55), 0 12px 40px rgba(0,0,0,0.6); }
-@media (max-width: 600px) {
-  .map-card--desert { flex-direction: column; min-height: auto; padding: 12px; }
-  .map-card--desert .map-preview { width: 100%; height: 80px; min-height: 80px; }
-}
+.map-card[data-map="desert_sands"]:hover   { border-color: rgba(212,160,23,0.55); box-shadow: 0 8px 24px rgba(0,0,0,0.6), 0 0 22px rgba(212,160,23,0.15); }
+.map-card[data-map="desert_sands"].selected { transform: translateY(-5px); border-color: #D4A017; box-shadow: 0 0 32px rgba(212,160,23,0.55), 0 8px 24px rgba(0,0,0,0.6); }
 
-/* ── Feature Row: Galactica · Tower · Sky Realm — 3 cards on one line ── */
-.feature-maps-row {
-  grid-column: 1 / -1;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-}
-.feature-maps-row .map-card            { min-width: 0; height: auto; }
-.feature-maps-row .map-name            { font-size: 15px !important; letter-spacing: 0.08em !important; }
-.feature-maps-row .map-desc            { font-size: 11px !important; margin: 4px 0 7px !important; }
-.feature-maps-row .map-tags            { gap: 4px; flex-wrap: wrap; }
+/* Feature cards — Galactica, Tower, Sky Realm (now inline in grid) */
 
 .map-card--galactica {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  min-width: 0;
-  height: auto;
-  background: linear-gradient(135deg, rgba(8,0,28,0.97) 0%, rgba(4,0,18,0.99) 100%);
-  border: 1px solid rgba(170,68,255,0.30);
+  background: #040010;
+  border-color: rgba(170,68,255,0.30);
 }
-.map-card--galactica .map-info { flex: 1; }
-.map-card[data-map="galactica"]:hover   { border-color: rgba(170,68,255,0.55); box-shadow: 0 8px 30px rgba(0,0,0,0.6), 0 0 22px rgba(170,68,255,0.18); }
-.map-card[data-map="galactica"].selected { transform: translateY(-5px); border-color: #AA44FF; box-shadow: 0 0 28px rgba(170,68,255,0.55), 0 12px 40px rgba(0,0,0,0.6); }
+.map-card[data-map="galactica"]:hover   { border-color: rgba(170,68,255,0.55); box-shadow: 0 8px 24px rgba(0,0,0,0.6), 0 0 22px rgba(170,68,255,0.18); }
+.map-card[data-map="galactica"].selected { transform: translateY(-5px); border-color: #AA44FF; box-shadow: 0 0 32px rgba(170,68,255,0.55), 0 8px 24px rgba(0,0,0,0.6); }
 
 /* The Tower map card */
 .map-card--tower {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  min-width: 0;
-  height: auto;
-  background: linear-gradient(135deg, rgba(26,18,8,0.97) 0%, rgba(14,10,4,0.99) 100%);
-  border: 1px solid rgba(200,150,0,0.30);
+  background: #100a04;
+  border-color: rgba(200,150,0,0.30);
 }
-.map-card--tower .map-info { flex: 1; }
-.map-card[data-map="tower"]:hover   { border-color: rgba(255,200,0,0.55); box-shadow: 0 8px 30px rgba(0,0,0,0.6), 0 0 22px rgba(200,150,0,0.18); }
-.map-card[data-map="tower"].selected { transform: translateY(-5px); border-color: #FFD700; box-shadow: 0 0 28px rgba(255,200,0,0.55), 0 12px 40px rgba(0,0,0,0.6); }
+.map-card[data-map="tower"]:hover   { border-color: rgba(255,200,0,0.55); box-shadow: 0 8px 24px rgba(0,0,0,0.6), 0 0 22px rgba(200,150,0,0.18); }
+.map-card[data-map="tower"].selected { transform: translateY(-5px); border-color: #FFD700; box-shadow: 0 0 32px rgba(255,200,0,0.55), 0 8px 24px rgba(0,0,0,0.6); }
 
-@media (max-width: 768px) {
-  .feature-maps-row { grid-template-columns: 1fr; }
-}
 
 /* Sky Realm map card */
 .map-card--sky {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  min-width: 0;
-  height: auto;
-  background: linear-gradient(135deg, rgba(10,22,50,0.97) 0%, rgba(16,34,72,0.99) 100%);
-  border: 1px solid rgba(135,206,235,0.30);
+  background: #081428;
+  border-color: rgba(135,206,235,0.30);
 }
-.map-card--sky .map-info { flex: 1; }
-.map-card[data-map="sky_realm"]:hover   { border-color: rgba(135,206,235,0.55); box-shadow: 0 8px 30px rgba(0,0,0,0.6), 0 0 22px rgba(135,206,235,0.18); }
-.map-card[data-map="sky_realm"].selected { transform: translateY(-5px); border-color: #87CEEB; box-shadow: 0 0 28px rgba(135,206,235,0.55), 0 12px 40px rgba(0,0,0,0.6); }
+.map-card[data-map="sky_realm"]:hover   { border-color: rgba(135,206,235,0.55); box-shadow: 0 8px 24px rgba(0,0,0,0.6), 0 0 22px rgba(135,206,235,0.18); }
+.map-card[data-map="sky_realm"].selected { transform: translateY(-5px); border-color: #87CEEB; box-shadow: 0 0 32px rgba(135,206,235,0.55), 0 8px 24px rgba(0,0,0,0.6); }
 
-/* Life Mode + Arena + Zombie — 3-per-row grid */
-.special-maps-row {
-  grid-column: 1 / -1; margin-top: 6px;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-}
-.special-maps-row .map-card { min-width: 0; }
-.map-card--arena, .map-card--experimental, .map-card--life {
-  display: flex; flex-direction: row; align-items: center; gap: 16px;
-  padding: 14px 18px;
-}
+/* Arena / Experimental / Life cards */
 .map-card--arena .map-preview,
 .map-card--experimental .map-preview,
-.map-card--life .map-preview { width: 100px; flex-shrink: 0; }
-.map-card--arena .map-info,
-.map-card--experimental .map-info,
-.map-card--life .map-info    { flex: 1; }
+.map-card--life .map-preview { height: 100%; width: 100%; }
 
 /* Life Mode card */
 .map-card--life              { border: 1px solid rgba(136,221,255,0.2); }
 .map-card--life:hover        { border-color: rgba(136,221,255,0.5); box-shadow: 0 8px 30px rgba(0,0,0,0.5), 0 0 20px rgba(136,221,255,0.12); }
-.map-card--life.selected     { transform: translateY(-3px); border-color: #88DDFF; box-shadow: 0 0 30px rgba(136,221,255,0.55), 0 12px 40px rgba(0,0,0,0.7); }
+.map-card--life.selected     { transform: translateY(-5px); border-color: #88DDFF; box-shadow: 0 0 30px rgba(136,221,255,0.55), 0 8px 24px rgba(0,0,0,0.6); }
 
 /* Hover/selected for zombie */
 .map-card[data-map="zombie"]:hover   { border-color: rgba(68,255,136,0.45); box-shadow: 0 8px 36px rgba(68,255,136,0.15); }
-.map-card[data-map="zombie"].selected { transform: translateY(-3px); border-color: #44FF88; box-shadow: 0 0 30px rgba(68,255,136,0.55), 0 12px 40px rgba(0,0,0,0.7); }
+.map-card[data-map="zombie"].selected { transform: translateY(-5px); border-color: #44FF88; box-shadow: 0 0 30px rgba(68,255,136,0.55), 0 8px 24px rgba(0,0,0,0.6); }
 
 /* Checkmark on selected map */
 .map-card.selected::after {
-  content: '✓'; position: absolute; top: 6px; right: 9px;
-  font-size: 13px; color: #fff; font-weight: bold;
-  text-shadow: 0 0 8px #fff; z-index: 4;
+  content: '✓'; position: absolute; top: 8px; right: 10px;
+  font-size: 12px; color: #fff; font-weight: bold;
+  text-shadow: 0 0 10px #fff, 0 0 20px rgba(255,255,255,0.5);
+  z-index: 5;
+  width: 20px; height: 20px;
+  background: rgba(255,255,255,0.15);
+  border-radius: 50%; border: 1px solid rgba(255,255,255,0.4);
+  display: flex; align-items: center; justify-content: center;
+  line-height: 20px; text-align: center;
 }
 
-/* ── Map preview area (road grid) ───────────────────────── */
+/* ── Map preview — fills entire card ───────────────────────── */
 .map-preview {
-  position: relative; flex-shrink: 0;
-  height: 76px; width: 100%; overflow: hidden;
-  background-color: var(--mbg, #080812);
-  /* Road grid lines */
-  background-image:
-    linear-gradient(var(--mr, rgba(68,238,255,0.3)) 1px, transparent 1px),
-    linear-gradient(90deg, var(--mr, rgba(68,238,255,0.3)) 1px, transparent 1px);
-  background-size: var(--mg, 18px) var(--mg, 18px);
-  background-position: 0 0;
-  transition: background-position 0s;
+  position: absolute; inset: 0;
+  width: 100%; height: 100%; overflow: hidden;
+  background: #060610;
 }
 
-/* Animated grid scroll when selected */
+/* No global CSS dot grid — each map has its own atmospheric identity */
+.map-preview::before { content: none; }
+
+/* Gradient moved to .map-info so HTML scene elements are fully visible */
+.map-preview::after { content: none; }
+
+/* Hide road dots */
+.road-dot { display: none; }
+
+/* Container for scene elements (pyramids, fish, snow, etc.) */
+.map-preview-inner { position: absolute; inset: 0; z-index: 2; }
+
+/* Fix height for maps with inline height:130px */
+.map-card--galactica .map-preview,
+.map-card--tower .map-preview,
+.map-card--sky .map-preview { height: 100% !important; }
+
+/* Selected card: subtle brightness pulse */
 .map-card.selected .map-preview {
-  animation: mapGridDrift 6s linear infinite;
+  animation: mapGlow 3s ease-in-out infinite;
 }
-@keyframes mapGridDrift {
-  to { background-position: var(--mg, 18px) var(--mg, 18px); }
-}
-
-/* Intersection glow dots */
-.map-preview::before {
-  content: ''; position: absolute; inset: 0;
-  background-image: radial-gradient(circle, var(--mr, rgba(68,238,255,0.5)) 1.5px, transparent 1.5px);
-  background-size: var(--mg, 18px) var(--mg, 18px);
-  background-position: 0 0;
+@keyframes mapGlow {
+  0%, 100% { filter: brightness(1); }
+  50%      { filter: brightness(1.18); }
 }
 
-/* Top-to-bottom fade into card body */
-.map-preview::after {
-  content: ''; position: absolute; inset: 0;
-  background: linear-gradient(to bottom, rgba(0,0,0,0) 50%, var(--panel) 100%);
+/* ── Per-map atmospheric backgrounds ──────────────────────── */
+
+/* Neon City — cyan grid city */
+[data-map="neon_city"] .map-preview {
+  background:
+    repeating-linear-gradient(rgba(68,238,255,0.13) 0px, rgba(68,238,255,0.13) 1px, transparent 1px, transparent 20px),
+    repeating-linear-gradient(90deg, rgba(68,238,255,0.13) 0px, rgba(68,238,255,0.13) 1px, transparent 1px, transparent 20px),
+    radial-gradient(ellipse at 50% 90%, rgba(68,238,255,0.4) 0%, transparent 60%),
+    radial-gradient(ellipse at 15% 15%, rgba(68,238,255,0.12) 0%, transparent 40%),
+    #020210;
 }
 
-/* Map name overlay on preview */
-.map-preview-label {
-  position: absolute; bottom: 6px; left: 10px; z-index: 3;
-  font-family: 'Orbitron', sans-serif; font-size: 12px; font-weight: 700;
-  letter-spacing: 0.1em; color: #fff;
-  text-shadow: 0 0 10px rgba(0,0,0,1), 0 0 20px rgba(0,0,0,0.8);
+/* Galactica — deep space nebula */
+[data-map="galactica"] .map-preview {
+  background:
+    radial-gradient(ellipse at 30% 40%, rgba(120,30,220,0.5) 0%, transparent 45%),
+    radial-gradient(ellipse at 75% 65%, rgba(200,30,140,0.35) 0%, transparent 35%),
+    radial-gradient(ellipse at 60% 15%, rgba(60,20,180,0.3) 0%, transparent 40%),
+    #010008;
 }
 
-/* Map number (top-left) */
-.map-num {
-  position: absolute; top: 7px; left: 9px; z-index: 3;
-  font-family: 'Orbitron', sans-serif; font-size: 9px; color: rgba(255,255,255,0.3);
+/* The Tower — dark architectural interior */
+[data-map="tower"] .map-preview {
+  background:
+    repeating-linear-gradient(rgba(180,140,40,0.07) 0px, rgba(180,140,40,0.07) 1px, transparent 1px, transparent 14px),
+    repeating-linear-gradient(90deg, rgba(180,140,40,0.07) 0px, rgba(180,140,40,0.07) 1px, transparent 1px, transparent 14px),
+    radial-gradient(ellipse at 50% 25%, rgba(200,150,30,0.25) 0%, transparent 50%),
+    linear-gradient(180deg, #0a0806 0%, #160e08 100%);
 }
 
-/* ── Map info section (bottom of card) ──────────────────── */
+/* Sky Realm — azure sky (inline bg on the element takes precedence; this is a fallback) */
+[data-map="sky_realm"] .map-preview {
+  background:
+    radial-gradient(ellipse at 82% 12%, rgba(255,230,80,0.4) 0%, transparent 28%),
+    radial-gradient(ellipse at 50% 75%, rgba(100,170,230,0.45) 0%, transparent 50%),
+    linear-gradient(180deg, #0e2040 0%, #1a4070 40%, #2a6090 100%);
+}
+
+/* Arena — blood red combat zone */
+[data-map="arena"] .map-preview {
+  background:
+    radial-gradient(ellipse at 50% 50%, rgba(200,0,30,0.45) 0%, transparent 55%),
+    radial-gradient(ellipse at 18% 82%, rgba(180,0,20,0.28) 0%, transparent 35%),
+    radial-gradient(ellipse at 82% 18%, rgba(160,0,10,0.22) 0%, transparent 30%),
+    linear-gradient(135deg, #080002 0%, #120004 100%);
+}
+
+/* Zombie — toxic bio-hazard fog */
+[data-map="zombie"] .map-preview {
+  background:
+    radial-gradient(ellipse at 50% 60%, rgba(20,190,55,0.38) 0%, transparent 55%),
+    radial-gradient(ellipse at 20% 28%, rgba(10,150,30,0.22) 0%, transparent 35%),
+    radial-gradient(ellipse at 80% 80%, rgba(30,170,45,0.22) 0%, transparent 30%),
+    linear-gradient(180deg, #010a01 0%, #030e03 100%);
+}
+
+/* Dino World — primordial jungle */
+[data-map="dino_world"] .map-preview {
+  background:
+    radial-gradient(ellipse at 50% 92%, rgba(40,165,20,0.45) 0%, transparent 50%),
+    radial-gradient(ellipse at 18% 50%, rgba(60,185,30,0.22) 0%, transparent 35%),
+    radial-gradient(ellipse at 78% 22%, rgba(50,175,20,0.22) 0%, transparent 35%),
+    linear-gradient(180deg, #020802 0%, #051204 100%);
+}
+
+/* Wasteland — orange barren badlands */
+[data-map="wasteland"] .map-preview {
+  background:
+    radial-gradient(ellipse at 50% 92%, rgba(225,82,18,0.55) 0%, transparent 55%),
+    radial-gradient(ellipse at 82% 28%, rgba(185,60,10,0.28) 0%, transparent 35%),
+    radial-gradient(ellipse at 18% 62%, rgba(165,50,10,0.22) 0%, transparent 30%),
+    linear-gradient(180deg, #0a0502 0%, #180b04 60%, #0a0502 100%);
+}
+
+/* Blitz — high-speed lightning */
+[data-map="blitz"] .map-preview {
+  background:
+    repeating-linear-gradient(68deg, transparent 0%, transparent 7%, rgba(255,40,0,0.06) 7.5%, transparent 9%),
+    radial-gradient(ellipse at 50% 50%, rgba(220,30,0,0.5) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 80%, rgba(200,20,0,0.28) 0%, transparent 30%),
+    linear-gradient(135deg, #060001 0%, #100003 100%);
+}
+
+/* Frozen Tundra — ice crystal winter */
+[data-map="frozen_tundra"] .map-preview {
+  background:
+    radial-gradient(ellipse at 50% 22%, rgba(130,215,255,0.32) 0%, transparent 55%),
+    radial-gradient(ellipse at 18% 75%, rgba(80,195,245,0.22) 0%, transparent 35%),
+    radial-gradient(ellipse at 82% 60%, rgba(105,205,255,0.18) 0%, transparent 30%),
+    linear-gradient(180deg, #010b13 0%, #03101a 100%);
+}
+
+/* Ocean Depths — deep blue abyss */
+[data-map="ocean_depths"] .map-preview {
+  background:
+    radial-gradient(ellipse at 30% 72%, rgba(0,100,195,0.48) 0%, transparent 50%),
+    radial-gradient(ellipse at 72% 28%, rgba(0,82,175,0.38) 0%, transparent 40%),
+    radial-gradient(ellipse at 50% 100%, rgba(0,125,205,0.42) 0%, transparent 40%),
+    linear-gradient(180deg, #000c18 0%, #001520 100%);
+}
+
+/* Metropolis — orange city grid */
+[data-map="metropolis"] .map-preview {
+  background:
+    repeating-linear-gradient(rgba(205,102,20,0.11) 0px, rgba(205,102,20,0.11) 1px, transparent 1px, transparent 16px),
+    repeating-linear-gradient(90deg, rgba(205,102,20,0.11) 0px, rgba(205,102,20,0.11) 1px, transparent 1px, transparent 16px),
+    radial-gradient(ellipse at 50% 82%, rgba(255,122,30,0.38) 0%, transparent 55%),
+    radial-gradient(ellipse at 20% 18%, rgba(225,102,20,0.22) 0%, transparent 35%),
+    linear-gradient(135deg, #040208 0%, #08040e 100%);
+}
+
+/* Jungle Safari — tropical rainforest */
+[data-map="jungle"] .map-preview {
+  background:
+    radial-gradient(ellipse at 40% 68%, rgba(30,135,10,0.48) 0%, transparent 50%),
+    radial-gradient(ellipse at 75% 28%, rgba(20,115,8,0.32) 0%, transparent 40%),
+    radial-gradient(ellipse at 12% 82%, rgba(40,155,15,0.28) 0%, transparent 30%),
+    linear-gradient(180deg, #020902 0%, #071406 100%);
+}
+
+/* Desert Sands — ancient golden sands */
+[data-map="desert_sands"] .map-preview {
+  background:
+    radial-gradient(ellipse at 50% 98%, rgba(215,155,20,0.6) 0%, transparent 50%),
+    radial-gradient(ellipse at 22% 62%, rgba(185,135,15,0.28) 0%, transparent 35%),
+    radial-gradient(ellipse at 78% 28%, rgba(205,145,10,0.22) 0%, transparent 35%),
+    linear-gradient(180deg, #0c0700 0%, #1c1000 60%, #120a00 100%);
+}
+
+/* Robot City — electric teal circuits */
+[data-map="robot_city"] .map-preview {
+  background:
+    repeating-linear-gradient(rgba(0,182,225,0.10) 0px, rgba(0,182,225,0.10) 1px, transparent 1px, transparent 12px),
+    repeating-linear-gradient(90deg, rgba(0,182,225,0.10) 0px, rgba(0,182,225,0.10) 1px, transparent 1px, transparent 12px),
+    radial-gradient(ellipse at 50% 50%, rgba(0,162,215,0.32) 0%, transparent 65%),
+    radial-gradient(ellipse at 82% 82%, rgba(0,205,255,0.18) 0%, transparent 30%),
+    linear-gradient(135deg, #020810 0%, #040c18 100%);
+}
+
+/* Hardcore Mode — fire orange intensity */
+[data-map="hardcore"] .map-preview {
+  background:
+    radial-gradient(ellipse at 50% 100%, rgba(255,100,0,0.65) 0%, transparent 50%),
+    radial-gradient(ellipse at 18% 52%, rgba(225,60,0,0.32) 0%, transparent 35%),
+    radial-gradient(ellipse at 82% 18%, rgba(205,40,0,0.22) 0%, transparent 30%),
+    linear-gradient(180deg, #040100 0%, #0e0400 100%);
+}
+
+/* Campaign — golden epic journey */
+[data-map="campaign"] .map-preview {
+  background:
+    radial-gradient(ellipse at 50% 50%, rgba(235,195,0,0.38) 0%, transparent 60%),
+    radial-gradient(ellipse at 18% 82%, rgba(205,165,0,0.22) 0%, transparent 35%),
+    radial-gradient(ellipse at 82% 18%, rgba(225,185,0,0.22) 0%, transparent 30%),
+    linear-gradient(135deg, #060500 0%, #0e0c00 100%);
+}
+
+/* ── Map info — gradient overlay at the bottom ─────────── */
 .map-info {
-  padding: 8px 10px 8px;
-  display: flex; flex-direction: column; gap: 5px;
-  flex: 1;
+  position: absolute; bottom: 0; left: 0; right: 0;
+  padding: 30px 10px 9px;
+  display: flex; flex-direction: column; gap: 4px;
+  z-index: 3;
+  background: linear-gradient(to top,
+    rgba(0,0,0,0.96) 0%,
+    rgba(0,0,0,0.78) 45%,
+    rgba(0,0,0,0.28) 72%,
+    transparent 100%);
 }
-.map-header { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.map-header { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
 .map-name {
-  font-family: 'Orbitron', sans-serif; font-size: 11px; font-weight: 700;
-  letter-spacing: 0.08em; white-space: nowrap;
+  font-family: 'Orbitron', sans-serif; font-size: 10px; font-weight: 700;
+  letter-spacing: 0.08em; line-height: 1.2;
+  color: #fff; text-shadow: 0 0 12px rgba(0,0,0,0.9);
 }
-.map-desc { font-size: 10px; color: var(--muted); line-height: 1.3; }
-.map-tags { display: flex; gap: 5px; flex-wrap: wrap; }
+.map-num {
+  font-family: 'Orbitron', sans-serif; font-size: 8px;
+  color: rgba(255,255,255,0.35); flex-shrink: 0;
+}
+.map-desc { display: none; }
+.map-tags { display: flex; gap: 4px; flex-wrap: wrap; }
 .map-tag {
-  font-family: 'Orbitron', sans-serif; font-size: 8px; letter-spacing: 0.12em;
+  font-family: 'Orbitron', sans-serif; font-size: 7.5px; letter-spacing: 0.08em;
   color: var(--tc, var(--cyan)); border: 1px solid var(--tc, var(--cyan));
-  padding: 1px 5px; border-radius: 3px;
-  opacity: 0.7;
+  padding: 2px 6px; border-radius: 4px;
+  opacity: 0.88; background: rgba(0,0,0,0.4);
 }
 .map-card.selected .map-tag { opacity: 1; }
 
@@ -1190,13 +1147,13 @@ body {
    ════════════════════════════════════════════════════════════ */
 .map-card--experimental              { border: 1px solid rgba(68,255,136,0.2); }
 .map-card--experimental:hover        { border-color: rgba(68,255,136,0.45); box-shadow: 0 8px 30px rgba(0,0,0,0.5), 0 0 20px rgba(68,255,136,0.1); }
-.map-card--experimental.selected     { transform: translateY(-3px); border-color: #44FF88; box-shadow: 0 0 30px rgba(68,255,136,0.55), 0 12px 40px rgba(0,0,0,0.7); }
+.map-card--experimental.selected     { transform: translateY(-5px); border-color: #44FF88; box-shadow: 0 0 30px rgba(68,255,136,0.55), 0 8px 24px rgba(0,0,0,0.6); }
 .experimental-badge {
-  position: absolute; top: 8px; left: 30px;
+  position: absolute; top: 9px; left: 10px;
   background: #44FF88; color: #000;
-  font: bold 9px 'Orbitron', monospace; padding: 2px 5px;
-  border-radius: 3px; letter-spacing: 0.08em;
-  box-shadow: 0 0 14px rgba(68,255,136,0.7);
+  font: bold 8px 'Orbitron', monospace; padding: 2px 7px;
+  border-radius: 4px; letter-spacing: 0.08em; z-index: 5;
+  box-shadow: 0 0 10px rgba(68,255,136,0.65);
 }
 
 /* ════════════════════════════════════════════════════════════
@@ -1308,12 +1265,12 @@ body {
   .section-label    { font-size: 8px; letter-spacing: 0.2em; }
 
   /* Maps — 2-column grid */
-  .maps-grid        { grid-template-columns: repeat(2, 1fr); gap: 7px; }
-  .map-card         { height: 120px; }
-  .map-preview      { height: 55px; }
-  .map-name         { font-size: 10px; }
+  .maps-grid        { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .map-card         { height: 130px; }
+  .map-preview      { height: 90px; }
+  .map-name         { font-size: 11px; }
   .map-desc         { font-size: 9px; line-height: 1.3; }
-  .map-tag          { font-size: 7px; padding: 1px 5px; }
+  .map-tag          { font-size: 7px; padding: 2px 5px; }
   .map-num          { font-size: 9px; }
   .map-info         { padding: 6px 8px 6px; }
 
@@ -1366,12 +1323,9 @@ body {
   .char-number      { font-size: 8px; }
 
   /* Map cards — single column */
-  .maps-grid        { grid-template-columns: 1fr; gap: 6px; }
-  .map-card         { height: 110px; }
-  .map-preview      { height: 48px; }
-
-  /* Special row — single column */
-  .special-maps-row { grid-template-columns: 1fr; }
+  .maps-grid        { grid-template-columns: 1fr; gap: 8px; }
+  .map-card         { height: 120px; }
+  .map-preview      { height: 90px; }
 
   /* Customize: each group full width */
   .cust-group       { width: 100%; }
@@ -3683,8 +3637,8 @@ body {
   .char-number           { font-size: 7px; }
 
   /* Map cards */
-  .map-card              { height: 88px; }
-  .map-preview           { height: 38px; }
+  .map-card              { height: 110px; }
+  .map-preview           { height: 80px; }
   .map-name              { font-size: 9px; }
   .map-desc              { font-size: 8px; }
   .map-info              { padding: 5px 7px 5px; gap: 3px; }
@@ -3977,18 +3931,18 @@ body {
 
 /* ── 1: Notebook / small desktop  (1025px – 1599px) ──────── */
 @media (max-width: 1599px) and (min-width: 1025px) {
-  .select-container          { max-width: 1080px; }
+  .select-container          { max-width: 100%; }
   .char-card                 { height: 112px; }
   .char-info h3              { font-size: 10px; letter-spacing: 0.06em; }
   .characters-grid           { gap: 10px; }
   .maps-grid                 { gap: 10px; }
-  .map-card                  { height: 130px; }
-  .map-preview               { height: 68px; }
+  .map-card                  { height: 140px; }
+  .map-preview               { height: 95px; }
   .map-card--neon-city,
   .map-card--wasteland,
   .map-card--jungle,
   .map-card--robot-city,
-  .map-card--desert          { min-height: 155px; }
+
 }
 
 /* ── 2: Fix wide map cards (inline "span 3") on 2-col grid ─ */

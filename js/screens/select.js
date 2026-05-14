@@ -33,7 +33,6 @@
   let customNeonColor  = 'default';
   let customMask       = 'none';
   let customEffect     = 'none';
-  let currentPage      = 1;
   let currentCharPage  = 1;
   let currentStep      = 1;
 
@@ -297,37 +296,7 @@
   if (charTab1) charTab1.addEventListener('click', () => switchCharPage(1));
   if (charTab2) charTab2.addEventListener('click', () => switchCharPage(2));
 
-  // ── Map page switching ────────────────────────────────────
-  const pageTab1  = document.getElementById('pageTab1');
-  const pageTab2  = document.getElementById('pageTab2');
-  const pageTab3  = document.getElementById('pageTab3');
-  const mapPage1  = document.getElementById('mapPage1');
-  const mapPage2  = document.getElementById('mapPage2');
-  const mapPage3  = document.getElementById('mapPage3');
-
-  function switchPage(page) {
-    currentPage = page;
-    mapPage1.style.display = 'none';
-    mapPage2.style.display = 'none';
-    if (mapPage3) mapPage3.style.display = 'none';
-    pageTab1.classList.remove('active');
-    pageTab2.classList.remove('active');
-    if (pageTab3) pageTab3.classList.remove('active');
-    if (page === 1) {
-      mapPage1.style.display = '';
-      pageTab1.classList.add('active');
-    } else if (page === 2) {
-      mapPage2.style.display = '';
-      pageTab2.classList.add('active');
-    } else if (page === 3) {
-      if (mapPage3) mapPage3.style.display = '';
-      if (pageTab3) pageTab3.classList.add('active');
-    }
-  }
-
-  if (pageTab1) pageTab1.addEventListener('click', () => switchPage(1));
-  if (pageTab2) pageTab2.addEventListener('click', () => switchPage(2));
-  if (pageTab3) pageTab3.addEventListener('click', () => switchPage(3));
+  // All maps are shown in a single scrollable grid — no page switching needed
 
   // ── Customization ─────────────────────────────────────────
   document.querySelectorAll('#colorSwatches .color-swatch').forEach(sw => {
@@ -428,51 +397,20 @@
     const num = parseInt(e.key);
 
     // 1-4 → pick character on current char page
-    // Page 1: 1-4 maps to chars 0-3; Page 2: 1-4 maps to chars 4-7
     if (num >= 1 && num <= 4) {
       if (currentCharPage === 1) {
         const card = charCards[num - 1];
         if (card) card.click();
       } else {
-        const card = charCards[5 + num];  // page2 starts at index 6 (5+1)
+        const card = charCards[5 + num];
         if (card) card.click();
       }
     }
 
-    // Page 1: Q/W/E/R/T/Y/U/I/O → maps 0-8 (classic + special)
-    // Page 2: Q/W/E/R/T/Y → maps on page 2
-    const page1Keys = ['KeyQ', 'KeyW', 'KeyE', 'KeyR', 'KeyT', 'KeyY', 'KeyU', 'KeyI', 'KeyO'];
-    const page2Keys = ['KeyQ', 'KeyW', 'KeyE', 'KeyR', 'KeyT', 'KeyY', 'KeyU', 'KeyI'];
-
-    if (currentPage === 1) {
-      const mapIdx = page1Keys.indexOf(e.code);
-      if (mapIdx >= 0) {
-        // Page 1 cards in DOM order
-        const page1Cards = document.querySelectorAll('#mapPage1 .map-card');
-        if (mapIdx < page1Cards.length) page1Cards[mapIdx].click();
-      }
-    } else if (currentPage === 2) {
-      const mapIdx = page2Keys.indexOf(e.code);
-      if (mapIdx >= 0) {
-        const page2Cards = document.querySelectorAll('#mapPage2 .map-card');
-        if (mapIdx < page2Cards.length) page2Cards[mapIdx].click();
-      }
-    } else if (currentPage === 3) {
-      const mapIdx = page2Keys.indexOf(e.code);
-      if (mapIdx >= 0) {
-        const page3Cards = document.querySelectorAll('#mapPage3 .map-card');
-        if (mapIdx < page3Cards.length) page3Cards[mapIdx].click();
-      }
-    }
-
-    // Tab = switch map page; Shift+Tab = switch char page
+    // Shift+Tab = switch char page
     if (e.code === 'Tab') {
       e.preventDefault();
-      if (e.shiftKey) {
-        switchCharPage(currentCharPage === 1 ? 2 : 1);
-      } else {
-        switchPage(currentPage === 1 ? 2 : currentPage === 2 ? 3 : 1);
-      }
+      if (e.shiftKey) switchCharPage(currentCharPage === 1 ? 2 : 1);
       return;
     }
 
