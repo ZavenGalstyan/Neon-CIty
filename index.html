@@ -1343,41 +1343,139 @@
 
         <div class="map-card map-card--experimental" data-map="dino_world">
           <div class="experimental-badge" style="background:linear-gradient(90deg,#44AA22,#88FF44);box-shadow:0 0 14px rgba(100,220,40,0.8);color:#000">🦕 PREHISTORIC</div>
-          <div class="map-preview" style="--mg:18px;--mbg:#060e04;--mr:rgba(80,200,40,0.55);">
+          <div class="map-preview" style="--mg:18px;--mbg:#060e04;--mr:rgba(255,80,10,0.65);">
             <div class="map-preview-inner">
-              <svg viewBox="0 0 200 150" xmlns="http://www.w3.org/2000/svg" style="position:absolute;inset:0;width:100%;height:100%;overflow:hidden">
-                <!-- Far jungle canopy -->
-                <path fill="#041602" d="M0,55 Q15,38 32,46 Q48,32 65,42 Q80,28 98,38 Q114,24 132,36 Q148,22 165,34 Q182,28 200,38 L200,55Z"/>
-                <!-- Mid canopy layer -->
-                <path fill="#051c04" d="M0,72 Q18,55 38,64 Q55,48 74,58 Q92,44 112,56 Q128,42 148,54 Q165,44 185,56 L200,62 L200,72Z"/>
-                <!-- T-Rex body -->
-                <path fill="#0a2c04" d="M52,118 L52,102 L56,90 L62,80 L70,70 L80,62 L90,56 L98,50 L108,45 L122,40 L136,38 L150,37 L162,36 L172,40 L176,48 L166,54 L152,54 L140,50 L128,54 L120,60 L114,66 L110,72 L108,78 L110,84 L106,88 L100,86 L96,82 L92,88 L96,102 L100,118 L94,118 L90,115 L88,118 L82,118 L82,115 L84,110 L82,102 L78,90 L70,88 L64,92 L62,104 L62,116 L60,118Z"/>
-                <!-- T-Rex tail -->
-                <path fill="#092804" d="M52,102 L38,98 L22,100 L12,108 L10,116 L24,113 L46,106Z"/>
-                <!-- T-Rex arm stub -->
-                <path fill="#0a2c04" d="M108,72 L118,70 L122,76 L116,82Z"/>
-                <!-- Ground shadow -->
-                <ellipse cx="78" cy="122" rx="45" ry="6" fill="rgba(4,16,2,0.7)"/>
-                <!-- Ground jungle floor -->
-                <rect x="0" y="118" width="200" height="32" fill="#030e02"/>
-                <path fill="#041004" d="M0,118 Q25,113 50,118 Q75,113 100,118 Q125,113 150,118 Q175,113 200,118 L200,124 L0,124Z"/>
-                <!-- Small sauropod far left -->
-                <path fill="rgba(8,30,4,0.75)" d="M18,118 L18,108 L22,102 L28,100 L34,102 L38,108 L38,118Z"/>
-                <!-- Sauropod neck/head -->
-                <path fill="rgba(8,30,4,0.75)" d="M34,102 L40,94 L48,90 L52,93 L46,98 L38,104Z"/>
-                <!-- Pterosaur flying -->
-                <path fill="rgba(7,25,3,0.72)" d="M152,20 L142,30 L152,27 L164,32 L170,24 L160,22Z"/>
-                <line x1="152" y1="20" x2="164" y2="32" stroke="rgba(7,25,3,0.7)" stroke-width="1.5"/>
+              <svg viewBox="0 0 200 160" xmlns="http://www.w3.org/2000/svg" style="position:absolute;inset:0;width:100%;height:100%;overflow:hidden">
+                <defs>
+                  <linearGradient id="dinoSky" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%"   stop-color="#020601"/>
+                    <stop offset="18%"  stop-color="#0a1802"/>
+                    <stop offset="42%"  stop-color="#1c1204"/>
+                    <stop offset="66%"  stop-color="#3a1202"/>
+                    <stop offset="84%"  stop-color="#661a04"/>
+                    <stop offset="100%" stop-color="#8e2a06"/>
+                  </linearGradient>
+                  <radialGradient id="lavaPit" cx="50%" cy="100%" r="65%">
+                    <stop offset="0%"  stop-color="rgba(255,80,8,0.7)"/>
+                    <stop offset="55%" stop-color="rgba(255,60,5,0.3)"/>
+                    <stop offset="100%" stop-color="transparent" stop-opacity="0"/>
+                  </radialGradient>
+                </defs>
+                <!-- Volcanic sky — rich amber/olive/smoke -->
+                <rect x="0" y="0" width="200" height="160" fill="url(#dinoSky)"/>
+                <!-- Lava horizon bloom (3 layers deep) -->
+                <ellipse cx="100" cy="162" rx="150" ry="60" fill="rgba(255,72,5,0.42)"/>
+                <ellipse cx="100" cy="162" rx="110" ry="44" fill="rgba(255,95,12,0.32)"/>
+                <ellipse cx="100" cy="162" rx="70"  ry="28" fill="rgba(255,120,20,0.22)"/>
+                <!-- Volcanic radial glow from lava below -->
+                <rect x="0" y="0" width="200" height="160" fill="url(#lavaPit)" opacity="0.85"/>
+                <!-- Thick ash / smoke clouds across sky -->
+                <ellipse cx="26"  cy="20" rx="30" ry="13" fill="rgba(28,22,8,0.58)"/>
+                <ellipse cx="22"  cy="15" rx="20" ry="14" fill="rgba(34,26,10,0.52)"/>
+                <ellipse cx="42"  cy="12" rx="16" ry="9"  fill="rgba(30,24,9,0.46)"/>
+                <ellipse cx="82"  cy="14" rx="26" ry="10" fill="rgba(26,20,7,0.52)"/>
+                <ellipse cx="78"  cy="10" rx="18" ry="11" fill="rgba(32,26,10,0.48)"/>
+                <ellipse cx="148" cy="18" rx="28" ry="11" fill="rgba(28,22,8,0.55)"/>
+                <ellipse cx="152" cy="12" rx="20" ry="13" fill="rgba(34,28,11,0.5)"/>
+                <ellipse cx="170" cy="8"  rx="16" ry="9"  fill="rgba(30,24,9,0.44)"/>
+                <!-- Warm amber atmospheric haze bands -->
+                <path fill="rgba(210,72,8,0.18)" d="M0,82 Q50,72 100,80 Q150,88 200,74 L200,98 Q150,92 100,98 Q50,92 0,100Z"/>
+                <path fill="rgba(190,60,6,0.12)" d="M0,62 Q60,54 110,62 Q160,70 200,58 L200,76 Q160,82 110,76 Q60,70 0,76Z"/>
+                <!-- Red embers drifting from volcano (small glowing dots) -->
+                <circle cx="182" cy="58" r="1.5" fill="rgba(255,110,20,0.7)"/>
+                <circle cx="175" cy="68" r="1.2" fill="rgba(255,90,15,0.65)"/>
+                <circle cx="168" cy="52" r="1"   fill="rgba(255,120,25,0.6)"/>
+                <circle cx="188" cy="46" r="1.3" fill="rgba(255,100,18,0.62)"/>
+                <circle cx="162" cy="72" r="0.9" fill="rgba(255,80,12,0.58)"/>
+                <!-- VOLCANO far right -->
+                <path fill="#080e03" d="M160,160 L162,82 Q165,72 170,62 Q173,54 176,46 Q179,54 182,62 Q186,72 188,82 L192,160Z"/>
+                <!-- Lava crater glow -->
+                <ellipse cx="176" cy="46" rx="16" ry="7"  fill="rgba(255,95,15,0.6)"/>
+                <ellipse cx="176" cy="48" rx="9"  ry="4.5" fill="rgba(255,140,35,0.5)"/>
+                <circle  cx="176" cy="46" r="4"   fill="rgba(255,170,50,0.45)"/>
+                <!-- Ash smoke plumes -->
+                <ellipse cx="172" cy="36" rx="8"  ry="14" fill="rgba(45,28,8,0.52)"/>
+                <ellipse cx="179" cy="30" rx="9"  ry="16" fill="rgba(40,25,6,0.44)"/>
+                <ellipse cx="174" cy="22" rx="10" ry="10" fill="rgba(50,32,10,0.38)"/>
+                <!-- Lava rivers (glowing cracks) on ground -->
+                <path fill="rgba(255,75,10,0.55)" d="M0,148 Q12,144 22,148 Q26,144 30,150 Q24,152 16,148 Q8,152 0,150Z"/>
+                <path fill="rgba(255,90,15,0.48)" d="M52,144 Q62,140 70,144 Q72,142 76,146 Q70,148 64,144 Q56,148 52,146Z"/>
+                <path fill="rgba(255,75,10,0.42)" d="M112,142 Q122,138 130,142 Q132,140 136,144 Q130,146 124,142 Q116,146 112,144Z"/>
+                <!-- Far dense jungle canopy -->
+                <path fill="#061202" d="M0,72 Q10,52 24,62 Q38,44 54,56 Q68,38 84,50 Q98,34 116,46 Q130,32 148,44 Q158,52 165,60 Q155,70 152,80 L0,80Z"/>
+                <!-- Giant prehistoric cycad trees (silhouettes) -->
+                <rect x="20" y="58" width="5" height="52" fill="#060f02"/>
+                <path fill="#091804" d="M22,58 Q10,48 8,38 Q15,42 20,52 Q22,56 24,54 Q28,44 34,38 Q36,46 30,56Z"/>
+                <path fill="#081504" d="M22,46 Q12,36 10,26 Q17,30 22,42Z"/>
+                <path fill="#081504" d="M22,46 Q32,36 34,28 Q28,32 22,44Z"/>
+                <rect x="46" y="50" width="5" height="60" fill="#050e02"/>
+                <path fill="#091804" d="M48,50 Q36,40 34,30 Q42,34 46,46 Q48,50 50,48 Q54,38 60,32 Q62,40 56,50Z"/>
+                <!-- Mid-ground jungle foliage mass -->
+                <path fill="#051504" d="M0,88 Q16,72 34,82 Q50,66 68,76 Q84,62 104,74 Q120,60 140,70 Q155,76 165,86 L165,96 L0,96Z"/>
+                <!-- Giant fern shapes (foreground left) -->
+                <path fill="rgba(16,88,8,0.72)"  d="M28,120 Q18,108 12,94 Q22,98 26,112Z"/>
+                <path fill="rgba(20,100,10,0.68)" d="M28,120 Q20,106 22,92 Q30,98 32,114Z"/>
+                <path fill="rgba(16,88,8,0.72)"  d="M28,120 Q30,106 38,94 Q40,102 34,116Z"/>
+                <path fill="rgba(20,100,10,0.65)" d="M28,120 Q36,108 46,96 Q46,106 40,118Z"/>
+                <!-- Giant fern shapes right -->
+                <path fill="rgba(16,88,8,0.7)"   d="M138,122 Q130,110 124,96 Q134,100 136,114Z"/>
+                <path fill="rgba(20,100,10,0.65)" d="M138,122 Q132,108 136,94 Q144,100 142,116Z"/>
+                <path fill="rgba(16,88,8,0.7)"   d="M138,122 Q142,108 150,96 Q152,106 146,120Z"/>
+                <!-- T-REX (dominant center — detailed build) -->
+                <!-- Main body mass -->
+                <path fill="#0e3006" d="M68,130 L64,114 L62,98 L63,82 L68,70 L76,60 L86,52 L98,46 L112,42 L128,38 L144,36 L158,34 L168,36 L176,42 L178,50 L172,58 L158,60 L144,56 L130,60 L120,66 L112,74 L108,82 L110,90 L106,96 L98,94 L92,88 L88,96 L90,110 L94,126 L88,128 L86,124 L84,128 L78,128 L78,124 L80,116 L78,108 L72,96 L65,94 L60,100 L58,114 L60,128 L54,130Z"/>
+                <!-- T-Rex neck detail -->
+                <path fill="#0c2a05" d="M148,36 L160,34 L170,36 L178,42 L178,48 Q172,52 164,50 Q156,50 150,44Z"/>
+                <!-- T-Rex head (wide menacing jaw) -->
+                <path fill="#102e06" d="M168,36 L180,40 L188,44 L192,48 L194,46 L196,40 L192,34 L184,30 L174,28 L164,30 L158,34Z"/>
+                <!-- Upper jaw separate -->
+                <path fill="#0c2a05" d="M178,42 L192,40 L196,46 L192,50 L182,52 L172,50 L164,46Z"/>
+                <!-- T-Rex eye (amber, glowing) -->
+                <circle cx="188" cy="36" r="3.5"  fill="rgba(255,190,0,0.9)"/>
+                <circle cx="188" cy="36" r="1.8"  fill="rgba(20,8,0,0.95)"/>
+                <circle cx="188" cy="36" r="5.5"  fill="rgba(255,160,0,0.18)"/>
+                <!-- Eye highlight -->
+                <circle cx="189" cy="35" r="0.8"  fill="rgba(255,240,200,0.7)"/>
+                <!-- Teeth (jagged upper jaw) -->
+                <path fill="rgba(210,230,190,0.72)" d="M178,50 L180,56 L183,50 L186,56 L189,50 L192,54 L193,50Z"/>
+                <!-- Lower jaw teeth -->
+                <path fill="rgba(190,210,170,0.5)"  d="M175,52 L177,57 L180,53 L183,58 L186,53 L188,57Z"/>
+                <!-- Nostril -->
+                <circle cx="192" cy="42" r="1.2" fill="rgba(8,20,4,0.8)"/>
+                <!-- T-Rex tiny arms -->
+                <path fill="#0c2a05" d="M108,78 L120,74 L126,82 L120,90 L112,86Z"/>
+                <!-- Claw tips on arms -->
+                <path fill="rgba(180,200,150,0.5)" d="M126,82 L130,79 L128,85Z"/>
+                <!-- T-Rex massive legs -->
+                <path fill="#0c2a05" d="M68,128 L62,118 L56,130 L54,150 L60,150 L62,138 L66,130Z"/>
+                <path fill="#0c2a05" d="M88,128 L82,118 L80,130 L78,150 L84,150 L86,138 L90,130Z"/>
+                <!-- Foot claws -->
+                <path fill="rgba(180,200,150,0.45)" d="M54,150 L50,155 L58,152Z"/>
+                <path fill="rgba(180,200,150,0.45)" d="M78,150 L74,155 L82,152Z"/>
+                <!-- T-Rex tail extending left -->
+                <path fill="#0e3006" d="M54,114 L38,108 L22,110 L10,118 L8,126 L22,122 L44,116Z"/>
+                <!-- Ground shadow beneath Rex -->
+                <ellipse cx="78" cy="134" rx="55" ry="9" fill="rgba(3,12,1,0.7)"/>
+                <!-- BRACHIOSAURUS neck peeking left background -->
+                <path fill="rgba(7,22,3,0.78)" d="M10,125 L10,112 L14,102 L20,92 L28,84 L36,78 L40,80 L36,88 L28,96 L22,106 L18,118 L16,128Z"/>
+                <path fill="rgba(7,22,3,0.74)" d="M36,78 L44,66 L52,54 L48,50 L42,58 L36,70 L34,80Z"/>
+                <!-- Brachio head -->
+                <ellipse cx="52" cy="52" rx="6" ry="5" fill="rgba(7,22,3,0.72)"/>
+                <circle cx="55" cy="50" r="1.2" fill="rgba(200,220,100,0.55)"/>
+                <!-- PTEROSAURS in smoky sky -->
+                <path fill="rgba(6,18,2,0.75)" d="M72,16 L62,26 L72,23 L84,28 L90,20 L80,16Z"/>
+                <ellipse cx="89" cy="19" rx="3.5" ry="2.5" fill="rgba(6,18,2,0.72)"/>
+                <path fill="rgba(6,18,2,0.68)" d="M112,10 L104,20 L112,17 L122,22 L128,14 L118,10Z"/>
+                <ellipse cx="127" cy="13" rx="3" ry="2.2" fill="rgba(6,18,2,0.65)"/>
+                <path fill="rgba(6,18,2,0.6)"  d="M142,20 L136,28 L142,26 L150,30 L154,24 L148,20Z"/>
+                <!-- Ground jungle floor (rich dark) -->
+                <rect x="0" y="132" width="200" height="28" fill="#030d01"/>
+                <path fill="#041004" d="M0,132 Q25,126 50,132 Q75,126 100,132 Q125,126 150,132 Q175,126 200,132 L200,138 L0,138Z"/>
+                <!-- Ground mist/fog -->
+                <ellipse cx="100" cy="148" rx="120" ry="20" fill="rgba(28,80,12,0.4)"/>
+                <ellipse cx="55"  cy="155" rx="90"  ry="18" fill="rgba(22,65,8,0.32)"/>
+                <ellipse cx="158" cy="152" rx="78"  ry="16" fill="rgba(18,60,6,0.26)"/>
               </svg>
-              <!-- T-Rex — main creature -->
-              <div style="position:absolute;bottom:18%;left:50%;transform:translateX(-50%);font-size:52px;line-height:1">🦖</div>
-              <!-- Sauropod at side -->
-              <div style="position:absolute;bottom:14%;left:5%;font-size:24px;line-height:1;opacity:0.7">🦕</div>
-              <!-- Pterodactyl flying -->
-              <div style="position:absolute;top:10%;right:10%;font-size:20px;line-height:1;opacity:0.75">🦅</div>
-              <!-- Palm trees -->
-              <div style="position:absolute;bottom:16%;right:4%;font-size:26px;line-height:1;opacity:0.65">🌴</div>
-              <div style="position:absolute;bottom:14%;left:32%;font-size:18px;line-height:1;opacity:0.5">🌿</div>
             </div>
           </div>
           <div class="map-info">
@@ -1774,71 +1872,150 @@
             <div class="map-preview" style="--mg:12px;--mbg:#0a1808;--mr:rgba(68,170,34,0.35);">
               <div class="map-preview-inner">
                 <svg viewBox="0 0 200 160" xmlns="http://www.w3.org/2000/svg" style="position:absolute;inset:0;width:100%;height:100%;overflow:hidden">
-                  <!-- Sky glimpse through canopy -->
-                  <rect x="0" y="0" width="200" height="60" fill="rgba(10,40,5,0.4)"/>
-                  <!-- Far canopy (dark, distant) -->
-                  <path fill="#021002" d="M0,55 Q12,36 26,44 Q40,28 56,38 Q70,22 88,34 Q104,20 122,32 Q138,18 158,30 Q174,20 190,28 L200,32 L200,55Z"/>
-                  <!-- Hanging vines from top -->
-                  <path fill="none" stroke="rgba(20,140,30,0.45)" stroke-width="2"   d="M30,0  Q24,20 30,40  Q36,60 30,80"/>
-                  <path fill="none" stroke="rgba(18,130,28,0.38)" stroke-width="1.5" d="M70,0  Q76,22 70,42  Q64,62 70,88"/>
-                  <path fill="none" stroke="rgba(22,145,32,0.42)" stroke-width="2"   d="M140,0 Q134,20 140,44 Q146,68 140,90"/>
-                  <path fill="none" stroke="rgba(18,130,28,0.35)" stroke-width="1.5" d="M175,0 Q180,18 175,36 Q170,54 175,70"/>
-                  <!-- Vine leaves -->
-                  <ellipse cx="28" cy="50" rx="8" ry="5" fill="rgba(25,150,35,0.55)" transform="rotate(-30,28,50)"/>
-                  <ellipse cx="72" cy="54" rx="7" ry="4" fill="rgba(28,158,38,0.5)"  transform="rotate(20,72,54)"/>
-                  <ellipse cx="142" cy="58" rx="8" ry="5" fill="rgba(22,145,32,0.52)" transform="rotate(-25,142,58)"/>
+                  <!-- Deep jungle base (transparent — CSS background shows through) -->
+                  <rect x="0" y="0" width="200" height="160" fill="transparent"/>
+                  <!-- Golden sunbeam shafts from upper-left (visible dappled light) -->
+                  <path fill="rgba(210,255,90,0.10)"  d="M-8,0 L70,160 L84,160 L6,0Z"/>
+                  <path fill="rgba(230,255,110,0.08)"  d="M16,0 L94,160 L110,160 L32,0Z"/>
+                  <path fill="rgba(200,248,80,0.072)"  d="M40,0 L116,160 L135,160 L58,0Z"/>
+                  <path fill="rgba(215,255,95,0.058)"  d="M66,0 L138,160 L160,160 L86,0Z"/>
+                  <path fill="rgba(190,240,70,0.045)"  d="M92,0 L162,160 L184,160 L112,0Z"/>
+                  <!-- Intense sunlight pool where beams hit the forest floor -->
+                  <ellipse cx="72"  cy="138" rx="32" ry="14" fill="rgba(200,255,80,0.12)"/>
+                  <ellipse cx="108" cy="142" rx="24" ry="10" fill="rgba(180,255,70,0.09)"/>
+                  <!-- Atmospheric jungle haze (green-tinted air) -->
+                  <rect x="0" y="0" width="200" height="160" fill="rgba(8,30,4,0.22)"/>
+                  <!-- Far canopy (darkest, most distant) -->
+                  <path fill="#021002" d="M0,55 Q14,36 28,46 Q44,28 60,40 Q76,24 94,36 Q110,20 128,32 Q144,18 162,30 Q178,20 196,28 L200,32 L200,55Z"/>
+                  <!-- Hanging vines with large leaves -->
+                  <path fill="none" stroke="rgba(22,148,18,0.52)" stroke-width="2.8" d="M26,0 Q20,22 26,48 Q32,74 26,100"/>
+                  <path fill="none" stroke="rgba(18,135,14,0.44)" stroke-width="2.2" d="M68,0 Q74,26 68,52 Q62,78 68,106"/>
+                  <path fill="none" stroke="rgba(26,155,20,0.5)"  stroke-width="2.8" d="M138,0 Q132,24 138,50 Q144,76 138,102"/>
+                  <path fill="none" stroke="rgba(20,140,16,0.4)"  stroke-width="2"   d="M174,0 Q180,22 174,44 Q168,66 174,84"/>
+                  <!-- Vine leaves (large, varied) -->
+                  <ellipse cx="24" cy="55" rx="11" ry="7"  fill="rgba(30,162,22,0.62)" transform="rotate(-35,24,55)"/>
+                  <ellipse cx="24" cy="80" rx="9"  ry="5.5" fill="rgba(26,150,18,0.56)" transform="rotate(22,24,80)"/>
+                  <ellipse cx="68" cy="60" rx="10" ry="6"  fill="rgba(34,168,26,0.58)" transform="rotate(28,68,60)"/>
+                  <ellipse cx="68" cy="86" rx="9"  ry="5"  fill="rgba(30,158,22,0.52)" transform="rotate(-18,68,86)"/>
+                  <ellipse cx="140" cy="64" rx="11" ry="7" fill="rgba(28,155,20,0.6)"  transform="rotate(-30,140,64)"/>
+                  <ellipse cx="140" cy="90" rx="9"  ry="5.5" fill="rgba(24,145,16,0.54)" transform="rotate(20,140,90)"/>
+                  <ellipse cx="174" cy="52" rx="8"  ry="5"  fill="rgba(26,150,18,0.5)"  transform="rotate(-25,174,52)"/>
                   <!-- Mid canopy layer -->
-                  <path fill="#031603" d="M0,75 Q14,58 30,66 Q46,50 64,60 Q80,46 100,58 Q118,44 138,56 Q155,46 170,54 Q185,46 200,52 L200,75Z"/>
-                  <!-- Ancient ruins (stone columns) -->
-                  <rect x="148" y="70" width="8" height="60" fill="rgba(80,90,60,0.7)"/>
-                  <rect x="162" y="78" width="8" height="52" fill="rgba(80,90,60,0.6)"/>
-                  <rect x="148" y="68" width="8"  height="5" fill="rgba(100,110,80,0.65)"/>
-                  <rect x="162" y="76" width="8"  height="5" fill="rgba(100,110,80,0.6)"/>
-                  <!-- Moss on ruins -->
-                  <rect x="148" y="72" width="8" height="3" fill="rgba(35,140,20,0.5)"/>
-                  <rect x="162" y="80" width="8" height="3" fill="rgba(35,140,20,0.45)"/>
-                  <!-- Near foreground large tree trunks -->
-                  <rect x="0"   y="80" width="22" height="80" fill="#020f02"/>
-                  <rect x="178" y="85" width="22" height="75" fill="#020f02"/>
+                  <path fill="#031a03" d="M0,78 Q16,60 34,70 Q50,54 68,64 Q86,48 106,60 Q124,46 144,58 Q158,48 174,56 Q188,48 200,54 L200,78Z"/>
+                  <!-- ANCIENT RUINS with stone arch gateway -->
+                  <!-- Rear wall of temple -->
+                  <rect x="144" y="72" width="38" height="56" fill="rgba(68,78,52,0.72)"/>
+                  <!-- Arch cutout door -->
+                  <path fill="#041004" d="M154,100 Q163,88 172,100 L172,128 L154,128Z"/>
+                  <!-- Arch keystone rim -->
+                  <path fill="rgba(88,98,70,0.7)" d="M152,100 Q163,86 174,100 L172,100 Q163,89 154,100Z"/>
+                  <!-- Stone block joints -->
+                  <line x1="144" y1="84"  x2="182" y2="84"  stroke="rgba(52,62,38,0.5)"  stroke-width="0.8"/>
+                  <line x1="144" y1="96"  x2="152" y2="96"  stroke="rgba(52,62,38,0.45)" stroke-width="0.7"/>
+                  <line x1="174" y1="96"  x2="182" y2="96"  stroke="rgba(52,62,38,0.45)" stroke-width="0.7"/>
+                  <line x1="144" y1="108" x2="152" y2="108" stroke="rgba(52,62,38,0.4)"  stroke-width="0.7"/>
+                  <line x1="174" y1="108" x2="182" y2="108" stroke="rgba(52,62,38,0.4)"  stroke-width="0.7"/>
+                  <!-- Top of wall crumbled edge -->
+                  <path fill="rgba(68,78,52,0.72)" d="M144,72 L146,68 L150,72 L154,66 L158,72 L162,68 L166,72 L170,66 L174,72 L178,68 L182,72Z"/>
+                  <!-- Moss/overgrowth on ruin -->
+                  <rect x="144" y="72"  width="38" height="5"  fill="rgba(32,140,14,0.55)"/>
+                  <rect x="144" y="92"  width="6"  height="36" fill="rgba(28,130,12,0.42)"/>
+                  <path fill="rgba(38,150,16,0.48)" d="M144,88 Q150,80 158,86 Q154,92 144,94Z"/>
+                  <path fill="rgba(30,138,12,0.42)" d="M180,80 Q186,74 192,80 Q188,86 180,84Z"/>
+                  <!-- Side crumbled pillar -->
+                  <rect x="136" y="78" width="7" height="50" fill="rgba(72,82,56,0.68)"/>
+                  <rect x="136" y="76" width="7" height="5"  fill="rgba(92,102,74,0.65)"/>
+                  <rect x="136" y="80" width="7" height="3"  fill="rgba(32,142,14,0.5)"/>
+                  <!-- Near foreground large tree trunks (dark imposing) -->
+                  <rect x="0"   y="70" width="25" height="90" fill="#010c01"/>
+                  <rect x="175" y="74" width="25" height="86" fill="#010c01"/>
                   <!-- Tree bark texture lines -->
-                  <line x1="6"   y1="80"  x2="4"   y2="160" stroke="rgba(30,80,10,0.35)"  stroke-width="1.5"/>
-                  <line x1="14"  y1="80"  x2="12"  y2="160" stroke="rgba(25,70,8,0.3)"    stroke-width="1"/>
-                  <line x1="184" y1="85"  x2="186" y2="160" stroke="rgba(30,80,10,0.35)"  stroke-width="1.5"/>
-                  <line x1="192" y1="85"  x2="190" y2="160" stroke="rgba(25,70,8,0.3)"    stroke-width="1"/>
-                  <!-- Near foreground canopy (hanging in from sides) -->
-                  <path fill="#041c04" d="M0,60  Q10,44 22,52 Q16,58 8,64 L0,66Z"/>
-                  <path fill="#031503" d="M200,64 Q190,48 178,56 Q184,62 192,68 L200,70Z"/>
-                  <!-- Near canopy top center -->
-                  <path fill="#041c04" d="M60,55 Q80,38 100,46 Q120,36 140,48 Q130,60 110,65 Q90,68 72,62Z"/>
-                  <!-- Mid ground undergrowth -->
-                  <path fill="#031a03" d="M0,128 Q10,120 22,126 Q35,118 50,124 Q62,118 76,124 Q88,116 104,122 Q118,116 134,122 Q148,118 164,124 Q178,118 200,124 L200,160 L0,160Z"/>
-                  <!-- Fern shapes -->
-                  <path fill="rgba(30,120,15,0.6)"  d="M42,128 Q38,118 48,112 Q52,118 50,126Z"/>
-                  <path fill="rgba(35,130,18,0.55)" d="M50,128 Q48,118 55,110 Q60,116 58,126Z"/>
-                  <path fill="rgba(28,115,14,0.58)" d="M110,124 Q106,114 116,108 Q120,114 118,122Z"/>
-                  <path fill="rgba(32,125,16,0.52)" d="M118,124 Q116,114 123,106 Q128,112 126,122Z"/>
-                  <!-- TIGER EYES hidden in shadows (center) -->
-                  <ellipse cx="88"  cy="105" rx="4.5" ry="3.2" fill="rgba(255,175,0,0.85)"/>
-                  <ellipse cx="88"  cy="105" rx="1.8" ry="2.5" fill="rgba(10,5,0,0.9)"/>
-                  <ellipse cx="112" cy="105" rx="4.5" ry="3.2" fill="rgba(255,175,0,0.85)"/>
-                  <ellipse cx="112" cy="105" rx="1.8" ry="2.5" fill="rgba(10,5,0,0.9)"/>
-                  <!-- Pupils (vertical slits) -->
-                  <ellipse cx="88"  cy="105" rx="4.5" ry="3.2" fill="none" stroke="rgba(255,200,50,0.4)" stroke-width="1"/>
-                  <ellipse cx="112" cy="105" rx="4.5" ry="3.2" fill="none" stroke="rgba(255,200,50,0.4)" stroke-width="1"/>
-                  <!-- Eye ambient glow -->
-                  <ellipse cx="88"  cy="105" rx="8"   ry="5.5" fill="rgba(255,150,0,0.15)"/>
-                  <ellipse cx="112" cy="105" rx="8"   ry="5.5" fill="rgba(255,150,0,0.15)"/>
-                  <!-- Mist/fog -->
-                  <ellipse cx="100" cy="138" rx="110" ry="20" fill="rgba(15,80,10,0.32)"/>
-                  <ellipse cx="60"  cy="148" rx="80"  ry="16" fill="rgba(12,70,8,0.25)"/>
-                  <ellipse cx="155" cy="145" rx="70"  ry="14" fill="rgba(10,65,8,0.2)"/>
+                  <line x1="6"   y1="70"  x2="4"   y2="160" stroke="rgba(28,78,8,0.4)"   stroke-width="2.2"/>
+                  <line x1="14"  y1="70"  x2="12"  y2="160" stroke="rgba(22,66,6,0.32)"  stroke-width="1.4"/>
+                  <line x1="20"  y1="70"  x2="18"  y2="160" stroke="rgba(18,58,4,0.26)"  stroke-width="1"/>
+                  <line x1="181" y1="74"  x2="183" y2="160" stroke="rgba(28,78,8,0.4)"   stroke-width="2.2"/>
+                  <line x1="189" y1="74"  x2="187" y2="160" stroke="rgba(22,66,6,0.32)"  stroke-width="1.4"/>
+                  <line x1="196" y1="74"  x2="194" y2="160" stroke="rgba(18,58,4,0.26)"  stroke-width="1"/>
+                  <!-- Root buttresses -->
+                  <path fill="#010c01" d="M0,145 Q10,134 25,144 L25,150 Q12,142 0,152Z"/>
+                  <path fill="#010c01" d="M200,147 Q190,136 175,146 L175,152 Q188,144 200,154Z"/>
+                  <!-- Foreground canopy draping in -->
+                  <path fill="#061f05" d="M0,54  Q14,38 30,48 Q22,56 12,64 L0,68Z"/>
+                  <path fill="#051803" d="M200,58 Q186,42 172,52 Q180,60 192,68 L200,72Z"/>
+                  <path fill="#061f05" d="M54,48 Q76,32 100,42 Q124,30 148,44 Q138,58 112,63 Q88,66 68,58Z"/>
+                  <!-- GORILLA silhouette against left tree trunk -->
+                  <ellipse cx="36" cy="112" rx="10" ry="13" fill="rgba(6,18,4,0.88)"/>
+                  <ellipse cx="36" cy="98"  rx="9"  ry="8.5" fill="rgba(6,18,4,0.85)"/>
+                  <!-- Gorilla brow ridge -->
+                  <path fill="rgba(4,12,2,0.9)" d="M28,93 Q36,88 44,93 L44,96 Q36,91 28,96Z"/>
+                  <!-- Gorilla eyes (faint amber) -->
+                  <ellipse cx="33" cy="96" rx="1.6" ry="1.3" fill="rgba(210,185,60,0.5)"/>
+                  <ellipse cx="39" cy="96" rx="1.6" ry="1.3" fill="rgba(210,185,60,0.5)"/>
+                  <!-- Gorilla long knuckle-dragging arms -->
+                  <path fill="rgba(6,18,4,0.84)" d="M26,112 Q18,120 12,128 Q10,124 14,118 Q20,112 26,108Z"/>
+                  <path fill="rgba(6,18,4,0.84)" d="M46,112 Q54,120 58,128 Q56,124 52,118 Q46,112 46,108Z"/>
+                  <!-- Gorilla legs -->
+                  <rect x="29" y="123" width="7" height="18" rx="3" fill="rgba(6,18,4,0.85)"/>
+                  <rect x="39" y="123" width="7" height="16" rx="3" fill="rgba(6,18,4,0.82)"/>
+                  <!-- Ground undergrowth -->
+                  <path fill="#031a03" d="M0,132 Q12,124 26,130 Q40,122 56,128 Q70,120 88,126 Q104,120 120,126 Q136,120 152,126 Q166,120 182,126 Q192,122 200,126 L200,160 L0,160Z"/>
+                  <!-- Rich fern layer -->
+                  <path fill="rgba(24,112,10,0.68)" d="M34,136 Q24,124 18,110 Q28,114 32,128Z"/>
+                  <path fill="rgba(28,124,12,0.63)" d="M42,134 Q36,122 38,108 Q46,114 46,130Z"/>
+                  <path fill="rgba(24,112,10,0.68)" d="M50,134 Q50,122 58,110 Q62,118 56,132Z"/>
+                  <path fill="rgba(22,105,10,0.63)" d="M110,130 Q102,118 96,106 Q106,110 110,124Z"/>
+                  <path fill="rgba(26,118,12,0.63)" d="M118,128 Q114,116 118,104 Q126,110 124,126Z"/>
+                  <path fill="rgba(24,112,10,0.65)" d="M126,130 Q126,118 134,108 Q138,116 132,128Z"/>
+                  <!-- Jungle river / stream (reflective) -->
+                  <path fill="rgba(15,75,95,0.48)" d="M62,126 Q74,120 90,122 Q108,118 124,122 Q136,120 144,126 L142,136 Q132,128 120,130 Q106,126 88,130 Q72,128 64,136Z"/>
+                  <!-- Water surface shimmer lines -->
+                  <path fill="none" stroke="rgba(80,200,220,0.38)" stroke-width="1"   d="M70,126 Q82,122 96,124 Q112,120 126,122"/>
+                  <path fill="none" stroke="rgba(60,180,200,0.28)" stroke-width="0.8" d="M74,130 Q88,126 102,128 Q116,124 128,126"/>
+                  <!-- River bank vegetation -->
+                  <path fill="rgba(22,105,10,0.55)" d="M62,124 Q58,118 64,112 Q68,118 66,124Z"/>
+                  <path fill="rgba(20,98,8,0.5)"   d="M144,124 Q148,118 154,114 Q154,120 148,126Z"/>
+                  <!-- TIGER (visible body with stripes, crouching) -->
+                  <path fill="rgba(175,92,12,0.6)"  d="M74,118 L70,112 L72,106 L78,102 L86,99 L96,98 L106,100 L110,106 L108,114 L102,120 L92,122 L80,122Z"/>
+                  <!-- Tiger stripes (dark) -->
+                  <line x1="80"  y1="99"  x2="78"  y2="116" stroke="rgba(18,6,0,0.5)"  stroke-width="1.5"/>
+                  <line x1="88"  y1="99"  x2="86"  y2="118" stroke="rgba(18,6,0,0.48)" stroke-width="1.5"/>
+                  <line x1="96"  y1="99"  x2="94"  y2="116" stroke="rgba(18,6,0,0.45)" stroke-width="1.5"/>
+                  <line x1="104" y1="100" x2="102" y2="114" stroke="rgba(18,6,0,0.42)" stroke-width="1.5"/>
+                  <!-- Tiger head -->
+                  <ellipse cx="111" cy="108" rx="9" ry="7" fill="rgba(180,96,14,0.62)"/>
+                  <!-- Face markings -->
+                  <line x1="107" y1="103" x2="105" y2="110" stroke="rgba(18,6,0,0.44)" stroke-width="1"/>
+                  <line x1="114" y1="103" x2="112" y2="110" stroke="rgba(18,6,0,0.4)"  stroke-width="1"/>
+                  <!-- Whisker dots -->
+                  <circle cx="108" cy="109" r="0.8" fill="rgba(230,210,180,0.55)"/>
+                  <circle cx="116" cy="109" r="0.8" fill="rgba(230,210,180,0.55)"/>
+                  <!-- TIGER EYES (glowing amber, piercing) -->
+                  <ellipse cx="107" cy="106" rx="2.5" ry="2"   fill="rgba(255,185,0,0.95)"/>
+                  <ellipse cx="107" cy="106" rx="0.9" ry="1.7" fill="rgba(10,4,0,0.98)"/>
+                  <ellipse cx="115" cy="106" rx="2.5" ry="2"   fill="rgba(255,185,0,0.95)"/>
+                  <ellipse cx="115" cy="106" rx="0.9" ry="1.7" fill="rgba(10,4,0,0.98)"/>
+                  <!-- Eye glow halos -->
+                  <ellipse cx="107" cy="106" rx="5"  ry="3.8" fill="rgba(255,160,0,0.22)"/>
+                  <ellipse cx="115" cy="106" rx="5"  ry="3.8" fill="rgba(255,160,0,0.22)"/>
+                  <!-- Tropical birds in canopy (colorful V-shapes) -->
+                  <path fill="none" stroke="rgba(255,185,0,0.65)"  stroke-width="1.3" d="M84,34 Q87,31 90,34"/>
+                  <path fill="none" stroke="rgba(220,80,0,0.58)"   stroke-width="1.1" d="M96,30 Q98.5,28 101,30"/>
+                  <path fill="none" stroke="rgba(50,200,50,0.55)"  stroke-width="1.1" d="M106,37 Q108.5,34 111,37"/>
+                  <!-- Atmospheric jungle mist / fog -->
+                  <ellipse cx="100" cy="144" rx="118" ry="22" fill="rgba(18,82,10,0.42)"/>
+                  <ellipse cx="52"  cy="152" rx="88"  ry="18" fill="rgba(14,70,8,0.34)"/>
+                  <ellipse cx="160" cy="150" rx="74"  ry="16" fill="rgba(12,65,7,0.28)"/>
+                  <!-- Luminous ground mist (slightly brighter) -->
+                  <ellipse cx="100" cy="157" rx="108" ry="12" fill="rgba(40,110,20,0.2)"/>
                 </svg>
-                <!-- Fireflies -->
-                <div class="firefly" style="--fd:2.2s;--fdelay:0s;   left:22%; top:58%; background:#BBFF55;box-shadow:0 0 6px #BBFF55,0 0 12px rgba(180,255,60,0.5)"></div>
-                <div class="firefly" style="--fd:3s;  --fdelay:0.8s; left:62%; top:54%; background:#AAFF44;box-shadow:0 0 6px #AAFF44,0 0 12px rgba(160,255,50,0.5)"></div>
-                <div class="firefly" style="--fd:2.6s;--fdelay:1.5s; left:44%; top:62%; background:#CCFF66;box-shadow:0 0 5px #CCFF66,0 0 10px rgba(190,255,80,0.4)"></div>
-                <div class="firefly" style="--fd:1.8s;--fdelay:0.4s; left:78%; top:50%; background:#AAFF44;box-shadow:0 0 5px #AAFF44,0 0 10px rgba(160,255,50,0.4)"></div>
-                <div class="firefly" style="--fd:2.8s;--fdelay:1.1s; left:35%; top:68%; background:#BBFF55;box-shadow:0 0 6px #BBFF55,0 0 11px rgba(180,255,60,0.45)"></div>
+                <!-- Fireflies (more of them, brighter) -->
+                <div class="firefly" style="--fd:2.2s;--fdelay:0s;   left:22%; top:56%; background:#CCFF55;box-shadow:0 0 7px #BBFF44,0 0 14px rgba(180,255,50,0.55)"></div>
+                <div class="firefly" style="--fd:3s;  --fdelay:0.8s; left:62%; top:52%; background:#AAFF44;box-shadow:0 0 7px #AAFF44,0 0 14px rgba(160,255,50,0.55)"></div>
+                <div class="firefly" style="--fd:2.6s;--fdelay:1.5s; left:44%; top:60%; background:#CCFF66;box-shadow:0 0 6px #CCFF66,0 0 12px rgba(190,255,80,0.5)"></div>
+                <div class="firefly" style="--fd:1.8s;--fdelay:0.4s; left:78%; top:50%; background:#AAFF44;box-shadow:0 0 6px #AAFF44,0 0 12px rgba(160,255,50,0.48)"></div>
+                <div class="firefly" style="--fd:2.8s;--fdelay:1.1s; left:35%; top:66%; background:#BBFF55;box-shadow:0 0 7px #BBFF55,0 0 13px rgba(180,255,60,0.52)"></div>
+                <div class="firefly" style="--fd:2.4s;--fdelay:2s;   left:52%; top:72%; background:#CCFF44;box-shadow:0 0 6px #CCFF44,0 0 11px rgba(190,255,50,0.46)"></div>
+                <div class="firefly" style="--fd:3.2s;--fdelay:0.6s; left:88%; top:58%; background:#BBFF55;box-shadow:0 0 6px #BBFF55,0 0 12px rgba(180,255,60,0.44)"></div>
               </div>
             </div>
             <div class="map-info">
