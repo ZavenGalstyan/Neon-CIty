@@ -230,8 +230,7 @@ body {
 .characters-grid--2col {
   grid-template-columns: repeat(2, 1fr);
 }
-@media (max-width: 760px) { .characters-grid { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 420px) { .characters-grid { grid-template-columns: 1fr; } }
+/* characters-grid responsive handled in main @media block below */
 
 .char-card {
   position: relative;
@@ -518,8 +517,7 @@ body {
   grid-template-columns: repeat(4, 1fr);
   gap: 10px;
 }
-@media (max-width: 900px) { .maps-grid { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 540px) { .maps-grid { grid-template-columns: repeat(2, 1fr); } }
+/* maps-grid responsive handled in main @media block below */
 
 /* ═══════════════════════════════════════════════
    MAP CARD — full-cover preview with glass info overlay
@@ -1321,13 +1319,7 @@ body {
   transform: translateY(-1px);
 }
 
-/* Mobile */
-@media (max-width: 760px) {
-  .cpp-panel { flex-direction: column; padding: 16px; gap: 16px; }
-  .cpp-wrap  { width: 160px; height: 220px; }
-  #cppCanvas { width: 160px; height: 220px; }
-  .cpp-stage { width: 100%; align-items: center; }
-}
+/* cpp-panel responsive handled in main @media block below */
 
 .customize-section { display: flex; flex-direction: column; gap: 0; margin-top: 6px; }
 .customize-section .section-divider { margin-bottom: 14px; }
@@ -1436,7 +1428,7 @@ body {
   transition: color 0.15s;
 }
 .mobile-warning-close:hover { color: rgba(255,255,255,0.9); }
-@media (max-width: 1024px) {
+@media (min-width: 768px) and (max-width: 1024px) {
   .mobile-warning-banner { display: flex; }
 }
 
@@ -1597,115 +1589,241 @@ body {
 .modal-feat b { color: rgba(255,255,255,0.8); }
 
 /* ═══════════════════════════════════════════════════════════
-   RESPONSIVE — phone / tablet / notebook / desktop
-   Breakpoints: 480 · 768 · 1024
+   RESPONSIVE — best-practice cascade (max-width, largest first)
+   Breakpoints: 1199 · 899 · 767 · 599 · 479 · 359
    ═══════════════════════════════════════════════════════════ */
 
-/* ── Notebook / small desktop  (769 – 1024px) ───────────── */
-@media (max-width: 1024px) {
-  .select-container { padding: 0 16px; }
-  .char-card        { height: 116px; }
+/* ── Notebook / medium desktop  (≤ 1199px) ─────────────── */
+@media (max-width: 1199px) {
+  .select-container { padding: 0 14px; }
+  .characters-grid  { gap: 10px; }
+  .char-card        { height: 114px; }
   .char-info h3     { font-size: 10px; }
+  .maps-grid        { gap: 9px; }
+  .map-card         { height: 155px; }
+  .map-preview      { height: 100% !important; }
 }
 
-/* ── Tablet  (481 – 768px) ──────────────────────────────── */
-@media (max-width: 768px) {
-  .select-screen    { padding: 14px 0 28px; }
-  .select-container { padding: 0 10px; gap: 8px; }
+/* ── Tablet landscape  (≤ 899px) ───────────────────────── */
+@media (max-width: 899px) {
+  .select-screen    { padding: 12px 0 26px; }
+  .select-container { padding: 0 12px; gap: 8px; }
 
   /* Logo */
-  .logo-text        { font-size: clamp(20px, 7vw, 36px); }
-  .logo-sub         { font-size: 9px; letter-spacing: 0.2em; }
-  .game-logo        { gap: 10px; }
+  .logo-text        { font-size: clamp(22px, 5.5vw, 38px); }
+  .logo-sub         { font-size: 8px; letter-spacing: 0.2em; }
+  .game-logo        { gap: 8px; }
 
-  /* Character cards — 2×2 grid */
-  .characters-grid  { grid-template-columns: repeat(2, 1fr); gap: 6px; }
+  /* Characters — 3 columns */
+  .characters-grid  { grid-template-columns: repeat(3, 1fr); gap: 8px; }
   .char-card        { height: 108px; }
-  .char-avatar      { width: 64px; min-width: 64px; }
+  .char-avatar      { width: 66px; min-width: 66px; }
   .char-figure      { width: 44px; height: 58px; }
+  .char-info        { padding: 9px 10px; }
   .char-info h3     { font-size: 9px; }
   .char-lore        { font-size: 9px; }
   .stat span        { font-size: 7px; width: 38px; }
   .stat-bar         { height: 3px; }
+  .char-number      { font-size: 8px; }
 
-  /* Page nav tabs */
-  .page-nav         { gap: 5px; margin: 8px 0 3px; }
-  .page-tab         { font-size: 8px; padding: 7px 8px; }
-  .section-label    { font-size: 8px; letter-spacing: 0.2em; }
-
-  /* Maps — 2-column grid */
-  .maps-grid        { grid-template-columns: repeat(2, 1fr); gap: 8px; }
-  .map-card         { height: 130px; }
-  .map-preview      { height: 90px; }
+  /* Maps — 3 columns */
+  .maps-grid        { grid-template-columns: repeat(3, 1fr); gap: 9px; }
+  .map-card         { height: 140px; }
+  .map-preview      { height: 100% !important; }
   .map-name         { font-size: 11px; }
   .map-desc         { font-size: 9px; line-height: 1.3; }
   .map-tag          { font-size: 7px; padding: 2px 5px; }
   .map-num          { font-size: 9px; }
-  .map-info         { padding: 6px 8px 6px; }
+  .map-info         { padding: 6px 9px 6px; }
 
-  /* Special row cards — 2-column grid on tablet */
-  .special-maps-row {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 7px;
-    flex-direction: unset;
-  }
-  .map-card--arena,
-  .map-card--experimental,
-  .map-card--life   { flex-direction: column; align-items: flex-start; gap: 0; padding: 0; height: auto; }
-  .map-card--arena .map-preview,
-  .map-card--experimental .map-preview,
-  .map-card--life .map-preview  { width: 100%; height: 50px; }
-  .map-card--arena .map-info,
-  .map-card--experimental .map-info,
-  .map-card--life .map-info     { padding: 6px 8px; }
+  /* Taller special cards scale down */
+  .map-card--neon-city { height: 168px; }
+  .map-card--wasteland { height: 166px; }
 
-  /* Customize */
+  /* Page nav tabs */
+  .page-nav         { gap: 6px; margin: 8px 0 3px; }
+  .page-tab         { font-size: 8px; padding: 7px 10px; }
+  .section-label    { font-size: 8px; letter-spacing: 0.22em; }
+
+  /* Step nav */
+  .step-label       { font-size: 10px; margin-bottom: 12px; }
+  .step-nav-btn     { font-size: 10px; padding: 8px 18px; }
+
+  /* CPP panel — slightly smaller canvas */
+  .cpp-panel        { padding: 20px 22px; gap: 22px; }
+  .cpp-wrap         { width: 195px; height: 265px; }
+  #cppCanvas        { width: 195px !important; height: 265px !important; }
+
+  /* Customize panel — 2 groups per row */
   .customize-panel  { flex-wrap: wrap; }
-  .cust-group       { width: 50%; min-width: 0; padding: 16px 16px; border-right: none; border-bottom: 1px solid rgba(255,255,255,0.04); }
+  .cust-group       { width: 50%; min-width: 0; padding: 14px 16px; border-right: none; border-bottom: 1px solid rgba(255,255,255,0.04); }
   .cust-group:nth-child(odd) { border-right: 1px solid rgba(255,255,255,0.04); }
-  .cust-group:last-child { border-bottom: none; }
+  .cust-group:last-child     { border-bottom: none; }
   .cust-label       { font-size: 8px; }
   .cust-btn         { font-size: 8px; padding: 6px 10px; }
-
-  /* Color swatches */
   .color-swatch     { width: 22px; height: 22px; }
 
   /* Start area */
-  .start-area       { gap: 10px; }
-  .start-btn        { font-size: 13px; padding: 12px 20px; }
+  .start-area       { gap: 12px; }
+  .start-btn        { font-size: 14px; padding: 14px 32px; }
   .start-hint       { font-size: 8px; }
-  .modes-btn        { font-size: 9px; padding: 6px 10px; }
+  .modes-btn        { font-size: 9px; padding: 6px 12px; }
+  .name-input       { font-size: 16px; }
 }
 
-/* ── Phone  (≤ 480px) ───────────────────────────────────── */
-@media (max-width: 480px) {
-  .select-screen    { padding: 10px 0 24px; }
-  .select-container { padding: 0 8px; gap: 7px; }
+/* ── Tablet portrait  (≤ 767px) ────────────────────────── */
+@media (max-width: 767px) {
+  .select-screen    { padding: 10px 0 22px; }
+  .select-container { padding: 0 10px; gap: 7px; }
+  .logo-text        { font-size: clamp(20px, 6.5vw, 34px); }
 
-  /* Logo */
-  .logo-text        { font-size: clamp(18px, 8vw, 28px); }
-  .logo-sub         { display: none; }   /* hide tagline to save space */
+  /* Characters — 2 columns */
+  .characters-grid  { grid-template-columns: repeat(2, 1fr); gap: 6px; }
+  .char-card        { height: 102px; }
+  .char-avatar      { width: 60px; min-width: 60px; }
+  .char-figure      { width: 40px; height: 54px; }
+  .char-info        { padding: 8px 9px; }
+  .char-info h3     { font-size: 9px; }
+  .char-lore        { font-size: 8px; }
+  .stat span        { font-size: 7px; width: 34px; }
+  .char-number      { font-size: 8px; }
 
-  /* Character cards — single column */
-  .characters-grid  { grid-template-columns: 1fr; gap: 5px; }
+  /* Maps — 2 columns */
+  .maps-grid        { grid-template-columns: repeat(2, 1fr); gap: 7px; }
+  .map-card         { height: 128px; }
+  .map-preview      { height: 100% !important; }
+  .map-name         { font-size: 10.5px; }
+  .map-desc         { font-size: 8.5px; }
+  .map-tag          { font-size: 6.5px; padding: 2px 4px; }
+  .map-info         { padding: 5px 8px 5px; }
+
+  /* Taller special cards */
+  .map-card--neon-city { height: 158px; }
+  .map-card--wasteland { height: 156px; }
+
+  /* CPP — vertical layout */
+  .cpp-panel        { flex-direction: column; padding: 16px; gap: 16px; }
+  .cpp-wrap         { width: 165px; height: 225px; }
+  #cppCanvas        { width: 165px !important; height: 225px !important; }
+  .cpp-stage        { width: 100%; align-items: center; }
+  .cpp-acc-btn, .cpp-eff-btn { font-size: 8px; padding: 6px 10px; }
+
+  /* Start area */
+  .start-btn        { font-size: 13px; padding: 12px 22px; }
+  .modes-btn        { font-size: 8px; padding: 5px 10px; }
+  .name-input       { font-size: 15px; }
+}
+
+/* ── Large phone  (≤ 599px) ─────────────────────────────── */
+@media (max-width: 599px) {
+  .select-screen    { padding: 8px 0 20px; }
+  .select-container { padding: 0 8px; gap: 6px; }
+  .logo-text        { font-size: clamp(18px, 7.5vw, 30px); }
+  .logo-sub         { font-size: 7.5px; letter-spacing: 0.16em; }
+
+  /* Char */
   .char-card        { height: 96px; }
   .char-avatar      { width: 56px; min-width: 56px; }
   .char-figure      { width: 38px; height: 50px; }
-  .char-number      { font-size: 8px; }
+  .char-info        { padding: 7px 8px; }
 
-  /* Map cards — single column */
-  .maps-grid        { grid-template-columns: 1fr; gap: 8px; }
+  /* Maps */
   .map-card         { height: 120px; }
-  .map-preview      { height: 90px; }
+  .map-name         { font-size: 10px; }
+  .map-desc         { font-size: 8px; line-height: 1.2; }
+  .map-info         { padding: 4px 7px 4px; }
+  .map-tag          { font-size: 6px; padding: 1px 4px; }
 
-  /* Customize: each group full width */
+  /* Taller special */
+  .map-card--neon-city { height: 150px; }
+  .map-card--wasteland { height: 148px; }
+  .neon-theme-btn, .wasteland-theme-btn { width: 24px; height: 24px; }
+
+  /* Tabs / labels */
+  .page-tab         { font-size: 7.5px; padding: 6px 8px; }
+  .section-label    { font-size: 7px; letter-spacing: 0.18em; }
+
+  /* Step nav */
+  .step-nav         { gap: 16px; padding: 10px 0 5px; }
+  .step-nav-btn     { font-size: 9px; padding: 7px 14px; }
+  .step-label       { font-size: 9px; margin-bottom: 10px; }
+
+  /* Start area — stack vertically, full-width buttons */
+  .start-area       { flex-direction: column; gap: 8px; align-items: stretch; }
+  .start-btn        { width: 100%; font-size: 13px; padding: 13px 20px; order: 0; box-sizing: border-box; }
+  .start-hint       { display: none; }
+  .modes-btn        { width: 100%; font-size: 8px; padding: 8px 12px; order: 1; text-align: center; box-sizing: border-box; }
+
+  /* Name input */
+  .name-input-wrap  { margin: 10px auto 16px; width: 100%; max-width: 100%; }
+  .name-input       { font-size: 14px; padding: 10px 12px; }
+
+  /* CPP canvas */
+  .cpp-wrap         { width: 150px; height: 205px; }
+  #cppCanvas        { width: 150px !important; height: 205px !important; }
+}
+
+/* ── Phone  (≤ 479px) ────────────────────────────────────── */
+@media (max-width: 479px) {
+  .select-container { padding: 0 6px; gap: 5px; }
+  .logo-text        { font-size: clamp(16px, 8.5vw, 26px); }
+  .logo-sub         { display: none; }
+
+  /* Char — stay 2 cols, tighten avatar */
+  .characters-grid  { gap: 5px; }
+  .char-card        { height: 88px; }
+  .char-avatar      { width: 50px; min-width: 50px; }
+  .char-figure      { width: 34px; height: 45px; }
+  .char-info        { padding: 6px 7px; }
+  .char-info h3     { font-size: 8px; }
+  .char-lore        { display: none; }
+  .stat span        { font-size: 6px; width: 30px; }
+  .stat-bar         { height: 2.5px; }
+  .char-number      { font-size: 7px; }
+  .char-key         { display: none; }
+
+  /* Maps — stay 2 cols, tighten */
+  .maps-grid        { gap: 5px; }
+  .map-card         { height: 112px; }
+  .map-name         { font-size: 9.5px; }
+  .map-desc         { font-size: 7.5px; }
+  .map-tag          { font-size: 6px; padding: 1px 3px; }
+  .map-info         { padding: 4px 5px 4px; }
+  .map-num          { display: none; }
+
+  /* Taller special */
+  .map-card--neon-city { height: 140px; }
+  .map-card--wasteland { height: 138px; }
+  .neon-theme-btn, .wasteland-theme-btn { width: 20px; height: 20px; }
+
+  /* CPP */
+  .cpp-panel        { padding: 12px; gap: 12px; }
+  .cpp-wrap         { width: 130px; height: 175px; }
+  #cppCanvas        { width: 130px !important; height: 175px !important; }
+  .cpp-acc-btn, .cpp-eff-btn { font-size: 7.5px; padding: 5px 8px; }
+
+  /* Customize */
   .cust-group       { width: 100%; }
 
-  /* Start area mobile */
-  .start-area       { flex-direction: column; gap: 8px; }
-  .start-btn        { width: 100%; font-size: 13px; order: 0; }
-  .start-hint       { display: none; }
-  .modes-btn        { font-size: 8px; padding: 5px 8px; order: 1; }
+  /* Tabs */
+  .page-tab         { font-size: 7px; padding: 5px 6px; letter-spacing: 0.05em; }
+  .section-label    { font-size: 6.5px; }
+}
+
+/* ── Very small phone  (≤ 359px) ────────────────────────── */
+@media (max-width: 359px) {
+  .select-container { padding: 0 5px; gap: 4px; }
+  .char-card        { height: 82px; }
+  .char-avatar      { width: 44px; min-width: 44px; }
+  .char-figure      { width: 30px; height: 40px; }
+  .char-info        { padding: 5px 5px; }
+  .map-card         { height: 104px; }
+  .map-card--neon-city { height: 130px; }
+  .map-card--wasteland { height: 128px; }
+  .map-name         { font-size: 9px; }
+  .map-desc         { display: none; }
+  .step-nav-btn     { font-size: 8px; padding: 6px 10px; }
+  .name-input       { font-size: 13px; padding: 9px 10px; }
 }
 
 /* ── Virtual touch controls (game.html) ── */
@@ -4009,7 +4127,7 @@ body {
 
   /* Map cards */
   .map-card              { height: 110px; }
-  .map-preview           { height: 80px; }
+  .map-preview           { height: 100% !important; }
   .map-name              { font-size: 9px; }
   .map-desc              { font-size: 8px; }
   .map-info              { padding: 5px 7px 5px; gap: 3px; }
@@ -4300,50 +4418,31 @@ body {
    COMPREHENSIVE RESPONSIVE FIX  — all screens < 1600px
    ════════════════════════════════════════════════════════════ */
 
-/* ── 1: Notebook / small desktop  (1025px – 1599px) ──────── */
-@media (max-width: 1599px) and (min-width: 1025px) {
-  .select-container          { max-width: 100%; }
-  .char-card                 { height: 112px; }
-  .char-info h3              { font-size: 10px; letter-spacing: 0.06em; }
-  .characters-grid           { gap: 10px; }
-  .maps-grid                 { gap: 10px; }
-  .map-card                  { height: 140px; }
-  .map-preview               { height: 95px; }
-  .map-card--neon-city,
-  .map-card--wasteland,
-  .map-card--jungle,
-  .map-card--robot-city,
-
+/* ── 1: Notebook / small desktop  (1025px – 1199px) ──────── */
+/* handled by main responsive block; just ensure container fills */
+@media (max-width: 1199px) and (min-width: 1025px) {
+  .select-container { max-width: 100%; }
 }
 
-/* ── 2: Fix wide map cards (inline "span 3") on 2-col grid ─ */
-/* At 760px the grid switches to 2 cols; span-3 inline style  */
-/* creates an implicit 3rd track and breaks the layout.        */
-@media (max-width: 760px) {
-  /* Force full-width (1/-1 = all available columns) */
+/* ── 2: Neon City / Wasteland — full-width on ≤767px grids ─ */
+/* These cards have theme-color pickers; spanning full width   */
+/* gives them more room on 2-col grids without breaking layout.*/
+@media (max-width: 767px) {
   .maps-grid > [data-map="neon_city"],
   .maps-grid > [data-map="wasteland"] {
     grid-column: 1 / -1 !important;
-    flex-direction: column   !important;
-    min-height: auto         !important;
-    padding: 12px            !important;
-    gap: 0                   !important;
   }
   .maps-grid > [data-map="neon_city"] .map-preview,
   .maps-grid > [data-map="wasteland"] .map-preview {
-    width: 100%     !important;
-    height: 80px    !important;
-    min-height: 80px !important;
+    width: 100%    !important;
+    height: 100%   !important;
   }
-  /* feature-maps-row: 2 cols on large tablet instead of jumping to 1 */
   .feature-maps-row { grid-template-columns: repeat(2, 1fr); }
 }
 
-/* ── 3: Phone (≤ 480px) map layout ───────────────────────── */
-@media (max-width: 480px) {
-  /* feature-maps-row: single column on phone */
+/* ── 3: Phone (≤ 479px) map layout ───────────────────────── */
+@media (max-width: 479px) {
   .feature-maps-row           { grid-template-columns: 1fr; }
-  /* wide cards stay full-width (already 1-col grid) */
   .maps-grid > [data-map="neon_city"],
   .maps-grid > [data-map="wasteland"] { grid-column: 1 / -1 !important; }
 }
@@ -4395,23 +4494,14 @@ body {
 .select-screen,
 .select-container { overflow-x: hidden; }
 
-/* ── 10: Map card previews on wide cards — tablet fix ─────── */
-@media (max-width: 760px) {
-  /* jungle / robot-city / desert: switch to column layout */
-  .map-card--jungle,
-  .map-card--robot-city,
-  .map-card--desert {
-    flex-direction: column !important;
-    min-height: auto       !important;
-    padding: 12px          !important;
-  }
-  .map-card--jungle .map-preview,
-  .map-card--robot-city .map-preview,
-  .map-card--desert .map-preview {
-    width: 100%     !important;
-    height: 75px    !important;
-    min-height: 75px !important;
-  }
+/* ── 10: Map card previews — always full height of card ───── */
+/* All map cards use absolute positioning; no column overrides  */
+/* needed. Just ensure map-preview covers the full card height. */
+.map-card--jungle .map-preview,
+.map-card--robot-city .map-preview,
+.map-card--desert .map-preview {
+  width: 100% !important;
+  height: 100% !important;
 }
 
 /* ── 11: Char cards — min readable size on tiny screens ───── */
