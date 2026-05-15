@@ -489,11 +489,11 @@ body {
   position: relative;
   overflow: hidden;
   cursor: pointer;
-  height: 148px;
+  height: 160px;
   border-radius: 14px;
   border: 1.5px solid rgba(255,255,255,0.1);
   background: #04040e;
-  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
 }
 .map-card::before {
   content: ''; position: absolute; inset: 0; z-index: 1;
@@ -512,7 +512,7 @@ body {
 /* Neon City color theme selector */
 .map-card--neon-city {
   background: #080818;
-  height: 168px;
+  height: 186px;
 }
 .map-card--neon-city .map-preview { height: 100%; }
 .map-card--neon-city .map-name { font-size: 11px; letter-spacing: 0.1em; }
@@ -559,7 +559,7 @@ body {
 /* Wasteland map card styling */
 .map-card--wasteland {
   background: #0e0804;
-  height: 164px;
+  height: 182px;
 }
 .map-card--wasteland .map-preview { height: 100%; }
 .map-card--wasteland .map-name { font-size: 11px; letter-spacing: 0.1em; }
@@ -773,13 +773,14 @@ body {
     linear-gradient(180deg, #010a01 0%, #030e03 100%);
 }
 
-/* Dino World — primordial jungle */
+/* Dino World — prehistoric sunset (violet sky, amber horizon, left sun glow) */
 [data-map="dino_world"] .map-preview {
   background:
-    radial-gradient(ellipse at 50% 92%, rgba(40,165,20,0.45) 0%, transparent 50%),
-    radial-gradient(ellipse at 18% 50%, rgba(60,185,30,0.22) 0%, transparent 35%),
-    radial-gradient(ellipse at 78% 22%, rgba(50,175,20,0.22) 0%, transparent 35%),
-    linear-gradient(180deg, #020802 0%, #051204 100%);
+    radial-gradient(ellipse at 25% 92%, rgba(255,215,55,0.72)  0%, transparent 44%),
+    radial-gradient(ellipse at 25% 88%, rgba(255,135,18,0.56)  0%, transparent 37%),
+    radial-gradient(ellipse at 62% 58%, rgba(148,32,8,0.36)    0%, transparent 52%),
+    radial-gradient(ellipse at 8%  8%,  rgba(4,1,18,0.55)      0%, transparent 32%),
+    linear-gradient(180deg, #060110 0%, #180630 22%, #5c1408 46%, #a02a06 70%, #ce4a08 86%, #e85c10 100%);
 }
 
 /* Wasteland — orange barren badlands */
@@ -828,13 +829,17 @@ body {
     linear-gradient(135deg, #040208 0%, #08040e 100%);
 }
 
-/* Jungle Safari — tropical rainforest */
+/* Jungle Safari — tropical rainforest with dappled sunlight */
 [data-map="jungle"] .map-preview {
   background:
-    radial-gradient(ellipse at 40% 68%, rgba(30,135,10,0.48) 0%, transparent 50%),
-    radial-gradient(ellipse at 75% 28%, rgba(20,115,8,0.32) 0%, transparent 40%),
-    radial-gradient(ellipse at 12% 82%, rgba(40,155,15,0.28) 0%, transparent 30%),
-    linear-gradient(180deg, #020902 0%, #071406 100%);
+    radial-gradient(ellipse at 24% 30%,  rgba(228,255,80,0.16)  0%, transparent 26%),
+    radial-gradient(ellipse at 56% 42%,  rgba(210,255,70,0.12)  0%, transparent 22%),
+    radial-gradient(ellipse at 70% 14%,  rgba(190,255,65,0.10)  0%, transparent 20%),
+    radial-gradient(ellipse at 42% 74%,  rgba(28,150,6,0.62)    0%, transparent 54%),
+    radial-gradient(ellipse at 86% 36%,  rgba(22,130,5,0.42)    0%, transparent 42%),
+    radial-gradient(ellipse at 6%  68%,  rgba(46,172,14,0.36)   0%, transparent 34%),
+    radial-gradient(ellipse at 52% 8%,   rgba(40,162,10,0.26)   0%, transparent 30%),
+    linear-gradient(165deg, #010502 0%, #031003 45%, #050e04 100%);
 }
 
 /* Desert Sands — ancient golden sands */
@@ -877,13 +882,13 @@ body {
 /* ── Map info — gradient overlay at the bottom ─────────── */
 .map-info {
   position: absolute; bottom: 0; left: 0; right: 0;
-  padding: 30px 10px 9px;
-  display: flex; flex-direction: column; gap: 4px;
+  padding: 30px 10px 7px;
+  display: flex; flex-direction: column; gap: 3px;
   z-index: 3;
   background: linear-gradient(to top,
-    rgba(0,0,0,0.96) 0%,
-    rgba(0,0,0,0.78) 45%,
-    rgba(0,0,0,0.28) 72%,
+    rgba(0,0,0,0.97) 0%,
+    rgba(0,0,0,0.85) 40%,
+    rgba(0,0,0,0.38) 68%,
     transparent 100%);
 }
 .map-header { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
@@ -896,7 +901,21 @@ body {
   font-family: 'Orbitron', sans-serif; font-size: 8px;
   color: rgba(255,255,255,0.35); flex-shrink: 0;
 }
-.map-desc { display: none; }
+.map-desc {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  line-height: 1.3;
+  color: rgba(255,255,255,0.45);
+  margin: 1px 0 2px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
 .map-tags { display: flex; gap: 4px; flex-wrap: wrap; }
 .map-tag {
   font-family: 'Orbitron', sans-serif; font-size: 7.5px; letter-spacing: 0.08em;
@@ -905,6 +924,150 @@ body {
   opacity: 0.88; background: rgba(0,0,0,0.4);
 }
 .map-card.selected .map-tag { opacity: 1; }
+.map-desc-inline {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  line-height: 1.3;
+  color: rgba(255,255,255,0.45);
+  margin: 1px 0 2px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* ── Map card atmospheric animations ───────────────────── */
+
+/* Neon City — rain streaks */
+.neon-rain {
+  position: absolute;
+  top: -20px;
+  width: 1px;
+  background: linear-gradient(to bottom, transparent, rgba(68,238,255,0.5), transparent);
+  animation: rainFall var(--rn, 1.2s) linear infinite;
+  animation-delay: var(--rndelay, 0s);
+}
+@keyframes rainFall {
+  0%   { transform: translateY(0);    opacity: 0; }
+  15%  { opacity: 0.7; }
+  85%  { opacity: 0.5; }
+  100% { transform: translateY(200px); opacity: 0; }
+}
+
+/* Ocean Depths — rising bubbles */
+.ocean-bubble {
+  position: absolute;
+  bottom: 0;
+  border-radius: 50%;
+  background: rgba(160,230,255,0.55);
+  box-shadow: inset 0 0 3px rgba(255,255,255,0.4), 0 0 4px rgba(100,210,255,0.3);
+  animation: bubbleRise var(--bd, 4s) ease-in infinite;
+  animation-delay: var(--bdelay, 0s);
+}
+@keyframes bubbleRise {
+  0%   { transform: translateY(0) scale(1);   opacity: 0.6; }
+  85%  { opacity: 0.35; }
+  100% { transform: translateY(-180px) scale(0.4); opacity: 0; }
+}
+
+/* Firefly pulse for Jungle */
+.firefly {
+  position: absolute;
+  width: 3px; height: 3px;
+  border-radius: 50%;
+  animation: fireflyPulse var(--fd, 2.2s) ease-in-out infinite;
+  animation-delay: var(--fdelay, 0s);
+}
+@keyframes fireflyPulse {
+  0%, 100% { opacity: 0.08; transform: scale(0.8); }
+  50%       { opacity: 0.92; transform: scale(1.4); }
+}
+
+/* Robot City — circuit node pulse */
+@keyframes circuitPulse {
+  0%, 100% { opacity: 0.22; }
+  50%       { opacity: 0.75; }
+}
+.circuit-node {
+  position: absolute;
+  border-radius: 50%;
+  animation: circuitPulse var(--cn, 2s) ease-in-out infinite;
+  animation-delay: var(--cndelay, 0s);
+}
+
+/* Galactica — star twinkle */
+.star-twinkle {
+  position: absolute;
+  border-radius: 50%;
+  animation: starTwinkle var(--std, 3s) ease-in-out infinite;
+  animation-delay: var(--stdelay, 0s);
+}
+@keyframes starTwinkle {
+  0%, 100% { opacity: 0.35; transform: scale(1); }
+  50%       { opacity: 1;    transform: scale(1.6); }
+}
+
+/* Hover zoom — scene zooms in slightly when hovering a card */
+.map-preview { transition: transform 0.55s ease; }
+.map-card:hover .map-preview { transform: scale(1.07); }
+
+/* Frozen Tundra — falling snow particles */
+.snow-particle {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(220,240,255,0.88);
+  box-shadow: 0 0 3px rgba(180,220,255,0.5);
+  animation: snowFall var(--sf, 3s) linear infinite;
+  animation-delay: var(--sfdelay, 0s);
+}
+@keyframes snowFall {
+  0%   { transform: translateY(-8px) translateX(0);              opacity: 0; }
+  12%  { opacity: 0.9; }
+  88%  { opacity: 0.45; }
+  100% { transform: translateY(185px) translateX(var(--sfx,8px)); opacity: 0; }
+}
+
+/* Desert Sands — drifting sand particles */
+.sand-particle {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(210,160,50,0.65);
+  animation: sandDrift var(--sd, 3.5s) linear infinite;
+  animation-delay: var(--sddelay, 0s);
+}
+@keyframes sandDrift {
+  0%   { transform: translateX(0)     translateY(0);              opacity: 0; }
+  12%  { opacity: 0.75; }
+  88%  { opacity: 0.3; }
+  100% { transform: translateX(220px) translateY(var(--sdy, 4px)); opacity: 0; }
+}
+
+/* Arena — torch flame flicker */
+.torch-flame {
+  position: absolute;
+  border-radius: 50% 50% 40% 40%;
+  animation: torchFlicker var(--tf, 0.35s) ease-in-out infinite alternate;
+  animation-delay: var(--tfdelay, 0s);
+}
+@keyframes torchFlicker {
+  0%   { opacity: 0.78; transform: scaleY(1)    scaleX(1); }
+  100% { opacity: 1;    transform: scaleY(1.18) scaleX(0.86); }
+}
+
+/* Sky Realm — cloud drift */
+.cloud-drift {
+  position: absolute;
+  animation: cloudDrift var(--cd, 9s) ease-in-out infinite;
+  animation-delay: var(--cddelay, 0s);
+}
+@keyframes cloudDrift {
+  0%, 100% { transform: translateX(0); }
+  50%       { transform: translateX(10px); }
+}
 
 /* ── Start button ───────────────────────────────────────── */
 .start-btn {
