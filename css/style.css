@@ -1254,7 +1254,6 @@ body {
 }
 #cppCanvas {
   display: block; width: 220px; height: 300px;
-  image-rendering: pixelated;
   transform-origin: center center;
   position: relative; z-index: 1;
 }
@@ -1327,7 +1326,7 @@ body {
   .cpp-panel { flex-direction: column; padding: 16px; gap: 16px; }
   .cpp-wrap  { width: 160px; height: 220px; }
   #cppCanvas { width: 160px; height: 220px; }
-  .cpp-stage { width: 100%; }
+  .cpp-stage { width: 100%; align-items: center; }
 }
 
 .customize-section { display: flex; flex-direction: column; gap: 0; margin-top: 6px; }

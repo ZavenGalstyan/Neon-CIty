@@ -771,5 +771,14 @@ const CharPreview = (() => {
     }
   }
 
-  return { draw, renderAll };
+  function drawBody(ctx, charData, cx, cy, sr) {
+    if (!charData) return;
+    const { id: charId, color, accent } = charData;
+    ctx.save();
+    ctx.translate(cx, cy);
+    _body(ctx, charId, color, accent, sr);
+    ctx.restore();
+  }
+
+  return { draw, renderAll, drawBody };
 })();
