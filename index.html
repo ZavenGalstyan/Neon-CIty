@@ -567,47 +567,60 @@
     </div><!-- end .char-section -->
 
 
-    <!-- ── Character Customization ──────────────────────── -->
-    <div class="customize-section">
-      <div class="section-divider">
-        <span class="section-label">CUSTOMIZE CHARACTER</span>
+    <!-- ── Character Customize Panel ──────────────────────── -->
+    <div class="cpp-panel" id="cppPanel" style="display:none">
+
+      <!-- Left: big rotating preview -->
+      <div class="cpp-stage">
+        <div class="cpp-wrap" id="cppWrap">
+          <canvas id="cppCanvas"></canvas>
+        </div>
+        <div class="cpp-name" id="cppName"></div>
+        <div class="cpp-hint">&#8592; DRAG TO ROTATE &#8594;</div>
       </div>
-      <div class="customize-panel">
+
+      <!-- Right: controls -->
+      <div class="cpp-controls">
 
         <!-- Neon Color -->
-        <div class="cust-group">
-          <div class="cust-label">NEON COLOR</div>
-          <div class="color-swatches" id="colorSwatches">
-            <div class="color-swatch active" data-color="default" title="Default" style="background:linear-gradient(135deg,#FF4466,#44EEFF,#44FF88,#CC88FF);box-shadow:0 0 8px rgba(255,255,255,0.4)"></div>
-            <div class="color-swatch" data-color="#FF4466" style="background:#FF4466;box-shadow:0 0 8px #FF4466" title="Crimson"></div>
-            <div class="color-swatch" data-color="#44EEFF" style="background:#44EEFF;box-shadow:0 0 8px #44EEFF" title="Cyan"></div>
-            <div class="color-swatch" data-color="#44FF88" style="background:#44FF88;box-shadow:0 0 8px #44FF88" title="Green"></div>
-            <div class="color-swatch" data-color="#FFDD44" style="background:#FFDD44;box-shadow:0 0 8px #FFDD44" title="Gold"></div>
-            <div class="color-swatch" data-color="#FF8800" style="background:#FF8800;box-shadow:0 0 8px #FF8800" title="Orange"></div>
-            <div class="color-swatch" data-color="#CC88FF" style="background:#CC88FF;box-shadow:0 0 8px #CC88FF" title="Purple"></div>
-            <div class="color-swatch" data-color="#FF66AA" style="background:#FF66AA;box-shadow:0 0 8px #FF66AA" title="Pink"></div>
+        <div class="cpp-group">
+          <div class="cpp-label">NEON COLOR</div>
+          <div class="cpp-row">
+            <div class="cpp-color active" data-color="default" title="Default" style="background:linear-gradient(135deg,#FF4466,#44EEFF,#44FF88,#CC88FF);box-shadow:0 0 8px rgba(255,255,255,0.35)"></div>
+            <div class="cpp-color" data-color="#FF4466" style="background:#FF4466;box-shadow:0 0 8px #FF4466" title="Crimson"></div>
+            <div class="cpp-color" data-color="#44EEFF" style="background:#44EEFF;box-shadow:0 0 8px #44EEFF" title="Cyan"></div>
+            <div class="cpp-color" data-color="#44FF88" style="background:#44FF88;box-shadow:0 0 8px #44FF88" title="Green"></div>
+            <div class="cpp-color" data-color="#FFDD44" style="background:#FFDD44;box-shadow:0 0 8px #FFDD44" title="Gold"></div>
+            <div class="cpp-color" data-color="#FF8800" style="background:#FF8800;box-shadow:0 0 8px #FF8800" title="Orange"></div>
+            <div class="cpp-color" data-color="#CC88FF" style="background:#CC88FF;box-shadow:0 0 8px #CC88FF" title="Purple"></div>
+            <div class="cpp-color" data-color="#FF66AA" style="background:#FF66AA;box-shadow:0 0 8px #FF66AA" title="Pink"></div>
           </div>
         </div>
 
-        <!-- Mask -->
-        <div class="cust-group">
-          <div class="cust-label">MASK</div>
-          <div class="cust-options" id="maskOptions">
-            <button class="cust-btn active" data-mask="none">NONE</button>
-            <button class="cust-btn" data-mask="skull">SKULL</button>
-            <button class="cust-btn" data-mask="visor">VISOR</button>
-            <button class="cust-btn" data-mask="cyber">CYBER</button>
+        <!-- Accessory -->
+        <div class="cpp-group">
+          <div class="cpp-label">ACCESSORY</div>
+          <div class="cpp-row cpp-row--wrap">
+            <button class="cpp-acc-btn active" data-acc="none">NONE</button>
+            <button class="cpp-acc-btn" data-acc="glasses">GLASSES</button>
+            <button class="cpp-acc-btn" data-acc="shades">SHADES</button>
+            <button class="cpp-acc-btn" data-acc="hat">HAT</button>
+            <button class="cpp-acc-btn" data-acc="crown">CROWN</button>
+            <button class="cpp-acc-btn" data-acc="bandana">BANDANA</button>
+            <button class="cpp-acc-btn" data-acc="mask">MASK</button>
           </div>
         </div>
 
-        <!-- Cyber Effect -->
-        <div class="cust-group">
-          <div class="cust-label">CYBER EFFECT</div>
-          <div class="cust-options" id="effectOptions">
-            <button class="cust-btn active" data-effect="none">NONE</button>
-            <button class="cust-btn" data-effect="aura">AURA</button>
-            <button class="cust-btn" data-effect="static">STATIC</button>
-            <button class="cust-btn" data-effect="glitch">GLITCH</button>
+        <!-- Effect -->
+        <div class="cpp-group">
+          <div class="cpp-label">CYBER EFFECT</div>
+          <div class="cpp-row cpp-row--wrap">
+            <button class="cpp-eff-btn active" data-eff="none">NONE</button>
+            <button class="cpp-eff-btn" data-eff="aura">AURA</button>
+            <button class="cpp-eff-btn" data-eff="fire">FIRE</button>
+            <button class="cpp-eff-btn" data-eff="lightning">LIGHTNING</button>
+            <button class="cpp-eff-btn" data-eff="glitch">GLITCH</button>
+            <button class="cpp-eff-btn" data-eff="static">STATIC</button>
           </div>
         </div>
 
@@ -2496,6 +2509,7 @@
   <script src="js/ws.js"></script>
   <script src="js/multiplayer.js"></script>
   <script src="js/social-ui.js"></script>
+  <script src="js/screens/customize.js"></script>
   <script src="js/screens/select.js"></script>
   <script>
     Auth.mountNavbar();

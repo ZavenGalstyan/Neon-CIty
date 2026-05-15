@@ -30,9 +30,6 @@
   let selectedMapId    = CONFIG.MAPS[0].id;  // default: first map
   let selectedNeonTheme = 'cyan';  // Default color theme for Neon City
   let selectedWastelandTheme = 'orange';  // Default color theme for Wasteland
-  let customNeonColor  = 'default';
-  let customMask       = 'none';
-  let customEffect     = 'none';
   let currentStep      = 1;
 
   const charCards    = document.querySelectorAll('.char-card');
@@ -63,6 +60,8 @@
       currentStep = n;
       _updateStepNav();
       if (n === 3) document.getElementById('playerNameInput')?.focus();
+      if (n !== 2) CharCustomize.hide();
+      else if (selectedCharId) CharCustomize.show(selectedCharId);
     }, 280);
   }
 
@@ -106,6 +105,7 @@
       startBtn.disabled = false;
       startBtnText.textContent = 'START GAME';
       _updateStepNav();
+      CharCustomize.show(selectedCharId);
     });
   });
 
@@ -275,30 +275,7 @@
 
   // All maps are shown in a single scrollable grid — no page switching needed
 
-  // ── Customization ─────────────────────────────────────────
-  document.querySelectorAll('#colorSwatches .color-swatch').forEach(sw => {
-    sw.addEventListener('click', () => {
-      document.querySelectorAll('#colorSwatches .color-swatch').forEach(s => s.classList.remove('active'));
-      sw.classList.add('active');
-      customNeonColor = sw.dataset.color;
-    });
-  });
-
-  document.querySelectorAll('#maskOptions .cust-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('#maskOptions .cust-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      customMask = btn.dataset.mask;
-    });
-  });
-
-  document.querySelectorAll('#effectOptions .cust-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('#effectOptions .cust-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      customEffect = btn.dataset.effect;
-    });
-  });
+  // Customization is handled by CharCustomize (customize.js) — no code needed here
 
   // ── Start ────────────────────────────────────────────────
   startBtn.addEventListener('click', () => {
@@ -355,7 +332,7 @@
     localStorage.setItem('playerName',     nameVal || 'ANONYMOUS');
     localStorage.setItem('selectedChar',   JSON.stringify(charData));
     localStorage.setItem('selectedMap',    JSON.stringify(mapData));
-    localStorage.setItem('customization',  JSON.stringify({ neonColor: customNeonColor, mask: customMask, effect: customEffect }));
+    // customization already saved to localStorage by CharCustomize on every change
     window.location.href = 'game.html';
   });
 

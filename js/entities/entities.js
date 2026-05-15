@@ -1619,9 +1619,10 @@ class Player {
       this.color  = _cust.neonColor;
       this.accent = _cust.neonColor + 'BB';
     }
-    this._custMask   = _cust.mask   || 'none';
-    this._custEffect = _cust.effect || 'none';
-    this._effectT    = 0;
+    this._custMask      = _cust.mask      || 'none';
+    this._custEffect    = _cust.effect    || 'none';
+    this._custAccessory = _cust.accessory || 'none';
+    this._effectT       = 0;
 
     // ── Active Buffs (building interactions) ──────────────
     // Map<id, {name,icon,color,remaining,maxDur, speedAdd?,fireMult?,dmgMult?,armorAdd?,
@@ -3519,6 +3520,11 @@ class Player {
       ctx.restore();
     }
 
+    // ── Accessory overlay ────────────────────────────────────
+    if (this._custAccessory !== 'none') {
+      this._drawAccessory(ctx, x, y, r);
+    }
+
     // ── Cyber effect ─────────────────────────────────────────
     const et = this._effectT || 0;
     if (this._custEffect === 'aura') {
@@ -3548,6 +3554,37 @@ class Player {
         ctx.beginPath(); ctx.arc(x + off, y, srRing, 0, Math.PI * 2); ctx.fill();
         ctx.restore();
       }
+    } else if (this._custEffect === 'fire') {
+      ctx.save();
+      for (let i = 0; i < 7; i++) {
+        const ang = (i / 7) * Math.PI * 2 + et * 1.8;
+        const d   = srRing + 4 + Math.sin(et * 5 + i * 1.1) * 5;
+        const fx  = x + Math.cos(ang) * d;
+        const fy  = y + Math.sin(ang) * d;
+        const fr  = 4 + Math.sin(et * 6 + i) * 2;
+        const g   = ctx.createRadialGradient(fx, fy, 0, fx, fy, fr);
+        g.addColorStop(0, '#FFFFFF'); g.addColorStop(0.3, '#FF8800'); g.addColorStop(1, 'transparent');
+        ctx.globalAlpha = 0.72;
+        ctx.fillStyle = g;
+        ctx.beginPath(); ctx.arc(fx, fy, fr, 0, Math.PI * 2); ctx.fill();
+      }
+      ctx.restore();
+    } else if (this._custEffect === 'lightning') {
+      if (Math.random() < 0.28) {
+        ctx.save();
+        ctx.strokeStyle = '#99DDFF'; ctx.lineWidth = 1.8;
+        ctx.shadowColor = '#99DDFF'; ctx.shadowBlur = 12;
+        ctx.globalAlpha = 0.78;
+        const ang = Math.random() * Math.PI * 2;
+        const x1 = x + Math.cos(ang) * srRing;
+        const y1 = y + Math.sin(ang) * srRing;
+        const x2 = x + Math.cos(ang) * (srRing + 18 + Math.random() * 12);
+        const y2 = y + Math.sin(ang) * (srRing + 18 + Math.random() * 12);
+        const mx = (x1 + x2) / 2 + (Math.random() - 0.5) * 10;
+        const my = (y1 + y2) / 2 + (Math.random() - 0.5) * 10;
+        ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(mx, my); ctx.lineTo(x2, y2); ctx.stroke();
+        ctx.restore();
+      }
     }
 
     // ── Player name tag (world space, below circle) ───────────
@@ -3559,6 +3596,83 @@ class Player {
       ctx.fillText(this._displayName, x, y + srRing + 13);
       ctx.restore();
     }
+  }
+
+  /* Draws the selected accessory on the in-game player (top-down view) */
+  _drawAccessory(ctx, x, y, r) {
+    const acc = this._custAccessory;
+    const col = this.color;
+    const acl = this.accent;
+    const bs  = this.charData.bodyScale || 1.0;
+    const sr  = r * bs;
+
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(this.angle - Math.PI / 2);
+    // shift toward front of character (local -Y = forward after rotation)
+    ctx.translate(0, -sr * 0.35);
+
+    switch (acc) {
+      case 'glasses': {
+        ctx.strokeStyle = '#ddd'; ctx.lineWidth = 1.2;
+        ctx.shadowColor = '#aaccff'; ctx.shadowBlur = 4;
+        for (const sx of [-1, 1]) {
+          ctx.beginPath(); ctx.arc(sx * sr * 0.32, 0, sr * 0.22, 0, Math.PI * 2); ctx.stroke();
+        }
+        ctx.beginPath(); ctx.moveTo(-sr * 0.1, 0); ctx.lineTo(sr * 0.1, 0); ctx.stroke();
+        break;
+      }
+      case 'shades': {
+        const g = ctx.createLinearGradient(-sr * 0.6, 0, sr * 0.6, 0);
+        g.addColorStop(0, '#FF224477'); g.addColorStop(1, '#4400FF77');
+        ctx.fillStyle = g; ctx.strokeStyle = '#888'; ctx.lineWidth = 1;
+        ctx.shadowColor = '#FF2244'; ctx.shadowBlur = 6;
+        ctx.beginPath(); ctx.roundRect(-sr * 0.62, -sr * 0.22, sr * 1.24, sr * 0.44, 3); ctx.fill(); ctx.stroke();
+        break;
+      }
+      case 'hat': {
+        ctx.fillStyle = col; ctx.strokeStyle = acl; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.arc(0, -sr * 0.1, sr * 0.55, Math.PI, Math.PI * 2); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = acl;
+        ctx.beginPath(); ctx.ellipse(0, -sr * 0.1, sr * 0.7, sr * 0.12, 0, 0, Math.PI * 2); ctx.fill();
+        break;
+      }
+      case 'crown': {
+        ctx.strokeStyle = '#FFD700'; ctx.lineWidth = 1.5;
+        ctx.shadowColor = '#FFD700'; ctx.shadowBlur = 8;
+        ctx.fillStyle = 'rgba(255,215,0,0.18)';
+        const cw = sr * 0.62, ch = sr * 0.5;
+        ctx.beginPath();
+        ctx.moveTo(-cw, 0); ctx.lineTo(-cw, -ch);
+        ctx.lineTo(-cw * 0.35, -ch * 0.45); ctx.lineTo(0, -ch);
+        ctx.lineTo(cw * 0.35, -ch * 0.45); ctx.lineTo(cw, -ch);
+        ctx.lineTo(cw, 0); ctx.closePath();
+        ctx.fill(); ctx.stroke();
+        break;
+      }
+      case 'bandana': {
+        ctx.fillStyle = col + 'CC';
+        ctx.beginPath(); ctx.ellipse(0, 0, sr * 0.52, sr * 0.2, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = acl + '88'; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.ellipse(0, 0, sr * 0.52, sr * 0.2, 0, 0, Math.PI * 2); ctx.stroke();
+        break;
+      }
+      case 'mask': {
+        ctx.globalAlpha = 0.72;
+        ctx.fillStyle = '#111';
+        ctx.beginPath(); ctx.arc(0, 0, sr * 0.62, 0, Math.PI * 2); ctx.fill();
+        ctx.globalAlpha = 1;
+        ctx.strokeStyle = col; ctx.lineWidth = 1.2; ctx.shadowColor = col; ctx.shadowBlur = 6;
+        ctx.beginPath(); ctx.arc(0, 0, sr * 0.62, 0, Math.PI * 2); ctx.stroke();
+        ctx.fillStyle = col; ctx.shadowBlur = 8;
+        for (const sx of [-1, 1]) {
+          ctx.beginPath(); ctx.ellipse(sx * sr * 0.2, -sr * 0.08, sr * 0.12, sr * 0.06, 0, 0, Math.PI * 2); ctx.fill();
+        }
+        break;
+      }
+    }
+
+    ctx.restore();
   }
 }
 
