@@ -526,7 +526,7 @@ body {
   position: relative;
   overflow: hidden;
   cursor: pointer;
-  height: 160px;
+  height: 186px;
   border-radius: 14px;
   border: 1.5px solid rgba(255,255,255,0.1);
   background: #04040e;
@@ -549,7 +549,6 @@ body {
 /* Neon City color theme selector */
 .map-card--neon-city {
   background: #080818;
-  height: 186px;
 }
 .map-card--neon-city .map-preview { height: 100%; }
 .map-card--neon-city .map-name { font-size: 11px; letter-spacing: 0.1em; }
@@ -596,7 +595,6 @@ body {
 /* Wasteland map card styling */
 .map-card--wasteland {
   background: #0e0804;
-  height: 182px;
 }
 .map-card--wasteland .map-preview { height: 100%; }
 .map-card--wasteland .map-name { font-size: 11px; letter-spacing: 0.1em; }
@@ -4257,6 +4255,22 @@ body {
   .nav-btn, .nav-shop-btn, .nav-account-btn { min-height: 44px; }
 }
 
+/* ── Theme buttons: cap size on small touch screens ─────── */
+@media (pointer: coarse) and (max-width: 1199px) {
+  .neon-theme-btn,
+  .wasteland-theme-btn { width: 22px; height: 22px; padding: 2px; }
+}
+@media (pointer: coarse) and (max-width: 767px) {
+  .neon-theme-btn,
+  .wasteland-theme-btn { width: 18px; height: 18px; padding: 2px; }
+  .neon-color-selector,
+  .wasteland-color-selector { gap: 4px !important; margin: 1px 0 2px; }
+}
+@media (pointer: coarse) and (max-width: 479px) {
+  .neon-theme-btn,
+  .wasteland-theme-btn { width: 16px; height: 16px; padding: 2px; }
+}
+
 /* ── Match top offset to actual nav height ───────────────── */
 /* At ≤ 768px the nav shrinks to 56px — use 68px for breathing room */
 @media (max-width: 768px) {
@@ -4719,7 +4733,7 @@ body {
   .s3-stat-card     { padding: 10px 14px; min-width: 66px; }
   .s3-feat          { font-size: 8px; padding: 5px 11px; }
 
-  .mm-panel         { max-height: calc(100dvh - 16px); border-radius: 14px; }
+  .mm-panel         { max-height: calc(100dvh - 150px); border-radius: 14px; }
   .modal-title      { font-size: 16px; padding: 16px 44px 0; }
   .mm-tabs          { padding: 10px 14px 0; gap: 3px; }
   .mm-tab           { font-size: 9px; padding: 7px 12px; }
@@ -4744,7 +4758,7 @@ body {
   .s3-stat-label    { font-size: 7px; }
 
   .modal-overlay    { padding: 8px; }
-  .mm-panel         { border-radius: 12px; max-height: calc(100dvh - 16px); }
+  .mm-panel         { border-radius: 12px; max-height: calc(100dvh - 150px); }
   .modal-title      { font-size: 14px; padding: 14px 40px 0; letter-spacing: 0.1em; }
   .mm-tabs          { padding: 8px 10px 0; }
   .mm-tab           { font-size: 8px; padding: 6px 10px; }
