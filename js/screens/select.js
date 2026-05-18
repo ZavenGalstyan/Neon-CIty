@@ -30,10 +30,6 @@
   let selectedMapId    = CONFIG.MAPS[0].id;  // default: first map
   let selectedNeonTheme = 'cyan';  // Default color theme for Neon City
   let selectedWastelandTheme = 'orange';  // Default color theme for Wasteland
-  let customNeonColor  = 'default';
-  let customMask       = 'none';
-  let customEffect     = 'none';
-  let currentCharPage  = 1;
   let currentStep      = 1;
 
   const charCards    = document.querySelectorAll('.char-card');
@@ -64,6 +60,8 @@
       currentStep = n;
       _updateStepNav();
       if (n === 3) document.getElementById('playerNameInput')?.focus();
+      if (n !== 2) CharCustomize.hide();
+      else if (selectedCharId) CharCustomize.show(selectedCharId);
     }, 280);
   }
 
@@ -107,6 +105,7 @@
       startBtn.disabled = false;
       startBtnText.textContent = 'START GAME';
       _updateStepNav();
+      CharCustomize.show(selectedCharId);
     });
   });
 
@@ -272,56 +271,11 @@
   // Initialize wasteland with default theme
   updateWastelandTheme('orange');
 
-  // ── Character page switching ──────────────────────────────
-  const charTab1  = document.getElementById('charTab1');
-  const charTab2  = document.getElementById('charTab2');
-  const charPage1El = document.getElementById('charPage1');
-  const charPage2El = document.getElementById('charPage2');
-
-  function switchCharPage(page) {
-    currentCharPage = page;
-    if (page === 1) {
-      charPage1El.style.display = '';
-      charPage2El.style.display = 'none';
-      charTab1.classList.add('active');
-      charTab2.classList.remove('active');
-    } else {
-      charPage1El.style.display = 'none';
-      charPage2El.style.display = '';
-      charTab1.classList.remove('active');
-      charTab2.classList.add('active');
-    }
-  }
-
-  if (charTab1) charTab1.addEventListener('click', () => switchCharPage(1));
-  if (charTab2) charTab2.addEventListener('click', () => switchCharPage(2));
+  // All characters shown in one grid — no page switching needed
 
   // All maps are shown in a single scrollable grid — no page switching needed
 
-  // ── Customization ─────────────────────────────────────────
-  document.querySelectorAll('#colorSwatches .color-swatch').forEach(sw => {
-    sw.addEventListener('click', () => {
-      document.querySelectorAll('#colorSwatches .color-swatch').forEach(s => s.classList.remove('active'));
-      sw.classList.add('active');
-      customNeonColor = sw.dataset.color;
-    });
-  });
-
-  document.querySelectorAll('#maskOptions .cust-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('#maskOptions .cust-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      customMask = btn.dataset.mask;
-    });
-  });
-
-  document.querySelectorAll('#effectOptions .cust-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('#effectOptions .cust-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      customEffect = btn.dataset.effect;
-    });
-  });
+  // Customization is handled by CharCustomize (customize.js) — no code needed here
 
   // ── Start ────────────────────────────────────────────────
   startBtn.addEventListener('click', () => {
@@ -378,7 +332,7 @@
     localStorage.setItem('playerName',     nameVal || 'ANONYMOUS');
     localStorage.setItem('selectedChar',   JSON.stringify(charData));
     localStorage.setItem('selectedMap',    JSON.stringify(mapData));
-    localStorage.setItem('customization',  JSON.stringify({ neonColor: customNeonColor, mask: customMask, effect: customEffect }));
+    // customization already saved to localStorage by CharCustomize on every change
     window.location.href = 'game.html';
   });
 
@@ -396,23 +350,13 @@
   document.addEventListener('keydown', e => {
     const num = parseInt(e.key);
 
-    // 1-4 → pick character on current char page
+    // 1-4 → pick character
     if (num >= 1 && num <= 4) {
-      if (currentCharPage === 1) {
-        const card = charCards[num - 1];
-        if (card) card.click();
-      } else {
-        const card = charCards[5 + num];
-        if (card) card.click();
-      }
+      const card = charCards[num - 1];
+      if (card) card.click();
     }
 
-    // Shift+Tab = switch char page
-    if (e.code === 'Tab') {
-      e.preventDefault();
-      if (e.shiftKey) switchCharPage(currentCharPage === 1 ? 2 : 1);
-      return;
-    }
+    if (e.code === 'Tab') { e.preventDefault(); return; }
 
     // Escape = close modal
     if (e.code === 'Escape' && modesModal && modesModal.style.display !== 'none') {

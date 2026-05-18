@@ -41,14 +41,7 @@
 
 <!-- Characters -->
     <div class="char-section">
-      <!-- Character page tabs -->
-      <div class="page-nav" style="margin:0 0 8px">
-        <button class="page-tab active" id="charTab1">PAGE 1 · STREET CREW</button>
-        <button class="page-tab" id="charTab2">PAGE 2 · SPECIALISTS</button>
-      </div>
-
-      <!-- Page 1: Characters 1-16 -->
-      <div id="charPage1">
+      <!-- All characters in one scrollable grid -->
       <div class="characters-grid">
 
       <!-- 01 Gangster -->
@@ -255,86 +248,7 @@
         </div>
       </div>
 
-      <!-- 13 Timebreaker (COMING SOON) -->
-      <div class="char-card char-card-locked" data-char="timebreaker" data-coming-soon="true">
-        <span class="char-number">13</span>
-        <div class="char-coming-soon-overlay"><span class="cs-badge">COMING SOON</span></div>
-        <div class="char-avatar" data-char="timebreaker">
-          <canvas class="char-preview-canvas" data-char="timebreaker"></canvas>
-        </div>
-        <div class="char-info">
-          <h3>TIMEBREAKER</h3>
-          <p class="char-lore">Bend time. Break reality.</p>
-          <div class="stats">
-            <div class="stat"><span>SPEED</span><div class="stat-bar"><div class="stat-fill" style="width:70%"></div></div></div>
-            <div class="stat"><span>HEALTH</span><div class="stat-bar"><div class="stat-fill" style="width:58%"></div></div></div>
-            <div class="stat"><span>DAMAGE</span><div class="stat-bar"><div class="stat-fill" style="width:85%"></div></div></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 14 AI Avatar (COMING SOON) -->
-      <div class="char-card char-card-locked" data-char="ai_avatar" data-coming-soon="true">
-        <span class="char-number">14</span>
-        <div class="char-coming-soon-overlay"><span class="cs-badge">COMING SOON</span></div>
-        <div class="char-avatar" data-char="ai_avatar">
-          <canvas class="char-preview-canvas" data-char="ai_avatar"></canvas>
-        </div>
-        <div class="char-info">
-          <h3>AI AVATAR</h3>
-          <p class="char-lore">Adaptive intelligence.</p>
-          <div class="stats">
-            <div class="stat"><span>SPEED</span><div class="stat-bar"><div class="stat-fill" style="width:65%"></div></div></div>
-            <div class="stat"><span>HEALTH</span><div class="stat-bar"><div class="stat-fill" style="width:68%"></div></div></div>
-            <div class="stat"><span>DAMAGE</span><div class="stat-bar"><div class="stat-fill" style="width:75%"></div></div></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 15 Overlord (COMING SOON) -->
-      <div class="char-card char-card-locked" data-char="overlord" data-coming-soon="true">
-        <span class="char-number">15</span>
-        <div class="char-coming-soon-overlay"><span class="cs-badge">COMING SOON</span></div>
-        <div class="char-avatar" data-char="overlord">
-          <canvas class="char-preview-canvas" data-char="overlord"></canvas>
-        </div>
-        <div class="char-info">
-          <h3>THE OVERLORD</h3>
-          <p class="char-lore">Command the swarm.</p>
-          <div class="stats">
-            <div class="stat"><span>SPEED</span><div class="stat-bar"><div class="stat-fill" style="width:38%"></div></div></div>
-            <div class="stat"><span>HEALTH</span><div class="stat-bar"><div class="stat-fill" style="width:82%"></div></div></div>
-            <div class="stat"><span>DAMAGE</span><div class="stat-bar"><div class="stat-fill" style="width:55%"></div></div></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 16 Electric Eel (COMING SOON) -->
-      <div class="char-card char-card-locked" data-char="electric_eel" data-coming-soon="true">
-        <span class="char-number">16</span>
-        <div class="char-coming-soon-overlay"><span class="cs-badge">COMING SOON</span></div>
-        <div class="char-avatar" data-char="electric_eel">
-          <canvas class="char-preview-canvas" data-char="electric_eel"></canvas>
-        </div>
-        <div class="char-info">
-          <h3>ELECTRIC EEL</h3>
-          <p class="char-lore">High voltage. Stun ability.</p>
-          <div class="stats">
-            <div class="stat"><span>SPEED</span><div class="stat-bar"><div class="stat-fill" style="width:68%"></div></div></div>
-            <div class="stat"><span>HEALTH</span><div class="stat-bar"><div class="stat-fill" style="width:50%"></div></div></div>
-            <div class="stat"><span>DAMAGE</span><div class="stat-bar"><div class="stat-fill" style="width:80%"></div></div></div>
-          </div>
-        </div>
-      </div>
-
-    </div><!-- end .characters-grid page1 -->
-    </div><!-- end #charPage1 -->
-
-    <!-- Page 2: Characters 17-32 -->
-    <div id="charPage2" style="display:none">
-    <div class="characters-grid">
-
-      <!-- 17 Medic -->
+      <!-- 13 Medic -->
       <div class="char-card" data-char="medic">
         <span class="char-number">17</span>
         <div class="char-avatar" data-char="medic">
@@ -540,46 +454,82 @@
         </div>
       </div>
 
-      <!-- 29-32: Locked characters -->
-      <!-- 29 Shadow Lord (COMING SOON) -->
-      <div class="char-card char-card-locked" data-char="shadow_lord" data-coming-soon="true">
+      <!-- ── COMING SOON (bottom) ─────────────────────────── -->
+      <!-- Timebreaker (COMING SOON) -->
+      <div class="char-card char-card-locked" data-char="timebreaker" data-coming-soon="true">
         <span class="char-number">29</span>
         <div class="char-coming-soon-overlay"><span class="cs-badge">COMING SOON</span></div>
-        <div class="char-avatar" data-char="shadow_lord">
-          <canvas class="char-preview-canvas" data-char="shadow_lord"></canvas>
+        <div class="char-avatar" data-char="timebreaker">
+          <canvas class="char-preview-canvas" data-char="timebreaker"></canvas>
         </div>
         <div class="char-info">
-          <h3>SHADOW LORD</h3>
-          <p class="char-lore">Darkness incarnate.</p>
+          <h3>TIMEBREAKER</h3>
+          <p class="char-lore">Bend time. Break reality.</p>
           <div class="stats">
-            <div class="stat"><span>SPEED</span><div class="stat-bar"><div class="stat-fill" style="width:72%"></div></div></div>
-            <div class="stat"><span>HEALTH</span><div class="stat-bar"><div class="stat-fill" style="width:65%"></div></div></div>
-            <div class="stat"><span>DAMAGE</span><div class="stat-bar"><div class="stat-fill" style="width:90%"></div></div></div>
+            <div class="stat"><span>SPEED</span><div class="stat-bar"><div class="stat-fill" style="width:70%"></div></div></div>
+            <div class="stat"><span>HEALTH</span><div class="stat-bar"><div class="stat-fill" style="width:58%"></div></div></div>
+            <div class="stat"><span>DAMAGE</span><div class="stat-bar"><div class="stat-fill" style="width:85%"></div></div></div>
           </div>
         </div>
       </div>
 
-      <!-- 30 Plasma Titan (COMING SOON) -->
-      <div class="char-card char-card-locked" data-char="plasma_titan" data-coming-soon="true">
+      <!-- AI Avatar (COMING SOON) -->
+      <div class="char-card char-card-locked" data-char="ai_avatar" data-coming-soon="true">
         <span class="char-number">30</span>
         <div class="char-coming-soon-overlay"><span class="cs-badge">COMING SOON</span></div>
-        <div class="char-avatar" data-char="plasma_titan">
-          <canvas class="char-preview-canvas" data-char="plasma_titan"></canvas>
+        <div class="char-avatar" data-char="ai_avatar">
+          <canvas class="char-preview-canvas" data-char="ai_avatar"></canvas>
         </div>
         <div class="char-info">
-          <h3>PLASMA TITAN</h3>
-          <p class="char-lore">Pure energy. Devastation.</p>
+          <h3>AI AVATAR</h3>
+          <p class="char-lore">Adaptive intelligence.</p>
           <div class="stats">
-            <div class="stat"><span>SPEED</span><div class="stat-bar"><div class="stat-fill" style="width:32%"></div></div></div>
-            <div class="stat"><span>HEALTH</span><div class="stat-bar"><div class="stat-fill" style="width:95%"></div></div></div>
-            <div class="stat"><span>DAMAGE</span><div class="stat-bar"><div class="stat-fill" style="width:100%"></div></div></div>
+            <div class="stat"><span>SPEED</span><div class="stat-bar"><div class="stat-fill" style="width:65%"></div></div></div>
+            <div class="stat"><span>HEALTH</span><div class="stat-bar"><div class="stat-fill" style="width:68%"></div></div></div>
+            <div class="stat"><span>DAMAGE</span><div class="stat-bar"><div class="stat-fill" style="width:75%"></div></div></div>
           </div>
         </div>
       </div>
 
-      <!-- 31 Quantum Ghost (COMING SOON) -->
-      <div class="char-card char-card-locked" data-char="quantum_ghost" data-coming-soon="true">
+      <!-- Overlord (COMING SOON) -->
+      <div class="char-card char-card-locked" data-char="overlord" data-coming-soon="true">
         <span class="char-number">31</span>
+        <div class="char-coming-soon-overlay"><span class="cs-badge">COMING SOON</span></div>
+        <div class="char-avatar" data-char="overlord">
+          <canvas class="char-preview-canvas" data-char="overlord"></canvas>
+        </div>
+        <div class="char-info">
+          <h3>THE OVERLORD</h3>
+          <p class="char-lore">Command the swarm.</p>
+          <div class="stats">
+            <div class="stat"><span>SPEED</span><div class="stat-bar"><div class="stat-fill" style="width:38%"></div></div></div>
+            <div class="stat"><span>HEALTH</span><div class="stat-bar"><div class="stat-fill" style="width:82%"></div></div></div>
+            <div class="stat"><span>DAMAGE</span><div class="stat-bar"><div class="stat-fill" style="width:55%"></div></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Electric Eel (COMING SOON) -->
+      <div class="char-card char-card-locked" data-char="electric_eel" data-coming-soon="true">
+        <span class="char-number">32</span>
+        <div class="char-coming-soon-overlay"><span class="cs-badge">COMING SOON</span></div>
+        <div class="char-avatar" data-char="electric_eel">
+          <canvas class="char-preview-canvas" data-char="electric_eel"></canvas>
+        </div>
+        <div class="char-info">
+          <h3>ELECTRIC EEL</h3>
+          <p class="char-lore">High voltage. Stun ability.</p>
+          <div class="stats">
+            <div class="stat"><span>SPEED</span><div class="stat-bar"><div class="stat-fill" style="width:68%"></div></div></div>
+            <div class="stat"><span>HEALTH</span><div class="stat-bar"><div class="stat-fill" style="width:50%"></div></div></div>
+            <div class="stat"><span>DAMAGE</span><div class="stat-bar"><div class="stat-fill" style="width:80%"></div></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quantum Ghost (COMING SOON) -->
+      <div class="char-card char-card-locked" data-char="quantum_ghost" data-coming-soon="true">
+        <span class="char-number">33</span>
         <div class="char-coming-soon-overlay"><span class="cs-badge">COMING SOON</span></div>
         <div class="char-avatar" data-char="quantum_ghost">
           <canvas class="char-preview-canvas" data-char="quantum_ghost"></canvas>
@@ -595,9 +545,9 @@
         </div>
       </div>
 
-      <!-- 32 Omega Prime (COMING SOON) -->
+      <!-- Omega Prime (COMING SOON) -->
       <div class="char-card char-card-locked" data-char="omega_prime" data-coming-soon="true">
-        <span class="char-number">32</span>
+        <span class="char-number">34</span>
         <div class="char-coming-soon-overlay"><span class="cs-badge">COMING SOON</span></div>
         <div class="char-avatar" data-char="omega_prime">
           <canvas class="char-preview-canvas" data-char="omega_prime"></canvas>
@@ -613,52 +563,75 @@
         </div>
       </div>
 
-    </div><!-- end .characters-grid page2 -->
-    </div><!-- end #charPage2 -->
+    </div><!-- end .characters-grid -->
     </div><!-- end .char-section -->
 
 
-    <!-- ── Character Customization ──────────────────────── -->
-    <div class="customize-section">
-      <div class="section-divider">
-        <span class="section-label">CUSTOMIZE CHARACTER</span>
+    <!-- ── Character Customize Panel ──────────────────────── -->
+    <div class="cpp-panel" id="cppPanel" style="display:none">
+
+      <!-- Left: big rotating preview -->
+      <div class="cpp-stage">
+        <div class="cpp-wrap" id="cppWrap">
+          <canvas id="cppCanvas"></canvas>
+        </div>
+        <div class="cpp-name" id="cppName"></div>
+        <div class="cpp-hint">&#8592; DRAG TO ROTATE &#8594;</div>
       </div>
-      <div class="customize-panel">
+
+      <!-- Right: controls -->
+      <div class="cpp-controls">
 
         <!-- Neon Color -->
-        <div class="cust-group">
-          <div class="cust-label">NEON COLOR</div>
-          <div class="color-swatches" id="colorSwatches">
-            <div class="color-swatch active" data-color="default" title="Default" style="background:linear-gradient(135deg,#FF4466,#44EEFF,#44FF88,#CC88FF);box-shadow:0 0 8px rgba(255,255,255,0.4)"></div>
-            <div class="color-swatch" data-color="#FF4466" style="background:#FF4466;box-shadow:0 0 8px #FF4466" title="Crimson"></div>
-            <div class="color-swatch" data-color="#44EEFF" style="background:#44EEFF;box-shadow:0 0 8px #44EEFF" title="Cyan"></div>
-            <div class="color-swatch" data-color="#44FF88" style="background:#44FF88;box-shadow:0 0 8px #44FF88" title="Green"></div>
-            <div class="color-swatch" data-color="#FFDD44" style="background:#FFDD44;box-shadow:0 0 8px #FFDD44" title="Gold"></div>
-            <div class="color-swatch" data-color="#FF8800" style="background:#FF8800;box-shadow:0 0 8px #FF8800" title="Orange"></div>
-            <div class="color-swatch" data-color="#CC88FF" style="background:#CC88FF;box-shadow:0 0 8px #CC88FF" title="Purple"></div>
-            <div class="color-swatch" data-color="#FF66AA" style="background:#FF66AA;box-shadow:0 0 8px #FF66AA" title="Pink"></div>
+        <div class="cpp-group">
+          <div class="cpp-label">NEON COLOR</div>
+          <div class="cpp-row">
+            <div class="cpp-color active" data-color="default" title="Default" style="background:linear-gradient(135deg,#FF4466,#44EEFF,#44FF88,#CC88FF);box-shadow:0 0 8px rgba(255,255,255,0.35)"></div>
+            <div class="cpp-color" data-color="#FF4466" style="background:#FF4466;box-shadow:0 0 8px #FF4466" title="Crimson"></div>
+            <div class="cpp-color" data-color="#44EEFF" style="background:#44EEFF;box-shadow:0 0 8px #44EEFF" title="Cyan"></div>
+            <div class="cpp-color" data-color="#44FF88" style="background:#44FF88;box-shadow:0 0 8px #44FF88" title="Green"></div>
+            <div class="cpp-color" data-color="#FFDD44" style="background:#FFDD44;box-shadow:0 0 8px #FFDD44" title="Gold"></div>
+            <div class="cpp-color" data-color="#FF8800" style="background:#FF8800;box-shadow:0 0 8px #FF8800" title="Orange"></div>
+            <div class="cpp-color" data-color="#CC88FF" style="background:#CC88FF;box-shadow:0 0 8px #CC88FF" title="Purple"></div>
+            <div class="cpp-color" data-color="#FF66AA" style="background:#FF66AA;box-shadow:0 0 8px #FF66AA" title="Pink"></div>
           </div>
         </div>
 
-        <!-- Mask -->
-        <div class="cust-group">
-          <div class="cust-label">MASK</div>
-          <div class="cust-options" id="maskOptions">
-            <button class="cust-btn active" data-mask="none">NONE</button>
-            <button class="cust-btn" data-mask="skull">SKULL</button>
-            <button class="cust-btn" data-mask="visor">VISOR</button>
-            <button class="cust-btn" data-mask="cyber">CYBER</button>
+        <!-- Accessory -->
+        <div class="cpp-group">
+          <div class="cpp-label">ACCESSORY</div>
+          <div class="cpp-row cpp-row--wrap">
+            <button class="cpp-acc-btn active" data-acc="none">NONE</button>
+            <button class="cpp-acc-btn" data-acc="glasses">GLASSES</button>
+            <button class="cpp-acc-btn" data-acc="shades">SHADES</button>
+            <button class="cpp-acc-btn" data-acc="goggles">GOGGLES</button>
+            <button class="cpp-acc-btn" data-acc="hat">HAT</button>
+            <button class="cpp-acc-btn" data-acc="crown">CROWN</button>
+            <button class="cpp-acc-btn" data-acc="halo">HALO</button>
+            <button class="cpp-acc-btn" data-acc="horns">HORNS</button>
+            <button class="cpp-acc-btn" data-acc="mohawk">MOHAWK</button>
+            <button class="cpp-acc-btn" data-acc="bandana">BANDANA</button>
+            <button class="cpp-acc-btn" data-acc="mask">MASK</button>
+            <button class="cpp-acc-btn" data-acc="chain">CHAIN</button>
+            <button class="cpp-acc-btn" data-acc="earphones">EARPHONES</button>
           </div>
         </div>
 
-        <!-- Cyber Effect -->
-        <div class="cust-group">
-          <div class="cust-label">CYBER EFFECT</div>
-          <div class="cust-options" id="effectOptions">
-            <button class="cust-btn active" data-effect="none">NONE</button>
-            <button class="cust-btn" data-effect="aura">AURA</button>
-            <button class="cust-btn" data-effect="static">STATIC</button>
-            <button class="cust-btn" data-effect="glitch">GLITCH</button>
+        <!-- Effect -->
+        <div class="cpp-group">
+          <div class="cpp-label">CYBER EFFECT</div>
+          <div class="cpp-row cpp-row--wrap">
+            <button class="cpp-eff-btn active" data-eff="none">NONE</button>
+            <button class="cpp-eff-btn" data-eff="aura">AURA</button>
+            <button class="cpp-eff-btn" data-eff="fire">FIRE</button>
+            <button class="cpp-eff-btn" data-eff="lightning">LIGHTNING</button>
+            <button class="cpp-eff-btn" data-eff="ice">ICE</button>
+            <button class="cpp-eff-btn" data-eff="rainbow">RAINBOW</button>
+            <button class="cpp-eff-btn" data-eff="dark">DARK VOID</button>
+            <button class="cpp-eff-btn" data-eff="speed">SPEED</button>
+            <button class="cpp-eff-btn" data-eff="smoke">SMOKE</button>
+            <button class="cpp-eff-btn" data-eff="glitch">GLITCH</button>
+            <button class="cpp-eff-btn" data-eff="static">STATIC</button>
           </div>
         </div>
 
@@ -2547,6 +2520,7 @@
   <script src="js/ws.js"></script>
   <script src="js/multiplayer.js"></script>
   <script src="js/social-ui.js"></script>
+  <script src="js/screens/customize.js"></script>
   <script src="js/screens/select.js"></script>
   <script>
     Auth.mountNavbar();

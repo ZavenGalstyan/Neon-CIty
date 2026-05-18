@@ -224,14 +224,13 @@ body {
    ════════════════════════════════════════════════════════════ */
 .characters-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   gap: 12px;
 }
 .characters-grid--2col {
   grid-template-columns: repeat(2, 1fr);
 }
-@media (max-width: 760px) { .characters-grid { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 420px) { .characters-grid { grid-template-columns: 1fr; } }
+/* characters-grid responsive handled in main @media block below */
 
 .char-card {
   position: relative;
@@ -264,6 +263,45 @@ body {
   content: '✓'; position: absolute; top: 6px; right: 8px;
   font-size: 13px; color: #fff; font-weight: bold;
   text-shadow: 0 0 8px #fff; z-index: 3;
+}
+
+/* ── Quantum Ghost special card ──────────────────────────── */
+.char-card--quantum-ghost {
+  border-color: rgba(160,80,255,0.45);
+  background: linear-gradient(135deg, rgba(38,8,72,0.95) 0%, rgba(8,4,28,0.98) 100%);
+  box-shadow: 0 0 24px rgba(160,80,255,0.18), inset 0 0 40px rgba(140,60,255,0.06);
+}
+.char-card--quantum-ghost:hover {
+  border-color: rgba(180,100,255,0.75);
+  box-shadow: 0 0 40px rgba(160,80,255,0.35), 0 14px 44px rgba(0,0,0,0.6);
+}
+.quantum-ghost-overlay {
+  position: absolute; inset: 0; z-index: 4;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+  background: linear-gradient(135deg, rgba(80,20,160,0.55), rgba(20,5,60,0.65));
+}
+.quantum-ghost-shimmer {
+  position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(105deg, transparent 30%, rgba(180,100,255,0.18) 50%, transparent 70%);
+  background-size: 250% 100%;
+  animation: qg-shimmer 2.8s ease-in-out infinite;
+}
+@keyframes qg-shimmer {
+  0%   { background-position: -100% 0; }
+  100% { background-position: 250% 0; }
+}
+.quantum-ghost-badge {
+  font-family: 'Orbitron', sans-serif; font-size: 8px; letter-spacing: 0.3em;
+  color: #CC88FF;
+  text-shadow: 0 0 14px rgba(200,120,255,0.9), 0 0 28px rgba(160,80,255,0.6);
+  padding: 4px 14px; border-radius: 20px;
+  border: 1px solid rgba(200,120,255,0.45);
+  background: rgba(80,20,160,0.35);
+  position: relative; z-index: 5; white-space: nowrap;
+}
+.quantum-ghost-sub {
+  font-family: 'Orbitron', sans-serif; font-size: 7px; letter-spacing: 0.2em;
+  color: rgba(200,160,255,0.6); position: relative; z-index: 5;
 }
 
 /* Left avatar column */
@@ -479,8 +517,7 @@ body {
   grid-template-columns: repeat(4, 1fr);
   gap: 10px;
 }
-@media (max-width: 900px) { .maps-grid { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 540px) { .maps-grid { grid-template-columns: repeat(2, 1fr); } }
+/* maps-grid responsive handled in main @media block below */
 
 /* ═══════════════════════════════════════════════
    MAP CARD — full-cover preview with glass info overlay
@@ -1174,36 +1211,197 @@ body {
 }
 
 /* ── Character Customization ──────────────────────────────── */
-.customize-section { display: flex; flex-direction: column; gap: 14px; }
+/* ════════════════════════════════════════════════════════════
+   CHARACTER CUSTOMIZE PANEL  (big preview + controls)
+   ════════════════════════════════════════════════════════════ */
+.cpp-panel {
+  display: flex; flex-direction: row; gap: 28px;
+  align-items: flex-start;
+  margin-top: 12px;
+  padding: 24px 28px;
+  background: linear-gradient(135deg, rgba(6,6,20,0.97), rgba(3,3,14,0.99));
+  border: 1px solid rgba(68,238,255,0.16);
+  border-radius: 18px;
+  box-shadow: 0 0 60px rgba(68,238,255,0.05), 0 28px 70px rgba(0,0,0,0.7);
+  position: relative; overflow: hidden;
+}
+.cpp-panel::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(68,238,255,0.55), rgba(204,136,255,0.55), transparent);
+}
+
+/* Stage (left — rotating preview) */
+.cpp-stage {
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+  flex-shrink: 0;
+}
+.cpp-wrap {
+  width: 220px; height: 300px;
+  cursor: grab; user-select: none;
+  position: relative;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 16px;
+  background: radial-gradient(ellipse at 50% 60%, rgba(68,238,255,0.06) 0%, rgba(0,0,0,0) 70%);
+  border: 1px solid rgba(255,255,255,0.05);
+  overflow: hidden;
+}
+.cpp-wrap::before {
+  content: ''; position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 50% 100%, rgba(68,238,255,0.08) 0%, transparent 65%);
+  pointer-events: none;
+}
+#cppCanvas {
+  display: block; width: 220px; height: 300px;
+  transform-origin: center center;
+  position: relative; z-index: 1;
+}
+.cpp-name {
+  font-family: 'Orbitron', sans-serif; font-size: 13px; font-weight: 700;
+  letter-spacing: 0.2em; color: #fff;
+  text-shadow: 0 0 16px rgba(68,238,255,0.6);
+  text-align: center;
+}
+.cpp-hint {
+  font-family: 'Orbitron', sans-serif; font-size: 8px; letter-spacing: 0.25em;
+  color: rgba(255,255,255,0.25); text-align: center;
+  animation: cpp-blink 2.5s ease-in-out infinite;
+}
+@keyframes cpp-blink {
+  0%, 100% { opacity: 0.3; } 50% { opacity: 0.7; }
+}
+
+/* Controls (right) */
+.cpp-controls {
+  flex: 1; display: flex; flex-direction: column; gap: 22px;
+  min-width: 0;
+}
+.cpp-group { display: flex; flex-direction: column; gap: 12px; }
+.cpp-label {
+  font-family: 'Orbitron', sans-serif; font-size: 8px; letter-spacing: 0.32em;
+  color: rgba(68,238,255,0.65); text-transform: uppercase;
+  display: flex; align-items: center; gap: 10px;
+}
+.cpp-label::before {
+  content: ''; width: 3px; height: 14px; flex-shrink: 0; border-radius: 2px;
+  background: linear-gradient(to bottom, #44EEFF, #CC88FF);
+  box-shadow: 0 0 8px rgba(68,238,255,0.7);
+}
+.cpp-row { display: flex; gap: 10px; align-items: center; flex-wrap: nowrap; }
+.cpp-row--wrap { flex-wrap: wrap; gap: 8px; }
+
+/* Color swatches */
+.cpp-color {
+  width: 30px; height: 30px; border-radius: 50%; cursor: pointer;
+  border: 2px solid rgba(255,255,255,0.1); flex-shrink: 0;
+  transition: transform 0.22s cubic-bezier(0.34,1.56,0.64,1), border-color 0.18s, box-shadow 0.22s;
+}
+.cpp-color:hover  { transform: scale(1.28) translateY(-2px); border-color: rgba(255,255,255,0.35); }
+.cpp-color.active { border-color: #fff; transform: scale(1.32) translateY(-2px); }
+
+/* Accessory / Effect buttons */
+.cpp-acc-btn, .cpp-eff-btn {
+  font-family: 'Orbitron', sans-serif; font-size: 9px; letter-spacing: 0.14em;
+  padding: 8px 14px; border-radius: 8px; cursor: pointer;
+  background: rgba(255,255,255,0.03); color: rgba(255,255,255,0.38);
+  border: 1px solid rgba(255,255,255,0.08);
+  transition: all 0.18s ease; position: relative; overflow: hidden;
+}
+.cpp-acc-btn:hover, .cpp-eff-btn:hover {
+  color: #fff; border-color: rgba(255,255,255,0.25);
+  background: rgba(255,255,255,0.07); transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.3);
+}
+.cpp-acc-btn.active, .cpp-eff-btn.active {
+  color: #44EEFF; border-color: rgba(68,238,255,0.55);
+  background: rgba(68,238,255,0.1);
+  text-shadow: 0 0 12px rgba(68,238,255,0.8);
+  box-shadow: 0 0 20px rgba(68,238,255,0.15), inset 0 0 14px rgba(68,238,255,0.07);
+  transform: translateY(-1px);
+}
+
+/* cpp-panel responsive handled in main @media block below */
+
+.customize-section { display: flex; flex-direction: column; gap: 0; margin-top: 6px; }
+.customize-section .section-divider { margin-bottom: 14px; }
 .customize-panel {
-  display: flex; flex-wrap: wrap; gap: 24px;
-  background: var(--panel); border: 1px solid var(--border);
-  border-radius: 10px; padding: 18px 22px;
+  display: flex; flex-wrap: wrap; gap: 0;
+  background: linear-gradient(135deg, rgba(8,8,24,0.97) 0%, rgba(4,4,16,0.99) 100%);
+  border: 1px solid rgba(68,238,255,0.18);
+  border-radius: 16px; padding: 0; overflow: hidden;
+  box-shadow: 0 0 50px rgba(68,238,255,0.06), 0 24px 64px rgba(0,0,0,0.7);
+  position: relative;
 }
-.cust-group { display: flex; flex-direction: column; gap: 10px; min-width: 160px; }
+.customize-panel::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent 0%, rgba(68,238,255,0.6) 30%, rgba(204,136,255,0.6) 70%, transparent 100%);
+  z-index: 1;
+}
+.customize-panel::after {
+  content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent 0%, rgba(68,238,255,0.15) 50%, transparent 100%);
+}
+.cust-group {
+  display: flex; flex-direction: column; gap: 14px;
+  padding: 24px 28px; flex: 1; min-width: 160px;
+  border-right: 1px solid rgba(255,255,255,0.04);
+  position: relative;
+}
+.cust-group:last-child { border-right: none; }
+.cust-group:hover { background: rgba(255,255,255,0.01); }
 .cust-label {
-  font-family: 'Orbitron', sans-serif; font-size: 9px;
-  letter-spacing: 0.2em; color: var(--muted); text-transform: uppercase;
+  font-family: 'Orbitron', sans-serif; font-size: 8px;
+  letter-spacing: 0.32em; color: rgba(68,238,255,0.65);
+  text-transform: uppercase; display: flex; align-items: center; gap: 10px;
 }
-.color-swatches { display: flex; gap: 8px; flex-wrap: wrap; }
+.cust-label::before {
+  content: ''; display: inline-block; width: 3px; height: 14px; flex-shrink: 0;
+  background: linear-gradient(to bottom, #44EEFF, #CC88FF);
+  border-radius: 2px; box-shadow: 0 0 8px rgba(68,238,255,0.7);
+}
+.color-swatches { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
 .color-swatch {
-  width: 26px; height: 26px; border-radius: 50%; cursor: pointer;
-  border: 2px solid transparent; transition: transform 0.15s, border-color 0.15s;
+  width: 30px; height: 30px; border-radius: 50%; cursor: pointer;
+  border: 2px solid rgba(255,255,255,0.08);
+  transition: transform 0.22s cubic-bezier(0.34,1.56,0.64,1), border-color 0.18s, box-shadow 0.22s;
+  position: relative;
 }
-.color-swatch:hover  { transform: scale(1.18); }
-.color-swatch.active { border-color: #fff; transform: scale(1.22); }
+.color-swatch::after {
+  content: ''; position: absolute; inset: -5px; border-radius: 50%;
+  border: 1.5px solid transparent;
+  transition: border-color 0.22s, box-shadow 0.22s;
+  pointer-events: none;
+}
+.color-swatch:hover { transform: scale(1.28) translateY(-3px); border-color: rgba(255,255,255,0.35); }
+.color-swatch.active {
+  border-color: rgba(255,255,255,0.95); transform: scale(1.32) translateY(-3px);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+}
+.color-swatch.active::after { border-color: rgba(255,255,255,0.25); }
 .cust-options { display: flex; gap: 8px; flex-wrap: wrap; }
 .cust-btn {
   font-family: 'Orbitron', sans-serif; font-size: 9px; letter-spacing: 0.15em;
-  padding: 6px 12px; border-radius: 4px; cursor: pointer;
-  background: transparent; color: var(--muted);
-  border: 1px solid var(--border); transition: all 0.15s;
+  padding: 9px 16px; border-radius: 8px; cursor: pointer;
+  background: rgba(255,255,255,0.03); color: rgba(255,255,255,0.38);
+  border: 1px solid rgba(255,255,255,0.08);
+  transition: all 0.18s ease; position: relative; overflow: hidden;
 }
-.cust-btn:hover { color: #fff; border-color: rgba(255,255,255,0.3); }
+.cust-btn::before {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.06), transparent);
+  opacity: 0; transition: opacity 0.18s;
+}
+.cust-btn:hover {
+  color: #fff; border-color: rgba(255,255,255,0.22);
+  background: rgba(255,255,255,0.06); transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.3);
+}
+.cust-btn:hover::before { opacity: 1; }
 .cust-btn.active {
-  color: #fff; border-color: rgba(68,238,255,0.6);
-  background: rgba(68,238,255,0.08);
-  text-shadow: 0 0 8px #44EEFF;
+  color: #44EEFF; border-color: rgba(68,238,255,0.55);
+  background: rgba(68,238,255,0.1);
+  text-shadow: 0 0 12px rgba(68,238,255,0.8);
+  box-shadow: 0 0 20px rgba(68,238,255,0.15), inset 0 0 14px rgba(68,238,255,0.07);
+  transform: translateY(-1px);
 }
 
 /* ════════════════════════════════════════════════════════════
@@ -1230,7 +1428,7 @@ body {
   transition: color 0.15s;
 }
 .mobile-warning-close:hover { color: rgba(255,255,255,0.9); }
-@media (max-width: 1024px) {
+@media (min-width: 768px) and (max-width: 1024px) {
   .mobile-warning-banner { display: flex; }
 }
 
@@ -1391,113 +1589,241 @@ body {
 .modal-feat b { color: rgba(255,255,255,0.8); }
 
 /* ═══════════════════════════════════════════════════════════
-   RESPONSIVE — phone / tablet / notebook / desktop
-   Breakpoints: 480 · 768 · 1024
+   RESPONSIVE — best-practice cascade (max-width, largest first)
+   Breakpoints: 1199 · 899 · 767 · 599 · 479 · 359
    ═══════════════════════════════════════════════════════════ */
 
-/* ── Notebook / small desktop  (769 – 1024px) ───────────── */
-@media (max-width: 1024px) {
-  .select-container { padding: 0 16px; }
-  .char-card        { height: 116px; }
+/* ── Notebook / medium desktop  (≤ 1199px) ─────────────── */
+@media (max-width: 1199px) {
+  .select-container { padding: 0 14px; }
+  .characters-grid  { gap: 10px; }
+  .char-card        { height: 114px; }
   .char-info h3     { font-size: 10px; }
+  .maps-grid        { gap: 9px; }
+  .map-card         { height: 155px; }
+  .map-preview      { height: 100% !important; }
 }
 
-/* ── Tablet  (481 – 768px) ──────────────────────────────── */
-@media (max-width: 768px) {
-  .select-screen    { padding: 14px 0 28px; }
-  .select-container { padding: 0 10px; gap: 8px; }
+/* ── Tablet landscape  (≤ 899px) ───────────────────────── */
+@media (max-width: 899px) {
+  .select-screen    { padding: 12px 0 26px; }
+  .select-container { padding: 0 12px; gap: 8px; }
 
   /* Logo */
-  .logo-text        { font-size: clamp(20px, 7vw, 36px); }
-  .logo-sub         { font-size: 9px; letter-spacing: 0.2em; }
-  .game-logo        { gap: 10px; }
+  .logo-text        { font-size: clamp(22px, 5.5vw, 38px); }
+  .logo-sub         { font-size: 8px; letter-spacing: 0.2em; }
+  .game-logo        { gap: 8px; }
 
-  /* Character cards — 2×2 grid */
-  .characters-grid  { grid-template-columns: repeat(2, 1fr); gap: 6px; }
+  /* Characters — 3 columns */
+  .characters-grid  { grid-template-columns: repeat(3, 1fr); gap: 8px; }
   .char-card        { height: 108px; }
-  .char-avatar      { width: 64px; min-width: 64px; }
+  .char-avatar      { width: 66px; min-width: 66px; }
   .char-figure      { width: 44px; height: 58px; }
+  .char-info        { padding: 9px 10px; }
   .char-info h3     { font-size: 9px; }
   .char-lore        { font-size: 9px; }
   .stat span        { font-size: 7px; width: 38px; }
   .stat-bar         { height: 3px; }
+  .char-number      { font-size: 8px; }
 
-  /* Page nav tabs */
-  .page-nav         { gap: 5px; margin: 8px 0 3px; }
-  .page-tab         { font-size: 8px; padding: 7px 8px; }
-  .section-label    { font-size: 8px; letter-spacing: 0.2em; }
-
-  /* Maps — 2-column grid */
-  .maps-grid        { grid-template-columns: repeat(2, 1fr); gap: 8px; }
-  .map-card         { height: 130px; }
-  .map-preview      { height: 90px; }
+  /* Maps — 3 columns */
+  .maps-grid        { grid-template-columns: repeat(3, 1fr); gap: 9px; }
+  .map-card         { height: 140px; }
+  .map-preview      { height: 100% !important; }
   .map-name         { font-size: 11px; }
   .map-desc         { font-size: 9px; line-height: 1.3; }
   .map-tag          { font-size: 7px; padding: 2px 5px; }
   .map-num          { font-size: 9px; }
-  .map-info         { padding: 6px 8px 6px; }
+  .map-info         { padding: 6px 9px 6px; }
 
-  /* Special row cards — 2-column grid on tablet */
-  .special-maps-row {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 7px;
-    flex-direction: unset;
-  }
-  .map-card--arena,
-  .map-card--experimental,
-  .map-card--life   { flex-direction: column; align-items: flex-start; gap: 0; padding: 0; height: auto; }
-  .map-card--arena .map-preview,
-  .map-card--experimental .map-preview,
-  .map-card--life .map-preview  { width: 100%; height: 50px; }
-  .map-card--arena .map-info,
-  .map-card--experimental .map-info,
-  .map-card--life .map-info     { padding: 6px 8px; }
+  /* Taller special cards scale down */
+  .map-card--neon-city { height: 168px; }
+  .map-card--wasteland { height: 166px; }
 
-  /* Customize */
-  .customize-panel  { flex-wrap: wrap; gap: 6px; }
-  .cust-group       { width: calc(50% - 3px); min-width: 0; }
+  /* Page nav tabs */
+  .page-nav         { gap: 6px; margin: 8px 0 3px; }
+  .page-tab         { font-size: 8px; padding: 7px 10px; }
+  .section-label    { font-size: 8px; letter-spacing: 0.22em; }
+
+  /* Step nav */
+  .step-label       { font-size: 10px; margin-bottom: 12px; }
+  .step-nav-btn     { font-size: 10px; padding: 8px 18px; }
+
+  /* CPP panel — slightly smaller canvas */
+  .cpp-panel        { padding: 20px 22px; gap: 22px; }
+  .cpp-wrap         { width: 195px; height: 265px; }
+  #cppCanvas        { width: 195px !important; height: 265px !important; }
+
+  /* Customize panel — 2 groups per row */
+  .customize-panel  { flex-wrap: wrap; }
+  .cust-group       { width: 50%; min-width: 0; padding: 14px 16px; border-right: none; border-bottom: 1px solid rgba(255,255,255,0.04); }
+  .cust-group:nth-child(odd) { border-right: 1px solid rgba(255,255,255,0.04); }
+  .cust-group:last-child     { border-bottom: none; }
   .cust-label       { font-size: 8px; }
-  .cust-btn         { font-size: 8px; padding: 4px 8px; }
-
-  /* Color swatches */
+  .cust-btn         { font-size: 8px; padding: 6px 10px; }
   .color-swatch     { width: 22px; height: 22px; }
 
   /* Start area */
-  .start-area       { gap: 10px; }
-  .start-btn        { font-size: 13px; padding: 12px 20px; }
+  .start-area       { gap: 12px; }
+  .start-btn        { font-size: 14px; padding: 14px 32px; }
   .start-hint       { font-size: 8px; }
-  .modes-btn        { font-size: 9px; padding: 6px 10px; }
+  .modes-btn        { font-size: 9px; padding: 6px 12px; }
+  .name-input       { font-size: 16px; }
 }
 
-/* ── Phone  (≤ 480px) ───────────────────────────────────── */
-@media (max-width: 480px) {
-  .select-screen    { padding: 10px 0 24px; }
-  .select-container { padding: 0 8px; gap: 7px; }
+/* ── Tablet portrait  (≤ 767px) ────────────────────────── */
+@media (max-width: 767px) {
+  .select-screen    { padding: 10px 0 22px; }
+  .select-container { padding: 0 10px; gap: 7px; }
+  .logo-text        { font-size: clamp(20px, 6.5vw, 34px); }
 
-  /* Logo */
-  .logo-text        { font-size: clamp(18px, 8vw, 28px); }
-  .logo-sub         { display: none; }   /* hide tagline to save space */
+  /* Characters — 2 columns */
+  .characters-grid  { grid-template-columns: repeat(2, 1fr); gap: 6px; }
+  .char-card        { height: 102px; }
+  .char-avatar      { width: 60px; min-width: 60px; }
+  .char-figure      { width: 40px; height: 54px; }
+  .char-info        { padding: 8px 9px; }
+  .char-info h3     { font-size: 9px; }
+  .char-lore        { font-size: 8px; }
+  .stat span        { font-size: 7px; width: 34px; }
+  .char-number      { font-size: 8px; }
 
-  /* Character cards — single column */
-  .characters-grid  { grid-template-columns: 1fr; gap: 5px; }
+  /* Maps — 2 columns */
+  .maps-grid        { grid-template-columns: repeat(2, 1fr); gap: 7px; }
+  .map-card         { height: 128px; }
+  .map-preview      { height: 100% !important; }
+  .map-name         { font-size: 10.5px; }
+  .map-desc         { font-size: 8.5px; }
+  .map-tag          { font-size: 6.5px; padding: 2px 4px; }
+  .map-info         { padding: 5px 8px 5px; }
+
+  /* Taller special cards */
+  .map-card--neon-city { height: 158px; }
+  .map-card--wasteland { height: 156px; }
+
+  /* CPP — vertical layout */
+  .cpp-panel        { flex-direction: column; padding: 16px; gap: 16px; }
+  .cpp-wrap         { width: 165px; height: 225px; }
+  #cppCanvas        { width: 165px !important; height: 225px !important; }
+  .cpp-stage        { width: 100%; align-items: center; }
+  .cpp-acc-btn, .cpp-eff-btn { font-size: 8px; padding: 6px 10px; }
+
+  /* Start area */
+  .start-btn        { font-size: 13px; padding: 12px 22px; }
+  .modes-btn        { font-size: 8px; padding: 5px 10px; }
+  .name-input       { font-size: 15px; }
+}
+
+/* ── Large phone  (≤ 599px) ─────────────────────────────── */
+@media (max-width: 599px) {
+  .select-screen    { padding: 8px 0 20px; }
+  .select-container { padding: 0 8px; gap: 6px; }
+  .logo-text        { font-size: clamp(18px, 7.5vw, 30px); }
+  .logo-sub         { font-size: 7.5px; letter-spacing: 0.16em; }
+
+  /* Char */
   .char-card        { height: 96px; }
   .char-avatar      { width: 56px; min-width: 56px; }
   .char-figure      { width: 38px; height: 50px; }
-  .char-number      { font-size: 8px; }
+  .char-info        { padding: 7px 8px; }
 
-  /* Map cards — single column */
-  .maps-grid        { grid-template-columns: 1fr; gap: 8px; }
+  /* Maps */
   .map-card         { height: 120px; }
-  .map-preview      { height: 90px; }
+  .map-name         { font-size: 10px; }
+  .map-desc         { font-size: 8px; line-height: 1.2; }
+  .map-info         { padding: 4px 7px 4px; }
+  .map-tag          { font-size: 6px; padding: 1px 4px; }
 
-  /* Customize: each group full width */
+  /* Taller special */
+  .map-card--neon-city { height: 150px; }
+  .map-card--wasteland { height: 148px; }
+  .neon-theme-btn, .wasteland-theme-btn { width: 24px; height: 24px; }
+
+  /* Tabs / labels */
+  .page-tab         { font-size: 7.5px; padding: 6px 8px; }
+  .section-label    { font-size: 7px; letter-spacing: 0.18em; }
+
+  /* Step nav */
+  .step-nav         { gap: 16px; padding: 10px 0 5px; }
+  .step-nav-btn     { font-size: 9px; padding: 7px 14px; }
+  .step-label       { font-size: 9px; margin-bottom: 10px; }
+
+  /* Start area — stack vertically, full-width buttons */
+  .start-area       { flex-direction: column; gap: 8px; align-items: stretch; }
+  .start-btn        { width: 100%; font-size: 13px; padding: 13px 20px; order: 0; box-sizing: border-box; }
+  .start-hint       { display: none; }
+  .modes-btn        { width: 100%; font-size: 8px; padding: 8px 12px; order: 1; text-align: center; box-sizing: border-box; }
+
+  /* Name input */
+  .name-input-wrap  { margin: 10px auto 16px; width: 100%; max-width: 100%; }
+  .name-input       { font-size: 14px; padding: 10px 12px; }
+
+  /* CPP canvas */
+  .cpp-wrap         { width: 150px; height: 205px; }
+  #cppCanvas        { width: 150px !important; height: 205px !important; }
+}
+
+/* ── Phone  (≤ 479px) ────────────────────────────────────── */
+@media (max-width: 479px) {
+  .select-container { padding: 0 6px; gap: 5px; }
+  .logo-text        { font-size: clamp(16px, 8.5vw, 26px); }
+  .logo-sub         { display: none; }
+
+  /* Char — stay 2 cols, tighten avatar */
+  .characters-grid  { gap: 5px; }
+  .char-card        { height: 88px; }
+  .char-avatar      { width: 50px; min-width: 50px; }
+  .char-figure      { width: 34px; height: 45px; }
+  .char-info        { padding: 6px 7px; }
+  .char-info h3     { font-size: 8px; }
+  .char-lore        { display: none; }
+  .stat span        { font-size: 6px; width: 30px; }
+  .stat-bar         { height: 2.5px; }
+  .char-number      { font-size: 7px; }
+  .char-key         { display: none; }
+
+  /* Maps — stay 2 cols, tighten */
+  .maps-grid        { gap: 5px; }
+  .map-card         { height: 112px; }
+  .map-name         { font-size: 9.5px; }
+  .map-desc         { font-size: 7.5px; }
+  .map-tag          { font-size: 6px; padding: 1px 3px; }
+  .map-info         { padding: 4px 5px 4px; }
+  .map-num          { display: none; }
+
+  /* Taller special */
+  .map-card--neon-city { height: 140px; }
+  .map-card--wasteland { height: 138px; }
+  .neon-theme-btn, .wasteland-theme-btn { width: 20px; height: 20px; }
+
+  /* CPP */
+  .cpp-panel        { padding: 12px; gap: 12px; }
+  .cpp-wrap         { width: 130px; height: 175px; }
+  #cppCanvas        { width: 130px !important; height: 175px !important; }
+  .cpp-acc-btn, .cpp-eff-btn { font-size: 7.5px; padding: 5px 8px; }
+
+  /* Customize */
   .cust-group       { width: 100%; }
 
-  /* Start area mobile */
-  .start-area       { flex-direction: column; gap: 8px; }
-  .start-btn        { width: 100%; font-size: 13px; order: 0; }
-  .start-hint       { display: none; }
-  .modes-btn        { font-size: 8px; padding: 5px 8px; order: 1; }
+  /* Tabs */
+  .page-tab         { font-size: 7px; padding: 5px 6px; letter-spacing: 0.05em; }
+  .section-label    { font-size: 6.5px; }
+}
+
+/* ── Very small phone  (≤ 359px) ────────────────────────── */
+@media (max-width: 359px) {
+  .select-container { padding: 0 5px; gap: 4px; }
+  .char-card        { height: 82px; }
+  .char-avatar      { width: 44px; min-width: 44px; }
+  .char-figure      { width: 30px; height: 40px; }
+  .char-info        { padding: 5px 5px; }
+  .map-card         { height: 104px; }
+  .map-card--neon-city { height: 130px; }
+  .map-card--wasteland { height: 128px; }
+  .map-name         { font-size: 9px; }
+  .map-desc         { display: none; }
+  .step-nav-btn     { font-size: 8px; padding: 6px 10px; }
+  .name-input       { font-size: 13px; padding: 9px 10px; }
 }
 
 /* ── Virtual touch controls (game.html) ── */
@@ -3801,7 +4127,7 @@ body {
 
   /* Map cards */
   .map-card              { height: 110px; }
-  .map-preview           { height: 80px; }
+  .map-preview           { height: 100% !important; }
   .map-name              { font-size: 9px; }
   .map-desc              { font-size: 8px; }
   .map-info              { padding: 5px 7px 5px; gap: 3px; }
@@ -3829,8 +4155,8 @@ body {
 
   /* Customization */
   .color-swatch          { width: 24px; height: 24px; }
-  .cust-btn              { font-size: 7px; padding: 5px 7px; }
-  .customize-panel       { padding: 14px 14px; gap: 14px; }
+  .cust-btn              { font-size: 7px; padding: 6px 8px; }
+  .cust-group            { padding: 14px 16px; }
 
   /* Section labels */
   .section-label         { font-size: 7px; letter-spacing: 0.16em; }
@@ -4092,50 +4418,31 @@ body {
    COMPREHENSIVE RESPONSIVE FIX  — all screens < 1600px
    ════════════════════════════════════════════════════════════ */
 
-/* ── 1: Notebook / small desktop  (1025px – 1599px) ──────── */
-@media (max-width: 1599px) and (min-width: 1025px) {
-  .select-container          { max-width: 100%; }
-  .char-card                 { height: 112px; }
-  .char-info h3              { font-size: 10px; letter-spacing: 0.06em; }
-  .characters-grid           { gap: 10px; }
-  .maps-grid                 { gap: 10px; }
-  .map-card                  { height: 140px; }
-  .map-preview               { height: 95px; }
-  .map-card--neon-city,
-  .map-card--wasteland,
-  .map-card--jungle,
-  .map-card--robot-city,
-
+/* ── 1: Notebook / small desktop  (1025px – 1199px) ──────── */
+/* handled by main responsive block; just ensure container fills */
+@media (max-width: 1199px) and (min-width: 1025px) {
+  .select-container { max-width: 100%; }
 }
 
-/* ── 2: Fix wide map cards (inline "span 3") on 2-col grid ─ */
-/* At 760px the grid switches to 2 cols; span-3 inline style  */
-/* creates an implicit 3rd track and breaks the layout.        */
-@media (max-width: 760px) {
-  /* Force full-width (1/-1 = all available columns) */
+/* ── 2: Neon City / Wasteland — full-width on ≤767px grids ─ */
+/* These cards have theme-color pickers; spanning full width   */
+/* gives them more room on 2-col grids without breaking layout.*/
+@media (max-width: 767px) {
   .maps-grid > [data-map="neon_city"],
   .maps-grid > [data-map="wasteland"] {
     grid-column: 1 / -1 !important;
-    flex-direction: column   !important;
-    min-height: auto         !important;
-    padding: 12px            !important;
-    gap: 0                   !important;
   }
   .maps-grid > [data-map="neon_city"] .map-preview,
   .maps-grid > [data-map="wasteland"] .map-preview {
-    width: 100%     !important;
-    height: 80px    !important;
-    min-height: 80px !important;
+    width: 100%    !important;
+    height: 100%   !important;
   }
-  /* feature-maps-row: 2 cols on large tablet instead of jumping to 1 */
   .feature-maps-row { grid-template-columns: repeat(2, 1fr); }
 }
 
-/* ── 3: Phone (≤ 480px) map layout ───────────────────────── */
-@media (max-width: 480px) {
-  /* feature-maps-row: single column on phone */
+/* ── 3: Phone (≤ 479px) map layout ───────────────────────── */
+@media (max-width: 479px) {
   .feature-maps-row           { grid-template-columns: 1fr; }
-  /* wide cards stay full-width (already 1-col grid) */
   .maps-grid > [data-map="neon_city"],
   .maps-grid > [data-map="wasteland"] { grid-column: 1 / -1 !important; }
 }
@@ -4187,23 +4494,14 @@ body {
 .select-screen,
 .select-container { overflow-x: hidden; }
 
-/* ── 10: Map card previews on wide cards — tablet fix ─────── */
-@media (max-width: 760px) {
-  /* jungle / robot-city / desert: switch to column layout */
-  .map-card--jungle,
-  .map-card--robot-city,
-  .map-card--desert {
-    flex-direction: column !important;
-    min-height: auto       !important;
-    padding: 12px          !important;
-  }
-  .map-card--jungle .map-preview,
-  .map-card--robot-city .map-preview,
-  .map-card--desert .map-preview {
-    width: 100%     !important;
-    height: 75px    !important;
-    min-height: 75px !important;
-  }
+/* ── 10: Map card previews — always full height of card ───── */
+/* All map cards use absolute positioning; no column overrides  */
+/* needed. Just ensure map-preview covers the full card height. */
+.map-card--jungle .map-preview,
+.map-card--robot-city .map-preview,
+.map-card--desert .map-preview {
+  width: 100% !important;
+  height: 100% !important;
 }
 
 /* ── 11: Char cards — min readable size on tiny screens ───── */
