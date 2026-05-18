@@ -2430,18 +2430,69 @@
       <!-- STEP 3: Name + Start -->
       <div id="step3" class="step">
         <p class="step-label">STEP 3 OF 3 &nbsp;·&nbsp; ENTER YOUR IDENTITY</p>
-        <div id="namePreview" class="name-preview"></div>
-        <div class="name-input-wrap">
-          <div class="name-label">PLAYER NAME</div>
-          <input id="playerNameInput" class="name-input" type="text" maxlength="20"
-            placeholder="ANONYMOUS" autocomplete="off" spellcheck="false">
+
+        <!-- Selected summary bar -->
+        <div class="s3-summary">
+          <div class="s3-summary-item">
+            <span class="s3-summary-label">CHARACTER</span>
+            <span class="s3-summary-val" id="namePreview">—</span>
+          </div>
+          <div class="s3-summary-sep">✦</div>
+          <div class="s3-summary-item">
+            <span class="s3-summary-label">MAP</span>
+            <span class="s3-summary-val" id="s3MapName">—</span>
+          </div>
         </div>
-        <div class="start-area">
-          <button class="start-btn" id="startBtn" disabled>
-            <span id="startBtnText">SELECT A CHARACTER</span>
-          </button>
-          <button class="modes-btn" id="modesBtn">📋 MAPS &amp; MODES</button>
+
+        <!-- Name input -->
+        <div class="s3-center">
+          <div class="s3-prompt">⬡ ENTER YOUR CALL SIGN ⬡</div>
+          <div class="name-input-wrap">
+            <input id="playerNameInput" class="name-input" type="text" maxlength="20"
+              placeholder="ANONYMOUS" autocomplete="off" spellcheck="false">
+          </div>
+          <div class="start-area">
+            <button class="start-btn" id="startBtn" disabled>
+              <span id="startBtnText">SELECT A CHARACTER</span>
+            </button>
+            <button class="modes-btn" id="modesBtn">⬡ MAPS &amp; MODES</button>
+          </div>
         </div>
+
+        <!-- Game stats row -->
+        <div class="s3-stats">
+          <div class="s3-stat-card">
+            <div class="s3-stat-num">30</div>
+            <div class="s3-stat-label">CHARACTERS</div>
+          </div>
+          <div class="s3-stat-card">
+            <div class="s3-stat-num">17</div>
+            <div class="s3-stat-label">MAPS</div>
+          </div>
+          <div class="s3-stat-card">
+            <div class="s3-stat-num">17</div>
+            <div class="s3-stat-label">GAME MODES</div>
+          </div>
+          <div class="s3-stat-card">
+            <div class="s3-stat-num">40+</div>
+            <div class="s3-stat-label">WEAPONS</div>
+          </div>
+        </div>
+
+        <!-- Feature tags -->
+        <div class="s3-features">
+          <div class="s3-feat">🏪 Building Interiors</div>
+          <div class="s3-feat">🚗 Car Dealership</div>
+          <div class="s3-feat">🎰 Casino</div>
+          <div class="s3-feat">⚗ Experimental Weapons</div>
+          <div class="s3-feat">👮 Wanted System</div>
+          <div class="s3-feat">🌙 Day / Night Cycle</div>
+          <div class="s3-feat">🌀 Global Events</div>
+          <div class="s3-feat">🛡 Hire Bodyguards</div>
+          <div class="s3-feat">💣 Grenades</div>
+          <div class="s3-feat">👥 Multiplayer</div>
+        </div>
+
       </div><!-- end #step3 -->
 
     </div><!-- end #stepWrapper -->
@@ -2457,56 +2508,99 @@
       <button class="step-nav-btn" id="nextBtn">NEXT ▶</button>
     </div>
 
-    <!-- Maps & Modes Modal -->
+    <!-- Maps & Modes Modal (redesigned) -->
     <div class="modal-overlay" id="modesModal" style="display:none">
-      <div class="modal-panel">
+      <div class="modal-panel mm-panel">
         <button class="modal-close" id="modesModalClose">×</button>
         <h2 class="modal-title">MAPS &amp; MODES</h2>
-        <div class="modal-section-label">STANDARD MAPS</div>
-        <div class="modal-grid">
-          <div class="modal-map-item" style="--mc:#44EEFF"><span>DOWNTOWN</span><span class="modal-size">40×40</span><span class="modal-desc">Dense neon city. Rain weather.</span></div>
-          <div class="modal-map-item" style="--mc:#FF8800"><span>INDUSTRIAL</span><span class="modal-size">36×36</span><span class="modal-desc">Wide warehouses. Smoke weather.</span></div>
-          <div class="modal-map-item" style="--mc:#44FF88"><span>SUBURBS</span><span class="modal-size">50×50</span><span class="modal-desc">Tight residential grid. Clear.</span></div>
-          <div class="modal-map-item" style="--mc:#FF4444"><span>RUINS</span><span class="modal-size">38×38</span><span class="modal-desc">Collapsed city. Sandstorm.</span></div>
-          <div class="modal-map-item" style="--mc:#00AACC"><span>DOCKS</span><span class="modal-size">34×34</span><span class="modal-desc">Port district. Foggy alleys.</span></div>
-          <div class="modal-map-item" style="--mc:#FFCC00"><span>CASINO STRIP</span><span class="modal-size">44×44</span><span class="modal-desc">Neon boulevard. Has a casino.</span></div>
+
+        <!-- Tab bar -->
+        <div class="mm-tabs">
+          <button class="mm-tab active" data-tab="maps">🗺 MAPS</button>
+          <button class="mm-tab" data-tab="modes">⚡ MODES</button>
+          <button class="mm-tab" data-tab="upgrades">✦ UPGRADES</button>
+          <button class="mm-tab" data-tab="features">⬡ FEATURES</button>
         </div>
-        <div class="modal-section-label">PAGE 2 — NEW MAPS</div>
-        <div class="modal-grid">
-          <div class="modal-map-item" style="--mc:#00CCDD"><span>HARBOR</span><span class="modal-size">38×38</span><span class="modal-desc">Foggy industrial waterfront.</span></div>
-          <div class="modal-map-item" style="--mc:#FF44CC"><span>NEON DISTRICT</span><span class="modal-size">42×42</span><span class="modal-desc">Pulsing neon. Dense city heart.</span></div>
-          <div class="modal-map-item" style="--mc:#88AA44"><span>MILITARY BASE</span><span class="modal-size">36×36</span><span class="modal-desc">Fortified. Armored patrols.</span></div>
-          <div class="modal-map-item" style="--mc:#FF6622"><span>BADLANDS</span><span class="modal-size">44×44</span><span class="modal-desc">Scorched wasteland. No cover.</span></div>
+
+        <!-- Tab bodies -->
+        <div class="mm-body">
+
+          <!-- MAPS -->
+          <div class="mm-tab-content active" data-tab="maps">
+            <div class="mm-grid">
+              <div class="mm-card" data-color="#44EEFF" data-title="NEON CITY" data-size="42×42" data-desc="The ultimate neon playground. Choose your color theme — Cyan, Orange, Green, Red, Blue or Gold. Classic dense city with rain, neon signs, and relentless gang warfare."><div class="mm-card-icon">🌆</div><div class="mm-card-name">NEON CITY</div><div class="mm-card-size">42×42</div></div>
+              <div class="mm-card" data-color="#AA44FF" data-title="GALACTICA" data-size="40×40" data-desc="A living galaxy under siege. Alien swarms, plasma storms, and the Galactic Overlord await. Zero-gravity zones, floating asteroid platforms — a map unlike anything on the ground."><div class="mm-card-icon">🌌</div><div class="mm-card-name">GALACTICA</div><div class="mm-card-size">40×40</div></div>
+              <div class="mm-card" data-color="#FFD700" data-title="THE TOWER" data-size="10 FLOORS" data-desc="One skyscraper. 10 floors. Kill every enemy on each floor, then ride the elevator to the next. Each floor brings harder enemies and better weapons. Reach the penthouse — if you survive."><div class="mm-card-icon">🏢</div><div class="mm-card-name">THE TOWER</div><div class="mm-card-size">10 FLOORS</div></div>
+              <div class="mm-card" data-color="#87CEEB" data-title="SKY REALM" data-size="AERIAL" data-desc="Battle above the clouds. Airplanes streak past, eagles dive from above, cloud formations replace buildings. Survive long enough to face the Storm Emperor — ruler of the sky."><div class="mm-card-icon">☁</div><div class="mm-card-name">SKY REALM</div><div class="mm-card-size">AERIAL</div></div>
+              <div class="mm-card" data-color="#FF0044" data-title="ARENA" data-size="24×24" data-desc="Enclosed kill-zone. Kill-based waves with a boss every 4 rounds. No shop. No escape. The smallest and most brutal map — only pure combat skill keeps you alive."><div class="mm-card-icon">☠</div><div class="mm-card-name">ARENA</div><div class="mm-card-size">24×24</div></div>
+              <div class="mm-card" data-color="#44FF88" data-title="ZOMBIE OUTBREAK" data-size="36×36" data-desc="Neon City has fallen. The infected never stop coming. Melee-only horde survival — no guns. Survive as long as you can against endless waves of the undead."><div class="mm-card-icon">☣</div><div class="mm-card-name">ZOMBIE OUTBREAK</div><div class="mm-card-size">36×36</div></div>
+              <div class="mm-card" data-color="#66DD44" data-title="DINO WORLD" data-size="44×44" data-desc="Primordial earth reborn. Raptors, water dinos and pterosaurs hunt you across jungle terrain. Survive long enough to face the Rex King — the apex predator of all time."><div class="mm-card-icon">🦕</div><div class="mm-card-name">DINO WORLD</div><div class="mm-card-size">44×44</div></div>
+              <div class="mm-card" data-color="#FF8800" data-title="WASTELAND" data-size="42×42" data-desc="Massive post-apocalyptic terrain with huge crumbling buildings. Choose your color theme. Radioactive zones slow movement and drain HP. Lawless — every survivor is your enemy."><div class="mm-card-icon">☢</div><div class="mm-card-name">WASTELAND</div><div class="mm-card-size">42×42</div></div>
+              <div class="mm-card" data-color="#FF4400" data-title="BLITZ MODE" data-size="28×28" data-desc="Triple speed carnage. Everyone moves at 3× speed and earns 5× money. No time to think — only react. The most chaotic and fast-paced map in the game."><div class="mm-card-icon">⚡</div><div class="mm-card-name">BLITZ MODE</div><div class="mm-card-size">28×28</div></div>
+              <div class="mm-card" data-color="#88DDFF" data-title="FROZEN TUNDRA" data-size="38×38" data-desc="A city locked in eternal winter. Blizzard rages and ice soldiers never stop coming. Slippery terrain, frozen traps, and a relentless cold that slows everything — including your bullets."><div class="mm-card-icon">❄</div><div class="mm-card-name">FROZEN TUNDRA</div><div class="mm-card-size">38×38</div></div>
+              <div class="mm-card" data-color="#00CCFF" data-title="OCEAN DEPTHS" data-size="44×44" data-desc="A vast ocean arena of floating ships and platforms. Water warriors rise from the deep, sea monsters patrol the edges. Fight on swaying decks above an endless abyss."><div class="mm-card-icon">🌊</div><div class="mm-card-name">OCEAN DEPTHS</div><div class="mm-card-size">44×44</div></div>
+              <div class="mm-card" data-color="#FF9933" data-title="METROPOLIS" data-size="90×60" data-desc="The biggest map ever. A vast living city with commercial towers, residential flats, industrial zones, gangster slums, and a lush central park. 4 unique zones to explore and dominate."><div class="mm-card-icon">🌆</div><div class="mm-card-name">METROPOLIS</div><div class="mm-card-size">90×60</div></div>
+              <div class="mm-card" data-color="#44CC22" data-title="JUNGLE SAFARI" data-size="40×40" data-desc="Gorillas, tigers, rhinos and predatory birds hunt you through dense jungle terrain. Use the undergrowth for cover and survive long enough to face the Jungle Lord."><div class="mm-card-icon">🌴</div><div class="mm-card-name">JUNGLE SAFARI</div><div class="mm-card-size">40×40</div></div>
+              <div class="mm-card" data-color="#D4A017" data-title="DESERT SANDS" data-size="40×40" data-desc="Mummies rise from the sand, scorpions strike from below, and sandstorms blind your vision. Defy the Pharaoh God in the ultimate ancient battlefield."><div class="mm-card-icon">🏜</div><div class="mm-card-name">DESERT SANDS</div><div class="mm-card-size">40×40</div></div>
+              <div class="mm-card" data-color="#00DDFF" data-title="ROBOT CITY" data-size="44×44" data-desc="A machine metropolis gone rogue. Drones, mechs, and androids hunt you through electrified corridors. Automated turrets and conveyor belts reshape combat. Face the Titan Sentinel."><div class="mm-card-icon">🤖</div><div class="mm-card-name">ROBOT CITY</div><div class="mm-card-size">44×44</div></div>
+              <div class="mm-card" data-color="#FF8800" data-title="HARDCORE MODE" data-size="40×40" data-desc="Enemies deal 2× damage. You earn 3× money. Only legends survive. The highest risk and highest reward map in the game — every mistake is lethal, every kill is profitable."><div class="mm-card-icon">💀</div><div class="mm-card-name">HARDCORE MODE</div><div class="mm-card-size">40×40</div></div>
+              <div class="mm-card" data-color="#FFDD00" data-title="CAMPAIGN" data-size="38×38" data-desc="100 levels of escalating warfare. A boss enemy appears every 10 levels — each one tougher than the last. The ultimate test of skill and endurance. Can you claim the crown at level 100?"><div class="mm-card-icon">⭐</div><div class="mm-card-name">CAMPAIGN</div><div class="mm-card-size">100 LEVELS</div></div>
+            </div>
+          </div>
+
+          <!-- MODES -->
+          <div class="mm-tab-content" data-tab="modes">
+            <div class="mm-grid">
+              <div class="mm-card" data-color="#88DDFF" data-title="LIFE MODE" data-size="SANDBOX · 60×60" data-desc="Full sandbox — no enemies, just life. Buy a home, eat at restaurants, drive vehicles and explore the city at your own pace. The largest map in the game with zero combat pressure."><div class="mm-card-icon">🏡</div><div class="mm-card-name">LIFE MODE</div><div class="mm-card-size">SANDBOX</div></div>
+              <div class="mm-card" data-color="#FF2244" data-title="SURVIVAL MODE" data-size="NO SHOP · 40×40" data-desc="No shop access. Blood rain darkens the sky. Only what you start with. Every resource is precious and every bullet counts. Die fighting or outlast every wave to claim survival."><div class="mm-card-icon">🩸</div><div class="mm-card-name">SURVIVAL MODE</div><div class="mm-card-size">NO SHOP</div></div>
+              <div class="mm-card" data-color="#AABB44" data-title="SIEGE" data-size="DEFEND · 36×36" data-desc="Defend your base from relentless waves of attackers. Place turrets and purchase upgrades between rounds. Last man standing wins — but the siege only escalates over time."><div class="mm-card-icon">🛡</div><div class="mm-card-name">SIEGE</div><div class="mm-card-size">DEFEND</div></div>
+              <div class="mm-card" data-color="#44CCFF" data-title="MULTIPLAYER" data-size="ONLINE · UP TO 8" data-desc="Fight alongside or against real players online. Create a room, invite friends, or join a public lobby. Customize your character before joining. Works on any map."><div class="mm-card-icon">👥</div><div class="mm-card-name">MULTIPLAYER</div><div class="mm-card-size">ONLINE</div></div>
+            </div>
+          </div>
+
+          <!-- UPGRADES -->
+          <div class="mm-tab-content" data-tab="upgrades">
+            <div class="mm-grid">
+              <div class="mm-card" data-color="#FFEE44" data-title="DODGE" data-size="+6%/LEVEL" data-desc="Grants a passive chance to completely dodge an incoming bullet. Stack multiple levels to become nearly untouchable. Incredibly powerful against rapid-fire enemies. Max 5 levels."><div class="mm-card-icon">✦</div><div class="mm-card-name">DODGE</div><div class="mm-card-size">+6%/LEVEL</div></div>
+              <div class="mm-card" data-color="#FFD700" data-title="WEALTH" data-size="+20%/LEVEL" data-desc="Earn significantly more money from every enemy kill. Stack multiple levels to maximize gold income and afford powerful shop items much sooner than other players."><div class="mm-card-icon">$</div><div class="mm-card-name">WEALTH</div><div class="mm-card-size">+20%/LEVEL</div></div>
+              <div class="mm-card" data-color="#FF44AA" data-title="LIFE LEECH" data-size="+2 HP/KILL" data-desc="Restore 2 HP every time you kill an enemy. Stay alive longer in extended fights without needing medkits. Pairs extremely well with high-damage characters who kill quickly."><div class="mm-card-icon">♦</div><div class="mm-card-name">LIFE LEECH</div><div class="mm-card-size">+2 HP/KILL</div></div>
+              <div class="mm-card" data-color="#FF6644" data-title="CRITICAL HIT" data-size="+8%/LEVEL" data-desc="Adds a chance to deal 2× bullet damage on any shot. Combined with high fire-rate weapons, this can absolutely devastate enemies. Stack for terrifying damage output."><div class="mm-card-icon">!</div><div class="mm-card-name">CRITICAL HIT</div><div class="mm-card-size">+8%/LEVEL</div></div>
+              <div class="mm-card" data-color="#AAFFEE" data-title="AMMO CAP" data-size="+25%/LEVEL" data-desc="Increases your maximum ammo capacity and the fire-rate bonus from ammo pickups. Never run dry in the middle of a firefight. Essential for automatic weapon builds."><div class="mm-card-icon">◉</div><div class="mm-card-name">AMMO CAP</div><div class="mm-card-size">+25%/LEVEL</div></div>
+              <div class="mm-card" data-color="#44FF88" data-title="SPEED BOOST" data-size="+10%/LEVEL" data-desc="Permanently increases movement speed. Stack it to outrun enemies, reposition faster, and escape danger. Essential for aggressive play styles and characters with low base speed."><div class="mm-card-icon">⚡</div><div class="mm-card-name">SPEED BOOST</div><div class="mm-card-size">+10%/LEVEL</div></div>
+              <div class="mm-card" data-color="#CC88FF" data-title="ARMOR PLATING" data-size="+15 HP/LEVEL" data-desc="Permanently increases maximum health. Essential for tank builds. Combine with Life Leech for near-immortality. The most reliable upgrade for beginners learning the game."><div class="mm-card-icon">🛡</div><div class="mm-card-name">ARMOR PLATING</div><div class="mm-card-size">+15 HP/LEVEL</div></div>
+              <div class="mm-card" data-color="#FF8800" data-title="GRENADE PACK" data-size="×2 GRENADES" data-desc="Doubles your grenade carry capacity. Grenades are thrown with the G key toward your mouse cursor and deal devastating area damage — perfect for clearing clustered enemies."><div class="mm-card-icon">💣</div><div class="mm-card-name">GRENADE PACK</div><div class="mm-card-size">×2 GRENADES</div></div>
+            </div>
+          </div>
+
+          <!-- FEATURES -->
+          <div class="mm-tab-content" data-tab="features">
+            <div class="mm-grid mm-grid--features">
+              <div class="mm-card mm-card--feat" data-color="#44EEFF" data-title="BUILDING INTERIORS" data-size="" data-desc="Press E near any door to enter a building. Inside you'll find enemies, loot crates, shops, and secret passages. Some buildings have multiple floors with escalating difficulty."><div class="mm-card-icon">🏪</div><div class="mm-card-name">BUILDING INTERIORS</div></div>
+              <div class="mm-card mm-card--feat" data-color="#FF8800" data-title="CAR DEALERSHIP" data-size="" data-desc="Visit the Car Dealership building to purchase vehicles, weapons, and grenades. Vehicles massively increase movement speed and can ram enemies, dealing area damage on impact."><div class="mm-card-icon">🚗</div><div class="mm-card-name">CAR DEALERSHIP</div></div>
+              <div class="mm-card mm-card--feat" data-color="#FFCC00" data-title="CASINO" data-size="" data-desc="The Casino in Casino Strip features slot machines and table games. Gamble your hard-earned money for a chance at legendary items. High risk — but the jackpot can change everything."><div class="mm-card-icon">🎰</div><div class="mm-card-name">CASINO</div></div>
+              <div class="mm-card mm-card--feat" data-color="#CC88FF" data-title="EXPERIMENTAL WEAPONS" data-size="" data-desc="Rare weapons found in special loot crates: Time Freeze Rifle, Gravity Rifle, Electric Whip, and Plasma Shotgun. Each weapon completely changes the combat meta when equipped."><div class="mm-card-icon">⚗</div><div class="mm-card-name">EXPERIMENTAL WEAPONS</div></div>
+              <div class="mm-card mm-card--feat" data-color="#FF4444" data-title="GRENADES" data-size="" data-desc="Buy grenades from the dealership. Press G to throw them toward your mouse cursor for precise targeting. They deal devastating area damage and can destroy entire vehicle clusters."><div class="mm-card-icon">💣</div><div class="mm-card-name">GRENADES</div></div>
+              <div class="mm-card mm-card--feat" data-color="#FF6622" data-title="WANTED SYSTEM" data-size="" data-desc="Build up a 4-star wanted level by killing innocents or attacking police. At maximum wanted level, elite police forces and armed pursuit drones hunt you relentlessly across the map."><div class="mm-card-icon">👮</div><div class="mm-card-name">WANTED SYSTEM</div></div>
+              <div class="mm-card mm-card--feat" data-color="#AADDFF" data-title="DAY / NIGHT CYCLE" data-size="" data-desc="The world transitions between day and night in real time. At night, a secret Black Market vendor spawns in a hidden location — offering rare items unavailable during the day."><div class="mm-card-icon">🌙</div><div class="mm-card-name">DAY / NIGHT CYCLE</div></div>
+              <div class="mm-card mm-card--feat" data-color="#44FF88" data-title="GLOBAL EVENTS" data-size="" data-desc="Random global events shake up gameplay: Blackout (all lights off), Riot (civilians fight back), Corporate Invasion (elite mercs drop in), and Glitch Mode (reality itself breaks)."><div class="mm-card-icon">🌀</div><div class="mm-card-name">GLOBAL EVENTS</div></div>
+              <div class="mm-card mm-card--feat" data-color="#FFD700" data-title="BODYGUARDS" data-size="" data-desc="Hire loyal bodyguards from the in-game shop. They follow you into battle, fight alongside you, and can be upgraded with better weapons and armor. Bring a squad to the hardest missions."><div class="mm-card-icon">🛡</div><div class="mm-card-name">BODYGUARDS</div></div>
+              <div class="mm-card mm-card--feat" data-color="#FF44CC" data-title="MULTIPLAYER ROOMS" data-size="" data-desc="Create or join multiplayer rooms with up to 8 players. Customize your character before the match, vote on a map, and fight cooperatively or against each other in real-time."><div class="mm-card-icon">👥</div><div class="mm-card-name">MULTIPLAYER ROOMS</div></div>
+              <div class="mm-card mm-card--feat" data-color="#44EEFF" data-title="SHOP SYSTEM" data-size="" data-desc="The in-game shop opens between waves. Buy weapons, upgrade stats, hire bodyguards, purchase vehicles, and equip special items. Efficient money management separates good players from great ones."><div class="mm-card-icon">🛒</div><div class="mm-card-name">SHOP SYSTEM</div></div>
+              <div class="mm-card mm-card--feat" data-color="#FF4466" data-title="BOSS BATTLES" data-size="" data-desc="Massive boss enemies appear at wave milestones. Each has unique attack patterns, enormous health pools, and powerful special moves. Defeating them drops legendary loot unavailable anywhere else."><div class="mm-card-icon">💀</div><div class="mm-card-name">BOSS BATTLES</div></div>
+            </div>
+          </div>
+
+        </div><!-- end .mm-body -->
+
+        <!-- Detail bar (shows on card click) -->
+        <div class="mm-detail" id="mmDetail">
+          <div class="mm-detail-inner">
+            <div class="mm-detail-title" id="mmDetailTitle">SELECT AN ITEM TO VIEW DETAILS</div>
+            <div class="mm-detail-desc" id="mmDetailDesc">Click any card above to learn more about maps, modes, upgrades and features.</div>
+          </div>
         </div>
-        <div class="modal-section-label">SPECIAL MODES</div>
-        <div class="modal-grid">
-          <div class="modal-map-item" style="--mc:#88DDFF"><span>🏙 LIFE MODE</span><span class="modal-size">60×60</span><span class="modal-desc">Sandbox. Buy home, eat, drive. No enemies.</span></div>
-          <div class="modal-map-item" style="--mc:#FF0044"><span>☠ ARENA</span><span class="modal-size">24×24</span><span class="modal-desc">Kill-based waves. Boss every 4. No shop.</span></div>
-          <div class="modal-map-item" style="--mc:#44FF88"><span>☣ ZOMBIE OUTBREAK</span><span class="modal-size">36×36</span><span class="modal-desc">Zombie hordes. Melee combat. Endless.</span></div>
-          <div class="modal-map-item" style="--mc:#FF2244"><span>☠ SURVIVAL MODE</span><span class="modal-size">40×40</span><span class="modal-desc">No shop. Blood rain. Die or fight.</span></div>
-          <div class="modal-map-item" style="--mc:#FF8800"><span>⚡ HARDCORE MODE</span><span class="modal-size">40×40</span><span class="modal-desc">2× enemy damage. 3× money earned.</span></div>
-        </div>
-        <div class="modal-section-label">NEW UPGRADES (SHOP)</div>
-        <div class="modal-grid">
-          <div class="modal-map-item" style="--mc:#FFEE44"><span>✦ DODGE</span><span class="modal-size">+6%/level</span><span class="modal-desc">Chance to dodge incoming bullets.</span></div>
-          <div class="modal-map-item" style="--mc:#FFD700"><span>$ WEALTH</span><span class="modal-size">+20%/level</span><span class="modal-desc">Earn more money per kill.</span></div>
-          <div class="modal-map-item" style="--mc:#FF44AA"><span>♦ LIFE LEECH</span><span class="modal-size">+2HP/kill</span><span class="modal-desc">Heal a little with every kill.</span></div>
-          <div class="modal-map-item" style="--mc:#FF6644"><span>! CRITICAL HIT</span><span class="modal-size">+8%/level</span><span class="modal-desc">Chance to deal 2× bullet damage.</span></div>
-          <div class="modal-map-item" style="--mc:#AAFFEE"><span>◉ AMMO CAP</span><span class="modal-size">+25%/level</span><span class="modal-desc">Increase ammo fire-rate bonus.</span></div>
-        </div>
-        <div class="modal-section-label">FEATURES</div>
-        <div class="modal-features">
-          <div class="modal-feat">🏪 <b>Building Interiors</b> — Press E near doors to enter combat-filled rooms</div>
-          <div class="modal-feat">🚗 <b>Car Dealership</b> — Buy vehicles, weapons and grenades inside special buildings</div>
-          <div class="modal-feat">🎰 <b>Casino</b> — Gamble for big money in Casino Strip buildings</div>
-          <div class="modal-feat">⚗ <b>Experimental Weapons</b> — Time Freeze, Gravity Rifle, Electric Whip, Plasma Shotgun</div>
-          <div class="modal-feat">💣 <b>Grenades</b> — Buy from dealership, throw with G key toward mouse cursor</div>
-          <div class="modal-feat">👮 <b>Wanted System</b> — 4-star wanted level, police and drone pursuit</div>
-          <div class="modal-feat">🌙 <b>Day / Night Cycle</b> — Black market vendor spawns at night</div>
-          <div class="modal-feat">🌀 <b>Global Events</b> — Blackout, Riot, Corporate Invasion, Glitch Mode</div>
-          <div class="modal-feat">🛡 <b>Bodyguards</b> — Hire security from the shop</div>
-        </div>
-      </div>
+
+      </div><!-- end .mm-panel -->
     </div>
 
   </div><!-- end .select-container -->
@@ -2813,6 +2907,88 @@
       update();
       setInterval(update, 30000);
     })();
+  </script>
+
+  <!-- Apply --mc CSS variable to each mm-card from data-color -->
+  <script>
+    document.querySelectorAll('.mm-card[data-color]').forEach(c => {
+      c.style.setProperty('--mc', c.dataset.color);
+    });
+  </script>
+
+  <!-- Maps & Modes modal: tabs + click-to-detail -->
+  <script>
+  (function () {
+    /* ── Tab switching ───────────────────────────────────── */
+    document.querySelectorAll('.mm-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        const panel = tab.closest('.mm-panel');
+        panel.querySelectorAll('.mm-tab').forEach(t => t.classList.remove('active'));
+        panel.querySelectorAll('.mm-tab-content').forEach(c => c.classList.remove('active'));
+        tab.classList.add('active');
+        panel.querySelector(`.mm-tab-content[data-tab="${tab.dataset.tab}"]`).classList.add('active');
+        // reset detail bar
+        document.getElementById('mmDetailTitle').textContent = 'SELECT AN ITEM TO VIEW DETAILS';
+        document.getElementById('mmDetailDesc').textContent = 'Click any card above to learn more about maps, modes, upgrades and features.';
+        document.getElementById('mmDetail').classList.remove('mm-detail--active');
+        document.querySelectorAll('.mm-card').forEach(c => c.classList.remove('mm-card--active'));
+      });
+    });
+
+    /* ── Card click → detail bar ─────────────────────────── */
+    document.addEventListener('click', e => {
+      const card = e.target.closest('.mm-card');
+      if (!card) return;
+      document.querySelectorAll('.mm-card').forEach(c => c.classList.remove('mm-card--active'));
+      card.classList.add('mm-card--active');
+      const color = card.dataset.color || '#44EEFF';
+      const title = card.dataset.title || '';
+      const size  = card.dataset.size  || '';
+      const desc  = card.dataset.desc  || '';
+      const titleEl = document.getElementById('mmDetailTitle');
+      const descEl  = document.getElementById('mmDetailDesc');
+      const detail  = document.getElementById('mmDetail');
+      titleEl.textContent = size ? `${title}  ·  ${size}` : title;
+      titleEl.style.color = color;
+      titleEl.style.textShadow = `0 0 12px ${color}88`;
+      descEl.textContent = desc;
+      detail.classList.add('mm-detail--active');
+    });
+
+    /* ── Populate step3 map name when modal opens ─────────── */
+    const modesBtn2 = document.getElementById('modesBtn');
+    if (modesBtn2) {
+      modesBtn2.addEventListener('click', () => {
+        // reset to first tab each open
+        const panel = document.querySelector('.mm-panel');
+        if (!panel) return;
+        panel.querySelectorAll('.mm-tab').forEach((t,i) => t.classList.toggle('active', i === 0));
+        panel.querySelectorAll('.mm-tab-content').forEach((c,i) => c.classList.toggle('active', i === 0));
+        document.getElementById('mmDetailTitle').textContent = 'SELECT AN ITEM TO VIEW DETAILS';
+        document.getElementById('mmDetailDesc').textContent = 'Click any card above to learn more about maps, modes, upgrades and features.';
+        document.getElementById('mmDetail').classList.remove('mm-detail--active');
+        document.querySelectorAll('.mm-card').forEach(c => c.classList.remove('mm-card--active'));
+      });
+    }
+  })();
+  </script>
+
+  <!-- Step 3: reflect selected map name -->
+  <script>
+  (function () {
+    function updateS3Map() {
+      const el = document.getElementById('s3MapName');
+      if (!el) return;
+      try {
+        const m = JSON.parse(localStorage.getItem('selectedMap') || '{}');
+        el.textContent = (m.name || m.id || '—').toUpperCase();
+      } catch(_) { el.textContent = '—'; }
+    }
+    // Poll since map is set in select.js after step transition
+    document.addEventListener('DOMContentLoaded', updateS3Map);
+    // Also hook into step navigation to refresh
+    document.getElementById('nextBtn')?.addEventListener('click', () => setTimeout(updateS3Map, 320));
+  })();
   </script>
 </body>
 </html>
