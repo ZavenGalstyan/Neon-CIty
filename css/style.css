@@ -1150,7 +1150,7 @@ body {
 }
 
 /* ── Step Wrapper & Animations ───────────────────────────── */
-.step-wrapper { overflow: hidden; position: relative; width: 100%; }
+.step-wrapper { overflow: hidden; position: relative; width: 100%; padding-bottom: 80px; }
 .step { display: none; }
 .step.active { display: block; animation: stepIn 0.35s ease forwards; }
 .step.slide-out { display: block; animation: stepOut 0.30s ease forwards; }
@@ -1166,7 +1166,11 @@ body {
 /* ── Step Nav ────────────────────────────────────────────── */
 .step-nav {
   display: flex; align-items: center; justify-content: center;
-  gap: 24px; padding: 14px 0 6px;
+  gap: 24px; padding: 14px 20px;
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 200;
+  background: linear-gradient(to top, rgba(4,4,16,0.98) 70%, rgba(4,4,16,0));
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
 }
 .step-nav-btn {
   font-family: 'Orbitron', sans-serif; font-size: 11px; font-weight: 700;
@@ -1745,7 +1749,7 @@ body {
   .section-label    { font-size: 7px; letter-spacing: 0.18em; }
 
   /* Step nav */
-  .step-nav         { gap: 16px; padding: 10px 0 5px; }
+  .step-nav         { gap: 16px; padding: 10px 16px; }
   .step-nav-btn     { font-size: 9px; padding: 7px 14px; }
   .step-label       { font-size: 9px; margin-bottom: 10px; }
 
