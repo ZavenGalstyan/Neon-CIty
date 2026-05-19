@@ -125,6 +125,10 @@ const SocialUI = (() => {
       const acct  = nav.querySelector('.nav-account') || nav.lastElementChild;
       if (links) links.prepend(clanBtn);
       else nav.insertBefore(clanBtn, acct);
+
+      // Place theme toggle to the left of CLANS
+      const themeToggle = document.getElementById('navThemeToggle');
+      if (themeToggle && links) links.insertBefore(themeToggle, clanBtn);
       nav.insertBefore(ranksBtn, acct);
       nav.insertBefore(profileBtn, ranksBtn);
       nav.insertBefore(notifBtn, profileBtn);
