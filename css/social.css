@@ -6170,3 +6170,400 @@
     font-size: 12px;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   LIGHT MODE OVERRIDES — all social modals, panels, chat
+   ═══════════════════════════════════════════════════════════════════ */
+
+html[data-theme="light"] {
+  --nc-surface: rgba(58,68,92,0.98);
+  --nc-glass:   rgba(52,62,86,0.96);
+  --nc-text:    #e8edf8;
+  --nc-muted:   rgba(200,215,240,0.55);
+}
+
+/* ── Full-screen overlays (Friends, Chat, Ranks, Clans) ─────────── */
+html[data-theme="light"] .ncs-page {
+  background: rgba(48,58,82,0.97);
+}
+html[data-theme="light"] .ncs-aurora-blob { opacity: 0.30; }
+html[data-theme="light"] .ncs-scanlines   { opacity: 0.02; }
+
+/* ── Top bar ─────────────────────────────────────────────────────── */
+html[data-theme="light"] .ncs-topbar {
+  background: rgba(40,50,74,0.98);
+  border-bottom-color: rgba(255,255,255,0.08);
+}
+html[data-theme="light"] .ncs-topbar::before {
+  background: linear-gradient(90deg, rgba(68,238,255,0.12), rgba(170,68,255,0.08), transparent);
+}
+html[data-theme="light"] .ncs-topbar-title  { color: #e8edf8; }
+html[data-theme="light"] .ncs-topbar-sub    { color: rgba(200,215,240,0.55); }
+
+/* ── Close / action buttons ─────────────────────────────────────── */
+html[data-theme="light"] .ncs-close-btn {
+  background: rgba(255,255,255,0.08);
+  border-color: rgba(255,255,255,0.14);
+  color: rgba(220,230,248,0.75);
+}
+html[data-theme="light"] .ncs-close-btn:hover {
+  background: rgba(255,255,255,0.14);
+  color: #e8edf8;
+}
+html[data-theme="light"] .ncs-btn-ghost {
+  background: rgba(255,255,255,0.07);
+  border-color: rgba(255,255,255,0.14);
+  color: rgba(200,215,240,0.65);
+}
+html[data-theme="light"] .ncs-btn-ghost:hover {
+  background: rgba(255,255,255,0.13);
+  color: #e8edf8;
+}
+
+/* ── Sidebar ─────────────────────────────────────────────────────── */
+html[data-theme="light"] .ncs-sidebar {
+  background: rgba(42,52,76,0.98);
+  border-right-color: rgba(255,255,255,0.07);
+}
+
+/* ── Main content area ───────────────────────────────────────────── */
+html[data-theme="light"] .ncs-main {
+  background: rgba(255,255,255,0.03);
+}
+
+/* ── Search / input ─────────────────────────────────────────────── */
+html[data-theme="light"] .ncs-search-wrap {
+  background: rgba(0,0,0,0.20);
+  border-color: rgba(255,255,255,0.10);
+}
+html[data-theme="light"] .ncs-search-wrap:focus-within {
+  border-color: rgba(68,238,255,0.40);
+  background: rgba(0,0,0,0.25);
+}
+html[data-theme="light"] .ncs-input {
+  background: rgba(0,0,0,0.20);
+  border-color: rgba(255,255,255,0.10);
+  color: #e8edf8;
+}
+html[data-theme="light"] .ncs-input:focus {
+  background: rgba(0,0,0,0.26);
+  border-color: rgba(68,238,255,0.42);
+}
+html[data-theme="light"] .ncs-input::placeholder { color: rgba(200,215,240,0.38); }
+html[data-theme="light"] .ncs-input-plain {
+  background: transparent;
+  color: #e8edf8;
+}
+
+/* ── Section labels ─────────────────────────────────────────────── */
+html[data-theme="light"] .ncs-sec-label {
+  color: rgba(200,215,240,0.50);
+  border-bottom-color: rgba(255,255,255,0.07);
+}
+
+/* ── Person rows ─────────────────────────────────────────────────── */
+html[data-theme="light"] .ncs-person-row {
+  background: rgba(255,255,255,0.04);
+  border-color: rgba(255,255,255,0.07);
+}
+html[data-theme="light"] .ncs-person-row:hover {
+  background: rgba(255,255,255,0.08);
+  border-color: rgba(255,255,255,0.14);
+}
+html[data-theme="light"] .ncs-person-row.selected {
+  background: rgba(68,238,255,0.12);
+  border-color: rgba(68,238,255,0.30);
+}
+
+/* ── Chat window ─────────────────────────────────────────────────── */
+html[data-theme="light"] .ncs-chat-window {
+  background: rgba(255,255,255,0.03);
+  border-left-color: rgba(255,255,255,0.07);
+}
+html[data-theme="light"] .ncs-chat-header {
+  background: rgba(0,0,0,0.15);
+  border-bottom-color: rgba(255,255,255,0.07);
+}
+html[data-theme="light"] .ncs-chat-header-name   { color: #e8edf8; }
+html[data-theme="light"] .ncs-chat-header-status { color: rgba(200,215,240,0.55); }
+html[data-theme="light"] .ncs-input-bar {
+  background: rgba(42,52,76,0.97);
+  border-top-color: rgba(255,255,255,0.07);
+}
+html[data-theme="light"] .ncs-msg-input {
+  background: rgba(0,0,0,0.22);
+  border-color: rgba(255,255,255,0.10);
+  color: #e8edf8;
+}
+html[data-theme="light"] .ncs-msg-input:focus {
+  border-color: rgba(68,238,255,0.38);
+  background: rgba(0,0,0,0.28);
+}
+html[data-theme="light"] .ncs-msg-input::placeholder { color: rgba(200,215,240,0.38); }
+html[data-theme="light"] .ncs-send-btn {
+  background: linear-gradient(135deg, rgba(68,238,255,0.18) 0%, rgba(68,238,255,0.32) 100%);
+  border-color: rgba(68,238,255,0.45);
+  color: #44EEFF;
+}
+html[data-theme="light"] .ncs-send-btn:hover {
+  background: linear-gradient(135deg, rgba(68,238,255,0.28) 0%, rgba(68,238,255,0.48) 100%);
+  box-shadow: 0 0 20px rgba(68,238,255,0.25);
+}
+html[data-theme="light"] .ncs-msg-date-div span { color: rgba(200,215,240,0.42); }
+html[data-theme="light"] .ncs-msg-time          { color: rgba(200,215,240,0.40); }
+
+/* ── Message bubbles ─────────────────────────────────────────────── */
+html[data-theme="light"] .ncs-msg.mine .ncs-msg-bubble {
+  background: linear-gradient(135deg, rgba(68,238,255,0.22) 0%, rgba(100,120,255,0.16) 50%, rgba(170,68,255,0.10) 100%);
+  border-color: rgba(68,238,255,0.32);
+  color: #e8edf8;
+}
+html[data-theme="light"] .ncs-msg.theirs .ncs-msg-bubble {
+  background: rgba(255,255,255,0.07);
+  border-color: rgba(255,255,255,0.10);
+  color: #e8edf8;
+}
+
+/* ── Add Friend panel section ────────────────────────────────────── */
+html[data-theme="light"] .ncs-panel-section {
+  background: rgba(0,0,0,0.12);
+  border-bottom-color: rgba(68,238,255,0.10);
+}
+html[data-theme="light"] .ncs-panel-section-title { color: rgba(68,238,255,0.80); }
+html[data-theme="light"] .ncs-add-row .ncs-input {
+  background: rgba(0,0,0,0.22);
+  border-color: rgba(68,238,255,0.20);
+  color: #e8edf8;
+}
+html[data-theme="light"] .ncs-add-row .ncs-input:focus {
+  border-color: rgba(68,238,255,0.50);
+  background: rgba(0,0,0,0.28);
+}
+html[data-theme="light"] .ncs-search-results {
+  background: rgba(30,40,65,0.95);
+  border-color: rgba(68,238,255,0.12);
+}
+
+/* ── Notification panel ──────────────────────────────────────────── */
+html[data-theme="light"] .ncs-notif-body {
+  background: rgba(48,58,82,0.98);
+}
+html[data-theme="light"] .ncs-notif-header {
+  background: rgba(40,50,74,0.98);
+  border-bottom-color: rgba(255,255,255,0.07);
+}
+html[data-theme="light"] .ncs-notif-filter-btn {
+  background: rgba(255,255,255,0.07);
+  border-color: rgba(255,255,255,0.12);
+  color: rgba(200,215,240,0.60);
+}
+html[data-theme="light"] .ncs-notif-filter-btn:hover {
+  background: rgba(255,255,255,0.12);
+  color: #e8edf8;
+}
+html[data-theme="light"] .ncs-notif-filter-btn.ncs-active {
+  background: rgba(68,238,255,0.16);
+  border-color: rgba(68,238,255,0.40);
+  color: #44EEFF;
+}
+html[data-theme="light"] .ncs-notif-card {
+  background: rgba(255,255,255,0.05);
+  border-color: rgba(255,255,255,0.08);
+}
+html[data-theme="light"] .ncs-notif-card:hover {
+  background: rgba(255,255,255,0.09);
+  border-color: rgba(255,255,255,0.14);
+}
+html[data-theme="light"] .ncs-notif-card.ncs-notif-unread {
+  background: rgba(68,238,255,0.07);
+  border-color: rgba(68,238,255,0.14);
+}
+html[data-theme="light"] .ncs-notif-title   { color: #e8edf8; }
+html[data-theme="light"] .ncs-notif-message { color: rgba(200,215,240,0.65); }
+html[data-theme="light"] .ncs-notif-time    { color: rgba(200,215,240,0.42); }
+html[data-theme="light"] .ncs-notif-action-btn {
+  background: rgba(255,255,255,0.07);
+  border-color: rgba(255,255,255,0.12);
+  color: rgba(200,215,240,0.65);
+}
+html[data-theme="light"] .ncs-notif-action-btn:hover {
+  background: rgba(255,255,255,0.13);
+  color: #e8edf8;
+}
+html[data-theme="light"] .ncs-notif-icon-wrap {
+  background: rgba(255,255,255,0.08);
+  border-color: rgba(255,255,255,0.12);
+}
+html[data-theme="light"] .ncs-notif-empty-title { color: rgba(200,215,240,0.65); }
+html[data-theme="light"] .ncs-notif-empty-desc  { color: rgba(200,215,240,0.40); }
+
+/* ── Profile panel ───────────────────────────────────────────────── */
+html[data-theme="light"] .ncs-profile-body {
+  background: rgba(48,58,82,0.98);
+}
+html[data-theme="light"] .ncs-profile-name { color: #e8edf8; }
+html[data-theme="light"] .ncs-profile-info { color: rgba(200,215,240,0.60); }
+html[data-theme="light"] .ncs-xp-bar-label { color: rgba(200,215,240,0.55); }
+html[data-theme="light"] .ncs-xp-bar-track { background: rgba(0,0,0,0.22); }
+html[data-theme="light"] .ncs-stat-card {
+  background: rgba(255,255,255,0.06);
+  border-color: rgba(255,255,255,0.09);
+}
+html[data-theme="light"] .ncs-stat-card:hover {
+  background: rgba(255,255,255,0.10);
+  border-color: rgba(255,255,255,0.16);
+}
+html[data-theme="light"] .ncs-stat-label { color: rgba(200,215,240,0.50); }
+
+/* ── Ranks panel ─────────────────────────────────────────────────── */
+html[data-theme="light"] .ncs-ranks-body,
+html[data-theme="light"] .ncs-ranks-wrap {
+  background: rgba(48,58,82,0.98);
+}
+html[data-theme="light"] .ncs-rank-tab {
+  background: rgba(255,255,255,0.07);
+  border-color: rgba(255,255,255,0.12);
+  color: rgba(200,215,240,0.60);
+}
+html[data-theme="light"] .ncs-rank-tab:hover {
+  background: rgba(255,255,255,0.12);
+  color: #e8edf8;
+}
+html[data-theme="light"] .ncs-rank-tab.active {
+  background: rgba(68,238,255,0.16);
+  border-color: rgba(68,238,255,0.40);
+  color: #44EEFF;
+}
+html[data-theme="light"] .ncs-rank-row {
+  background: rgba(255,255,255,0.04);
+  border-color: rgba(255,255,255,0.07);
+}
+html[data-theme="light"] .ncs-rank-row:hover {
+  background: rgba(255,255,255,0.08);
+}
+html[data-theme="light"] .ncs-rank-row.is-me {
+  background: rgba(68,238,255,0.10);
+  border-color: rgba(68,238,255,0.28);
+}
+html[data-theme="light"] .ncs-rank-name { color: #e8edf8; }
+html[data-theme="light"] .ncs-rank-sub  { color: rgba(200,215,240,0.50); }
+html[data-theme="light"] .ncs-rank-bar-wrap { background: rgba(0,0,0,0.22); }
+html[data-theme="light"] .ncs-podium-name  { color: #e8edf8; }
+html[data-theme="light"] .ncs-podium-base {
+  background: rgba(0,0,0,0.18);
+  border-top-color: rgba(255,255,255,0.10);
+}
+
+/* ── Clan sidebar navigation ─────────────────────────────────────── */
+html[data-theme="light"] .ncs-clan-sidenav {
+  background: linear-gradient(180deg, rgba(36,46,70,0.99) 0%, rgba(30,40,64,0.99) 100%);
+  border-right-color: rgba(170,68,255,0.18);
+}
+html[data-theme="light"] .ncs-sidenav-btn {
+  background: rgba(255,255,255,0.03);
+  border-color: rgba(255,255,255,0.06);
+  color: rgba(200,215,240,0.60);
+}
+html[data-theme="light"] .ncs-sidenav-btn:hover {
+  background: linear-gradient(135deg, rgba(170,68,255,0.14) 0%, rgba(170,68,255,0.06) 100%);
+  color: #e8edf8;
+  border-color: rgba(170,68,255,0.30);
+}
+html[data-theme="light"] .ncs-sidenav-btn.active {
+  background: linear-gradient(135deg, rgba(170,68,255,0.18) 0%, rgba(170,68,255,0.07) 100%);
+  border-color: rgba(170,68,255,0.40);
+  color: #CC88FF;
+}
+
+/* ── Clan content area ───────────────────────────────────────────── */
+html[data-theme="light"] .ncs-clan-content {
+  background: rgba(48,58,82,0.50);
+}
+html[data-theme="light"] .ncs-clan-card {
+  background: linear-gradient(180deg, rgba(50,60,85,0.90) 0%, rgba(42,52,76,0.95) 100%);
+  border-color: rgba(255,255,255,0.07);
+}
+html[data-theme="light"] .ncs-clan-card:hover {
+  border-color: rgba(255,255,255,0.14);
+  box-shadow: 0 16px 48px rgba(0,0,0,0.35);
+}
+html[data-theme="light"] .ncs-clan-card-name { color: #e8edf8; }
+html[data-theme="light"] .ncs-clan-card-desc { color: rgba(200,215,240,0.55); }
+html[data-theme="light"] .ncs-clan-card-stats span { color: rgba(200,215,240,0.50); }
+html[data-theme="light"] .ncs-clan-card-leader { color: rgba(200,215,240,0.60); }
+html[data-theme="light"] .ncs-myclan-name { color: #e8edf8; }
+html[data-theme="light"] .ncs-myclan-stat { color: rgba(200,215,240,0.60); }
+html[data-theme="light"] .ncs-clan-empty-title { color: rgba(200,215,240,0.65); }
+html[data-theme="light"] .ncs-clan-empty-desc  { color: rgba(200,215,240,0.42); }
+html[data-theme="light"] .ncs-clan-loading-text { color: rgba(200,215,240,0.60); }
+
+/* ── Clan chat ───────────────────────────────────────────────────── */
+html[data-theme="light"] .ncs-clanchat-wrap {
+  background: linear-gradient(135deg, rgba(255,0,102,0.04) 0%, rgba(42,52,76,0.96) 30%);
+  border-color: rgba(255,0,102,0.20);
+}
+html[data-theme="light"] .ncs-clanchat-header {
+  background: linear-gradient(90deg, rgba(255,0,102,0.08) 0%, rgba(42,52,76,0.95) 40%, rgba(255,0,102,0.05) 100%);
+  border-bottom-color: rgba(255,0,102,0.18);
+}
+html[data-theme="light"] .ncs-clanchat-header-title { color: #e8edf8; }
+html[data-theme="light"] .ncs-clanchat-header-status { color: rgba(200,215,240,0.55); }
+html[data-theme="light"] .ncs-clanchat-messages { background: transparent; }
+html[data-theme="light"] .ncs-clan-msg-from { color: rgba(200,215,240,0.80); }
+html[data-theme="light"] .ncs-clan-msg-text { color: #e8edf8; }
+html[data-theme="light"] .ncs-clan-msg-time { color: rgba(200,215,240,0.38); }
+html[data-theme="light"] .ncs-clanchat-inputbar {
+  background: linear-gradient(180deg, rgba(255,0,102,0.03) 0%, rgba(36,46,70,0.97) 100%);
+  border-top-color: rgba(255,0,102,0.18);
+}
+html[data-theme="light"] .ncs-clanchat-input {
+  background: rgba(255,0,102,0.05);
+  border-color: rgba(255,0,102,0.22);
+  color: #e8edf8;
+}
+html[data-theme="light"] .ncs-clanchat-input:focus {
+  border-color: rgba(255,0,102,0.48);
+  background: rgba(255,0,102,0.08);
+}
+html[data-theme="light"] .ncs-clanchat-input::placeholder { color: rgba(255,0,102,0.38); }
+html[data-theme="light"] .ncs-clanchat-sendbtn {
+  background: linear-gradient(135deg, rgba(255,0,102,0.20) 0%, rgba(255,0,102,0.35) 100%);
+  border-color: rgba(255,0,102,0.45);
+}
+html[data-theme="light"] .ncs-clanchat-sendbtn:hover {
+  background: linear-gradient(135deg, rgba(255,0,102,0.32) 0%, rgba(255,0,102,0.55) 100%);
+  box-shadow: 0 0 20px rgba(255,0,102,0.30);
+}
+
+/* ── Friends strip ───────────────────────────────────────────────── */
+html[data-theme="light"] .ncs-friends-strip {
+  background: rgba(40,50,74,0.95);
+  border-top-color: rgba(255,255,255,0.07);
+}
+html[data-theme="light"] .ncs-strip-title { color: rgba(200,215,240,0.50); }
+html[data-theme="light"] .ncs-strip-name  { color: rgba(200,215,240,0.65); }
+html[data-theme="light"] .ncs-strip-person:hover { background: rgba(255,255,255,0.07); }
+
+/* ── Empty states ────────────────────────────────────────────────── */
+html[data-theme="light"] .ncs-empty-text { color: rgba(200,215,240,0.48); }
+
+/* ── FAB button ──────────────────────────────────────────────────── */
+html[data-theme="light"] .ncs-fab {
+  background: rgba(68,238,255,0.85);
+  box-shadow: 0 8px 32px rgba(68,238,255,0.28);
+}
+html[data-theme="light"] .ncs-fab:hover {
+  background: rgba(68,238,255,1);
+  box-shadow: 0 12px 40px rgba(68,238,255,0.40);
+}
+html[data-theme="light"] .ncs-fab-badge {
+  background: rgba(255,68,102,0.92);
+}
+
+/* ── Toasts ──────────────────────────────────────────────────────── */
+html[data-theme="light"] .ncs-toast {
+  background: rgba(50,60,84,0.97);
+  border-color: rgba(255,255,255,0.12);
+  color: #e8edf8;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.35);
+}

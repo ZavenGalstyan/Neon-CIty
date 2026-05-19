@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>DASH DREAD — Inventory</title>
   <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/social.css">
+  <script>try{if(localStorage.getItem('nc_theme')==='light')document.documentElement.setAttribute('data-theme','light');}catch(e){}</script>
   <style>
   /* ═══════════════════════════════════════════════════════════════════
      INVENTORY — ULTRA-PREMIUM AAA CYBERPUNK UI
@@ -1258,6 +1260,64 @@
     .inv-toast { font-size: 9px; padding: 12px 18px; }
   }
 
+  /* ═══════════════════════════════════════════════════════════════════
+     LIGHT MODE OVERRIDES
+  ═══════════════════════════════════════════════════════════════════ */
+
+  html[data-theme="light"] .inv-page {
+    background: linear-gradient(180deg, #353e56 0%, #3a4460 50%, #3e4866 100%);
+  }
+  html[data-theme="light"] .inv-title__sub { color: rgba(200,215,240,0.50); }
+  html[data-theme="light"] .inv-balance {
+    background: linear-gradient(135deg, rgba(255,215,0,0.12) 0%, rgba(255,180,50,0.05) 50%, rgba(255,215,0,0.03) 100%);
+    border-color: rgba(255,215,0,0.30);
+    box-shadow: 0 0 40px rgba(255,215,0,0.10), 0 16px 32px rgba(0,0,0,0.30), inset 0 1px 0 rgba(255,255,255,0.08);
+  }
+  html[data-theme="light"] .inv-balance__label { color: rgba(200,215,240,0.55); }
+  html[data-theme="light"] .inv-tab {
+    background: rgba(255,255,255,0.07);
+    border-color: rgba(255,255,255,0.10);
+    color: rgba(200,215,240,0.55);
+  }
+  html[data-theme="light"] .inv-tab:hover {
+    background: rgba(255,255,255,0.12);
+    border-color: rgba(255,255,255,0.20);
+    color: #e8edf8;
+  }
+  html[data-theme="light"] .inv-tab.active {
+    background: linear-gradient(135deg, rgba(68,238,255,0.18) 0%, rgba(68,238,255,0.08) 100%);
+    border-color: rgba(68,238,255,0.45);
+    color: #44EEFF;
+    text-shadow: 0 0 12px rgba(68,238,255,0.40);
+    box-shadow: 0 0 30px rgba(68,238,255,0.14), 0 6px 20px rgba(0,0,0,0.20);
+  }
+  html[data-theme="light"] .inv-hud-strip {
+    background: linear-gradient(135deg, rgba(68,238,255,0.06) 0%, rgba(68,238,255,0.02) 100%);
+    border-color: rgba(68,238,255,0.14);
+  }
+  html[data-theme="light"] .inv-hud-strip__text { color: rgba(200,215,240,0.55); }
+  html[data-theme="light"] .inv-card {
+    background: linear-gradient(180deg, rgba(55,65,90,0.90) 0%, rgba(48,58,82,0.95) 100%);
+    border-color: rgba(255,255,255,0.07);
+  }
+  html[data-theme="light"] .inv-card__name { color: #e8edf8; text-shadow: none; }
+  html[data-theme="light"] .inv-card__desc { color: rgba(200,215,240,0.55); }
+  html[data-theme="light"] .inv-card__stat {
+    background: linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.03) 100%);
+    border-color: rgba(255,255,255,0.09);
+    color: rgba(200,215,240,0.60);
+  }
+  html[data-theme="light"] .inv-card__footer {
+    border-top-color: rgba(255,255,255,0.06);
+    background: linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.12) 100%);
+  }
+  html[data-theme="light"] .inv-empty__title { color: rgba(200,215,240,0.75); }
+  html[data-theme="light"] .inv-empty__sub   { color: rgba(200,215,240,0.45); }
+  html[data-theme="light"] .inv-notification {
+    background: linear-gradient(135deg, rgba(255,68,102,0.10) 0%, rgba(255,80,50,0.05) 100%);
+    border-color: rgba(255,68,102,0.28);
+  }
+
   /* Touch-friendly targets */
   @media (pointer: coarse) {
     .inv-tab { min-height: 48px; }
@@ -1411,6 +1471,10 @@
   <script src="js/config.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/api.js"></script>
+  <script src="js/social.js"></script>
+  <script src="js/ws.js"></script>
+  <script src="js/multiplayer.js"></script>
+  <script src="js/social-ui.js"></script>
   <script>
   'use strict';
 
@@ -1420,6 +1484,7 @@
 
   if (!Auth.isLoggedIn()) window.location.href = 'login.html';
   Auth.mountNavbar();
+  if (Auth.isLoggedIn()) SocialUI.init();
 
   /* ══════════════════════════════════════════════════════════════════
      STATE

@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>DASH DREAD — Leaderboards</title>
   <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/social.css">
+  <script>try{if(localStorage.getItem('nc_theme')==='light')document.documentElement.setAttribute('data-theme','light');}catch(e){}</script>
   <style>
   /* ═══════════════════════════════════════════════════════════════════
      LEADERBOARDS — ULTRA-PREMIUM AAA CYBERPUNK ESPORTS UI
@@ -1740,6 +1742,67 @@
     .map-dropdown__search { padding: 24px 16px 12px; }
     .map-dropdown__list { max-height: calc(75vh - 100px); padding-bottom: 24px; }
   }
+
+  /* ═══════════════════════════════════════════════════════════
+     LIGHT MODE OVERRIDES
+  ═══════════════════════════════════════════════════════════ */
+  html[data-theme="light"] .lb-page {
+    background: linear-gradient(180deg, #30384e 0%, #353e56 50%, #3a4460 100%);
+  }
+  html[data-theme="light"] .lb-page::before { opacity: 0.35; }
+  html[data-theme="light"] .lb-orb--1 { opacity: 0.30; }
+  html[data-theme="light"] .lb-orb--2 { opacity: 0.25; }
+
+  html[data-theme="light"] .lb-hero {
+    background: linear-gradient(180deg, rgba(42,52,76,0.98) 0%, rgba(48,58,82,0.95) 100%);
+  }
+  html[data-theme="light"] .lb-tab {
+    background: rgba(255,255,255,0.07);
+    border-color: rgba(255,255,255,0.12);
+    color: rgba(200,215,240,0.55);
+    backdrop-filter: blur(8px);
+  }
+  html[data-theme="light"] .lb-tab:hover {
+    background: rgba(255,255,255,0.12);
+    color: #e8edf8;
+    border-color: rgba(255,255,255,0.22);
+  }
+  html[data-theme="light"] .lb-tab.active {
+    background: rgba(68,238,255,0.18);
+    border-color: rgba(68,238,255,0.42);
+    color: #44EEFF;
+  }
+  html[data-theme="light"] .lb-row {
+    background: linear-gradient(135deg, rgba(55,65,90,0.80) 0%, rgba(48,58,82,0.88) 100%);
+    border-color: rgba(255,255,255,0.07);
+  }
+  html[data-theme="light"] .lb-row:hover {
+    background: linear-gradient(135deg, rgba(62,72,98,0.90) 0%, rgba(55,65,90,0.96) 100%);
+    border-color: rgba(255,255,255,0.14);
+  }
+  html[data-theme="light"] .lb-row--top10 {
+    background: linear-gradient(135deg, rgba(60,70,96,0.85) 0%, rgba(52,62,88,0.92) 100%);
+    border-color: rgba(68,238,255,0.18);
+  }
+  html[data-theme="light"] .lb-row--me {
+    background: linear-gradient(135deg, rgba(68,238,255,0.14) 0%, rgba(68,238,255,0.07) 100%);
+    border-color: rgba(68,238,255,0.35);
+  }
+  html[data-theme="light"] .lb-username { color: #e8edf8; }
+  html[data-theme="light"] .lb-score    { color: #e8edf8; }
+  html[data-theme="light"] .lb-stat     { color: rgba(200,215,240,0.65); }
+  html[data-theme="light"] .lb-rank-num { color: rgba(200,215,240,0.55); }
+  html[data-theme="light"] .lb-section-title { color: rgba(200,215,240,0.65); }
+  html[data-theme="light"] .lb-section-line  {
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.10), transparent);
+  }
+  html[data-theme="light"] .lb-notification {
+    background: rgba(48,58,82,0.95);
+    border-color: rgba(255,255,255,0.12);
+    color: #e8edf8;
+  }
+  html[data-theme="light"] .lb-content-wrap { background: transparent; }
+  html[data-theme="light"] .lb-table-wrap   { background: transparent; }
 </style>
 </head>
 <body class="select-screen">
@@ -2037,10 +2100,15 @@
   <script src="js/config.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/api.js"></script>
+  <script src="js/social.js"></script>
+  <script src="js/ws.js"></script>
+  <script src="js/multiplayer.js"></script>
+  <script src="js/social-ui.js"></script>
   <script>
   'use strict';
 
   Auth.mountNavbar();
+  if (Auth.isLoggedIn()) SocialUI.init();
 
   /* ══════════════════════════════════════════════════════════════════
      CURRENT PLAYER

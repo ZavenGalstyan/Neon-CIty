@@ -117,8 +117,60 @@ const Auth = (() => {
     window.location.href = 'index.html';
   }
 
+  /* ── Theme helpers ─────────────────────────────────────── */
+  function initTheme() {
+    try {
+      if (localStorage.getItem('nc_theme') === 'light') {
+        document.documentElement.dataset.theme = 'light';
+      } else {
+        delete document.documentElement.dataset.theme;
+      }
+    } catch (e) {}
+  }
+
+  function _mountThemeToggle() {
+    if (!document.body.classList.contains('select-screen')) return;
+    const navEl = document.querySelector('.site-nav');
+    if (!navEl) return;
+
+    document.getElementById('navThemeToggle')?.remove();
+
+    const _sunSVG  = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>`;
+    const _moonSVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`;
+
+    const isLight = document.documentElement.dataset.theme === 'light';
+    const btn = document.createElement('button');
+    btn.id        = 'navThemeToggle';
+    btn.className = 'nav-theme-btn';
+    btn.innerHTML = isLight ? _moonSVG : _sunSVG;
+    btn.title     = isLight ? 'Switch to dark mode' : 'Switch to light mode';
+    btn.setAttribute('aria-label', btn.title);
+
+    btn.addEventListener('click', () => {
+      const switchToLight = document.documentElement.dataset.theme !== 'light';
+      if (switchToLight) {
+        document.documentElement.dataset.theme = 'light';
+        localStorage.setItem('nc_theme', 'light');
+        btn.innerHTML = _moonSVG;
+        btn.title = 'Switch to dark mode';
+      } else {
+        delete document.documentElement.dataset.theme;
+        localStorage.removeItem('nc_theme');
+        btn.innerHTML = _sunSVG;
+        btn.title = 'Switch to light mode';
+      }
+      btn.setAttribute('aria-label', btn.title);
+    });
+
+    // Insert as first item in nav-links (social-ui will move it left of CLANS later)
+    const links = document.querySelector('#siteNav .nav-links');
+    if (links) links.prepend(btn);
+    else navEl.appendChild(btn);
+  }
+
   /* ── Navbar injection (call on every page) ─────────────── */
   function mountNavbar() {
+    initTheme();
     const session = getSession();
     const nav = document.getElementById('siteNav');
     if (!nav) return;
@@ -175,6 +227,9 @@ const Auth = (() => {
 
     // ── Burger menu (injected outside #siteNav into the nav element) ──
     _mountBurger(session);
+
+    // ── Theme toggle (select screen only) ──────────────────
+    _mountThemeToggle();
   }
 
   function _mountBurger(session) {
@@ -268,5 +323,5 @@ const Auth = (() => {
       .replace(/"/g, '&quot;');
   }
 
-  return { register, login, logout, isLoggedIn, getSession, mountNavbar, fetchProfile };
+  return { register, login, logout, isLoggedIn, getSession, mountNavbar, fetchProfile, initTheme };
 })();
