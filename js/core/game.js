@@ -1314,6 +1314,7 @@ class Game {
                 mult > 1 ? "#FF8800" : "#FFD700",
               );
               this._onKill();
+              if (this._roomId && typeof Multiplayer !== 'undefined') Multiplayer.sendBotDead(bot._id);
               this._dropPickup(bot);
               if (this.player._leechHp)
                 this.player.health = Math.min(
@@ -1426,6 +1427,7 @@ class Game {
             );
             if (b.isMelee) this._achStats.knifeKills++;
             this._onKill();
+            if (this._roomId && typeof Multiplayer !== 'undefined') Multiplayer.sendBotDead(bot._id);
             if (this.player._leechHp)
               this.player.health = Math.min(
                 this.player.maxHealth,
@@ -2220,6 +2222,9 @@ class Game {
   }
 
   _spawnBot() {
+    // Non-host in multiplayer: bots arrive via bot:spawn events from the host
+    if (this._roomId && typeof Multiplayer !== 'undefined' && !this._isHost) return;
+
     const margin = 130;
     const W = this.canvas.width,
       H = this.canvas.height;
@@ -2270,7 +2275,11 @@ class Game {
         bot.hp = Math.round(bot.hp * 1.25);
         bot.maxHp = bot.hp;
       }
+      bot._id = Math.random().toString(36).slice(2, 10);
       this.bots.push(bot);
+      if (this._roomId && typeof Multiplayer !== 'undefined') {
+        Multiplayer.sendBotSpawn(bot, this.wave, this._arenaWaveSize || 0);
+      }
     };
 
     if (Math.random() > 0.4) {
@@ -2283,6 +2292,17 @@ class Game {
     }
     const rp = this.map.randomRoadPos();
     _pushBot(rp.x, rp.y);
+  }
+
+  // Called on non-host clients when receiving bot:spawn from the host
+  _addRemoteBot(data) {
+    const bot = new Bot(data.x || 0, data.y || 0, data.wave || this.wave, data.type || 'normal', this.map.config);
+    if (this._blitzMode) bot.speed = Math.round(bot.speed * 3);
+    if (data.waveSize) this._arenaWaveSize = Math.max(this._arenaWaveSize || 0, data.waveSize);
+    bot._id = data.id;
+    this.bots.push(bot);
+    if (this._arenaMode)  this._arenaSpawned  = (this._arenaSpawned  || 0) + 1;
+    if (this._zombieMode) this._zombieSpawned = (this._zombieSpawned || 0) + 1;
   }
 
   // ── Tower HUD & victory rendering ────────────────────────

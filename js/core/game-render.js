@@ -94,43 +94,93 @@ Game.prototype._render = function() {
           const rpSx = rp.x;
           const rpSy = rp.y;
 
+          // Look up this player's character data for correct visuals
+          const rpCharData = (CONFIG.CHARACTERS || []).find(c => c.id === rp.charId) || {};
+          const rpColor  = rpCharData.color  || '#44EEFF';
+          const rpAccent = rpCharData.accent || '#00FFCC';
+          const rpRType  = rpCharData.renderType || 'humanoid';
+          const rpScale  = rpCharData.bodyScale  || 1.0;
+          const rpR      = (rpCharData.radius || 18) * rpScale;
+
           ctx.save();
           ctx.translate(rpSx, rpSy);
-          ctx.rotate(rp.angle || 0);
+          ctx.rotate((rp.angle || 0) - Math.PI / 2);
 
-          // Body
-          ctx.fillStyle = '#44EEFF';
-          ctx.strokeStyle = '#fff';
-          ctx.lineWidth = 1.5;
+          // Shadow
+          ctx.globalAlpha = 0.28;
+          ctx.fillStyle = '#000';
           ctx.beginPath();
-          ctx.ellipse(0, 0, 10, 13, 0, 0, Math.PI * 2);
+          ctx.ellipse(0, rpR * 0.25, rpR * 0.65, rpR * 0.22, 0, 0, Math.PI * 2);
           ctx.fill();
-          ctx.stroke();
+          ctx.globalAlpha = 1;
 
-          // Head
-          ctx.fillStyle = '#fff';
-          ctx.beginPath();
-          ctx.arc(0, -14, 6, 0, Math.PI * 2);
-          ctx.fill();
+          if (rpRType === 'humanoid_heavy') {
+            ctx.fillStyle = rpColor;
+            ctx.beginPath();
+            ctx.ellipse(0, 0, rpR * 0.55, rpR * 0.65, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = rpAccent; ctx.lineWidth = 2; ctx.stroke();
+            ctx.fillStyle = rpColor;
+            ctx.beginPath();
+            ctx.arc(0, -rpR * 0.72, rpR * 0.36, 0, Math.PI * 2);
+            ctx.fill();
+          } else if (rpRType === 'humanoid_slim') {
+            ctx.fillStyle = rpColor;
+            ctx.beginPath();
+            ctx.ellipse(0, 0, rpR * 0.28, rpR * 0.55, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = rpAccent; ctx.lineWidth = 1.5; ctx.stroke();
+            ctx.fillStyle = rpColor;
+            ctx.beginPath();
+            ctx.arc(0, -rpR * 0.66, rpR * 0.22, 0, Math.PI * 2);
+            ctx.fill();
+          } else if (rpRType === 'cloaked') {
+            ctx.globalAlpha = 0.75;
+            ctx.fillStyle = rpColor;
+            ctx.beginPath();
+            ctx.ellipse(0, 0, rpR * 0.35, rpR * 0.58, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.globalAlpha = 1;
+            ctx.strokeStyle = rpAccent; ctx.lineWidth = 1.5; ctx.stroke();
+            ctx.fillStyle = rpAccent;
+            ctx.shadowColor = rpAccent; ctx.shadowBlur = 12;
+            ctx.beginPath();
+            ctx.arc(0, -rpR * 0.68, rpR * 0.26, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+          } else {
+            ctx.fillStyle = rpColor;
+            ctx.beginPath();
+            ctx.ellipse(0, 0, rpR * 0.42, rpR * 0.58, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = rpAccent; ctx.lineWidth = 1.5; ctx.stroke();
+            ctx.fillStyle = rpColor;
+            ctx.beginPath();
+            ctx.arc(0, -rpR * 0.68, rpR * 0.28, 0, Math.PI * 2);
+            ctx.fill();
+          }
 
-          // Direction indicator
-          ctx.fillStyle = '#00FFCC';
+          // Direction arrow
+          ctx.fillStyle = rpAccent;
+          ctx.shadowColor = rpAccent; ctx.shadowBlur = 6;
           ctx.beginPath();
-          ctx.moveTo(0, -20);
-          ctx.lineTo(-3, -14);
-          ctx.lineTo(3, -14);
+          ctx.moveTo(0, -rpR * 0.97);
+          ctx.lineTo(-rpR * 0.14, -rpR * 0.76);
+          ctx.lineTo(rpR * 0.14, -rpR * 0.76);
           ctx.closePath();
           ctx.fill();
+          ctx.shadowBlur = 0;
 
           ctx.restore();
 
-          // HP bar (world-space, above player)
-          const barW = 38, barH = 4;
+          // HP bar
+          const barW = 40, barH = 4;
           const hpPct = Math.max(0, Math.min(1, (rp.hp || 0) / (rp.maxHp || 100)));
+          const barY = rpSy - rpR - 20;
           ctx.fillStyle = 'rgba(0,0,0,0.55)';
-          ctx.fillRect(rpSx - barW / 2, rpSy - 34, barW, barH);
+          ctx.fillRect(rpSx - barW / 2, barY, barW, barH);
           ctx.fillStyle = hpPct > 0.5 ? '#44FF88' : hpPct > 0.25 ? '#FFCC00' : '#FF4444';
-          ctx.fillRect(rpSx - barW / 2, rpSy - 34, barW * hpPct, barH);
+          ctx.fillRect(rpSx - barW / 2, barY, barW * hpPct, barH);
 
           // Name tag
           ctx.save();
@@ -138,9 +188,9 @@ Game.prototype._render = function() {
           ctx.textAlign = 'center';
           ctx.textBaseline = 'bottom';
           ctx.fillStyle = 'rgba(0,0,0,0.5)';
-          ctx.fillText(rp.username || 'PLAYER', rpSx + 1, rpSy - 37);
-          ctx.fillStyle = '#44EEFF';
-          ctx.fillText(rp.username || 'PLAYER', rpSx, rpSy - 38);
+          ctx.fillText(rp.username || 'PLAYER', rpSx + 1, barY - 1);
+          ctx.fillStyle = rpColor;
+          ctx.fillText(rp.username || 'PLAYER', rpSx, barY - 2);
           ctx.restore();
         }
       }

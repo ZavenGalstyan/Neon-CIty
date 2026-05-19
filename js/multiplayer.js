@@ -259,6 +259,23 @@ const Multiplayer = (() => {
         window._game._mpStats    = stats;
       }
     });
+
+    // bot:spawn — host relayed a new enemy spawn; non-host clients create the bot
+    WS.on('bot:spawn', ({ id, x, y, type, wave, waveSize }) => {
+      if (window._game && !window._game._isHost) {
+        window._game._addRemoteBot({ id, x, y, type, wave, waveSize });
+      }
+    });
+
+    // bot:dead — another player killed this bot; remove it from our simulation
+    WS.on('bot:dead', ({ id }) => {
+      if (!window._game || !id) return;
+      const bot = window._game.bots.find(b => b._id === id && !b.dead);
+      if (bot) bot.dead = true;
+      if (window._game.boss && window._game.boss._id === id && !window._game.boss.dead) {
+        window._game.boss.dead = true;
+      }
+    });
   }
 
   /* ── Position broadcast (called from game loop) ─────────── */
@@ -284,6 +301,23 @@ const Multiplayer = (() => {
 
   function sendDead() {
     WS.send('player:dead', { killedBy: 'bot' });
+  }
+
+  function sendBotSpawn(bot, wave, waveSize) {
+    if (!bot._id) return;
+    WS.send('bot:spawn', {
+      id:       bot._id,
+      x:        Math.round(bot.x),
+      y:        Math.round(bot.y),
+      type:     bot.type || 'normal',
+      wave:     wave || 1,
+      waveSize: waveSize || 0
+    });
+  }
+
+  function sendBotDead(botId) {
+    if (!botId) return;
+    WS.send('bot:dead', { id: botId });
   }
 
   function sendWaveAck(wave) {
@@ -322,6 +356,7 @@ const Multiplayer = (() => {
     createRoom, listRooms, joinRoom, leaveRoom, startRoom, markReady,
     bindLobbyEvents, bindGameEvents,
     sendPos, sendShoot, sendDead, sendWaveAck, sendFinished,
+    sendBotSpawn, sendBotDead,
     updateRemotePlayers,
     getRoom, isHost, getRemotePlayers, setMyUserId, setRoom, setIsHost
   };
