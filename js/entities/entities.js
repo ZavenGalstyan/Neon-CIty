@@ -7210,6 +7210,46 @@ const BOSS_CONFIGS = {
     radius: 56, speed: 62,   hp: 2000, dmg: 40, fr: 1000, bspd: 310,
     special: 'charge',   // thundering charge attack
   },
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // NEW UNIQUE BOSSES — Each designed specifically for their map's atmosphere
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  neon_city: {
+    name: 'NEON REAPER',      color: '#00FFEE', accent: '#88FFFF',
+    radius: 44, speed: 95,    hp: 1200, dmg: 26, fr: 780,  bspd: 380,
+    special: 'burst',   // neon energy ring
+  },
+  zombie: {
+    name: 'THE ABOMINATION',  color: '#44FF66', accent: '#88FF99',
+    radius: 52, speed: 58,    hp: 1600, dmg: 32, fr: 1100, bspd: 260,
+    special: 'spawn',   // spawns zombie minions
+  },
+  wasteland: {
+    name: 'THE RAVAGER',      color: '#FF6622', accent: '#FFAA66',
+    radius: 48, speed: 72,    hp: 1400, dmg: 35, fr: 900,  bspd: 320,
+    special: 'slam',    // ground pound shockwave
+  },
+  blitz: {
+    name: 'VOLTAGE PHANTOM',  color: '#FF2200', accent: '#FF6644',
+    radius: 40, speed: 165,   hp: 900,  dmg: 24, fr: 520,  bspd: 450,
+    special: 'charge',  // lightning dash
+  },
+  frozen_tundra: {
+    name: 'FROST TITAN',      color: '#88DDFF', accent: '#CCFFFF',
+    radius: 54, speed: 52,    hp: 1800, dmg: 34, fr: 1050, bspd: 290,
+    special: 'slam',    // ice shockwave
+  },
+  metropolis: {
+    name: 'THE CORPORATE',    color: '#FF9933', accent: '#FFCC66',
+    radius: 46, speed: 88,    hp: 1350, dmg: 28, fr: 680,  bspd: 400,
+    special: 'volley',  // precision strike barrage
+  },
+  hardcore: {
+    name: 'THE NIGHTMARE',    color: '#FF4400', accent: '#FF8844',
+    radius: 58, speed: 78,    hp: 2500, dmg: 45, fr: 750,  bspd: 360,
+    special: 'scatter', // massive multi-directional attack
+  },
 };
 
 class BossBot {
@@ -7527,6 +7567,14 @@ class BossBot {
       case 'tower':         this._renderPenthouseLord(ctx, x, y, r, pulse); break;
       case 'sky_realm':     this._renderStormEmperor(ctx, x, y, r, pulse);  break;
       case 'dino_world':    this._renderRexKing(ctx, x, y, r, pulse); break;
+      // New unique bosses
+      case 'neon_city':     this._renderNeonReaper(ctx, x, y, r, pulse); break;
+      case 'zombie':        this._renderAbomination(ctx, x, y, r, pulse); break;
+      case 'wasteland':     this._renderRavager(ctx, x, y, r, pulse); break;
+      case 'blitz':         this._renderVoltagePhantom(ctx, x, y, r, pulse); break;
+      case 'frozen_tundra': this._renderFrostTitan(ctx, x, y, r, pulse); break;
+      case 'metropolis':    this._renderCorporate(ctx, x, y, r, pulse); break;
+      case 'hardcore':      this._renderNightmare(ctx, x, y, r, pulse); break;
       default:              this._renderKingpin(ctx, x, y, r, pulse); break;
     }
 
@@ -9147,6 +9195,1296 @@ class BossBot {
     const horns = [[-r*0.20, headY - r*0.28], [0, headY - r*0.32], [r*0.20, headY - r*0.28]];
     for (const [hx, hy] of horns) {
       ctx.beginPath(); ctx.moveTo(hx - r*0.07, hy + r*0.04); ctx.lineTo(hx, hy - r*0.22); ctx.lineTo(hx + r*0.07, hy + r*0.04); ctx.closePath(); ctx.fill(); ctx.stroke();
+    }
+
+    ctx.restore();
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // NEON REAPER — Cyberpunk Futuristic Boss for Neon City
+  // Neon-powered, glowing energy core, advanced tech armor, holographic VFX
+  // ═══════════════════════════════════════════════════════════════════════════════
+  _renderNeonReaper(ctx, x, y, r, pulse) {
+    const t = this._pulseT;
+    const glitchOffset = Math.random() > 0.95 ? (Math.random() - 0.5) * 6 : 0;
+    ctx.save();
+    ctx.translate(x + glitchOffset, y);
+
+    // ── 1. HOLOGRAPHIC PROJECTION AURA ───────────────────────────
+    for (let hi = 0; hi < 4; hi++) {
+      const hR = r * (1.25 + hi * 0.18 + Math.sin(t * 1.5 + hi * 0.5) * 0.08);
+      ctx.globalAlpha = (0.20 - hi * 0.04) * (0.8 + pulse * 0.2);
+      ctx.strokeStyle = hi % 2 === 0 ? '#00FFEE' : '#FF00FF';
+      ctx.lineWidth = 2.5 - hi * 0.4;
+      ctx.shadowColor = '#00FFFF'; ctx.shadowBlur = 15;
+      ctx.setLineDash([6 + hi * 2, 8 + hi * 3]);
+      ctx.lineDashOffset = -t * (30 + hi * 10);
+      ctx.beginPath(); ctx.arc(0, 0, hR, 0, Math.PI * 2); ctx.stroke();
+    }
+    ctx.setLineDash([]); ctx.globalAlpha = 1; ctx.shadowBlur = 0;
+
+    // ── 2. HEXAGONAL TECH BODY ───────────────────────────────────
+    const bodyG = ctx.createRadialGradient(-r * 0.2, -r * 0.2, 2, 0, 0, r);
+    bodyG.addColorStop(0, '#88FFFF'); bodyG.addColorStop(0.3, '#00FFEE');
+    bodyG.addColorStop(0.6, '#0088AA'); bodyG.addColorStop(1, '#002233');
+    ctx.fillStyle = bodyG;
+    ctx.shadowColor = '#00FFEE'; ctx.shadowBlur = 30 + pulse * 20;
+    ctx.beginPath();
+    for (let i = 0; i < 6; i++) {
+      const a = (i / 6) * Math.PI * 2 - Math.PI / 2;
+      if (i === 0) ctx.moveTo(Math.cos(a) * r, Math.sin(a) * r);
+      else ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r);
+    }
+    ctx.closePath(); ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // ── 3. CIRCUIT PATTERN OVERLAY ───────────────────────────────
+    ctx.strokeStyle = '#00FFFF'; ctx.lineWidth = 1.2; ctx.globalAlpha = 0.5;
+    const circuitPaths = [
+      [[0, -r * 0.6], [-r * 0.3, -r * 0.3], [-r * 0.5, 0]],
+      [[0, -r * 0.6], [r * 0.3, -r * 0.3], [r * 0.5, 0]],
+      [[-r * 0.3, r * 0.2], [0, r * 0.4], [r * 0.3, r * 0.2]],
+      [[-r * 0.5, 0], [-r * 0.3, r * 0.3], [0, r * 0.5]],
+      [[r * 0.5, 0], [r * 0.3, r * 0.3], [0, r * 0.5]],
+    ];
+    for (const path of circuitPaths) {
+      ctx.beginPath();
+      ctx.moveTo(path[0][0], path[0][1]);
+      for (let i = 1; i < path.length; i++) ctx.lineTo(path[i][0], path[i][1]);
+      ctx.stroke();
+    }
+    // Circuit nodes
+    ctx.fillStyle = '#00FFFF';
+    for (const path of circuitPaths) {
+      for (const [cx, cy] of path) {
+        ctx.beginPath(); ctx.arc(cx, cy, 2.5, 0, Math.PI * 2); ctx.fill();
+      }
+    }
+    ctx.globalAlpha = 1;
+
+    // ── 4. GLOWING ENERGY CORE ───────────────────────────────────
+    const corePulse = Math.sin(t * 4) * 0.3 + 0.7;
+    ctx.fillStyle = `rgba(0,255,238,${corePulse * 0.4})`;
+    ctx.shadowColor = '#00FFEE'; ctx.shadowBlur = 25;
+    ctx.beginPath(); ctx.arc(0, 0, r * 0.45, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = `rgba(255,255,255,${corePulse})`;
+    ctx.beginPath(); ctx.arc(0, 0, r * 0.22, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#00FFFF';
+    ctx.beginPath(); ctx.arc(0, 0, r * 0.10, 0, Math.PI * 2); ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // ── 5. HOLOGRAPHIC DATA RINGS ────────────────────────────────
+    ctx.save();
+    ctx.rotate(t * 0.8);
+    ctx.strokeStyle = '#FF00FF'; ctx.lineWidth = 1.8; ctx.globalAlpha = 0.7;
+    ctx.beginPath(); ctx.ellipse(0, 0, r * 0.75, r * 0.22, 0, 0, Math.PI * 2); ctx.stroke();
+    ctx.rotate(-t * 1.6);
+    ctx.strokeStyle = '#00FFCC'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.ellipse(0, 0, r * 0.85, r * 0.25, Math.PI / 4, 0, Math.PI * 2); ctx.stroke();
+    ctx.globalAlpha = 1;
+    ctx.restore();
+
+    // ── 6. CYBER VISOR EYES ──────────────────────────────────────
+    const visorW = r * 0.75, visorH = r * 0.16;
+    ctx.fillStyle = '#001122';
+    ctx.beginPath(); ctx.roundRect(-visorW / 2, -r * 0.25, visorW, visorH, 4); ctx.fill();
+    // Scanning effect
+    const scanX = ((t * 0.5) % 1) * visorW - visorW / 2;
+    ctx.fillStyle = `rgba(0,255,255,${0.6 + pulse * 0.3})`;
+    ctx.shadowColor = '#00FFFF'; ctx.shadowBlur = 10;
+    ctx.fillRect(scanX - 3, -r * 0.25 + 2, 6, visorH - 4);
+    ctx.shadowBlur = 0;
+    // Visor glow
+    ctx.strokeStyle = '#00FFEE'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.roundRect(-visorW / 2, -r * 0.25, visorW, visorH, 4); ctx.stroke();
+
+    // ── 7. TECH SPIKES / ANTENNA ─────────────────────────────────
+    ctx.strokeStyle = '#00FFEE'; ctx.lineWidth = 3;
+    ctx.shadowColor = '#00FFFF'; ctx.shadowBlur = 10;
+    for (let i = 0; i < 6; i++) {
+      const sa = (i / 6) * Math.PI * 2 + t * 0.15;
+      const sLen = r * (0.35 + Math.sin(t * 2 + i) * 0.08);
+      ctx.beginPath();
+      ctx.moveTo(Math.cos(sa) * r * 0.95, Math.sin(sa) * r * 0.95);
+      ctx.lineTo(Math.cos(sa) * (r + sLen), Math.sin(sa) * (r + sLen));
+      ctx.stroke();
+      // Tip glow
+      ctx.fillStyle = '#88FFFF';
+      ctx.beginPath(); ctx.arc(Math.cos(sa) * (r + sLen), Math.sin(sa) * (r + sLen), 4, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.shadowBlur = 0;
+
+    // ── 8. DUAL PLASMA CANNONS ───────────────────────────────────
+    for (const side of [-1, 1]) {
+      const ga = this._angle + side * 0.4;
+      const gunX = Math.cos(ga) * r;
+      const gunY = Math.sin(ga) * r;
+      const tipX = Math.cos(ga) * (r + 24);
+      const tipY = Math.sin(ga) * (r + 24);
+      ctx.strokeStyle = '#00DDFF'; ctx.lineWidth = 7; ctx.lineCap = 'round';
+      ctx.shadowColor = '#00FFFF'; ctx.shadowBlur = 10;
+      ctx.beginPath(); ctx.moveTo(gunX, gunY); ctx.lineTo(tipX, tipY); ctx.stroke();
+      ctx.strokeStyle = '#AAFFFF'; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.moveTo(tipX, tipY); ctx.lineTo(tipX + Math.cos(ga) * 10, tipY + Math.sin(ga) * 10); ctx.stroke();
+      ctx.shadowBlur = 0;
+    }
+
+    // ── 9. HOLOGRAPHIC FRAGMENTS (ENRAGED) ───────────────────────
+    if (this._enraged) {
+      ctx.globalAlpha = 0.6;
+      for (let i = 0; i < 12; i++) {
+        const fa = (i / 12) * Math.PI * 2 + t * 1.5;
+        const fr = r * (1.4 + Math.sin(t * 3 + i) * 0.2);
+        const fx = Math.cos(fa) * fr, fy = Math.sin(fa) * fr;
+        ctx.fillStyle = i % 3 === 0 ? '#FF00FF' : (i % 3 === 1 ? '#00FFFF' : '#FFFF00');
+        ctx.save(); ctx.translate(fx, fy); ctx.rotate(t * 2 + i);
+        ctx.fillRect(-4, -4, 8, 8); ctx.restore();
+      }
+      ctx.globalAlpha = 1;
+      // Glitch lines
+      ctx.strokeStyle = '#FF00FF'; ctx.lineWidth = 2; ctx.globalAlpha = 0.7;
+      for (let i = 0; i < 5; i++) {
+        const gy = -r + Math.random() * r * 2;
+        ctx.beginPath(); ctx.moveTo(-r * 1.2, gy); ctx.lineTo(r * 1.2, gy + (Math.random() - 0.5) * 10); ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    ctx.restore();
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // THE ABOMINATION — Mutant Horror Boss for Zombie Outbreak
+  // Grotesque mutations, infected glow, horror atmosphere, green theme
+  // ═══════════════════════════════════════════════════════════════════════════════
+  _renderAbomination(ctx, x, y, r, pulse) {
+    const t = this._pulseT;
+    const breathe = Math.sin(t * 1.2) * 0.05;
+    const twitch = this._enraged ? Math.sin(t * 15) * 3 : 0;
+    ctx.save();
+    ctx.translate(x + twitch, y);
+
+    // ── 1. TOXIC MIASMA AURA ─────────────────────────────────────
+    for (let mi = 0; mi < 4; mi++) {
+      const mR = r * (1.4 + mi * 0.25 + Math.sin(t * 0.8 + mi) * 0.12);
+      ctx.globalAlpha = (0.18 - mi * 0.04) + pulse * 0.08;
+      ctx.fillStyle = mi % 2 === 0 ? '#44FF66' : '#22AA44';
+      ctx.beginPath(); ctx.arc(0, 0, mR, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
+    // ── 2. BLOATED MUTANT BODY ───────────────────────────────────
+    const bodyScale = 1 + breathe;
+    ctx.save(); ctx.scale(bodyScale, bodyScale * 0.95);
+    const bodyG = ctx.createRadialGradient(-r * 0.2, -r * 0.15, 5, 0, 0, r);
+    bodyG.addColorStop(0, '#88FF99'); bodyG.addColorStop(0.3, '#44DD66');
+    bodyG.addColorStop(0.6, '#227744'); bodyG.addColorStop(1, '#0a2210');
+    ctx.fillStyle = bodyG;
+    ctx.shadowColor = '#44FF66'; ctx.shadowBlur = 25 + pulse * 15;
+    // Irregular blob shape
+    ctx.beginPath();
+    for (let i = 0; i <= 20; i++) {
+      const a = (i / 20) * Math.PI * 2;
+      const wobble = r * (0.92 + Math.sin(t * 2 + i * 0.8) * 0.08 + Math.sin(i * 3) * 0.05);
+      if (i === 0) ctx.moveTo(Math.cos(a) * wobble, Math.sin(a) * wobble);
+      else ctx.lineTo(Math.cos(a) * wobble, Math.sin(a) * wobble);
+    }
+    ctx.closePath(); ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.restore();
+
+    // ── 3. EXPOSED BONE PLATES ───────────────────────────────────
+    ctx.fillStyle = '#DDDDBB'; ctx.strokeStyle = '#888866'; ctx.lineWidth = 1.5;
+    const bones = [
+      [-r * 0.35, -r * 0.5, r * 0.25, r * 0.18],
+      [r * 0.25, -r * 0.45, r * 0.22, r * 0.15],
+      [0, r * 0.35, r * 0.28, r * 0.16],
+    ];
+    for (const [bx, by, bw, bh] of bones) {
+      ctx.beginPath(); ctx.ellipse(bx, by, bw, bh, 0, 0, Math.PI * 2);
+      ctx.fill(); ctx.stroke();
+    }
+
+    // ── 4. PULSING PUSTULES ──────────────────────────────────────
+    const pustules = [
+      [-r * 0.5, 0, r * 0.18], [r * 0.55, -r * 0.2, r * 0.15],
+      [-r * 0.3, r * 0.4, r * 0.14], [r * 0.4, r * 0.35, r * 0.16],
+      [0, -r * 0.65, r * 0.12], [-r * 0.15, r * 0.55, r * 0.13],
+    ];
+    for (let pi = 0; pi < pustules.length; pi++) {
+      const [px, py, pr] = pustules[pi];
+      const pustPulse = Math.sin(t * 3 + pi * 1.2) * 0.2 + 0.8;
+      const pustG = ctx.createRadialGradient(px - pr * 0.3, py - pr * 0.3, 1, px, py, pr);
+      pustG.addColorStop(0, '#EEFF44'); pustG.addColorStop(0.5, '#AACC22'); pustG.addColorStop(1, '#446600');
+      ctx.fillStyle = pustG;
+      ctx.shadowColor = '#AAFF44'; ctx.shadowBlur = 8 * pustPulse;
+      ctx.beginPath(); ctx.arc(px, py, pr * pustPulse, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.shadowBlur = 0;
+
+    // ── 5. MUTANT TENTACLES ──────────────────────────────────────
+    ctx.strokeStyle = '#33AA44'; ctx.lineCap = 'round';
+    const tentacles = 6;
+    for (let ti = 0; ti < tentacles; ti++) {
+      const baseA = (ti / tentacles) * Math.PI * 2 + Math.PI / tentacles;
+      const wave = Math.sin(t * 2 + ti * 1.5) * 0.4;
+      ctx.lineWidth = 8 - ti * 0.5;
+      ctx.beginPath();
+      const startX = Math.cos(baseA) * r * 0.7;
+      const startY = Math.sin(baseA) * r * 0.7;
+      const midX = Math.cos(baseA + wave) * r * 1.3;
+      const midY = Math.sin(baseA + wave) * r * 1.3;
+      const endX = Math.cos(baseA + wave * 1.5) * r * 1.7;
+      const endY = Math.sin(baseA + wave * 1.5) * r * 1.7;
+      ctx.moveTo(startX, startY);
+      ctx.quadraticCurveTo(midX, midY, endX, endY);
+      ctx.stroke();
+      // Sucker tips
+      ctx.fillStyle = '#66DD77';
+      ctx.beginPath(); ctx.arc(endX, endY, 5, 0, Math.PI * 2); ctx.fill();
+    }
+
+    // ── 6. MULTIPLE EYES (Horror) ────────────────────────────────
+    const eyes = [
+      [-r * 0.25, -r * 0.15, r * 0.14], [r * 0.22, -r * 0.18, r * 0.12],
+      [0, -r * 0.35, r * 0.10], [-r * 0.45, -r * 0.3, r * 0.08],
+      [r * 0.4, 0, r * 0.09], [-r * 0.1, r * 0.1, r * 0.07],
+    ];
+    for (let ei = 0; ei < eyes.length; ei++) {
+      const [ex, ey, er] = eyes[ei];
+      const blink = Math.sin(t * 2 + ei * 2) > 0.9 ? 0.2 : 1;
+      // Bloodshot sclera
+      ctx.fillStyle = '#FFEECC';
+      ctx.shadowColor = '#FF4400'; ctx.shadowBlur = 4;
+      ctx.beginPath(); ctx.ellipse(ex, ey, er, er * blink, 0, 0, Math.PI * 2); ctx.fill();
+      // Veins
+      if (er > 0.09 * r) {
+        ctx.strokeStyle = '#FF4444'; ctx.lineWidth = 0.8; ctx.globalAlpha = 0.5;
+        for (let vi = 0; vi < 4; vi++) {
+          const va = (vi / 4) * Math.PI * 2;
+          ctx.beginPath();
+          ctx.moveTo(ex, ey);
+          ctx.lineTo(ex + Math.cos(va) * er * 0.9, ey + Math.sin(va) * er * 0.9);
+          ctx.stroke();
+        }
+        ctx.globalAlpha = 1;
+      }
+      // Iris
+      ctx.fillStyle = this._enraged ? '#FF2200' : '#44FF44';
+      ctx.shadowColor = this._enraged ? '#FF0000' : '#00FF00'; ctx.shadowBlur = 8;
+      ctx.beginPath(); ctx.arc(ex, ey, er * 0.55 * blink, 0, Math.PI * 2); ctx.fill();
+      // Pupil
+      ctx.fillStyle = '#000'; ctx.shadowBlur = 0;
+      ctx.beginPath(); ctx.arc(ex, ey, er * 0.25 * blink, 0, Math.PI * 2); ctx.fill();
+    }
+
+    // ── 7. DRIPPING SLIME ────────────────────────────────────────
+    ctx.fillStyle = '#66FF88'; ctx.globalAlpha = 0.7;
+    for (let di = 0; di < 8; di++) {
+      const da = (di / 8) * Math.PI * 2 + t * 0.1;
+      const dx = Math.cos(da) * r * 0.95;
+      const dy = Math.sin(da) * r * 0.95;
+      const dripLen = (Math.sin(t * 2 + di * 1.5) * 0.5 + 0.5) * r * 0.5;
+      ctx.beginPath();
+      ctx.moveTo(dx - 4, dy);
+      ctx.quadraticCurveTo(dx, dy + dripLen * 0.7, dx - 2, dy + dripLen);
+      ctx.quadraticCurveTo(dx, dy + dripLen * 0.7, dx + 4, dy);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
+    // ── 8. GAPING MAW ────────────────────────────────────────────
+    const mouthOpen = 0.3 + Math.sin(t * 1.5) * 0.1 + (this._enraged ? 0.15 : 0);
+    ctx.fillStyle = '#220a00';
+    ctx.beginPath();
+    ctx.ellipse(0, r * 0.15, r * 0.35, r * mouthOpen, 0, 0, Math.PI * 2);
+    ctx.fill();
+    // Jagged teeth
+    ctx.fillStyle = '#FFEEAA';
+    for (let ti = -4; ti <= 4; ti++) {
+      const tx = ti * r * 0.065;
+      const tLen = (ti % 2 === 0 ? r * 0.12 : r * 0.08) * (this._enraged ? 1.3 : 1);
+      ctx.beginPath();
+      ctx.moveTo(tx - 4, r * 0.15 - r * mouthOpen * 0.8);
+      ctx.lineTo(tx, r * 0.15 - r * mouthOpen * 0.8 - tLen);
+      ctx.lineTo(tx + 4, r * 0.15 - r * mouthOpen * 0.8);
+      ctx.closePath(); ctx.fill();
+    }
+
+    // ── 9. ENRAGED: TOXIC EXPLOSION EFFECT ───────────────────────
+    if (this._enraged) {
+      ctx.globalAlpha = 0.35 + pulse * 0.2;
+      ctx.fillStyle = '#44FF00';
+      ctx.shadowColor = '#22FF00'; ctx.shadowBlur = 30;
+      ctx.beginPath(); ctx.arc(0, 0, r * 1.5 + pulse * r * 0.3, 0, Math.PI * 2); ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.globalAlpha = 1;
+      // Spore particles
+      ctx.fillStyle = '#AAFF44';
+      for (let si = 0; si < 20; si++) {
+        const sa = (si / 20) * Math.PI * 2 + t * 0.7;
+        const sr = r * (1.3 + Math.sin(t * 2 + si) * 0.3);
+        ctx.globalAlpha = 0.5 + Math.sin(t * 3 + si) * 0.3;
+        ctx.beginPath(); ctx.arc(Math.cos(sa) * sr, Math.sin(sa) * sr, 4, 0, Math.PI * 2); ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    ctx.restore();
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // THE RAVAGER — Post-Apocalyptic Warlord Boss for Wasteland
+  // Brutal scavenger aesthetic, rusty armor, Mad Max style, orange theme
+  // ═══════════════════════════════════════════════════════════════════════════════
+  _renderRavager(ctx, x, y, r, pulse) {
+    const t = this._pulseT;
+    const rumble = Math.sin(t * 8) * 2 * (this._enraged ? 1.5 : 0.5);
+    ctx.save();
+    ctx.translate(x + rumble, y);
+
+    // ── 1. DUST STORM AURA ───────────────────────────────────────
+    ctx.globalAlpha = 0.25 + pulse * 0.15;
+    for (let di = 0; di < 3; di++) {
+      const dR = r * (1.5 + di * 0.3 + Math.sin(t + di) * 0.1);
+      ctx.strokeStyle = di % 2 === 0 ? '#FF6622' : '#CC4400';
+      ctx.lineWidth = 3 - di * 0.5;
+      ctx.setLineDash([12, 8 + di * 4]);
+      ctx.lineDashOffset = -t * (40 + di * 15);
+      ctx.beginPath(); ctx.arc(0, 0, dR, 0, Math.PI * 2); ctx.stroke();
+    }
+    ctx.setLineDash([]); ctx.globalAlpha = 1;
+
+    // ── 2. MASSIVE ARMORED BODY ──────────────────────────────────
+    const bodyG = ctx.createRadialGradient(-r * 0.25, -r * 0.2, 5, 0, 0, r);
+    bodyG.addColorStop(0, '#FFAA66'); bodyG.addColorStop(0.3, '#CC6622');
+    bodyG.addColorStop(0.6, '#884411'); bodyG.addColorStop(1, '#331100');
+    ctx.fillStyle = bodyG;
+    ctx.shadowColor = '#FF6622'; ctx.shadowBlur = 20 + pulse * 15;
+    // Irregular armored shape
+    ctx.beginPath();
+    ctx.moveTo(0, -r);
+    ctx.lineTo(r * 0.7, -r * 0.6);
+    ctx.lineTo(r, 0);
+    ctx.lineTo(r * 0.8, r * 0.7);
+    ctx.lineTo(0, r);
+    ctx.lineTo(-r * 0.8, r * 0.7);
+    ctx.lineTo(-r, 0);
+    ctx.lineTo(-r * 0.7, -r * 0.6);
+    ctx.closePath(); ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // ── 3. RUSTY ARMOR PLATES ────────────────────────────────────
+    ctx.fillStyle = '#664422'; ctx.strokeStyle = '#442200'; ctx.lineWidth = 2;
+    const plates = [
+      [-r * 0.4, -r * 0.5, r * 0.35, r * 0.25, -0.2],
+      [r * 0.35, -r * 0.45, r * 0.32, r * 0.22, 0.15],
+      [0, -r * 0.2, r * 0.4, r * 0.2, 0],
+      [-r * 0.3, r * 0.25, r * 0.28, r * 0.18, 0.1],
+      [r * 0.35, r * 0.2, r * 0.25, r * 0.16, -0.1],
+    ];
+    for (const [px, py, pw, ph, rot] of plates) {
+      ctx.save(); ctx.translate(px, py); ctx.rotate(rot);
+      ctx.beginPath(); ctx.roundRect(-pw / 2, -ph / 2, pw, ph, 4);
+      ctx.fill(); ctx.stroke(); ctx.restore();
+    }
+
+    // ── 4. RIVETS AND BOLTS ──────────────────────────────────────
+    ctx.fillStyle = '#AA7744';
+    const rivets = [
+      [-r * 0.55, -r * 0.35], [r * 0.5, -r * 0.3], [-r * 0.6, r * 0.1],
+      [r * 0.58, r * 0.15], [-r * 0.4, r * 0.45], [r * 0.42, r * 0.4],
+      [0, -r * 0.7], [-r * 0.25, -r * 0.6], [r * 0.28, -r * 0.55],
+    ];
+    for (const [rx, ry] of rivets) {
+      ctx.beginPath(); ctx.arc(rx, ry, 4, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#553311';
+      ctx.beginPath(); ctx.arc(rx + 1, ry + 1, 2, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#AA7744';
+    }
+
+    // ── 5. WELDING SCARS ─────────────────────────────────────────
+    ctx.strokeStyle = '#553322'; ctx.lineWidth = 3; ctx.lineCap = 'round';
+    ctx.globalAlpha = 0.6;
+    ctx.beginPath(); ctx.moveTo(-r * 0.3, -r * 0.4); ctx.lineTo(-r * 0.1, 0); ctx.lineTo(-r * 0.25, r * 0.3); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(r * 0.25, -r * 0.35); ctx.lineTo(r * 0.4, r * 0.1); ctx.stroke();
+    ctx.globalAlpha = 1;
+
+    // ── 6. SKULL MASK ────────────────────────────────────────────
+    // Skull shape
+    ctx.fillStyle = '#EEDDCC';
+    ctx.shadowColor = '#FFAA66'; ctx.shadowBlur = 10;
+    ctx.beginPath();
+    ctx.arc(0, -r * 0.35, r * 0.32, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(-r * 0.18, -r * 0.1);
+    ctx.lineTo(0, r * 0.05);
+    ctx.lineTo(r * 0.18, -r * 0.1);
+    ctx.closePath(); ctx.fill();
+    ctx.shadowBlur = 0;
+    // Eye sockets
+    ctx.fillStyle = '#000';
+    ctx.beginPath(); ctx.ellipse(-r * 0.12, -r * 0.4, r * 0.09, r * 0.07, -0.15, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(r * 0.12, -r * 0.4, r * 0.09, r * 0.07, 0.15, 0, Math.PI * 2); ctx.fill();
+    // Glowing eyes
+    ctx.fillStyle = this._enraged ? '#FF2200' : '#FF6600';
+    ctx.shadowColor = this._enraged ? '#FF0000' : '#FF4400'; ctx.shadowBlur = 15;
+    ctx.beginPath(); ctx.arc(-r * 0.12, -r * 0.4, r * 0.05, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(r * 0.12, -r * 0.4, r * 0.05, 0, Math.PI * 2); ctx.fill();
+    ctx.shadowBlur = 0;
+    // Nose hole
+    ctx.fillStyle = '#221100';
+    ctx.beginPath(); ctx.ellipse(0, -r * 0.22, r * 0.05, r * 0.08, 0, 0, Math.PI * 2); ctx.fill();
+    // Teeth
+    ctx.fillStyle = '#DDCCAA';
+    for (let ti = -2; ti <= 2; ti++) {
+      ctx.beginPath();
+      ctx.rect(ti * r * 0.06 - r * 0.025, -r * 0.12, r * 0.05, r * 0.08);
+      ctx.fill();
+    }
+
+    // ── 7. SHOULDER SPIKES ───────────────────────────────────────
+    ctx.fillStyle = '#775533';
+    ctx.shadowColor = '#FF6622'; ctx.shadowBlur = 8;
+    for (const side of [-1, 1]) {
+      const sx = side * r * 0.75;
+      for (let si = 0; si < 3; si++) {
+        const sa = -Math.PI / 4 + si * Math.PI / 6;
+        const sLen = r * (0.3 + si * 0.1);
+        ctx.beginPath();
+        ctx.moveTo(sx - side * 8, -r * 0.3 + si * 8);
+        ctx.lineTo(sx + Math.cos(sa + side * Math.PI / 2) * sLen, -r * 0.3 + si * 8 + Math.sin(sa) * sLen);
+        ctx.lineTo(sx + side * 8, -r * 0.3 + si * 8 + 12);
+        ctx.closePath(); ctx.fill();
+      }
+    }
+    ctx.shadowBlur = 0;
+
+    // ── 8. CHAIN WEAPON ──────────────────────────────────────────
+    ctx.strokeStyle = '#888'; ctx.lineWidth = 4;
+    const chainAngle = this._angle + Math.sin(t * 2) * 0.3;
+    const chainLen = r + 35;
+    ctx.beginPath();
+    ctx.moveTo(Math.cos(chainAngle) * r * 0.8, Math.sin(chainAngle) * r * 0.8);
+    ctx.lineTo(Math.cos(chainAngle) * chainLen, Math.sin(chainAngle) * chainLen);
+    ctx.stroke();
+    // Chain links
+    for (let ci = 0; ci < 6; ci++) {
+      const cx = Math.cos(chainAngle) * (r * 0.8 + ci * 8);
+      const cy = Math.sin(chainAngle) * (r * 0.8 + ci * 8);
+      ctx.strokeStyle = ci % 2 === 0 ? '#AAA' : '#666';
+      ctx.beginPath(); ctx.arc(cx, cy, 4, 0, Math.PI * 2); ctx.stroke();
+    }
+    // Spiked ball
+    ctx.fillStyle = '#554433';
+    ctx.shadowColor = '#FF6622'; ctx.shadowBlur = 10;
+    const ballX = Math.cos(chainAngle) * chainLen;
+    const ballY = Math.sin(chainAngle) * chainLen;
+    ctx.beginPath(); ctx.arc(ballX, ballY, 14, 0, Math.PI * 2); ctx.fill();
+    // Spikes on ball
+    ctx.fillStyle = '#887766';
+    for (let spi = 0; spi < 8; spi++) {
+      const spa = (spi / 8) * Math.PI * 2;
+      ctx.beginPath();
+      ctx.moveTo(ballX + Math.cos(spa) * 10, ballY + Math.sin(spa) * 10);
+      ctx.lineTo(ballX + Math.cos(spa) * 22, ballY + Math.sin(spa) * 22);
+      ctx.lineTo(ballX + Math.cos(spa + 0.2) * 10, ballY + Math.sin(spa + 0.2) * 10);
+      ctx.closePath(); ctx.fill();
+    }
+    ctx.shadowBlur = 0;
+
+    // ── 9. ENRAGED: FIRE AURA ────────────────────────────────────
+    if (this._enraged) {
+      ctx.globalAlpha = 0.4 + pulse * 0.2;
+      ctx.fillStyle = '#FF4400';
+      ctx.shadowColor = '#FF2200'; ctx.shadowBlur = 35;
+      ctx.beginPath(); ctx.arc(0, 0, r * 1.4, 0, Math.PI * 2); ctx.fill();
+      ctx.shadowBlur = 0;
+      // Fire particles
+      ctx.fillStyle = '#FFAA00';
+      for (let fi = 0; fi < 15; fi++) {
+        const fa = (fi / 15) * Math.PI * 2 + t;
+        const fr = r * (1.1 + Math.sin(t * 4 + fi * 2) * 0.25);
+        const fy = Math.sin(t * 3 + fi) * 10;
+        ctx.globalAlpha = 0.6 + Math.sin(t * 5 + fi) * 0.3;
+        ctx.beginPath();
+        ctx.moveTo(Math.cos(fa) * fr, Math.sin(fa) * fr + fy);
+        ctx.lineTo(Math.cos(fa) * fr - 5, Math.sin(fa) * fr + fy + 15);
+        ctx.lineTo(Math.cos(fa) * fr + 5, Math.sin(fa) * fr + fy + 15);
+        ctx.closePath(); ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    ctx.restore();
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // VOLTAGE PHANTOM — Lightning Speed Boss for Blitz Mode
+  // Fast aggressive electric boss, lightning VFX, sharp futuristic armor, red theme
+  // ═══════════════════════════════════════════════════════════════════════════════
+  _renderVoltagePhantom(ctx, x, y, r, pulse) {
+    const t = this._pulseT;
+    const flicker = Math.random() > 0.9 ? 0.5 : 1;
+    const speedBlur = Math.sin(t * 12) * 3;
+    ctx.save();
+    ctx.translate(x, y);
+
+    // ── 1. ELECTRIC DISCHARGE AURA ───────────────────────────────
+    ctx.globalAlpha = (0.4 + pulse * 0.3) * flicker;
+    for (let ei = 0; ei < 3; ei++) {
+      const eR = r * (1.3 + ei * 0.2);
+      ctx.strokeStyle = ei === 0 ? '#FF2200' : (ei === 1 ? '#FF6644' : '#FFAA88');
+      ctx.lineWidth = 3 - ei * 0.5;
+      ctx.shadowColor = '#FF4400'; ctx.shadowBlur = 20;
+      ctx.beginPath(); ctx.arc(0, 0, eR, 0, Math.PI * 2); ctx.stroke();
+    }
+    ctx.shadowBlur = 0; ctx.globalAlpha = 1;
+
+    // ── 2. LIGHTNING BOLTS ───────────────────────────────────────
+    ctx.strokeStyle = '#FF4400'; ctx.lineWidth = 3;
+    ctx.shadowColor = '#FF2200'; ctx.shadowBlur = 15;
+    for (let li = 0; li < 8; li++) {
+      const la = (li / 8) * Math.PI * 2 + t * 2;
+      ctx.globalAlpha = 0.5 + Math.random() * 0.4;
+      ctx.beginPath();
+      let lx = Math.cos(la) * r * 0.8;
+      let ly = Math.sin(la) * r * 0.8;
+      ctx.moveTo(lx, ly);
+      for (let seg = 0; seg < 4; seg++) {
+        const segLen = r * (0.15 + Math.random() * 0.15);
+        const segAngle = la + (Math.random() - 0.5) * 0.8;
+        lx += Math.cos(segAngle) * segLen;
+        ly += Math.sin(segAngle) * segLen;
+        ctx.lineTo(lx, ly);
+      }
+      ctx.stroke();
+    }
+    ctx.shadowBlur = 0; ctx.globalAlpha = 1;
+
+    // ── 3. SLEEK SHARP BODY ──────────────────────────────────────
+    const bodyG = ctx.createRadialGradient(-r * 0.2, -r * 0.2, 2, 0, 0, r);
+    bodyG.addColorStop(0, '#FF8866'); bodyG.addColorStop(0.3, '#FF2200');
+    bodyG.addColorStop(0.6, '#AA0000'); bodyG.addColorStop(1, '#330000');
+    ctx.fillStyle = bodyG;
+    ctx.shadowColor = '#FF2200'; ctx.shadowBlur = 25 + pulse * 20;
+    // Sharp diamond shape
+    ctx.beginPath();
+    ctx.moveTo(0, -r);
+    ctx.lineTo(r * 0.6, -r * 0.3);
+    ctx.lineTo(r, 0);
+    ctx.lineTo(r * 0.6, r * 0.3);
+    ctx.lineTo(0, r);
+    ctx.lineTo(-r * 0.6, r * 0.3);
+    ctx.lineTo(-r, 0);
+    ctx.lineTo(-r * 0.6, -r * 0.3);
+    ctx.closePath(); ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // ── 4. SPEED LINES ───────────────────────────────────────────
+    ctx.strokeStyle = '#FF4400'; ctx.lineWidth = 2; ctx.globalAlpha = 0.5;
+    for (let si = 0; si < 6; si++) {
+      const sx = -r * 1.5 - si * 10 + speedBlur;
+      const sy = -r * 0.5 + si * r * 0.2;
+      ctx.beginPath();
+      ctx.moveTo(sx, sy);
+      ctx.lineTo(sx - 25 - Math.random() * 15, sy);
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+
+    // ── 5. ENERGY CORE ───────────────────────────────────────────
+    const corePulse = Math.sin(t * 8) * 0.3 + 0.7;
+    ctx.fillStyle = `rgba(255,100,0,${corePulse * 0.5})`;
+    ctx.shadowColor = '#FF4400'; ctx.shadowBlur = 20;
+    ctx.beginPath(); ctx.arc(0, 0, r * 0.4, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = `rgba(255,200,100,${corePulse})`;
+    ctx.beginPath(); ctx.arc(0, 0, r * 0.2, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#FFFFFF';
+    ctx.beginPath(); ctx.arc(0, 0, r * 0.08, 0, Math.PI * 2); ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // ── 6. VISOR EYES ────────────────────────────────────────────
+    ctx.fillStyle = '#220000';
+    ctx.beginPath();
+    ctx.moveTo(-r * 0.5, -r * 0.25);
+    ctx.lineTo(-r * 0.1, -r * 0.35);
+    ctx.lineTo(r * 0.1, -r * 0.35);
+    ctx.lineTo(r * 0.5, -r * 0.25);
+    ctx.lineTo(r * 0.4, -r * 0.15);
+    ctx.lineTo(-r * 0.4, -r * 0.15);
+    ctx.closePath(); ctx.fill();
+    // Glowing visor
+    ctx.fillStyle = '#FF4400';
+    ctx.shadowColor = '#FF2200'; ctx.shadowBlur = 15 * flicker;
+    ctx.beginPath();
+    ctx.moveTo(-r * 0.45, -r * 0.24);
+    ctx.lineTo(-r * 0.12, -r * 0.32);
+    ctx.lineTo(r * 0.12, -r * 0.32);
+    ctx.lineTo(r * 0.45, -r * 0.24);
+    ctx.lineTo(r * 0.38, -r * 0.18);
+    ctx.lineTo(-r * 0.38, -r * 0.18);
+    ctx.closePath(); ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // ── 7. BLADE ARMS ────────────────────────────────────────────
+    ctx.fillStyle = '#CC2200';
+    ctx.shadowColor = '#FF4400'; ctx.shadowBlur = 10;
+    for (const side of [-1, 1]) {
+      ctx.beginPath();
+      ctx.moveTo(side * r * 0.7, -r * 0.1);
+      ctx.lineTo(side * r * 1.4, -r * 0.15);
+      ctx.lineTo(side * r * 1.5, 0);
+      ctx.lineTo(side * r * 1.4, r * 0.15);
+      ctx.lineTo(side * r * 0.7, r * 0.1);
+      ctx.closePath(); ctx.fill();
+      // Energy edge
+      ctx.strokeStyle = '#FF8844'; ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(side * r * 0.9, -r * 0.12);
+      ctx.lineTo(side * r * 1.45, 0);
+      ctx.lineTo(side * r * 0.9, r * 0.12);
+      ctx.stroke();
+    }
+    ctx.shadowBlur = 0;
+
+    // ── 8. AFTERIMAGE TRAIL ──────────────────────────────────────
+    ctx.globalAlpha = 0.25;
+    for (let ai = 1; ai <= 3; ai++) {
+      ctx.fillStyle = `rgba(255,34,0,${0.15 / ai})`;
+      const ax = -ai * 20;
+      ctx.beginPath();
+      ctx.moveTo(ax, -r * 0.8);
+      ctx.lineTo(ax + r * 0.5, -r * 0.25);
+      ctx.lineTo(ax + r * 0.8, 0);
+      ctx.lineTo(ax + r * 0.5, r * 0.25);
+      ctx.lineTo(ax, r * 0.8);
+      ctx.lineTo(ax - r * 0.5, r * 0.25);
+      ctx.lineTo(ax - r * 0.8, 0);
+      ctx.lineTo(ax - r * 0.5, -r * 0.25);
+      ctx.closePath(); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
+    // ── 9. CHARGE EFFECT ─────────────────────────────────────────
+    if (this._chargeActive) {
+      ctx.globalAlpha = 0.6;
+      ctx.fillStyle = '#FF2200';
+      ctx.shadowColor = '#FF0000'; ctx.shadowBlur = 40;
+      ctx.beginPath(); ctx.arc(0, 0, r * 1.6, 0, Math.PI * 2); ctx.fill();
+      // Motion blur streaks
+      ctx.strokeStyle = '#FFAA00'; ctx.lineWidth = 4;
+      for (let mi = 0; mi < 10; mi++) {
+        const mx = -r * 2 - mi * 15;
+        const my = (Math.random() - 0.5) * r * 1.5;
+        ctx.beginPath(); ctx.moveTo(mx, my); ctx.lineTo(mx - 40, my); ctx.stroke();
+      }
+      ctx.shadowBlur = 0; ctx.globalAlpha = 1;
+    }
+
+    // ── 10. ENRAGED: OVERCHARGE ──────────────────────────────────
+    if (this._enraged) {
+      ctx.globalAlpha = 0.5 + pulse * 0.3;
+      ctx.strokeStyle = '#FFFF00'; ctx.lineWidth = 3;
+      ctx.shadowColor = '#FFAA00'; ctx.shadowBlur = 20;
+      for (let oi = 0; oi < 12; oi++) {
+        const oa = (oi / 12) * Math.PI * 2 + t * 3;
+        ctx.beginPath();
+        ctx.moveTo(Math.cos(oa) * r, Math.sin(oa) * r);
+        let ox = Math.cos(oa) * r, oy = Math.sin(oa) * r;
+        for (let seg = 0; seg < 3; seg++) {
+          ox += (Math.random() - 0.5) * 20;
+          oy += (Math.random() - 0.5) * 20 - 10;
+          ctx.lineTo(ox, oy);
+        }
+        ctx.stroke();
+      }
+      ctx.shadowBlur = 0; ctx.globalAlpha = 1;
+    }
+
+    ctx.restore();
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // FROST TITAN — Ancient Ice Guardian Boss for Frozen Tundra
+  // Frozen armor, icy particles, cold blue-white palette, ancient guardian feeling
+  // ═══════════════════════════════════════════════════════════════════════════════
+  _renderFrostTitan(ctx, x, y, r, pulse) {
+    const t = this._pulseT;
+    const breathe = Math.sin(t * 0.8) * 0.03;
+    ctx.save();
+    ctx.translate(x, y);
+
+    // ── 1. BLIZZARD AURA ─────────────────────────────────────────
+    ctx.globalAlpha = 0.3 + pulse * 0.15;
+    for (let bi = 0; bi < 3; bi++) {
+      const bR = r * (1.5 + bi * 0.25 + Math.sin(t * 0.6 + bi) * 0.1);
+      ctx.strokeStyle = bi === 0 ? '#88DDFF' : (bi === 1 ? '#AAEEFF' : '#CCFFFF');
+      ctx.lineWidth = 3 - bi * 0.5;
+      ctx.setLineDash([8, 12 + bi * 4]);
+      ctx.lineDashOffset = t * (25 + bi * 8);
+      ctx.beginPath(); ctx.arc(0, 0, bR, 0, Math.PI * 2); ctx.stroke();
+    }
+    ctx.setLineDash([]); ctx.globalAlpha = 1;
+
+    // ── 2. SNOWFLAKE PARTICLES ───────────────────────────────────
+    ctx.fillStyle = '#FFFFFF'; ctx.globalAlpha = 0.7;
+    for (let si = 0; si < 25; si++) {
+      const sa = (si / 25) * Math.PI * 2 + t * 0.5;
+      const sr = r * (1.2 + Math.sin(t + si * 0.7) * 0.4);
+      const sz = 2 + Math.sin(t * 2 + si) * 1.5;
+      ctx.beginPath(); ctx.arc(Math.cos(sa) * sr, Math.sin(sa) * sr, sz, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
+    // ── 3. MASSIVE ICE BODY ──────────────────────────────────────
+    const bodyScale = 1 + breathe;
+    ctx.save(); ctx.scale(bodyScale, bodyScale);
+    const bodyG = ctx.createRadialGradient(-r * 0.2, -r * 0.25, 5, 0, 0, r);
+    bodyG.addColorStop(0, '#FFFFFF'); bodyG.addColorStop(0.2, '#CCFFFF');
+    bodyG.addColorStop(0.5, '#66BBDD'); bodyG.addColorStop(0.8, '#2266AA');
+    bodyG.addColorStop(1, '#0a2244');
+    ctx.fillStyle = bodyG;
+    ctx.shadowColor = '#88DDFF'; ctx.shadowBlur = 30 + pulse * 20;
+    // Crystal-like angular shape
+    ctx.beginPath();
+    ctx.moveTo(0, -r);
+    ctx.lineTo(r * 0.55, -r * 0.7);
+    ctx.lineTo(r * 0.85, -r * 0.2);
+    ctx.lineTo(r, r * 0.3);
+    ctx.lineTo(r * 0.6, r * 0.8);
+    ctx.lineTo(0, r);
+    ctx.lineTo(-r * 0.6, r * 0.8);
+    ctx.lineTo(-r, r * 0.3);
+    ctx.lineTo(-r * 0.85, -r * 0.2);
+    ctx.lineTo(-r * 0.55, -r * 0.7);
+    ctx.closePath(); ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.restore();
+
+    // ── 4. ICE CRYSTAL FORMATIONS ────────────────────────────────
+    ctx.fillStyle = '#AADDFF'; ctx.strokeStyle = '#CCFFFF'; ctx.lineWidth = 1.5;
+    const crystals = [
+      [0, -r * 0.85, r * 0.25, r * 0.4, 0],
+      [-r * 0.45, -r * 0.55, r * 0.18, r * 0.3, -0.3],
+      [r * 0.42, -r * 0.58, r * 0.16, r * 0.28, 0.25],
+      [-r * 0.7, 0, r * 0.14, r * 0.25, -0.5],
+      [r * 0.68, -r * 0.05, r * 0.15, r * 0.26, 0.45],
+    ];
+    for (const [cx, cy, cw, ch, rot] of crystals) {
+      ctx.save(); ctx.translate(cx, cy); ctx.rotate(rot);
+      // Crystal spike
+      ctx.beginPath();
+      ctx.moveTo(0, -ch);
+      ctx.lineTo(cw, ch * 0.4);
+      ctx.lineTo(cw * 0.4, ch);
+      ctx.lineTo(-cw * 0.4, ch);
+      ctx.lineTo(-cw, ch * 0.4);
+      ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.restore();
+    }
+
+    // ── 5. FROST RUNES ───────────────────────────────────────────
+    ctx.strokeStyle = '#AAFFFF'; ctx.lineWidth = 2; ctx.globalAlpha = 0.6 + pulse * 0.3;
+    ctx.shadowColor = '#88FFFF'; ctx.shadowBlur = 8;
+    // Rune circle
+    ctx.beginPath(); ctx.arc(0, 0, r * 0.55, 0, Math.PI * 2); ctx.stroke();
+    // Inner runes
+    for (let ri = 0; ri < 6; ri++) {
+      const ra = (ri / 6) * Math.PI * 2 + t * 0.2;
+      ctx.beginPath();
+      ctx.moveTo(Math.cos(ra) * r * 0.35, Math.sin(ra) * r * 0.35);
+      ctx.lineTo(Math.cos(ra) * r * 0.55, Math.sin(ra) * r * 0.55);
+      ctx.stroke();
+      // Rune symbols
+      ctx.beginPath();
+      ctx.moveTo(Math.cos(ra) * r * 0.45 - 5, Math.sin(ra) * r * 0.45);
+      ctx.lineTo(Math.cos(ra) * r * 0.45 + 5, Math.sin(ra) * r * 0.45 - 8);
+      ctx.lineTo(Math.cos(ra) * r * 0.45 + 5, Math.sin(ra) * r * 0.45 + 8);
+      ctx.stroke();
+    }
+    ctx.shadowBlur = 0; ctx.globalAlpha = 1;
+
+    // ── 6. FROZEN FACE ───────────────────────────────────────────
+    // Eye sockets
+    ctx.fillStyle = '#0a2244';
+    ctx.beginPath(); ctx.ellipse(-r * 0.2, -r * 0.25, r * 0.12, r * 0.08, -0.1, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(r * 0.2, -r * 0.25, r * 0.12, r * 0.08, 0.1, 0, Math.PI * 2); ctx.fill();
+    // Glowing ice eyes
+    ctx.fillStyle = this._enraged ? '#FF4444' : '#88FFFF';
+    ctx.shadowColor = this._enraged ? '#FF0000' : '#44FFFF'; ctx.shadowBlur = 20;
+    ctx.beginPath(); ctx.arc(-r * 0.2, -r * 0.25, r * 0.07, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(r * 0.2, -r * 0.25, r * 0.07, 0, Math.PI * 2); ctx.fill();
+    ctx.shadowBlur = 0;
+    // Stern mouth
+    ctx.strokeStyle = '#224466'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(-r * 0.15, r * 0.05); ctx.lineTo(r * 0.15, r * 0.05); ctx.stroke();
+
+    // ── 7. ICE CROWN ─────────────────────────────────────────────
+    ctx.fillStyle = '#CCFFFF';
+    ctx.shadowColor = '#88FFFF'; ctx.shadowBlur = 12;
+    const crownSpikes = [
+      [0, -r * 1.1, 8], [-r * 0.25, -r * 0.95, 6], [r * 0.25, -r * 0.95, 6],
+      [-r * 0.45, -r * 0.8, 5], [r * 0.45, -r * 0.8, 5],
+    ];
+    for (const [cx, cy, cw] of crownSpikes) {
+      ctx.beginPath();
+      ctx.moveTo(cx - cw, -r * 0.65);
+      ctx.lineTo(cx, cy);
+      ctx.lineTo(cx + cw, -r * 0.65);
+      ctx.closePath(); ctx.fill();
+    }
+    ctx.shadowBlur = 0;
+
+    // ── 8. FROST BREATH WEAPON ───────────────────────────────────
+    const gunX = Math.cos(this._angle) * r;
+    const gunY = Math.sin(this._angle) * r;
+    ctx.strokeStyle = '#88DDFF'; ctx.lineWidth = 10; ctx.lineCap = 'round';
+    ctx.shadowColor = '#44FFFF'; ctx.shadowBlur = 15;
+    ctx.beginPath();
+    ctx.moveTo(gunX, gunY);
+    ctx.lineTo(Math.cos(this._angle) * (r + 30), Math.sin(this._angle) * (r + 30));
+    ctx.stroke();
+    // Frost particles from weapon
+    ctx.fillStyle = '#CCFFFF';
+    for (let fi = 0; fi < 5; fi++) {
+      const fa = this._angle + (Math.random() - 0.5) * 0.4;
+      const fd = r + 35 + Math.random() * 20;
+      ctx.globalAlpha = 0.5 + Math.random() * 0.3;
+      ctx.beginPath(); ctx.arc(Math.cos(fa) * fd, Math.sin(fa) * fd, 3 + Math.random() * 3, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.globalAlpha = 1; ctx.shadowBlur = 0;
+
+    // ── 9. ENRAGED: ABSOLUTE ZERO AURA ───────────────────────────
+    if (this._enraged) {
+      ctx.globalAlpha = 0.4 + pulse * 0.25;
+      ctx.fillStyle = '#AAFFFF';
+      ctx.shadowColor = '#88FFFF'; ctx.shadowBlur = 40;
+      ctx.beginPath(); ctx.arc(0, 0, r * 1.6, 0, Math.PI * 2); ctx.fill();
+      ctx.shadowBlur = 0;
+      // Ice shards flying
+      ctx.fillStyle = '#FFFFFF';
+      for (let ii = 0; ii < 16; ii++) {
+        const ia = (ii / 16) * Math.PI * 2 + t * 0.8;
+        const ir = r * (1.3 + Math.sin(t * 2 + ii) * 0.2);
+        ctx.save(); ctx.translate(Math.cos(ia) * ir, Math.sin(ia) * ir); ctx.rotate(ia);
+        ctx.beginPath();
+        ctx.moveTo(0, -8); ctx.lineTo(4, 8); ctx.lineTo(-4, 8);
+        ctx.closePath(); ctx.fill();
+        ctx.restore();
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    ctx.restore();
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // THE CORPORATE — Elite Urban Boss for Metropolis
+  // High-tech executive style, corporate sci-fi, sleek tactical armor, orange theme
+  // ═══════════════════════════════════════════════════════════════════════════════
+  _renderCorporate(ctx, x, y, r, pulse) {
+    const t = this._pulseT;
+    ctx.save();
+    ctx.translate(x, y);
+
+    // ── 1. EXECUTIVE AURA ────────────────────────────────────────
+    ctx.globalAlpha = 0.25 + pulse * 0.15;
+    for (let ai = 0; ai < 3; ai++) {
+      const aR = r * (1.25 + ai * 0.2);
+      ctx.strokeStyle = ai === 0 ? '#FF9933' : (ai === 1 ? '#FFCC66' : '#FFEE99');
+      ctx.lineWidth = 2.5 - ai * 0.5;
+      ctx.shadowColor = '#FF9933'; ctx.shadowBlur = 15;
+      ctx.beginPath(); ctx.arc(0, 0, aR, 0, Math.PI * 2); ctx.stroke();
+    }
+    ctx.shadowBlur = 0; ctx.globalAlpha = 1;
+
+    // ── 2. SLEEK SUIT BODY ───────────────────────────────────────
+    const bodyG = ctx.createRadialGradient(-r * 0.2, -r * 0.25, 5, 0, 0, r);
+    bodyG.addColorStop(0, '#FFCC88'); bodyG.addColorStop(0.3, '#FF9933');
+    bodyG.addColorStop(0.6, '#CC6600'); bodyG.addColorStop(1, '#331a00');
+    ctx.fillStyle = bodyG;
+    ctx.shadowColor = '#FF9933'; ctx.shadowBlur = 25 + pulse * 15;
+    // Clean geometric shape
+    ctx.beginPath();
+    ctx.moveTo(0, -r);
+    ctx.lineTo(r * 0.7, -r * 0.5);
+    ctx.lineTo(r, r * 0.2);
+    ctx.lineTo(r * 0.5, r);
+    ctx.lineTo(-r * 0.5, r);
+    ctx.lineTo(-r, r * 0.2);
+    ctx.lineTo(-r * 0.7, -r * 0.5);
+    ctx.closePath(); ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // ── 3. BUSINESS SUIT PATTERN ─────────────────────────────────
+    ctx.strokeStyle = '#FFCC66'; ctx.lineWidth = 1.2; ctx.globalAlpha = 0.3;
+    // Lapels
+    ctx.beginPath();
+    ctx.moveTo(-r * 0.15, -r * 0.6);
+    ctx.lineTo(-r * 0.35, r * 0.2);
+    ctx.moveTo(r * 0.15, -r * 0.6);
+    ctx.lineTo(r * 0.35, r * 0.2);
+    ctx.stroke();
+    // Buttons
+    ctx.fillStyle = '#FFD700'; ctx.globalAlpha = 0.7;
+    for (let bi = 0; bi < 3; bi++) {
+      ctx.beginPath(); ctx.arc(0, -r * 0.25 + bi * r * 0.22, 4, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
+    // ── 4. HOLOGRAPHIC TIE ───────────────────────────────────────
+    ctx.fillStyle = '#FF6600';
+    ctx.shadowColor = '#FF9933'; ctx.shadowBlur = 8;
+    ctx.beginPath();
+    ctx.moveTo(0, -r * 0.5);
+    ctx.lineTo(r * 0.08, -r * 0.3);
+    ctx.lineTo(r * 0.06, r * 0.3);
+    ctx.lineTo(0, r * 0.4);
+    ctx.lineTo(-r * 0.06, r * 0.3);
+    ctx.lineTo(-r * 0.08, -r * 0.3);
+    ctx.closePath(); ctx.fill();
+    ctx.shadowBlur = 0;
+    // Tie pattern
+    ctx.strokeStyle = '#FFAA44'; ctx.lineWidth = 1; ctx.globalAlpha = 0.6;
+    for (let ti = 0; ti < 4; ti++) {
+      const ty = -r * 0.35 + ti * r * 0.15;
+      ctx.beginPath(); ctx.moveTo(-r * 0.05, ty); ctx.lineTo(r * 0.05, ty + r * 0.05); ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+
+    // ── 5. COLD EXECUTIVE FACE ───────────────────────────────────
+    // Face plate
+    ctx.fillStyle = '#442200';
+    ctx.beginPath(); ctx.ellipse(0, -r * 0.55, r * 0.3, r * 0.25, 0, 0, Math.PI * 2); ctx.fill();
+    // Stern eyes
+    ctx.fillStyle = '#000';
+    ctx.beginPath(); ctx.ellipse(-r * 0.12, -r * 0.58, r * 0.08, r * 0.04, -0.1, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(r * 0.12, -r * 0.58, r * 0.08, r * 0.04, 0.1, 0, Math.PI * 2); ctx.fill();
+    // Calculating gaze
+    ctx.fillStyle = this._enraged ? '#FF0000' : '#FF9933';
+    ctx.shadowColor = this._enraged ? '#FF4400' : '#FFCC00'; ctx.shadowBlur = 12;
+    ctx.beginPath(); ctx.arc(-r * 0.12, -r * 0.58, r * 0.04, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(r * 0.12, -r * 0.58, r * 0.04, 0, Math.PI * 2); ctx.fill();
+    ctx.shadowBlur = 0;
+    // Stern mouth
+    ctx.strokeStyle = '#221100'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(-r * 0.08, -r * 0.42); ctx.lineTo(r * 0.08, -r * 0.42); ctx.stroke();
+
+    // ── 6. SHOULDER PADS ─────────────────────────────────────────
+    ctx.fillStyle = '#884400';
+    ctx.shadowColor = '#FF9933'; ctx.shadowBlur = 8;
+    for (const side of [-1, 1]) {
+      ctx.beginPath();
+      ctx.roundRect(side * r * 0.55 - r * 0.15, -r * 0.55, r * 0.3, r * 0.25, 5);
+      ctx.fill();
+      // Rank insignia
+      ctx.fillStyle = '#FFD700';
+      for (let ri = 0; ri < 3; ri++) {
+        ctx.beginPath(); ctx.rect(side * r * 0.55 - r * 0.08 + ri * r * 0.05, -r * 0.5, r * 0.03, r * 0.15); ctx.fill();
+      }
+      ctx.fillStyle = '#884400';
+    }
+    ctx.shadowBlur = 0;
+
+    // ── 7. DATA STREAMS ──────────────────────────────────────────
+    ctx.strokeStyle = '#FFCC00'; ctx.lineWidth = 1.5; ctx.globalAlpha = 0.6;
+    for (let di = 0; di < 8; di++) {
+      const da = (di / 8) * Math.PI * 2 + t * 0.8;
+      const dr = r * 1.1;
+      ctx.beginPath();
+      ctx.moveTo(Math.cos(da) * r * 0.9, Math.sin(da) * r * 0.9);
+      ctx.lineTo(Math.cos(da) * dr, Math.sin(da) * dr);
+      ctx.stroke();
+      // Data nodes
+      ctx.fillStyle = '#FFEE00';
+      ctx.beginPath(); ctx.rect(Math.cos(da) * dr - 3, Math.sin(da) * dr - 3, 6, 6); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
+    // ── 8. BRIEFCASE WEAPON ──────────────────────────────────────
+    const bx = Math.cos(this._angle) * r * 0.8;
+    const by = Math.sin(this._angle) * r * 0.8;
+    ctx.fillStyle = '#553311';
+    ctx.shadowColor = '#FF9933'; ctx.shadowBlur = 10;
+    ctx.save(); ctx.translate(bx, by); ctx.rotate(this._angle);
+    // Briefcase
+    ctx.beginPath(); ctx.roundRect(-15, -10, 30, 20, 3); ctx.fill();
+    // Handle
+    ctx.strokeStyle = '#FFD700'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.arc(0, -12, 8, Math.PI, 0); ctx.stroke();
+    // Open weapon barrel
+    ctx.fillStyle = '#000';
+    ctx.beginPath(); ctx.rect(15, -5, 25, 10); ctx.fill();
+    ctx.fillStyle = '#FF6600';
+    ctx.beginPath(); ctx.rect(17, -3, 20, 6); ctx.fill();
+    ctx.restore();
+    ctx.shadowBlur = 0;
+
+    // ── 9. ORBITING STOCK TICKERS ────────────────────────────────
+    ctx.font = 'bold 10px monospace'; ctx.textAlign = 'center';
+    const tickers = ['▲', '▼', '◆', '●', '■'];
+    for (let oi = 0; oi < 5; oi++) {
+      const oa = (oi / 5) * Math.PI * 2 + t * 0.6;
+      const or = r * 1.35;
+      const ox = Math.cos(oa) * or;
+      const oy = Math.sin(oa) * or;
+      ctx.fillStyle = oi % 2 === 0 ? '#00FF00' : '#FF0000';
+      ctx.globalAlpha = 0.7;
+      ctx.fillText(tickers[oi], ox, oy);
+    }
+    ctx.globalAlpha = 1;
+
+    // ── 10. ENRAGED: HOSTILE TAKEOVER ────────────────────────────
+    if (this._enraged) {
+      ctx.globalAlpha = 0.4 + pulse * 0.2;
+      ctx.fillStyle = '#FF4400';
+      ctx.shadowColor = '#FF2200'; ctx.shadowBlur = 30;
+      ctx.beginPath(); ctx.arc(0, 0, r * 1.5, 0, Math.PI * 2); ctx.fill();
+      ctx.shadowBlur = 0;
+      // Warning symbols
+      ctx.fillStyle = '#FFFF00'; ctx.font = 'bold 16px monospace';
+      for (let wi = 0; wi < 6; wi++) {
+        const wa = (wi / 6) * Math.PI * 2 + t;
+        const wr = r * 1.3;
+        ctx.globalAlpha = 0.8;
+        ctx.fillText('⚠', Math.cos(wa) * wr, Math.sin(wa) * wr);
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    ctx.restore();
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // THE NIGHTMARE — Ultimate Boss for Hardcore Mode
+  // Most intimidating, elite/endgame, unique aura/VFX, final challenge feeling
+  // ═══════════════════════════════════════════════════════════════════════════════
+  _renderNightmare(ctx, x, y, r, pulse) {
+    const t = this._pulseT;
+    const dread = Math.sin(t * 0.5) * 0.05;
+    const flicker = Math.random() > 0.85 ? 0.7 : 1;
+    ctx.save();
+    ctx.translate(x, y);
+
+    // ── 1. VOID ABYSS AURA ───────────────────────────────────────
+    // Outer darkness
+    ctx.globalAlpha = 0.5;
+    const voidG = ctx.createRadialGradient(0, 0, r * 0.8, 0, 0, r * 2.2);
+    voidG.addColorStop(0, 'rgba(0,0,0,0)');
+    voidG.addColorStop(0.5, 'rgba(40,0,0,0.4)');
+    voidG.addColorStop(1, 'rgba(0,0,0,0.7)');
+    ctx.fillStyle = voidG;
+    ctx.beginPath(); ctx.arc(0, 0, r * 2.2, 0, Math.PI * 2); ctx.fill();
+    ctx.globalAlpha = 1;
+
+    // Pulsing rings of dread
+    for (let ri = 0; ri < 4; ri++) {
+      const rR = r * (1.4 + ri * 0.25 + Math.sin(t * 0.8 + ri * 0.5) * 0.12);
+      ctx.globalAlpha = (0.35 - ri * 0.07) * flicker;
+      ctx.strokeStyle = ri % 2 === 0 ? '#FF4400' : '#FF8800';
+      ctx.lineWidth = 4 - ri * 0.6;
+      ctx.shadowColor = '#FF2200'; ctx.shadowBlur = 20;
+      ctx.beginPath(); ctx.arc(0, 0, rR, 0, Math.PI * 2); ctx.stroke();
+    }
+    ctx.shadowBlur = 0; ctx.globalAlpha = 1;
+
+    // ── 2. SHADOW TENDRILS ───────────────────────────────────────
+    ctx.strokeStyle = '#220000'; ctx.lineCap = 'round';
+    for (let ti = 0; ti < 12; ti++) {
+      const ta = (ti / 12) * Math.PI * 2 + t * 0.3;
+      const wave = Math.sin(t * 1.5 + ti) * 0.5;
+      ctx.lineWidth = 6 - (ti % 3);
+      ctx.globalAlpha = 0.6 + Math.sin(t + ti) * 0.2;
+      ctx.beginPath();
+      const startX = Math.cos(ta) * r * 0.85;
+      const startY = Math.sin(ta) * r * 0.85;
+      const midX = Math.cos(ta + wave) * r * 1.5;
+      const midY = Math.sin(ta + wave) * r * 1.5;
+      const endX = Math.cos(ta + wave * 1.3) * r * 2.1;
+      const endY = Math.sin(ta + wave * 1.3) * r * 2.1;
+      ctx.moveTo(startX, startY);
+      ctx.quadraticCurveTo(midX, midY, endX, endY);
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+
+    // ── 3. NIGHTMARISH BODY ──────────────────────────────────────
+    const bodyScale = 1 + dread;
+    ctx.save(); ctx.scale(bodyScale, bodyScale);
+    const bodyG = ctx.createRadialGradient(-r * 0.15, -r * 0.2, 5, 0, 0, r);
+    bodyG.addColorStop(0, '#FF6644'); bodyG.addColorStop(0.2, '#FF4400');
+    bodyG.addColorStop(0.5, '#AA2200'); bodyG.addColorStop(0.75, '#440000');
+    bodyG.addColorStop(1, '#110000');
+    ctx.fillStyle = bodyG;
+    ctx.shadowColor = '#FF4400'; ctx.shadowBlur = 40 + pulse * 25;
+    // Irregular menacing shape
+    ctx.beginPath();
+    for (let i = 0; i <= 16; i++) {
+      const a = (i / 16) * Math.PI * 2;
+      const spiky = i % 2 === 0 ? r * 1.1 : r * 0.9;
+      const wobble = spiky + Math.sin(t * 2 + i * 0.8) * r * 0.05;
+      if (i === 0) ctx.moveTo(Math.cos(a) * wobble, Math.sin(a) * wobble);
+      else ctx.lineTo(Math.cos(a) * wobble, Math.sin(a) * wobble);
+    }
+    ctx.closePath(); ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.restore();
+
+    // ── 4. BURNING SIGILS ────────────────────────────────────────
+    ctx.strokeStyle = '#FF6600'; ctx.lineWidth = 2.5;
+    ctx.shadowColor = '#FF4400'; ctx.shadowBlur = 12;
+    ctx.globalAlpha = 0.7 + pulse * 0.2;
+    // Pentagram
+    ctx.beginPath();
+    for (let pi = 0; pi < 5; pi++) {
+      const pa = (pi / 5) * Math.PI * 2 - Math.PI / 2 + t * 0.15;
+      const nextA = ((pi + 2) / 5) * Math.PI * 2 - Math.PI / 2 + t * 0.15;
+      ctx.moveTo(Math.cos(pa) * r * 0.65, Math.sin(pa) * r * 0.65);
+      ctx.lineTo(Math.cos(nextA) * r * 0.65, Math.sin(nextA) * r * 0.65);
+    }
+    ctx.stroke();
+    // Outer circle
+    ctx.beginPath(); ctx.arc(0, 0, r * 0.7, 0, Math.PI * 2); ctx.stroke();
+    ctx.shadowBlur = 0; ctx.globalAlpha = 1;
+
+    // ── 5. MULTIPLE DEMONIC EYES ─────────────────────────────────
+    const eyes = [
+      [0, -r * 0.2, r * 0.18], // Central main eye
+      [-r * 0.35, -r * 0.35, r * 0.10], [r * 0.35, -r * 0.35, r * 0.10],
+      [-r * 0.25, r * 0.15, r * 0.08], [r * 0.25, r * 0.15, r * 0.08],
+      [-r * 0.5, 0, r * 0.07], [r * 0.5, 0, r * 0.07],
+    ];
+    for (let ei = 0; ei < eyes.length; ei++) {
+      const [ex, ey, er] = eyes[ei];
+      const blink = ei === 0 ? 1 : (Math.sin(t * 3 + ei * 2) > 0.9 ? 0.3 : 1);
+      // Black sclera
+      ctx.fillStyle = '#000';
+      ctx.beginPath(); ctx.ellipse(ex, ey, er, er * 0.8 * blink, 0, 0, Math.PI * 2); ctx.fill();
+      // Burning iris
+      const irisG = ctx.createRadialGradient(ex, ey, 0, ex, ey, er * 0.7);
+      irisG.addColorStop(0, '#FFFF00'); irisG.addColorStop(0.5, '#FF4400'); irisG.addColorStop(1, '#880000');
+      ctx.fillStyle = irisG;
+      ctx.shadowColor = '#FF4400'; ctx.shadowBlur = 15 * flicker;
+      ctx.beginPath(); ctx.arc(ex, ey, er * 0.65 * blink, 0, Math.PI * 2); ctx.fill();
+      // Slit pupil
+      ctx.fillStyle = '#000'; ctx.shadowBlur = 0;
+      ctx.save(); ctx.translate(ex, ey); ctx.scale(0.25, 1);
+      ctx.beginPath(); ctx.arc(0, 0, er * 0.5 * blink, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+    }
+
+    // ── 6. HORNS OF TERROR ───────────────────────────────────────
+    ctx.fillStyle = '#331100';
+    ctx.shadowColor = '#FF4400'; ctx.shadowBlur = 8;
+    for (const side of [-1, 1]) {
+      ctx.beginPath();
+      ctx.moveTo(side * r * 0.3, -r * 0.7);
+      ctx.quadraticCurveTo(side * r * 0.7, -r * 1.2, side * r * 0.9, -r * 0.6);
+      ctx.quadraticCurveTo(side * r * 0.65, -r * 0.9, side * r * 0.35, -r * 0.6);
+      ctx.closePath(); ctx.fill();
+      // Horn glow lines
+      ctx.strokeStyle = '#FF6600'; ctx.lineWidth = 2; ctx.globalAlpha = 0.6;
+      ctx.beginPath();
+      ctx.moveTo(side * r * 0.35, -r * 0.7);
+      ctx.quadraticCurveTo(side * r * 0.6, -r * 1.0, side * r * 0.8, -r * 0.7);
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
+    ctx.shadowBlur = 0;
+
+    // ── 7. JAGGED MAW ────────────────────────────────────────────
+    ctx.fillStyle = '#110000';
+    const mouthOpen = 0.35 + Math.sin(t * 1.2) * 0.1;
+    ctx.beginPath();
+    ctx.ellipse(0, r * 0.35, r * 0.45, r * mouthOpen, 0, 0, Math.PI * 2);
+    ctx.fill();
+    // Rows of teeth
+    ctx.fillStyle = '#FFEECC';
+    for (let row = 0; row < 2; row++) {
+      for (let ti = -5; ti <= 5; ti++) {
+        const tx = ti * r * 0.07;
+        const ty = r * 0.35 - r * mouthOpen * (0.7 - row * 0.4);
+        const tLen = (Math.abs(ti) % 2 === 0 ? r * 0.12 : r * 0.08) * (row === 0 ? 1 : 0.7);
+        ctx.beginPath();
+        ctx.moveTo(tx - 3, ty);
+        ctx.lineTo(tx, ty + (row === 0 ? -tLen : tLen));
+        ctx.lineTo(tx + 3, ty);
+        ctx.closePath(); ctx.fill();
+      }
+    }
+
+    // ── 8. SOUL DRAIN WEAPON ─────────────────────────────────────
+    const gunAngle = this._angle;
+    ctx.strokeStyle = '#880000'; ctx.lineWidth = 12; ctx.lineCap = 'round';
+    ctx.shadowColor = '#FF0000'; ctx.shadowBlur = 20;
+    ctx.beginPath();
+    ctx.moveTo(Math.cos(gunAngle) * r * 0.7, Math.sin(gunAngle) * r * 0.7);
+    ctx.lineTo(Math.cos(gunAngle) * (r + 40), Math.sin(gunAngle) * (r + 40));
+    ctx.stroke();
+    ctx.strokeStyle = '#FF4400'; ctx.lineWidth = 6;
+    ctx.beginPath();
+    ctx.moveTo(Math.cos(gunAngle) * (r + 20), Math.sin(gunAngle) * (r + 20));
+    ctx.lineTo(Math.cos(gunAngle) * (r + 50), Math.sin(gunAngle) * (r + 50));
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    // ── 9. SCREAMING SOULS ───────────────────────────────────────
+    ctx.globalAlpha = 0.4;
+    for (let si = 0; si < 8; si++) {
+      const sa = (si / 8) * Math.PI * 2 + t * 0.5;
+      const sr = r * (1.5 + Math.sin(t * 2 + si) * 0.3);
+      const sx = Math.cos(sa) * sr;
+      const sy = Math.sin(sa) * sr;
+      // Ghost face
+      ctx.fillStyle = '#AAAAAA';
+      ctx.beginPath(); ctx.arc(sx, sy, 8, 0, Math.PI * 2); ctx.fill();
+      // Screaming mouth
+      ctx.fillStyle = '#000';
+      ctx.beginPath(); ctx.ellipse(sx, sy + 3, 3, 5, 0, 0, Math.PI * 2); ctx.fill();
+      // Hollow eyes
+      ctx.beginPath(); ctx.arc(sx - 3, sy - 2, 2, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(sx + 3, sy - 2, 2, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
+    // ── 10. ENRAGED: APOCALYPSE MODE ─────────────────────────────
+    if (this._enraged) {
+      // Reality-breaking cracks
+      ctx.strokeStyle = '#FF0000'; ctx.lineWidth = 3;
+      ctx.shadowColor = '#FFAA00'; ctx.shadowBlur = 15;
+      for (let ci = 0; ci < 8; ci++) {
+        const ca = (ci / 8) * Math.PI * 2 + t * 0.2;
+        ctx.globalAlpha = 0.7;
+        ctx.beginPath();
+        let cx = Math.cos(ca) * r * 0.5;
+        let cy = Math.sin(ca) * r * 0.5;
+        ctx.moveTo(cx, cy);
+        for (let seg = 0; seg < 5; seg++) {
+          cx += (Math.random() - 0.5) * 30;
+          cy += (Math.random() - 0.5) * 30;
+          ctx.lineTo(cx, cy);
+        }
+        ctx.stroke();
+      }
+      ctx.shadowBlur = 0;
+      // Ultimate aura
+      ctx.globalAlpha = 0.35 + pulse * 0.25;
+      ctx.fillStyle = '#FF2200';
+      ctx.shadowColor = '#FF0000'; ctx.shadowBlur = 50;
+      ctx.beginPath(); ctx.arc(0, 0, r * 1.8, 0, Math.PI * 2); ctx.fill();
+      ctx.shadowBlur = 0;
+      // Death symbols
+      ctx.fillStyle = '#FF4400'; ctx.font = 'bold 14px serif';
+      ctx.textAlign = 'center';
+      const deathSymbols = ['☠', '⚰', '†', '✝', '☠', '⚰'];
+      for (let di = 0; di < 6; di++) {
+        const da = (di / 6) * Math.PI * 2 + t * 0.6;
+        const dr = r * 1.55;
+        ctx.globalAlpha = 0.8;
+        ctx.fillText(deathSymbols[di], Math.cos(da) * dr, Math.sin(da) * dr + 5);
+      }
+      ctx.globalAlpha = 1;
     }
 
     ctx.restore();
