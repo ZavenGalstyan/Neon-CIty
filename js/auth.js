@@ -168,6 +168,39 @@ const Auth = (() => {
     else navEl.appendChild(btn);
   }
 
+  /* ── Navbar scroll behavior ──────────────────────────────── */
+  function initNavbarScroll() {
+    const nav = document.querySelector('.site-nav');
+    if (!nav) return;
+
+    let lastScrollY = 0;
+    let ticking = false;
+
+    function updateNavbar() {
+      const scrollY = window.scrollY || window.pageYOffset;
+
+      if (scrollY > 40) {
+        nav.classList.add('site-nav--scrolled');
+      } else {
+        nav.classList.remove('site-nav--scrolled');
+      }
+
+      lastScrollY = scrollY;
+      ticking = false;
+    }
+
+    function onScroll() {
+      if (!ticking) {
+        window.requestAnimationFrame(updateNavbar);
+        ticking = true;
+      }
+    }
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    // Initial check
+    updateNavbar();
+  }
+
   /* ── Navbar injection (call on every page) ─────────────── */
   function mountNavbar() {
     initTheme();
@@ -230,6 +263,9 @@ const Auth = (() => {
 
     // ── Theme toggle (select screen only) ──────────────────
     _mountThemeToggle();
+
+    // ── Scroll behavior for navbar shrinking ───────────────
+    initNavbarScroll();
   }
 
   function _mountBurger(session) {
@@ -255,14 +291,31 @@ const Auth = (() => {
     backdrop.className = 'nav-mobile-backdrop';
     document.body.appendChild(backdrop);
 
-    // Mobile menu panel
+    // Mobile menu panel (full-screen)
     const menu = document.createElement('nav');
     menu.id = 'navMobileMenu';
     menu.className = 'nav-mobile-menu';
 
+    // Build menu content
+    let menuContent = '';
+
+    // HUD decorations
+    menuContent += `
+      <div class="nav-mobile-menu-grid"></div>
+      <div class="nav-mobile-glow"></div>
+      <button class="nav-mobile-close" aria-label="Close menu">✕</button>
+    `;
+
+    // SVG icons for theme toggle
+    const _sunSVG  = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="20" height="20"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>`;
+    const _moonSVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="20" height="20"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`;
+    const isLightMode = document.documentElement.dataset.theme === 'light';
+    const themeIcon = isLightMode ? _moonSVG : _sunSVG;
+    const themeLabel = isLightMode ? 'DARK MODE' : 'LIGHT MODE';
+
     if (session && session.name) {
       const initial = _esc(session.name.charAt(0).toUpperCase());
-      menu.innerHTML = `
+      menuContent += `
         <a href="profile.html" class="nav-mobile-account">
           <div class="nav-mobile-account-avatar">${initial}</div>
           <div>
@@ -271,24 +324,49 @@ const Auth = (() => {
           </div>
         </a>
         <div class="nav-mobile-section">NAVIGATE</div>
-        <a href="index.html"       class="nav-mobile-item"><span class="nav-mobile-item-icon">⬡</span>HOME</a>
+        <a href="index.html"       class="nav-mobile-item"><span class="nav-mobile-item-icon">⌂</span>HOME</a>
         <a href="shop.html"        class="nav-mobile-item gold"><span class="nav-mobile-item-icon">⬡</span>ITEM SHOP</a>
-        <a href="inventory.html"   class="nav-mobile-item"><span class="nav-mobile-item-icon">▦</span>INVENTORY</a>
+        <a href="inventory.html"   class="nav-mobile-item cyan"><span class="nav-mobile-item-icon">▦</span>INVENTORY</a>
         <a href="leaderboard.html" class="nav-mobile-item pink"><span class="nav-mobile-item-icon">▲</span>LEADERBOARDS</a>
-        <div class="nav-mobile-section">ACCOUNT</div>`;
-    } else {
-      menu.innerHTML = `
-        <div class="nav-mobile-section">NAVIGATE</div>
-        <a href="index.html"       class="nav-mobile-item"><span class="nav-mobile-item-icon">⬡</span>HOME</a>
-        <a href="shop.html"        class="nav-mobile-item gold"><span class="nav-mobile-item-icon">⬡</span>ITEM SHOP</a>
-        <a href="inventory.html"   class="nav-mobile-item"><span class="nav-mobile-item-icon">▦</span>INVENTORY</a>
-        <a href="leaderboard.html" class="nav-mobile-item pink"><span class="nav-mobile-item-icon">▲</span>LEADERBOARDS</a>
+        <div class="nav-mobile-section">SOCIAL</div>
+        <button class="nav-mobile-item purple" id="mobileNotifications"><span class="nav-mobile-item-icon">⚑</span>NOTIFICATIONS</button>
+        <button class="nav-mobile-item cyan" id="mobileAddFriends"><span class="nav-mobile-item-icon">＋</span>ADD FRIENDS</button>
         <div class="nav-mobile-section">ACCOUNT</div>
-        <a href="login.html"    class="nav-mobile-item"><span class="nav-mobile-item-icon">◈</span>LOGIN</a>
-        <a href="register.html" class="nav-mobile-item green"><span class="nav-mobile-item-icon">✦</span>REGISTER</a>`;
+        <a href="profile.html"     class="nav-mobile-item"><span class="nav-mobile-item-icon">◈</span>MY PROFILE</a>
+        <button class="nav-mobile-theme-toggle" id="mobileThemeToggle">
+          <span class="toggle-left">
+            <span class="toggle-icon">${themeIcon}</span>
+            <span>${themeLabel}</span>
+          </span>
+          <span class="toggle-switch"></span>
+        </button>
+      `;
+    } else {
+      menuContent += `
+        <div class="nav-mobile-section">NAVIGATE</div>
+        <a href="index.html"       class="nav-mobile-item"><span class="nav-mobile-item-icon">⌂</span>HOME</a>
+        <a href="shop.html"        class="nav-mobile-item gold"><span class="nav-mobile-item-icon">⬡</span>ITEM SHOP</a>
+        <a href="inventory.html"   class="nav-mobile-item cyan"><span class="nav-mobile-item-icon">▦</span>INVENTORY</a>
+        <a href="leaderboard.html" class="nav-mobile-item pink"><span class="nav-mobile-item-icon">▲</span>LEADERBOARDS</a>
+        <div class="nav-mobile-section">SETTINGS</div>
+        <button class="nav-mobile-theme-toggle" id="mobileThemeToggle">
+          <span class="toggle-left">
+            <span class="toggle-icon">${themeIcon}</span>
+            <span>${themeLabel}</span>
+          </span>
+          <span class="toggle-switch"></span>
+        </button>
+        <div class="nav-mobile-section">ACCOUNT</div>
+        <a href="login.html"    class="nav-mobile-item"><span class="nav-mobile-item-icon">→</span>LOGIN</a>
+        <a href="register.html" class="nav-mobile-item green"><span class="nav-mobile-item-icon">✦</span>REGISTER</a>
+      `;
     }
 
+    menu.innerHTML = menuContent;
     document.body.appendChild(menu);
+
+    // Get close button reference
+    const closeBtn = menu.querySelector('.nav-mobile-close');
 
     // Toggle logic
     function openMenu() {
@@ -308,10 +386,66 @@ const Auth = (() => {
       burger.classList.contains('open') ? closeMenu() : openMenu();
     });
     backdrop.addEventListener('click', closeMenu);
+    closeBtn.addEventListener('click', closeMenu);
 
     // Close on nav link click
     menu.querySelectorAll('a').forEach(a => a.addEventListener('click', closeMenu));
 
+    // Theme toggle in mobile menu
+    const mobileThemeBtn = menu.querySelector('#mobileThemeToggle');
+    if (mobileThemeBtn) {
+      mobileThemeBtn.addEventListener('click', () => {
+        const switchToLight = document.documentElement.dataset.theme !== 'light';
+        const toggleIcon = mobileThemeBtn.querySelector('.toggle-icon');
+        const toggleLabel = mobileThemeBtn.querySelector('.toggle-left span:last-child');
+        if (switchToLight) {
+          document.documentElement.dataset.theme = 'light';
+          localStorage.setItem('nc_theme', 'light');
+          toggleIcon.innerHTML = _moonSVG;
+          toggleLabel.textContent = 'DARK MODE';
+        } else {
+          delete document.documentElement.dataset.theme;
+          localStorage.removeItem('nc_theme');
+          toggleIcon.innerHTML = _sunSVG;
+          toggleLabel.textContent = 'LIGHT MODE';
+        }
+      });
+    }
+
+    // Notifications button - opens real notifications panel
+    const notifBtn = menu.querySelector('#mobileNotifications');
+    if (notifBtn) {
+      notifBtn.addEventListener('click', () => {
+        closeMenu();
+        // Small delay to let mobile menu close animation finish before opening panel
+        setTimeout(() => {
+          if (typeof SocialUI !== 'undefined' && SocialUI.openPage) {
+            SocialUI.openPage('notifications');
+          }
+        }, 150);
+      });
+    }
+
+    // Add Friends button - opens real friends panel
+    const addFriendsBtn = menu.querySelector('#mobileAddFriends');
+    if (addFriendsBtn) {
+      addFriendsBtn.addEventListener('click', () => {
+        closeMenu();
+        // Small delay to let mobile menu close animation finish before opening panel
+        setTimeout(() => {
+          if (typeof SocialUI !== 'undefined' && SocialUI.openPage) {
+            SocialUI.openPage('friends');
+          }
+        }, 150);
+      });
+    }
+
+    // Close on Escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && menu.classList.contains('open')) {
+        closeMenu();
+      }
+    });
   }
 
   /* Minimal HTML-escape to prevent XSS when injecting a username */
