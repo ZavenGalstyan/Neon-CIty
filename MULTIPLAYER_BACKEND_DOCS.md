@@ -198,38 +198,80 @@ second message.  The server can relay duplicates safely.
 
 ---
 
+### `bot:positions`  ← HOST client → server → all OTHER clients in room
+
+The host sends this every ~500 ms with the current position and HP of every
+live bot.  Non-host clients use this to keep their bot positions in sync with
+the host's authoritative simulation.
+
+**Host → server:**
+```json
+{
+  "type": "bot:positions",
+  "payload": {
+    "bots": [
+      { "id": "ab3f7c", "x": 1520, "y": 940, "hp": 80 },
+      { "id": "cd8a1b", "x": 880,  "y": 620, "hp": 45 }
+    ]
+  }
+}
+```
+
+**Server relays to every OTHER client in the room (do NOT echo to host):**
+```json
+{
+  "type": "bot:positions",
+  "payload": {
+    "bots": [
+      { "id": "ab3f7c", "x": 1520, "y": 940, "hp": 80 },
+      { "id": "cd8a1b", "x": 880,  "y": 620, "hp": 45 }
+    ]
+  }
+}
+```
+
+This is a high-frequency relay.  The server should pass it through with minimal
+processing — just add it to the room's broadcast queue.
+
+---
+
 ## Summary table
 
-| Event           | Direction                        | Purpose                          |
-|-----------------|----------------------------------|----------------------------------|
-| `room:player_joined` | server → all clients         | Must include `charId`            |
-| `room:state`    | server → rejoining client        | Must include `charId` per player |
-| `player:pos`    | client → server → others         | Position/angle/HP relay          |
-| `player:shoot`  | client → server → others         | Bullet origin relay              |
-| `bot:spawn`     | host → server → non-host clients | Enemy spawn sync (NEW)           |
-| `bot:dead`      | any client → server → others     | Enemy kill sync (NEW)            |
+| Event            | Direction                        | Purpose                              |
+|------------------|----------------------------------|--------------------------------------|
+| `room:player_joined` | server → all clients         | Must include `charId`                |
+| `room:state`     | server → rejoining client        | Must include `charId` per player     |
+| `player:pos`     | client → server → others         | Position/angle/HP relay              |
+| `player:shoot`   | client → server → others         | Bullet origin + **exact angle** relay|
+| `bot:spawn`      | host → server → non-host clients | Enemy spawn sync                     |
+| `bot:dead`       | any client → server → others     | Enemy kill sync                      |
+| `bot:positions`  | host → server → non-host clients | Enemy position sync every 500 ms (NEW) |
 
 ---
 
 ## Notes for the backend developer
 
 1. **Host identity**: the room object already tracks `hostId`.  Use that to
-   decide which client is the authority for `bot:spawn`.  Non-host clients
-   send `bot:dead` only.
+   decide which client is the authority for `bot:spawn` and `bot:positions`.
 
 2. **Room isolation**: relay events only within the same `roomId`.  Never
    cross rooms.
 
-3. **`bot:spawn` relay**: do NOT echo `bot:spawn` back to the sender (the
-   host).  Only relay to the other clients.
+3. **`bot:spawn` relay**: do NOT echo back to the host.  Only relay to others.
 
 4. **`bot:dead` relay**: do NOT echo back to the sender.  Relay to everyone
    else.  Duplicates are harmless.
 
-5. **No server-side bot simulation needed**: the front-end runs the AI.  The
+5. **`bot:positions` relay**: do NOT echo back to the host.  Relay to others.
+   This fires every 500 ms — keep processing minimal (just relay).
+
+6. **No server-side bot simulation needed**: the front-end runs the AI.  The
    server is a pure relay for these events.
 
-6. **`charId` in join/state**: this is the most important fix.  Without it
-   remote players render as a generic shape.  Make sure `charId` is persisted
-   on the room's player record when the player calls `/rooms/:id/join` (they
-   already send `charId` in the request body — just store and echo it).
+7. **`charId` in join/state**: make sure `charId` is persisted on the room's
+   player record when the player calls `/rooms/:id/join` (they send `charId`
+   in the request body — just store and echo it back in all player objects).
+
+8. **`player:shoot` angle**: the front-end now sends the exact bullet angle
+   (recovered from velocity vector via `atan2`).  No changes needed on the
+   server — just relay it as-is.

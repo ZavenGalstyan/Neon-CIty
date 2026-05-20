@@ -171,6 +171,23 @@ Game.prototype._render = function() {
           ctx.fill();
           ctx.shadowBlur = 0;
 
+          // Weapon barrel (extends in forward/-Y direction)
+          const rpWCfg = (CONFIG.WEAPONS || []).find(w => w.id === rp.weaponId);
+          const rpWColor = (rpWCfg && rpWCfg.color) || (rpCharData.gunColor) || '#AAAAAA';
+          ctx.strokeStyle = rpWColor;
+          ctx.lineCap = 'round';
+          // Barrel thickness and length vary by weapon class
+          const isHeavy = rp.weaponId === 'rocket' || rp.weaponId === 'flamethrower' || rp.weaponId === 'minigun';
+          const isLong  = rp.weaponId === 'sniper'  || rp.weaponId === 'crossbow';
+          const isMelee = rp.weaponId === 'knife'   || rp.weaponId === 'bat' || rp.weaponId === 'sword' || rp.weaponId === 'whip';
+          ctx.lineWidth = isHeavy ? 5 : isMelee ? 2 : 3;
+          const barrelLen = isLong ? rpR * 1.05 : isMelee ? rpR * 0.75 : rpR * 0.72;
+          const barrelOff = rpR * 0.28; // held to the right side
+          ctx.beginPath();
+          ctx.moveTo(barrelOff, -rpR * 0.32);
+          ctx.lineTo(barrelOff, -(rpR * 0.32 + barrelLen));
+          ctx.stroke();
+
           ctx.restore();
 
           // HP bar

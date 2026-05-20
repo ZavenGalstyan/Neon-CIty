@@ -628,6 +628,14 @@ class Game {
         this._mpTimer = 0;
         Multiplayer.sendPos(this.player);
       }
+      // Host: broadcast bot positions every 0.5s so non-host clients stay in sync
+      if (this._isHost) {
+        this._mpBotSyncTimer = (this._mpBotSyncTimer || 0) + dt;
+        if (this._mpBotSyncTimer >= 0.5) {
+          this._mpBotSyncTimer = 0;
+          if (this.bots.length > 0) Multiplayer.sendBotPositions(this.bots);
+        }
+      }
       Multiplayer.updateRemotePlayers(dt);
     }
 
@@ -868,11 +876,11 @@ class Game {
     this.player.inVehicle = !!this._playerVehicle || this._droneControl;
     const _bulletsBefore = this.bullets.length;
     this.player.update(dt, this.input, this.map, this.bullets, this.particles);
-    // Broadcast newly spawned player bullets to remote players
+    // Broadcast ALL newly spawned player bullets (covers shotgun/burst weapons)
     if (this._roomId && typeof Multiplayer !== 'undefined' && this.bullets.length > _bulletsBefore) {
-      const newBullet = this.bullets[this.bullets.length - 1];
-      if (newBullet && newBullet.isPlayer) {
-        Multiplayer.sendShoot(newBullet, this.player.equippedWeaponId);
+      for (let _bi = _bulletsBefore; _bi < this.bullets.length; _bi++) {
+        const _b = this.bullets[_bi];
+        if (_b && _b.isPlayer) Multiplayer.sendShoot(_b, this.player.equippedWeaponId);
       }
     }
     if (
