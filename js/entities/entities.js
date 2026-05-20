@@ -677,6 +677,7 @@ class Weather {
 class Bullet {
   constructor(x, y, angle, speed, damage, isPlayer, color) {
     this.x = x; this.y = y;
+    this.angle = angle;
     this.vx = Math.cos(angle) * speed;
     this.vy = Math.sin(angle) * speed;
     this.damage   = damage;

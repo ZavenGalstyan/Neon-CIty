@@ -276,6 +276,25 @@ const Multiplayer = (() => {
         window._game.boss.dead = true;
       }
     });
+
+    // bot:positions — host broadcast; non-host lerps bots to authoritative positions
+    WS.on('bot:positions', ({ bots }) => {
+      if (!window._game || !bots || window._game._isHost) return;
+      for (const upd of bots) {
+        const bot = window._game.bots.find(b => b._id === upd.id && !b.dead && !b.dying);
+        if (!bot) continue;
+        // Snap if far, lerp if close — avoids rubber-banding on small drift
+        const dx = upd.x - bot.x, dy = upd.y - bot.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist > 120) {
+          bot.x = upd.x; bot.y = upd.y;
+        } else if (dist > 4) {
+          bot.x += dx * 0.3;
+          bot.y += dy * 0.3;
+        }
+        if (upd.hp !== undefined) bot.health = upd.hp;
+      }
+    });
   }
 
   /* ── Position broadcast (called from game loop) ─────────── */
@@ -290,10 +309,14 @@ const Multiplayer = (() => {
   }
 
   function sendShoot(bullet, weaponId) {
+    // Recover angle from velocity components — works even if .angle is missing
+    const angle = (bullet.angle !== undefined)
+      ? bullet.angle
+      : Math.atan2(bullet.vy, bullet.vx);
     WS.send('player:shoot', {
       x:        bullet.x,
       y:        bullet.y,
-      angle:    bullet.angle || 0,
+      angle:    angle,
       weaponId: weaponId || 'pistol',
       bulletId: Math.random().toString(36).slice(2)
     });
@@ -318,6 +341,16 @@ const Multiplayer = (() => {
   function sendBotDead(botId) {
     if (!botId) return;
     WS.send('bot:dead', { id: botId });
+  }
+
+  function sendBotPositions(bots) {
+    const positions = [];
+    for (const b of bots) {
+      if (!b._id || b.dead || b.dying) continue;
+      positions.push({ id: b._id, x: Math.round(b.x), y: Math.round(b.y), hp: b.health });
+    }
+    if (positions.length === 0) return;
+    WS.send('bot:positions', { bots: positions });
   }
 
   function sendWaveAck(wave) {
@@ -356,7 +389,7 @@ const Multiplayer = (() => {
     createRoom, listRooms, joinRoom, leaveRoom, startRoom, markReady,
     bindLobbyEvents, bindGameEvents,
     sendPos, sendShoot, sendDead, sendWaveAck, sendFinished,
-    sendBotSpawn, sendBotDead,
+    sendBotSpawn, sendBotDead, sendBotPositions,
     updateRemotePlayers,
     getRoom, isHost, getRemotePlayers, setMyUserId, setRoom, setIsHost
   };
