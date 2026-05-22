@@ -94,13 +94,31 @@ Game.prototype._render = function() {
           const rpSx = rp.x;
           const rpSy = rp.y;
 
-          // Look up this player's character data for correct visuals
-          const rpCharData = (CONFIG.CHARACTERS || []).find(c => c.id === rp.charId) || {};
-          const rpColor  = rpCharData.color  || '#44EEFF';
-          const rpAccent = rpCharData.accent || '#00FFCC';
+          // Look up character data — fallback to gangster so we always render something
+          const _rpChars = CONFIG.CHARACTERS || [];
+          const rpCharData = _rpChars.find(c => c.id === rp.charId)
+                          || _rpChars.find(c => c.id === 'gangster')
+                          || _rpChars[0]
+                          || { color:'#FF4466', accent:'#FF0033', gunColor:'#888', radius:18, bodyScale:1.0, renderType:'humanoid' };
+          const rpColor  = rpCharData.color;
+          const rpAccent = rpCharData.accent;
           const rpRType  = rpCharData.renderType || 'humanoid';
-          const rpScale  = rpCharData.bodyScale  || 1.0;
-          const rpR      = (rpCharData.radius || 18) * rpScale;
+          // Scale up 1.6× so the remote player is clearly visible beside the local player
+          const rpR      = (rpCharData.radius || 18) * (rpCharData.bodyScale || 1.0) * 1.6;
+
+          // Team ring — always-visible cyan glow behind the character
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(rpSx, rpSy, rpR * 0.75, 0, Math.PI * 2);
+          ctx.strokeStyle = '#44EEFF';
+          ctx.lineWidth = 3;
+          ctx.globalAlpha = 0.55;
+          ctx.shadowColor = '#44EEFF';
+          ctx.shadowBlur = 14;
+          ctx.stroke();
+          ctx.shadowBlur = 0;
+          ctx.globalAlpha = 1;
+          ctx.restore();
 
           ctx.save();
           ctx.translate(rpSx, rpSy);
