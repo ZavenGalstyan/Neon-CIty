@@ -12,6 +12,20 @@ const Multiplayer = (() => {
   let _isHost       = false;
   let _myUserId     = null;
 
+  /* Convert 1-based playerCharacterId number → charId string */
+  function _charIdFromNumber(n) {
+    if (!n || !CONFIG || !CONFIG.CHARACTERS) return 'gangster';
+    const c = CONFIG.CHARACTERS[n - 1];
+    return c ? c.id : 'gangster';
+  }
+
+  /* Resolve charId from a player object — prefers string charId, falls back to number */
+  function _resolveCharId(player) {
+    if (player.playerCharacterId) return _charIdFromNumber(player.playerCharacterId);
+    if (player.charId) return player.charId;
+    return 'gangster';
+  }
+
   /* Remote players: userId → { x,y,targetX,targetY,angle,hp,maxHp,weaponId,username,charId,dead } */
   const remotePlayers = new Map();
 
@@ -87,7 +101,7 @@ const Multiplayer = (() => {
       remotePlayers.set(player.userId, {
         x: 0, y: 0, targetX: 0, targetY: 0,
         angle: 0, hp: player.hp, maxHp: player.maxHp || 100,
-        username: player.username, charId: player.charId, dead: false
+        username: player.username, charId: _resolveCharId(player), dead: false
       });
       callbacks.onPlayerJoined && callbacks.onPlayerJoined(player);
     });
@@ -128,7 +142,7 @@ const Multiplayer = (() => {
           hp:    p.hp    || 100,
           maxHp: p.maxHp || 100,
           username: p.username || 'PLAYER',
-          charId:   p.charId   || 'gangster',
+          charId:   _resolveCharId(p),
           dead: false
         });
       }
@@ -147,17 +161,20 @@ const Multiplayer = (() => {
     });
 
     // room:player_rejoined — a teammate reconnected after page navigate
-    WS.on('room:player_rejoined', ({ userId, username }) => {
+    WS.on('room:player_rejoined', ({ userId, username, playerCharacterId, charId }) => {
       if (!remotePlayers.has(userId)) {
         remotePlayers.set(userId, {
           x: 0, y: 0, targetX: 0, targetY: 0,
           angle: 0, hp: 100, maxHp: 100,
           username: username || 'PLAYER',
-          charId: 'gangster', dead: false
+          charId: _resolveCharId({ playerCharacterId, charId }), dead: false
         });
       } else {
-        // They were already there (from localStorage) — just mark alive
-        remotePlayers.get(userId).dead = false;
+        const rp = remotePlayers.get(userId);
+        rp.dead = false;
+        // Update charId if backend now sends it on rejoin
+        const resolved = _resolveCharId({ playerCharacterId, charId });
+        if (resolved !== 'gangster') rp.charId = resolved;
       }
     });
 
@@ -240,7 +257,7 @@ const Multiplayer = (() => {
         remotePlayers.set(pid, {
           x: 0, y: 0, targetX: 0, targetY: 0,
           angle: 0, hp: player.hp || 100, maxHp: player.maxHp || 100,
-          username: player.username, charId: player.charId, dead: false
+          username: player.username, charId: _resolveCharId(player), dead: false
         });
       }
     });
