@@ -19,10 +19,20 @@ const Multiplayer = (() => {
     return c ? c.id : 'gangster';
   }
 
-  /* Resolve charId from a player object — prefers string charId, falls back to number */
+  /* Resolve charId from a player object — handles number or string from backend */
   function _resolveCharId(player) {
+    // Prefer explicit numeric index (most reliable)
     if (player.playerCharacterId) return _charIdFromNumber(player.playerCharacterId);
-    if (player.charId) return player.charId;
+    // charId can be a number (backend sends integer) or a string
+    if (player.charId !== undefined && player.charId !== null && player.charId !== '') {
+      if (typeof player.charId === 'number') return _charIdFromNumber(player.charId);
+      // String — verify it actually exists in CONFIG, otherwise ignore it
+      if (CONFIG && CONFIG.CHARACTERS) {
+        const found = CONFIG.CHARACTERS.find(c => c.id === player.charId);
+        if (found) return found.id;
+      }
+      return player.charId; // return as-is, rendering will fallback to gangster if invalid
+    }
     return 'gangster';
   }
 
@@ -134,7 +144,8 @@ const Multiplayer = (() => {
       const pid = String(p.userId || p._id || '');
       if (pid === String(myId)) return;
       if ((p.username || '').toLowerCase() === myName) return;
-      // Add or update entry
+      const resolvedCharId = _resolveCharId(p);
+      // Add or update entry — always sync charId from authoritative room state
       if (!remotePlayers.has(pid)) {
         remotePlayers.set(pid, {
           x: 0, y: 0, targetX: 0, targetY: 0,
@@ -142,9 +153,16 @@ const Multiplayer = (() => {
           hp:    p.hp    || 100,
           maxHp: p.maxHp || 100,
           username: p.username || 'PLAYER',
-          charId:   _resolveCharId(p),
+          charId:   resolvedCharId,
           dead: false
         });
+      } else {
+        // Update charId and username even on existing entries
+        const existing = remotePlayers.get(pid);
+        existing.charId   = resolvedCharId;
+        existing.username = p.username || existing.username;
+        if (p.hp    !== undefined) existing.hp    = p.hp;
+        if (p.maxHp !== undefined) existing.maxHp = p.maxHp;
       }
     });
   }
