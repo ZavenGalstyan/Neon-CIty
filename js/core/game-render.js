@@ -94,22 +94,19 @@ Game.prototype._render = function() {
           const rpSx = rp.x;
           const rpSy = rp.y;
 
-          // Look up character data — fallback to gangster so we always render something
+          // Character lookup — 3-level fallback so we always have a valid charData
           const _rpChars = CONFIG.CHARACTERS || [];
           const rpCharData = _rpChars.find(c => c.id === rp.charId)
                           || _rpChars.find(c => c.id === 'gangster')
                           || _rpChars[0]
-                          || { color:'#FF4466', accent:'#FF0033', gunColor:'#888', radius:18, bodyScale:1.0, renderType:'humanoid' };
-          const rpColor  = rpCharData.color;
-          const rpAccent = rpCharData.accent;
-          const rpRType  = rpCharData.renderType || 'humanoid';
-          // Scale up 1.6× so the remote player is clearly visible beside the local player
-          const rpR      = (rpCharData.radius || 18) * (rpCharData.bodyScale || 1.0) * 1.6;
+                          || { color:'#FF4466', accent:'#FF0033', gunColor:'#888', radius:18, bodyScale:1.0 };
+          const rpColor = rpCharData.color;
+          const rpR     = (rpCharData.radius || 18) * (rpCharData.bodyScale || 1.0);
 
-          // Team ring — always-visible cyan glow behind the character
+          // Team ring — cyan glow so the teammate is always identifiable
           ctx.save();
           ctx.beginPath();
-          ctx.arc(rpSx, rpSy, rpR * 0.75, 0, Math.PI * 2);
+          ctx.arc(rpSx, rpSy, rpR * 1.25, 0, Math.PI * 2);
           ctx.strokeStyle = '#44EEFF';
           ctx.lineWidth = 3;
           ctx.globalAlpha = 0.55;
@@ -120,98 +117,40 @@ Game.prototype._render = function() {
           ctx.globalAlpha = 1;
           ctx.restore();
 
-          ctx.save();
-          ctx.translate(rpSx, rpSy);
-          ctx.rotate((rp.angle || 0) - Math.PI / 2);
-
-          // Shadow
-          ctx.globalAlpha = 0.28;
-          ctx.fillStyle = '#000';
-          ctx.beginPath();
-          ctx.ellipse(0, rpR * 0.25, rpR * 0.65, rpR * 0.22, 0, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.globalAlpha = 1;
-
-          if (rpRType === 'humanoid_heavy') {
-            ctx.fillStyle = rpColor;
-            ctx.beginPath();
-            ctx.ellipse(0, 0, rpR * 0.55, rpR * 0.65, 0, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.strokeStyle = rpAccent; ctx.lineWidth = 2; ctx.stroke();
-            ctx.fillStyle = rpColor;
-            ctx.beginPath();
-            ctx.arc(0, -rpR * 0.72, rpR * 0.36, 0, Math.PI * 2);
-            ctx.fill();
-          } else if (rpRType === 'humanoid_slim') {
-            ctx.fillStyle = rpColor;
-            ctx.beginPath();
-            ctx.ellipse(0, 0, rpR * 0.28, rpR * 0.55, 0, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.strokeStyle = rpAccent; ctx.lineWidth = 1.5; ctx.stroke();
-            ctx.fillStyle = rpColor;
-            ctx.beginPath();
-            ctx.arc(0, -rpR * 0.66, rpR * 0.22, 0, Math.PI * 2);
-            ctx.fill();
-          } else if (rpRType === 'cloaked') {
-            ctx.globalAlpha = 0.75;
-            ctx.fillStyle = rpColor;
-            ctx.beginPath();
-            ctx.ellipse(0, 0, rpR * 0.35, rpR * 0.58, 0, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.globalAlpha = 1;
-            ctx.strokeStyle = rpAccent; ctx.lineWidth = 1.5; ctx.stroke();
-            ctx.fillStyle = rpAccent;
-            ctx.shadowColor = rpAccent; ctx.shadowBlur = 12;
-            ctx.beginPath();
-            ctx.arc(0, -rpR * 0.68, rpR * 0.26, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.shadowBlur = 0;
-          } else {
-            ctx.fillStyle = rpColor;
-            ctx.beginPath();
-            ctx.ellipse(0, 0, rpR * 0.42, rpR * 0.58, 0, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.strokeStyle = rpAccent; ctx.lineWidth = 1.5; ctx.stroke();
-            ctx.fillStyle = rpColor;
-            ctx.beginPath();
-            ctx.arc(0, -rpR * 0.68, rpR * 0.28, 0, Math.PI * 2);
-            ctx.fill();
+          // Full character art — reuse Player.prototype.render via a ghost object
+          const _rpWpn = (CONFIG.WEAPONS || []).find(w => w.id === rp.weaponId)
+                      || (CONFIG.WEAPONS && CONFIG.WEAPONS[0])
+                      || { color: '#AAAAAA', melee: false, range: 50 };
+          const _rpGhost = {
+            x: rpSx, y: rpSy,
+            radius: rpCharData.radius || 18,
+            angle: rp.angle || 0,
+            charData: rpCharData,
+            color: rpCharData.color,
+            accent: rpCharData.accent,
+            _weapon: _rpWpn,
+            _weaponColor() { return this._weapon.color; },
+            _muzzleFlash: 0,
+            invincible: 0,
+            _custMask: 'none',
+            _custEffect: 'none',
+            _custAccessory: 'none',
+            _effectT: 0,
+            _displayName: null,
+          };
+          try {
+            Player.prototype.render.call(_rpGhost, ctx);
+          } catch (_rpErr) {
+            ctx.save();
+            ctx.beginPath(); ctx.arc(rpSx, rpSy, rpR, 0, Math.PI * 2);
+            ctx.fillStyle = rpColor; ctx.fill();
+            ctx.restore();
           }
-
-          // Direction arrow
-          ctx.fillStyle = rpAccent;
-          ctx.shadowColor = rpAccent; ctx.shadowBlur = 6;
-          ctx.beginPath();
-          ctx.moveTo(0, -rpR * 0.97);
-          ctx.lineTo(-rpR * 0.14, -rpR * 0.76);
-          ctx.lineTo(rpR * 0.14, -rpR * 0.76);
-          ctx.closePath();
-          ctx.fill();
-          ctx.shadowBlur = 0;
-
-          // Weapon barrel (extends in forward/-Y direction)
-          const rpWCfg = (CONFIG.WEAPONS || []).find(w => w.id === rp.weaponId);
-          const rpWColor = (rpWCfg && rpWCfg.color) || (rpCharData.gunColor) || '#AAAAAA';
-          ctx.strokeStyle = rpWColor;
-          ctx.lineCap = 'round';
-          // Barrel thickness and length vary by weapon class
-          const isHeavy = rp.weaponId === 'rocket' || rp.weaponId === 'flamethrower' || rp.weaponId === 'minigun';
-          const isLong  = rp.weaponId === 'sniper'  || rp.weaponId === 'crossbow';
-          const isMelee = rp.weaponId === 'knife'   || rp.weaponId === 'bat' || rp.weaponId === 'sword' || rp.weaponId === 'whip';
-          ctx.lineWidth = isHeavy ? 5 : isMelee ? 2 : 3;
-          const barrelLen = isLong ? rpR * 1.05 : isMelee ? rpR * 0.75 : rpR * 0.72;
-          const barrelOff = rpR * 0.28; // held to the right side
-          ctx.beginPath();
-          ctx.moveTo(barrelOff, -rpR * 0.32);
-          ctx.lineTo(barrelOff, -(rpR * 0.32 + barrelLen));
-          ctx.stroke();
-
-          ctx.restore();
 
           // HP bar
           const barW = 40, barH = 4;
           const hpPct = Math.max(0, Math.min(1, (rp.hp || 0) / (rp.maxHp || 100)));
-          const barY = rpSy - rpR - 20;
+          const barY = rpSy - rpR - 22;
           ctx.fillStyle = 'rgba(0,0,0,0.55)';
           ctx.fillRect(rpSx - barW / 2, barY, barW, barH);
           ctx.fillStyle = hpPct > 0.5 ? '#44FF88' : hpPct > 0.25 ? '#FFCC00' : '#FF4444';
@@ -224,7 +163,7 @@ Game.prototype._render = function() {
           ctx.textBaseline = 'bottom';
           ctx.fillStyle = 'rgba(0,0,0,0.5)';
           ctx.fillText(rp.username || 'PLAYER', rpSx + 1, barY - 1);
-          ctx.fillStyle = rpColor;
+          ctx.fillStyle = '#44EEFF';
           ctx.fillText(rp.username || 'PLAYER', rpSx, barY - 2);
           ctx.restore();
         }
