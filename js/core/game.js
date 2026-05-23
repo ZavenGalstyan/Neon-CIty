@@ -628,10 +628,10 @@ class Game {
         this._mpTimer = 0;
         Multiplayer.sendPos(this.player);
       }
-      // Host: broadcast bot positions every 0.5s so non-host clients stay in sync
+      // Host: broadcast bot positions at 10 Hz (every 100ms) for smooth sync
       if (this._isHost) {
         this._mpBotSyncTimer = (this._mpBotSyncTimer || 0) + dt;
-        if (this._mpBotSyncTimer >= 0.5) {
+        if (this._mpBotSyncTimer >= 0.1) {
           this._mpBotSyncTimer = 0;
           if (this.bots.length > 0) Multiplayer.sendBotPositions(this.bots);
         }
@@ -1186,6 +1186,11 @@ class Game {
         edt = dt * (bot._slowMult || 0.3);
       }
       bot.update(edt, this.player, this.map, this.bullets, this.particles);
+    }
+
+    // Non-host: pull bots toward server-authoritative positions after AI ran
+    if (this._roomId && typeof Multiplayer !== 'undefined' && !this._isHost) {
+      Multiplayer.updateRemoteBots(dt);
     }
 
     // ── Zombie melee contact damage ────────────────────────
