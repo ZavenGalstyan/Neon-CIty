@@ -312,22 +312,17 @@ const Multiplayer = (() => {
       }
     });
 
-    // bot:positions — host broadcast; non-host lerps bots to authoritative positions
+    // bot:positions — host broadcast; non-host stores targets for per-frame interpolation
     WS.on('bot:positions', ({ bots }) => {
       if (!window._game || !bots || window._game._isHost) return;
       for (const upd of bots) {
         const bot = window._game.bots.find(b => b._id === upd.id && !b.dead && !b.dying);
         if (!bot) continue;
-        // Snap if far, lerp if close — avoids rubber-banding on small drift
-        const dx = upd.x - bot.x, dy = upd.y - bot.y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        if (dist > 120) {
-          bot.x = upd.x; bot.y = upd.y;
-        } else if (dist > 4) {
-          bot.x += dx * 0.3;
-          bot.y += dy * 0.3;
-        }
-        if (upd.hp !== undefined) bot.health = upd.hp;
+        // Store authoritative target — updateRemoteBots() interpolates toward it every frame
+        bot._targetX     = upd.x;
+        bot._targetY     = upd.y;
+        if (upd.angle !== undefined) bot._targetAngle = upd.angle;
+        if (upd.hp    !== undefined) bot.health = upd.hp;
       }
     });
   }
@@ -382,7 +377,13 @@ const Multiplayer = (() => {
     const positions = [];
     for (const b of bots) {
       if (!b._id || b.dead || b.dying) continue;
-      positions.push({ id: b._id, x: Math.round(b.x), y: Math.round(b.y), hp: b.health });
+      positions.push({
+        id:    b._id,
+        x:     Math.round(b.x),
+        y:     Math.round(b.y),
+        hp:    b.health,
+        angle: Math.round((b.angle || 0) * 100) / 100
+      });
     }
     if (positions.length === 0) return;
     WS.send('bot:positions', { bots: positions });
@@ -412,6 +413,36 @@ const Multiplayer = (() => {
     }
   }
 
+  /* Per-frame bot interpolation toward server-authoritative targets.
+     Called on non-host AFTER bot.update() so local AI provides animation
+     while server positions continuously correct any drift. */
+  function updateRemoteBots(dt) {
+    if (!window._game) return;
+    const posAlpha = Math.min(1, dt * 25); // reaches 10 Hz target in ~4 frames
+    const angAlpha = Math.min(1, dt * 20);
+    for (const bot of window._game.bots) {
+      if (bot.dead || bot.dying || bot._targetX === undefined) continue;
+      const dx   = bot._targetX - bot.x;
+      const dy   = bot._targetY - bot.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist > 200) {
+        // Hard snap when very far out of sync (e.g., just spawned or major lag)
+        bot.x = bot._targetX;
+        bot.y = bot._targetY;
+      } else if (dist > 0.5) {
+        bot.x += dx * posAlpha;
+        bot.y += dy * posAlpha;
+      }
+      if (bot._targetAngle !== undefined) {
+        let da = bot._targetAngle - (bot.angle || 0);
+        // Normalize to [-π, π] to take the short arc
+        while (da >  Math.PI) da -= Math.PI * 2;
+        while (da < -Math.PI) da += Math.PI * 2;
+        bot.angle = (bot.angle || 0) + da * angAlpha;
+      }
+    }
+  }
+
   /* ── Getters ─────────────────────────────────────────────── */
   function getRoom()           { return _currentRoom; }
   function isHost()            { return _isHost; }
@@ -425,7 +456,7 @@ const Multiplayer = (() => {
     bindLobbyEvents, bindGameEvents,
     sendPos, sendShoot, sendDead, sendWaveAck, sendFinished,
     sendBotSpawn, sendBotDead, sendBotPositions,
-    updateRemotePlayers,
+    updateRemotePlayers, updateRemoteBots,
     getRoom, isHost, getRemotePlayers, setMyUserId, setRoom, setIsHost
   };
 })();
