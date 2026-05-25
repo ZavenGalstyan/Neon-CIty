@@ -147,10 +147,10 @@ class InputManager {
 
   isDown(code) { return this.keys.has(code) || this._virtualKeys.has(code); }
 
-  updateMouseWorld(camX, camY) {
+  updateMouseWorld(camX, camY, zoom = 1) {
     this.mouseWorld.set(
-      this.mouseScreen.x + camX,
-      this.mouseScreen.y + camY
+      this.mouseScreen.x / zoom + camX,
+      this.mouseScreen.y / zoom + camY
     );
   }
 

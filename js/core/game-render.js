@@ -29,14 +29,16 @@ Game.prototype._render = function() {
     } else {
       ctx.globalAlpha = 1;
       ctx.save();
-      ctx.translate(-this.camX + shake.x, -this.camY + shake.y);
-      this.map.render(ctx, this.camX, this.camY, W, H);
+      const _zoom = this._camZoom || 1;
+      ctx.scale(_zoom, _zoom);
+      ctx.translate(-this.camX + shake.x / _zoom, -this.camY + shake.y / _zoom);
+      this.map.render(ctx, this.camX, this.camY, W / _zoom, H / _zoom);
       this.map.renderStreetLightPoles(
         ctx,
         this.camX,
         this.camY,
-        W,
-        H,
+        W / _zoom,
+        H / _zoom,
         this._nightAlpha,
       );
       this.map.renderMetroEntrance(ctx);
@@ -66,7 +68,8 @@ Game.prototype._render = function() {
           ctx.setTransform(1, 0, 0, 1, 0, 0);
           ctx.globalAlpha = 1;
           ctx.shadowBlur = 0;
-          ctx.translate(-this.camX + shake.x, -this.camY + shake.y);
+          ctx.scale(_zoom, _zoom);
+          ctx.translate(-this.camX + shake.x / _zoom, -this.camY + shake.y / _zoom);
         }
       }
       for (const npc of this._cityNpcs) npc.render(ctx);
@@ -79,7 +82,8 @@ Game.prototype._render = function() {
           ctx.setTransform(1, 0, 0, 1, 0, 0);
           ctx.globalAlpha = 1;
           ctx.shadowBlur = 0;
-          ctx.translate(-this.camX + shake.x, -this.camY + shake.y);
+          ctx.scale(_zoom, _zoom);
+          ctx.translate(-this.camX + shake.x / _zoom, -this.camY + shake.y / _zoom);
         }
       }
       for (const b of this.bullets) if (b.isPlayer) b.render(ctx);
@@ -1552,8 +1556,10 @@ Game.prototype._render = function() {
 
     // Tower: elevator in world-space
     if (this._towerMode) {
+      const _zoom2 = this._camZoom || 1;
       ctx.save();
-      ctx.translate(-this.camX + shake.x, -this.camY + shake.y);
+      ctx.scale(_zoom2, _zoom2);
+      ctx.translate(-this.camX + shake.x / _zoom2, -this.camY + shake.y / _zoom2);
       this.map.renderTowerElevator(
         ctx,
         this._towerElevatorActive,
@@ -1565,14 +1571,16 @@ Game.prototype._render = function() {
     // Street light glows — additive, world-space, after night overlay
     // so the warm halos visibly punch through the darkness
     if (!this._indoor && this._nightAlpha > 0.01) {
+      const _zoom2 = this._camZoom || 1;
       ctx.save();
-      ctx.translate(-this.camX + shake.x, -this.camY + shake.y);
+      ctx.scale(_zoom2, _zoom2);
+      ctx.translate(-this.camX + shake.x / _zoom2, -this.camY + shake.y / _zoom2);
       this.map.renderStreetLightGlows(
         ctx,
         this.camX,
         this.camY,
-        W,
-        H,
+        W / _zoom2,
+        H / _zoom2,
         this._nightAlpha,
       );
       ctx.restore();
@@ -1581,8 +1589,9 @@ Game.prototype._render = function() {
     // ── Global Event overlays ─────────────────────────────
     if (this._globalEvent) {
       if (this._globalEvent.id === "blackout") {
-        const psx = this.player.x - this.camX;
-        const psy = this.player.y - this.camY;
+        const _bz = this._camZoom || 1;
+        const psx = (this.player.x - this.camX) * _bz;
+        const psy = (this.player.y - this.camY) * _bz;
         const grad = ctx.createRadialGradient(
           psx,
           psy,
