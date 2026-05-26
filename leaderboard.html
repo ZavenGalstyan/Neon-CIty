@@ -1803,6 +1803,154 @@
   }
   html[data-theme="light"] .lb-content-wrap { background: transparent; }
   html[data-theme="light"] .lb-table-wrap   { background: transparent; }
+
+  /* ── Report button ── */
+  .lb-report-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 9px;
+    background: rgba(255,68,102,0.07);
+    border: 1px solid rgba(255,68,102,0.22);
+    border-radius: 7px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 8px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: rgba(255,68,102,0.7);
+    cursor: pointer;
+    flex-shrink: 0;
+    opacity: 0;
+    transition: opacity 0.2s, background 0.2s, border-color 0.2s, color 0.2s, box-shadow 0.2s;
+  }
+  .lb-row:hover .lb-report-btn,
+  .lb-podium-card:hover .lb-report-btn { opacity: 1; }
+  .lb-report-btn:hover {
+    background: rgba(255,68,102,0.2);
+    border-color: rgba(255,68,102,0.55);
+    color: #FF4466;
+    box-shadow: 0 0 12px rgba(255,68,102,0.25);
+  }
+  @media (pointer: coarse) { .lb-report-btn { opacity: 1; } }
+
+  /* ── Report modal ── */
+  .rpt-backdrop {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.84);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    z-index: 3000;
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px;
+    animation: rptFadeIn 0.2s ease;
+  }
+  @keyframes rptFadeIn { from { opacity: 0; } to { opacity: 1; } }
+  .rpt-backdrop[hidden] { display: none !important; }
+  .rpt-box {
+    background: linear-gradient(145deg, rgba(14,10,28,0.99) 0%, rgba(9,7,20,0.99) 100%);
+    border: 1px solid rgba(255,68,102,0.45);
+    border-radius: 20px;
+    padding: 36px 32px 28px;
+    max-width: 440px;
+    width: 100%;
+    box-shadow: 0 0 80px rgba(255,68,102,0.15), 0 30px 80px rgba(0,0,0,0.7);
+    animation: rptSlideIn 0.25s cubic-bezier(0.4,0,0.2,1);
+  }
+  @keyframes rptSlideIn { from { opacity: 0; transform: scale(0.92) translateY(16px); } to { opacity: 1; transform: none; } }
+  .rpt-icon { font-size: 30px; margin-bottom: 10px; }
+  .rpt-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 16px;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    color: #FF4466;
+    margin-bottom: 4px;
+    text-shadow: 0 0 20px rgba(255,68,102,0.4);
+  }
+  .rpt-sub {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 13px;
+    color: rgba(255,255,255,0.38);
+    margin-bottom: 26px;
+  }
+  .rpt-field { margin-bottom: 16px; }
+  .rpt-lbl {
+    display: block;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 9px;
+    letter-spacing: 0.22em;
+    color: rgba(255,255,255,0.45);
+    margin-bottom: 8px;
+  }
+  .rpt-inp, .rpt-area {
+    width: 100%;
+    padding: 13px 16px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.09);
+    border-radius: 12px;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    color: #fff;
+    outline: none;
+    transition: border-color 0.22s, box-shadow 0.22s;
+    box-sizing: border-box;
+  }
+  .rpt-inp::placeholder, .rpt-area::placeholder { color: rgba(255,255,255,0.22); }
+  .rpt-inp:focus, .rpt-area:focus {
+    border-color: rgba(255,68,102,0.5);
+    box-shadow: 0 0 20px rgba(255,68,102,0.1);
+  }
+  .rpt-area { resize: vertical; min-height: 96px; }
+  .rpt-err {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 13px;
+    color: #FF4466;
+    margin-top: -4px;
+    margin-bottom: 10px;
+    display: none;
+  }
+  .rpt-btns {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    margin-top: 22px;
+  }
+  .rpt-btn {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    padding: 11px 22px;
+    border-radius: 10px;
+    cursor: pointer;
+    border: 1px solid;
+    transition: all 0.18s;
+  }
+  .rpt-btn--cancel { background: rgba(255,255,255,0.03); border-color: rgba(255,255,255,0.1); color: rgba(255,255,255,0.45); }
+  .rpt-btn--cancel:hover { background: rgba(255,255,255,0.07); border-color: rgba(255,255,255,0.2); color: #fff; }
+  .rpt-btn--send { background: rgba(255,68,102,0.14); border-color: rgba(255,68,102,0.5); color: #FF4466; }
+  .rpt-btn--send:hover { background: rgba(255,68,102,0.28); border-color: #FF4466; color: #fff; box-shadow: 0 0 20px rgba(255,68,102,0.3); }
+  .rpt-btn--send:disabled { opacity: 0.45; cursor: not-allowed; pointer-events: none; }
+
+  /* ── Leaderboard toast ── */
+  .lb-toast {
+    position: fixed;
+    bottom: 32px; left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    padding: 12px 28px;
+    border-radius: 12px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    z-index: 4000;
+    opacity: 0;
+    transition: opacity 0.3s, transform 0.3s;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+  .lb-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .lb-toast--success { background: rgba(68,255,136,0.12); border: 1px solid rgba(68,255,136,0.35); color: #44FF88; box-shadow: 0 0 20px rgba(68,255,136,0.2); }
+  .lb-toast--error   { background: rgba(255,68,102,0.12); border: 1px solid rgba(255,68,102,0.35); color: #FF4466; box-shadow: 0 0 20px rgba(255,68,102,0.2); }
 </style>
 </head>
 <body class="select-screen">
@@ -2096,6 +2244,31 @@
     <div class="lb-content" id="lbContent"></div>
 
   </div><!-- /.lb-page -->
+
+  <!-- ══ Report Player Modal ══════════════════════════════════════ -->
+  <div class="rpt-backdrop" id="rptModal" hidden>
+    <div class="rpt-box">
+      <div class="rpt-icon">⚑</div>
+      <div class="rpt-title">REPORT PLAYER</div>
+      <div class="rpt-sub">Submit a report for review by our moderation team.</div>
+      <div class="rpt-field">
+        <label class="rpt-lbl" for="rptName">PLAYER NAME</label>
+        <input class="rpt-inp" id="rptName" type="text" placeholder="Enter player name…" autocomplete="off">
+      </div>
+      <div class="rpt-field">
+        <label class="rpt-lbl" for="rptReason">REASON</label>
+        <textarea class="rpt-area" id="rptReason" placeholder="Describe the reason for this report…"></textarea>
+      </div>
+      <div class="rpt-err" id="rptErr"></div>
+      <div class="rpt-btns">
+        <button class="rpt-btn rpt-btn--cancel" id="rptCancel">CANCEL</button>
+        <button class="rpt-btn rpt-btn--send" id="rptSend">SEND REPORT</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="lb-toast" id="lbToast"></div>
 
   <script src="js/config.js"></script>
   <script src="js/auth.js"></script>
@@ -2407,6 +2580,14 @@
         info.appendChild(charDiv);
         info.appendChild(val);
 
+        if (!isMe) {
+          const rptBtn = document.createElement('button');
+          rptBtn.className = 'lb-report-btn';
+          rptBtn.textContent = '⚑ REPORT';
+          rptBtn.addEventListener('click', (e) => { e.stopPropagation(); openReportModal(row.name); });
+          info.appendChild(rptBtn);
+        }
+
         card.appendChild(medal);
         card.appendChild(avatar);
         card.appendChild(info);
@@ -2449,12 +2630,18 @@
 
         const nameCell = document.createElement('span');
         nameCell.className = 'lb-row__name';
-        nameCell.textContent = row.name || 'Unknown';
+        nameCell.appendChild(document.createTextNode(row.name || 'Unknown'));
         if (isMe) {
           const tag = document.createElement('span');
           tag.className = 'lb-you-tag';
           tag.textContent = 'YOU';
           nameCell.appendChild(tag);
+        } else {
+          const rptBtn = document.createElement('button');
+          rptBtn.className = 'lb-report-btn';
+          rptBtn.textContent = '⚑ REPORT';
+          rptBtn.addEventListener('click', (e) => { e.stopPropagation(); openReportModal(row.name); });
+          nameCell.appendChild(rptBtn);
         }
 
         const charCell = document.createElement('span');
@@ -2502,6 +2689,74 @@
   retryBtn.addEventListener('click', () => {
     errorEl.hidden = true;
     switchBoard(activeBoard);
+  });
+
+  /* ══════════════════════════════════════════════════════════════════
+     REPORT MODAL
+  ══════════════════════════════════════════════════════════════════ */
+
+  let _lbToastTimer = null;
+  function showLbToast(msg, type = 'success') {
+    const el = document.getElementById('lbToast');
+    el.textContent = msg;
+    el.className = `lb-toast lb-toast--${type} show`;
+    clearTimeout(_lbToastTimer);
+    _lbToastTimer = setTimeout(() => el.classList.remove('show'), 3200);
+  }
+
+  function openReportModal(playerName) {
+    document.getElementById('rptName').value = playerName || '';
+    document.getElementById('rptReason').value = '';
+    document.getElementById('rptErr').style.display = 'none';
+    document.getElementById('rptModal').hidden = false;
+    setTimeout(() => document.getElementById('rptName').focus(), 60);
+  }
+
+  document.getElementById('rptCancel').addEventListener('click', () => {
+    document.getElementById('rptModal').hidden = true;
+  });
+
+  document.getElementById('rptModal').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('rptModal')) {
+      document.getElementById('rptModal').hidden = true;
+    }
+  });
+
+  document.getElementById('rptSend').addEventListener('click', async () => {
+    const name   = document.getElementById('rptName').value.trim();
+    const reason = document.getElementById('rptReason').value.trim();
+    const errEl  = document.getElementById('rptErr');
+
+    if (!name || !reason) {
+      errEl.textContent = 'Please fill in both fields.';
+      errEl.style.display = 'block';
+      return;
+    }
+
+    const btn = document.getElementById('rptSend');
+    btn.disabled = true;
+    btn.textContent = 'SENDING…';
+    errEl.style.display = 'none';
+
+    try {
+      const res = await fetch('https://game-backend-wfmf.onrender.com/reports', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reportedName: name, reason })
+      });
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        throw new Error(d.message || `Server error ${res.status}`);
+      }
+      document.getElementById('rptModal').hidden = true;
+      showLbToast('✓ Report submitted successfully', 'success');
+    } catch (err) {
+      errEl.textContent = err.message || 'Failed to submit report.';
+      errEl.style.display = 'block';
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'SEND REPORT';
+    }
   });
 
   /* ══════════════════════════════════════════════════════════════════
