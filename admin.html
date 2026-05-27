@@ -540,6 +540,265 @@
       color: var(--adm-red);
       box-shadow: 0 0 20px rgba(255,68,102,0.2);
     }
+
+    /* ── Reports filter bar ────────────────────────────────── */
+    .reports-filter-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 22px;
+      border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+    }
+    .reports-filter-label {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 9px;
+      letter-spacing: 0.2em;
+      color: var(--muted);
+      margin-right: 4px;
+    }
+    .rpt-filter-btn {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 9px;
+      letter-spacing: 0.15em;
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: 1px solid rgba(255,255,255,0.1);
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.18s;
+    }
+    .rpt-filter-btn:hover {
+      background: rgba(255,255,255,0.06);
+      color: var(--text);
+    }
+    .rpt-filter-btn.active {
+      background: rgba(68,238,255,0.1);
+      border-color: rgba(68,238,255,0.4);
+      color: var(--adm-cyan);
+    }
+    .rpt-filter-btn[data-status="open"].active {
+      background: rgba(255,68,102,0.1);
+      border-color: rgba(255,68,102,0.4);
+      color: var(--adm-red);
+    }
+    .rpt-filter-btn[data-status="reviewed"].active {
+      background: rgba(68,255,136,0.1);
+      border-color: rgba(68,255,136,0.4);
+      color: var(--adm-green);
+    }
+    .rpt-filter-btn[data-status="dismissed"].active {
+      background: rgba(255,255,255,0.06);
+      border-color: rgba(255,255,255,0.2);
+      color: var(--muted);
+    }
+
+    /* ── Report status badge ───────────────────────────────── */
+    .rpt-status-badge {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 8px;
+      letter-spacing: 0.18em;
+      padding: 4px 10px;
+      border-radius: 20px;
+      display: inline-block;
+      white-space: nowrap;
+    }
+    .rpt-status-badge--open {
+      background: rgba(255,68,102,0.1);
+      border: 1px solid rgba(255,68,102,0.3);
+      color: var(--adm-red);
+    }
+    .rpt-status-badge--reviewed {
+      background: rgba(68,255,136,0.1);
+      border: 1px solid rgba(68,255,136,0.3);
+      color: var(--adm-green);
+    }
+    .rpt-status-badge--dismissed {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: var(--muted);
+    }
+
+    /* ── Report reporter/reported names ────────────────────── */
+    .rpt-reporter-cell {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .rpt-avatar {
+      width: 28px; height: 28px;
+      border-radius: 7px;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .rpt-avatar--reporter {
+      background: rgba(68,238,255,0.12);
+      border: 1px solid rgba(68,238,255,0.2);
+      color: var(--adm-cyan);
+    }
+    .rpt-avatar--reported {
+      background: rgba(255,68,102,0.12);
+      border: 1px solid rgba(255,68,102,0.2);
+      color: var(--adm-red);
+    }
+    .rpt-reason-text {
+      max-width: 220px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-size: 12px;
+      color: var(--muted);
+      cursor: default;
+    }
+    .rpt-id-text {
+      font-family: monospace;
+      font-size: 10px;
+      color: var(--muted);
+    }
+
+    /* ── Custom status dropdown ────────────────────────────── */
+    .rpt-dd {
+      position: relative;
+      display: inline-block;
+    }
+    .rpt-dd__trigger {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 9px;
+      letter-spacing: 0.14em;
+      padding: 7px 12px 7px 10px;
+      border-radius: 9px;
+      border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(10,10,18,0.7);
+      color: var(--text);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 130px;
+      transition: border-color 0.18s, box-shadow 0.18s, background 0.18s;
+      outline: none;
+      white-space: nowrap;
+      backdrop-filter: blur(8px);
+    }
+    .rpt-dd__trigger:hover {
+      border-color: rgba(68,238,255,0.3);
+      background: rgba(68,238,255,0.04);
+    }
+    .rpt-dd--open .rpt-dd__trigger {
+      border-color: rgba(68,238,255,0.5);
+      box-shadow: 0 0 14px rgba(68,238,255,0.12);
+      background: rgba(68,238,255,0.05);
+    }
+    .rpt-dd--loading .rpt-dd__trigger {
+      opacity: 0.5;
+      pointer-events: none;
+    }
+    .rpt-dd__dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      transition: background 0.2s, box-shadow 0.2s;
+    }
+    .rpt-dd__dot--open      { background: var(--adm-red);   box-shadow: 0 0 6px rgba(255,68,102,0.8); }
+    .rpt-dd__dot--reviewed  { background: var(--adm-green); box-shadow: 0 0 6px rgba(68,255,136,0.8); }
+    .rpt-dd__dot--dismissed { background: rgba(255,255,255,0.25); box-shadow: none; }
+    .rpt-dd__label {
+      flex: 1;
+      text-align: left;
+    }
+    .rpt-dd__arrow {
+      font-size: 10px;
+      color: var(--muted);
+      transition: transform 0.2s;
+      margin-left: 2px;
+      flex-shrink: 0;
+    }
+    .rpt-dd--open .rpt-dd__arrow {
+      transform: rotate(180deg);
+      color: var(--adm-cyan);
+    }
+    .rpt-dd__spinner {
+      width: 12px; height: 12px;
+      border: 2px solid rgba(68,238,255,0.2);
+      border-top-color: var(--adm-cyan);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      flex-shrink: 0;
+    }
+
+    /* Panel */
+    .rpt-dd__panel {
+      position: fixed;
+      min-width: 140px;
+      background: rgba(8,8,16,0.96);
+      border: 1px solid rgba(68,238,255,0.18);
+      border-radius: 11px;
+      box-shadow:
+        0 0 0 1px rgba(0,0,0,0.5),
+        0 12px 40px rgba(0,0,0,0.7),
+        0 0 30px rgba(68,238,255,0.06);
+      backdrop-filter: blur(16px);
+      z-index: 500;
+      overflow: hidden;
+      padding: 5px;
+      transform-origin: top center;
+      animation: rptDdIn 0.15s ease;
+    }
+    @keyframes rptDdIn {
+      from { opacity: 0; transform: scaleY(0.88) translateY(-4px); }
+      to   { opacity: 1; transform: scaleY(1)    translateY(0);    }
+    }
+    .rpt-dd__panel[hidden] { display: none !important; }
+
+    /* Items */
+    .rpt-dd__item {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 9px;
+      letter-spacing: 0.16em;
+      width: 100%;
+      padding: 9px 12px;
+      border-radius: 7px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      transition: background 0.14s, border-color 0.14s, color 0.14s;
+      white-space: nowrap;
+      text-align: left;
+    }
+    .rpt-dd__item:hover {
+      background: rgba(255,255,255,0.05);
+      color: var(--text);
+    }
+    .rpt-dd__item--open:hover {
+      background: rgba(255,68,102,0.1);
+      border-color: rgba(255,68,102,0.2);
+      color: var(--adm-red);
+    }
+    .rpt-dd__item--reviewed:hover {
+      background: rgba(68,255,136,0.08);
+      border-color: rgba(68,255,136,0.2);
+      color: var(--adm-green);
+    }
+    .rpt-dd__item--dismissed:hover {
+      background: rgba(255,255,255,0.05);
+      border-color: rgba(255,255,255,0.1);
+      color: var(--text);
+    }
+    .rpt-dd__item--active {
+      color: var(--text);
+      background: rgba(255,255,255,0.04);
+    }
+    .rpt-dd__item--active.rpt-dd__item--open      { background: rgba(255,68,102,0.08);  color: var(--adm-red);   border-color: rgba(255,68,102,0.15); }
+    .rpt-dd__item--active.rpt-dd__item--reviewed  { background: rgba(68,255,136,0.06);  color: var(--adm-green); border-color: rgba(68,255,136,0.15); }
+    .rpt-dd__item--active.rpt-dd__item--dismissed { background: rgba(255,255,255,0.04); color: var(--muted);     border-color: rgba(255,255,255,0.08); }
   </style>
 </head>
 <body class="select-screen admin-page">
@@ -625,6 +884,30 @@
         <div class="admin-loading">
           <div class="adm-spinner"></div>
           LOADING CLANS…
+        </div>
+      </div>
+    </div>
+
+    <!-- Reports -->
+    <div class="admin-section">
+      <div class="admin-section-head">
+        <div class="admin-section-title" style="--section-color: var(--adm-red)">
+          <div class="dot" style="background:var(--adm-red);box-shadow:0 0 8px rgba(255,68,102,0.7)"></div>
+          USER REPORTS
+        </div>
+        <div class="admin-section-badge" id="reportCountBadge" style="border-color:rgba(255,68,102,0.25);background:rgba(255,68,102,0.07);color:var(--adm-red)">LOADING…</div>
+      </div>
+      <div class="reports-filter-bar">
+        <span class="reports-filter-label">FILTER:</span>
+        <button class="rpt-filter-btn active" data-status="">ALL</button>
+        <button class="rpt-filter-btn" data-status="open">OPEN</button>
+        <button class="rpt-filter-btn" data-status="reviewed">REVIEWED</button>
+        <button class="rpt-filter-btn" data-status="dismissed">DISMISSED</button>
+      </div>
+      <div id="reportsTableWrap">
+        <div class="admin-loading">
+          <div class="adm-spinner"></div>
+          LOADING REPORTS…
         </div>
       </div>
     </div>
@@ -906,10 +1189,230 @@
         .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     }
 
+    /* ── Custom dropdown factory ─────────────────────────── */
+    const RPT_STATUS_OPTIONS = [
+      { value: 'open',      label: 'OPEN'      },
+      { value: 'reviewed',  label: 'REVIEWED'  },
+      { value: 'dismissed', label: 'DISMISSED' },
+    ];
+
+    function _buildStatusDropdown(currentStatus, onSelect) {
+      const wrap = document.createElement('div');
+      wrap.className = 'rpt-dd';
+
+      const trigger = document.createElement('button');
+      trigger.className = 'rpt-dd__trigger';
+      trigger.type = 'button';
+
+      const dot   = document.createElement('span');
+      const label = document.createElement('span');
+      const arrow = document.createElement('span');
+      dot.className   = `rpt-dd__dot rpt-dd__dot--${currentStatus}`;
+      label.className = 'rpt-dd__label';
+      label.textContent = currentStatus.toUpperCase();
+      arrow.className = 'rpt-dd__arrow';
+      arrow.textContent = '▾';
+
+      trigger.append(dot, label, arrow);
+
+      const panel = document.createElement('div');
+      panel.className = 'rpt-dd__panel';
+      panel.hidden = true;
+
+      RPT_STATUS_OPTIONS.forEach(opt => {
+        const item = document.createElement('button');
+        item.type = 'button';
+        item.className = `rpt-dd__item rpt-dd__item--${opt.value}${opt.value === currentStatus ? ' rpt-dd__item--active' : ''}`;
+
+        const iDot = document.createElement('span');
+        iDot.className = `rpt-dd__dot rpt-dd__dot--${opt.value}`;
+        item.append(iDot, opt.label);
+
+        item.addEventListener('click', () => {
+          closeDropdown();
+          if (opt.value === wrap._value) return;
+          onSelect(opt.value, wrap);
+        });
+
+        panel.appendChild(item);
+      });
+
+      wrap.appendChild(trigger);
+      wrap.appendChild(panel);
+
+      /* State helpers */
+      wrap._value = currentStatus;
+
+      function openDropdown() {
+        const rect = trigger.getBoundingClientRect();
+        panel.style.top  = `${rect.bottom + 6}px`;
+        panel.style.left = `${rect.left}px`;
+        wrap.classList.add('rpt-dd--open');
+        panel.hidden = false;
+      }
+      function closeDropdown() {
+        wrap.classList.remove('rpt-dd--open');
+        panel.hidden = true;
+      }
+
+      trigger.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (wrap.classList.contains('rpt-dd--open')) closeDropdown();
+        else openDropdown();
+      });
+
+      /* Close on outside click */
+      document.addEventListener('click', function handler(e) {
+        if (!wrap.contains(e.target)) {
+          closeDropdown();
+        }
+      });
+
+      /* Update trigger appearance */
+      wrap._setValue = (val) => {
+        wrap._value = val;
+        dot.className   = `rpt-dd__dot rpt-dd__dot--${val}`;
+        label.textContent = val.toUpperCase();
+        panel.querySelectorAll('.rpt-dd__item').forEach(it => {
+          it.classList.toggle('rpt-dd__item--active', it.classList.contains(`rpt-dd__item--${val}`));
+        });
+      };
+
+      wrap._setLoading = (loading) => {
+        wrap.classList.toggle('rpt-dd--loading', loading);
+        if (loading) {
+          const sp = document.createElement('span');
+          sp.className = 'rpt-dd__spinner';
+          sp.id = 'rptDdSpinner';
+          arrow.replaceWith(sp);
+        } else {
+          const sp = trigger.querySelector('#rptDdSpinner');
+          if (sp) sp.replaceWith(arrow);
+        }
+      };
+
+      return wrap;
+    }
+
+    /* ── Reports ─────────────────────────────────────────── */
+    let _currentReportStatus = '';
+
+    function _reportStatusBadge(status) {
+      const cls = `rpt-status-badge rpt-status-badge--${status}`;
+      const label = status.toUpperCase();
+      return `<span class="${cls}">${label}</span>`;
+    }
+
+    async function loadReports(status = '') {
+      const wrap = document.getElementById('reportsTableWrap');
+      wrap.innerHTML = '<div class="admin-loading"><div class="adm-spinner"></div>LOADING REPORTS…</div>';
+
+      try {
+        const d = await API.getReports({ status: status || undefined, limit: 100, skip: 1 });
+        const reports = d.reports || [];
+        const total   = d.total ?? reports.length;
+
+        const badge = document.getElementById('reportCountBadge');
+        badge.textContent = `${total} REPORT${total !== 1 ? 'S' : ''}`;
+
+        if (reports.length === 0) {
+          wrap.innerHTML = '<div class="admin-empty">NO REPORTS FOUND</div>';
+          return;
+        }
+
+        const tableWrap = document.createElement('div');
+        tableWrap.className = 'admin-table-wrap';
+
+        const table = document.createElement('table');
+        table.className = 'admin-table';
+        table.innerHTML = `
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>REPORTER</th>
+              <th>REPORTED</th>
+              <th>REASON</th>
+              <th>STATUS</th>
+              <th>DATE</th>
+              <th>CHANGE STATUS</th>
+            </tr>
+          </thead>
+          <tbody id="reportsTableBody"></tbody>
+        `;
+
+        tableWrap.appendChild(table);
+        wrap.innerHTML = '';
+        wrap.appendChild(tableWrap);
+
+        const tbody = document.getElementById('reportsTableBody');
+        reports.forEach((r, i) => {
+          const tr = document.createElement('tr');
+          tr.dataset.reportId = r._id;
+
+          tr.innerHTML = `
+            <td style="color:var(--muted);font-size:12px">${i + 1}</td>
+            <td>
+              <div class="rpt-reporter-cell">
+                <div class="rpt-avatar rpt-avatar--reporter">${(r.reporterName || '?').charAt(0).toUpperCase()}</div>
+                <span style="font-weight:600">${_esc(r.reporterName)}</span>
+              </div>
+            </td>
+            <td>
+              <div class="rpt-reporter-cell">
+                <div class="rpt-avatar rpt-avatar--reported">${(r.reportedName || '?').charAt(0).toUpperCase()}</div>
+                <span style="font-weight:600;color:var(--adm-red)">${_esc(r.reportedName)}</span>
+              </div>
+            </td>
+            <td>
+              <span class="rpt-reason-text" title="${_esc(r.reason)}">${_esc(r.reason)}</span>
+            </td>
+            <td class="rpt-status-cell">${_reportStatusBadge(r.status)}</td>
+            <td><span class="user-date-text">${fmtDate(r.createdAt)}</span></td>
+            <td></td>
+          `;
+
+          /* Custom status dropdown */
+          const actionCell = tr.querySelector('td:last-child');
+          const dd = _buildStatusDropdown(r.status, async (newStatus, ddEl) => {
+            ddEl._setLoading(true);
+            try {
+              await API.updateReportStatus(r._id, newStatus);
+              tr.querySelector('.rpt-status-cell').innerHTML = _reportStatusBadge(newStatus);
+              r.status = newStatus;
+              ddEl._setValue(newStatus);
+              showToast(`Report status updated to ${newStatus}`, 'success');
+            } catch (err) {
+              showToast(`Error: ${err.message}`, 'error');
+            } finally {
+              ddEl._setLoading(false);
+            }
+          });
+
+          actionCell.appendChild(dd);
+          tbody.appendChild(tr);
+        });
+
+      } catch (err) {
+        wrap.innerHTML = `<div class="admin-error">Failed to load reports: ${_esc(err.message)}</div>`;
+        document.getElementById('reportCountBadge').textContent = 'ERROR';
+      }
+    }
+
+    /* Filter button wiring */
+    document.querySelectorAll('.rpt-filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.rpt-filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        _currentReportStatus = btn.dataset.status;
+        loadReports(_currentReportStatus);
+      });
+    });
+
     /* ── Boot ────────────────────────────────────────────── */
     loadStats();
     loadUsers();
     loadClans();
+    loadReports();
   </script>
 </body>
 </html>
