@@ -259,6 +259,50 @@ const API = (() => {
     return _patch(`/reports/${encodeURIComponent(id)}/status`, { status });
   }
 
+  /* ══════════════════════════════════════════════════════════
+     PROPOSALS
+  ══════════════════════════════════════════════════════════ */
+
+  async function submitProposal(title, description) {
+    return _post('/proposals', { title, description });
+  }
+
+  async function getProposals({ status, limit = 100, skip = 0 } = {}) {
+    const p = new URLSearchParams({ limit, skip });
+    if (status) p.set('status', status);
+    return _get(`/proposals?${p}`);
+  }
+
+  async function updateProposalStatus(id, status) {
+    return _patch(`/proposals/${encodeURIComponent(id)}/status`, { status });
+  }
+
+  async function deleteProposal(id) {
+    return _delete(`/proposals/${encodeURIComponent(id)}`);
+  }
+
+  /* ══════════════════════════════════════════════════════════
+     PROBLEMS
+  ══════════════════════════════════════════════════════════ */
+
+  async function submitProblem(title, description) {
+    return _post('/problems', { title, description });
+  }
+
+  async function getProblems({ status, limit = 100, skip = 0 } = {}) {
+    const p = new URLSearchParams({ limit, skip });
+    if (status) p.set('status', status);
+    return _get(`/problems?${p}`);
+  }
+
+  async function updateProblemStatus(id, status) {
+    return _patch(`/problems/${encodeURIComponent(id)}/status`, { status });
+  }
+
+  async function deleteProblem(id) {
+    return _delete(`/problems/${encodeURIComponent(id)}`);
+  }
+
   /* ── Public exports ────────────────────────────────────── */
   return {
     // Profile
@@ -285,5 +329,9 @@ const API = (() => {
     getAllUsers, deleteAccount,
     // Reports
     getReports, updateReportStatus,
+    // Proposals
+    submitProposal, getProposals, updateProposalStatus, deleteProposal,
+    // Problems
+    submitProblem, getProblems, updateProblemStatus, deleteProblem,
   };
 })();
