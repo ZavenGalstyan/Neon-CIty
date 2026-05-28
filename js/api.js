@@ -71,6 +71,21 @@ const API = (() => {
     return data;
   }
 
+  /* ── Protected PATCH ────────────────────────────────────── */
+  async function _patch(path, body) {
+    const res = await fetch(`${BASE}${path}`, {
+      method:  'PATCH',
+      headers: {
+        'Content-Type':  'application/json',
+        'Authorization': `Bearer ${_token()}`,
+      },
+      body: JSON.stringify(body),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.message || data.error || `HTTP ${res.status}`);
+    return data;
+  }
+
   /* ══════════════════════════════════════════════════════════
      PROFILE
   ══════════════════════════════════════════════════════════ */
@@ -228,6 +243,22 @@ const API = (() => {
     return _delete(`/auth/account/${encodeURIComponent(name)}`);
   }
 
+  /* ══════════════════════════════════════════════════════════
+     REPORTS
+  ══════════════════════════════════════════════════════════ */
+
+  /** GET /reports?limit=100&skip=1&status=... */
+  async function getReports({ status, limit = 100, skip = 1 } = {}) {
+    const params = new URLSearchParams({ limit, skip });
+    if (status) params.set('status', status);
+    return _get(`/reports?${params}`);
+  }
+
+  /** PATCH /reports/{id}/status  body: { status } */
+  async function updateReportStatus(id, status) {
+    return _patch(`/reports/${encodeURIComponent(id)}/status`, { status });
+  }
+
   /* ── Public exports ────────────────────────────────────── */
   return {
     // Profile
@@ -252,5 +283,7 @@ const API = (() => {
     getInventory, addWeapon, addUpgrade, addVehicle, updateGrenades,
     // Auth admin
     getAllUsers, deleteAccount,
+    // Reports
+    getReports, updateReportStatus,
   };
 })();

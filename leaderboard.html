@@ -2678,6 +2678,31 @@
 
   </div><!-- /.lb-page -->
 
+  <!-- ══ Report Player Modal ══════════════════════════════════════ -->
+  <div class="rpt-backdrop" id="rptModal" hidden>
+    <div class="rpt-box">
+      <div class="rpt-icon">⚑</div>
+      <div class="rpt-title">REPORT PLAYER</div>
+      <div class="rpt-sub">Submit a report for review by our moderation team.</div>
+      <div class="rpt-field">
+        <label class="rpt-lbl" for="rptName">PLAYER NAME</label>
+        <input class="rpt-inp" id="rptName" type="text" placeholder="Enter player name…" autocomplete="off">
+      </div>
+      <div class="rpt-field">
+        <label class="rpt-lbl" for="rptReason">REASON</label>
+        <textarea class="rpt-area" id="rptReason" placeholder="Describe the reason for this report…"></textarea>
+      </div>
+      <div class="rpt-err" id="rptErr"></div>
+      <div class="rpt-btns">
+        <button class="rpt-btn rpt-btn--cancel" id="rptCancel">CANCEL</button>
+        <button class="rpt-btn rpt-btn--send" id="rptSend">SEND REPORT</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="lb-toast" id="lbToast"></div>
+
   <script src="js/config.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/api.js"></script>
@@ -2988,6 +3013,14 @@
         info.appendChild(charDiv);
         info.appendChild(val);
 
+        if (!isMe) {
+          const rptBtn = document.createElement('button');
+          rptBtn.className = 'lb-report-btn';
+          rptBtn.textContent = '⚑ REPORT';
+          rptBtn.addEventListener('click', (e) => { e.stopPropagation(); openReportModal(row.name); });
+          info.appendChild(rptBtn);
+        }
+
         card.appendChild(medal);
         card.appendChild(avatar);
         card.appendChild(info);
@@ -3030,12 +3063,18 @@
 
         const nameCell = document.createElement('span');
         nameCell.className = 'lb-row__name';
-        nameCell.textContent = row.name || 'Unknown';
+        nameCell.appendChild(document.createTextNode(row.name || 'Unknown'));
         if (isMe) {
           const tag = document.createElement('span');
           tag.className = 'lb-you-tag';
           tag.textContent = 'YOU';
           nameCell.appendChild(tag);
+        } else {
+          const rptBtn = document.createElement('button');
+          rptBtn.className = 'lb-report-btn';
+          rptBtn.textContent = '⚑ REPORT';
+          rptBtn.addEventListener('click', (e) => { e.stopPropagation(); openReportModal(row.name); });
+          nameCell.appendChild(rptBtn);
         }
 
         const charCell = document.createElement('span');
@@ -3083,6 +3122,74 @@
   retryBtn.addEventListener('click', () => {
     errorEl.hidden = true;
     switchBoard(activeBoard);
+  });
+
+  /* ══════════════════════════════════════════════════════════════════
+     REPORT MODAL
+  ══════════════════════════════════════════════════════════════════ */
+
+  let _lbToastTimer = null;
+  function showLbToast(msg, type = 'success') {
+    const el = document.getElementById('lbToast');
+    el.textContent = msg;
+    el.className = `lb-toast lb-toast--${type} show`;
+    clearTimeout(_lbToastTimer);
+    _lbToastTimer = setTimeout(() => el.classList.remove('show'), 3200);
+  }
+
+  function openReportModal(playerName) {
+    document.getElementById('rptName').value = playerName || '';
+    document.getElementById('rptReason').value = '';
+    document.getElementById('rptErr').style.display = 'none';
+    document.getElementById('rptModal').hidden = false;
+    setTimeout(() => document.getElementById('rptName').focus(), 60);
+  }
+
+  document.getElementById('rptCancel').addEventListener('click', () => {
+    document.getElementById('rptModal').hidden = true;
+  });
+
+  document.getElementById('rptModal').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('rptModal')) {
+      document.getElementById('rptModal').hidden = true;
+    }
+  });
+
+  document.getElementById('rptSend').addEventListener('click', async () => {
+    const name   = document.getElementById('rptName').value.trim();
+    const reason = document.getElementById('rptReason').value.trim();
+    const errEl  = document.getElementById('rptErr');
+
+    if (!name || !reason) {
+      errEl.textContent = 'Please fill in both fields.';
+      errEl.style.display = 'block';
+      return;
+    }
+
+    const btn = document.getElementById('rptSend');
+    btn.disabled = true;
+    btn.textContent = 'SENDING…';
+    errEl.style.display = 'none';
+
+    try {
+      const res = await fetch('https://game-backend-wfmf.onrender.com/reports', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reportedName: name, reason })
+      });
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        throw new Error(d.message || `Server error ${res.status}`);
+      }
+      document.getElementById('rptModal').hidden = true;
+      showLbToast('✓ Report submitted successfully', 'success');
+    } catch (err) {
+      errEl.textContent = err.message || 'Failed to submit report.';
+      errEl.style.display = 'block';
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'SEND REPORT';
+    }
   });
 
   /* ══════════════════════════════════════════════════════════════════

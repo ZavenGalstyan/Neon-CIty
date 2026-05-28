@@ -1,0 +1,1418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DASH DREAD — Admin Panel</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/social.css">
+  <script>try{if(localStorage.getItem('nc_theme')==='light')document.documentElement.setAttribute('data-theme','light');}catch(e){}</script>
+  <style>
+    /* ═══════════════════════════════════════════════════════════
+       ADMIN PANEL — CYBERPUNK COMMAND CENTER
+    ═══════════════════════════════════════════════════════════ */
+
+    :root {
+      --adm-red:    #FF4466;
+      --adm-cyan:   #44EEFF;
+      --adm-gold:   #FFD700;
+      --adm-purple: #CC88FF;
+      --adm-green:  #44FF88;
+    }
+
+    .admin-page {
+      min-height: 100vh;
+      padding: 0 0 100px;
+      background:
+        radial-gradient(ellipse at 50% 0%,   rgba(255,68,102,0.10) 0%, transparent 60%),
+        radial-gradient(ellipse at 85% 80%,  rgba(68,238,255,0.06) 0%, transparent 55%),
+        radial-gradient(ellipse at 10% 60%,  rgba(204,136,255,0.05) 0%, transparent 50%),
+        var(--bg);
+    }
+
+    /* ── Header ────────────────────────────────────────────── */
+    .admin-header {
+      position: relative;
+      padding: 32px 24px 24px;
+      max-width: 1200px;
+      margin: 100px auto 0;
+    }
+    .admin-title-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 6px;
+    }
+    .admin-shield {
+      width: 48px; height: 48px;
+      background: linear-gradient(135deg, rgba(255,68,102,0.2), rgba(255,68,102,0.05));
+      border: 1px solid rgba(255,68,102,0.4);
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
+      box-shadow: 0 0 20px rgba(255,68,102,0.2);
+    }
+    .admin-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: clamp(20px, 3vw, 32px);
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      background: linear-gradient(135deg, #FF4466 0%, #FF88AA 50%, #CC44FF 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      filter: drop-shadow(0 0 14px rgba(255,68,102,0.4));
+    }
+    .admin-subtitle {
+      font-size: 12px;
+      letter-spacing: 0.25em;
+      color: var(--muted);
+      margin-top: 4px;
+      padding-left: 64px;
+    }
+
+    /* ── Main layout ───────────────────────────────────────── */
+    .admin-body {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+    }
+
+    /* ── Stats row ─────────────────────────────────────────── */
+    .admin-stats-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 12px;
+    }
+    @media (max-width: 900px) { .admin-stats-grid { grid-template-columns: repeat(3, 1fr); } }
+    @media (max-width: 580px) { .admin-stats-grid { grid-template-columns: repeat(2, 1fr); } }
+
+    .admin-stat-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .admin-stat-card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: var(--stat-color, var(--adm-cyan));
+      opacity: 0.7;
+    }
+    .admin-stat-card:hover {
+      border-color: rgba(255,255,255,0.15);
+      box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+    }
+    .admin-stat-icon {
+      font-size: 20px;
+      margin-bottom: 2px;
+    }
+    .admin-stat-label {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 8px;
+      letter-spacing: 0.25em;
+      color: var(--muted);
+    }
+    .admin-stat-value {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--stat-color, var(--adm-cyan));
+      text-shadow: 0 0 14px var(--stat-color, rgba(68,238,255,0.5));
+    }
+    .admin-stat-value.skeleton { opacity: 0.3; animation: skPulse 1.4s ease-in-out infinite; }
+    @keyframes skPulse { 0%,100%{opacity:0.3} 50%{opacity:0.6} }
+
+    /* ── Section card ──────────────────────────────────────── */
+    .admin-section {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+    .admin-section-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 22px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(255,255,255,0.02);
+    }
+    .admin-section-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 11px;
+      letter-spacing: 0.25em;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .admin-section-title .dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--section-color, var(--adm-cyan));
+      box-shadow: 0 0 8px var(--section-color, rgba(68,238,255,0.7));
+    }
+    .admin-section-badge {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 10px;
+      padding: 4px 12px;
+      border-radius: 20px;
+      background: rgba(68,238,255,0.08);
+      border: 1px solid rgba(68,238,255,0.2);
+      color: var(--adm-cyan);
+    }
+
+    /* ── Table ─────────────────────────────────────────────── */
+    .admin-table-wrap {
+      overflow-x: auto;
+    }
+    table.admin-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    table.admin-table th {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 9px;
+      letter-spacing: 0.2em;
+      color: var(--muted);
+      padding: 12px 20px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+    table.admin-table td {
+      padding: 14px 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      font-size: 13px;
+      color: var(--text);
+      white-space: nowrap;
+    }
+    table.admin-table tr:last-child td { border-bottom: none; }
+    table.admin-table tbody tr {
+      transition: background 0.15s;
+    }
+    table.admin-table tbody tr:hover {
+      background: rgba(255,255,255,0.03);
+    }
+
+    .user-name-cell {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .user-avatar {
+      width: 30px; height: 30px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, rgba(68,238,255,0.15), rgba(204,136,255,0.1));
+      border: 1px solid rgba(68,238,255,0.2);
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--adm-cyan);
+      flex-shrink: 0;
+    }
+    .user-id-text {
+      font-family: monospace;
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .user-level-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 10px;
+      padding: 3px 8px;
+      border-radius: 6px;
+      background: rgba(204,136,255,0.1);
+      border: 1px solid rgba(204,136,255,0.2);
+      color: var(--adm-purple);
+    }
+    .user-nex-text {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 12px;
+      color: var(--adm-gold);
+    }
+    .user-date-text {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    /* Delete button */
+    .btn-delete {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 9px;
+      letter-spacing: 0.15em;
+      padding: 7px 14px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,68,102,0.35);
+      background: rgba(255,68,102,0.07);
+      color: var(--adm-red);
+      cursor: pointer;
+      transition: all 0.18s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-delete:hover {
+      background: rgba(255,68,102,0.18);
+      border-color: rgba(255,68,102,0.7);
+      box-shadow: 0 0 16px rgba(255,68,102,0.25);
+      color: #fff;
+    }
+    .btn-delete:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+    .btn-delete--deleting {
+      opacity: 0.6;
+      pointer-events: none;
+    }
+
+    /* ── Clans grid ────────────────────────────────────────── */
+    .clans-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 14px;
+      padding: 20px;
+    }
+    .clan-card {
+      background: rgba(255,255,255,0.02);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .clan-card:hover {
+      border-color: rgba(68,238,255,0.2);
+      box-shadow: 0 6px 24px rgba(0,0,0,0.35);
+    }
+    .clan-card-top {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .clan-emblem {
+      width: 44px; height: 44px;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+    }
+    .clan-info { flex: 1; min-width: 0; }
+    .clan-name {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .clan-tag {
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: 0.1em;
+    }
+    .clan-open-badge {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 8px;
+      letter-spacing: 0.18em;
+      padding: 3px 8px;
+      border-radius: 20px;
+    }
+    .clan-open-badge--open {
+      background: rgba(68,255,136,0.1);
+      border: 1px solid rgba(68,255,136,0.25);
+      color: var(--adm-green);
+    }
+    .clan-open-badge--closed {
+      background: rgba(255,68,102,0.1);
+      border: 1px solid rgba(255,68,102,0.25);
+      color: var(--adm-red);
+    }
+    .clan-meta {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .clan-meta-item {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .clan-meta-label {
+      font-size: 9px;
+      letter-spacing: 0.15em;
+      color: var(--muted);
+      font-family: 'Orbitron', sans-serif;
+    }
+    .clan-meta-value {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .clan-members-list {
+      border-top: 1px solid var(--border);
+      padding-top: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .clan-member-chip {
+      font-size: 10px;
+      padding: 3px 8px;
+      border-radius: 6px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.07);
+      color: var(--muted);
+    }
+    .clan-member-chip--leader {
+      background: rgba(255,215,0,0.08);
+      border-color: rgba(255,215,0,0.2);
+      color: var(--adm-gold);
+    }
+
+    /* ── Loading / error ───────────────────────────────────── */
+    .admin-loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 40px;
+      color: var(--muted);
+      font-size: 12px;
+      letter-spacing: 0.18em;
+    }
+    .admin-error {
+      padding: 20px;
+      text-align: center;
+      color: var(--adm-red);
+      font-size: 12px;
+      letter-spacing: 0.1em;
+    }
+    .admin-empty {
+      padding: 32px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 12px;
+      letter-spacing: 0.15em;
+    }
+
+    /* ── Spinner ───────────────────────────────────────────── */
+    .adm-spinner {
+      width: 20px; height: 20px;
+      border: 2px solid rgba(68,238,255,0.15);
+      border-top-color: var(--adm-cyan);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Confirm modal ─────────────────────────────────────── */
+    .adm-modal-backdrop {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.75);
+      backdrop-filter: blur(6px);
+      z-index: 1000;
+      display: flex; align-items: center; justify-content: center;
+      padding: 20px;
+    }
+    .adm-modal-backdrop[hidden] { display: none !important; }
+    .adm-modal {
+      background: var(--panel);
+      border: 1px solid rgba(255,68,102,0.35);
+      border-radius: 16px;
+      padding: 32px 28px;
+      max-width: 400px;
+      width: 100%;
+      box-shadow: 0 0 60px rgba(255,68,102,0.15), 0 24px 80px rgba(0,0,0,0.6);
+      text-align: center;
+    }
+    .adm-modal-icon {
+      font-size: 36px;
+      margin-bottom: 14px;
+    }
+    .adm-modal-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--adm-red);
+      margin-bottom: 10px;
+      letter-spacing: 0.06em;
+    }
+    .adm-modal-body {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.6;
+      margin-bottom: 24px;
+    }
+    .adm-modal-target {
+      color: var(--text);
+      font-weight: 600;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 14px;
+    }
+    .adm-modal-buttons {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+    }
+    .adm-btn {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 10px;
+      letter-spacing: 0.15em;
+      padding: 11px 22px;
+      border-radius: 10px;
+      cursor: pointer;
+      border: 1px solid;
+      transition: all 0.18s;
+    }
+    .adm-btn--cancel {
+      background: rgba(255,255,255,0.04);
+      border-color: rgba(255,255,255,0.12);
+      color: var(--muted);
+    }
+    .adm-btn--cancel:hover {
+      background: rgba(255,255,255,0.08);
+      border-color: rgba(255,255,255,0.22);
+      color: var(--text);
+    }
+    .adm-btn--confirm {
+      background: rgba(255,68,102,0.15);
+      border-color: rgba(255,68,102,0.5);
+      color: var(--adm-red);
+    }
+    .adm-btn--confirm:hover {
+      background: rgba(255,68,102,0.28);
+      border-color: #FF4466;
+      color: #fff;
+      box-shadow: 0 0 20px rgba(255,68,102,0.3);
+    }
+
+    /* ── Toast ─────────────────────────────────────────────── */
+    .adm-toast {
+      position: fixed;
+      bottom: 32px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      padding: 12px 24px;
+      border-radius: 12px;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      z-index: 2000;
+      opacity: 0;
+      transition: opacity 0.3s, transform 0.3s;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+    .adm-toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+    .adm-toast--success {
+      background: rgba(68,255,136,0.12);
+      border: 1px solid rgba(68,255,136,0.35);
+      color: var(--adm-green);
+      box-shadow: 0 0 20px rgba(68,255,136,0.2);
+    }
+    .adm-toast--error {
+      background: rgba(255,68,102,0.12);
+      border: 1px solid rgba(255,68,102,0.35);
+      color: var(--adm-red);
+      box-shadow: 0 0 20px rgba(255,68,102,0.2);
+    }
+
+    /* ── Reports filter bar ────────────────────────────────── */
+    .reports-filter-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 22px;
+      border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+    }
+    .reports-filter-label {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 9px;
+      letter-spacing: 0.2em;
+      color: var(--muted);
+      margin-right: 4px;
+    }
+    .rpt-filter-btn {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 9px;
+      letter-spacing: 0.15em;
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: 1px solid rgba(255,255,255,0.1);
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.18s;
+    }
+    .rpt-filter-btn:hover {
+      background: rgba(255,255,255,0.06);
+      color: var(--text);
+    }
+    .rpt-filter-btn.active {
+      background: rgba(68,238,255,0.1);
+      border-color: rgba(68,238,255,0.4);
+      color: var(--adm-cyan);
+    }
+    .rpt-filter-btn[data-status="open"].active {
+      background: rgba(255,68,102,0.1);
+      border-color: rgba(255,68,102,0.4);
+      color: var(--adm-red);
+    }
+    .rpt-filter-btn[data-status="reviewed"].active {
+      background: rgba(68,255,136,0.1);
+      border-color: rgba(68,255,136,0.4);
+      color: var(--adm-green);
+    }
+    .rpt-filter-btn[data-status="dismissed"].active {
+      background: rgba(255,255,255,0.06);
+      border-color: rgba(255,255,255,0.2);
+      color: var(--muted);
+    }
+
+    /* ── Report status badge ───────────────────────────────── */
+    .rpt-status-badge {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 8px;
+      letter-spacing: 0.18em;
+      padding: 4px 10px;
+      border-radius: 20px;
+      display: inline-block;
+      white-space: nowrap;
+    }
+    .rpt-status-badge--open {
+      background: rgba(255,68,102,0.1);
+      border: 1px solid rgba(255,68,102,0.3);
+      color: var(--adm-red);
+    }
+    .rpt-status-badge--reviewed {
+      background: rgba(68,255,136,0.1);
+      border: 1px solid rgba(68,255,136,0.3);
+      color: var(--adm-green);
+    }
+    .rpt-status-badge--dismissed {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: var(--muted);
+    }
+
+    /* ── Report reporter/reported names ────────────────────── */
+    .rpt-reporter-cell {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .rpt-avatar {
+      width: 28px; height: 28px;
+      border-radius: 7px;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .rpt-avatar--reporter {
+      background: rgba(68,238,255,0.12);
+      border: 1px solid rgba(68,238,255,0.2);
+      color: var(--adm-cyan);
+    }
+    .rpt-avatar--reported {
+      background: rgba(255,68,102,0.12);
+      border: 1px solid rgba(255,68,102,0.2);
+      color: var(--adm-red);
+    }
+    .rpt-reason-text {
+      max-width: 220px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-size: 12px;
+      color: var(--muted);
+      cursor: default;
+    }
+    .rpt-id-text {
+      font-family: monospace;
+      font-size: 10px;
+      color: var(--muted);
+    }
+
+    /* ── Custom status dropdown ────────────────────────────── */
+    .rpt-dd {
+      position: relative;
+      display: inline-block;
+    }
+    .rpt-dd__trigger {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 9px;
+      letter-spacing: 0.14em;
+      padding: 7px 12px 7px 10px;
+      border-radius: 9px;
+      border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(10,10,18,0.7);
+      color: var(--text);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 130px;
+      transition: border-color 0.18s, box-shadow 0.18s, background 0.18s;
+      outline: none;
+      white-space: nowrap;
+      backdrop-filter: blur(8px);
+    }
+    .rpt-dd__trigger:hover {
+      border-color: rgba(68,238,255,0.3);
+      background: rgba(68,238,255,0.04);
+    }
+    .rpt-dd--open .rpt-dd__trigger {
+      border-color: rgba(68,238,255,0.5);
+      box-shadow: 0 0 14px rgba(68,238,255,0.12);
+      background: rgba(68,238,255,0.05);
+    }
+    .rpt-dd--loading .rpt-dd__trigger {
+      opacity: 0.5;
+      pointer-events: none;
+    }
+    .rpt-dd__dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      transition: background 0.2s, box-shadow 0.2s;
+    }
+    .rpt-dd__dot--open      { background: var(--adm-red);   box-shadow: 0 0 6px rgba(255,68,102,0.8); }
+    .rpt-dd__dot--reviewed  { background: var(--adm-green); box-shadow: 0 0 6px rgba(68,255,136,0.8); }
+    .rpt-dd__dot--dismissed { background: rgba(255,255,255,0.25); box-shadow: none; }
+    .rpt-dd__label {
+      flex: 1;
+      text-align: left;
+    }
+    .rpt-dd__arrow {
+      font-size: 10px;
+      color: var(--muted);
+      transition: transform 0.2s;
+      margin-left: 2px;
+      flex-shrink: 0;
+    }
+    .rpt-dd--open .rpt-dd__arrow {
+      transform: rotate(180deg);
+      color: var(--adm-cyan);
+    }
+    .rpt-dd__spinner {
+      width: 12px; height: 12px;
+      border: 2px solid rgba(68,238,255,0.2);
+      border-top-color: var(--adm-cyan);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      flex-shrink: 0;
+    }
+
+    /* Panel */
+    .rpt-dd__panel {
+      position: fixed;
+      min-width: 140px;
+      background: rgba(8,8,16,0.96);
+      border: 1px solid rgba(68,238,255,0.18);
+      border-radius: 11px;
+      box-shadow:
+        0 0 0 1px rgba(0,0,0,0.5),
+        0 12px 40px rgba(0,0,0,0.7),
+        0 0 30px rgba(68,238,255,0.06);
+      backdrop-filter: blur(16px);
+      z-index: 500;
+      overflow: hidden;
+      padding: 5px;
+      transform-origin: top center;
+      animation: rptDdIn 0.15s ease;
+    }
+    @keyframes rptDdIn {
+      from { opacity: 0; transform: scaleY(0.88) translateY(-4px); }
+      to   { opacity: 1; transform: scaleY(1)    translateY(0);    }
+    }
+    .rpt-dd__panel[hidden] { display: none !important; }
+
+    /* Items */
+    .rpt-dd__item {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 9px;
+      letter-spacing: 0.16em;
+      width: 100%;
+      padding: 9px 12px;
+      border-radius: 7px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      transition: background 0.14s, border-color 0.14s, color 0.14s;
+      white-space: nowrap;
+      text-align: left;
+    }
+    .rpt-dd__item:hover {
+      background: rgba(255,255,255,0.05);
+      color: var(--text);
+    }
+    .rpt-dd__item--open:hover {
+      background: rgba(255,68,102,0.1);
+      border-color: rgba(255,68,102,0.2);
+      color: var(--adm-red);
+    }
+    .rpt-dd__item--reviewed:hover {
+      background: rgba(68,255,136,0.08);
+      border-color: rgba(68,255,136,0.2);
+      color: var(--adm-green);
+    }
+    .rpt-dd__item--dismissed:hover {
+      background: rgba(255,255,255,0.05);
+      border-color: rgba(255,255,255,0.1);
+      color: var(--text);
+    }
+    .rpt-dd__item--active {
+      color: var(--text);
+      background: rgba(255,255,255,0.04);
+    }
+    .rpt-dd__item--active.rpt-dd__item--open      { background: rgba(255,68,102,0.08);  color: var(--adm-red);   border-color: rgba(255,68,102,0.15); }
+    .rpt-dd__item--active.rpt-dd__item--reviewed  { background: rgba(68,255,136,0.06);  color: var(--adm-green); border-color: rgba(68,255,136,0.15); }
+    .rpt-dd__item--active.rpt-dd__item--dismissed { background: rgba(255,255,255,0.04); color: var(--muted);     border-color: rgba(255,255,255,0.08); }
+  </style>
+</head>
+<body class="select-screen admin-page">
+  <div class="bg-grid"></div>
+  <div class="scanlines"></div>
+
+  <!-- Navbar -->
+  <nav class="site-nav">
+    <a href="index.html" class="site-nav__logo"><span class="logo-dash">DASH</span><span class="logo-sep">✦</span><span class="logo-dread">DREAD</span></a>
+    <div id="siteNav" class="site-nav__controls"></div>
+  </nav>
+
+  <!-- Header -->
+  <div class="admin-header">
+    <div class="admin-title-row">
+      <div class="admin-shield">⚡</div>
+      <div>
+        <div class="admin-title">ADMIN PANEL</div>
+      </div>
+    </div>
+    <div class="admin-subtitle">COMMAND CENTER — RESTRICTED ACCESS</div>
+  </div>
+
+  <!-- Body -->
+  <div class="admin-body">
+
+    <!-- Global Stats -->
+    <div class="admin-stats-grid" id="statsGrid">
+      <div class="admin-stat-card" style="--stat-color: var(--adm-cyan)">
+        <div class="admin-stat-icon">👥</div>
+        <div class="admin-stat-label">TOTAL PLAYERS</div>
+        <div class="admin-stat-value skeleton" id="statPlayers">—</div>
+      </div>
+      <div class="admin-stat-card" style="--stat-color: var(--adm-red)">
+        <div class="admin-stat-icon">💀</div>
+        <div class="admin-stat-label">TOTAL KILLS</div>
+        <div class="admin-stat-value skeleton" id="statKills">—</div>
+      </div>
+      <div class="admin-stat-card" style="--stat-color: var(--adm-gold)">
+        <div class="admin-stat-icon">🎮</div>
+        <div class="admin-stat-label">GAMES PLAYED</div>
+        <div class="admin-stat-value skeleton" id="statGames">—</div>
+      </div>
+      <div class="admin-stat-card" style="--stat-color: var(--adm-green)">
+        <div class="admin-stat-icon">🏆</div>
+        <div class="admin-stat-label">TOP CHARACTER</div>
+        <div class="admin-stat-value skeleton" id="statChar" style="font-size:14px;letter-spacing:0.05em">—</div>
+      </div>
+      <div class="admin-stat-card" style="--stat-color: var(--adm-purple)">
+        <div class="admin-stat-icon">🗺️</div>
+        <div class="admin-stat-label">TOP MAP</div>
+        <div class="admin-stat-value skeleton" id="statMap" style="font-size:14px;letter-spacing:0.05em">—</div>
+      </div>
+    </div>
+
+    <!-- Users Table -->
+    <div class="admin-section">
+      <div class="admin-section-head">
+        <div class="admin-section-title" style="--section-color: var(--adm-cyan)">
+          <div class="dot"></div>
+          REGISTERED USERS
+        </div>
+        <div class="admin-section-badge" id="userCountBadge">LOADING…</div>
+      </div>
+      <div id="usersTableWrap">
+        <div class="admin-loading">
+          <div class="adm-spinner"></div>
+          LOADING USERS…
+        </div>
+      </div>
+    </div>
+
+    <!-- Clans -->
+    <div class="admin-section">
+      <div class="admin-section-head">
+        <div class="admin-section-title" style="--section-color: var(--adm-gold)">
+          <div class="dot" style="background:var(--adm-gold);box-shadow:0 0 8px rgba(255,215,0,0.7)"></div>
+          ALL CLANS
+        </div>
+        <div class="admin-section-badge" id="clanCountBadge" style="border-color:rgba(255,215,0,0.25);background:rgba(255,215,0,0.07);color:var(--adm-gold)">LOADING…</div>
+      </div>
+      <div id="clansGrid" class="clans-grid">
+        <div class="admin-loading">
+          <div class="adm-spinner"></div>
+          LOADING CLANS…
+        </div>
+      </div>
+    </div>
+
+    <!-- Reports -->
+    <div class="admin-section">
+      <div class="admin-section-head">
+        <div class="admin-section-title" style="--section-color: var(--adm-red)">
+          <div class="dot" style="background:var(--adm-red);box-shadow:0 0 8px rgba(255,68,102,0.7)"></div>
+          USER REPORTS
+        </div>
+        <div class="admin-section-badge" id="reportCountBadge" style="border-color:rgba(255,68,102,0.25);background:rgba(255,68,102,0.07);color:var(--adm-red)">LOADING…</div>
+      </div>
+      <div class="reports-filter-bar">
+        <span class="reports-filter-label">FILTER:</span>
+        <button class="rpt-filter-btn active" data-status="">ALL</button>
+        <button class="rpt-filter-btn" data-status="open">OPEN</button>
+        <button class="rpt-filter-btn" data-status="reviewed">REVIEWED</button>
+        <button class="rpt-filter-btn" data-status="dismissed">DISMISSED</button>
+      </div>
+      <div id="reportsTableWrap">
+        <div class="admin-loading">
+          <div class="adm-spinner"></div>
+          LOADING REPORTS…
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Confirm delete modal -->
+  <div class="adm-modal-backdrop" id="deleteModal" hidden>
+    <div class="adm-modal">
+      <div class="adm-modal-icon">⚠️</div>
+      <div class="adm-modal-title">DELETE ACCOUNT</div>
+      <div class="adm-modal-body">
+        You are about to permanently delete<br>
+        <span class="adm-modal-target" id="deleteModalName"></span><br><br>
+        This action cannot be undone.
+      </div>
+      <div class="adm-modal-buttons">
+        <button class="adm-btn adm-btn--cancel" id="deleteCancel">CANCEL</button>
+        <button class="adm-btn adm-btn--confirm" id="deleteConfirm">DELETE</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="adm-toast" id="toast"></div>
+
+  <script src="js/auth.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/social.js"></script>
+  <script src="js/ws.js"></script>
+  <script src="js/multiplayer.js"></script>
+  <script src="js/social-ui.js"></script>
+  <script>
+    /* ── Guard: must be logged in AND be "Admin" ─────────── */
+    const _session = Auth.getSession();
+    if (!Auth.isLoggedIn() || _session.name !== 'Admin') {
+      window.location.href = 'index.html';
+    }
+
+    Auth.mountNavbar();
+    if (Auth.isLoggedIn()) SocialUI.init();
+
+    /* ── Toast helper ───────────────────────────────────── */
+    let _toastTimer = null;
+    function showToast(msg, type = 'success') {
+      const el = document.getElementById('toast');
+      el.textContent = msg;
+      el.className = `adm-toast adm-toast--${type} show`;
+      clearTimeout(_toastTimer);
+      _toastTimer = setTimeout(() => {
+        el.classList.remove('show');
+      }, 3200);
+    }
+
+    /* ── Delete confirm modal ───────────────────────────── */
+    let _pendingDelete = null;
+
+    document.getElementById('deleteCancel').addEventListener('click', () => {
+      document.getElementById('deleteModal').hidden = true;
+      _pendingDelete = null;
+    });
+
+    document.getElementById('deleteConfirm').addEventListener('click', async () => {
+      if (!_pendingDelete) return;
+      const { name, row, btn } = _pendingDelete;
+      document.getElementById('deleteModal').hidden = true;
+
+      btn.classList.add('btn-delete--deleting');
+      btn.innerHTML = '<div class="adm-spinner" style="width:14px;height:14px;border-width:2px"></div> DELETING…';
+
+      try {
+        await API.deleteAccount(name);
+        row.style.transition = 'opacity 0.4s, transform 0.4s';
+        row.style.opacity = '0';
+        row.style.transform = 'translateX(20px)';
+        setTimeout(() => row.remove(), 420);
+
+        /* Update user count badge */
+        const badge = document.getElementById('userCountBadge');
+        const cur = parseInt(badge.dataset.count || '0', 10);
+        if (cur > 0) {
+          const next = cur - 1;
+          badge.dataset.count = next;
+          badge.textContent = `${next} USERS`;
+        }
+
+        showToast(`✓ ${name} deleted`, 'success');
+      } catch (err) {
+        btn.classList.remove('btn-delete--deleting');
+        btn.innerHTML = '✕ DELETE';
+        showToast(`Error: ${err.message}`, 'error');
+      }
+
+      _pendingDelete = null;
+    });
+
+    function confirmDelete(name, row, btn) {
+      _pendingDelete = { name, row, btn };
+      document.getElementById('deleteModalName').textContent = name;
+      document.getElementById('deleteModal').hidden = false;
+    }
+
+    /* ── Format date ─────────────────────────────────────── */
+    function fmtDate(iso) {
+      try {
+        return new Date(iso).toLocaleDateString('en-GB', {
+          day: '2-digit', month: 'short', year: 'numeric'
+        });
+      } catch { return iso; }
+    }
+
+    /* ── Load global stats ───────────────────────────────── */
+    async function loadStats() {
+      try {
+        const d = await API.getGlobalStats();
+        const set = (id, val) => {
+          const el = document.getElementById(id);
+          el.classList.remove('skeleton');
+          el.textContent = val;
+        };
+        set('statPlayers', (d.totalPlayers ?? '—').toLocaleString());
+        set('statKills',   (d.totalKills   ?? '—').toLocaleString());
+        set('statGames',   (d.totalGamesPlayed ?? '—').toLocaleString());
+        set('statChar',    (d.topCharacter ?? '—').toUpperCase());
+        set('statMap',     (d.topMap       ?? '—').toUpperCase());
+      } catch (err) {
+        ['statPlayers','statKills','statGames','statChar','statMap'].forEach(id => {
+          const el = document.getElementById(id);
+          el.classList.remove('skeleton');
+          el.textContent = 'ERR';
+          el.style.color = 'var(--adm-red)';
+        });
+      }
+    }
+
+    /* ── Load users ──────────────────────────────────────── */
+    async function loadUsers() {
+      const wrap = document.getElementById('usersTableWrap');
+      try {
+        const d = await API.getAllUsers();
+        const users = d.users || [];
+
+        const badge = document.getElementById('userCountBadge');
+        badge.textContent = `${users.length} USERS`;
+        badge.dataset.count = users.length;
+
+        if (users.length === 0) {
+          wrap.innerHTML = '<div class="admin-empty">NO USERS FOUND</div>';
+          return;
+        }
+
+        const table = document.createElement('table');
+        table.className = 'admin-table';
+        table.innerHTML = `
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>PLAYER</th>
+              <th>EMAIL</th>
+              <th>LEVEL</th>
+              <th>NEX</th>
+              <th>JOINED</th>
+              <th>ACTIONS</th>
+            </tr>
+          </thead>
+          <tbody id="usersTableBody"></tbody>
+        `;
+
+        wrap.innerHTML = '';
+        const tableWrap = document.createElement('div');
+        tableWrap.className = 'admin-table-wrap';
+        tableWrap.appendChild(table);
+        wrap.appendChild(tableWrap);
+
+        const tbody = document.getElementById('usersTableBody');
+        users.forEach((u, i) => {
+          const isSelf = u.name === 'Admin';
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td style="color:var(--muted);font-size:12px">${i + 1}</td>
+            <td>
+              <div class="user-name-cell">
+                <div class="user-avatar">${(u.name || '?').charAt(0).toUpperCase()}</div>
+                <div>
+                  <div style="font-weight:600">${_esc(u.name)}</div>
+                  <div class="user-id-text">${u._id}</div>
+                </div>
+              </div>
+            </td>
+            <td style="color:var(--muted);font-size:12px">${_esc(u.email)}</td>
+            <td><span class="user-level-badge">⬡ LV ${u.level ?? 1}</span></td>
+            <td><span class="user-nex-text">⬢ ${(u.nex ?? 0).toLocaleString()}</span></td>
+            <td><span class="user-date-text">${fmtDate(u.createdAt)}</span></td>
+            <td></td>
+          `;
+
+          const actionCell = tr.querySelector('td:last-child');
+
+          if (isSelf) {
+            actionCell.innerHTML = '<span style="font-size:10px;color:var(--muted);letter-spacing:0.12em">YOU</span>';
+          } else {
+            const delBtn = document.createElement('button');
+            delBtn.className = 'btn-delete';
+            delBtn.innerHTML = '✕ DELETE';
+            delBtn.addEventListener('click', () => confirmDelete(u.name, tr, delBtn));
+            actionCell.appendChild(delBtn);
+          }
+
+          tbody.appendChild(tr);
+        });
+
+      } catch (err) {
+        wrap.innerHTML = `<div class="admin-error">Failed to load users: ${_esc(err.message)}</div>`;
+        document.getElementById('userCountBadge').textContent = 'ERROR';
+      }
+    }
+
+    /* ── Load clans ──────────────────────────────────────── */
+    async function loadClans() {
+      const grid = document.getElementById('clansGrid');
+      try {
+        const d = await fetch('https://game-backend-wfmf.onrender.com/clans?page=1&limit=100&sortBy=members')
+          .then(r => r.json());
+        const clans = d.clans || [];
+
+        const badge = document.getElementById('clanCountBadge');
+        badge.textContent = `${clans.length} CLANS`;
+
+        if (clans.length === 0) {
+          grid.innerHTML = '<div class="admin-empty">NO CLANS FOUND</div>';
+          return;
+        }
+
+        grid.innerHTML = '';
+        clans.forEach(c => {
+          const card = document.createElement('div');
+          card.className = 'clan-card';
+
+          const memberChips = (c.members || []).map(m =>
+            `<span class="clan-member-chip${m.role === 'leader' ? ' clan-member-chip--leader' : ''}">${m.role === 'leader' ? '♛ ' : ''}${_esc(m.name)}</span>`
+          ).join('');
+
+          card.innerHTML = `
+            <div class="clan-card-top">
+              <div class="clan-emblem">${c.emblem || '⚔'}</div>
+              <div class="clan-info">
+                <div class="clan-name">${_esc(c.name)}</div>
+                <div class="clan-tag">[${_esc(c.tag)}] · ${_esc(c.leaderName)}</div>
+              </div>
+              <span class="clan-open-badge ${c.isOpen ? 'clan-open-badge--open' : 'clan-open-badge--closed'}">
+                ${c.isOpen ? 'OPEN' : 'CLOSED'}
+              </span>
+            </div>
+            <div class="clan-meta">
+              <div class="clan-meta-item">
+                <span class="clan-meta-label">MEMBERS</span>
+                <span class="clan-meta-value">${c.memberCount ?? c.members?.length ?? 0}</span>
+              </div>
+              <div class="clan-meta-item">
+                <span class="clan-meta-label">TOTAL KILLS</span>
+                <span class="clan-meta-value" style="color:var(--adm-red)">${(c.totalKills ?? 0).toLocaleString()}</span>
+              </div>
+            </div>
+            ${memberChips ? `<div class="clan-members-list">${memberChips}</div>` : ''}
+          `;
+
+          grid.appendChild(card);
+        });
+
+      } catch (err) {
+        grid.innerHTML = `<div class="admin-error">Failed to load clans: ${_esc(err.message)}</div>`;
+        document.getElementById('clanCountBadge').textContent = 'ERROR';
+      }
+    }
+
+    /* ── HTML escape ─────────────────────────────────────── */
+    function _esc(str) {
+      return String(str ?? '')
+        .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    /* ── Custom dropdown factory ─────────────────────────── */
+    const RPT_STATUS_OPTIONS = [
+      { value: 'open',      label: 'OPEN'      },
+      { value: 'reviewed',  label: 'REVIEWED'  },
+      { value: 'dismissed', label: 'DISMISSED' },
+    ];
+
+    function _buildStatusDropdown(currentStatus, onSelect) {
+      const wrap = document.createElement('div');
+      wrap.className = 'rpt-dd';
+
+      const trigger = document.createElement('button');
+      trigger.className = 'rpt-dd__trigger';
+      trigger.type = 'button';
+
+      const dot   = document.createElement('span');
+      const label = document.createElement('span');
+      const arrow = document.createElement('span');
+      dot.className   = `rpt-dd__dot rpt-dd__dot--${currentStatus}`;
+      label.className = 'rpt-dd__label';
+      label.textContent = currentStatus.toUpperCase();
+      arrow.className = 'rpt-dd__arrow';
+      arrow.textContent = '▾';
+
+      trigger.append(dot, label, arrow);
+
+      const panel = document.createElement('div');
+      panel.className = 'rpt-dd__panel';
+      panel.hidden = true;
+
+      RPT_STATUS_OPTIONS.forEach(opt => {
+        const item = document.createElement('button');
+        item.type = 'button';
+        item.className = `rpt-dd__item rpt-dd__item--${opt.value}${opt.value === currentStatus ? ' rpt-dd__item--active' : ''}`;
+
+        const iDot = document.createElement('span');
+        iDot.className = `rpt-dd__dot rpt-dd__dot--${opt.value}`;
+        item.append(iDot, opt.label);
+
+        item.addEventListener('click', () => {
+          closeDropdown();
+          if (opt.value === wrap._value) return;
+          onSelect(opt.value, wrap);
+        });
+
+        panel.appendChild(item);
+      });
+
+      wrap.appendChild(trigger);
+      wrap.appendChild(panel);
+
+      /* State helpers */
+      wrap._value = currentStatus;
+
+      function openDropdown() {
+        const rect = trigger.getBoundingClientRect();
+        panel.style.top  = `${rect.bottom + 6}px`;
+        panel.style.left = `${rect.left}px`;
+        wrap.classList.add('rpt-dd--open');
+        panel.hidden = false;
+      }
+      function closeDropdown() {
+        wrap.classList.remove('rpt-dd--open');
+        panel.hidden = true;
+      }
+
+      trigger.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (wrap.classList.contains('rpt-dd--open')) closeDropdown();
+        else openDropdown();
+      });
+
+      /* Close on outside click */
+      document.addEventListener('click', function handler(e) {
+        if (!wrap.contains(e.target)) {
+          closeDropdown();
+        }
+      });
+
+      /* Update trigger appearance */
+      wrap._setValue = (val) => {
+        wrap._value = val;
+        dot.className   = `rpt-dd__dot rpt-dd__dot--${val}`;
+        label.textContent = val.toUpperCase();
+        panel.querySelectorAll('.rpt-dd__item').forEach(it => {
+          it.classList.toggle('rpt-dd__item--active', it.classList.contains(`rpt-dd__item--${val}`));
+        });
+      };
+
+      wrap._setLoading = (loading) => {
+        wrap.classList.toggle('rpt-dd--loading', loading);
+        if (loading) {
+          const sp = document.createElement('span');
+          sp.className = 'rpt-dd__spinner';
+          sp.id = 'rptDdSpinner';
+          arrow.replaceWith(sp);
+        } else {
+          const sp = trigger.querySelector('#rptDdSpinner');
+          if (sp) sp.replaceWith(arrow);
+        }
+      };
+
+      return wrap;
+    }
+
+    /* ── Reports ─────────────────────────────────────────── */
+    let _currentReportStatus = '';
+
+    function _reportStatusBadge(status) {
+      const cls = `rpt-status-badge rpt-status-badge--${status}`;
+      const label = status.toUpperCase();
+      return `<span class="${cls}">${label}</span>`;
+    }
+
+    async function loadReports(status = '') {
+      const wrap = document.getElementById('reportsTableWrap');
+      wrap.innerHTML = '<div class="admin-loading"><div class="adm-spinner"></div>LOADING REPORTS…</div>';
+
+      try {
+        const d = await API.getReports({ status: status || undefined, limit: 100, skip: 1 });
+        const reports = d.reports || [];
+        const total   = d.total ?? reports.length;
+
+        const badge = document.getElementById('reportCountBadge');
+        badge.textContent = `${total} REPORT${total !== 1 ? 'S' : ''}`;
+
+        if (reports.length === 0) {
+          wrap.innerHTML = '<div class="admin-empty">NO REPORTS FOUND</div>';
+          return;
+        }
+
+        const tableWrap = document.createElement('div');
+        tableWrap.className = 'admin-table-wrap';
+
+        const table = document.createElement('table');
+        table.className = 'admin-table';
+        table.innerHTML = `
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>REPORTER</th>
+              <th>REPORTED</th>
+              <th>REASON</th>
+              <th>STATUS</th>
+              <th>DATE</th>
+              <th>CHANGE STATUS</th>
+            </tr>
+          </thead>
+          <tbody id="reportsTableBody"></tbody>
+        `;
+
+        tableWrap.appendChild(table);
+        wrap.innerHTML = '';
+        wrap.appendChild(tableWrap);
+
+        const tbody = document.getElementById('reportsTableBody');
+        reports.forEach((r, i) => {
+          const tr = document.createElement('tr');
+          tr.dataset.reportId = r._id;
+
+          tr.innerHTML = `
+            <td style="color:var(--muted);font-size:12px">${i + 1}</td>
+            <td>
+              <div class="rpt-reporter-cell">
+                <div class="rpt-avatar rpt-avatar--reporter">${(r.reporterName || '?').charAt(0).toUpperCase()}</div>
+                <span style="font-weight:600">${_esc(r.reporterName)}</span>
+              </div>
+            </td>
+            <td>
+              <div class="rpt-reporter-cell">
+                <div class="rpt-avatar rpt-avatar--reported">${(r.reportedName || '?').charAt(0).toUpperCase()}</div>
+                <span style="font-weight:600;color:var(--adm-red)">${_esc(r.reportedName)}</span>
+              </div>
+            </td>
+            <td>
+              <span class="rpt-reason-text" title="${_esc(r.reason)}">${_esc(r.reason)}</span>
+            </td>
+            <td class="rpt-status-cell">${_reportStatusBadge(r.status)}</td>
+            <td><span class="user-date-text">${fmtDate(r.createdAt)}</span></td>
+            <td></td>
+          `;
+
+          /* Custom status dropdown */
+          const actionCell = tr.querySelector('td:last-child');
+          const dd = _buildStatusDropdown(r.status, async (newStatus, ddEl) => {
+            ddEl._setLoading(true);
+            try {
+              await API.updateReportStatus(r._id, newStatus);
+              tr.querySelector('.rpt-status-cell').innerHTML = _reportStatusBadge(newStatus);
+              r.status = newStatus;
+              ddEl._setValue(newStatus);
+              showToast(`Report status updated to ${newStatus}`, 'success');
+            } catch (err) {
+              showToast(`Error: ${err.message}`, 'error');
+            } finally {
+              ddEl._setLoading(false);
+            }
+          });
+
+          actionCell.appendChild(dd);
+          tbody.appendChild(tr);
+        });
+
+      } catch (err) {
+        wrap.innerHTML = `<div class="admin-error">Failed to load reports: ${_esc(err.message)}</div>`;
+        document.getElementById('reportCountBadge').textContent = 'ERROR';
+      }
+    }
+
+    /* Filter button wiring */
+    document.querySelectorAll('.rpt-filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.rpt-filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        _currentReportStatus = btn.dataset.status;
+        loadReports(_currentReportStatus);
+      });
+    });
+
+    /* ── Boot ────────────────────────────────────────────── */
+    loadStats();
+    loadUsers();
+    loadClans();
+    loadReports();
+  </script>
+</body>
+</html>

@@ -29,14 +29,16 @@ Game.prototype._render = function() {
     } else {
       ctx.globalAlpha = 1;
       ctx.save();
-      ctx.translate(-this.camX + shake.x, -this.camY + shake.y);
-      this.map.render(ctx, this.camX, this.camY, W, H);
+      const _zoom = this._camZoom || 1;
+      ctx.scale(_zoom, _zoom);
+      ctx.translate(-this.camX + shake.x / _zoom, -this.camY + shake.y / _zoom);
+      this.map.render(ctx, this.camX, this.camY, W / _zoom, H / _zoom);
       this.map.renderStreetLightPoles(
         ctx,
         this.camX,
         this.camY,
-        W,
-        H,
+        W / _zoom,
+        H / _zoom,
         this._nightAlpha,
       );
       this.map.renderMetroEntrance(ctx);
@@ -66,7 +68,8 @@ Game.prototype._render = function() {
           ctx.setTransform(1, 0, 0, 1, 0, 0);
           ctx.globalAlpha = 1;
           ctx.shadowBlur = 0;
-          ctx.translate(-this.camX + shake.x, -this.camY + shake.y);
+          ctx.scale(_zoom, _zoom);
+          ctx.translate(-this.camX + shake.x / _zoom, -this.camY + shake.y / _zoom);
         }
       }
       for (const npc of this._cityNpcs) npc.render(ctx);
@@ -79,7 +82,8 @@ Game.prototype._render = function() {
           ctx.setTransform(1, 0, 0, 1, 0, 0);
           ctx.globalAlpha = 1;
           ctx.shadowBlur = 0;
-          ctx.translate(-this.camX + shake.x, -this.camY + shake.y);
+          ctx.scale(_zoom, _zoom);
+          ctx.translate(-this.camX + shake.x / _zoom, -this.camY + shake.y / _zoom);
         }
       }
       for (const b of this.bullets) if (b.isPlayer) b.render(ctx);
@@ -94,106 +98,63 @@ Game.prototype._render = function() {
           const rpSx = rp.x;
           const rpSy = rp.y;
 
-          // Look up this player's character data for correct visuals
-          const rpCharData = (CONFIG.CHARACTERS || []).find(c => c.id === rp.charId) || {};
-          const rpColor  = rpCharData.color  || '#44EEFF';
-          const rpAccent = rpCharData.accent || '#00FFCC';
-          const rpRType  = rpCharData.renderType || 'humanoid';
-          const rpScale  = rpCharData.bodyScale  || 1.0;
-          const rpR      = (rpCharData.radius || 18) * rpScale;
+          // Character lookup — 3-level fallback so we always have a valid charData
+          const _rpChars = CONFIG.CHARACTERS || [];
+          const rpCharData = _rpChars.find(c => c.id === rp.charId)
+                          || _rpChars.find(c => c.id === 'gangster')
+                          || _rpChars[0]
+                          || { color:'#FF4466', accent:'#FF0033', gunColor:'#888', radius:18, bodyScale:1.0 };
+          const rpColor = rpCharData.color;
+          const rpR     = (rpCharData.radius || 18) * (rpCharData.bodyScale || 1.0);
 
+          // Team ring — cyan glow so the teammate is always identifiable
           ctx.save();
-          ctx.translate(rpSx, rpSy);
-          ctx.rotate((rp.angle || 0) - Math.PI / 2);
-
-          // Shadow
-          ctx.globalAlpha = 0.28;
-          ctx.fillStyle = '#000';
           ctx.beginPath();
-          ctx.ellipse(0, rpR * 0.25, rpR * 0.65, rpR * 0.22, 0, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.globalAlpha = 1;
-
-          if (rpRType === 'humanoid_heavy') {
-            ctx.fillStyle = rpColor;
-            ctx.beginPath();
-            ctx.ellipse(0, 0, rpR * 0.55, rpR * 0.65, 0, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.strokeStyle = rpAccent; ctx.lineWidth = 2; ctx.stroke();
-            ctx.fillStyle = rpColor;
-            ctx.beginPath();
-            ctx.arc(0, -rpR * 0.72, rpR * 0.36, 0, Math.PI * 2);
-            ctx.fill();
-          } else if (rpRType === 'humanoid_slim') {
-            ctx.fillStyle = rpColor;
-            ctx.beginPath();
-            ctx.ellipse(0, 0, rpR * 0.28, rpR * 0.55, 0, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.strokeStyle = rpAccent; ctx.lineWidth = 1.5; ctx.stroke();
-            ctx.fillStyle = rpColor;
-            ctx.beginPath();
-            ctx.arc(0, -rpR * 0.66, rpR * 0.22, 0, Math.PI * 2);
-            ctx.fill();
-          } else if (rpRType === 'cloaked') {
-            ctx.globalAlpha = 0.75;
-            ctx.fillStyle = rpColor;
-            ctx.beginPath();
-            ctx.ellipse(0, 0, rpR * 0.35, rpR * 0.58, 0, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.globalAlpha = 1;
-            ctx.strokeStyle = rpAccent; ctx.lineWidth = 1.5; ctx.stroke();
-            ctx.fillStyle = rpAccent;
-            ctx.shadowColor = rpAccent; ctx.shadowBlur = 12;
-            ctx.beginPath();
-            ctx.arc(0, -rpR * 0.68, rpR * 0.26, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.shadowBlur = 0;
-          } else {
-            ctx.fillStyle = rpColor;
-            ctx.beginPath();
-            ctx.ellipse(0, 0, rpR * 0.42, rpR * 0.58, 0, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.strokeStyle = rpAccent; ctx.lineWidth = 1.5; ctx.stroke();
-            ctx.fillStyle = rpColor;
-            ctx.beginPath();
-            ctx.arc(0, -rpR * 0.68, rpR * 0.28, 0, Math.PI * 2);
-            ctx.fill();
-          }
-
-          // Direction arrow
-          ctx.fillStyle = rpAccent;
-          ctx.shadowColor = rpAccent; ctx.shadowBlur = 6;
-          ctx.beginPath();
-          ctx.moveTo(0, -rpR * 0.97);
-          ctx.lineTo(-rpR * 0.14, -rpR * 0.76);
-          ctx.lineTo(rpR * 0.14, -rpR * 0.76);
-          ctx.closePath();
-          ctx.fill();
-          ctx.shadowBlur = 0;
-
-          // Weapon barrel (extends in forward/-Y direction)
-          const rpWCfg = (CONFIG.WEAPONS || []).find(w => w.id === rp.weaponId);
-          const rpWColor = (rpWCfg && rpWCfg.color) || (rpCharData.gunColor) || '#AAAAAA';
-          ctx.strokeStyle = rpWColor;
-          ctx.lineCap = 'round';
-          // Barrel thickness and length vary by weapon class
-          const isHeavy = rp.weaponId === 'rocket' || rp.weaponId === 'flamethrower' || rp.weaponId === 'minigun';
-          const isLong  = rp.weaponId === 'sniper'  || rp.weaponId === 'crossbow';
-          const isMelee = rp.weaponId === 'knife'   || rp.weaponId === 'bat' || rp.weaponId === 'sword' || rp.weaponId === 'whip';
-          ctx.lineWidth = isHeavy ? 5 : isMelee ? 2 : 3;
-          const barrelLen = isLong ? rpR * 1.05 : isMelee ? rpR * 0.75 : rpR * 0.72;
-          const barrelOff = rpR * 0.28; // held to the right side
-          ctx.beginPath();
-          ctx.moveTo(barrelOff, -rpR * 0.32);
-          ctx.lineTo(barrelOff, -(rpR * 0.32 + barrelLen));
+          ctx.arc(rpSx, rpSy, rpR * 1.25, 0, Math.PI * 2);
+          ctx.strokeStyle = '#44EEFF';
+          ctx.lineWidth = 3;
+          ctx.globalAlpha = 0.55;
+          ctx.shadowColor = '#44EEFF';
+          ctx.shadowBlur = 14;
           ctx.stroke();
-
+          ctx.shadowBlur = 0;
+          ctx.globalAlpha = 1;
           ctx.restore();
+
+          // Full character art — reuse Player.prototype.render via a ghost object
+          const _rpWpn = (CONFIG.WEAPONS || []).find(w => w.id === rp.weaponId)
+                      || (CONFIG.WEAPONS && CONFIG.WEAPONS[0])
+                      || { color: '#AAAAAA', melee: false, range: 50 };
+          const _rpGhost = {
+            x: rpSx, y: rpSy,
+            radius: rpCharData.radius || 18,
+            angle: rp.angle || 0,
+            charData: rpCharData,
+            color: rpCharData.color,
+            accent: rpCharData.accent,
+            _weapon: _rpWpn,
+            _weaponColor() { return this._weapon.color; },
+            _muzzleFlash: 0,
+            invincible: 0,
+            _custMask: 'none',
+            _custEffect: 'none',
+            _custAccessory: 'none',
+            _effectT: 0,
+            _displayName: null,
+          };
+          try {
+            Player.prototype.render.call(_rpGhost, ctx);
+          } catch (_rpErr) {
+            ctx.save();
+            ctx.beginPath(); ctx.arc(rpSx, rpSy, rpR, 0, Math.PI * 2);
+            ctx.fillStyle = rpColor; ctx.fill();
+            ctx.restore();
+          }
 
           // HP bar
           const barW = 40, barH = 4;
           const hpPct = Math.max(0, Math.min(1, (rp.hp || 0) / (rp.maxHp || 100)));
-          const barY = rpSy - rpR - 20;
+          const barY = rpSy - rpR - 22;
           ctx.fillStyle = 'rgba(0,0,0,0.55)';
           ctx.fillRect(rpSx - barW / 2, barY, barW, barH);
           ctx.fillStyle = hpPct > 0.5 ? '#44FF88' : hpPct > 0.25 ? '#FFCC00' : '#FF4444';
@@ -206,7 +167,7 @@ Game.prototype._render = function() {
           ctx.textBaseline = 'bottom';
           ctx.fillStyle = 'rgba(0,0,0,0.5)';
           ctx.fillText(rp.username || 'PLAYER', rpSx + 1, barY - 1);
-          ctx.fillStyle = rpColor;
+          ctx.fillStyle = '#44EEFF';
           ctx.fillText(rp.username || 'PLAYER', rpSx, barY - 2);
           ctx.restore();
         }
@@ -1595,8 +1556,10 @@ Game.prototype._render = function() {
 
     // Tower: elevator in world-space
     if (this._towerMode) {
+      const _zoom2 = this._camZoom || 1;
       ctx.save();
-      ctx.translate(-this.camX + shake.x, -this.camY + shake.y);
+      ctx.scale(_zoom2, _zoom2);
+      ctx.translate(-this.camX + shake.x / _zoom2, -this.camY + shake.y / _zoom2);
       this.map.renderTowerElevator(
         ctx,
         this._towerElevatorActive,
@@ -1608,14 +1571,16 @@ Game.prototype._render = function() {
     // Street light glows — additive, world-space, after night overlay
     // so the warm halos visibly punch through the darkness
     if (!this._indoor && this._nightAlpha > 0.01) {
+      const _zoom2 = this._camZoom || 1;
       ctx.save();
-      ctx.translate(-this.camX + shake.x, -this.camY + shake.y);
+      ctx.scale(_zoom2, _zoom2);
+      ctx.translate(-this.camX + shake.x / _zoom2, -this.camY + shake.y / _zoom2);
       this.map.renderStreetLightGlows(
         ctx,
         this.camX,
         this.camY,
-        W,
-        H,
+        W / _zoom2,
+        H / _zoom2,
         this._nightAlpha,
       );
       ctx.restore();
@@ -1624,8 +1589,9 @@ Game.prototype._render = function() {
     // ── Global Event overlays ─────────────────────────────
     if (this._globalEvent) {
       if (this._globalEvent.id === "blackout") {
-        const psx = this.player.x - this.camX;
-        const psy = this.player.y - this.camY;
+        const _bz = this._camZoom || 1;
+        const psx = (this.player.x - this.camX) * _bz;
+        const psy = (this.player.y - this.camY) * _bz;
         const grad = ctx.createRadialGradient(
           psx,
           psy,

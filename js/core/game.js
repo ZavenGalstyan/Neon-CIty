@@ -300,6 +300,9 @@ class Game {
     this._portalCooldown = 0; // prevents instant re-teleport
 
     // Camera
+    this._camZoomLevels = [1.5, 1.0, 0.65];
+    this._camZoomIdx = 1;
+    this._camZoom = this._camZoomLevels[this._camZoomIdx];
     this.camX = spawnX - this.canvas.width / 2;
     this.camY = spawnY - this.canvas.height / 2;
 
@@ -376,6 +379,11 @@ class Game {
     }
     if (e.code === "KeyV" && this.state === "playing") {
       this._togglePlayerDrone();
+      return;
+    }
+    if (e.code === "KeyZ" && this.state === "playing") {
+      this._camZoomIdx = (this._camZoomIdx + 1) % this._camZoomLevels.length;
+      this._camZoom = this._camZoomLevels[this._camZoomIdx];
       return;
     }
     if (e.code === "KeyN") {
@@ -628,10 +636,10 @@ class Game {
         this._mpTimer = 0;
         Multiplayer.sendPos(this.player);
       }
-      // Host: broadcast bot positions every 0.5s so non-host clients stay in sync
+      // Host: broadcast bot positions at 10 Hz (every 100ms) for smooth sync
       if (this._isHost) {
         this._mpBotSyncTimer = (this._mpBotSyncTimer || 0) + dt;
-        if (this._mpBotSyncTimer >= 0.5) {
+        if (this._mpBotSyncTimer >= 0.1) {
           this._mpBotSyncTimer = 0;
           if (this.bots.length > 0) Multiplayer.sendBotPositions(this.bots);
         }
@@ -870,7 +878,7 @@ class Game {
       return;
     }
 
-    this.input.updateMouseWorld(this.camX, this.camY);
+    this.input.updateMouseWorld(this.camX, this.camY, this._camZoom);
 
     // Sync vehicle state before player update (also freeze player while controlling drone)
     this.player.inVehicle = !!this._playerVehicle || this._droneControl;
@@ -1186,6 +1194,11 @@ class Game {
         edt = dt * (bot._slowMult || 0.3);
       }
       bot.update(edt, this.player, this.map, this.bullets, this.particles);
+    }
+
+    // Non-host: pull bots toward server-authoritative positions after AI ran
+    if (this._roomId && typeof Multiplayer !== 'undefined' && !this._isHost) {
+      Multiplayer.updateRemoteBots(dt);
     }
 
     // ── Zombie melee contact damage ────────────────────────
@@ -1760,20 +1773,23 @@ class Game {
     // ── Camera ─────────────────────────────────────────────
     const _camTarget =
       this._droneControl && this._playerDrone ? this._playerDrone : this.player;
-    const tcx = _camTarget.x - this.canvas.width / 2;
-    const tcy = _camTarget.y - this.canvas.height / 2;
+    const zoom = this._camZoom;
+    const tcx = _camTarget.x - this.canvas.width / (2 * zoom);
+    const tcy = _camTarget.y - this.canvas.height / (2 * zoom);
     this.camX = lerp(this.camX, tcx, CONFIG.CAM_LERP);
     this.camY = lerp(this.camY, tcy, CONFIG.CAM_LERP);
     const mapPxW = this.map.W * this.map.S,
       mapPxH = this.map.H * this.map.S;
+    const visW = this.canvas.width / zoom;
+    const visH = this.canvas.height / zoom;
     this.camX =
-      mapPxW <= this.canvas.width
-        ? (mapPxW - this.canvas.width) / 2
-        : clamp(this.camX, 0, mapPxW - this.canvas.width);
+      mapPxW <= visW
+        ? (mapPxW - visW) / 2
+        : clamp(this.camX, 0, mapPxW - visW);
     this.camY =
-      mapPxH <= this.canvas.height
-        ? (mapPxH - this.canvas.height) / 2
-        : clamp(this.camY, 0, mapPxH - this.canvas.height);
+      mapPxH <= visH
+        ? (mapPxH - visH) / 2
+        : clamp(this.camY, 0, mapPxH - visH);
 
     this.hud.update(dt);
   }
