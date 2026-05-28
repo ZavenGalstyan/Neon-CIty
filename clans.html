@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>DASH DREAD — Clans</title>
   <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/social.css">
+  <script>try{if(localStorage.getItem('nc_theme')==='light')document.documentElement.setAttribute('data-theme','light');}catch(e){}</script>
   <style>
   /* ═══════════════════════════════════════════════════════════════════
      CLANS SYSTEM — NEXT-GEN IN-GAME UI
@@ -2527,6 +2529,507 @@
     .clan-nav__item,
     .chat__message,
     .myclan__member { transition-duration: 0.15s; }
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════
+     LIGHT MODE OVERRIDES
+     Light backgrounds + DARK text/borders for structure and readability
+  ═══════════════════════════════════════════════════════════════════ */
+
+  /* Override bright colors with darker, muted variants for Light Mode */
+  html[data-theme="light"] {
+    --clan-cyan: #006585;
+    --clan-magenta: #a01840;
+    --clan-gold: #8a6914;
+    --clan-purple: #4a2080;
+    --clan-orange: #a85020;
+    --clan-green: #0a6030;
+    --clan-pink: #a01840;
+    --clan-red: #9a1830;
+    --clan-blue: #2a5090;
+    --clan-border-active: rgba(0,101,133,0.35);
+    --hud-line: rgba(0,101,133,0.12);
+    --hud-glow: rgba(0,101,133,0.06);
+  }
+
+  html[data-theme="light"] .clan-page {
+    background: linear-gradient(180deg, #c8d8ec 0%, #d0dff0 40%, #d4e2f4 70%, #d0daea 100%);
+  }
+  html[data-theme="light"] .clan-page::before { background: radial-gradient(ellipse at 30% 20%, rgba(74,32,128,0.08) 0%, transparent 50%); }
+  html[data-theme="light"] .clan-page::after { background: radial-gradient(ellipse at 70% 80%, rgba(0,101,133,0.06) 0%, transparent 50%); }
+  html[data-theme="light"] .clan-orb--1 { background: radial-gradient(circle, rgba(0,101,133,0.08) 0%, transparent 60%); }
+  html[data-theme="light"] .clan-orb--2 { background: radial-gradient(circle, rgba(74,32,128,0.06) 0%, transparent 60%); }
+  html[data-theme="light"] .clan-orb--3 { background: radial-gradient(circle, rgba(160,24,64,0.05) 0%, transparent 60%); }
+  html[data-theme="light"] .clan-scan-beam { background: linear-gradient(180deg, transparent, rgba(0,101,133,0.05), transparent); }
+
+  /* Header */
+  html[data-theme="light"] .clan-header {
+    background: linear-gradient(180deg, rgba(220,232,246,0.96) 0%, rgba(215,228,244,0.98) 100%);
+    border-bottom: 1px solid rgba(10,25,50,0.38);
+  }
+  html[data-theme="light"] .clan-header__title { color: #050a15; text-shadow: none; }
+  html[data-theme="light"] .clan-header__sub { color: #1e2a3c; }
+  html[data-theme="light"] .clan-header__emblem { filter: saturate(0.80) brightness(0.90); }
+
+  /* Navigation */
+  html[data-theme="light"] .clan-nav {
+    background: linear-gradient(180deg, rgba(225,235,248,0.96) 0%, rgba(220,232,246,0.98) 100%);
+    border-right: 1px solid rgba(10,25,50,0.32);
+  }
+  html[data-theme="light"] .clan-nav__item {
+    background: rgba(225,235,248,0.90);
+    border: 1px solid rgba(10,25,50,0.32);
+    color: #050a15;
+  }
+  html[data-theme="light"] .clan-nav__item:hover {
+    background: rgba(220,235,250,0.95);
+    border-color: rgba(0,101,133,0.40);
+    color: #006585;
+  }
+  html[data-theme="light"] .clan-nav__item.active {
+    background: rgba(0,101,133,0.12);
+    border: 2px solid #006585;
+    color: #006585;
+  }
+  html[data-theme="light"] .clan-nav__label { color: inherit; }
+
+  /* Sidebar */
+  html[data-theme="light"] .clan-sidebar {
+    background: linear-gradient(180deg, rgba(225,235,248,0.96) 0%, rgba(220,232,246,0.98) 100%);
+    border-left: 1px solid rgba(10,25,50,0.35);
+  }
+  html[data-theme="light"] .clan-sidebar__header {
+    border-bottom: 1px solid rgba(10,30,60,0.20);
+    color: #006585;
+  }
+  html[data-theme="light"] .clan-sidebar__status { color: #050a15; }
+  html[data-theme="light"] .clan-sidebar__status-text { color: #1e2a3c; }
+
+  /* Main content */
+  html[data-theme="light"] .clan-main {
+    background: rgba(215,228,244,0.50);
+  }
+  html[data-theme="light"] .clan-section__title { color: #050a15; font-weight: 700; }
+  html[data-theme="light"] .clan-section__sub { color: #1e2a3c; }
+
+  /* Clan cards */
+  html[data-theme="light"] .clan-card {
+    background: linear-gradient(180deg, rgba(230,238,250,0.96) 0%, rgba(225,235,248,0.98) 100%);
+    border: 1px solid rgba(10,25,50,0.40);
+    box-shadow: 0 4px 12px rgba(10,25,50,0.10);
+  }
+  html[data-theme="light"] .clan-card:hover {
+    border-color: rgba(74,32,128,0.45);
+    box-shadow: 0 8px 24px rgba(10,25,50,0.12), 0 0 12px rgba(74,32,128,0.12);
+  }
+  html[data-theme="light"] .clan-card__name { color: #050a15; font-weight: 700; }
+  html[data-theme="light"] .clan-card__tag { color: #5a2d96; }
+  html[data-theme="light"] .clan-card__stat { color: #1e2a3c; }
+  html[data-theme="light"] .clan-card__desc { color: #151e30; }
+  html[data-theme="light"] .clan-card__join-btn {
+    background: linear-gradient(135deg, #5a2d96 0%, #6a3da6 100%);
+    border: 1px solid #5a2d96;
+    color: #ffffff;
+    font-weight: 600;
+  }
+  html[data-theme="light"] .clan-card__join-btn:hover {
+    background: linear-gradient(135deg, #6a3da6 0%, #7a4db6 100%);
+    box-shadow: 0 0 12px rgba(74,32,128,0.28);
+  }
+
+  /* My Clan section */
+  html[data-theme="light"] .myclan {
+    background: linear-gradient(180deg, rgba(225,235,248,0.96) 0%, rgba(220,232,246,0.98) 100%);
+    border: 1px solid rgba(10,25,50,0.40);
+  }
+  html[data-theme="light"] .myclan__name { color: #050a15; font-weight: 700; }
+  html[data-theme="light"] .myclan__tag { color: #5a2d96; }
+  html[data-theme="light"] .myclan__stat-label { color: #1e2a3c; }
+  html[data-theme="light"] .myclan__stat-value { color: #006585; }
+  html[data-theme="light"] .myclan__member {
+    background: rgba(230,238,250,0.90);
+    border: 1px solid rgba(10,30,60,0.20);
+    color: #050a15;
+  }
+  html[data-theme="light"] .myclan__member:hover {
+    background: rgba(220,235,250,0.98);
+    border-color: rgba(0,101,133,0.40);
+  }
+  html[data-theme="light"] .myclan__member-role { color: #5a2d96; }
+  html[data-theme="light"] .myclan__invite-btn {
+    background: rgba(0,101,133,0.08);
+    border: 1px solid rgba(10,25,50,0.40);
+    color: #006585;
+  }
+  html[data-theme="light"] .myclan__invite-btn:hover {
+    background: rgba(0,101,133,0.15);
+    border-color: #006585;
+    box-shadow: 0 0 10px rgba(0,101,133,0.16);
+  }
+
+  /* Chat */
+  html[data-theme="light"] .chat {
+    background: linear-gradient(180deg, rgba(225,235,248,0.96) 0%, rgba(220,232,246,0.98) 100%);
+    border: 1px solid rgba(10,25,50,0.40);
+  }
+  html[data-theme="light"] .chat__header {
+    background: linear-gradient(180deg, rgba(220,232,246,0.98) 0%, rgba(215,228,244,0.99) 100%);
+    border-bottom: 1px solid rgba(10,25,50,0.35);
+    color: #050a15;
+  }
+  html[data-theme="light"] .chat__header-title { color: #050a15; }
+  html[data-theme="light"] .chat__message {
+    background: rgba(230,238,250,0.92);
+    border: 1px solid rgba(10,30,60,0.18);
+  }
+  html[data-theme="light"] .chat__message-author { color: #5a2d96; font-weight: 600; }
+  html[data-theme="light"] .chat__message-text { color: #050a15; }
+  html[data-theme="light"] .chat__message-time { color: #1e2a3c; }
+  html[data-theme="light"] .chat__input-wrap {
+    background: linear-gradient(180deg, rgba(215,228,244,0.95) 0%, rgba(220,232,246,0.98) 100%);
+    border-top: 1px solid rgba(10,25,50,0.35);
+  }
+  html[data-theme="light"] .chat__input {
+    background: rgba(230,238,250,0.95);
+    border: 1px solid rgba(10,25,50,0.40);
+    color: #050a15;
+  }
+  html[data-theme="light"] .chat__input:focus {
+    border-color: #5a2d96;
+    box-shadow: 0 0 8px rgba(74,32,128,0.16);
+  }
+  html[data-theme="light"] .chat__input::placeholder { color: #3d4a60; }
+  html[data-theme="light"] .chat__send-btn {
+    background: linear-gradient(135deg, #5a2d96 0%, #6a3da6 100%);
+    border: 1px solid #5a2d96;
+    color: #ffffff;
+  }
+  html[data-theme="light"] .chat__send-btn:hover {
+    background: linear-gradient(135deg, #6a3da6 0%, #7a4db6 100%);
+    box-shadow: 0 0 12px rgba(74,32,128,0.28);
+  }
+  html[data-theme="light"] .chat__empty-text { color: #1e2a3c; }
+
+  /* No clan state */
+  html[data-theme="light"] .no-clan {
+    background: rgba(225,235,248,0.90);
+    border: 1px solid rgba(10,25,50,0.35);
+  }
+  html[data-theme="light"] .no-clan__title { color: #050a15; }
+  html[data-theme="light"] .no-clan__text { color: #1e2a3c; }
+  html[data-theme="light"] .no-clan__btn {
+    background: linear-gradient(135deg, #5a2d96 0%, #6a3da6 100%);
+    border: 2px solid #5a2d96;
+    color: #ffffff;
+    font-weight: 600;
+  }
+  html[data-theme="light"] .no-clan__btn:hover {
+    background: linear-gradient(135deg, #6a3da6 0%, #7a4db6 100%);
+    box-shadow: 0 0 16px rgba(74,32,128,0.28);
+  }
+
+  /* Browse empty state */
+  html[data-theme="light"] .browse__empty-title { color: #050a15; }
+  html[data-theme="light"] .browse__empty-text { color: #1e2a3c; }
+
+  /* Loading states */
+  html[data-theme="light"] .clan-loading { color: #1e2a3c; }
+  html[data-theme="light"] .clan-loading-text { color: #1e2a3c; }
+
+  /* ── Light Mode: Leader/Crown styles ──────────────────────────────── */
+  html[data-theme="light"] .myclan__avatar--leader {
+    border: 2px dashed rgba(138,105,20,0.45);
+  }
+  html[data-theme="light"] .myclan__avatar--leader.has-image {
+    background: radial-gradient(circle at 30% 30%, rgba(138,105,20,0.20) 0%, transparent 50%),
+                linear-gradient(135deg, rgba(138,105,20,0.12) 0%, rgba(112,80,16,0.06) 100%);
+    border: 2px solid rgba(138,105,20,0.50);
+    box-shadow: 0 0 20px rgba(138,105,20,0.12);
+  }
+  html[data-theme="light"] .myclan__crown {
+    background: linear-gradient(135deg, rgba(138,105,20,0.14) 0%, rgba(138,105,20,0.06) 100%);
+    border: 1px solid rgba(138,105,20,0.40);
+    text-shadow: none;
+  }
+  html[data-theme="light"] .myclan__member--leader {
+    background: linear-gradient(135deg, rgba(138,105,20,0.06) 0%, rgba(138,105,20,0.02) 100%);
+    border: 1px solid rgba(138,105,20,0.35);
+  }
+  html[data-theme="light"] .myclan__member--leader:hover {
+    background: linear-gradient(135deg, rgba(138,105,20,0.10) 0%, rgba(138,105,20,0.05) 100%);
+    border-color: rgba(138,105,20,0.50);
+  }
+  html[data-theme="light"] .myclan__member-role--leader {
+    color: #5a4010;
+    text-shadow: none;
+  }
+
+  /* Leader card avatar frame */
+  html[data-theme="light"] .clan-card__avatar--leader {
+    background: linear-gradient(135deg, rgba(138,105,20,0.08) 0%, transparent 30%),
+                linear-gradient(180deg, rgba(230,238,250,0.95) 0%, rgba(225,235,248,0.98) 100%);
+    border: 1px solid rgba(138,105,20,0.25);
+  }
+  html[data-theme="light"] .clan-card__avatar--leader::before {
+    background: linear-gradient(135deg, transparent 50%, rgba(138,105,20,0.08) 50%);
+  }
+  html[data-theme="light"] .clan-card__avatar--leader::after {
+    background: linear-gradient(-45deg, transparent 50%, rgba(138,105,20,0.08) 50%);
+  }
+  html[data-theme="light"] .clan-card__avatar-accent {
+    background: linear-gradient(180deg, transparent 0%, rgba(138,105,20,0.08) 50%, transparent 100%);
+  }
+  html[data-theme="light"] .clan-card__avatar-glow {
+    background: radial-gradient(ellipse at center, rgba(138,105,20,0.10) 0%, transparent 50%);
+  }
+
+  /* MyClan leader avatar */
+  html[data-theme="light"] .myclan__leader-avatar-frame {
+    border: 2px dashed rgba(138,105,20,0.35);
+  }
+  html[data-theme="light"] .myclan__leader-avatar-frame.has-image {
+    background: radial-gradient(circle at 30% 30%, rgba(138,105,20,0.25) 0%, transparent 50%),
+                linear-gradient(135deg, rgba(138,105,20,0.12) 0%, rgba(112,80,16,0.06) 100%);
+    border: 3px solid rgba(138,105,20,0.50);
+    box-shadow: 0 0 30px rgba(138,105,20,0.12);
+    animation: none;
+  }
+  html[data-theme="light"] .myclan__leader-crown {
+    background: linear-gradient(135deg, rgba(138,105,20,0.14) 0%, rgba(138,105,20,0.06) 100%);
+    border: 1px solid rgba(138,105,20,0.40);
+  }
+
+  /* Invite code highlight */
+  html[data-theme="light"] .invite-code-highlight {
+    background: rgba(138,105,20,0.10);
+    border-color: rgba(138,105,20,0.40);
+  }
+
+  /* ── Light Mode: Additional text/border overrides ─────────────────── */
+  html[data-theme="light"] .clan-header__sub {
+    color: #1e2a3c;
+  }
+  html[data-theme="light"] .clan-stat-label {
+    color: #3d4a60;
+  }
+  html[data-theme="light"] .clan-stat-value {
+    color: #050a15;
+  }
+  html[data-theme="light"] .myclan__stat-label {
+    color: #3d4a60;
+  }
+  html[data-theme="light"] .myclan__desc {
+    color: #1e2a3c;
+  }
+  html[data-theme="light"] .myclan__role {
+    color: #5a2d96;
+  }
+  html[data-theme="light"] .myclan__member-name {
+    color: #050a15;
+  }
+  html[data-theme="light"] .myclan__member-status {
+    color: #1e2a3c;
+  }
+  html[data-theme="light"] .clan-card__members {
+    color: #1e2a3c;
+  }
+  html[data-theme="light"] .clan-card__members-icon {
+    color: #5a2d96;
+  }
+  html[data-theme="light"] .clan-card__level {
+    color: #1e2a3c;
+  }
+  html[data-theme="light"] .clan-section__header {
+    border-bottom: 1px solid rgba(10,25,50,0.25);
+  }
+  html[data-theme="light"] .clan-divider {
+    background: linear-gradient(90deg, transparent, rgba(10,25,50,0.25), transparent);
+  }
+  html[data-theme="light"] .create-clan__label {
+    color: #1e2a3c;
+  }
+  html[data-theme="light"] .create-clan__input {
+    background: rgba(230,238,250,0.95);
+    border: 1px solid rgba(10,25,50,0.40);
+    color: #050a15;
+  }
+  html[data-theme="light"] .create-clan__input::placeholder {
+    color: #3d4a60;
+  }
+  html[data-theme="light"] .create-clan__input:focus {
+    border-color: #5a2d96;
+    box-shadow: 0 0 8px rgba(74,32,128,0.18);
+  }
+  html[data-theme="light"] .create-clan__hint {
+    color: #3d4a60;
+  }
+  html[data-theme="light"] .browse__search::placeholder {
+    color: #3d4a60;
+  }
+  html[data-theme="light"] .browse__filter-label {
+    color: #1e2a3c;
+  }
+  html[data-theme="light"] .chat__message-meta {
+    color: #3d4a60;
+  }
+  html[data-theme="light"] .clan-settings__label {
+    color: #1e2a3c;
+  }
+  html[data-theme="light"] .clan-settings__value {
+    color: #050a15;
+  }
+
+  /* ══════════════════════════════════════════════════════════════════
+     COMPREHENSIVE LIGHT MODE FIXES - Clans
+  ══════════════════════════════════════════════════════════════════ */
+
+  /* Nav items - dark text */
+  html[data-theme="light"] .clan-nav__item {
+    color: #050a15;
+  }
+  html[data-theme="light"] .clan-nav__item:hover {
+    color: #5a2d96;
+    border-color: rgba(74,32,128,0.50);
+  }
+  html[data-theme="light"] .clan-nav__item.active {
+    color: #5a2d96;
+    border-color: #5a2d96;
+  }
+
+  /* Sidebar status */
+  html[data-theme="light"] .clan-sidebar__status-dot {
+    box-shadow: 0 0 6px currentColor;
+  }
+
+  /* Member cards */
+  html[data-theme="light"] .myclan__member {
+    border: 1px solid rgba(10,25,50,0.30);
+  }
+  html[data-theme="light"] .myclan__member:hover {
+    border-color: rgba(74,32,128,0.50);
+  }
+  html[data-theme="light"] .myclan__member-rank {
+    color: #3d4a60;
+  }
+  html[data-theme="light"] .myclan__member-name {
+    color: #050a15;
+    font-weight: 600;
+  }
+  html[data-theme="light"] .myclan__member-tag {
+    color: #3d4a60;
+  }
+
+  /* Clan cards in browser */
+  html[data-theme="light"] .clan-card {
+    border: 1px solid rgba(10,25,50,0.30);
+  }
+  html[data-theme="light"] .clan-card:hover {
+    border-color: rgba(74,32,128,0.50);
+  }
+  html[data-theme="light"] .clan-card__tag {
+    color: #5a2d96;
+  }
+  html[data-theme="light"] .clan-card__members {
+    color: #3d4a60;
+  }
+  html[data-theme="light"] .clan-card__level {
+    color: #3d4a60;
+  }
+  html[data-theme="light"] .clan-card__trophies {
+    color: #5a4010;
+  }
+
+  /* Section headers */
+  html[data-theme="light"] .clan-section__line {
+    background: linear-gradient(90deg, transparent, rgba(10,25,50,0.25), transparent);
+  }
+
+  /* Action buttons */
+  html[data-theme="light"] .clan-action-btn {
+    border: 1px solid rgba(10,25,50,0.35);
+    color: #050a15;
+  }
+  html[data-theme="light"] .clan-action-btn:hover {
+    border-color: rgba(74,32,128,0.50);
+    color: #5a2d96;
+  }
+
+  /* Chat messages */
+  html[data-theme="light"] .chat__msg {
+    border: 1px solid rgba(10,25,50,0.20);
+  }
+  html[data-theme="light"] .chat__msg-name {
+    color: #5a2d96;
+  }
+  html[data-theme="light"] .chat__msg-text {
+    color: #050a15;
+  }
+  html[data-theme="light"] .chat__msg-time {
+    color: #3d4a60;
+  }
+
+  /* Empty states */
+  html[data-theme="light"] .clan-empty__icon {
+    filter: saturate(0.8) brightness(0.9);
+  }
+  html[data-theme="light"] .clan-empty__title {
+    color: #050a15;
+  }
+  html[data-theme="light"] .clan-empty__text {
+    color: #1e2a3c;
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════
+     LIGHT MODE: SEARCH INPUT FIX
+     Fix white/invisible border on search input - STRONGLY ENFORCED
+  ═══════════════════════════════════════════════════════════════════ */
+  html[data-theme="light"] .browse__search-wrap {
+    position: relative;
+    background: transparent;
+  }
+  html[data-theme="light"] .browse__search-icon {
+    color: rgba(74,32,128,0.70) !important;
+  }
+  html[data-theme="light"] .browse__search-input {
+    background: rgba(245,248,255,0.98) !important;
+    border: 2px solid rgba(40,60,100,0.50) !important;
+    border-radius: 12px !important;
+    color: #050a15 !important;
+    box-shadow:
+      inset 0 2px 4px rgba(10,25,50,0.08),
+      0 2px 8px rgba(10,25,50,0.06) !important;
+  }
+  html[data-theme="light"] .browse__search-input::placeholder {
+    color: rgba(30,50,80,0.55) !important;
+  }
+  html[data-theme="light"] .browse__search-input:focus {
+    background: rgba(250,252,255,1) !important;
+    border-color: rgba(74,32,128,0.70) !important;
+    box-shadow:
+      0 0 0 3px rgba(74,32,128,0.12),
+      0 0 16px rgba(74,32,128,0.15),
+      inset 0 1px 2px rgba(0,0,0,0.04) !important;
+  }
+  html[data-theme="light"] .browse__filter-btn {
+    background: rgba(235,242,252,0.95) !important;
+    border: 2px solid rgba(40,60,100,0.45) !important;
+    color: #1e2a3c !important;
+  }
+  html[data-theme="light"] .browse__filter-btn:hover {
+    background: rgba(74,32,128,0.15) !important;
+    border-color: rgba(74,32,128,0.60) !important;
+    color: #5a2d96 !important;
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════
+     LIGHT MODE: BROWSE CONTENT AREA FIX
+     Ensure content area has light background
+  ═══════════════════════════════════════════════════════════════════ */
+  html[data-theme="light"] .browse {
+    background: transparent;
+  }
+  html[data-theme="light"] .browse__grid {
+    background: transparent;
   }
   </style>
 </head>

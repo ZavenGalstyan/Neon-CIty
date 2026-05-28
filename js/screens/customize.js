@@ -113,16 +113,6 @@ const CharCustomize = (() => {
     /* ── Character body via CharPreview.drawBody ───────────── */
     CharPreview.drawBody(ctx, _charData, cx, cy, sr);
 
-    /* ── Outer energy ring ─────────────────────────────────── */
-    ctx.save();
-    ctx.globalAlpha = 0.38;
-    ctx.strokeStyle = col;
-    ctx.lineWidth   = 3;
-    ctx.beginPath();
-    ctx.arc(cx, cy, sr + 8, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.restore();
-
     /* ── Floor shadow ellipse ──────────────────────────────── */
     ctx.save();
     ctx.globalAlpha = 0.22;

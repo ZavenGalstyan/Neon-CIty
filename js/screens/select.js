@@ -73,7 +73,15 @@
       d.classList.toggle('active', +d.dataset.step === currentStep));
     if (currentStep === 3) {
       const charData = CONFIG.CHARACTERS.find(c => c.id === selectedCharId);
-      document.getElementById('namePreview').textContent = charData?.name ?? '';
+      const charName = charData?.name ?? '—';
+      document.getElementById('namePreview').textContent = charName;
+      // Update side panel operative badge
+      const charBadge = document.getElementById('s3CharBadge');
+      if (charBadge) charBadge.textContent = charName;
+      // Update mission zone with selected map
+      const missionZone = document.getElementById('s3MissionZone');
+      const mapNameEl = document.getElementById('s3MapName');
+      if (missionZone && mapNameEl) missionZone.textContent = mapNameEl.textContent || '—';
       startBtn.disabled = !selectedCharId;
       startBtnText.textContent = selectedCharId ? 'START GAME' : 'GO BACK & SELECT A CHARACTER';
     }

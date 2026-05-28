@@ -36,7 +36,9 @@
       "Bash(awk NR>=981 && NR<=1020:*)",
       "Bash(echo \"Exit code: $?\")",
       "PowerShell(head *)",
-      "PowerShell(\\(Get-Content \"C:\\\\Users\\\\Zav\\\\Desktop\\\\Z-Gta\\\\js\\\\core\\\\game-furniture.js\" | Measure-Object -Line\\).Lines)"
+      "PowerShell(\\(Get-Content \"C:\\\\Users\\\\Zav\\\\Desktop\\\\Z-Gta\\\\js\\\\core\\\\game-furniture.js\" | Measure-Object -Line\\).Lines)",
+      "WebFetch(domain:dribbble.com)",
+      "WebSearch"
     ]
   }
 }
