@@ -71,6 +71,15 @@
     .prof-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
     .prof-toast--success { background: rgba(68,255,136,0.12); border: 1px solid rgba(68,255,136,0.35); color: #44FF88; box-shadow: 0 0 20px rgba(68,255,136,0.2); }
     .prof-toast--error   { background: rgba(255,68,102,0.12); border: 1px solid rgba(255,68,102,0.35); color: #FF4466; box-shadow: 0 0 20px rgba(255,68,102,0.2); }
+    /* Feedback modal tabs */
+    .fbk-tabs { display:flex; gap:6px; margin-bottom:22px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.07); border-radius:12px; padding:4px; }
+    .fbk-tab {
+      flex:1; font-family:'Orbitron',sans-serif; font-size:9px; letter-spacing:0.16em;
+      padding:9px 14px; border-radius:9px; cursor:pointer; border:1px solid transparent;
+      background:transparent; color:rgba(255,255,255,0.38); transition:all 0.18s;
+    }
+    .fbk-tab:hover { color:rgba(255,255,255,0.7); background:rgba(255,255,255,0.05); }
+    .fbk-tab--active { background:rgba(255,68,102,0.15) !important; border-color:rgba(255,68,102,0.4) !important; color:#FF4466 !important; box-shadow:0 0 14px rgba(255,68,102,0.12); }
   </style>
 </head>
 <body class="select-screen profile-page">
@@ -148,6 +157,16 @@
           onmouseout="this.style.background='rgba(255,68,102,0.1)';this.style.borderColor='rgba(255,68,102,0.4)';this.style.boxShadow=''"
           onclick="window.location.href='admin.html'"
         >⚡ ADMIN PANEL</button>
+        <button id="profileFeedbackBtn"
+          style="
+            font-family:'Orbitron',sans-serif;font-size:9px;letter-spacing:0.18em;
+            padding:9px 18px;border-radius:10px;cursor:pointer;
+            background:rgba(68,238,255,0.08);border:1px solid rgba(68,238,255,0.3);color:#44EEFF;
+            transition:all 0.18s;display:flex;align-items:center;gap:8px;
+          "
+          onmouseover="this.style.background='rgba(68,238,255,0.18)';this.style.borderColor='#44EEFF';this.style.boxShadow='0 0 18px rgba(68,238,255,0.25)'"
+          onmouseout="this.style.background='rgba(68,238,255,0.08)';this.style.borderColor='rgba(68,238,255,0.3)';this.style.boxShadow=''"
+        >💬 FEEDBACK</button>
         <button id="profileReportBtn"
           style="
             font-family:'Orbitron',sans-serif;font-size:9px;letter-spacing:0.18em;
@@ -176,6 +195,44 @@
       </div>
     </div>
 
+  </div>
+
+  <!-- Feedback Modal (Proposals / Problems) -->
+  <div class="rpt-backdrop" id="fbkModal" hidden>
+    <div class="rpt-box">
+      <div class="rpt-icon">💬</div>
+      <div class="rpt-title">PLAYER FEEDBACK</div>
+      <div class="rpt-sub">Share your ideas or report issues directly to the team.</div>
+      <div class="fbk-tabs">
+        <button class="fbk-tab fbk-tab--active" id="fbkTabProposal">💡 PROPOSAL</button>
+        <button class="fbk-tab" id="fbkTabProblem">🐛 PROBLEM</button>
+      </div>
+      <div id="fbkFormProposal">
+        <div class="rpt-field">
+          <label class="rpt-lbl" for="fbkPropTitle">TITLE</label>
+          <input class="rpt-inp" id="fbkPropTitle" type="text" placeholder="Your feature idea in one line…" autocomplete="off">
+        </div>
+        <div class="rpt-field">
+          <label class="rpt-lbl" for="fbkPropDesc">DESCRIPTION</label>
+          <textarea class="rpt-area" id="fbkPropDesc" placeholder="Describe your proposal in detail…"></textarea>
+        </div>
+      </div>
+      <div id="fbkFormProblem" hidden>
+        <div class="rpt-field">
+          <label class="rpt-lbl" for="fbkProbTitle">TITLE</label>
+          <input class="rpt-inp" id="fbkProbTitle" type="text" placeholder="Describe the issue briefly…" autocomplete="off">
+        </div>
+        <div class="rpt-field">
+          <label class="rpt-lbl" for="fbkProbDesc">DESCRIPTION</label>
+          <textarea class="rpt-area" id="fbkProbDesc" placeholder="Steps to reproduce, what happened, expected vs actual…"></textarea>
+        </div>
+      </div>
+      <div class="rpt-err" id="fbkErr"></div>
+      <div class="rpt-btns">
+        <button class="rpt-btn rpt-btn--cancel" id="fbkCancel">CANCEL</button>
+        <button class="rpt-btn rpt-btn--send" id="fbkSend">SUBMIT PROPOSAL</button>
+      </div>
+    </div>
   </div>
 
   <!-- Report Player Modal -->
@@ -366,6 +423,71 @@
       } finally {
         btn.disabled = false;
         btn.textContent = 'SEND REPORT';
+      }
+    });
+
+    /* ── Feedback Modal (Proposals / Problems) ─────────────── */
+    let _fbkTab = 'proposal';
+
+    function _fbkSwitchTab(tab) {
+      _fbkTab = tab;
+      document.getElementById('fbkFormProposal').hidden = tab !== 'proposal';
+      document.getElementById('fbkFormProblem').hidden  = tab !== 'problem';
+      document.getElementById('fbkTabProposal').classList.toggle('fbk-tab--active', tab === 'proposal');
+      document.getElementById('fbkTabProblem').classList.toggle('fbk-tab--active',  tab === 'problem');
+      document.getElementById('fbkSend').textContent = tab === 'proposal' ? 'SUBMIT PROPOSAL' : 'SUBMIT PROBLEM';
+    }
+
+    document.getElementById('profileFeedbackBtn').addEventListener('click', () => {
+      ['fbkPropTitle','fbkPropDesc','fbkProbTitle','fbkProbDesc'].forEach(id => { document.getElementById(id).value = ''; });
+      document.getElementById('fbkErr').style.display = 'none';
+      _fbkSwitchTab('proposal');
+      document.getElementById('fbkModal').hidden = false;
+      setTimeout(() => document.getElementById('fbkPropTitle').focus(), 60);
+    });
+
+    document.getElementById('fbkTabProposal').addEventListener('click', () => _fbkSwitchTab('proposal'));
+    document.getElementById('fbkTabProblem').addEventListener('click',  () => _fbkSwitchTab('problem'));
+
+    document.getElementById('fbkCancel').addEventListener('click', () => {
+      document.getElementById('fbkModal').hidden = true;
+    });
+    document.getElementById('fbkModal').addEventListener('click', e => {
+      if (e.target === document.getElementById('fbkModal')) document.getElementById('fbkModal').hidden = true;
+    });
+
+    document.getElementById('fbkSend').addEventListener('click', async () => {
+      const isProposal = _fbkTab === 'proposal';
+      const title = document.getElementById(isProposal ? 'fbkPropTitle' : 'fbkProbTitle').value.trim();
+      const desc  = document.getElementById(isProposal ? 'fbkPropDesc'  : 'fbkProbDesc').value.trim();
+      const errEl = document.getElementById('fbkErr');
+
+      if (!title || !desc) {
+        errEl.textContent = 'Please fill in both fields.';
+        errEl.style.display = 'block';
+        return;
+      }
+
+      const btn = document.getElementById('fbkSend');
+      btn.disabled = true;
+      btn.textContent = 'SUBMITTING…';
+      errEl.style.display = 'none';
+
+      try {
+        if (isProposal) {
+          await API.submitProposal(title, desc);
+          showProfToast('✓ Proposal submitted! Thank you.', 'success');
+        } else {
+          await API.submitProblem(title, desc);
+          showProfToast('✓ Problem report submitted! Thank you.', 'success');
+        }
+        document.getElementById('fbkModal').hidden = true;
+      } catch (err) {
+        errEl.textContent = err.message || 'Failed to submit. Try again.';
+        errEl.style.display = 'block';
+      } finally {
+        btn.disabled = false;
+        _fbkSwitchTab(_fbkTab);
       }
     });
   </script>
