@@ -2429,71 +2429,167 @@
 
       </div><!-- end #step1 -->
 
-      <!-- STEP 3: Name + Start -->
+      <!-- STEP 3: Name + Start — Mission Deployment Terminal -->
       <div id="step3" class="step">
         <p class="step-label">STEP 3 OF 3 &nbsp;·&nbsp; ENTER YOUR IDENTITY</p>
 
-        <!-- Selected summary bar -->
-        <div class="s3-summary">
-          <div class="s3-summary-item">
-            <span class="s3-summary-label">CHARACTER</span>
-            <span class="s3-summary-val" id="namePreview">—</span>
-          </div>
-          <div class="s3-summary-sep">✦</div>
-          <div class="s3-summary-item">
-            <span class="s3-summary-label">MAP</span>
-            <span class="s3-summary-val" id="s3MapName">—</span>
-          </div>
-        </div>
+        <!-- Cinematic deployment container -->
+        <div class="s3-deploy-terminal">
+          <!-- Decorative corner brackets -->
+          <div class="s3-corner s3-corner--tl"></div>
+          <div class="s3-corner s3-corner--tr"></div>
+          <div class="s3-corner s3-corner--bl"></div>
+          <div class="s3-corner s3-corner--br"></div>
 
-        <!-- Name input -->
-        <div class="s3-center">
-          <div class="s3-prompt">⬡ ENTER YOUR CALL SIGN ⬡</div>
-          <div class="name-input-wrap">
-            <input id="playerNameInput" class="name-input" type="text" maxlength="20"
-              placeholder="ANONYMOUS" autocomplete="off" spellcheck="false">
-          </div>
-          <div class="start-area">
-            <button class="start-btn" id="startBtn" disabled>
-              <span id="startBtnText">SELECT A CHARACTER</span>
-            </button>
-            <button class="modes-btn" id="modesBtn">⬡ MAPS &amp; MODES</button>
-          </div>
-        </div>
+          <!-- Ambient scan line -->
+          <div class="s3-scanline"></div>
 
-        <!-- Game stats row -->
-        <div class="s3-stats">
-          <div class="s3-stat-card">
-            <div class="s3-stat-num">30</div>
-            <div class="s3-stat-label">CHARACTERS</div>
-          </div>
-          <div class="s3-stat-card">
-            <div class="s3-stat-num">17</div>
-            <div class="s3-stat-label">MAPS</div>
-          </div>
-          <div class="s3-stat-card">
-            <div class="s3-stat-num">17</div>
-            <div class="s3-stat-label">GAME MODES</div>
-          </div>
-          <div class="s3-stat-card">
-            <div class="s3-stat-num">40+</div>
-            <div class="s3-stat-label">WEAPONS</div>
-          </div>
-        </div>
+          <!-- Main content area -->
+          <div class="s3-main-content">
 
-        <!-- Feature tags -->
-        <div class="s3-features">
-          <div class="s3-feat">🏪 Building Interiors</div>
-          <div class="s3-feat">🚗 Car Dealership</div>
-          <div class="s3-feat">🎰 Casino</div>
-          <div class="s3-feat">⚗ Experimental Weapons</div>
-          <div class="s3-feat">👮 Wanted System</div>
-          <div class="s3-feat">🌙 Day / Night Cycle</div>
-          <div class="s3-feat">🌀 Global Events</div>
-          <div class="s3-feat">🛡 Hire Bodyguards</div>
-          <div class="s3-feat">💣 Grenades</div>
-          <div class="s3-feat">👥 Multiplayer</div>
-        </div>
+            <!-- Left panel: Character briefing -->
+            <div class="s3-side-panel s3-panel-left">
+              <div class="s3-panel-header">
+                <span class="s3-panel-icon">◈</span>
+                <span class="s3-panel-title">OPERATIVE</span>
+              </div>
+              <div class="s3-panel-body">
+                <div class="s3-operative-badge" id="s3CharBadge">—</div>
+                <div class="s3-operative-class">CLASS: ASSAULT</div>
+                <div class="s3-operative-stats">
+                  <div class="s3-op-stat"><span>SPD</span><div class="s3-op-bar"><div class="s3-op-fill" style="width:70%"></div></div></div>
+                  <div class="s3-op-stat"><span>HP</span><div class="s3-op-bar"><div class="s3-op-fill" style="width:85%"></div></div></div>
+                  <div class="s3-op-stat"><span>DMG</span><div class="s3-op-bar"><div class="s3-op-fill" style="width:60%"></div></div></div>
+                </div>
+              </div>
+              <div class="s3-panel-status">
+                <span class="s3-status-dot"></span> READY
+              </div>
+            </div>
+
+            <!-- Center: Main deployment console -->
+            <div class="s3-center-console">
+              <!-- Mission briefing header -->
+              <div class="s3-briefing-header">
+                <div class="s3-briefing-line"></div>
+                <span class="s3-briefing-label">MISSION BRIEFING</span>
+                <div class="s3-briefing-line"></div>
+              </div>
+
+              <!-- Selected summary bar -->
+              <div class="s3-summary">
+                <div class="s3-summary-item">
+                  <span class="s3-summary-label">CHARACTER</span>
+                  <span class="s3-summary-val" id="namePreview">—</span>
+                </div>
+                <div class="s3-summary-sep">✦</div>
+                <div class="s3-summary-item">
+                  <span class="s3-summary-label">MAP</span>
+                  <span class="s3-summary-val" id="s3MapName">—</span>
+                </div>
+              </div>
+
+              <!-- Call sign input section -->
+              <div class="s3-callsign-section">
+                <div class="s3-callsign-frame">
+                  <div class="s3-prompt">⬡ ENTER YOUR CALL SIGN ⬡</div>
+                  <div class="name-input-wrap">
+                    <div class="s3-input-glow"></div>
+                    <input id="playerNameInput" class="name-input" type="text" maxlength="20"
+                      placeholder="ANONYMOUS" autocomplete="off" spellcheck="false">
+                  </div>
+                  <div class="s3-callsign-hint">Your identity in the field</div>
+                </div>
+              </div>
+
+              <!-- Launch control area -->
+              <div class="s3-launch-control">
+                <div class="s3-launch-frame">
+                  <div class="s3-launch-lines">
+                    <span class="s3-launch-line"></span>
+                    <span class="s3-launch-line"></span>
+                  </div>
+                  <div class="start-area">
+                    <button class="start-btn" id="startBtn" disabled>
+                      <span id="startBtnText">SELECT A CHARACTER</span>
+                    </button>
+                    <button class="modes-btn" id="modesBtn">⬡ MAPS &amp; MODES</button>
+                  </div>
+                  <div class="s3-launch-lines">
+                    <span class="s3-launch-line"></span>
+                    <span class="s3-launch-line"></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right panel: Mission intel -->
+            <div class="s3-side-panel s3-panel-right">
+              <div class="s3-panel-header">
+                <span class="s3-panel-icon">◈</span>
+                <span class="s3-panel-title">MISSION</span>
+              </div>
+              <div class="s3-panel-body">
+                <div class="s3-mission-zone" id="s3MissionZone">—</div>
+                <div class="s3-mission-type">MODE: SURVIVAL</div>
+                <div class="s3-mission-intel">
+                  <div class="s3-intel-row"><span>THREAT</span><span class="s3-intel-val">HIGH</span></div>
+                  <div class="s3-intel-row"><span>WEATHER</span><span class="s3-intel-val">CLEAR</span></div>
+                  <div class="s3-intel-row"><span>TIME</span><span class="s3-intel-val">NIGHT</span></div>
+                </div>
+              </div>
+              <div class="s3-panel-status s3-panel-status--alert">
+                <span class="s3-status-dot"></span> HOSTILE
+              </div>
+            </div>
+
+          </div><!-- end s3-main-content -->
+
+          <!-- Bottom: Stats & features section -->
+          <div class="s3-bottom-section">
+            <!-- Divider -->
+            <div class="s3-section-divider">
+              <span class="s3-divider-line"></span>
+              <span class="s3-divider-label">ARSENAL OVERVIEW</span>
+              <span class="s3-divider-line"></span>
+            </div>
+
+            <!-- Game stats row -->
+            <div class="s3-stats">
+              <div class="s3-stat-card">
+                <div class="s3-stat-num">30</div>
+                <div class="s3-stat-label">CHARACTERS</div>
+              </div>
+              <div class="s3-stat-card">
+                <div class="s3-stat-num">17</div>
+                <div class="s3-stat-label">MAPS</div>
+              </div>
+              <div class="s3-stat-card">
+                <div class="s3-stat-num">17</div>
+                <div class="s3-stat-label">GAME MODES</div>
+              </div>
+              <div class="s3-stat-card">
+                <div class="s3-stat-num">40+</div>
+                <div class="s3-stat-label">WEAPONS</div>
+              </div>
+            </div>
+
+            <!-- Feature tags -->
+            <div class="s3-features">
+              <div class="s3-feat">🏪 Building Interiors</div>
+              <div class="s3-feat">🚗 Car Dealership</div>
+              <div class="s3-feat">🎰 Casino</div>
+              <div class="s3-feat">⚗ Experimental Weapons</div>
+              <div class="s3-feat">👮 Wanted System</div>
+              <div class="s3-feat">🌙 Day / Night Cycle</div>
+              <div class="s3-feat">🌀 Global Events</div>
+              <div class="s3-feat">🛡 Hire Bodyguards</div>
+              <div class="s3-feat">💣 Grenades</div>
+              <div class="s3-feat">👥 Multiplayer</div>
+            </div>
+          </div>
+
+        </div><!-- end s3-deploy-terminal -->
 
       </div><!-- end #step3 -->
 

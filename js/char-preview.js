@@ -37,14 +37,6 @@ const CharPreview = (() => {
     _body(ctx, charId, color, accent, sr);
     ctx.restore();
 
-    // Outer energy ring
-    ctx.globalAlpha = 0.38;
-    ctx.strokeStyle = color;
-    ctx.lineWidth   = 1.5;
-    ctx.beginPath();
-    ctx.arc(CX, CY, sr + 4, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.globalAlpha = 1;
   }
 
   /* ── Public: render every .char-preview-canvas on the page ── */
