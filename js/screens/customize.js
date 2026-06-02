@@ -130,15 +130,76 @@ const CharCustomize = (() => {
   }
 
   /* ══════════════════════════════════════════════════════════
+     CHARACTER HEAD POSITION DATA
+     Maps character IDs to their head/face positions for proper accessory placement
+  ══════════════════════════════════════════════════════════ */
+  const HEAD_DATA = {
+    // Humanoid characters with standard head positions
+    gangster:       { headY: -0.46, eyeY: 0.04, headR: 0.50, type: 'humanoid' },
+    hacker:         { headY: -0.41, eyeY: 0.05, headR: 0.41, type: 'humanoid_slim' },
+    mercenary:      { headY: -0.61, eyeY: 0.10, headR: 0.52, type: 'humanoid_heavy' },
+    engineer:       { headY: -0.46, eyeY: 0.05, headR: 0.50, type: 'humanoid' },
+    sniper_elite:   { headY: -0.44, eyeY: 0.05, headR: 0.45, type: 'humanoid_slim' },
+    drone_pilot:    { headY: -0.46, eyeY: 0.04, headR: 0.47, type: 'humanoid' },
+    chemist:        { headY: -0.46, eyeY: -0.05, headR: 0.50, type: 'humanoid' },
+    medic:          { headY: -0.46, eyeY: 0.05, headR: 0.47, type: 'humanoid' },
+    ronin:          { headY: -0.47, eyeY: 0.00, headR: 0.45, type: 'humanoid_slim' },
+    pyro:           { headY: -0.55, eyeY: -0.05, headR: 0.50, type: 'humanoid_heavy' },
+    overlord:       { headY: -0.58, eyeY: 0.05, headR: 0.44, type: 'humanoid_heavy' },
+    blade_dancer:   { headY: -0.43, eyeY: 0.05, headR: 0.38, type: 'humanoid_slim' },
+    volt_runner:    { headY: -0.40, eyeY: 0.00, headR: 0.41, type: 'humanoid_slim' },
+    frost_walker:   { headY: -0.46, eyeY: 0.04, headR: 0.50, type: 'humanoid' },
+    timebreaker:    { headY: -0.46, eyeY: 0.04, headR: 0.50, type: 'humanoid' },
+    ai_avatar:      { headY: -0.46, eyeY: 0.04, headR: 0.48, type: 'humanoid' },
+    omega_prime:    { headY: -0.55, eyeY: 0.05, headR: 0.52, type: 'humanoid_heavy' },
+
+    // Cloaked/Ghost characters - face is in shadow/hood
+    ghost:          { headY: -0.25, eyeY: 0.00, headR: 0.30, type: 'cloaked' },
+    shadow_lord:    { headY: -0.25, eyeY: 0.00, headR: 0.30, type: 'cloaked' },
+    quantum_ghost:  { headY: -0.25, eyeY: 0.00, headR: 0.30, type: 'cloaked' },
+    phantom:        { headY: -0.25, eyeY: 0.00, headR: 0.25, type: 'cloaked' },
+
+    // Ninja character
+    cyber_ninja:    { headY: -0.40, eyeY: 0.08, headR: 0.32, type: 'ninja' },
+
+    // Animal characters - different head structures
+    cyber_wolf:     { headY: -0.75, eyeY: 0.03, headR: 0.35, type: 'wolf' },
+    neon_panther:   { headY: -0.75, eyeY: 0.00, headR: 0.32, type: 'panther' },
+    mecha_bulldog:  { headY: -0.73, eyeY: -0.05, headR: 0.40, type: 'bulldog' },
+
+    // Non-humanoid creatures
+    spider_drone:   { headY: -0.45, eyeY: 0.00, headR: 0.20, type: 'spider' },
+    robo_hawk:      { headY: -0.40, eyeY: 0.00, headR: 0.25, type: 'hawk' },
+    nano_rat:       { headY: -0.50, eyeY: 0.00, headR: 0.25, type: 'rat' },
+    mini_bee:       { headY: -0.40, eyeY: 0.00, headR: 0.20, type: 'bee' },
+    electric_eel:   { headY: -0.75, eyeY: 0.00, headR: 0.25, type: 'eel' },
+
+    // Titan/Tank characters
+    tank_commander: { headY: -0.60, eyeY: 0.00, headR: 0.35, type: 'titan' },
+    plasma_titan:   { headY: -0.60, eyeY: 0.00, headR: 0.35, type: 'titan' },
+  };
+
+  // Default head data for unknown characters
+  const DEFAULT_HEAD = { headY: -0.46, eyeY: 0.04, headR: 0.42, type: 'humanoid' };
+
+  /* ══════════════════════════════════════════════════════════
      ACCESSORY  (drawn at full BW×BH resolution)
   ══════════════════════════════════════════════════════════ */
   function _drawAccessory(col, cx, cy, sr, bs) {
     if (_accessory === 'none') return;
 
     const acc = _charData.accent || col;
-    /* head center: slightly above body center, toward "top" of character */
-    const hcy = cy - sr * 0.72;
-    const hr  = sr * 0.42;
+
+    // Get character-specific head data
+    const charId = _charData.id;
+    const hd = HEAD_DATA[charId] || DEFAULT_HEAD;
+
+    // Calculate head center position based on character data
+    const hcy = cy + sr * hd.headY;
+    const hr  = sr * hd.headR;
+
+    // Eye offset from head center (positive = lower on face)
+    const eyeOffset = sr * hd.eyeY;
 
     ctx.save();
     ctx.translate(cx, hcy);
@@ -146,53 +207,62 @@ const CharCustomize = (() => {
     switch (_accessory) {
 
       case 'glasses': {
+        // Position glasses at eye level
+        const ey = eyeOffset;
         ctx.strokeStyle = '#e8e8e8'; ctx.lineWidth = 4;
         ctx.shadowColor = '#aaccff'; ctx.shadowBlur = 14;
-        const gd = hr * 0.6;
+        const gd = hr * 0.65;
+        const gr = hr * 0.38;
         for (const sx of [-1, 1]) {
-          ctx.beginPath(); ctx.arc(sx * gd, 0, hr * 0.4, 0, Math.PI * 2); ctx.stroke();
+          ctx.beginPath(); ctx.arc(sx * gd, ey, gr, 0, Math.PI * 2); ctx.stroke();
         }
-        ctx.beginPath(); ctx.moveTo(-gd + hr * 0.4, 0); ctx.lineTo(gd - hr * 0.4, 0); ctx.stroke();
-        // temple arms
+        ctx.beginPath(); ctx.moveTo(-gd + gr, ey); ctx.lineTo(gd - gr, ey); ctx.stroke();
+        // temple arms going back
         for (const sx of [-1, 1]) {
-          ctx.beginPath(); ctx.moveTo(sx * (gd + hr * 0.4), 0); ctx.lineTo(sx * (gd + hr * 0.85), -hr * 0.3); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(sx * (gd + gr), ey); ctx.lineTo(sx * (gd + hr * 0.85), ey - hr * 0.25); ctx.stroke();
         }
         break;
       }
 
       case 'shades': {
-        const g = ctx.createLinearGradient(-hr * 1.2, 0, hr * 1.2, 0);
+        // Position shades at eye level
+        const ey = eyeOffset;
+        const g = ctx.createLinearGradient(-hr * 1.2, ey, hr * 1.2, ey);
         g.addColorStop(0, '#FF224499'); g.addColorStop(0.5, '#4400FFBB'); g.addColorStop(1, '#FF224499');
         ctx.fillStyle = g;
         ctx.strokeStyle = '#555'; ctx.lineWidth = 3;
         ctx.shadowColor = '#FF2244'; ctx.shadowBlur = 18;
-        ctx.beginPath(); ctx.roundRect(-hr * 1.15, -hr * 0.3, hr * 2.3, hr * 0.6, 7); ctx.fill(); ctx.stroke();
+        ctx.beginPath(); ctx.roundRect(-hr * 1.15, ey - hr * 0.3, hr * 2.3, hr * 0.6, 7); ctx.fill(); ctx.stroke();
         ctx.strokeStyle = '#22224466'; ctx.lineWidth = 2;
-        ctx.beginPath(); ctx.moveTo(0, -hr * 0.3); ctx.lineTo(0, hr * 0.3); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(0, ey - hr * 0.3); ctx.lineTo(0, ey + hr * 0.3); ctx.stroke();
         break;
       }
 
       case 'hat': {
+        // Position hat on top of head
+        const topY = -hr * 0.85;
         // brim
         ctx.fillStyle = acc;
         ctx.beginPath();
-        ctx.ellipse(hr * 0.35, hr * 0.18, hr * 0.85, hr * 0.22, 0.12, 0, Math.PI);
+        ctx.ellipse(hr * 0.35, topY + hr * 0.28, hr * 0.85, hr * 0.22, 0.12, 0, Math.PI);
         ctx.fill();
         // cap body
         ctx.fillStyle = col;
         ctx.strokeStyle = acc; ctx.lineWidth = 2.5;
         ctx.beginPath();
-        ctx.arc(0, -hr * 0.04, hr * 1.12, Math.PI, Math.PI * 2);
+        ctx.arc(0, topY + hr * 0.06, hr * 1.12, Math.PI, Math.PI * 2);
         ctx.fill(); ctx.stroke();
         // button
         ctx.fillStyle = acc;
-        ctx.beginPath(); ctx.arc(0, -hr * 1.16, hr * 0.14, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(0, topY - hr * 0.06, hr * 0.14, 0, Math.PI * 2); ctx.fill();
         break;
       }
 
       case 'crown': {
+        // Position crown on top of head
+        const topY = -hr * 0.75;
         const cw = hr * 1.28, ch = hr * 1.0;
-        const y0 = -hr * 0.08;
+        const y0 = topY + hr * 0.02;
         ctx.strokeStyle = '#FFD700'; ctx.lineWidth = 4;
         ctx.fillStyle = 'rgba(255,215,0,0.18)';
         ctx.shadowColor = '#FFD700'; ctx.shadowBlur = 24;
@@ -214,39 +284,46 @@ const CharCustomize = (() => {
       }
 
       case 'bandana': {
-        const bg2 = ctx.createLinearGradient(-hr, hr * 0.1, hr, hr * 0.45);
+        // Position bandana covering lower face/mouth area
+        const mouthY = eyeOffset + hr * 0.5;
+        const bg2 = ctx.createLinearGradient(-hr, mouthY - hr * 0.1, hr, mouthY + hr * 0.35);
         bg2.addColorStop(0, col + 'EE'); bg2.addColorStop(1, acc + 'BB');
         ctx.fillStyle = bg2;
         ctx.beginPath();
-        ctx.moveTo(-hr * 1.05, hr * 0.08);
-        ctx.lineTo( hr * 1.05, hr * 0.08);
-        ctx.lineTo( hr * 0.9,  hr * 0.48);
-        ctx.lineTo(-hr * 0.9,  hr * 0.48);
+        ctx.moveTo(-hr * 1.05, mouthY - hr * 0.12);
+        ctx.lineTo( hr * 1.05, mouthY - hr * 0.12);
+        ctx.lineTo( hr * 0.9,  mouthY + hr * 0.32);
+        ctx.lineTo(-hr * 0.9,  mouthY + hr * 0.32);
         ctx.closePath(); ctx.fill();
         ctx.strokeStyle = acc + '66'; ctx.lineWidth = 2;
         for (let xi = -0.6; xi <= 0.6; xi += 0.3) {
-          ctx.beginPath(); ctx.moveTo(hr * xi, hr * 0.08); ctx.lineTo(hr * xi, hr * 0.48); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(hr * xi, mouthY - hr * 0.12); ctx.lineTo(hr * xi, mouthY + hr * 0.32); ctx.stroke();
         }
         break;
       }
 
       case 'mask': {
+        // Position mask covering full face
+        const faceY = eyeOffset + hr * 0.15;
         ctx.globalAlpha = 0.88;
         ctx.fillStyle = '#111';
-        ctx.beginPath(); ctx.arc(0, hr * 0.18, hr * 0.95, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(0, faceY, hr * 0.95, 0, Math.PI * 2); ctx.fill();
         ctx.globalAlpha = 1;
         ctx.strokeStyle = col; ctx.lineWidth = 3; ctx.shadowColor = col; ctx.shadowBlur = 14;
-        ctx.beginPath(); ctx.arc(0, hr * 0.18, hr * 0.95, 0, Math.PI * 2); ctx.stroke();
+        ctx.beginPath(); ctx.arc(0, faceY, hr * 0.95, 0, Math.PI * 2); ctx.stroke();
+        // Eye slits at eye level
         ctx.fillStyle = col; ctx.shadowBlur = 18;
         for (const sx of [-1, 1]) {
-          ctx.beginPath(); ctx.ellipse(sx * hr * 0.3, -hr * 0.04, hr * 0.26, hr * 0.1, 0, 0, Math.PI * 2); ctx.fill();
+          ctx.beginPath(); ctx.ellipse(sx * hr * 0.3, eyeOffset - hr * 0.05, hr * 0.26, hr * 0.1, 0, 0, Math.PI * 2); ctx.fill();
         }
         break;
       }
 
       case 'chain': {
+        // Position chain at neck/lower head area
+        const neckY = hr * 0.6;
         ctx.save();
-        ctx.translate(0, hr * 0.95);
+        ctx.translate(0, neckY);
         const chainR = hr * 1.05;
         const chainGrad = ctx.createLinearGradient(-chainR, 0, chainR, 0);
         chainGrad.addColorStop(0, '#AA8800');
@@ -272,8 +349,10 @@ const CharCustomize = (() => {
       }
 
       case 'halo': {
+        // Position halo floating above head
+        const topY = -hr * 0.9;
         const haloR = hr * 1.05;
-        const haloY = -hr * 1.35;
+        const haloY = topY - hr * 0.65;
         const hg = ctx.createRadialGradient(0, haloY, haloR * 0.6, 0, haloY, haloR * 1.4);
         hg.addColorStop(0, '#FFFFFF');
         hg.addColorStop(0.3, '#FFFFAA');
@@ -293,56 +372,62 @@ const CharCustomize = (() => {
       }
 
       case 'horns': {
+        // Position horns on top/sides of head
+        const topY = -hr * 0.65;
         ctx.shadowColor = '#FF2200'; ctx.shadowBlur = 16;
         for (const sx of [-1, 1]) {
-          const hx = sx * hr * 0.55;
-          const hornGrad = ctx.createLinearGradient(hx, 0, hx, -hr * 1.15);
+          const hx = sx * hr * 0.65;
+          const hornGrad = ctx.createLinearGradient(hx, topY, hx, topY - hr * 1.1);
           hornGrad.addColorStop(0, '#CC1100');
           hornGrad.addColorStop(1, '#FF4422');
           ctx.fillStyle = hornGrad;
           ctx.beginPath();
-          ctx.moveTo(hx - hr * 0.18, -hr * 0.2);
-          ctx.lineTo(hx + sx * hr * 0.08, -hr * 1.12);
-          ctx.lineTo(hx + hr * 0.18, -hr * 0.2);
+          ctx.moveTo(hx - hr * 0.18, topY);
+          ctx.lineTo(hx + sx * hr * 0.12, topY - hr * 1.05);
+          ctx.lineTo(hx + hr * 0.18, topY);
           ctx.closePath(); ctx.fill();
           // highlight
           ctx.fillStyle = 'rgba(255,120,80,0.5)';
           ctx.beginPath();
-          ctx.moveTo(hx - hr * 0.05, -hr * 0.3);
-          ctx.lineTo(hx + sx * hr * 0.06, -hr * 0.95);
-          ctx.lineTo(hx + hr * 0.05, -hr * 0.3);
+          ctx.moveTo(hx - hr * 0.05, topY - hr * 0.1);
+          ctx.lineTo(hx + sx * hr * 0.08, topY - hr * 0.85);
+          ctx.lineTo(hx + hr * 0.05, topY - hr * 0.1);
           ctx.closePath(); ctx.fill();
         }
         break;
       }
 
       case 'goggles': {
+        // Position goggles at eye level
+        const ey = eyeOffset;
         ctx.strokeStyle = '#888'; ctx.lineWidth = 4;
         ctx.shadowColor = col; ctx.shadowBlur = 16;
         // strap
         ctx.fillStyle = '#333';
-        ctx.beginPath(); ctx.roundRect(-hr * 1.25, -hr * 0.22, hr * 2.5, hr * 0.44, 4); ctx.fill();
+        ctx.beginPath(); ctx.roundRect(-hr * 1.25, ey - hr * 0.22, hr * 2.5, hr * 0.44, 4); ctx.fill();
         // lenses
         for (const sx of [-1, 1]) {
-          const lg = ctx.createRadialGradient(sx * hr * 0.55, 0, 0, sx * hr * 0.55, 0, hr * 0.44);
+          const lg = ctx.createRadialGradient(sx * hr * 0.55, ey, 0, sx * hr * 0.55, ey, hr * 0.44);
           lg.addColorStop(0, col + 'AA');
           lg.addColorStop(0.6, col + '44');
           lg.addColorStop(1, '#11111188');
           ctx.fillStyle = lg;
           ctx.strokeStyle = '#aaa';
-          ctx.beginPath(); ctx.arc(sx * hr * 0.55, 0, hr * 0.44, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+          ctx.beginPath(); ctx.arc(sx * hr * 0.55, ey, hr * 0.44, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
           // lens glare
           ctx.fillStyle = 'rgba(255,255,255,0.35)';
-          ctx.beginPath(); ctx.ellipse(sx * hr * 0.55 - hr * 0.12, -hr * 0.14, hr * 0.13, hr * 0.07, -0.4, 0, Math.PI * 2); ctx.fill();
+          ctx.beginPath(); ctx.ellipse(sx * hr * 0.55 - hr * 0.12, ey - hr * 0.14, hr * 0.13, hr * 0.07, -0.4, 0, Math.PI * 2); ctx.fill();
         }
         // centre bridge
         ctx.fillStyle = '#444';
-        ctx.beginPath(); ctx.roundRect(-hr * 0.12, -hr * 0.1, hr * 0.24, hr * 0.2, 3); ctx.fill();
+        ctx.beginPath(); ctx.roundRect(-hr * 0.12, ey - hr * 0.1, hr * 0.24, hr * 0.2, 3); ctx.fill();
         break;
       }
 
       case 'mohawk': {
-        const mBase = -hr * 0.05;
+        // Position mohawk on top of head
+        const topY = -hr * 0.75;
+        const mBase = topY + hr * 0.1;
         const mkGrad = ctx.createLinearGradient(-hr * 0.15, mBase, hr * 0.15, mBase - hr * 1.6);
         mkGrad.addColorStop(0, col);
         mkGrad.addColorStop(0.5, acc);
@@ -361,11 +446,13 @@ const CharCustomize = (() => {
       }
 
       case 'earphones': {
-        const epY = 0;
+        // Position earphones at ear level (around head sides)
+        const epY = eyeOffset;
         ctx.strokeStyle = '#222'; ctx.lineWidth = 4;
-        // headband arc
-        ctx.beginPath(); ctx.arc(0, epY - hr * 0.25, hr * 1.02, Math.PI * 1.05, Math.PI * 1.95); ctx.stroke();
-        // ear cups
+        // headband arc - goes over the top of head
+        const bandY = -hr * 0.7;
+        ctx.beginPath(); ctx.arc(0, bandY, hr * 1.02, Math.PI * 1.05, Math.PI * 1.95); ctx.stroke();
+        // ear cups at ear level
         for (const sx of [-1, 1]) {
           const ex = sx * hr * 0.98, ey = epY + hr * 0.08;
           const cupGrad = ctx.createRadialGradient(ex, ey, 0, ex, ey, hr * 0.36);

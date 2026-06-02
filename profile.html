@@ -8,78 +8,393 @@
   <link rel="stylesheet" href="css/social.css">
   <script>try{if(localStorage.getItem('nc_theme')==='light')document.documentElement.setAttribute('data-theme','light');}catch(e){}</script>
   <style>
+    /* ═══ Report Button Styling ═══ */
+    .profile-report-btn {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      padding: 10px 18px;
+      border-radius: 10px;
+      cursor: pointer;
+      background: rgba(255,170,68,0.08);
+      border: 1px solid rgba(255,170,68,0.35);
+      color: #DDAA44;
+      transition: all 0.22s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .profile-report-btn:hover {
+      background: rgba(255,170,68,0.16);
+      border-color: rgba(255,170,68,0.55);
+      color: #FFBB55;
+      box-shadow: 0 0 20px rgba(255,170,68,0.2);
+    }
+    .profile-report-btn:active {
+      transform: scale(0.97);
+    }
+
+    /* ═══ Report Modal — Premium Moderation UI ═══ */
     .rpt-backdrop {
-      position: fixed; inset: 0;
-      background: rgba(0,0,0,0.84);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
+      position: fixed;
+      inset: 0;
+      background: rgba(2,2,12,0.88);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
       z-index: 3000;
-      display: flex; align-items: center; justify-content: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       padding: 20px;
-      animation: rptFadeIn 0.2s ease;
+      animation: rptFadeIn 0.25s ease;
     }
     @keyframes rptFadeIn { from { opacity: 0; } to { opacity: 1; } }
     .rpt-backdrop[hidden] { display: none !important; }
+
     .rpt-box {
-      background: linear-gradient(145deg, rgba(14,10,28,0.99) 0%, rgba(9,7,20,0.99) 100%);
-      border: 1px solid rgba(255,68,102,0.45);
+      background: linear-gradient(155deg, rgba(16,12,32,0.99) 0%, rgba(10,8,22,0.99) 100%);
+      border: 1px solid rgba(255,170,68,0.35);
       border-radius: 20px;
-      padding: 36px 32px 28px;
-      max-width: 440px;
+      padding: 32px 36px 28px;
+      max-width: 460px;
       width: 100%;
-      box-shadow: 0 0 80px rgba(255,68,102,0.15), 0 30px 80px rgba(0,0,0,0.7);
-      animation: rptSlideIn 0.25s cubic-bezier(0.4,0,0.2,1);
+      box-shadow:
+        0 0 60px rgba(255,170,68,0.1),
+        0 0 30px rgba(255,136,68,0.06),
+        0 30px 70px rgba(0,0,0,0.65),
+        inset 0 1px 0 rgba(255,255,255,0.04);
+      animation: rptSlideIn 0.3s cubic-bezier(0.4,0,0.2,1);
+      position: relative;
+      overflow: hidden;
     }
-    @keyframes rptSlideIn { from { opacity: 0; transform: scale(0.92) translateY(16px); } to { opacity: 1; transform: none; } }
-    .rpt-icon { font-size: 30px; margin-bottom: 10px; }
+    .rpt-box::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 80px;
+      background: linear-gradient(180deg, rgba(255,170,68,0.06) 0%, transparent 100%);
+      pointer-events: none;
+      border-radius: 20px 20px 0 0;
+    }
+    @keyframes rptSlideIn {
+      from { opacity: 0; transform: scale(0.94) translateY(12px); }
+      to { opacity: 1; transform: none; }
+    }
+
+    /* Header */
+    .rpt-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      margin-bottom: 24px;
+      position: relative;
+    }
+    .rpt-icon-wrap {
+      width: 48px;
+      height: 48px;
+      background: linear-gradient(135deg, rgba(255,170,68,0.15) 0%, rgba(255,136,68,0.08) 100%);
+      border: 1px solid rgba(255,170,68,0.3);
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .rpt-icon {
+      font-size: 22px;
+      color: #FFAA44;
+      filter: drop-shadow(0 0 8px rgba(255,170,68,0.5));
+    }
+    .rpt-header-text {
+      flex: 1;
+    }
     .rpt-title {
       font-family: 'Orbitron', sans-serif;
-      font-size: 16px; font-weight: 800; letter-spacing: 0.1em;
-      color: #FF4466; margin-bottom: 4px;
-      text-shadow: 0 0 20px rgba(255,68,102,0.4);
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      color: #FFAA44;
+      margin: 0 0 6px 0;
+      text-shadow: 0 0 18px rgba(255,170,68,0.4);
     }
-    .rpt-sub { font-family: 'Rajdhani', sans-serif; font-size: 13px; color: rgba(255,255,255,0.38); margin-bottom: 26px; }
-    .rpt-field { margin-bottom: 16px; }
-    .rpt-lbl { display: block; font-family: 'Orbitron', sans-serif; font-size: 9px; letter-spacing: 0.22em; color: rgba(255,255,255,0.45); margin-bottom: 8px; }
+    .rpt-sub {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      color: rgba(255,255,255,0.45);
+      line-height: 1.4;
+      margin: 0;
+    }
+
+    /* Form fields */
+    .rpt-field {
+      margin-bottom: 20px;
+    }
+    .rpt-lbl {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 0.18em;
+      color: rgba(255,170,68,0.7);
+      margin-bottom: 10px;
+      text-transform: uppercase;
+    }
+    .rpt-lbl::before {
+      content: '';
+      width: 4px;
+      height: 4px;
+      background: #FFAA44;
+      border-radius: 50%;
+      box-shadow: 0 0 6px #FFAA44;
+    }
+
     .rpt-inp, .rpt-area {
-      width: 100%; padding: 13px 16px;
-      background: rgba(255,255,255,0.04);
-      border: 1px solid rgba(255,255,255,0.09);
+      width: 100%;
+      padding: 14px 18px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.1);
       border-radius: 12px;
-      font-family: 'Rajdhani', sans-serif; font-size: 15px; font-weight: 600; color: #fff;
-      outline: none; transition: border-color 0.22s, box-shadow 0.22s; box-sizing: border-box;
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      color: #fff;
+      outline: none;
+      transition: all 0.25s ease;
+      box-sizing: border-box;
     }
-    .rpt-inp::placeholder, .rpt-area::placeholder { color: rgba(255,255,255,0.22); }
-    .rpt-inp:focus, .rpt-area:focus { border-color: rgba(255,68,102,0.5); box-shadow: 0 0 20px rgba(255,68,102,0.1); }
-    .rpt-area { resize: vertical; min-height: 96px; }
-    .rpt-err { font-family: 'Rajdhani', sans-serif; font-size: 13px; color: #FF4466; margin-top: -4px; margin-bottom: 10px; display: none; }
-    .rpt-btns { display: flex; gap: 12px; justify-content: flex-end; margin-top: 22px; }
-    .rpt-btn { font-family: 'Orbitron', sans-serif; font-size: 10px; letter-spacing: 0.14em; padding: 11px 22px; border-radius: 10px; cursor: pointer; border: 1px solid; transition: all 0.18s; }
-    .rpt-btn--cancel { background: rgba(255,255,255,0.03); border-color: rgba(255,255,255,0.1); color: rgba(255,255,255,0.45); }
-    .rpt-btn--cancel:hover { background: rgba(255,255,255,0.07); border-color: rgba(255,255,255,0.2); color: #fff; }
-    .rpt-btn--send { background: rgba(255,68,102,0.14); border-color: rgba(255,68,102,0.5); color: #FF4466; }
-    .rpt-btn--send:hover { background: rgba(255,68,102,0.28); border-color: #FF4466; color: #fff; box-shadow: 0 0 20px rgba(255,68,102,0.3); }
-    .rpt-btn--send:disabled { opacity: 0.45; cursor: not-allowed; pointer-events: none; }
+    .rpt-inp::placeholder, .rpt-area::placeholder {
+      color: rgba(255,255,255,0.28);
+    }
+    .rpt-inp:hover, .rpt-area:hover {
+      border-color: rgba(255,170,68,0.25);
+      background: rgba(255,255,255,0.04);
+    }
+    .rpt-inp:focus, .rpt-area:focus {
+      border-color: rgba(255,170,68,0.5);
+      background: rgba(255,170,68,0.04);
+      box-shadow: 0 0 20px rgba(255,170,68,0.1), inset 0 0 20px rgba(255,170,68,0.02);
+    }
+    .rpt-area {
+      resize: vertical;
+      min-height: 110px;
+      line-height: 1.5;
+    }
+
+    /* Error */
+    .rpt-err {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      color: #FF6666;
+      margin-top: -8px;
+      margin-bottom: 12px;
+      display: none;
+      padding-left: 12px;
+      border-left: 2px solid #FF6666;
+    }
+
+    /* Buttons */
+    .rpt-btns {
+      display: flex;
+      gap: 14px;
+      justify-content: flex-end;
+      margin-top: 28px;
+      padding-top: 20px;
+      border-top: 1px solid rgba(255,255,255,0.06);
+    }
+    .rpt-btn {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      padding: 12px 24px;
+      border-radius: 10px;
+      cursor: pointer;
+      border: 1px solid;
+      transition: all 0.22s ease;
+    }
+    .rpt-btn--cancel {
+      background: rgba(255,255,255,0.03);
+      border-color: rgba(255,255,255,0.12);
+      color: rgba(255,255,255,0.5);
+    }
+    .rpt-btn--cancel:hover {
+      background: rgba(255,255,255,0.08);
+      border-color: rgba(255,255,255,0.25);
+      color: #fff;
+    }
+    .rpt-btn--send {
+      background: linear-gradient(135deg, rgba(255,170,68,0.2) 0%, rgba(255,136,68,0.15) 100%);
+      border-color: rgba(255,170,68,0.45);
+      color: #FFAA44;
+      box-shadow: 0 0 15px rgba(255,170,68,0.15);
+    }
+    .rpt-btn--send:hover {
+      background: linear-gradient(135deg, rgba(255,170,68,0.3) 0%, rgba(255,136,68,0.22) 100%);
+      border-color: rgba(255,170,68,0.65);
+      color: #FFCC66;
+      box-shadow: 0 0 25px rgba(255,170,68,0.25);
+      transform: translateY(-1px);
+    }
+    .rpt-btn--send:active {
+      transform: translateY(0);
+    }
+    .rpt-btn--send:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      pointer-events: none;
+      box-shadow: none;
+    }
+
+    /* ═══ Light Mode — Report Button ═══ */
+    html[data-theme="light"] .profile-report-btn {
+      background: rgba(180,120,40,0.08);
+      border-color: rgba(180,120,40,0.4);
+      color: #996622;
+    }
+    html[data-theme="light"] .profile-report-btn:hover {
+      background: rgba(180,120,40,0.15);
+      border-color: rgba(180,120,40,0.6);
+      color: #885511;
+      box-shadow: 0 0 18px rgba(180,120,40,0.2);
+    }
+
+    /* ═══ Light Mode — Report Modal ═══ */
+    html[data-theme="light"] .rpt-backdrop {
+      background: rgba(220,230,245,0.88);
+    }
+    html[data-theme="light"] .rpt-box {
+      background: linear-gradient(155deg, rgba(255,255,255,0.99) 0%, rgba(248,250,255,0.99) 100%);
+      border-color: rgba(180,120,40,0.35);
+      box-shadow:
+        0 0 50px rgba(180,120,40,0.1),
+        0 25px 60px rgba(0,30,60,0.2),
+        inset 0 1px 0 rgba(255,255,255,0.9);
+    }
+    html[data-theme="light"] .rpt-box::before {
+      background: linear-gradient(180deg, rgba(180,120,40,0.06) 0%, transparent 100%);
+    }
+    html[data-theme="light"] .rpt-icon-wrap {
+      background: linear-gradient(135deg, rgba(180,120,40,0.12) 0%, rgba(180,120,40,0.06) 100%);
+      border-color: rgba(180,120,40,0.3);
+    }
+    html[data-theme="light"] .rpt-icon {
+      color: #996622;
+      filter: drop-shadow(0 0 6px rgba(180,120,40,0.4));
+    }
+    html[data-theme="light"] .rpt-title {
+      color: #885511;
+      text-shadow: 0 0 15px rgba(180,120,40,0.3);
+    }
+    html[data-theme="light"] .rpt-sub {
+      color: rgba(30,40,60,0.6);
+    }
+    html[data-theme="light"] .rpt-lbl {
+      color: rgba(140,100,40,0.85);
+    }
+    html[data-theme="light"] .rpt-lbl::before {
+      background: #996622;
+      box-shadow: 0 0 6px rgba(180,120,40,0.5);
+    }
+    html[data-theme="light"] .rpt-inp,
+    html[data-theme="light"] .rpt-area {
+      background: rgba(0,20,40,0.03);
+      border-color: rgba(0,30,60,0.15);
+      color: #1a2a40;
+    }
+    html[data-theme="light"] .rpt-inp::placeholder,
+    html[data-theme="light"] .rpt-area::placeholder {
+      color: rgba(30,50,80,0.4);
+    }
+    html[data-theme="light"] .rpt-inp:hover,
+    html[data-theme="light"] .rpt-area:hover {
+      border-color: rgba(180,120,40,0.3);
+      background: rgba(0,20,40,0.04);
+    }
+    html[data-theme="light"] .rpt-inp:focus,
+    html[data-theme="light"] .rpt-area:focus {
+      border-color: rgba(180,120,40,0.5);
+      background: rgba(180,120,40,0.04);
+      box-shadow: 0 0 18px rgba(180,120,40,0.1);
+    }
+    html[data-theme="light"] .rpt-err {
+      color: #cc4444;
+      border-left-color: #cc4444;
+    }
+    html[data-theme="light"] .rpt-btns {
+      border-top-color: rgba(0,30,60,0.08);
+    }
+    html[data-theme="light"] .rpt-btn--cancel {
+      background: rgba(0,30,60,0.04);
+      border-color: rgba(0,30,60,0.15);
+      color: rgba(30,50,80,0.6);
+    }
+    html[data-theme="light"] .rpt-btn--cancel:hover {
+      background: rgba(0,30,60,0.08);
+      border-color: rgba(0,30,60,0.25);
+      color: #1a2a40;
+    }
+    html[data-theme="light"] .rpt-btn--send {
+      background: linear-gradient(135deg, rgba(180,120,40,0.18) 0%, rgba(180,120,40,0.12) 100%);
+      border-color: rgba(180,120,40,0.45);
+      color: #885511;
+      box-shadow: 0 0 12px rgba(180,120,40,0.12);
+    }
+    html[data-theme="light"] .rpt-btn--send:hover {
+      background: linear-gradient(135deg, rgba(180,120,40,0.28) 0%, rgba(180,120,40,0.18) 100%);
+      border-color: rgba(180,120,40,0.6);
+      color: #774400;
+      box-shadow: 0 0 20px rgba(180,120,40,0.2);
+    }
+
+    /* ═══ Toast Notifications ═══ */
     .prof-toast {
-      position: fixed; bottom: 32px; left: 50%;
+      position: fixed;
+      bottom: 32px;
+      left: 50%;
       transform: translateX(-50%) translateY(20px);
-      padding: 12px 28px; border-radius: 12px;
-      font-family: 'Orbitron', sans-serif; font-size: 11px; letter-spacing: 0.12em;
-      z-index: 4000; opacity: 0; transition: opacity 0.3s, transform 0.3s;
-      pointer-events: none; white-space: nowrap;
+      padding: 14px 28px;
+      border-radius: 12px;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      z-index: 4000;
+      opacity: 0;
+      transition: opacity 0.3s, transform 0.3s;
+      pointer-events: none;
+      white-space: nowrap;
     }
     .prof-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-    .prof-toast--success { background: rgba(68,255,136,0.12); border: 1px solid rgba(68,255,136,0.35); color: #44FF88; box-shadow: 0 0 20px rgba(68,255,136,0.2); }
-    .prof-toast--error   { background: rgba(255,68,102,0.12); border: 1px solid rgba(255,68,102,0.35); color: #FF4466; box-shadow: 0 0 20px rgba(255,68,102,0.2); }
-    /* Feedback modal tabs */
-    .fbk-tabs { display:flex; gap:6px; margin-bottom:22px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.07); border-radius:12px; padding:4px; }
-    .fbk-tab {
-      flex:1; font-family:'Orbitron',sans-serif; font-size:9px; letter-spacing:0.16em;
-      padding:9px 14px; border-radius:9px; cursor:pointer; border:1px solid transparent;
-      background:transparent; color:rgba(255,255,255,0.38); transition:all 0.18s;
+    .prof-toast--success {
+      background: rgba(68,255,136,0.12);
+      border: 1px solid rgba(68,255,136,0.35);
+      color: #44FF88;
+      box-shadow: 0 0 20px rgba(68,255,136,0.2);
     }
-    .fbk-tab:hover { color:rgba(255,255,255,0.7); background:rgba(255,255,255,0.05); }
-    .fbk-tab--active { background:rgba(255,68,102,0.15) !important; border-color:rgba(255,68,102,0.4) !important; color:#FF4466 !important; box-shadow:0 0 14px rgba(255,68,102,0.12); }
+    .prof-toast--error {
+      background: rgba(255,68,102,0.12);
+      border: 1px solid rgba(255,68,102,0.35);
+      color: #FF4466;
+      box-shadow: 0 0 20px rgba(255,68,102,0.2);
+    }
+
+    /* Light mode toasts */
+    html[data-theme="light"] .prof-toast--success {
+      background: rgba(34,170,85,0.12);
+      border-color: rgba(34,170,85,0.4);
+      color: #117744;
+      box-shadow: 0 0 18px rgba(34,170,85,0.15);
+    }
+    html[data-theme="light"] .prof-toast--error {
+      background: rgba(200,60,80,0.12);
+      border-color: rgba(200,60,80,0.4);
+      color: #aa3344;
+      box-shadow: 0 0 18px rgba(200,60,80,0.15);
+    }
   </style>
 </head>
 <body class="select-screen profile-page">
@@ -157,6 +472,13 @@
           onmouseout="this.style.background='rgba(255,68,102,0.1)';this.style.borderColor='rgba(255,68,102,0.4)';this.style.boxShadow=''"
           onclick="window.location.href='admin.html'"
         >⚡ ADMIN PANEL</button>
+        <button id="profileReportBtn" class="profile-report-btn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/>
+            <line x1="4" y1="22" x2="4" y2="15"/>
+          </svg>
+          REPORT
+        </button>
         <button id="profileFeedbackBtn"
           style="
             font-family:'Orbitron',sans-serif;font-size:9px;letter-spacing:0.18em;
@@ -238,16 +560,25 @@
   <!-- Report Player Modal -->
   <div class="rpt-backdrop" id="rptModal" hidden>
     <div class="rpt-box">
-      <div class="rpt-icon">⚑</div>
-      <div class="rpt-title">REPORT PLAYER</div>
-      <div class="rpt-sub">Submit a report for review by our moderation team.</div>
+      <div class="rpt-header">
+        <div class="rpt-icon-wrap">
+          <svg class="rpt-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/>
+            <line x1="4" y1="22" x2="4" y2="15"/>
+          </svg>
+        </div>
+        <div class="rpt-header-text">
+          <div class="rpt-title">REPORT PLAYER</div>
+          <div class="rpt-sub">Submit a report for review by our moderation team.</div>
+        </div>
+      </div>
       <div class="rpt-field">
         <label class="rpt-lbl" for="rptName">PLAYER NAME</label>
-        <input class="rpt-inp" id="rptName" type="text" placeholder="Enter player name…" autocomplete="off">
+        <input class="rpt-inp" id="rptName" type="text" placeholder="Enter player name..." autocomplete="off">
       </div>
       <div class="rpt-field">
         <label class="rpt-lbl" for="rptReason">REASON</label>
-        <textarea class="rpt-area" id="rptReason" placeholder="Describe the reason for this report…"></textarea>
+        <textarea class="rpt-area" id="rptReason" placeholder="Describe the reason for this report..."></textarea>
       </div>
       <div class="rpt-err" id="rptErr"></div>
       <div class="rpt-btns">

@@ -5803,18 +5803,6 @@
   }
 }
 
-/* Nav profile / ranks buttons */
-.ncs-nav-profile-btn:hover {
-  background: rgba(255, 215, 0, 0.1);
-  border-color: rgba(255, 215, 0, 0.3);
-  color: var(--nc-gold);
-}
-.ncs-nav-ranks-btn:hover {
-  background: rgba(255, 0, 102, 0.1);
-  border-color: rgba(255, 0, 102, 0.3);
-  color: var(--nc-pink);
-}
-
 /* ═══════════════════════════════════════════════════════════
    NOTIFICATIONS PAGE
    Futuristic dark design with cyan/orange accent

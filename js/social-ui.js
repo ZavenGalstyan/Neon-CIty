@@ -105,22 +105,6 @@ const SocialUI = (() => {
       notifBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="17" height="17"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><span class="ncs-nav-badge" id="ncsNavNotifBadge" style="display:none">0</span>`;
       notifBtn.onclick = () => openPage('notifications');
 
-      // PROFILE
-      const profileBtn = document.createElement('button');
-      profileBtn.className = 'ncs-nav-icon-btn ncs-nav-profile-btn';
-      profileBtn.id = 'ncsNavProfileBtn';
-      profileBtn.title = 'Profile';
-      profileBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="17" height="17"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`;
-      profileBtn.onclick = () => openPage('profile');
-
-      // RANKS
-      const ranksBtn = document.createElement('button');
-      ranksBtn.className = 'ncs-nav-icon-btn ncs-nav-ranks-btn';
-      ranksBtn.id = 'ncsNavRanksBtn';
-      ranksBtn.title = 'Leaderboard';
-      ranksBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="17" height="17"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>`;
-      ranksBtn.onclick = () => openPage('ranks');
-
       const links = nav.querySelector('.nav-links');
       const acct  = nav.querySelector('.nav-account') || nav.lastElementChild;
       if (links) links.prepend(clanBtn);
@@ -129,9 +113,7 @@ const SocialUI = (() => {
       // Place theme toggle to the left of CLANS
       const themeToggle = document.getElementById('navThemeToggle');
       if (themeToggle && links) links.insertBefore(themeToggle, clanBtn);
-      nav.insertBefore(ranksBtn, acct);
-      nav.insertBefore(profileBtn, ranksBtn);
-      nav.insertBefore(notifBtn, profileBtn);
+      nav.insertBefore(notifBtn, acct);
       nav.insertBefore(friendBtn, notifBtn);
     };
     try_(); setTimeout(try_, 300); setTimeout(try_, 900);
