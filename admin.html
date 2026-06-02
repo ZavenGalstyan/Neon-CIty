@@ -706,6 +706,9 @@
     .rpt-dd__dot--open      { background: var(--adm-red);   box-shadow: 0 0 6px rgba(255,68,102,0.8); }
     .rpt-dd__dot--reviewed  { background: var(--adm-green); box-shadow: 0 0 6px rgba(68,255,136,0.8); }
     .rpt-dd__dot--dismissed { background: rgba(255,255,255,0.25); box-shadow: none; }
+    .rpt-dd__dot--accepted  { background: var(--adm-green); box-shadow: 0 0 6px rgba(68,255,136,0.8); }
+    .rpt-dd__dot--rejected  { background: rgba(255,255,255,0.25); box-shadow: none; }
+    .rpt-dd__dot--fixed     { background: var(--adm-green); box-shadow: 0 0 6px rgba(68,255,136,0.8); }
     .rpt-dd__label {
       flex: 1;
       text-align: left;
@@ -782,12 +785,15 @@
       border-color: rgba(255,68,102,0.2);
       color: var(--adm-red);
     }
-    .rpt-dd__item--reviewed:hover {
+    .rpt-dd__item--reviewed:hover,
+    .rpt-dd__item--accepted:hover,
+    .rpt-dd__item--fixed:hover {
       background: rgba(68,255,136,0.08);
       border-color: rgba(68,255,136,0.2);
       color: var(--adm-green);
     }
-    .rpt-dd__item--dismissed:hover {
+    .rpt-dd__item--dismissed:hover,
+    .rpt-dd__item--rejected:hover {
       background: rgba(255,255,255,0.05);
       border-color: rgba(255,255,255,0.1);
       color: var(--text);
@@ -797,8 +803,16 @@
       background: rgba(255,255,255,0.04);
     }
     .rpt-dd__item--active.rpt-dd__item--open      { background: rgba(255,68,102,0.08);  color: var(--adm-red);   border-color: rgba(255,68,102,0.15); }
-    .rpt-dd__item--active.rpt-dd__item--reviewed  { background: rgba(68,255,136,0.06);  color: var(--adm-green); border-color: rgba(68,255,136,0.15); }
-    .rpt-dd__item--active.rpt-dd__item--dismissed { background: rgba(255,255,255,0.04); color: var(--muted);     border-color: rgba(255,255,255,0.08); }
+    .rpt-dd__item--active.rpt-dd__item--reviewed,
+    .rpt-dd__item--active.rpt-dd__item--accepted,
+    .rpt-dd__item--active.rpt-dd__item--fixed     { background: rgba(68,255,136,0.06);  color: var(--adm-green); border-color: rgba(68,255,136,0.15); }
+    .rpt-dd__item--active.rpt-dd__item--dismissed,
+    .rpt-dd__item--active.rpt-dd__item--rejected  { background: rgba(255,255,255,0.04); color: var(--muted);     border-color: rgba(255,255,255,0.08); }
+
+    /* Filter active states for accepted / fixed / rejected */
+    .rpt-filter-btn[data-status="accepted"].active { background: rgba(68,255,136,0.1); border-color: rgba(68,255,136,0.4); color: var(--adm-green); }
+    .rpt-filter-btn[data-status="fixed"].active    { background: rgba(68,255,136,0.1); border-color: rgba(68,255,136,0.4); color: var(--adm-green); }
+    .rpt-filter-btn[data-status="rejected"].active { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.2); color: var(--muted); }
   </style>
 </head>
 <body class="select-screen admin-page">
@@ -909,6 +923,48 @@
           <div class="adm-spinner"></div>
           LOADING REPORTS…
         </div>
+      </div>
+    </div>
+
+    <!-- Proposals -->
+    <div class="admin-section">
+      <div class="admin-section-head">
+        <div class="admin-section-title" style="--section-color: var(--adm-purple)">
+          <div class="dot" style="background:var(--adm-purple);box-shadow:0 0 8px rgba(204,136,255,0.7)"></div>
+          PLAYER PROPOSALS
+        </div>
+        <div class="admin-section-badge" id="proposalCountBadge" style="border-color:rgba(204,136,255,0.25);background:rgba(204,136,255,0.07);color:var(--adm-purple)">LOADING…</div>
+      </div>
+      <div class="reports-filter-bar">
+        <span class="reports-filter-label">FILTER:</span>
+        <button class="rpt-filter-btn prop-filter active" data-status="">ALL</button>
+        <button class="rpt-filter-btn prop-filter" data-status="open">OPEN</button>
+        <button class="rpt-filter-btn prop-filter" data-status="accepted">ACCEPTED</button>
+        <button class="rpt-filter-btn prop-filter" data-status="rejected">REJECTED</button>
+      </div>
+      <div id="proposalsTableWrap">
+        <div class="admin-loading"><div class="adm-spinner"></div>LOADING PROPOSALS…</div>
+      </div>
+    </div>
+
+    <!-- Problems -->
+    <div class="admin-section">
+      <div class="admin-section-head">
+        <div class="admin-section-title" style="--section-color: var(--adm-gold)">
+          <div class="dot" style="background:var(--adm-gold);box-shadow:0 0 8px rgba(255,215,0,0.7)"></div>
+          BUG REPORTS / PROBLEMS
+        </div>
+        <div class="admin-section-badge" id="problemCountBadge" style="border-color:rgba(255,215,0,0.25);background:rgba(255,215,0,0.07);color:var(--adm-gold)">LOADING…</div>
+      </div>
+      <div class="reports-filter-bar">
+        <span class="reports-filter-label">FILTER:</span>
+        <button class="rpt-filter-btn prob-filter active" data-status="">ALL</button>
+        <button class="rpt-filter-btn prob-filter" data-status="open">OPEN</button>
+        <button class="rpt-filter-btn prob-filter" data-status="fixed">FIXED</button>
+        <button class="rpt-filter-btn prob-filter" data-status="dismissed">DISMISSED</button>
+      </div>
+      <div id="problemsTableWrap">
+        <div class="admin-loading"><div class="adm-spinner"></div>LOADING PROBLEMS…</div>
       </div>
     </div>
 
@@ -1195,8 +1251,19 @@
       { value: 'reviewed',  label: 'REVIEWED'  },
       { value: 'dismissed', label: 'DISMISSED' },
     ];
+    const PROPOSAL_STATUS_OPTIONS = [
+      { value: 'open',     label: 'OPEN'     },
+      { value: 'accepted', label: 'ACCEPTED' },
+      { value: 'rejected', label: 'REJECTED' },
+    ];
+    const PROBLEM_STATUS_OPTIONS = [
+      { value: 'open',      label: 'OPEN'      },
+      { value: 'fixed',     label: 'FIXED'     },
+      { value: 'dismissed', label: 'DISMISSED' },
+    ];
 
-    function _buildStatusDropdown(currentStatus, onSelect) {
+    /* Generic dropdown — pass any options array */
+    function _buildStatusDropdown(currentStatus, onSelect, options = RPT_STATUS_OPTIONS) {
       const wrap = document.createElement('div');
       wrap.className = 'rpt-dd';
 
@@ -1219,7 +1286,7 @@
       panel.className = 'rpt-dd__panel';
       panel.hidden = true;
 
-      RPT_STATUS_OPTIONS.forEach(opt => {
+      options.forEach(opt => {
         const item = document.createElement('button');
         item.type = 'button';
         item.className = `rpt-dd__item rpt-dd__item--${opt.value}${opt.value === currentStatus ? ' rpt-dd__item--active' : ''}`;
@@ -1240,7 +1307,6 @@
       wrap.appendChild(trigger);
       wrap.appendChild(panel);
 
-      /* State helpers */
       wrap._value = currentStatus;
 
       function openDropdown() {
@@ -1261,14 +1327,10 @@
         else openDropdown();
       });
 
-      /* Close on outside click */
-      document.addEventListener('click', function handler(e) {
-        if (!wrap.contains(e.target)) {
-          closeDropdown();
-        }
+      document.addEventListener('click', (e) => {
+        if (!wrap.contains(e.target)) closeDropdown();
       });
 
-      /* Update trigger appearance */
       wrap._setValue = (val) => {
         wrap._value = val;
         dot.className   = `rpt-dd__dot rpt-dd__dot--${val}`;
@@ -1398,13 +1460,203 @@
       }
     }
 
-    /* Filter button wiring */
-    document.querySelectorAll('.rpt-filter-btn').forEach(btn => {
+    /* Report filter wiring */
+    document.querySelectorAll('.rpt-filter-btn:not(.prop-filter):not(.prob-filter)').forEach(btn => {
       btn.addEventListener('click', () => {
-        document.querySelectorAll('.rpt-filter-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.rpt-filter-btn:not(.prop-filter):not(.prob-filter)').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         _currentReportStatus = btn.dataset.status;
         loadReports(_currentReportStatus);
+      });
+    });
+
+    /* ── Shared status badge renderer ─────────────────────── */
+    function _submissionBadge(status) {
+      const map = {
+        open:      ['rpt-status-badge--open',     'OPEN'],
+        accepted:  ['rpt-status-badge--reviewed',  'ACCEPTED'],
+        rejected:  ['rpt-status-badge--dismissed', 'REJECTED'],
+        fixed:     ['rpt-status-badge--reviewed',  'FIXED'],
+        dismissed: ['rpt-status-badge--dismissed', 'DISMISSED'],
+      };
+      const [cls, lbl] = map[status] || ['rpt-status-badge--open', status.toUpperCase()];
+      return `<span class="rpt-status-badge ${cls}">${lbl}</span>`;
+    }
+
+    /* ── Generic submission table builder ─────────────────── */
+    function _buildSubmissionTable(items, statusOptions, onStatusChange, onDelete) {
+      const tableWrap = document.createElement('div');
+      tableWrap.className = 'admin-table-wrap';
+
+      const table = document.createElement('table');
+      table.className = 'admin-table';
+      table.innerHTML = `
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>PLAYER</th>
+            <th>TITLE</th>
+            <th>DESCRIPTION</th>
+            <th>STATUS</th>
+            <th>DATE</th>
+            <th>CHANGE STATUS</th>
+            <th>DELETE</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      `;
+
+      const tbody = table.querySelector('tbody');
+      items.forEach((item, i) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td style="color:var(--muted);font-size:12px">${i + 1}</td>
+          <td>
+            <div class="user-name-cell">
+              <div class="user-avatar">${(_esc(item.submitterName || '?')).charAt(0).toUpperCase()}</div>
+              <span style="font-weight:600">${_esc(item.submitterName || '—')}</span>
+            </div>
+          </td>
+          <td style="max-width:200px;font-weight:600">${_esc(item.title)}</td>
+          <td>
+            <span class="rpt-reason-text" title="${_esc(item.description)}" style="max-width:260px">
+              ${_esc(item.description)}
+            </span>
+          </td>
+          <td class="sub-status-cell">${_submissionBadge(item.status)}</td>
+          <td><span class="user-date-text">${fmtDate(item.createdAt)}</span></td>
+          <td></td>
+          <td></td>
+        `;
+
+        /* Status dropdown */
+        const ddCell  = tr.querySelectorAll('td')[6];
+        const dd = _buildStatusDropdown(item.status, async (newStatus, ddEl) => {
+          ddEl._setLoading(true);
+          try {
+            await onStatusChange(item._id, newStatus);
+            tr.querySelector('.sub-status-cell').innerHTML = _submissionBadge(newStatus);
+            item.status = newStatus;
+            ddEl._setValue(newStatus);
+            showToast(`Status updated to ${newStatus}`, 'success');
+          } catch (err) {
+            showToast(`Error: ${err.message}`, 'error');
+          } finally {
+            ddEl._setLoading(false);
+          }
+        }, statusOptions);
+        ddCell.appendChild(dd);
+
+        /* Delete button */
+        const delCell = tr.querySelectorAll('td')[7];
+        const delBtn  = document.createElement('button');
+        delBtn.className = 'btn-delete';
+        delBtn.innerHTML = '✕ DELETE';
+        delBtn.addEventListener('click', async () => {
+          if (!confirm(`Delete "${item.title}"?`)) return;
+          delBtn.disabled = true;
+          delBtn.innerHTML = '<div class="adm-spinner" style="width:14px;height:14px;border-width:2px"></div>';
+          try {
+            await onDelete(item._id);
+            tr.style.transition = 'opacity 0.35s,transform 0.35s';
+            tr.style.opacity = '0';
+            tr.style.transform = 'translateX(16px)';
+            setTimeout(() => tr.remove(), 380);
+            showToast('Deleted', 'success');
+          } catch (err) {
+            delBtn.disabled = false;
+            delBtn.innerHTML = '✕ DELETE';
+            showToast(`Error: ${err.message}`, 'error');
+          }
+        });
+        delCell.appendChild(delBtn);
+
+        tbody.appendChild(tr);
+      });
+
+      tableWrap.appendChild(table);
+      return tableWrap;
+    }
+
+    /* ── Load proposals ──────────────────────────────────── */
+    let _currentPropStatus = '';
+
+    async function loadProposals(status = '') {
+      const wrap = document.getElementById('proposalsTableWrap');
+      wrap.innerHTML = '<div class="admin-loading"><div class="adm-spinner"></div>LOADING PROPOSALS…</div>';
+      try {
+        const d = await API.getProposals({ status: status || undefined, limit: 100 });
+        const items = d.proposals || [];
+        const total = d.total ?? items.length;
+
+        const badge = document.getElementById('proposalCountBadge');
+        badge.textContent = `${total} PROPOSAL${total !== 1 ? 'S' : ''}`;
+
+        if (items.length === 0) {
+          wrap.innerHTML = '<div class="admin-empty">NO PROPOSALS FOUND</div>';
+          return;
+        }
+
+        wrap.innerHTML = '';
+        wrap.appendChild(_buildSubmissionTable(
+          items,
+          PROPOSAL_STATUS_OPTIONS,
+          (id, st) => API.updateProposalStatus(id, st),
+          (id)     => API.deleteProposal(id)
+        ));
+      } catch (err) {
+        wrap.innerHTML = `<div class="admin-error">Failed to load proposals: ${_esc(err.message)}</div>`;
+        document.getElementById('proposalCountBadge').textContent = 'ERROR';
+      }
+    }
+
+    document.querySelectorAll('.prop-filter').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.prop-filter').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        _currentPropStatus = btn.dataset.status;
+        loadProposals(_currentPropStatus);
+      });
+    });
+
+    /* ── Load problems ───────────────────────────────────── */
+    let _currentProbStatus = '';
+
+    async function loadProblems(status = '') {
+      const wrap = document.getElementById('problemsTableWrap');
+      wrap.innerHTML = '<div class="admin-loading"><div class="adm-spinner"></div>LOADING PROBLEMS…</div>';
+      try {
+        const d = await API.getProblems({ status: status || undefined, limit: 100 });
+        const items = d.problems || [];
+        const total = d.total ?? items.length;
+
+        const badge = document.getElementById('problemCountBadge');
+        badge.textContent = `${total} PROBLEM${total !== 1 ? 'S' : ''}`;
+
+        if (items.length === 0) {
+          wrap.innerHTML = '<div class="admin-empty">NO PROBLEMS FOUND</div>';
+          return;
+        }
+
+        wrap.innerHTML = '';
+        wrap.appendChild(_buildSubmissionTable(
+          items,
+          PROBLEM_STATUS_OPTIONS,
+          (id, st) => API.updateProblemStatus(id, st),
+          (id)     => API.deleteProblem(id)
+        ));
+      } catch (err) {
+        wrap.innerHTML = `<div class="admin-error">Failed to load problems: ${_esc(err.message)}</div>`;
+        document.getElementById('problemCountBadge').textContent = 'ERROR';
+      }
+    }
+
+    document.querySelectorAll('.prob-filter').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.prob-filter').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        _currentProbStatus = btn.dataset.status;
+        loadProblems(_currentProbStatus);
       });
     });
 
@@ -1413,6 +1665,8 @@
     loadUsers();
     loadClans();
     loadReports();
+    loadProposals();
+    loadProblems();
   </script>
 </body>
 </html>
