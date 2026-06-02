@@ -2766,6 +2766,12 @@
         return;
       }
       _myName = (Auth.getSession()?.name || 'PLAYER').toUpperCase();
+
+      // Lock body scroll (prevent background scrolling)
+      const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+      document.documentElement.style.setProperty('--scrollbar-width', scrollbarWidth + 'px');
+      document.body.classList.add('mp-modal-open');
+
       document.getElementById('mpOverlay').style.display = 'flex';
       // Read current selections from select.js state via localStorage
       try {
@@ -2779,6 +2785,9 @@
 
     function close() {
       document.getElementById('mpOverlay').style.display = 'none';
+      // Unlock body scroll
+      document.body.classList.remove('mp-modal-open');
+      document.documentElement.style.removeProperty('--scrollbar-width');
     }
 
     function switchTab(tab) {
@@ -2792,49 +2801,163 @@
 
     /* ── CREATE TAB ─────────────────────────────── */
     function _renderCreate() {
-      const mapOpts = MAPS.map(m =>
-        `<option value="${m}" ${m === _mapId ? 'selected' : ''}>${m.replace(/_/g,' ').toUpperCase()}</option>`
+      const selectedMapLabel = _mapId.replace(/_/g,' ').toUpperCase();
+      const mapItems = MAPS.map(m =>
+        `<button class="mp-dropdown__item ${m === _mapId ? 'selected' : ''}" data-value="${m}">${m.replace(/_/g,' ').toUpperCase()}</button>`
       ).join('');
+
+      const playerOptions = [
+        { value: '2', label: '2 PLAYERS' },
+        { value: '3', label: '3 PLAYERS' },
+        { value: '4', label: '4 PLAYERS' },
+        { value: '5', label: '5 PLAYERS' },
+        { value: '6', label: '6 PLAYERS' },
+        { value: '8', label: '8 PLAYERS' }
+      ];
+      const playerItems = playerOptions.map(opt =>
+        `<button class="mp-dropdown__item ${opt.value === '4' ? 'selected' : ''}" data-value="${opt.value}">${opt.label}</button>`
+      ).join('');
+
       document.getElementById('mpBody').innerHTML = `
         <div id="mpToast"></div>
+        <div class="mp-section-title" style="font-family:'Orbitron',monospace;font-size:11px;color:rgba(68,238,255,0.6);letter-spacing:0.12em;margin-bottom:20px;display:flex;align-items:center;gap:10px;">
+          <span style="width:6px;height:6px;background:#44EEFF;border-radius:50%;box-shadow:0 0 8px #44EEFF;"></span>
+          ROOM SETTINGS
+        </div>
         <div class="mp-form-row">
           <div class="mp-form-col">
             <label class="mp-label">MAP</label>
-            <select class="mp-select" id="mpMapSel">${mapOpts}</select>
+            <div class="mp-dropdown" id="mpMapDropdown">
+              <div class="mp-dropdown__trigger" tabindex="0">
+                <span class="mp-dropdown__selected">${selectedMapLabel}</span>
+                <svg class="mp-dropdown__arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+              </div>
+              <div class="mp-dropdown__panel">${mapItems}</div>
+              <input type="hidden" id="mpMapSel" value="${_mapId}">
+            </div>
           </div>
           <div class="mp-form-col">
             <label class="mp-label">MAX PLAYERS</label>
-            <select class="mp-select" id="mpMaxSel">
-              <option value="2">2</option>
-              <option value="3">3</option>
-              <option value="4" selected>4</option>
-            </select>
+            <div class="mp-dropdown" id="mpMaxDropdown">
+              <div class="mp-dropdown__trigger" tabindex="0">
+                <span class="mp-dropdown__selected">4 PLAYERS</span>
+                <svg class="mp-dropdown__arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+              </div>
+              <div class="mp-dropdown__panel">${playerItems}</div>
+              <input type="hidden" id="mpMaxSel" value="4">
+            </div>
           </div>
         </div>
-        <div style="margin-top:8px;display:flex;gap:12px;flex-wrap:wrap;">
-          <button class="mp-btn mp-btn-primary" onclick="MPLobby.doCreate()">CREATE ROOM</button>
+        <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center;">
+          <button class="mp-btn mp-btn-primary" onclick="MPLobby.doCreate()">
+            <span style="margin-right:8px;">◈</span> CREATE ROOM
+          </button>
         </div>
-        <p class="mp-status-msg">Create a room, share the Room ID with friends, and start when ready.</p>
+        <p class="mp-status-msg" style="margin-top:28px;padding-bottom:10px;">Create a room, share the Room ID with friends, and start when ready.</p>
       `;
+
+      // Initialize custom dropdowns
+      _initDropdown('mpMapDropdown', 'mpMapSel');
+      _initDropdown('mpMaxDropdown', 'mpMaxSel');
     }
+
+    /* ── Custom Dropdown Logic ─────────────────── */
+    function _initDropdown(dropdownId, hiddenInputId) {
+      const dropdown = document.getElementById(dropdownId);
+      if (!dropdown) return;
+
+      const trigger = dropdown.querySelector('.mp-dropdown__trigger');
+      const panel = dropdown.querySelector('.mp-dropdown__panel');
+      const selected = dropdown.querySelector('.mp-dropdown__selected');
+      const hidden = document.getElementById(hiddenInputId);
+      const items = panel.querySelectorAll('.mp-dropdown__item');
+
+      // Toggle dropdown
+      trigger.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isOpen = dropdown.classList.contains('open');
+        const mpBody = document.getElementById('mpBody');
+        // Close all other dropdowns
+        document.querySelectorAll('.mp-dropdown.open').forEach(d => d.classList.remove('open'));
+        if (!isOpen) {
+          dropdown.classList.add('open');
+          if (mpBody) mpBody.classList.add('dropdown-open');
+        } else {
+          if (mpBody) mpBody.classList.remove('dropdown-open');
+        }
+      });
+
+      // Select item
+      items.forEach(item => {
+        item.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const value = item.dataset.value;
+          const label = item.textContent;
+
+          // Update selected state
+          items.forEach(i => i.classList.remove('selected'));
+          item.classList.add('selected');
+
+          // Update display and hidden input
+          selected.textContent = label;
+          hidden.value = value;
+
+          // Close dropdown
+          dropdown.classList.remove('open');
+          const mpBody = document.getElementById('mpBody');
+          if (mpBody && !document.querySelector('.mp-dropdown.open')) {
+            mpBody.classList.remove('dropdown-open');
+          }
+        });
+      });
+
+      // Keyboard navigation
+      trigger.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          trigger.click();
+        } else if (e.key === 'Escape') {
+          dropdown.classList.remove('open');
+          const mpBody = document.getElementById('mpBody');
+          if (mpBody) mpBody.classList.remove('dropdown-open');
+        }
+      });
+    }
+
+    // Close dropdowns on outside click
+    document.addEventListener('click', () => {
+      document.querySelectorAll('.mp-dropdown.open').forEach(d => d.classList.remove('open'));
+      const mpBody = document.getElementById('mpBody');
+      if (mpBody) mpBody.classList.remove('dropdown-open');
+    });
 
     /* ── BROWSE TAB ─────────────────────────────── */
     async function _renderBrowse() {
       document.getElementById('mpBody').innerHTML = `
         <div class="mp-list-header">
           <span class="mp-list-title">OPEN ROOMS</span>
-          <button class="mp-btn mp-btn-ghost" style="padding:6px 14px;font-size:10px" onclick="MPLobby.switchTab('browse')">↻ REFRESH</button>
+          <button class="mp-btn mp-btn-ghost" style="padding:10px 18px;font-size:10px" onclick="MPLobby.switchTab('browse')">
+            <span style="margin-right:6px;">↻</span> REFRESH
+          </button>
         </div>
-        <div id="mpRoomList"><div class="mp-empty">Loading rooms…</div></div>
+        <div id="mpRoomList"><div class="mp-empty" style="padding:60px 30px;">Scanning for rooms…</div></div>
       `;
       try {
         const rooms = await Multiplayer.listRooms();
         const el = document.getElementById('mpRoomList');
-        if (!rooms.length) { el.innerHTML = '<div class="mp-empty">No open rooms right now. Create one!</div>'; return; }
+        if (!rooms.length) {
+          el.innerHTML = `
+            <div class="mp-empty" style="padding:60px 30px;">
+              <div style="font-size:15px;margin-top:12px;font-family:'Rajdhani',sans-serif;">No open rooms right now</div>
+              <div style="font-size:13px;margin-top:8px;opacity:0.6;">Create one to get started!</div>
+            </div>
+          `;
+          return;
+        }
         el.innerHTML = rooms.map(r => `
           <div class="mp-room-item">
             <div class="mp-room-map">${r.mapId.replace(/_/g,' ').toUpperCase()}</div>
-            <div class="mp-room-host">by ${r.hostName || '?'}</div>
+            <div class="mp-room-host">hosted by <strong>${r.hostName || 'Unknown'}</strong></div>
             <div class="mp-room-count">${r.playerCount}/${r.maxPlayers}</div>
             <button class="mp-btn mp-btn-primary mp-room-join" onclick="MPLobby.doJoin('${r.roomId}')">JOIN</button>
           </div>
@@ -2849,20 +2972,31 @@
       if (!_room) { switchTab('create'); return; }
       document.getElementById('mpWaitingTab').style.display = '';
       const me = Auth.getSession()?.name || '';
-      const playersHtml = (_room.players || []).map(p => `
-        <div class="mp-player-row ${p.username === me ? 'is-you' : ''} ${p.userId === _room.hostId ? 'is-host' : ''}">
-          <div class="mp-player-name">${p.username}${p.username === me ? ' (you)' : ''}</div>
-          <div class="mp-player-char">${(p.charId || '').toUpperCase()}</div>
-          <span class="mp-player-ready">${_readySet.has(p.userId) ? '✅' : '⏳'}</span>
-        </div>
-      `).join('');
+      const charData = CONFIG.CHARACTERS || [];
+      const playersHtml = (_room.players || []).map(p => {
+        const char = charData.find(c => c.id === p.charId);
+        const charName = char ? char.name : (p.charId || 'UNKNOWN').toUpperCase();
+        const charColor = char ? char.color : '#888';
+        return `
+          <div class="mp-player-row ${p.username === me ? 'is-you' : ''} ${p.userId === _room.hostId ? 'is-host' : ''}">
+            <div class="mp-player-name">${p.username}${p.username === me ? ' (you)' : ''}</div>
+            <div class="mp-player-char" style="display:flex;align-items:center;gap:8px;">
+              <span>${charName}</span>
+              <span style="width:10px;height:10px;background:${charColor};border-radius:50%;box-shadow:0 0 6px ${charColor};"></span>
+            </div>
+            <span class="mp-player-ready">${_readySet.has(p.userId) ? '✅' : '⏳'}</span>
+          </div>
+        `;
+      }).join('');
       document.getElementById('mpBody').innerHTML = `
         <div class="mp-waiting-title">ROOM · ${_room.mapId.replace(/_/g,' ').toUpperCase()}</div>
-        <div class="mp-room-id">ROOM ID: ${_room.roomId}</div>
+        <div class="mp-room-id" style="cursor:pointer;" onclick="navigator.clipboard.writeText('${_room.roomId}');this.innerHTML='ROOM ID: COPIED! ✓';setTimeout(()=>this.innerHTML='ROOM ID: ${_room.roomId}',1500);" title="Click to copy">
+          ROOM ID: ${_room.roomId}
+        </div>
         <div class="mp-player-list" id="mpPlayerList">${playersHtml}</div>
         <div class="mp-waiting-actions">
-          ${_isHost ? `<button class="mp-btn mp-btn-green" id="mpStartBtn" onclick="MPLobby.doStart()">▶ START GAME</button>` : ''}
-          <button class="mp-btn mp-btn-ghost" onclick="MPLobby.doReady()" id="mpReadyBtn">✔ READY</button>
+          ${_isHost ? `<button class="mp-btn mp-btn-green" id="mpStartBtn" onclick="MPLobby.doStart()"><span style="margin-right:8px;">▶</span> START GAME</button>` : ''}
+          <button class="mp-btn mp-btn-ghost" onclick="MPLobby.doReady()" id="mpReadyBtn"><span style="margin-right:6px;">✓</span> READY</button>
           <button class="mp-btn mp-btn-danger" onclick="MPLobby.doLeave()">LEAVE ROOM</button>
         </div>
         <p class="mp-status-msg" id="mpStatusMsg">Waiting for players…</p>
