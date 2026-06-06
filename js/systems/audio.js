@@ -443,6 +443,30 @@ class AudioManager {
     });
   }
 
+  /** Enemy shoots — quieter version of gun, separate throttle so it plays alongside player shots */
+  enemyShoot() {
+    this._play('enemyShoot', 90, (ctx, out, t) => {
+      const nSrc  = ctx.createBufferSource();
+      const nFilt = ctx.createBiquadFilter();
+      const nGain = ctx.createGain();
+      nSrc.buffer = this._noiseBuffer(ctx, 0.07);
+      nFilt.type  = 'highpass'; nFilt.frequency.value = 1600;
+      nGain.gain.setValueAtTime(0.10, t);
+      nGain.gain.exponentialRampToValueAtTime(0.001, t + 0.07);
+      nSrc.connect(nFilt); nFilt.connect(nGain); nGain.connect(out);
+      nSrc.start(t); nSrc.stop(t + 0.09);
+
+      const osc  = ctx.createOscillator();
+      const oGain = ctx.createGain();
+      osc.frequency.setValueAtTime(160, t);
+      osc.frequency.exponentialRampToValueAtTime(35, t + 0.08);
+      oGain.gain.setValueAtTime(0.13, t);
+      oGain.gain.exponentialRampToValueAtTime(0.001, t + 0.10);
+      osc.connect(oGain); oGain.connect(out);
+      osc.start(t); osc.stop(t + 0.10);
+    });
+  }
+
   /** Player hit by enemy bullet — short sharp pain sting */
   playerHit() {
     this._play('playerHit', 120, (ctx, out, t) => {

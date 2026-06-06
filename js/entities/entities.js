@@ -708,12 +708,17 @@ class Bullet {
       ctx.arc(t.x, t.y, this.radius * 0.5, 0, Math.PI * 2);
       ctx.fill();
     }
-    // Core bullet — flat fill, no shadowBlur, no radialGradient
+    // Core bullet
     ctx.globalAlpha = 1;
+    if (!this.isPlayer) {
+      ctx.shadowBlur  = 14;
+      ctx.shadowColor = this.color;
+    }
     ctx.fillStyle = this.color;
     ctx.beginPath(); ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = '#ffffff';
     ctx.beginPath(); ctx.arc(this.x, this.y, this.radius * 0.42, 0, Math.PI * 2); ctx.fill();
+    if (!this.isPlayer) ctx.shadowBlur = 0;
   }
 }
 
@@ -4065,6 +4070,8 @@ class Bot {
     const bx    = this.x + Math.cos(this._angle) * go;
     const by    = this.y + Math.sin(this._angle) * go;
 
+    window.audio?.enemyShoot();
+
     if (cfg.isBomber) {
       // Bomber throws a slow AOE explosive blob
       const bull = new Bullet(bx, by, this._angle, cfg.bulletSpeed, this.damage, false, cfg.bulletColor);
@@ -7379,6 +7386,7 @@ class BossBot {
   }
 
   _shoot(bullets, particles) {
+    window.audio?.enemyShoot();
     const go = this.radius + 10;
     const bx = this.x + Math.cos(this._angle) * go;
     const by = this.y + Math.sin(this._angle) * go;
