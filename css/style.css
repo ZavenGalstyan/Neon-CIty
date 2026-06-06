@@ -4016,14 +4016,18 @@ body {
   left: 10px;
   background: #44ff88;
   color: #000;
-  font:
-    bold 8px "Orbitron",
-    monospace;
-  padding: 2px 7px;
+  font: bold 8px "Orbitron", monospace;
+  padding: 3px 8px;
   border-radius: 4px;
   letter-spacing: 0.08em;
   z-index: 5;
   box-shadow: 0 0 10px rgba(68, 255, 136, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+.map-card:hover .experimental-badge {
+  box-shadow: 0 0 18px currentColor;
+  transform: scale(1.03);
 }
 
 /* ════════════════════════════════════════════════════════════
