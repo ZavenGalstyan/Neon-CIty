@@ -3299,7 +3299,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 24px;
+  gap: 40px; /* Increased gap for balanced PREV/NEXT spacing without dots */
   padding: 20px 24px;
   position: fixed;
   bottom: 0;
@@ -3347,9 +3347,7 @@ body {
   pointer-events: none;
 }
 .step-dots {
-  display: flex;
-  gap: 10px;
-  align-items: center;
+  display: none; /* Hidden - only PREV/NEXT buttons shown */
 }
 .step-dot {
   width: 8px;
@@ -5423,7 +5421,7 @@ body {
 
   /* Step nav */
   .step-nav {
-    gap: 16px;
+    gap: 32px; /* Balanced spacing for PREV/NEXT without dots */
     padding: 10px 16px;
   }
   .step-nav-btn {
@@ -9776,14 +9774,14 @@ html[data-theme="light"] .nav-mobile-theme-toggle .toggle-switch::after {
 
   /* Step navigation */
   .step-nav {
-    gap: 10px;
+    gap: 28px; /* Balanced spacing for PREV/NEXT without dots */
   }
   .step-nav-btn {
     font-size: 9px;
     padding: 8px 12px;
   }
   .step-dots {
-    gap: 7px;
+    display: none; /* Hidden on mobile too */
   }
   .step-dot {
     width: 7px;
