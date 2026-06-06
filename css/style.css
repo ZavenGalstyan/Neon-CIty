@@ -2700,6 +2700,239 @@ body {
 .map-card.selected .map-tag {
   opacity: 1;
 }
+
+/* ── Per-Map Themed Tags ─────────────────────────────────────
+   Each map's tags inherit its visual identity
+   ────────────────────────────────────────────────────────────── */
+
+/* Neon City - cyan / electric blue */
+.map-card[data-map="neon_city"] .map-tag {
+  color: var(--neon-theme-color, #44EEFF);
+  border-color: var(--neon-theme-color, rgba(68,238,255,0.6));
+}
+.map-card[data-map="neon_city"]:hover .map-tag,
+.map-card[data-map="neon_city"].selected .map-tag {
+  color: var(--neon-theme-color, #66F4FF);
+  border-color: var(--neon-theme-color, rgba(68,238,255,0.85));
+  text-shadow: 0 0 6px var(--neon-theme-glow, rgba(68,238,255,0.5));
+}
+
+/* Galactica - cosmic purple */
+.map-card[data-map="galactica"] .map-tag {
+  color: #BB77FF;
+  border-color: rgba(180,100,255,0.55);
+}
+.map-card[data-map="galactica"]:hover .map-tag,
+.map-card[data-map="galactica"].selected .map-tag {
+  color: #CC99FF;
+  border-color: rgba(180,100,255,0.8);
+  text-shadow: 0 0 6px rgba(180,100,255,0.5);
+}
+
+/* The Tower - gold / amber */
+.map-card[data-map="tower"] .map-tag {
+  color: #FFCC44;
+  border-color: rgba(255,200,60,0.55);
+}
+.map-card[data-map="tower"]:hover .map-tag,
+.map-card[data-map="tower"].selected .map-tag {
+  color: #FFDD66;
+  border-color: rgba(255,200,60,0.8);
+  text-shadow: 0 0 6px rgba(255,200,60,0.5);
+}
+
+/* Sky Realm - sky blue */
+.map-card[data-map="sky_realm"] .map-tag {
+  color: #88CCFF;
+  border-color: rgba(135,200,255,0.55);
+}
+.map-card[data-map="sky_realm"]:hover .map-tag,
+.map-card[data-map="sky_realm"].selected .map-tag {
+  color: #AADDFF;
+  border-color: rgba(135,200,255,0.8);
+  text-shadow: 0 0 6px rgba(135,200,255,0.5);
+}
+
+/* Arena - combat red */
+.map-card[data-map="arena"] .map-tag {
+  color: #FF5577;
+  border-color: rgba(255,70,100,0.55);
+}
+.map-card[data-map="arena"]:hover .map-tag,
+.map-card[data-map="arena"].selected .map-tag {
+  color: #FF7799;
+  border-color: rgba(255,70,100,0.8);
+  text-shadow: 0 0 6px rgba(255,70,100,0.5);
+}
+
+/* Zombie Outbreak - toxic green */
+.map-card[data-map="zombie"] .map-tag {
+  color: #66FF99;
+  border-color: rgba(80,255,130,0.55);
+}
+.map-card[data-map="zombie"]:hover .map-tag,
+.map-card[data-map="zombie"].selected .map-tag {
+  color: #88FFBB;
+  border-color: rgba(80,255,130,0.8);
+  text-shadow: 0 0 6px rgba(80,255,130,0.5);
+}
+
+/* Dino World - prehistoric green */
+.map-card[data-map="dino_world"] .map-tag {
+  color: #99CC66;
+  border-color: rgba(140,190,90,0.55);
+}
+.map-card[data-map="dino_world"]:hover .map-tag,
+.map-card[data-map="dino_world"].selected .map-tag {
+  color: #BBDD88;
+  border-color: rgba(140,190,90,0.8);
+  text-shadow: 0 0 6px rgba(140,190,90,0.5);
+}
+
+/* Wasteland - rust orange */
+.map-card[data-map="wasteland"] .map-tag {
+  color: var(--wasteland-theme-color, #FF8844);
+  border-color: var(--wasteland-theme-color, rgba(255,130,60,0.55));
+}
+.map-card[data-map="wasteland"]:hover .map-tag,
+.map-card[data-map="wasteland"].selected .map-tag {
+  color: var(--wasteland-theme-color, #FFAA66);
+  border-color: var(--wasteland-theme-color, rgba(255,130,60,0.8));
+  text-shadow: 0 0 6px var(--wasteland-theme-glow, rgba(255,130,60,0.5));
+}
+
+/* Blitz - electric orange */
+.map-card[data-map="blitz"] .map-tag {
+  color: #FFAA33;
+  border-color: rgba(255,160,40,0.55);
+}
+.map-card[data-map="blitz"]:hover .map-tag,
+.map-card[data-map="blitz"].selected .map-tag {
+  color: #FFCC55;
+  border-color: rgba(255,160,40,0.8);
+  text-shadow: 0 0 6px rgba(255,160,40,0.5);
+}
+
+/* Frozen Tundra - ice blue */
+.map-card[data-map="frozen_tundra"] .map-tag {
+  color: #AADDFF;
+  border-color: rgba(170,220,255,0.55);
+}
+.map-card[data-map="frozen_tundra"]:hover .map-tag,
+.map-card[data-map="frozen_tundra"].selected .map-tag {
+  color: #CCEEFF;
+  border-color: rgba(170,220,255,0.8);
+  text-shadow: 0 0 6px rgba(170,220,255,0.5);
+}
+
+/* Ocean Depths - ocean cyan */
+.map-card[data-map="ocean_depths"] .map-tag {
+  color: #44CCEE;
+  border-color: rgba(60,190,230,0.55);
+}
+.map-card[data-map="ocean_depths"]:hover .map-tag,
+.map-card[data-map="ocean_depths"].selected .map-tag {
+  color: #66DDFF;
+  border-color: rgba(60,190,230,0.8);
+  text-shadow: 0 0 6px rgba(60,190,230,0.5);
+}
+
+/* Metropolis - warm amber */
+.map-card[data-map="metropolis"] .map-tag {
+  color: #FFBB66;
+  border-color: rgba(255,185,90,0.55);
+}
+.map-card[data-map="metropolis"]:hover .map-tag,
+.map-card[data-map="metropolis"].selected .map-tag {
+  color: #FFDD88;
+  border-color: rgba(255,185,90,0.8);
+  text-shadow: 0 0 6px rgba(255,185,90,0.5);
+}
+
+/* Jungle Safari - jungle green */
+.map-card[data-map="jungle"] .map-tag {
+  color: #66CC44;
+  border-color: rgba(90,190,60,0.55);
+}
+.map-card[data-map="jungle"]:hover .map-tag,
+.map-card[data-map="jungle"].selected .map-tag {
+  color: #88DD66;
+  border-color: rgba(90,190,60,0.8);
+  text-shadow: 0 0 6px rgba(90,190,60,0.5);
+}
+
+/* Desert Sands - golden sand */
+.map-card[data-map="desert_sands"] .map-tag {
+  color: #DDBB55;
+  border-color: rgba(220,185,80,0.55);
+}
+.map-card[data-map="desert_sands"]:hover .map-tag,
+.map-card[data-map="desert_sands"].selected .map-tag {
+  color: #EECC77;
+  border-color: rgba(220,185,80,0.8);
+  text-shadow: 0 0 6px rgba(220,185,80,0.5);
+}
+
+/* Robot City - tech cyan */
+.map-card[data-map="robot_city"] .map-tag {
+  color: #44DDFF;
+  border-color: rgba(60,220,255,0.55);
+}
+.map-card[data-map="robot_city"]:hover .map-tag,
+.map-card[data-map="robot_city"].selected .map-tag {
+  color: #66EEFF;
+  border-color: rgba(60,220,255,0.8);
+  text-shadow: 0 0 6px rgba(60,220,255,0.5);
+}
+
+/* Hardcore - dark red/crimson */
+.map-card[data-map="hardcore"] .map-tag {
+  color: #EE6655;
+  border-color: rgba(220,90,75,0.55);
+}
+.map-card[data-map="hardcore"]:hover .map-tag,
+.map-card[data-map="hardcore"].selected .map-tag {
+  color: #FF8877;
+  border-color: rgba(220,90,75,0.8);
+  text-shadow: 0 0 6px rgba(220,90,75,0.5);
+}
+
+/* Campaign - royal gold / amber */
+.map-card[data-map="campaign"] .map-tag {
+  color: #DDAA44;
+  border-color: rgba(220,165,60,0.55);
+}
+.map-card[data-map="campaign"]:hover .map-tag,
+.map-card[data-map="campaign"].selected .map-tag {
+  color: #EECC66;
+  border-color: rgba(220,165,60,0.8);
+  text-shadow: 0 0 6px rgba(220,165,60,0.5);
+}
+
+/* Life Mode - soft cyan */
+.map-card--life .map-tag {
+  color: #77DDFF;
+  border-color: rgba(120,220,255,0.55);
+}
+.map-card--life:hover .map-tag,
+.map-card--life.selected .map-tag {
+  color: #99EEFF;
+  border-color: rgba(120,220,255,0.8);
+  text-shadow: 0 0 6px rgba(120,220,255,0.5);
+}
+
+/* Experimental maps (fallback green) */
+.map-card--experimental .map-tag {
+  color: #66FF99;
+  border-color: rgba(80,255,140,0.55);
+}
+.map-card--experimental:hover .map-tag,
+.map-card--experimental.selected .map-tag {
+  color: #88FFBB;
+  border-color: rgba(80,255,140,0.8);
+  text-shadow: 0 0 6px rgba(80,255,140,0.5);
+}
+
 .map-desc-inline {
   display: -webkit-box;
   -webkit-line-clamp: 1;
@@ -3066,7 +3299,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 24px;
+  gap: 40px; /* Increased gap for balanced PREV/NEXT spacing without dots */
   padding: 20px 24px;
   position: fixed;
   bottom: 0;
@@ -3114,9 +3347,7 @@ body {
   pointer-events: none;
 }
 .step-dots {
-  display: flex;
-  gap: 10px;
-  align-items: center;
+  display: none; /* Hidden - only PREV/NEXT buttons shown */
 }
 .step-dot {
   width: 8px;
@@ -3785,14 +4016,18 @@ body {
   left: 10px;
   background: #44ff88;
   color: #000;
-  font:
-    bold 8px "Orbitron",
-    monospace;
-  padding: 2px 7px;
+  font: bold 8px "Orbitron", monospace;
+  padding: 3px 8px;
   border-radius: 4px;
   letter-spacing: 0.08em;
   z-index: 5;
   box-shadow: 0 0 10px rgba(68, 255, 136, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+.map-card:hover .experimental-badge {
+  box-shadow: 0 0 18px currentColor;
+  transform: scale(1.03);
 }
 
 /* ════════════════════════════════════════════════════════════
@@ -5190,7 +5425,7 @@ body {
 
   /* Step nav */
   .step-nav {
-    gap: 16px;
+    gap: 32px; /* Balanced spacing for PREV/NEXT without dots */
     padding: 10px 16px;
   }
   .step-nav-btn {
@@ -9543,14 +9778,14 @@ html[data-theme="light"] .nav-mobile-theme-toggle .toggle-switch::after {
 
   /* Step navigation */
   .step-nav {
-    gap: 10px;
+    gap: 28px; /* Balanced spacing for PREV/NEXT without dots */
   }
   .step-nav-btn {
     font-size: 9px;
     padding: 8px 12px;
   }
   .step-dots {
-    gap: 7px;
+    display: none; /* Hidden on mobile too */
   }
   .step-dot {
     width: 7px;

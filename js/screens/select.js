@@ -34,6 +34,22 @@
 
   const charCards    = document.querySelectorAll('.char-card');
   const allMapCards  = document.querySelectorAll('.map-card');  // all pages
+
+  // ── Auto-number character cards based on visual order ──────
+  charCards.forEach((card, index) => {
+    const numEl = card.querySelector('.char-number');
+    if (numEl) {
+      numEl.textContent = String(index + 1).padStart(2, '0');
+    }
+  });
+
+  // ── Auto-number map cards based on visual order ──────
+  allMapCards.forEach((card, index) => {
+    const numEl = card.querySelector('.map-num');
+    if (numEl) {
+      numEl.textContent = String(index + 1).padStart(2, '0');
+    }
+  });
   const startBtn     = document.getElementById('startBtn');
   const startBtnText = document.getElementById('startBtnText');
   const prevBtn      = document.getElementById('prevBtn');
