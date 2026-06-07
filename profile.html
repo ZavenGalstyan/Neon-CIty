@@ -713,9 +713,9 @@
 
     /* Footer buttons */
     .fbk-footer {
-      display: flex;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
       gap: 12px;
-      justify-content: flex-end;
       padding-top: 20px;
       border-top: 1px solid rgba(255,255,255,0.05);
       position: relative;
@@ -999,9 +999,6 @@
   <!-- Feedback Modal -->
   <div class="fbk-backdrop" id="fbkModal" hidden>
     <div class="fbk-box">
-
-      <!-- Close -->
-      <button class="fbk-close" id="fbkClose" aria-label="Close">✕</button>
 
       <!-- Header -->
       <div class="fbk-header">
@@ -1294,7 +1291,6 @@
     document.getElementById('fbkTabProposal').addEventListener('click', () => _fbkSwitchTab('proposal'));
     document.getElementById('fbkTabProblem').addEventListener('click',  () => _fbkSwitchTab('problem'));
 
-    document.getElementById('fbkClose').addEventListener('click',  _closeFbkModal);
     document.getElementById('fbkCancel').addEventListener('click', _closeFbkModal);
     document.getElementById('fbkModal').addEventListener('click', e => {
       if (e.target === document.getElementById('fbkModal')) _closeFbkModal();
