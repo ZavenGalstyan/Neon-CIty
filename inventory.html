@@ -1825,7 +1825,7 @@
         : [['DMG', w.damage || 'BASE'], ['FIRE', w.fireRate + 'ms'], ['SPD', w.bulletSpeed]];
 
       const footerEl = isEquipped
-        ? _badge('✓ EQUIPPED — STARTING WEAPON', 'inv-card__btn--equipped')
+        ? _badge('✓ STARTING WEAPON', 'inv-card__btn--equipped')
         : _equipBtn(w.id);
 
       gridEl.appendChild(_buildCard({

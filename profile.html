@@ -8,6 +8,44 @@
   <link rel="stylesheet" href="css/social.css">
   <script>try{if(localStorage.getItem('nc_theme')==='light')document.documentElement.setAttribute('data-theme','light');}catch(e){}</script>
   <style>
+    /* ═══ Feedback Button ═══ */
+    .profile-feedback-btn {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      padding: 10px 20px;
+      border-radius: 10px;
+      cursor: pointer;
+      background: linear-gradient(135deg, rgba(0,240,255,0.08) 0%, rgba(170,100,255,0.06) 100%);
+      border: 1px solid rgba(0,240,255,0.3);
+      color: #44EEFF;
+      transition: all 0.25s cubic-bezier(0.4,0,0.2,1);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      position: relative;
+      overflow: hidden;
+    }
+    .profile-feedback-btn::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(105deg, transparent, rgba(0,240,255,0.12), transparent);
+      opacity: 0;
+      transition: opacity 0.25s;
+    }
+    .profile-feedback-btn:hover {
+      background: linear-gradient(135deg, rgba(0,240,255,0.16) 0%, rgba(170,100,255,0.12) 100%);
+      border-color: rgba(0,240,255,0.6);
+      color: #88FFFF;
+      box-shadow: 0 0 22px rgba(0,240,255,0.22), 0 4px 16px rgba(0,0,0,0.3);
+      transform: translateY(-1px);
+    }
+    .profile-feedback-btn:hover::before { opacity: 1; }
+    .profile-feedback-btn:active { transform: scale(0.97) translateY(0); }
+    .profile-feedback-btn svg { flex-shrink: 0; }
+
     /* ═══ Report Button Styling ═══ */
     .profile-report-btn {
       font-family: 'Orbitron', sans-serif;
@@ -351,6 +389,459 @@
       box-shadow: 0 0 20px rgba(180,120,40,0.2);
     }
 
+    /* ═══ Feedback Modal ═══ */
+    .fbk-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(2,2,14,0.88);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      z-index: 3000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      animation: fbkFadeIn 0.22s ease;
+    }
+    @keyframes fbkFadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .fbk-backdrop[hidden] { display: none !important; }
+
+    .fbk-box {
+      background: linear-gradient(158deg, rgba(8,6,22,0.98) 0%, rgba(5,4,16,0.99) 100%);
+      border: 1px solid rgba(0,240,255,0.2);
+      border-radius: 24px;
+      padding: 36px 38px 32px;
+      max-width: 500px;
+      width: 100%;
+      box-shadow:
+        0 0 80px rgba(0,240,255,0.08),
+        0 0 40px rgba(170,100,255,0.06),
+        0 40px 80px rgba(0,0,0,0.7),
+        inset 0 1px 0 rgba(255,255,255,0.05);
+      animation: fbkSlideIn 0.28s cubic-bezier(0.4,0,0.2,1);
+      position: relative;
+      overflow: hidden;
+    }
+    /* Top glow strip */
+    .fbk-box::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent 0%, rgba(0,240,255,0.5) 30%, rgba(170,100,255,0.5) 70%, transparent 100%);
+    }
+    /* Ambient inner glow */
+    .fbk-box::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 120px;
+      background: linear-gradient(180deg, rgba(0,240,255,0.04) 0%, transparent 100%);
+      pointer-events: none;
+    }
+    @keyframes fbkSlideIn {
+      from { opacity: 0; transform: scale(0.93) translateY(14px); }
+      to   { opacity: 1; transform: none; }
+    }
+
+    /* Header */
+    .fbk-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 18px;
+      margin-bottom: 28px;
+      position: relative;
+      z-index: 1;
+    }
+    .fbk-icon-wrap {
+      width: 52px;
+      height: 52px;
+      flex-shrink: 0;
+      border-radius: 16px;
+      background: linear-gradient(135deg, rgba(0,240,255,0.12) 0%, rgba(170,100,255,0.08) 100%);
+      border: 1px solid rgba(0,240,255,0.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 20px rgba(0,240,255,0.1);
+      animation: fbkIconPulse 3s ease-in-out infinite;
+    }
+    @keyframes fbkIconPulse {
+      0%,100% { box-shadow: 0 0 16px rgba(0,240,255,0.08); }
+      50%      { box-shadow: 0 0 28px rgba(0,240,255,0.18); }
+    }
+    .fbk-icon-svg {
+      color: #44EEFF;
+      filter: drop-shadow(0 0 8px rgba(0,240,255,0.6));
+    }
+    .fbk-header-text { flex: 1; }
+    .fbk-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      color: #fff;
+      margin: 0 0 7px;
+      text-shadow: 0 0 24px rgba(0,240,255,0.3);
+    }
+    .fbk-sub {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      color: rgba(255,255,255,0.4);
+      line-height: 1.45;
+      margin: 0;
+    }
+    .fbk-close {
+      position: absolute;
+      top: 0; right: 0;
+      width: 32px; height: 32px;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px;
+      background: rgba(255,255,255,0.03);
+      color: rgba(255,255,255,0.4);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      transition: all 0.18s;
+      z-index: 2;
+    }
+    .fbk-close:hover {
+      background: rgba(255,255,255,0.08);
+      border-color: rgba(255,255,255,0.25);
+      color: #fff;
+    }
+
+    /* Divider */
+    .fbk-divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.07), transparent);
+      margin-bottom: 24px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Type selector tabs */
+    .fbk-type-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 28px;
+      position: relative;
+      z-index: 1;
+    }
+    .fbk-type-btn {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 20px 16px;
+      border-radius: 16px;
+      cursor: pointer;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.02);
+      transition: all 0.28s cubic-bezier(0.4,0,0.2,1);
+      overflow: hidden;
+    }
+    .fbk-type-btn::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      opacity: 0;
+      transition: opacity 0.28s;
+    }
+    .fbk-type-btn:hover { transform: translateY(-2px); }
+
+    /* Proposal */
+    .fbk-type-btn--proposal::before {
+      background: linear-gradient(135deg, rgba(170,100,255,0.1) 0%, rgba(255,215,0,0.06) 100%);
+    }
+    .fbk-type-btn--proposal:hover {
+      border-color: rgba(170,100,255,0.4);
+      box-shadow: 0 8px 32px rgba(170,100,255,0.12);
+    }
+    .fbk-type-btn--proposal:hover::before { opacity: 1; }
+    .fbk-type-btn--proposal.fbk-type-active {
+      border-color: rgba(170,100,255,0.6);
+      background: linear-gradient(135deg, rgba(170,100,255,0.12) 0%, rgba(255,215,0,0.06) 100%);
+      box-shadow: 0 0 40px rgba(170,100,255,0.18), 0 8px 24px rgba(0,0,0,0.3);
+    }
+    .fbk-type-btn--proposal.fbk-type-active::before { opacity: 1; }
+
+    /* Problem */
+    .fbk-type-btn--problem::before {
+      background: linear-gradient(135deg, rgba(255,68,102,0.1) 0%, rgba(255,120,60,0.06) 100%);
+    }
+    .fbk-type-btn--problem:hover {
+      border-color: rgba(255,68,102,0.4);
+      box-shadow: 0 8px 32px rgba(255,68,102,0.12);
+    }
+    .fbk-type-btn--problem:hover::before { opacity: 1; }
+    .fbk-type-btn--problem.fbk-type-active {
+      border-color: rgba(255,68,102,0.6);
+      background: linear-gradient(135deg, rgba(255,68,102,0.12) 0%, rgba(255,120,60,0.06) 100%);
+      box-shadow: 0 0 40px rgba(255,68,102,0.18), 0 8px 24px rgba(0,0,0,0.3);
+    }
+    .fbk-type-btn--problem.fbk-type-active::before { opacity: 1; }
+
+    .fbk-type-icon {
+      font-size: 28px;
+      line-height: 1;
+      transition: transform 0.28s ease;
+      position: relative;
+      z-index: 1;
+    }
+    .fbk-type-btn:hover .fbk-type-icon { transform: scale(1.12); }
+    .fbk-type-active .fbk-type-icon { transform: scale(1.08); }
+
+    .fbk-type-label {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      position: relative;
+      z-index: 1;
+      transition: color 0.25s;
+    }
+    .fbk-type-btn--proposal .fbk-type-label { color: rgba(200,160,255,0.6); }
+    .fbk-type-btn--proposal.fbk-type-active .fbk-type-label,
+    .fbk-type-btn--proposal:hover .fbk-type-label { color: #CC88FF; text-shadow: 0 0 12px rgba(170,100,255,0.5); }
+    .fbk-type-btn--problem .fbk-type-label { color: rgba(255,150,150,0.6); }
+    .fbk-type-btn--problem.fbk-type-active .fbk-type-label,
+    .fbk-type-btn--problem:hover .fbk-type-label { color: #FF7788; text-shadow: 0 0 12px rgba(255,68,102,0.5); }
+
+    .fbk-type-desc {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 11px;
+      font-weight: 500;
+      color: rgba(255,255,255,0.3);
+      text-align: center;
+      line-height: 1.35;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Active indicator dot */
+    .fbk-type-btn .fbk-active-dot {
+      position: absolute;
+      top: 10px; right: 10px;
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      opacity: 0;
+      transition: opacity 0.25s;
+    }
+    .fbk-type-btn--proposal .fbk-active-dot { background: #CC88FF; box-shadow: 0 0 8px #AA66FF; }
+    .fbk-type-btn--problem  .fbk-active-dot { background: #FF7788; box-shadow: 0 0 8px #FF4466; }
+    .fbk-type-active .fbk-active-dot { opacity: 1; }
+
+    /* Form fields */
+    .fbk-field {
+      margin-bottom: 18px;
+      position: relative;
+      z-index: 1;
+    }
+    .fbk-lbl {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 8.5px;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      color: rgba(0,240,255,0.6);
+      margin-bottom: 10px;
+      text-transform: uppercase;
+    }
+    .fbk-lbl::before {
+      content: '';
+      width: 3px; height: 3px;
+      border-radius: 50%;
+      background: #44EEFF;
+      box-shadow: 0 0 6px #44EEFF;
+    }
+    .fbk-inp, .fbk-area {
+      width: 100%;
+      padding: 13px 16px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.09);
+      border-radius: 12px;
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      color: #fff;
+      outline: none;
+      transition: all 0.22s ease;
+      box-sizing: border-box;
+    }
+    .fbk-inp::placeholder, .fbk-area::placeholder { color: rgba(255,255,255,0.22); }
+    .fbk-inp:hover, .fbk-area:hover {
+      border-color: rgba(0,240,255,0.2);
+      background: rgba(255,255,255,0.04);
+    }
+    .fbk-inp:focus, .fbk-area:focus {
+      border-color: rgba(0,240,255,0.45);
+      background: rgba(0,240,255,0.03);
+      box-shadow: 0 0 22px rgba(0,240,255,0.08), inset 0 0 16px rgba(0,240,255,0.02);
+    }
+    .fbk-area {
+      resize: vertical;
+      min-height: 108px;
+      line-height: 1.55;
+    }
+
+    /* Error */
+    .fbk-err {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      color: #FF6677;
+      margin-bottom: 14px;
+      display: none;
+      padding: 10px 14px;
+      border-radius: 8px;
+      background: rgba(255,68,102,0.06);
+      border: 1px solid rgba(255,68,102,0.25);
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Footer buttons */
+    .fbk-footer {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      padding-top: 20px;
+      border-top: 1px solid rgba(255,255,255,0.05);
+      position: relative;
+      z-index: 1;
+    }
+    .fbk-btn {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 9.5px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      padding: 13px 26px;
+      border-radius: 11px;
+      cursor: pointer;
+      border: 1px solid;
+      transition: all 0.22s cubic-bezier(0.4,0,0.2,1);
+      position: relative;
+      overflow: hidden;
+    }
+    .fbk-btn::before {
+      content: '';
+      position: absolute;
+      top: -50%; left: -80%;
+      width: 50%; height: 200%;
+      background: linear-gradient(105deg, transparent, rgba(255,255,255,0.12), transparent);
+      transform: skewX(-15deg);
+      opacity: 0;
+      transition: opacity 0.22s;
+    }
+    .fbk-btn:hover::before { opacity: 1; animation: fbkShine 0.5s ease forwards; }
+    @keyframes fbkShine { from { left: -80%; } to { left: 160%; } }
+
+    .fbk-btn--cancel {
+      background: rgba(255,255,255,0.03);
+      border-color: rgba(255,255,255,0.1);
+      color: rgba(255,255,255,0.45);
+    }
+    .fbk-btn--cancel:hover {
+      background: rgba(255,255,255,0.07);
+      border-color: rgba(255,255,255,0.22);
+      color: #fff;
+    }
+    .fbk-btn--submit {
+      background: linear-gradient(135deg, rgba(0,240,255,0.15) 0%, rgba(170,100,255,0.1) 100%);
+      border-color: rgba(0,240,255,0.4);
+      color: #44EEFF;
+      box-shadow: 0 0 18px rgba(0,240,255,0.12);
+    }
+    .fbk-btn--submit:hover:not(:disabled) {
+      background: linear-gradient(135deg, rgba(0,240,255,0.25) 0%, rgba(170,100,255,0.18) 100%);
+      border-color: rgba(0,240,255,0.65);
+      color: #88FFFF;
+      box-shadow: 0 0 30px rgba(0,240,255,0.22), 0 6px 20px rgba(0,0,0,0.3);
+      transform: translateY(-1px);
+    }
+    .fbk-btn--submit:active:not(:disabled) { transform: translateY(0) scale(0.98); }
+    .fbk-btn--submit:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    /* ═══ Light Mode — Feedback Button ═══ */
+    html[data-theme="light"] .profile-feedback-btn {
+      background: linear-gradient(135deg, rgba(0,101,133,0.08) 0%, rgba(74,32,128,0.05) 100%);
+      border-color: rgba(0,101,133,0.35);
+      color: #006585;
+    }
+    html[data-theme="light"] .profile-feedback-btn:hover {
+      background: linear-gradient(135deg, rgba(0,101,133,0.15) 0%, rgba(74,32,128,0.1) 100%);
+      border-color: rgba(0,101,133,0.6);
+      color: #004d66;
+      box-shadow: 0 0 18px rgba(0,101,133,0.18);
+    }
+
+    /* ═══ Light Mode — Feedback Modal ═══ */
+    html[data-theme="light"] .fbk-backdrop { background: rgba(210,225,242,0.88); }
+    html[data-theme="light"] .fbk-box {
+      background: linear-gradient(158deg, rgba(248,252,255,0.99) 0%, rgba(240,248,255,0.99) 100%);
+      border-color: rgba(0,101,133,0.25);
+      box-shadow: 0 0 60px rgba(0,101,133,0.08), 0 30px 70px rgba(0,30,60,0.18), inset 0 1px 0 rgba(255,255,255,0.9);
+    }
+    html[data-theme="light"] .fbk-box::before {
+      background: linear-gradient(90deg, transparent, rgba(0,101,133,0.3), rgba(74,32,128,0.3), transparent);
+    }
+    html[data-theme="light"] .fbk-box::after {
+      background: linear-gradient(180deg, rgba(0,101,133,0.04) 0%, transparent 100%);
+    }
+    html[data-theme="light"] .fbk-icon-wrap {
+      background: linear-gradient(135deg, rgba(0,101,133,0.1) 0%, rgba(74,32,128,0.07) 100%);
+      border-color: rgba(0,101,133,0.3);
+    }
+    html[data-theme="light"] .fbk-icon-svg { color: #006585; filter: drop-shadow(0 0 6px rgba(0,101,133,0.4)); }
+    html[data-theme="light"] .fbk-title { color: #050a15; text-shadow: none; }
+    html[data-theme="light"] .fbk-sub { color: rgba(30,42,60,0.55); }
+    html[data-theme="light"] .fbk-close { border-color: rgba(10,25,50,0.15); color: rgba(30,42,60,0.5); }
+    html[data-theme="light"] .fbk-close:hover { background: rgba(10,25,50,0.06); color: #050a15; }
+    html[data-theme="light"] .fbk-divider { background: linear-gradient(90deg, transparent, rgba(10,25,50,0.1), transparent); }
+    html[data-theme="light"] .fbk-type-btn { background: rgba(10,25,50,0.03); border-color: rgba(10,25,50,0.12); }
+    html[data-theme="light"] .fbk-type-btn--proposal:hover { border-color: rgba(74,32,128,0.45); box-shadow: 0 8px 24px rgba(74,32,128,0.1); }
+    html[data-theme="light"] .fbk-type-btn--proposal.fbk-type-active { border-color: rgba(74,32,128,0.6); background: linear-gradient(135deg, rgba(74,32,128,0.08) 0%, rgba(255,215,0,0.04) 100%); box-shadow: 0 0 30px rgba(74,32,128,0.12); }
+    html[data-theme="light"] .fbk-type-btn--problem:hover  { border-color: rgba(180,40,60,0.45); box-shadow: 0 8px 24px rgba(180,40,60,0.1); }
+    html[data-theme="light"] .fbk-type-btn--problem.fbk-type-active  { border-color: rgba(180,40,60,0.6); background: linear-gradient(135deg, rgba(180,40,60,0.08) 0%, rgba(220,80,30,0.04) 100%); box-shadow: 0 0 30px rgba(180,40,60,0.12); }
+    html[data-theme="light"] .fbk-type-btn--proposal .fbk-type-label { color: rgba(74,32,128,0.5); }
+    html[data-theme="light"] .fbk-type-btn--proposal.fbk-type-active .fbk-type-label,
+    html[data-theme="light"] .fbk-type-btn--proposal:hover .fbk-type-label { color: #5a2888; text-shadow: none; }
+    html[data-theme="light"] .fbk-type-btn--problem .fbk-type-label  { color: rgba(180,40,60,0.5); }
+    html[data-theme="light"] .fbk-type-btn--problem.fbk-type-active .fbk-type-label,
+    html[data-theme="light"] .fbk-type-btn--problem:hover .fbk-type-label  { color: #a02030; text-shadow: none; }
+    html[data-theme="light"] .fbk-type-desc { color: rgba(30,42,60,0.45); }
+    html[data-theme="light"] .fbk-lbl { color: rgba(0,101,133,0.75); }
+    html[data-theme="light"] .fbk-lbl::before { background: #006585; box-shadow: none; }
+    html[data-theme="light"] .fbk-inp, html[data-theme="light"] .fbk-area {
+      background: rgba(0,20,50,0.03);
+      border-color: rgba(0,30,60,0.14);
+      color: #1a2a40;
+    }
+    html[data-theme="light"] .fbk-inp::placeholder, html[data-theme="light"] .fbk-area::placeholder { color: rgba(30,50,80,0.35); }
+    html[data-theme="light"] .fbk-inp:hover, html[data-theme="light"] .fbk-area:hover { border-color: rgba(0,101,133,0.25); background: rgba(0,20,50,0.04); }
+    html[data-theme="light"] .fbk-inp:focus, html[data-theme="light"] .fbk-area:focus { border-color: rgba(0,101,133,0.45); background: rgba(0,101,133,0.03); box-shadow: 0 0 16px rgba(0,101,133,0.08); }
+    html[data-theme="light"] .fbk-err { color: #aa3344; background: rgba(180,40,60,0.06); border-color: rgba(180,40,60,0.25); }
+    html[data-theme="light"] .fbk-footer { border-top-color: rgba(10,25,50,0.08); }
+    html[data-theme="light"] .fbk-btn--cancel { background: rgba(10,25,50,0.04); border-color: rgba(10,25,50,0.14); color: rgba(30,50,80,0.55); }
+    html[data-theme="light"] .fbk-btn--cancel:hover { background: rgba(10,25,50,0.08); border-color: rgba(10,25,50,0.25); color: #1a2a40; }
+    html[data-theme="light"] .fbk-btn--submit { background: linear-gradient(135deg, rgba(0,101,133,0.14) 0%, rgba(74,32,128,0.1) 100%); border-color: rgba(0,101,133,0.45); color: #006585; box-shadow: 0 0 14px rgba(0,101,133,0.1); }
+    html[data-theme="light"] .fbk-btn--submit:hover:not(:disabled) { background: linear-gradient(135deg, rgba(0,101,133,0.22) 0%, rgba(74,32,128,0.16) 100%); border-color: rgba(0,101,133,0.65); color: #004d66; box-shadow: 0 0 22px rgba(0,101,133,0.18); }
+
     /* ═══ Toast Notifications ═══ */
     .prof-toast {
       position: fixed;
@@ -479,26 +970,12 @@
           </svg>
           REPORT
         </button>
-        <button id="profileFeedbackBtn"
-          style="
-            font-family:'Orbitron',sans-serif;font-size:9px;letter-spacing:0.18em;
-            padding:9px 18px;border-radius:10px;cursor:pointer;
-            background:rgba(68,238,255,0.08);border:1px solid rgba(68,238,255,0.3);color:#44EEFF;
-            transition:all 0.18s;display:flex;align-items:center;gap:8px;
-          "
-          onmouseover="this.style.background='rgba(68,238,255,0.18)';this.style.borderColor='#44EEFF';this.style.boxShadow='0 0 18px rgba(68,238,255,0.25)'"
-          onmouseout="this.style.background='rgba(68,238,255,0.08)';this.style.borderColor='rgba(68,238,255,0.3)';this.style.boxShadow=''"
-        >💬 FEEDBACK</button>
-        <button id="profileReportBtn"
-          style="
-            font-family:'Orbitron',sans-serif;font-size:9px;letter-spacing:0.18em;
-            padding:9px 18px;border-radius:10px;cursor:pointer;
-            background:rgba(255,68,102,0.1);border:1px solid rgba(255,68,102,0.4);color:#FF4466;
-            transition:all 0.18s;display:flex;align-items:center;gap:8px;
-          "
-          onmouseover="this.style.background='rgba(255,68,102,0.22)';this.style.borderColor='#FF4466';this.style.boxShadow='0 0 18px rgba(255,68,102,0.3)'"
-          onmouseout="this.style.background='rgba(255,68,102,0.1)';this.style.borderColor='rgba(255,68,102,0.4)';this.style.boxShadow=''"
-        >⚑ REPORT</button>
+        <button id="profileFeedbackBtn" class="profile-feedback-btn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+          </svg>
+          FEEDBACK
+        </button>
         <button class="profile-logout-btn" id="profileLogout">LOGOUT</button>
       </div>
     </div>
@@ -519,40 +996,70 @@
 
   </div>
 
-  <!-- Feedback Modal (Proposals / Problems) -->
-  <div class="rpt-backdrop" id="fbkModal" hidden>
-    <div class="rpt-box">
-      <div class="rpt-icon">💬</div>
-      <div class="rpt-title">PLAYER FEEDBACK</div>
-      <div class="rpt-sub">Share your ideas or report issues directly to the team.</div>
-      <div class="fbk-tabs">
-        <button class="fbk-tab fbk-tab--active" id="fbkTabProposal">💡 PROPOSAL</button>
-        <button class="fbk-tab" id="fbkTabProblem">🐛 PROBLEM</button>
+  <!-- Feedback Modal -->
+  <div class="fbk-backdrop" id="fbkModal" hidden>
+    <div class="fbk-box">
+
+      <!-- Header -->
+      <div class="fbk-header">
+        <div class="fbk-icon-wrap">
+          <svg class="fbk-icon-svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+          </svg>
+        </div>
+        <div class="fbk-header-text">
+          <div class="fbk-title">PLAYER FEEDBACK</div>
+          <div class="fbk-sub">Share your ideas or report issues directly to the team.</div>
+        </div>
       </div>
+
+      <div class="fbk-divider"></div>
+
+      <!-- Type selector -->
+      <div class="fbk-type-row">
+        <button class="fbk-type-btn fbk-type-btn--proposal fbk-type-active" id="fbkTabProposal">
+          <div class="fbk-active-dot"></div>
+          <span class="fbk-type-icon">💡</span>
+          <span class="fbk-type-label">PROPOSAL</span>
+          <span class="fbk-type-desc">Feature ideas &amp; suggestions</span>
+        </button>
+        <button class="fbk-type-btn fbk-type-btn--problem" id="fbkTabProblem">
+          <div class="fbk-active-dot"></div>
+          <span class="fbk-type-icon">⚠️</span>
+          <span class="fbk-type-label">PROBLEM</span>
+          <span class="fbk-type-desc">Bugs &amp; issues you've found</span>
+        </button>
+      </div>
+
+      <!-- Proposal form -->
       <div id="fbkFormProposal">
-        <div class="rpt-field">
-          <label class="rpt-lbl" for="fbkPropTitle">TITLE</label>
-          <input class="rpt-inp" id="fbkPropTitle" type="text" placeholder="Your feature idea in one line…" autocomplete="off">
+        <div class="fbk-field">
+          <label class="fbk-lbl" for="fbkPropTitle">TITLE</label>
+          <input class="fbk-inp" id="fbkPropTitle" type="text" placeholder="Your feature idea in one line…" autocomplete="off">
         </div>
-        <div class="rpt-field">
-          <label class="rpt-lbl" for="fbkPropDesc">DESCRIPTION</label>
-          <textarea class="rpt-area" id="fbkPropDesc" placeholder="Describe your proposal in detail…"></textarea>
+        <div class="fbk-field">
+          <label class="fbk-lbl" for="fbkPropDesc">DESCRIPTION</label>
+          <textarea class="fbk-area" id="fbkPropDesc" placeholder="Describe your proposal in detail…"></textarea>
         </div>
       </div>
+
+      <!-- Problem form -->
       <div id="fbkFormProblem" hidden>
-        <div class="rpt-field">
-          <label class="rpt-lbl" for="fbkProbTitle">TITLE</label>
-          <input class="rpt-inp" id="fbkProbTitle" type="text" placeholder="Describe the issue briefly…" autocomplete="off">
+        <div class="fbk-field">
+          <label class="fbk-lbl" for="fbkProbTitle">TITLE</label>
+          <input class="fbk-inp" id="fbkProbTitle" type="text" placeholder="Describe the issue briefly…" autocomplete="off">
         </div>
-        <div class="rpt-field">
-          <label class="rpt-lbl" for="fbkProbDesc">DESCRIPTION</label>
-          <textarea class="rpt-area" id="fbkProbDesc" placeholder="Steps to reproduce, what happened, expected vs actual…"></textarea>
+        <div class="fbk-field">
+          <label class="fbk-lbl" for="fbkProbDesc">DESCRIPTION</label>
+          <textarea class="fbk-area" id="fbkProbDesc" placeholder="Steps to reproduce, what happened, expected vs actual…"></textarea>
         </div>
       </div>
-      <div class="rpt-err" id="fbkErr"></div>
-      <div class="rpt-btns">
-        <button class="rpt-btn rpt-btn--cancel" id="fbkCancel">CANCEL</button>
-        <button class="rpt-btn rpt-btn--send" id="fbkSend">SUBMIT PROPOSAL</button>
+
+      <div class="fbk-err" id="fbkErr"></div>
+
+      <div class="fbk-footer">
+        <button class="fbk-btn fbk-btn--cancel" id="fbkCancel">CANCEL</button>
+        <button class="fbk-btn fbk-btn--submit" id="fbkSend">SUBMIT PROPOSAL</button>
       </div>
     </div>
   </div>
@@ -764,9 +1271,13 @@
       _fbkTab = tab;
       document.getElementById('fbkFormProposal').hidden = tab !== 'proposal';
       document.getElementById('fbkFormProblem').hidden  = tab !== 'problem';
-      document.getElementById('fbkTabProposal').classList.toggle('fbk-tab--active', tab === 'proposal');
-      document.getElementById('fbkTabProblem').classList.toggle('fbk-tab--active',  tab === 'problem');
+      document.getElementById('fbkTabProposal').classList.toggle('fbk-type-active', tab === 'proposal');
+      document.getElementById('fbkTabProblem').classList.toggle('fbk-type-active',  tab === 'problem');
       document.getElementById('fbkSend').textContent = tab === 'proposal' ? 'SUBMIT PROPOSAL' : 'SUBMIT PROBLEM';
+    }
+
+    function _closeFbkModal() {
+      document.getElementById('fbkModal').hidden = true;
     }
 
     document.getElementById('profileFeedbackBtn').addEventListener('click', () => {
@@ -780,11 +1291,9 @@
     document.getElementById('fbkTabProposal').addEventListener('click', () => _fbkSwitchTab('proposal'));
     document.getElementById('fbkTabProblem').addEventListener('click',  () => _fbkSwitchTab('problem'));
 
-    document.getElementById('fbkCancel').addEventListener('click', () => {
-      document.getElementById('fbkModal').hidden = true;
-    });
+    document.getElementById('fbkCancel').addEventListener('click', _closeFbkModal);
     document.getElementById('fbkModal').addEventListener('click', e => {
-      if (e.target === document.getElementById('fbkModal')) document.getElementById('fbkModal').hidden = true;
+      if (e.target === document.getElementById('fbkModal')) _closeFbkModal();
     });
 
     document.getElementById('fbkSend').addEventListener('click', async () => {
