@@ -43,6 +43,7 @@ const SocialUI = (() => {
     WS.on('friend_accepted',         _wsOnFriendAccepted);
     WS.on('clan_invite_received',    _wsOnClanInvite);
     WS.on('clan_kicked',             _wsOnKicked);
+    WS.on('notification',            _wsOnNotification);
     WS.on('friend_online',           p => _updateOnline(p.name, true));
     WS.on('friend_offline',          p => _updateOnline(p.name, false));
     WS.on('poll_unread',             p => _setNotifCount(p.count));
@@ -1502,6 +1503,14 @@ const SocialUI = (() => {
     toast(`You were kicked from ${clanName}.`, 'error');
   }
 
+  function _wsOnNotification({ notification }) {
+    if (!notification) return;
+    S.notifications.unshift(notification);
+    S.unreadNotif++;
+    _refreshBadges();
+    if (S.activePage === 'notifications') _renderNotificationsPage();
+  }
+
   function _updateOnline(name, online) {
     const f = S.friends.find(x => x.name === name);
     if (f) {
@@ -1527,13 +1536,14 @@ const SocialUI = (() => {
       const unreadOnly = S.notifFilter === 'unread';
       const data = await Social.Notifications.list(50, unreadOnly);
       S.notifications = data.notifications || data || [];
+      if (typeof data.unreadCount === 'number') _setNotifCount(data.unreadCount);
     } catch (e) {
       listEl.innerHTML = `<div class="ncs-empty"><div class="ncs-empty-icon">⚠️</div>Failed to load notifications</div>`;
       return;
     }
 
-    // Update subtitle
-    const unreadCount = S.notifications.filter(n => !n.read).length;
+    // Update subtitle (readAt === null means unread)
+    const unreadCount = S.notifications.filter(n => !n.readAt).length;
     if (subEl) subEl.textContent = unreadCount > 0 ? `${unreadCount} unread` : 'All caught up!';
 
     // Bind filter buttons
@@ -1573,33 +1583,35 @@ const SocialUI = (() => {
 
   function _htmlNotificationCard(n) {
     const iconMap = {
-      friend_request: '👤',
+      friend_request:  '👤',
       friend_accepted: '🤝',
-      clan_invite: '⭐',
-      clan_kicked: '⚠️',
-      achievement: '🏆',
-      system: '📢',
-      dm: '💬',
-      level_up: '⬆️',
-      reward: '🎁',
+      clan_invite:     '⭐',
+      clan_kicked:     '⚠️',
+      achievement:     '🏆',
+      system:          '📢',
+      dm:              '💬',
+      dm_received:     '💬',
+      level_up:        '⬆️',
+      reward:          '🎁',
     };
-    const icon = iconMap[n.type] || '🔔';
-    const time = _timeAgo(n.createdAt || n.timestamp);
-    const unreadClass = n.read ? '' : 'ncs-notif-unread';
+    const icon    = iconMap[n.type] || '🔔';
+    const time    = _timeAgo(n.createdAt || n.timestamp);
+    const isUnread = !n.readAt;
+    const id      = n._id || n.id;
 
     return `
-      <div class="ncs-notif-card ${unreadClass}" data-notif-id="${n.id || n._id}">
+      <div class="ncs-notif-card ${isUnread ? 'ncs-notif-unread' : ''}" data-notif-id="${id}">
         <div class="ncs-notif-icon-wrap">
           <span class="ncs-notif-icon">${icon}</span>
-          ${!n.read ? '<span class="ncs-notif-dot"></span>' : ''}
+          ${isUnread ? '<span class="ncs-notif-dot"></span>' : ''}
         </div>
         <div class="ncs-notif-content">
           <div class="ncs-notif-title">${_esc(n.title || _notifTypeTitle(n.type))}</div>
-          <div class="ncs-notif-message">${_esc(n.message || n.content || '')}</div>
+          <div class="ncs-notif-message">${_esc(n.body || n.message || n.content || '')}</div>
           <div class="ncs-notif-time">${time}</div>
         </div>
         <div class="ncs-notif-actions">
-          ${!n.read ? `<button class="ncs-notif-action-btn" data-notif-action="read" data-notif-id="${n.id || n._id}" title="Mark as read">
+          ${isUnread ? `<button class="ncs-notif-action-btn" data-notif-action="read" data-notif-id="${id}" title="Mark as read">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg>
           </button>` : ''}
         </div>
@@ -1616,6 +1628,7 @@ const SocialUI = (() => {
       achievement: 'Achievement Unlocked',
       system: 'System Message',
       dm: 'New Message',
+      dm_received: 'New Message',
       level_up: 'Level Up!',
       reward: 'Reward Received',
     };
@@ -1630,7 +1643,8 @@ const SocialUI = (() => {
   async function _markAllNotificationsRead() {
     try {
       await Social.Notifications.markAllRead();
-      S.notifications.forEach(n => n.read = true);
+      const now = new Date().toISOString();
+      S.notifications.forEach(n => { if (!n.readAt) n.readAt = now; });
       S.unreadNotif = 0;
       _refreshBadges();
       _renderNotificationsPage();
@@ -1655,8 +1669,8 @@ const SocialUI = (() => {
     if (action === 'read' && notifId) {
       try {
         await Social.Notifications.markRead(notifId);
-        const notif = S.notifications.find(n => (n.id || n._id) === notifId);
-        if (notif) notif.read = true;
+        const notif = S.notifications.find(n => (n._id || n.id) === notifId);
+        if (notif) notif.readAt = new Date().toISOString();
         S.unreadNotif = Math.max(0, S.unreadNotif - 1);
         _refreshBadges();
         _renderNotificationsPage();
