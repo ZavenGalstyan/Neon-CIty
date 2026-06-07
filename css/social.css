@@ -373,7 +373,7 @@
    ═══════════════════════════════════════════════════════════ */
 .ncs-sidebar {
   position: relative;
-  width: 290px;
+  width: 350px;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
