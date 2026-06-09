@@ -14470,7 +14470,7 @@ class CityNPC {
 // ══════════════════════════════════════════════════════════════════════════════
 class AnimalCompanion {
   constructor(type) {
-    this.type          = type;   // 'dog'|'cat'|'wolf'|'raven'|'bear'|'fox'|'salamander'|'spirit'
+    this.type          = type;   // 'dog'|'cat'|'wolf'|'raven'|'bear'|'fox'|'salamander'|'spirit'|'chrono_orb'
     this.x             = 0;
     this.y             = 0;
     this.radius        = 10;
@@ -14478,7 +14478,7 @@ class AnimalCompanion {
     this.maxHp         = this.hp;
     this.dead          = false;
     this._attackTimer  = 0;
-    this._cooldown     = type === 'bear' ? 4.5 : type === 'wolf' ? 2.2 : type === 'salamander' ? 1.8 : type === 'spirit' ? 2.5 : 3.0;
+    this._cooldown     = type === 'bear' ? 4.5 : type === 'wolf' ? 2.2 : type === 'salamander' ? 1.8 : type === 'spirit' ? 2.5 : type === 'chrono_orb' ? 5.0 : 3.0;
     this._animT        = Math.random() * Math.PI * 2;
     this._orbitAngle   = Math.random() * Math.PI * 2;
     this._followDist   = type === 'spirit' ? 35 : 50;
@@ -14558,6 +14558,31 @@ class AnimalCompanion {
       return;
     }
 
+    // Chrono Orb: time-pulse — slows all bots within 200px every 5s
+    if (this.type === 'chrono_orb') {
+      this._attackTimer -= dt;
+      if (this._attackTimer <= 0) {
+        const pulseRange = 200;
+        let hit = false;
+        for (const b of bots) {
+          if (b.dead || b.dying) continue;
+          if (Math.hypot(b.x - this.x, b.y - this.y) < pulseRange) {
+            b._slowTimer = 1.8;
+            b._slowMult  = 0.35;
+            hit = true;
+          }
+        }
+        // Burst pulse particles regardless — marks the pulse visually
+        for (let i = 0; i < 14; i++) {
+          const a = (i / 14) * Math.PI * 2;
+          const s = rnd(60, 160);
+          particles.push(new Particle(this.x, this.y, Math.cos(a)*s, Math.sin(a)*s, i%2===0?'#FFDD00':'#FFAA00', rnd(2,5), hit?0.7:0.35));
+        }
+        this._attackTimer = this._cooldown;
+      }
+      return;
+    }
+
     // Others attack nearest enemy with projectile
     this._attackTimer -= dt;
     if (this._attackTimer <= 0) {
@@ -14600,8 +14625,9 @@ class AnimalCompanion {
       case 'raven':      this._renderRaven(ctx);      break;
       case 'bear':       this._renderBear(ctx);       break;
       case 'fox':        this._renderFox(ctx);        break;
-      case 'salamander': this._renderSalamander(ctx); break;
-      case 'spirit':     this._renderSpirit(ctx);     break;
+      case 'salamander':  this._renderSalamander(ctx);  break;
+      case 'spirit':      this._renderSpirit(ctx);      break;
+      case 'chrono_orb':  this._renderChronoOrb(ctx);   break;
     }
     ctx.restore();
     // HP bar when damaged
@@ -14772,6 +14798,42 @@ class AnimalCompanion {
       ctx.save(); ctx.globalAlpha = 0.7;
       ctx.fillStyle = '#CC44FF'; ctx.shadowColor = '#CC44FF'; ctx.shadowBlur = 8;
       ctx.beginPath(); ctx.arc(Math.cos(a) * 14, Math.sin(a) * 9, 2, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+    }
+  }
+
+  _renderChronoOrb(ctx) {
+    const pulse = Math.sin(this._animT * 4) * 0.18;
+    // Outer glow aura
+    ctx.save(); ctx.globalAlpha = 0.14 + pulse;
+    ctx.fillStyle = '#FFDD00'; ctx.shadowColor = '#FFAA00'; ctx.shadowBlur = 28;
+    ctx.beginPath(); ctx.arc(0, 0, 18, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+    // Core orb
+    ctx.fillStyle = '#FFEE44'; ctx.shadowColor = '#FFDD00'; ctx.shadowBlur = 16;
+    ctx.beginPath(); ctx.arc(0, 0, 9, 0, Math.PI * 2); ctx.fill();
+    // Inner highlight
+    ctx.fillStyle = '#FFFFF0'; ctx.shadowBlur = 0;
+    ctx.beginPath(); ctx.arc(-2, -3, 3.5, 0, Math.PI * 2); ctx.fill();
+    // Clock-hand spokes (rotating)
+    ctx.strokeStyle = '#FFAA00'; ctx.lineWidth = 1.8; ctx.lineCap = 'round';
+    ctx.shadowColor = '#FFDD00'; ctx.shadowBlur = 6;
+    const rot = this._animT * 1.2;
+    for (let i = 0; i < 6; i++) {
+      const a = rot + (i / 6) * Math.PI * 2;
+      ctx.beginPath();
+      ctx.moveTo(Math.cos(a) * 9, Math.sin(a) * 9);
+      ctx.lineTo(Math.cos(a) * 16, Math.sin(a) * 16);
+      ctx.stroke();
+    }
+    ctx.shadowBlur = 0;
+    // 3 fast orbiting particles (time sparks)
+    for (let i = 0; i < 3; i++) {
+      const a = this._animT * 3.5 + (i * Math.PI * 2 / 3);
+      ctx.save(); ctx.globalAlpha = 0.85;
+      ctx.fillStyle = i % 2 === 0 ? '#FFDD00' : '#FFAA44';
+      ctx.shadowColor = '#FFDD00'; ctx.shadowBlur = 8;
+      ctx.beginPath(); ctx.arc(Math.cos(a) * 13, Math.sin(a) * 13, 2.5, 0, Math.PI * 2); ctx.fill();
       ctx.restore();
     }
   }

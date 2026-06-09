@@ -2060,6 +2060,25 @@ class Game {
 
   _onKill() {
     window.audio?.kill();
+    // TimeBreaker: 35% chance on kill to slow all bots within 260px for 2.2s
+    if (this.charData?._slowTime && Math.random() < 0.35) {
+      const range = 260;
+      let hit = false;
+      for (const b of this.bots) {
+        if (b.dead || b.dying) continue;
+        if (Math.hypot(b.x - this.player.x, b.y - this.player.y) < range) {
+          b._slowTimer = 2.2;
+          b._slowMult  = 0.32;
+          hit = true;
+        }
+      }
+      if (hit) {
+        for (let i = 0; i < 12; i++) {
+          const a = Math.random() * Math.PI * 2, s = rnd(50, 140);
+          this.particles.push(new Particle(this.player.x, this.player.y, Math.cos(a)*s, Math.sin(a)*s, i%2===0?'#FFDD00':'#FFAA00', rnd(2,5), 0.8));
+        }
+      }
+    }
     // Killstreak
     this._killStreak++;
     this._streakTimer = 3.0;
