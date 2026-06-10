@@ -26,6 +26,13 @@
  */
 
 (function () {
+  function _hexToRgba(hex, alpha) {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return `rgba(${r},${g},${b},${alpha})`;
+  }
+
   let selectedCharId   = null;
   let selectedMapId    = CONFIG.MAPS[0].id;  // default: first map
   let selectedNeonTheme = 'cyan';  // Default color theme for Neon City
@@ -177,7 +184,7 @@
     // Update card border glow color
     if (neonCityCard) {
       neonCityCard.style.setProperty('--neon-theme-color', theme.color);
-      neonCityCard.style.setProperty('--neon-theme-glow', theme.color.replace('#', 'rgba(') + ',0.5)');
+      neonCityCard.style.setProperty('--neon-theme-glow', _hexToRgba(theme.color, 0.5));
       neonCityCard.style.borderColor = theme.color;
     }
 
@@ -249,7 +256,7 @@
     // Update card border glow color
     if (wastelandCard) {
       wastelandCard.style.setProperty('--wasteland-theme-color', theme.color);
-      wastelandCard.style.setProperty('--wasteland-theme-glow', theme.color.replace('#', 'rgba(') + ',0.5)');
+      wastelandCard.style.setProperty('--wasteland-theme-glow', _hexToRgba(theme.color, 0.5));
       wastelandCard.style.borderColor = theme.color;
     }
 
