@@ -137,7 +137,7 @@ const CONFIG = {
       color: '#FFDD00', accent: '#CCAA00', gunColor: '#FFEE66',
       speed: 200, health: 100, damage: 45, fireRate: 340, radius: 17,
       stats: { speed: 70, health: 58, damage: 85 }, companion: 'chrono_orb',
-      renderType: 'humanoid', bodyScale: 1.0, _slowTime: true, locked: true, price: 15000
+      renderType: 'humanoid', bodyScale: 1.0, _slowTime: true
     },
     {
       id: 'ai_avatar', name: 'AI AVATAR', lore: 'Adaptive intelligence. Learns your pain.',

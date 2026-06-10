@@ -396,6 +396,7 @@ body {
 }
 .char-card.selected {
   transform: translateY(-5px);
+  z-index: 6;
 }
 .char-card[data-char="gangster"].selected {
   border-color: #ff4466;
@@ -446,17 +447,198 @@ body {
     0 12px 40px rgba(0, 0, 0, 0.5);
 }
 
-/* Checkmark badge */
+/* ── Premium octagonal selection badge (mirrors map-card style) ── */
 .char-card.selected::after {
   content: "✓";
   position: absolute;
-  top: 6px;
-  right: 8px;
-  font-size: 13px;
+  top: 7px;
+  right: 7px;
+  width: 20px;
+  height: 20px;
+  z-index: 7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 900;
+  font-family: system-ui, -apple-system, sans-serif;
   color: #fff;
-  font-weight: bold;
-  text-shadow: 0 0 8px #fff;
-  z-index: 3;
+  line-height: 1;
+  padding-bottom: 1px;
+  text-shadow: 0 0 2px #fff, 0 0 4px #fff, 0 0 8px rgba(68,238,255,0.9);
+  transition: all 0.2s ease;
+  clip-path: polygon(25% 0%,75% 0%,100% 25%,100% 75%,75% 100%,25% 100%,0% 75%,0% 25%);
+  background:
+    linear-gradient(135deg,rgba(255,255,255,.5) 0%,rgba(255,255,255,.12) 30%,transparent 50%),
+    linear-gradient(180deg,rgba(68,238,255,1) 0%,rgba(45,190,230,1) 45%,rgba(25,140,180,1) 100%);
+  box-shadow:
+    inset 0 1px 2px rgba(255,255,255,.65),
+    inset 0 -1px 2px rgba(0,0,0,.45),
+    0 0 0 1px rgba(0,0,0,.5),
+    0 0 0 2px rgba(68,238,255,.7),
+    0 0 6px rgba(68,238,255,.5);
+}
+
+/* ── Per-character badge colors ─────────────────────────────── */
+.char-card[data-char="gangster"].selected::after {
+  text-shadow: 0 0 2px #fff,0 0 4px #fff,0 0 8px rgba(255,68,102,.9);
+  background: linear-gradient(135deg,rgba(255,255,255,.5) 0%,rgba(255,255,255,.12) 30%,transparent 50%),linear-gradient(180deg,rgba(255,68,102,1) 0%,rgba(220,40,75,1) 45%,rgba(160,15,50,1) 100%);
+  box-shadow: inset 0 1px 2px rgba(255,255,255,.65),inset 0 -1px 2px rgba(0,0,0,.45),0 0 0 1px rgba(0,0,0,.5),0 0 0 2px rgba(255,68,102,.7),0 0 6px rgba(255,68,102,.5);
+}
+.char-card[data-char="hacker"].selected::after {
+  text-shadow: 0 0 2px #fff,0 0 4px #fff,0 0 8px rgba(68,238,255,.9);
+  background: linear-gradient(135deg,rgba(255,255,255,.5) 0%,rgba(255,255,255,.12) 30%,transparent 50%),linear-gradient(180deg,rgba(68,238,255,1) 0%,rgba(45,190,230,1) 45%,rgba(25,140,180,1) 100%);
+  box-shadow: inset 0 1px 2px rgba(255,255,255,.65),inset 0 -1px 2px rgba(0,0,0,.45),0 0 0 1px rgba(0,0,0,.5),0 0 0 2px rgba(68,238,255,.7),0 0 6px rgba(68,238,255,.5);
+}
+.char-card[data-char="mercenary"].selected::after {
+  text-shadow: 0 0 2px #fff,0 0 4px #fff,0 0 8px rgba(68,255,136,.9);
+  background: linear-gradient(135deg,rgba(255,255,255,.5) 0%,rgba(255,255,255,.12) 30%,transparent 50%),linear-gradient(180deg,rgba(68,255,136,1) 0%,rgba(40,210,100,1) 45%,rgba(20,160,65,1) 100%);
+  box-shadow: inset 0 1px 2px rgba(255,255,255,.65),inset 0 -1px 2px rgba(0,0,0,.45),0 0 0 1px rgba(0,0,0,.5),0 0 0 2px rgba(68,255,136,.7),0 0 6px rgba(68,255,136,.5);
+}
+.char-card[data-char="ghost"].selected::after {
+  text-shadow: 0 0 2px #fff,0 0 4px #fff,0 0 8px rgba(204,136,255,.9);
+  background: linear-gradient(135deg,rgba(255,255,255,.5) 0%,rgba(255,255,255,.12) 30%,transparent 50%),linear-gradient(180deg,rgba(204,136,255,1) 0%,rgba(170,100,220,1) 45%,rgba(130,60,175,1) 100%);
+  box-shadow: inset 0 1px 2px rgba(255,255,255,.65),inset 0 -1px 2px rgba(0,0,0,.45),0 0 0 1px rgba(0,0,0,.5),0 0 0 2px rgba(204,136,255,.7),0 0 6px rgba(204,136,255,.5);
+}
+.char-card[data-char="engineer"].selected::after {
+  text-shadow: 0 0 2px #fff,0 0 4px #fff,0 0 8px rgba(255,170,0,.9);
+  background: linear-gradient(135deg,rgba(255,255,255,.5) 0%,rgba(255,255,255,.12) 30%,transparent 50%),linear-gradient(180deg,rgba(255,170,0,1) 0%,rgba(220,135,0,1) 45%,rgba(170,100,0,1) 100%);
+  box-shadow: inset 0 1px 2px rgba(255,255,255,.65),inset 0 -1px 2px rgba(0,0,0,.45),0 0 0 1px rgba(0,0,0,.5),0 0 0 2px rgba(255,170,0,.7),0 0 6px rgba(255,170,0,.5);
+}
+.char-card[data-char="sniper_elite"].selected::after {
+  text-shadow: 0 0 2px #fff,0 0 4px #fff,0 0 8px rgba(34,136,255,.9);
+  background: linear-gradient(135deg,rgba(255,255,255,.5) 0%,rgba(255,255,255,.12) 30%,transparent 50%),linear-gradient(180deg,rgba(34,136,255,1) 0%,rgba(20,100,220,1) 45%,rgba(10,65,175,1) 100%);
+  box-shadow: inset 0 1px 2px rgba(255,255,255,.65),inset 0 -1px 2px rgba(0,0,0,.45),0 0 0 1px rgba(0,0,0,.5),0 0 0 2px rgba(34,136,255,.7),0 0 6px rgba(34,136,255,.5);
+}
+.char-card[data-char="drone_pilot"].selected::after {
+  text-shadow: 0 0 2px #fff,0 0 4px #fff,0 0 8px rgba(119,221,255,.9);
+  background: linear-gradient(135deg,rgba(255,255,255,.5) 0%,rgba(255,255,255,.12) 30%,transparent 50%),linear-gradient(180deg,rgba(119,221,255,1) 0%,rgba(85,178,225,1) 45%,rgba(50,135,185,1) 100%);
+  box-shadow: inset 0 1px 2px rgba(255,255,255,.65),inset 0 -1px 2px rgba(0,0,0,.45),0 0 0 1px rgba(0,0,0,.5),0 0 0 2px rgba(119,221,255,.7),0 0 6px rgba(119,221,255,.5);
+}
+.char-card[data-char="chemist"].selected::after {
+  text-shadow: 0 0 2px #fff,0 0 4px #fff,0 0 8px rgba(136,255,68,.9);
+  background: linear-gradient(135deg,rgba(255,255,255,.5) 0%,rgba(255,255,255,.12) 30%,transparent 50%),linear-gradient(180deg,rgba(136,255,68,1) 0%,rgba(100,210,40,1) 45%,rgba(65,160,18,1) 100%);
+  box-shadow: inset 0 1px 2px rgba(255,255,255,.65),inset 0 -1px 2px rgba(0,0,0,.45),0 0 0 1px rgba(0,0,0,.5),0 0 0 2px rgba(136,255,68,.7),0 0 6px rgba(136,255,68,.5);
+}
+.char-card[data-char="cyber_ninja"].selected::after {
+  text-shadow: 0 0 2px #fff,0 0 4px #fff,0 0 8px rgba(255,0,170,.9);
+  background: linear-gradient(135deg,rgba(255,255,255,.5) 0%,rgba(255,255,255,.12) 30%,transparent 50%),linear-gradient(180deg,rgba(255,0,170,1) 0%,rgba(220,0,135,1) 45%,rgba(165,0,95,1) 100%);
+  box-shadow: inset 0 1px 2px rgba(255,255,255,.65),inset 0 -1px 2px rgba(0,0,0,.45),0 0 0 1px rgba(0,0,0,.5),0 0 0 2px rgba(255,0,170,.7),0 0 6px rgba(255,0,170,.5);
+}
+.char-card[data-char="cyber_wolf"].selected::after {
+  text-shadow: 0 0 2px #fff,0 0 4px #fff,0 0 8px rgba(136,153,170,.9);
+  background: linear-gradient(135deg,rgba(255,255,255,.5) 0%,rgba(255,255,255,.12) 30%,transparent 50%),linear-gradient(180deg,rgba(136,153,170,1) 0%,rgba(100,115,135,1) 45%,rgba(68,80,100,1) 100%);
+  box-shadow: inset 0 1px 2px rgba(255,255,255,.65),inset 0 -1px 2px rgba(0,0,0,.45),0 0 0 1px rgba(0,0,0,.5),0 0 0 2px rgba(136,153,170,.7),0 0 6px rgba(136,153,170,.5);
+}
+.char-card[data-char="neon_panther"].selected::after {
+  text-shadow: 0 0 2px #fff,0 0 4px #fff,0 0 8px rgba(255,68,255,.9);
+  background: linear-gradient(135deg,rgba(255,255,255,.5) 0%,rgba(255,255,255,.12) 30%,transparent 50%),linear-gradient(180deg,rgba(255,68,255,1) 0%,rgba(215,35,215,1) 45%,rgba(160,15,160,1) 100%);
+  box-shadow: inset 0 1px 2px rgba(255,255,255,.65),inset 0 -1px 2px rgba(0,0,0,.45),0 0 0 1px rgba(0,0,0,.5),0 0 0 2px rgba(255,68,255,.7),0 0 6px rgba(255,68,255,.5);
+}
+.char-card[data-char="mecha_bulldog"].selected::after {
+  text-shadow: 0 0 2px #fff,0 0 4px #fff,0 0 8px rgba(170,136,102,.9);
+  background: linear-gradient(135deg,rgba(255,255,255,.5) 0%,rgba(255,255,255,.12) 30%,transparent 50%),linear-gradient(180deg,rgba(170,136,102,1) 0%,rgba(135,105,75,1) 45%,rgba(100,75,50,1) 100%);
+  box-shadow: inset 0 1px 2px rgba(255,255,255,.65),inset 0 -1px 2px rgba(0,0,0,.45),0 0 0 1px rgba(0,0,0,.5),0 0 0 2px rgba(170,136,102,.7),0 0 6px rgba(170,136,102,.5);
+}
+.char-card[data-char="timebreaker"].selected::after {
+  text-shadow: 0 0 2px #fff,0 0 4px #fff,0 0 8px rgba(255,221,0,.9);
+  background: linear-gradient(135deg,rgba(255,255,255,.5) 0%,rgba(255,255,255,.12) 30%,transparent 50%),linear-gradient(180deg,rgba(255,221,0,1) 0%,rgba(215,178,0,1) 45%,rgba(165,130,0,1) 100%);
+  box-shadow: inset 0 1px 2px rgba(255,255,255,.65),inset 0 -1px 2px rgba(0,0,0,.45),0 0 0 1px rgba(0,0,0,.5),0 0 0 2px rgba(255,221,0,.7),0 0 6px rgba(255,221,0,.5);
+}
+.char-card[data-char="ai_avatar"].selected::after {
+  text-shadow: 0 0 2px #fff,0 0 4px #fff,0 0 8px rgba(0,255,170,.9);
+  background: linear-gradient(135deg,rgba(255,255,255,.5) 0%,rgba(255,255,255,.12) 30%,transparent 50%),linear-gradient(180deg,rgba(0,255,170,1) 0%,rgba(0,210,130,1) 45%,rgba(0,160,90,1) 100%);
+  box-shadow: inset 0 1px 2px rgba(255,255,255,.65),inset 0 -1px 2px rgba(0,0,0,.45),0 0 0 1px rgba(0,0,0,.5),0 0 0 2px rgba(0,255,170,.7),0 0 6px rgba(0,255,170,.5);
+}
+.char-card[data-char="overlord"].selected::after {
+  text-shadow: 0 0 2px #fff,0 0 4px #fff,0 0 8px rgba(119,68,255,.9);
+  background: linear-gradient(135deg,rgba(255,255,255,.5) 0%,rgba(255,255,255,.12) 30%,transparent 50%),linear-gradient(180deg,rgba(119,68,255,1) 0%,rgba(88,42,220,1) 45%,rgba(58,20,170,1) 100%);
+  box-shadow: inset 0 1px 2px rgba(255,255,255,.65),inset 0 -1px 2px rgba(0,0,0,.45),0 0 0 1px rgba(0,0,0,.5),0 0 0 2px rgba(119,68,255,.7),0 0 6px rgba(119,68,255,.5);
+}
+.char-card[data-char="electric_eel"].selected::after {
+  text-shadow: 0 0 2px #fff,0 0 4px #fff,0 0 8px rgba(68,221,255,.9);
+  background: linear-gradient(135deg,rgba(255,255,255,.5) 0%,rgba(255,255,255,.12) 30%,transparent 50%),linear-gradient(180deg,rgba(68,221,255,1) 0%,rgba(40,178,220,1) 45%,rgba(18,135,175,1) 100%);
+  box-shadow: inset 0 1px 2px rgba(255,255,255,.65),inset 0 -1px 2px rgba(0,0,0,.45),0 0 0 1px rgba(0,0,0,.5),0 0 0 2px rgba(68,221,255,.7),0 0 6px rgba(68,221,255,.5);
+}
+.char-card[data-char="medic"].selected::after {
+  text-shadow: 0 0 2px #fff,0 0 4px #fff,0 0 8px rgba(68,255,170,.9);
+  background: linear-gradient(135deg,rgba(255,255,255,.5) 0%,rgba(255,255,255,.12) 30%,transparent 50%),linear-gradient(180deg,rgba(68,255,170,1) 0%,rgba(40,210,130,1) 45%,rgba(18,160,88,1) 100%);
+  box-shadow: inset 0 1px 2px rgba(255,255,255,.65),inset 0 -1px 2px rgba(0,0,0,.45),0 0 0 1px rgba(0,0,0,.5),0 0 0 2px rgba(68,255,170,.7),0 0 6px rgba(68,255,170,.5);
+}
+.char-card[data-char="ronin"].selected::after {
+  text-shadow: 0 0 2px #fff,0 0 4px #fff,0 0 8px rgba(255,204,68,.9);
+  background: linear-gradient(135deg,rgba(255,255,255,.5) 0%,rgba(255,255,255,.12) 30%,transparent 50%),linear-gradient(180deg,rgba(255,204,68,1) 0%,rgba(215,162,35,1) 45%,rgba(165,120,12,1) 100%);
+  box-shadow: inset 0 1px 2px rgba(255,255,255,.65),inset 0 -1px 2px rgba(0,0,0,.45),0 0 0 1px rgba(0,0,0,.5),0 0 0 2px rgba(255,204,68,.7),0 0 6px rgba(255,204,68,.5);
+}
+.char-card[data-char="pyro"].selected::after {
+  text-shadow: 0 0 2px #fff,0 0 4px #fff,0 0 8px rgba(255,85,0,.9);
+  background: linear-gradient(135deg,rgba(255,255,255,.5) 0%,rgba(255,255,255,.12) 30%,transparent 50%),linear-gradient(180deg,rgba(255,85,0,1) 0%,rgba(215,55,0,1) 45%,rgba(160,28,0,1) 100%);
+  box-shadow: inset 0 1px 2px rgba(255,255,255,.65),inset 0 -1px 2px rgba(0,0,0,.45),0 0 0 1px rgba(0,0,0,.5),0 0 0 2px rgba(255,85,0,.7),0 0 6px rgba(255,85,0,.5);
+}
+.char-card[data-char="phantom"].selected::after {
+  text-shadow: 0 0 2px #fff,0 0 4px #fff,0 0 8px rgba(170,68,255,.9);
+  background: linear-gradient(135deg,rgba(255,255,255,.5) 0%,rgba(255,255,255,.12) 30%,transparent 50%),linear-gradient(180deg,rgba(170,68,255,1) 0%,rgba(135,40,220,1) 45%,rgba(95,18,170,1) 100%);
+  box-shadow: inset 0 1px 2px rgba(255,255,255,.65),inset 0 -1px 2px rgba(0,0,0,.45),0 0 0 1px rgba(0,0,0,.5),0 0 0 2px rgba(170,68,255,.7),0 0 6px rgba(170,68,255,.5);
+}
+.char-card[data-char="spider_drone"].selected::after {
+  text-shadow: 0 0 2px #fff,0 0 4px #fff,0 0 8px rgba(170,68,68,.9);
+  background: linear-gradient(135deg,rgba(255,255,255,.5) 0%,rgba(255,255,255,.12) 30%,transparent 50%),linear-gradient(180deg,rgba(170,68,68,1) 0%,rgba(135,42,42,1) 45%,rgba(95,20,20,1) 100%);
+  box-shadow: inset 0 1px 2px rgba(255,255,255,.65),inset 0 -1px 2px rgba(0,0,0,.45),0 0 0 1px rgba(0,0,0,.5),0 0 0 2px rgba(170,68,68,.7),0 0 6px rgba(170,68,68,.5);
+}
+.char-card[data-char="robo_hawk"].selected::after {
+  text-shadow: 0 0 2px #fff,0 0 4px #fff,0 0 8px rgba(221,170,68,.9);
+  background: linear-gradient(135deg,rgba(255,255,255,.5) 0%,rgba(255,255,255,.12) 30%,transparent 50%),linear-gradient(180deg,rgba(221,170,68,1) 0%,rgba(180,135,40,1) 45%,rgba(135,95,15,1) 100%);
+  box-shadow: inset 0 1px 2px rgba(255,255,255,.65),inset 0 -1px 2px rgba(0,0,0,.45),0 0 0 1px rgba(0,0,0,.5),0 0 0 2px rgba(221,170,68,.7),0 0 6px rgba(221,170,68,.5);
+}
+.char-card[data-char="nano_rat"].selected::after {
+  text-shadow: 0 0 2px #fff,0 0 4px #fff,0 0 8px rgba(136,136,136,.9);
+  background: linear-gradient(135deg,rgba(255,255,255,.5) 0%,rgba(255,255,255,.12) 30%,transparent 50%),linear-gradient(180deg,rgba(136,136,136,1) 0%,rgba(100,100,100,1) 45%,rgba(68,68,68,1) 100%);
+  box-shadow: inset 0 1px 2px rgba(255,255,255,.65),inset 0 -1px 2px rgba(0,0,0,.45),0 0 0 1px rgba(0,0,0,.5),0 0 0 2px rgba(136,136,136,.7),0 0 6px rgba(136,136,136,.5);
+}
+.char-card[data-char="mini_bee"].selected::after {
+  text-shadow: 0 0 2px #fff,0 0 4px #fff,0 0 8px rgba(255,204,0,.9);
+  background: linear-gradient(135deg,rgba(255,255,255,.5) 0%,rgba(255,255,255,.12) 30%,transparent 50%),linear-gradient(180deg,rgba(255,204,0,1) 0%,rgba(215,162,0,1) 45%,rgba(165,118,0,1) 100%);
+  box-shadow: inset 0 1px 2px rgba(255,255,255,.65),inset 0 -1px 2px rgba(0,0,0,.45),0 0 0 1px rgba(0,0,0,.5),0 0 0 2px rgba(255,204,0,.7),0 0 6px rgba(255,204,0,.5);
+}
+.char-card[data-char="tank_commander"].selected::after {
+  text-shadow: 0 0 2px #fff,0 0 4px #fff,0 0 8px rgba(85,102,68,.9);
+  background: linear-gradient(135deg,rgba(255,255,255,.5) 0%,rgba(255,255,255,.12) 30%,transparent 50%),linear-gradient(180deg,rgba(85,102,68,1) 0%,rgba(62,78,48,1) 45%,rgba(40,55,30,1) 100%);
+  box-shadow: inset 0 1px 2px rgba(255,255,255,.65),inset 0 -1px 2px rgba(0,0,0,.45),0 0 0 1px rgba(0,0,0,.5),0 0 0 2px rgba(85,102,68,.7),0 0 6px rgba(85,102,68,.5);
+}
+.char-card[data-char="blade_dancer"].selected::after {
+  text-shadow: 0 0 2px #fff,0 0 4px #fff,0 0 8px rgba(255,102,136,.9);
+  background: linear-gradient(135deg,rgba(255,255,255,.5) 0%,rgba(255,255,255,.12) 30%,transparent 50%),linear-gradient(180deg,rgba(255,102,136,1) 0%,rgba(215,68,100,1) 45%,rgba(160,35,68,1) 100%);
+  box-shadow: inset 0 1px 2px rgba(255,255,255,.65),inset 0 -1px 2px rgba(0,0,0,.45),0 0 0 1px rgba(0,0,0,.5),0 0 0 2px rgba(255,102,136,.7),0 0 6px rgba(255,102,136,.5);
+}
+.char-card[data-char="frost_walker"].selected::after {
+  text-shadow: 0 0 2px #fff,0 0 4px #fff,0 0 8px rgba(136,221,255,.9);
+  background: linear-gradient(135deg,rgba(255,255,255,.5) 0%,rgba(255,255,255,.12) 30%,transparent 50%),linear-gradient(180deg,rgba(136,221,255,1) 0%,rgba(95,178,225,1) 45%,rgba(55,135,185,1) 100%);
+  box-shadow: inset 0 1px 2px rgba(255,255,255,.65),inset 0 -1px 2px rgba(0,0,0,.45),0 0 0 1px rgba(0,0,0,.5),0 0 0 2px rgba(136,221,255,.7),0 0 6px rgba(136,221,255,.5);
+}
+.char-card[data-char="volt_runner"].selected::after {
+  text-shadow: 0 0 2px #fff,0 0 4px #fff,0 0 8px rgba(255,255,68,.9);
+  background: linear-gradient(135deg,rgba(255,255,255,.5) 0%,rgba(255,255,255,.12) 30%,transparent 50%),linear-gradient(180deg,rgba(255,255,68,1) 0%,rgba(210,210,35,1) 45%,rgba(160,160,12,1) 100%);
+  box-shadow: inset 0 1px 2px rgba(255,255,255,.65),inset 0 -1px 2px rgba(0,0,0,.45),0 0 0 1px rgba(0,0,0,.5),0 0 0 2px rgba(255,255,68,.7),0 0 6px rgba(255,255,68,.5);
+}
+.char-card[data-char="shadow_lord"].selected::after {
+  text-shadow: 0 0 2px #fff,0 0 4px #fff,0 0 8px rgba(120,68,180,.9);
+  background: linear-gradient(135deg,rgba(255,255,255,.5) 0%,rgba(255,255,255,.12) 30%,transparent 50%),linear-gradient(180deg,rgba(120,68,180,1) 0%,rgba(88,42,140,1) 45%,rgba(55,18,95,1) 100%);
+  box-shadow: inset 0 1px 2px rgba(255,255,255,.65),inset 0 -1px 2px rgba(0,0,0,.45),0 0 0 1px rgba(0,0,0,.5),0 0 0 2px rgba(120,68,180,.7),0 0 6px rgba(120,68,180,.5);
+}
+.char-card[data-char="plasma_titan"].selected::after {
+  text-shadow: 0 0 2px #fff,0 0 4px #fff,0 0 8px rgba(255,136,255,.9);
+  background: linear-gradient(135deg,rgba(255,255,255,.5) 0%,rgba(255,255,255,.12) 30%,transparent 50%),linear-gradient(180deg,rgba(255,136,255,1) 0%,rgba(215,95,215,1) 45%,rgba(165,55,165,1) 100%);
+  box-shadow: inset 0 1px 2px rgba(255,255,255,.65),inset 0 -1px 2px rgba(0,0,0,.45),0 0 0 1px rgba(0,0,0,.5),0 0 0 2px rgba(255,136,255,.7),0 0 6px rgba(255,136,255,.5);
+}
+.char-card[data-char="quantum_ghost"].selected::after {
+  text-shadow: 0 0 2px #fff,0 0 4px #fff,0 0 8px rgba(170,255,255,.9);
+  background: linear-gradient(135deg,rgba(255,255,255,.5) 0%,rgba(255,255,255,.12) 30%,transparent 50%),linear-gradient(180deg,rgba(170,255,255,1) 0%,rgba(120,210,225,1) 45%,rgba(75,165,185,1) 100%);
+  box-shadow: inset 0 1px 2px rgba(255,255,255,.65),inset 0 -1px 2px rgba(0,0,0,.45),0 0 0 1px rgba(0,0,0,.5),0 0 0 2px rgba(170,255,255,.7),0 0 6px rgba(170,255,255,.5);
+}
+.char-card[data-char="omega_prime"].selected::after {
+  text-shadow: 0 0 2px #fff,0 0 4px #fff,0 0 8px rgba(255,215,0,.9);
+  background: linear-gradient(135deg,rgba(255,255,255,.5) 0%,rgba(255,255,255,.12) 30%,transparent 50%),linear-gradient(180deg,rgba(255,215,0,1) 0%,rgba(215,170,0,1) 45%,rgba(165,125,0,1) 100%);
+  box-shadow: inset 0 1px 2px rgba(255,255,255,.65),inset 0 -1px 2px rgba(0,0,0,.45),0 0 0 1px rgba(0,0,0,.5),0 0 0 2px rgba(255,215,0,.7),0 0 6px rgba(255,215,0,.5);
 }
 
 /* ── Quantum Ghost special card ──────────────────────────── */
@@ -1187,7 +1369,7 @@ body {
   border-color: var(--neon-theme-color, #44eeff);
   border-width: 2px;
   box-shadow:
-    0 0 14px var(--neon-theme-glow, rgba(68, 238, 255, 0.5)),
+    0 0 20px rgba(68, 238, 255, 0.6),
     0 6px 20px rgba(0, 0, 0, 0.5);
 }
 .map-card[data-map="arena"].selected {
@@ -1195,7 +1377,7 @@ body {
   border-color: #ff3366;
   border-width: 2px;
   box-shadow:
-    0 0 14px rgba(255, 50, 80, 0.5),
+    0 0 20px rgba(255, 50, 80, 0.6),
     0 6px 20px rgba(0, 0, 0, 0.5);
 }
 
@@ -1291,7 +1473,7 @@ body {
   border-color: var(--wasteland-theme-color, #ff7733);
   border-width: 2px;
   box-shadow:
-    0 0 14px var(--wasteland-theme-glow, rgba(255, 120, 50, 0.5)),
+    0 0 20px rgba(255, 120, 50, 0.6),
     0 6px 20px rgba(0, 0, 0, 0.5);
 }
 
@@ -1599,8 +1781,8 @@ body {
   border-color: #dd4455;
   border-width: 2px;
   box-shadow:
-    0 0 15px rgba(220, 60, 80, 0.5),
-    0 8px 20px rgba(0, 0, 0, 0.5);
+    0 0 20px rgba(220, 60, 80, 0.6),
+    0 6px 20px rgba(0, 0, 0, 0.5);
 }
 
 /* Selected map card z-index */
@@ -1686,6 +1868,33 @@ body {
    Each map has matching accent color for badge + checkmark glow
    Contained box-shadows to prevent overflow
    ────────────────────────────────────────────────────────────── */
+
+/* Neon City - default cyan (theme color changes border but badge stays cyan) */
+.map-card[data-map="neon_city"].selected::after {
+  text-shadow:
+    0 0 2px #fff,
+    0 0 4px #fff,
+    0 0 8px rgba(68, 238, 255, 0.9);
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.5) 0%,
+      rgba(255, 255, 255, 0.12) 30%,
+      transparent 50%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(68, 238, 255, 1) 0%,
+      rgba(45, 190, 230, 1) 45%,
+      rgba(25, 140, 180, 1) 100%
+    );
+  box-shadow:
+    inset 0 1px 2px rgba(255, 255, 255, 0.65),
+    inset 0 -1px 2px rgba(0, 0, 0, 0.45),
+    0 0 0 1px rgba(0, 0, 0, 0.5),
+    0 0 0 2px rgba(68, 238, 255, 0.7),
+    0 0 6px rgba(68, 238, 255, 0.5);
+}
 
 /* Arena - combat red */
 .map-card[data-map="arena"].selected::after {
