@@ -468,8 +468,8 @@
   .lb-tabs-wrapper {
     position: relative;
     max-width: 1000px;
-    margin: 0 auto;
-    padding: 0 28px 40px;
+    margin: 0 auto 12px;
+    padding: 0 28px 48px;
     z-index: 10;
   }
 
@@ -1195,24 +1195,13 @@
   .lb-podium-name--silver { color: var(--lb-silver); text-shadow: 0 0 20px rgba(200,220,240,0.5); }
   .lb-podium-name--bronze { color: var(--lb-bronze); text-shadow: 0 0 20px rgba(255,136,68,0.5); }
 
-  /* Character */
+  /* Character — Hidden for cleaner design */
   .lb-podium-char {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 13px;
-    font-weight: 600;
-    color: rgba(255,255,255,0.5);
-    margin-bottom: 18px;
-    z-index: 3;
+    display: none; /* Removed: dot + line clutter */
   }
 
   .lb-podium-char-dot {
-    width: 8px; height: 8px;
-    border-radius: 50%;
-    flex-shrink: 0;
-    box-shadow: 0 0 8px currentColor;
+    display: none;
   }
 
   /* Score value */
@@ -1280,7 +1269,7 @@
   /* Table header */
   .lb-list-header {
     display: grid;
-    grid-template-columns: 60px 1fr 200px 180px;
+    grid-template-columns: 60px 1fr 180px; /* 3 columns: rank, name, value */
     padding: 10px 24px 14px;
     font-family: 'Orbitron', sans-serif;
     font-size: 9px;
@@ -1305,7 +1294,7 @@
   .lb-row {
     position: relative;
     display: grid;
-    grid-template-columns: 60px 1fr 200px 180px;
+    grid-template-columns: 60px 1fr 180px; /* 3 columns: rank, name, value */
     align-items: center;
     padding: 16px 24px;
     border-radius: 14px;
@@ -1431,23 +1420,13 @@
     text-shadow: 0 0 8px var(--lb-cyan);
   }
 
-  /* Character column */
+  /* Character column — Hidden for cleaner design */
   .lb-row__char {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 14px;
-    font-weight: 600;
-    color: rgba(255,255,255,0.5);
-    overflow: hidden;
+    display: none; /* Removed: visual clutter */
   }
 
   .lb-char-dot {
-    width: 10px; height: 10px;
-    border-radius: 50%;
-    flex-shrink: 0;
-    box-shadow: 0 0 8px currentColor;
+    display: none;
   }
 
   /* Value column */
@@ -1527,8 +1506,8 @@
     .lb-content { max-width: 100%; padding: 0 20px; }
     .lb-podium-card { max-width: 260px; min-width: 170px; padding: 28px 20px 24px; }
     .lb-podium-card--gold { transform: translateY(-24px); padding-top: 34px; }
-    .lb-row { grid-template-columns: 54px 1fr 160px 150px; }
-    .lb-list-header { grid-template-columns: 54px 1fr 160px 150px; }
+    .lb-row { grid-template-columns: 54px 1fr 150px; }
+    .lb-list-header { grid-template-columns: 54px 1fr 150px; }
     .lb-hud-corner { width: 100px; height: 100px; opacity: 0.4; }
   }
 
@@ -1540,7 +1519,7 @@
     .lb-player-badge { padding: 12px 24px; gap: 12px; }
     .lb-player-badge__name { font-size: 12px; }
 
-    .lb-tabs-wrapper { padding: 0 16px 32px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .lb-tabs-wrapper { padding: 0 16px 40px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
     .lb-tabs { justify-content: flex-start; flex-wrap: nowrap; gap: 8px; padding-bottom: 4px; }
     .lb-tab { padding: 12px 20px; font-size: 10px; flex-shrink: 0; min-height: 48px; }
 
@@ -1559,9 +1538,7 @@
     .lb-podium-char { font-size: 11px; margin-bottom: 14px; }
 
     .lb-row { grid-template-columns: 50px 1fr 140px; padding: 14px 18px; }
-    .lb-row__char { display: none; }
     .lb-list-header { grid-template-columns: 50px 1fr 140px; padding: 8px 18px 12px; }
-    .lb-list-header span:nth-child(3) { display: none; }
     .lb-row__val { font-size: 13px; }
     .lb-row__name { font-size: 15px; }
     .lb-row__rank { width: 36px; height: 36px; font-size: 12px; }
@@ -1579,7 +1556,7 @@
     .lb-player-badge__name { font-size: 11px; }
     .lb-player-badge__label { font-size: 8px; }
 
-    .lb-tabs-wrapper { padding: 0 12px 26px; }
+    .lb-tabs-wrapper { padding: 0 12px 36px; }
     .lb-tabs { gap: 6px; }
     .lb-tab { padding: 10px 14px; font-size: 8px; letter-spacing: 0.12em; min-height: 44px; }
     .lb-tab__icon { font-size: 12px; }
@@ -1645,7 +1622,7 @@
     .lb-hero__sub { font-size: 9px; gap: 8px; }
     .lb-player-badge { padding: 8px 14px; font-size: 9px; margin-top: 18px; }
 
-    .lb-tabs-wrapper { padding: 0 8px 20px; }
+    .lb-tabs-wrapper { padding: 0 8px 32px; }
     .lb-tabs { gap: 4px; }
     .lb-tab { padding: 9px 10px; font-size: 7px; letter-spacing: 0.1em; min-height: 40px; }
     .lb-tab__icon { font-size: 10px; }
@@ -2220,8 +2197,8 @@
   ═══════════════════════════════════════════════════════════════════ */
   html[data-theme="light"] .lb-tabs-wrapper {
     padding-top: 16px;
-    padding-bottom: 50px;
-    margin-bottom: 20px;
+    padding-bottom: 56px;
+    margin-bottom: 16px;
     position: relative;
     z-index: 50;
   }
@@ -2384,6 +2361,360 @@
   html[data-theme="light"] .map-dropdown__empty {
     color: rgba(10,25,50,0.55);
   }
+
+  /* ═══════════════════════════════════════════════════════════════════
+     REPORT BUTTON — Matching Profile Page Design
+  ═══════════════════════════════════════════════════════════════════ */
+  .lb-report-btn {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 8px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    background: rgba(255,170,68,0.08);
+    border: 1px solid rgba(255,170,68,0.35);
+    color: #DDAA44;
+    transition: all 0.22s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin-left: 10px;
+    flex-shrink: 0;
+  }
+  /* Podium card report button — more breathing room */
+  .lb-podium-info .lb-report-btn {
+    margin-left: 0;
+    margin-top: 16px;
+  }
+  .lb-report-btn:hover {
+    background: rgba(255,170,68,0.16);
+    border-color: rgba(255,170,68,0.55);
+    color: #FFBB55;
+    box-shadow: 0 0 16px rgba(255,170,68,0.2);
+  }
+  .lb-report-btn:active {
+    transform: scale(0.97);
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════
+     REPORT MODAL — Premium Moderation UI (Matching Profile)
+  ═══════════════════════════════════════════════════════════════════ */
+  .rpt-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(2,2,12,0.88);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    z-index: 3000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    animation: rptFadeIn 0.25s ease;
+  }
+  @keyframes rptFadeIn { from { opacity: 0; } to { opacity: 1; } }
+  .rpt-backdrop[hidden] { display: none !important; }
+
+  .rpt-box {
+    background: linear-gradient(155deg, rgba(16,12,32,0.99) 0%, rgba(10,8,22,0.99) 100%);
+    border: 1px solid rgba(255,170,68,0.35);
+    border-radius: 20px;
+    padding: 32px 36px 28px;
+    max-width: 460px;
+    width: 100%;
+    box-shadow:
+      0 0 60px rgba(255,170,68,0.1),
+      0 0 30px rgba(255,136,68,0.06),
+      0 30px 70px rgba(0,0,0,0.65),
+      inset 0 1px 0 rgba(255,255,255,0.04);
+    animation: rptSlideIn 0.3s cubic-bezier(0.4,0,0.2,1);
+    position: relative;
+    overflow: hidden;
+  }
+  .rpt-box::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 80px;
+    background: linear-gradient(180deg, rgba(255,170,68,0.06) 0%, transparent 100%);
+    pointer-events: none;
+    border-radius: 20px 20px 0 0;
+  }
+  @keyframes rptSlideIn {
+    from { opacity: 0; transform: scale(0.94) translateY(12px); }
+    to { opacity: 1; transform: none; }
+  }
+
+  /* Header */
+  .rpt-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 24px;
+    position: relative;
+  }
+  .rpt-icon-wrap {
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(135deg, rgba(255,170,68,0.15) 0%, rgba(255,136,68,0.08) 100%);
+    border: 1px solid rgba(255,170,68,0.3);
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .rpt-icon {
+    font-size: 22px;
+    color: #FFAA44;
+    filter: drop-shadow(0 0 8px rgba(255,170,68,0.5));
+  }
+  .rpt-header-text {
+    flex: 1;
+  }
+  .rpt-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    color: #FFAA44;
+    margin: 0 0 6px 0;
+    text-shadow: 0 0 18px rgba(255,170,68,0.4);
+  }
+  .rpt-sub {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    color: rgba(255,255,255,0.45);
+    line-height: 1.4;
+    margin: 0;
+  }
+
+  /* Form fields */
+  .rpt-field {
+    margin-bottom: 20px;
+  }
+  .rpt-lbl {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    color: rgba(255,170,68,0.7);
+    margin-bottom: 10px;
+    text-transform: uppercase;
+  }
+  .rpt-lbl::before {
+    content: '';
+    width: 4px;
+    height: 4px;
+    background: #FFAA44;
+    border-radius: 50%;
+    box-shadow: 0 0 6px #FFAA44;
+  }
+
+  .rpt-inp, .rpt-area {
+    width: 100%;
+    padding: 14px 18px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    color: #fff;
+    outline: none;
+    transition: all 0.25s ease;
+    box-sizing: border-box;
+  }
+  .rpt-inp::placeholder, .rpt-area::placeholder {
+    color: rgba(255,255,255,0.28);
+  }
+  .rpt-inp:hover, .rpt-area:hover {
+    border-color: rgba(255,170,68,0.25);
+    background: rgba(255,255,255,0.04);
+  }
+  .rpt-inp:focus, .rpt-area:focus {
+    border-color: rgba(255,170,68,0.5);
+    background: rgba(255,170,68,0.04);
+    box-shadow: 0 0 20px rgba(255,170,68,0.1), inset 0 0 20px rgba(255,170,68,0.02);
+  }
+  .rpt-area {
+    resize: vertical;
+    min-height: 110px;
+    line-height: 1.5;
+  }
+
+  /* Error */
+  .rpt-err {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: #FF6666;
+    margin-top: -8px;
+    margin-bottom: 12px;
+    display: none;
+    padding-left: 12px;
+    border-left: 2px solid #FF6666;
+  }
+
+  /* Buttons */
+  .rpt-btns {
+    display: flex;
+    gap: 14px;
+    justify-content: flex-end;
+    margin-top: 28px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(255,255,255,0.06);
+  }
+  .rpt-btn {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    padding: 12px 24px;
+    border-radius: 10px;
+    cursor: pointer;
+    border: 1px solid;
+    transition: all 0.22s ease;
+  }
+  .rpt-btn--cancel {
+    background: rgba(255,255,255,0.03);
+    border-color: rgba(255,255,255,0.12);
+    color: rgba(255,255,255,0.5);
+  }
+  .rpt-btn--cancel:hover {
+    background: rgba(255,255,255,0.08);
+    border-color: rgba(255,255,255,0.25);
+    color: #fff;
+  }
+  .rpt-btn--send {
+    background: linear-gradient(135deg, rgba(255,170,68,0.2) 0%, rgba(255,136,68,0.15) 100%);
+    border-color: rgba(255,170,68,0.45);
+    color: #FFAA44;
+    box-shadow: 0 0 15px rgba(255,170,68,0.15);
+  }
+  .rpt-btn--send:hover {
+    background: linear-gradient(135deg, rgba(255,170,68,0.3) 0%, rgba(255,136,68,0.22) 100%);
+    border-color: rgba(255,170,68,0.65);
+    color: #FFCC66;
+    box-shadow: 0 0 25px rgba(255,170,68,0.25);
+    transform: translateY(-1px);
+  }
+  .rpt-btn--send:active {
+    transform: translateY(0);
+  }
+  .rpt-btn--send:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    pointer-events: none;
+    box-shadow: none;
+  }
+
+  /* ═══ Light Mode — Report Button ═══ */
+  html[data-theme="light"] .lb-report-btn {
+    background: rgba(180,120,40,0.08);
+    border-color: rgba(180,120,40,0.4);
+    color: #996622;
+  }
+  html[data-theme="light"] .lb-report-btn:hover {
+    background: rgba(180,120,40,0.15);
+    border-color: rgba(180,120,40,0.6);
+    color: #885511;
+    box-shadow: 0 0 16px rgba(180,120,40,0.2);
+  }
+
+  /* ═══ Light Mode — Report Modal ═══ */
+  html[data-theme="light"] .rpt-backdrop {
+    background: rgba(220,230,245,0.88);
+  }
+  html[data-theme="light"] .rpt-box {
+    background: linear-gradient(155deg, rgba(255,255,255,0.99) 0%, rgba(248,250,255,0.99) 100%);
+    border-color: rgba(180,120,40,0.4);
+    box-shadow:
+      0 0 50px rgba(180,120,40,0.08),
+      0 20px 60px rgba(0,0,0,0.15),
+      inset 0 1px 0 rgba(255,255,255,0.8);
+  }
+  html[data-theme="light"] .rpt-box::before {
+    background: linear-gradient(180deg, rgba(180,120,40,0.06) 0%, transparent 100%);
+  }
+  html[data-theme="light"] .rpt-icon-wrap {
+    background: linear-gradient(135deg, rgba(180,120,40,0.12) 0%, rgba(180,100,30,0.06) 100%);
+    border-color: rgba(180,120,40,0.3);
+  }
+  html[data-theme="light"] .rpt-icon {
+    color: #996622;
+    filter: drop-shadow(0 0 6px rgba(180,120,40,0.4));
+  }
+  html[data-theme="light"] .rpt-title {
+    color: #885511;
+    text-shadow: 0 0 12px rgba(180,120,40,0.3);
+  }
+  html[data-theme="light"] .rpt-sub {
+    color: rgba(40,50,70,0.6);
+  }
+  html[data-theme="light"] .rpt-lbl {
+    color: rgba(140,90,30,0.8);
+  }
+  html[data-theme="light"] .rpt-lbl::before {
+    background: #996622;
+    box-shadow: 0 0 5px rgba(180,120,40,0.5);
+  }
+  html[data-theme="light"] .rpt-inp,
+  html[data-theme="light"] .rpt-area {
+    background: rgba(0,0,0,0.02);
+    border-color: rgba(0,0,0,0.1);
+    color: #1a2a40;
+  }
+  html[data-theme="light"] .rpt-inp::placeholder,
+  html[data-theme="light"] .rpt-area::placeholder {
+    color: rgba(40,50,70,0.4);
+  }
+  html[data-theme="light"] .rpt-inp:hover,
+  html[data-theme="light"] .rpt-area:hover {
+    border-color: rgba(180,120,40,0.3);
+    background: rgba(180,120,40,0.03);
+  }
+  html[data-theme="light"] .rpt-inp:focus,
+  html[data-theme="light"] .rpt-area:focus {
+    border-color: rgba(180,120,40,0.5);
+    background: rgba(180,120,40,0.04);
+    box-shadow: 0 0 15px rgba(180,120,40,0.1);
+  }
+  html[data-theme="light"] .rpt-err {
+    color: #CC4444;
+    border-left-color: #CC4444;
+  }
+  html[data-theme="light"] .rpt-btns {
+    border-top-color: rgba(0,0,0,0.06);
+  }
+  html[data-theme="light"] .rpt-btn--cancel {
+    background: rgba(0,0,0,0.03);
+    border-color: rgba(0,0,0,0.12);
+    color: rgba(40,50,70,0.6);
+  }
+  html[data-theme="light"] .rpt-btn--cancel:hover {
+    background: rgba(0,0,0,0.06);
+    border-color: rgba(0,0,0,0.2);
+    color: #1a2a40;
+  }
+  html[data-theme="light"] .rpt-btn--send {
+    background: linear-gradient(135deg, rgba(180,120,40,0.15) 0%, rgba(160,100,30,0.1) 100%);
+    border-color: rgba(180,120,40,0.45);
+    color: #885511;
+    box-shadow: 0 0 12px rgba(180,120,40,0.12);
+  }
+  html[data-theme="light"] .rpt-btn--send:hover {
+    background: linear-gradient(135deg, rgba(180,120,40,0.22) 0%, rgba(160,100,30,0.16) 100%);
+    border-color: rgba(180,120,40,0.6);
+    color: #774400;
+    box-shadow: 0 0 20px rgba(180,120,40,0.2);
+  }
 </style>
 </head>
 <body class="select-screen">
@@ -2489,9 +2820,6 @@
         </button>
         <button class="lb-tab" data-board="nex" role="tab" aria-selected="false">
           <span class="lb-tab__icon">⬢</span>NEX
-        </button>
-        <button class="lb-tab" data-board="campaign" role="tab" aria-selected="false">
-          <span class="lb-tab__icon">◆</span>CAMPAIGN
         </button>
         <button class="lb-tab" data-board="map" role="tab" aria-selected="false">
           <span class="lb-tab__icon">⬡</span>MAP
@@ -2678,19 +3006,28 @@
 
   </div><!-- /.lb-page -->
 
-  <!-- ══ Report Player Modal ══════════════════════════════════════ -->
+  <!-- ══ Report Player Modal (Matching Profile Design) ══════════════ -->
   <div class="rpt-backdrop" id="rptModal" hidden>
     <div class="rpt-box">
-      <div class="rpt-icon">⚑</div>
-      <div class="rpt-title">REPORT PLAYER</div>
-      <div class="rpt-sub">Submit a report for review by our moderation team.</div>
+      <div class="rpt-header">
+        <div class="rpt-icon-wrap">
+          <svg class="rpt-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/>
+            <line x1="4" y1="22" x2="4" y2="15"/>
+          </svg>
+        </div>
+        <div class="rpt-header-text">
+          <div class="rpt-title">REPORT PLAYER</div>
+          <div class="rpt-sub">Submit a report for review by our moderation team.</div>
+        </div>
+      </div>
       <div class="rpt-field">
         <label class="rpt-lbl" for="rptName">PLAYER NAME</label>
-        <input class="rpt-inp" id="rptName" type="text" placeholder="Enter player name…" autocomplete="off">
+        <input class="rpt-inp" id="rptName" type="text" placeholder="Enter player name..." autocomplete="off">
       </div>
       <div class="rpt-field">
         <label class="rpt-lbl" for="rptReason">REASON</label>
-        <textarea class="rpt-area" id="rptReason" placeholder="Describe the reason for this report…"></textarea>
+        <textarea class="rpt-area" id="rptReason" placeholder="Describe the reason for this report..."></textarea>
       </div>
       <div class="rpt-err" id="rptErr"></div>
       <div class="rpt-btns">
@@ -2736,7 +3073,6 @@
     waves:    { col: 'HIGHEST WAVE',   fmt: v => `Wave ${v}` },
     level:    { col: 'ACCOUNT LEVEL',  fmt: v => `Level ${v}` },
     nex:      { col: 'LIFETIME NEX',   fmt: v => `${(+v).toLocaleString()} ⬢` },
-    campaign: { col: 'CAMPAIGN LEVEL', fmt: v => `Level ${v}` },
     map:      { col: 'MAP KILLS',      fmt: v => v.toLocaleString() },
   };
 
@@ -3016,7 +3352,7 @@
         if (!isMe) {
           const rptBtn = document.createElement('button');
           rptBtn.className = 'lb-report-btn';
-          rptBtn.textContent = '⚑ REPORT';
+          rptBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg> REPORT';
           rptBtn.addEventListener('click', (e) => { e.stopPropagation(); openReportModal(row.name); });
           info.appendChild(rptBtn);
         }
@@ -3042,7 +3378,7 @@
 
       const header = document.createElement('div');
       header.className = 'lb-list-header';
-      header.innerHTML = `<span>#</span><span>PLAYER</span><span>CHARACTER</span><span>${cfg.col}</span>`;
+      header.innerHTML = `<span>#</span><span>PLAYER</span><span>${cfg.col}</span>`;
       wrap.appendChild(header);
 
       const list = document.createElement('div');
@@ -3072,7 +3408,7 @@
         } else {
           const rptBtn = document.createElement('button');
           rptBtn.className = 'lb-report-btn';
-          rptBtn.textContent = '⚑ REPORT';
+          rptBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg> REPORT';
           rptBtn.addEventListener('click', (e) => { e.stopPropagation(); openReportModal(row.name); });
           nameCell.appendChild(rptBtn);
         }
