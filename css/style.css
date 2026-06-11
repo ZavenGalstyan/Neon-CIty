@@ -9696,8 +9696,6 @@ html[data-theme="light"] .nav-mobile-theme-toggle .toggle-switch::after {
   display: block;
   width: 100%;
   height: 100%;
-  /* Ensure canvas fills perfectly on all devices */
-  object-fit: contain;
 }
 
 /* Phone touch controls */

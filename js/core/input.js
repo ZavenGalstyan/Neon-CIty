@@ -40,7 +40,8 @@ class InputManager {
     // ── Mouse ────────────────────────────────────────────────
     canvas.addEventListener('mousemove', e => {
       const r = canvas.getBoundingClientRect();
-      this.mouseScreen.set(e.clientX - r.left, e.clientY - r.top);
+      const sx = canvas.width / r.width, sy = canvas.height / r.height;
+      this.mouseScreen.set((e.clientX - r.left) * sx, (e.clientY - r.top) * sy);
     });
     canvas.addEventListener('mousedown', e => {
       if (e.button === 0) { this.mouseDown = true; this.mouseJustDown = true; }
@@ -53,8 +54,9 @@ class InputManager {
     // ── Touch auto-aim (right half of screen = fire toward touch) ──
     canvas.addEventListener('touchstart', e => {
       const r = canvas.getBoundingClientRect();
+      const sx = canvas.width / r.width, sy = canvas.height / r.height;
       for (const t of e.changedTouches) {
-        const cx = t.clientX - r.left, cy = t.clientY - r.top;
+        const cx = (t.clientX - r.left) * sx, cy = (t.clientY - r.top) * sy;
         // Right half of screen = aim + fire
         if (cx > canvas.width * 0.45) {
           this.mouseScreen.set(cx, cy);
@@ -66,8 +68,9 @@ class InputManager {
 
     canvas.addEventListener('touchmove', e => {
       const r = canvas.getBoundingClientRect();
+      const sx = canvas.width / r.width, sy = canvas.height / r.height;
       for (const t of e.changedTouches) {
-        const cx = t.clientX - r.left, cy = t.clientY - r.top;
+        const cx = (t.clientX - r.left) * sx, cy = (t.clientY - r.top) * sy;
         if (cx > canvas.width * 0.45) this.mouseScreen.set(cx, cy);
       }
       e.preventDefault();
@@ -76,8 +79,9 @@ class InputManager {
     canvas.addEventListener('touchend', e => {
       let anyRight = false;
       const r = canvas.getBoundingClientRect();
+      const sx = canvas.width / r.width;
       for (const t of e.changedTouches) {
-        if ((t.clientX - r.left) > canvas.width * 0.45) anyRight = true;
+        if ((t.clientX - r.left) * sx > canvas.width * 0.45) anyRight = true;
       }
       if (anyRight) this.mouseDown = false;
       e.preventDefault();
