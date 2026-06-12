@@ -1681,7 +1681,7 @@ Game.prototype._render = function() {
         this._isMobile,
       );
       if (this._waypointDoor)
-        this.hud.renderWaypointNav(this.player, this._waypointDoor, this.map);
+        this.hud.renderWaypointNav(this.player, this._waypointDoor, this.map, this._isMobile);
       this.hud.renderHealthBar(this.player, this._isMobile);
       this.hud.renderHelpButton(this._helpPanelOpen, this._isMobile);
       if (this._helpPanelOpen) this.hud.renderHelpPanel(this._arenaMode);
@@ -2059,7 +2059,11 @@ Game.prototype._render = function() {
     }
 
     // ── Big-map overlay ───────────────────────────────────────
-    if (this.state === "bigmap") {
+    // Toggle body class to disable touch controls overlay when bigmap is open
+    const bigmapOpen = this.state === "bigmap";
+    document.body.classList.toggle("bigmap-open", bigmapOpen);
+
+    if (bigmapOpen) {
       const mx = this.input.mouseScreen.x,
         my = this.input.mouseScreen.y;
       const hoveredDoor = this.hud.renderBigMap(
@@ -2073,7 +2077,14 @@ Game.prototype._render = function() {
         mx,
         my,
       );
+
       if (this.input.mouseJustDown) {
+        // Get map bounds from the HUD (set during renderBigMap)
+        const bounds = this.hud._bigMapBounds;
+        const insideMap = bounds &&
+          mx >= bounds.ox && mx <= bounds.ox + bounds.mapW &&
+          my >= bounds.oy && my <= bounds.oy + bounds.mapH;
+
         if (hoveredDoor) {
           // Toggle: click same door/metro again clears waypoint, otherwise set it
           let same = false;
@@ -2088,11 +2099,14 @@ Game.prototype._render = function() {
             }
           }
           this._waypointDoor = same ? null : hoveredDoor;
+          // Close map after selecting destination for quick gameplay
           this.state = "playing";
-        } else {
-          // Click empty space closes map
+        } else if (!insideMap) {
+          // Only close map when clicking OUTSIDE the map area
+          // Clicking inside the map but not on a marker does nothing
           this.state = "playing";
         }
+        // If clicking inside map but not on a marker, do nothing (prevent accidental close)
       }
     }
 
