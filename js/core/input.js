@@ -57,10 +57,12 @@ class InputManager {
       const sx = canvas.width / r.width, sy = canvas.height / r.height;
       for (const t of e.changedTouches) {
         const cx = (t.clientX - r.left) * sx, cy = (t.clientY - r.top) * sy;
-        // Right half of screen = aim + fire
+        // Always track position and single-tap for UI interactions (bigmap, pause menu, etc.)
+        this.mouseScreen.set(cx, cy);
+        this.mouseJustDown = true;
+        // Sustained fire only from right half (left half is the joystick zone during gameplay)
         if (cx > canvas.width * 0.45) {
-          this.mouseScreen.set(cx, cy);
-          this.mouseDown = true; this.mouseJustDown = true;
+          this.mouseDown = true;
         }
       }
       e.preventDefault();
@@ -71,7 +73,8 @@ class InputManager {
       const sx = canvas.width / r.width, sy = canvas.height / r.height;
       for (const t of e.changedTouches) {
         const cx = (t.clientX - r.left) * sx, cy = (t.clientY - r.top) * sy;
-        if (cx > canvas.width * 0.45) this.mouseScreen.set(cx, cy);
+        // Always update position so hover works across the full bigmap
+        this.mouseScreen.set(cx, cy);
       }
       e.preventDefault();
     }, { passive: false });
