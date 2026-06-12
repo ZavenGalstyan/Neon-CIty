@@ -646,10 +646,87 @@ const SocialUI = (() => {
     try { await Social.Friends.send(name); toast(`Request sent to ${name}!`, 'friend'); await _refreshAll(); }
     catch(e) { toast(e.message, 'error'); }
   }
-  async function _doRemoveFriend(name) {
-    if (!confirm(`Remove ${name} from friends?`)) return;
-    try { await Social.Friends.remove(name); toast(`${name} removed.`, 'friend'); await _refreshAll(); }
-    catch(e) { toast(e.message, 'error'); }
+
+  /* ── Remove Friend Confirmation Modal ───────────────────────── */
+  function _showRemoveFriendModal(name) {
+    // Remove existing modal if any
+    document.getElementById('ncsConfirmModal')?.remove();
+
+    const overlay = document.createElement('div');
+    overlay.id = 'ncsConfirmModal';
+    overlay.className = 'ncs-confirm-overlay';
+    overlay.innerHTML = `
+      <div class="ncs-confirm-modal" role="dialog" aria-modal="true" aria-labelledby="ncsConfirmTitle">
+        <div class="ncs-confirm-icon">⚠️</div>
+        <h3 class="ncs-confirm-title" id="ncsConfirmTitle">REMOVE FRIEND?</h3>
+        <p class="ncs-confirm-message">Are you sure you want to remove this player from your friends list?</p>
+        <div class="ncs-confirm-name">${_esc(name)}</div>
+        <div class="ncs-confirm-buttons">
+          <button class="ncs-confirm-btn cancel" id="ncsConfirmCancel">CANCEL</button>
+          <button class="ncs-confirm-btn danger" id="ncsConfirmRemove">REMOVE FRIEND</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    document.body.style.overflow = 'hidden'; // Prevent background scroll
+
+    const modal = overlay.querySelector('.ncs-confirm-modal');
+    const cancelBtn = overlay.querySelector('#ncsConfirmCancel');
+    const removeBtn = overlay.querySelector('#ncsConfirmRemove');
+
+    // Close modal helper
+    function closeModal() {
+      overlay.classList.add('closing');
+      document.body.style.overflow = '';
+      setTimeout(() => overlay.remove(), 150);
+    }
+
+    // Cancel button
+    cancelBtn.addEventListener('click', closeModal);
+
+    // Click outside modal to close
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) closeModal();
+    });
+
+    // Escape key to close
+    function handleEscape(e) {
+      if (e.key === 'Escape') {
+        closeModal();
+        document.removeEventListener('keydown', handleEscape);
+      }
+    }
+    document.addEventListener('keydown', handleEscape);
+
+    // Remove button - performs the actual removal
+    removeBtn.addEventListener('click', async () => {
+      // Disable buttons and show loading state
+      cancelBtn.disabled = true;
+      removeBtn.disabled = true;
+      removeBtn.classList.add('loading');
+      removeBtn.textContent = 'REMOVING...';
+
+      try {
+        await Social.Friends.remove(name);
+        toast(`${name} removed.`, 'friend');
+        closeModal();
+        await _refreshAll();
+      } catch (e) {
+        toast(e.message || 'Failed to remove friend.', 'error');
+        // Re-enable buttons on error
+        cancelBtn.disabled = false;
+        removeBtn.disabled = false;
+        removeBtn.classList.remove('loading');
+        removeBtn.textContent = 'REMOVE FRIEND';
+      }
+    });
+
+    // Focus the cancel button for accessibility
+    cancelBtn.focus();
+  }
+
+  function _doRemoveFriend(name) {
+    _showRemoveFriendModal(name);
   }
   async function _doAcceptReq(id) {
     if (!id) { toast('Request ID missing — try refreshing the page.', 'error'); return; }

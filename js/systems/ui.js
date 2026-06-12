@@ -2113,8 +2113,10 @@ class HUD {
 
   // ── Full-screen big-map overlay ────────────────────────────────────────────
   // Returns the door the cursor is currently hovering over (or null).
+  // Also returns map bounds info for click detection.
   renderBigMap(ctx, W, H, gameMap, player, doors, waypointDoor, mx, my) {
     const t = performance.now() / 1000;
+    const sc = this._sc; // responsive scale factor
 
     // Background with gradient effect
     const bgGrad = ctx.createRadialGradient(W/2, H/2, 0, W/2, H/2, Math.max(W, H));
@@ -2127,25 +2129,34 @@ class HUD {
     ctx.save();
     ctx.strokeStyle = 'rgba(68,238,255,0.04)';
     ctx.lineWidth = 1;
-    for (let x = 0; x < W; x += 40) {
+    const gridStep = Math.max(20, Math.round(40 * sc));
+    for (let x = 0; x < W; x += gridStep) {
       ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
     }
-    for (let y = 0; y < H; y += 40) {
+    for (let y = 0; y < H; y += gridStep) {
       ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
     }
     ctx.restore();
 
-    // Map area
-    const padX = 68, padY = 72;
+    // Map area - responsive padding
+    const padX = Math.max(20, Math.round(68 * sc));
+    const padY = Math.max(40, Math.round(72 * sc));
+    const legendH = Math.round(50 * sc);
     const mapW = W - padX * 2;
-    const mapH = H - padY * 2 - 50; // 50px for legend row
+    const mapH = H - padY * 2 - legendH;
     const ox = padX, oy = padY;
     const scX = mapW / (gameMap.W * gameMap.S);
     const scY = mapH / (gameMap.H * gameMap.S);
 
+    // Store map bounds for external click detection
+    this._bigMapBounds = { ox, oy, mapW, mapH };
+
+    // Hover detection radius - scales with screen size, minimum 14px for touch
+    const hoverRadius = Math.max(14, Math.round(18 * sc));
+
     // Outer glow frame - enhanced
     ctx.save();
-    ctx.shadowColor = '#44EEFF'; ctx.shadowBlur = 35;
+    ctx.shadowColor = '#44EEFF'; ctx.shadowBlur = 35 * sc;
     ctx.strokeStyle = 'rgba(68,238,255,0.4)'; ctx.lineWidth = 2;
     this._rr(ctx, ox - 10, oy - 10, mapW + 20, mapH + 20, 12); ctx.stroke();
     // Inner frame
@@ -2166,21 +2177,25 @@ class HUD {
     this._rr(ctx, ox, oy, mapW, mapH, 6); ctx.stroke();
     ctx.restore();
 
-    // Title - enhanced with better styling
+    // Title - enhanced with better styling (responsive)
+    const titleSize = Math.max(14, Math.round(22 * sc));
+    const subtitleSize = Math.max(7, Math.round(9 * sc));
     ctx.save();
     ctx.textAlign = 'center';
     // Main title with glow
-    ctx.font = 'bold 22px Orbitron, monospace';
-    ctx.fillStyle = '#44EEFF'; ctx.shadowColor = '#44EEFF'; ctx.shadowBlur = 25;
-    ctx.fillText('⟨ NEON CITY MAP ⟩', W / 2, oy - 30);
+    ctx.font = `bold ${titleSize}px Orbitron, monospace`;
+    ctx.fillStyle = '#44EEFF'; ctx.shadowColor = '#44EEFF'; ctx.shadowBlur = 25 * sc;
+    ctx.fillText('⟨ NEON CITY MAP ⟩', W / 2, oy - Math.round(30 * sc));
     // Decorative lines
+    const lineOffset = Math.round(120 * sc);
+    const lineLen = Math.round(60 * sc);
     ctx.strokeStyle = 'rgba(68,238,255,0.3)'; ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.moveTo(W/2 - 180, oy - 30); ctx.lineTo(W/2 - 120, oy - 30); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(W/2 + 120, oy - 30); ctx.lineTo(W/2 + 180, oy - 30); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(W/2 - lineOffset - lineLen, oy - Math.round(30 * sc)); ctx.lineTo(W/2 - lineOffset, oy - Math.round(30 * sc)); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(W/2 + lineOffset, oy - Math.round(30 * sc)); ctx.lineTo(W/2 + lineOffset + lineLen, oy - Math.round(30 * sc)); ctx.stroke();
     // Subtitle
-    ctx.font = '9px Orbitron, monospace';
+    ctx.font = `${subtitleSize}px Orbitron, monospace`;
     ctx.fillStyle = 'rgba(255,255,255,0.5)'; ctx.shadowBlur = 0;
-    ctx.fillText('[ N ] CLOSE  ·  CLICK LOCATION TO SET DESTINATION  ·  CLICK AGAIN TO CLEAR', W / 2, oy - 12);
+    ctx.fillText('[ N ] CLOSE  ·  CLICK LOCATION TO SET DESTINATION  ·  CLICK AGAIN TO CLEAR', W / 2, oy - Math.round(12 * sc));
     ctx.restore();
 
     // ── Building markers with icons and labels ──────────────────────────────────────
@@ -2196,10 +2211,11 @@ class HUD {
       if (sx < ox || sx > ox + mapW || sy < oy || sy > oy + mapH) continue;
       const info  = this._doorInfo(door, gameMap);
       const wp    = isWP(door);
-      const hover = Math.hypot(mx - sx, my - sy) < 18;
+      const hover = Math.hypot(mx - sx, my - sy) < hoverRadius;
       if (hover) hoveredDoor = door;
 
-      const baseR = wp || hover ? 10 : 7;
+      // Scaled marker sizes
+      const baseR = Math.max(5, Math.round((wp || hover ? 10 : 7) * sc));
       const pulse = Math.sin(t * 3 + door.tx * 0.5) * 0.2 + 0.8;
       const r = baseR * (wp || hover ? 1.2 : pulse);
 
@@ -2207,10 +2223,10 @@ class HUD {
 
       // Outer glow ring
       ctx.shadowColor = info.color;
-      ctx.shadowBlur = wp ? 25 : hover ? 20 : 12;
+      ctx.shadowBlur = (wp ? 25 : hover ? 20 : 12) * sc;
       ctx.strokeStyle = info.color + (wp || hover ? 'AA' : '66');
-      ctx.lineWidth = wp || hover ? 2.5 : 1.5;
-      ctx.beginPath(); ctx.arc(sx, sy, r + 3, 0, Math.PI * 2); ctx.stroke();
+      ctx.lineWidth = (wp || hover ? 2.5 : 1.5) * sc;
+      ctx.beginPath(); ctx.arc(sx, sy, r + 3 * sc, 0, Math.PI * 2); ctx.stroke();
 
       // Main circle background
       const grad = ctx.createRadialGradient(sx - r * 0.3, sy - r * 0.3, 0, sx, sy, r);
@@ -2218,7 +2234,7 @@ class HUD {
       grad.addColorStop(0.7, info.color + 'DD');
       grad.addColorStop(1, info.color + '88');
       ctx.fillStyle = grad;
-      ctx.shadowBlur = wp ? 20 : hover ? 15 : 8;
+      ctx.shadowBlur = (wp ? 20 : hover ? 15 : 8) * sc;
       ctx.beginPath(); ctx.arc(sx, sy, r, 0, Math.PI * 2); ctx.fill();
 
       // Inner highlight
@@ -2232,46 +2248,50 @@ class HUD {
       ctx.textBaseline = 'middle';
       ctx.fillStyle = '#FFFFFF';
       ctx.shadowColor = 'rgba(0,0,0,0.8)';
-      ctx.shadowBlur = 3;
+      ctx.shadowBlur = 3 * sc;
       ctx.fillText(info.icon || '🏪', sx, sy + 1);
 
-      // Label below marker - show for ALL markers
+      // Label below marker - show for ALL markers (responsive)
+      const labelFontSize = Math.max(6, Math.round(8 * sc));
       ctx.shadowBlur = 0;
-      ctx.font = 'bold 8px Orbitron, monospace';
+      ctx.font = `bold ${labelFontSize}px Orbitron, monospace`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'top';
       // Label background
-      const labelW = ctx.measureText(info.name).width + 10;
-      const labelH = wp || hover ? 16 : 14;
+      const labelW = ctx.measureText(info.name).width + 10 * sc;
+      const labelH = Math.round((wp || hover ? 16 : 14) * sc);
       ctx.fillStyle = 'rgba(0,0,0,0.9)';
       ctx.beginPath();
-      ctx.roundRect(sx - labelW/2, sy + r + 6, labelW, labelH, 4);
+      ctx.roundRect(sx - labelW/2, sy + r + 6 * sc, labelW, labelH, 4);
       ctx.fill();
-      ctx.strokeStyle = info.color + (wp || hover ? 'DD' : 'AA'); ctx.lineWidth = wp || hover ? 1.5 : 1;
+      ctx.strokeStyle = info.color + (wp || hover ? 'DD' : 'AA'); ctx.lineWidth = (wp || hover ? 1.5 : 1) * sc;
       ctx.stroke();
       // Label text
       ctx.fillStyle = info.color;
-      ctx.shadowColor = info.color; ctx.shadowBlur = wp || hover ? 10 : 4;
-      ctx.fillText(info.name, sx, sy + r + (wp || hover ? 9 : 8));
+      ctx.shadowColor = info.color; ctx.shadowBlur = (wp || hover ? 10 : 4) * sc;
+      ctx.fillText(info.name, sx, sy + r + Math.round((wp || hover ? 9 : 8) * sc));
 
       ctx.restore();
 
-      // Waypoint pin - enhanced
+      // Waypoint pin - enhanced (responsive)
       if (wp) {
         const wpPulse = Math.sin(t * 4) * 0.4 + 0.6;
+        const poleH = Math.round(24 * sc);
+        const flagW = Math.round(14 * sc);
+        const flagH = Math.round(7 * sc);
         ctx.save();
-        ctx.strokeStyle = info.color; ctx.lineWidth = 2.5;
-        ctx.shadowColor = info.color; ctx.shadowBlur = 15 * wpPulse;
+        ctx.strokeStyle = info.color; ctx.lineWidth = 2.5 * sc;
+        ctx.shadowColor = info.color; ctx.shadowBlur = 15 * wpPulse * sc;
         // Pole
-        ctx.beginPath(); ctx.moveTo(sx, sy - r - 2); ctx.lineTo(sx, sy - r - 24); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(sx, sy - r - 2); ctx.lineTo(sx, sy - r - poleH); ctx.stroke();
         // Flag
         ctx.fillStyle = info.color;
-        ctx.beginPath(); ctx.moveTo(sx, sy - r - 24); ctx.lineTo(sx + 14, sy - r - 17); ctx.lineTo(sx, sy - r - 10); ctx.closePath(); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(sx, sy - r - poleH); ctx.lineTo(sx + flagW, sy - r - poleH + flagH); ctx.lineTo(sx, sy - r - poleH + flagH * 2); ctx.closePath(); ctx.fill();
         // Animated pulsing rings
         for (let i = 0; i < 2; i++) {
           const ringPulse = ((t * 2 + i * 0.5) % 1);
           ctx.globalAlpha = (1 - ringPulse) * 0.4;
-          ctx.beginPath(); ctx.arc(sx, sy, r + 8 + ringPulse * 15, 0, Math.PI * 2); ctx.stroke();
+          ctx.beginPath(); ctx.arc(sx, sy, r + 8 * sc + ringPulse * 15 * sc, 0, Math.PI * 2); ctx.stroke();
         }
         ctx.globalAlpha = 1;
         ctx.restore();
@@ -2282,42 +2302,43 @@ class HUD {
     let hoveredMetro = null;
     if (gameMap.metroEntrance) {
       const me = gameMap.metroEntrance;
-      const sx = ox + me.wx * scX;
-      const sy = oy + me.wy * scY;
-      if (sx >= ox && sx <= ox + mapW && sy >= oy && sy <= oy + mapH) {
+      const msx = ox + me.wx * scX;
+      const msy = oy + me.wy * scY;
+      if (msx >= ox && msx <= ox + mapW && msy >= oy && msy <= oy + mapH) {
         const metroColor = gameMap.config?.wasteland ? '#FF8844' : '#22FF66';
         const metroName = gameMap.config?.wasteland ? 'WASTELAND METRO' : 'METRO';
 
         // Check if metro is waypoint or hovered
         const isMetroWP = waypointDoor && waypointDoor.isMetro === true;
-        const hover = Math.hypot(mx - sx, my - sy) < 18;
+        const hover = Math.hypot(mx - msx, my - msy) < hoverRadius;
         if (hover) hoveredMetro = { ...me, isMetro: true, _metroColor: metroColor, _metroName: metroName };
 
-        const baseR = isMetroWP || hover ? 10 : 8;
+        // Scaled metro marker sizes
+        const baseR = Math.max(6, Math.round((isMetroWP || hover ? 10 : 8) * sc));
         const pulse = Math.sin(t * 3 + 100) * 0.2 + 0.8;
         const r = baseR * (isMetroWP || hover ? 1.2 : pulse);
 
         ctx.save();
         // Outer glow ring
         ctx.shadowColor = metroColor;
-        ctx.shadowBlur = isMetroWP ? 25 : hover ? 20 : 14;
+        ctx.shadowBlur = (isMetroWP ? 25 : hover ? 20 : 14) * sc;
         ctx.strokeStyle = metroColor + (isMetroWP || hover ? 'AA' : '88');
-        ctx.lineWidth = isMetroWP || hover ? 2.5 : 2;
-        ctx.beginPath(); ctx.arc(sx, sy, r + 4, 0, Math.PI * 2); ctx.stroke();
+        ctx.lineWidth = (isMetroWP || hover ? 2.5 : 2) * sc;
+        ctx.beginPath(); ctx.arc(msx, msy, r + 4 * sc, 0, Math.PI * 2); ctx.stroke();
 
         // Main circle background
-        const grad = ctx.createRadialGradient(sx - r * 0.3, sy - r * 0.3, 0, sx, sy, r);
+        const grad = ctx.createRadialGradient(msx - r * 0.3, msy - r * 0.3, 0, msx, msy, r);
         grad.addColorStop(0, metroColor);
         grad.addColorStop(0.7, metroColor + 'DD');
         grad.addColorStop(1, metroColor + '88');
         ctx.fillStyle = grad;
-        ctx.shadowBlur = isMetroWP ? 20 : hover ? 15 : 10;
-        ctx.beginPath(); ctx.arc(sx, sy, r, 0, Math.PI * 2); ctx.fill();
+        ctx.shadowBlur = (isMetroWP ? 20 : hover ? 15 : 10) * sc;
+        ctx.beginPath(); ctx.arc(msx, msy, r, 0, Math.PI * 2); ctx.fill();
 
         // Inner highlight
         ctx.fillStyle = 'rgba(255,255,255,0.4)';
         ctx.shadowBlur = 0;
-        ctx.beginPath(); ctx.arc(sx - r * 0.25, sy - r * 0.3, r * 0.4, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(msx - r * 0.25, msy - r * 0.3, r * 0.4, 0, Math.PI * 2); ctx.fill();
 
         // Metro icon (train symbol)
         ctx.font = `${Math.round(r * 1.2)}px sans-serif`;
@@ -2325,44 +2346,48 @@ class HUD {
         ctx.textBaseline = 'middle';
         ctx.fillStyle = '#FFFFFF';
         ctx.shadowColor = 'rgba(0,0,0,0.8)';
-        ctx.shadowBlur = 3;
-        ctx.fillText('🚇', sx, sy + 1);
+        ctx.shadowBlur = 3 * sc;
+        ctx.fillText('🚇', msx, msy + 1);
 
-        // Label below marker
+        // Label below marker (responsive)
+        const metroLabelFontSize = Math.max(6, Math.round(8 * sc));
         ctx.shadowBlur = 0;
-        ctx.font = 'bold 8px Orbitron, monospace';
+        ctx.font = `bold ${metroLabelFontSize}px Orbitron, monospace`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'top';
-        const labelW = ctx.measureText(metroName).width + 10;
-        const labelH = isMetroWP || hover ? 16 : 14;
+        const labelW = ctx.measureText(metroName).width + 10 * sc;
+        const labelH = Math.round((isMetroWP || hover ? 16 : 14) * sc);
         ctx.fillStyle = 'rgba(0,0,0,0.9)';
         ctx.beginPath();
-        ctx.roundRect(sx - labelW/2, sy + r + 6, labelW, labelH, 4);
+        ctx.roundRect(msx - labelW/2, msy + r + 6 * sc, labelW, labelH, 4);
         ctx.fill();
-        ctx.strokeStyle = metroColor + (isMetroWP || hover ? 'DD' : 'AA'); ctx.lineWidth = isMetroWP || hover ? 1.5 : 1;
+        ctx.strokeStyle = metroColor + (isMetroWP || hover ? 'DD' : 'AA'); ctx.lineWidth = (isMetroWP || hover ? 1.5 : 1) * sc;
         ctx.stroke();
         ctx.fillStyle = metroColor;
-        ctx.shadowColor = metroColor; ctx.shadowBlur = isMetroWP || hover ? 10 : 4;
-        ctx.fillText(metroName, sx, sy + r + (isMetroWP || hover ? 9 : 8));
+        ctx.shadowColor = metroColor; ctx.shadowBlur = (isMetroWP || hover ? 10 : 4) * sc;
+        ctx.fillText(metroName, msx, msy + r + Math.round((isMetroWP || hover ? 9 : 8) * sc));
 
         ctx.restore();
 
-        // Waypoint pin for metro - enhanced
+        // Waypoint pin for metro - enhanced (responsive)
         if (isMetroWP) {
           const wpPulse = Math.sin(t * 4) * 0.4 + 0.6;
+          const poleH = Math.round(24 * sc);
+          const flagW = Math.round(14 * sc);
+          const flagH = Math.round(7 * sc);
           ctx.save();
-          ctx.strokeStyle = metroColor; ctx.lineWidth = 2.5;
-          ctx.shadowColor = metroColor; ctx.shadowBlur = 15 * wpPulse;
+          ctx.strokeStyle = metroColor; ctx.lineWidth = 2.5 * sc;
+          ctx.shadowColor = metroColor; ctx.shadowBlur = 15 * wpPulse * sc;
           // Pole
-          ctx.beginPath(); ctx.moveTo(sx, sy - r - 2); ctx.lineTo(sx, sy - r - 24); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(msx, msy - r - 2); ctx.lineTo(msx, msy - r - poleH); ctx.stroke();
           // Flag
           ctx.fillStyle = metroColor;
-          ctx.beginPath(); ctx.moveTo(sx, sy - r - 24); ctx.lineTo(sx + 14, sy - r - 17); ctx.lineTo(sx, sy - r - 10); ctx.closePath(); ctx.fill();
+          ctx.beginPath(); ctx.moveTo(msx, msy - r - poleH); ctx.lineTo(msx + flagW, msy - r - poleH + flagH); ctx.lineTo(msx, msy - r - poleH + flagH * 2); ctx.closePath(); ctx.fill();
           // Animated pulsing rings
           for (let i = 0; i < 2; i++) {
             const ringPulse = ((t * 2 + i * 0.5) % 1);
             ctx.globalAlpha = (1 - ringPulse) * 0.4;
-            ctx.beginPath(); ctx.arc(sx, sy, r + 8 + ringPulse * 15, 0, Math.PI * 2); ctx.stroke();
+            ctx.beginPath(); ctx.arc(msx, msy, r + 8 * sc + ringPulse * 15 * sc, 0, Math.PI * 2); ctx.stroke();
           }
           ctx.globalAlpha = 1;
           ctx.restore();
@@ -2370,55 +2395,60 @@ class HUD {
       }
     }
 
-    // Player marker - enhanced
+    // Player marker - enhanced (responsive)
     {
       const px = ox + player.x * scX;
       const py = oy + player.y * scY;
       const pulse = Math.sin(t * 3) * 0.3 + 0.7;
+      const playerR = Math.max(5, Math.round(8 * sc));
       ctx.save();
-      ctx.shadowColor = player.color; ctx.shadowBlur = 22 * pulse;
+      ctx.shadowColor = player.color; ctx.shadowBlur = 22 * pulse * sc;
 
       // Animated outer rings
       for (let i = 0; i < 2; i++) {
         const ringPulse = ((t * 1.5 + i * 0.5) % 1);
         ctx.globalAlpha = (1 - ringPulse) * 0.3;
-        ctx.strokeStyle = player.color; ctx.lineWidth = 1.5;
-        ctx.beginPath(); ctx.arc(px, py, 8 + ringPulse * 12, 0, Math.PI * 2); ctx.stroke();
+        ctx.strokeStyle = player.color; ctx.lineWidth = 1.5 * sc;
+        ctx.beginPath(); ctx.arc(px, py, playerR + ringPulse * 12 * sc, 0, Math.PI * 2); ctx.stroke();
       }
       ctx.globalAlpha = 1;
 
       // Main body with gradient
-      const playerGrad = ctx.createRadialGradient(px - 2, py - 2, 0, px, py, 8);
+      const playerGrad = ctx.createRadialGradient(px - 2, py - 2, 0, px, py, playerR);
       playerGrad.addColorStop(0, '#FFFFFF');
       playerGrad.addColorStop(0.5, player.color);
       playerGrad.addColorStop(1, player.color + '88');
       ctx.fillStyle = playerGrad;
-      ctx.beginPath(); ctx.arc(px, py, 8, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(px, py, playerR, 0, Math.PI * 2); ctx.fill();
 
       // Center dot
+      const centerR = Math.max(2, Math.round(3 * sc));
       ctx.fillStyle = '#FFFFFF'; ctx.shadowBlur = 0;
-      ctx.beginPath(); ctx.arc(px, py, 3, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(px, py, centerR, 0, Math.PI * 2); ctx.fill();
 
-      // YOU label with background
-      ctx.font = 'bold 9px Orbitron, monospace'; ctx.textAlign = 'center';
-      const youW = ctx.measureText('YOU').width + 10;
+      // YOU label with background (responsive)
+      const youFontSize = Math.max(7, Math.round(9 * sc));
+      ctx.font = `bold ${youFontSize}px Orbitron, monospace`; ctx.textAlign = 'center';
+      const youW = ctx.measureText('YOU').width + 10 * sc;
+      const youLabelH = Math.round(14 * sc);
+      const youLabelY = py - Math.round(26 * sc);
       ctx.fillStyle = 'rgba(0,0,0,0.85)';
-      ctx.beginPath(); ctx.roundRect(px - youW/2, py - 26, youW, 14, 3); ctx.fill();
+      ctx.beginPath(); ctx.roundRect(px - youW/2, youLabelY, youW, youLabelH, 3); ctx.fill();
       ctx.strokeStyle = player.color + 'AA'; ctx.lineWidth = 1;
       ctx.stroke();
-      ctx.fillStyle = '#FFF'; ctx.shadowColor = player.color; ctx.shadowBlur = 10;
-      ctx.fillText('YOU', px, py - 17);
+      ctx.fillStyle = '#FFF'; ctx.shadowColor = player.color; ctx.shadowBlur = 10 * sc;
+      ctx.fillText('YOU', px, youLabelY + youLabelH / 2 + 1);
       ctx.restore();
     }
 
-    // Hover tooltip - enhanced
+    // Hover tooltip - enhanced (responsive)
     if (hoveredDoor) {
       const info = this._doorInfo(hoveredDoor, gameMap);
-      const sx   = ox + hoveredDoor.wx * scX;
-      const sy   = oy + hoveredDoor.wy * scY;
-      const ttW  = 180, ttH = 48;
-      const ttX  = Math.min(sx + 18, W - ttW - 15);
-      const ttY  = Math.max(sy - 54, oy + 8);
+      const hsx  = ox + hoveredDoor.wx * scX;
+      const hsy  = oy + hoveredDoor.wy * scY;
+      const ttW  = Math.round(180 * sc), ttH = Math.round(48 * sc);
+      const ttX  = Math.min(hsx + 18 * sc, W - ttW - 15);
+      const ttY  = Math.max(hsy - 54 * sc, oy + 8);
       ctx.save();
       // Tooltip background with gradient
       const ttGrad = ctx.createLinearGradient(ttX, ttY, ttX, ttY + ttH);
@@ -2426,35 +2456,35 @@ class HUD {
       ttGrad.addColorStop(1, 'rgba(2,4,14,0.98)');
       ctx.fillStyle = ttGrad;
       ctx.strokeStyle = info.color; ctx.lineWidth = 1.5;
-      ctx.shadowColor = info.color; ctx.shadowBlur = 15;
+      ctx.shadowColor = info.color; ctx.shadowBlur = 15 * sc;
       ctx.beginPath(); ctx.roundRect(ttX, ttY, ttW, ttH, 8); ctx.fill(); ctx.stroke();
       // Icon
-      ctx.font = '20px sans-serif';
+      ctx.font = `${Math.round(20 * sc)}px sans-serif`;
       ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
       ctx.shadowBlur = 0;
-      ctx.fillText(info.icon || '🏪', ttX + 12, ttY + ttH/2);
+      ctx.fillText(info.icon || '🏪', ttX + 12 * sc, ttY + ttH/2);
       // Name
-      ctx.font = 'bold 11px Orbitron, monospace';
+      ctx.font = `bold ${Math.max(8, Math.round(11 * sc))}px Orbitron, monospace`;
       ctx.fillStyle = info.color;
-      ctx.fillText(info.name, ttX + 40, ttY + 16);
+      ctx.fillText(info.name, ttX + 40 * sc, ttY + 16 * sc);
       // Instructions
       ctx.fillStyle = 'rgba(255,255,255,0.6)';
-      ctx.font = '8px Orbitron, monospace';
-      ctx.fillText(isWP(hoveredDoor) ? '📍 DESTINATION SET' : '🖱️ Click to set destination', ttX + 40, ttY + 32);
+      ctx.font = `${Math.max(6, Math.round(8 * sc))}px Orbitron, monospace`;
+      ctx.fillText(isWP(hoveredDoor) ? '📍 DESTINATION SET' : '🖱️ Click to set destination', ttX + 40 * sc, ttY + 32 * sc);
       ctx.fillStyle = 'rgba(255,255,255,0.4)';
-      ctx.fillText(isWP(hoveredDoor) ? 'Click again to clear' : '', ttX + 40, ttY + 42);
+      ctx.fillText(isWP(hoveredDoor) ? 'Click again to clear' : '', ttX + 40 * sc, ttY + 42 * sc);
       ctx.restore();
     }
 
-    // Hover tooltip for Metro
+    // Hover tooltip for Metro (responsive)
     if (hoveredMetro && !hoveredDoor) {
       const metroColor = hoveredMetro._metroColor;
       const metroName = hoveredMetro._metroName;
-      const sx   = ox + hoveredMetro.wx * scX;
-      const sy   = oy + hoveredMetro.wy * scY;
-      const ttW  = 180, ttH = 48;
-      const ttX  = Math.min(sx + 18, W - ttW - 15);
-      const ttY  = Math.max(sy - 54, oy + 8);
+      const hmsx = ox + hoveredMetro.wx * scX;
+      const hmsy = oy + hoveredMetro.wy * scY;
+      const ttW  = Math.round(180 * sc), ttH = Math.round(48 * sc);
+      const ttX  = Math.min(hmsx + 18 * sc, W - ttW - 15);
+      const ttY  = Math.max(hmsy - 54 * sc, oy + 8);
       const isMetroWP = waypointDoor && waypointDoor.isMetro === true;
       ctx.save();
       // Tooltip background with gradient
@@ -2463,28 +2493,29 @@ class HUD {
       ttGrad.addColorStop(1, 'rgba(2,4,14,0.98)');
       ctx.fillStyle = ttGrad;
       ctx.strokeStyle = metroColor; ctx.lineWidth = 1.5;
-      ctx.shadowColor = metroColor; ctx.shadowBlur = 15;
+      ctx.shadowColor = metroColor; ctx.shadowBlur = 15 * sc;
       ctx.beginPath(); ctx.roundRect(ttX, ttY, ttW, ttH, 8); ctx.fill(); ctx.stroke();
       // Icon
-      ctx.font = '20px sans-serif';
+      ctx.font = `${Math.round(20 * sc)}px sans-serif`;
       ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
       ctx.shadowBlur = 0;
-      ctx.fillText('🚇', ttX + 12, ttY + ttH/2);
+      ctx.fillText('🚇', ttX + 12 * sc, ttY + ttH/2);
       // Name
-      ctx.font = 'bold 11px Orbitron, monospace';
+      ctx.font = `bold ${Math.max(8, Math.round(11 * sc))}px Orbitron, monospace`;
       ctx.fillStyle = metroColor;
-      ctx.fillText(metroName, ttX + 40, ttY + 16);
+      ctx.fillText(metroName, ttX + 40 * sc, ttY + 16 * sc);
       // Instructions
       ctx.fillStyle = 'rgba(255,255,255,0.6)';
-      ctx.font = '8px Orbitron, monospace';
-      ctx.fillText(isMetroWP ? '📍 DESTINATION SET' : '🖱️ Click to set destination', ttX + 40, ttY + 32);
+      ctx.font = `${Math.max(6, Math.round(8 * sc))}px Orbitron, monospace`;
+      ctx.fillText(isMetroWP ? '📍 DESTINATION SET' : '🖱️ Click to set destination', ttX + 40 * sc, ttY + 32 * sc);
       ctx.fillStyle = 'rgba(255,255,255,0.4)';
-      ctx.fillText(isMetroWP ? 'Click again to clear' : '', ttX + 40, ttY + 42);
+      ctx.fillText(isMetroWP ? 'Click again to clear' : '', ttX + 40 * sc, ttY + 42 * sc);
       ctx.restore();
     }
 
-    // ── Legend row - enhanced ────────────────────────────────────────────
-    const legY   = oy + mapH + 26;
+    // ── Legend row - enhanced (responsive) ────────────────────────────────────────────
+    const legY   = oy + mapH + Math.round(26 * sc);
+    const legH   = Math.round(40 * sc);
     const seen   = new Map();
     for (const door of doors) {
       const info = this._doorInfo(door, gameMap);
@@ -2502,33 +2533,38 @@ class HUD {
     ctx.save();
     ctx.fillStyle = 'rgba(0,0,0,0.6)';
     ctx.strokeStyle = 'rgba(68,238,255,0.2)'; ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.roundRect(ox - 5, legY - 12, mapW + 10, 40, 6); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.roundRect(ox - 5, legY - 12 * sc, mapW + 10, legH, 6); ctx.fill(); ctx.stroke();
 
     // Legend title
-    ctx.font = 'bold 8px Orbitron, monospace';
+    const legTitleSize = Math.max(6, Math.round(8 * sc));
+    ctx.font = `bold ${legTitleSize}px Orbitron, monospace`;
     ctx.fillStyle = 'rgba(68,238,255,0.7)';
     ctx.textAlign = 'left';
-    ctx.fillText('LOCATIONS:', ox + 5, legY - 2);
+    ctx.fillText('LOCATIONS:', ox + 5, legY - 2 * sc);
     ctx.restore();
 
-    const colW    = Math.min(115, (mapW - 80) / Math.max(1, entries.length));
-    const maxCols = Math.min(entries.length, Math.floor((mapW - 80) / colW));
-    const startX  = ox + 80;
+    const legStartOffset = Math.round(80 * sc);
+    const colW    = Math.min(115 * sc, (mapW - legStartOffset) / Math.max(1, entries.length));
+    const maxCols = Math.min(entries.length, Math.floor((mapW - legStartOffset) / colW));
+    const startX  = ox + legStartOffset;
 
     ctx.save();
-    ctx.font = '7.5px Orbitron, monospace'; ctx.textAlign = 'left';
+    const legFontSize = Math.max(5.5, Math.round(7.5 * sc));
+    ctx.font = `${legFontSize}px Orbitron, monospace`; ctx.textAlign = 'left';
     for (let i = 0; i < maxCols; i++) {
       const [name, data] = entries[i];
       const lx = startX + i * colW;
       // Icon and colored dot
-      ctx.font = '10px sans-serif';
-      ctx.fillText(data.icon || '🏪', lx, legY + 8);
-      ctx.fillStyle = data.color; ctx.shadowColor = data.color; ctx.shadowBlur = 6;
-      ctx.beginPath(); ctx.arc(lx + 16, legY + 5, 4, 0, Math.PI * 2); ctx.fill();
+      const iconSize = Math.round(10 * sc);
+      ctx.font = `${iconSize}px sans-serif`;
+      ctx.fillText(data.icon || '🏪', lx, legY + 8 * sc);
+      ctx.fillStyle = data.color; ctx.shadowColor = data.color; ctx.shadowBlur = 6 * sc;
+      ctx.beginPath(); ctx.arc(lx + 16 * sc, legY + 5 * sc, 4 * sc, 0, Math.PI * 2); ctx.fill();
       // Label
-      ctx.font = '7px Orbitron, monospace';
+      const labelFontSize = Math.max(5, Math.round(7 * sc));
+      ctx.font = `${labelFontSize}px Orbitron, monospace`;
       ctx.fillStyle = 'rgba(255,255,255,0.75)'; ctx.shadowBlur = 0;
-      ctx.fillText(name, lx + 24, legY + 8);
+      ctx.fillText(name, lx + 24 * sc, legY + 8 * sc);
     }
     ctx.restore();
 
@@ -2537,16 +2573,20 @@ class HUD {
   }
 
   // ── Waypoint navigation overlay on minimap ────────────────────────────────
-  renderWaypointNav(player, waypointDoor, gameMap) {
+  renderWaypointNav(player, waypointDoor, gameMap, isMobile = false) {
     if (!waypointDoor) return;
     const ctx  = this.ctx;
     const H    = this.canvas.height;
+    // Use scaled dimensions to match the actual rendered minimap size
     const mmX  = HUD_PAD;
-    const mmY  = H - HUD_PAD - 82 - 10 - HUD_MM_H - 22;
-    const mmW  = HUD_MM_W;
-    const mmH  = HUD_MM_H;
-    const sx   = gameMap.mmScaleX;
-    const sy   = gameMap.mmScaleY;
+    const mmW  = this._s(HUD_MM_W);
+    const mmH  = this._s(HUD_MM_H);
+    const mmY  = isMobile
+      ? this._s(HUD_PAD) + this._s(28)
+      : H - this._s(HUD_PAD) - this._s(82) - this._s(10) - mmH - this._s(22);
+    // Scale factors adjusted for actual displayed minimap size
+    const sx   = gameMap.mmScaleX * (mmW / HUD_MM_W);
+    const sy   = gameMap.mmScaleY * (mmH / HUD_MM_H);
     // Handle metro waypoints
     const info = waypointDoor.isMetro
       ? { name: waypointDoor._metroName || 'METRO', color: waypointDoor._metroColor || '#22FF66', icon: '🚇' }
@@ -2554,16 +2594,26 @@ class HUD {
     const t    = performance.now() / 1000;
     const pulse = Math.sin(t * 4) * 0.4 + 0.6;
 
-    // Waypoint dot + ring on minimap
+    // Scale factor for dot/ring sizes
+    const sc = this._sc;
+    const dotR = Math.max(2, 3 * sc);
+    const ringR = Math.max(3, 4 * sc);
+    const ringPulseR = Math.max(2, 3 * sc);
+
+    // Waypoint dot + ring on minimap (positioned relative to minimap container)
     const wpX = mmX + waypointDoor.wx * sx;
     const wpY = mmY + waypointDoor.wy * sy;
+
+    // Clip to minimap bounds to ensure dots stay inside
     ctx.save();
-    ctx.shadowColor = info.color; ctx.shadowBlur = 8 * pulse;
+    ctx.beginPath(); ctx.rect(mmX, mmY, mmW, mmH); ctx.clip();
+
+    ctx.shadowColor = info.color; ctx.shadowBlur = 8 * pulse * sc;
     ctx.fillStyle   = info.color;
-    ctx.beginPath(); ctx.arc(wpX, wpY, 3, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(wpX, wpY, dotR, 0, Math.PI * 2); ctx.fill();
     ctx.globalAlpha = pulse * 0.65;
-    ctx.strokeStyle = info.color; ctx.lineWidth = 1.2;
-    ctx.beginPath(); ctx.arc(wpX, wpY, 4 + pulse * 3, 0, Math.PI * 2); ctx.stroke();
+    ctx.strokeStyle = info.color; ctx.lineWidth = Math.max(1, 1.2 * sc);
+    ctx.beginPath(); ctx.arc(wpX, wpY, ringR + pulse * ringPulseR, 0, Math.PI * 2); ctx.stroke();
     ctx.globalAlpha = 1;
     ctx.restore();
 
@@ -2572,8 +2622,8 @@ class HUD {
     const plY = mmY + player.y * sy;
     ctx.save();
     ctx.beginPath(); ctx.rect(mmX, mmY, mmW, mmH); ctx.clip();
-    ctx.strokeStyle = info.color + '66'; ctx.lineWidth = 1;
-    ctx.setLineDash([3, 4]);
+    ctx.strokeStyle = info.color + '66'; ctx.lineWidth = Math.max(1, 1 * sc);
+    ctx.setLineDash([3 * sc, 4 * sc]);
     ctx.beginPath(); ctx.moveTo(plX, plY); ctx.lineTo(wpX, wpY); ctx.stroke();
     ctx.setLineDash([]);
     ctx.restore();
@@ -2583,27 +2633,30 @@ class HUD {
     const dy   = waypointDoor.wy - player.y;
     const dist = Math.round(Math.hypot(dx, dy));
     const ang  = Math.atan2(dy, dx);
-    const bgY  = mmY - 30;
+    const badgeH = this._s(26);
+    const bgY  = mmY - this._s(30);
 
     ctx.save();
     ctx.fillStyle   = 'rgba(0,0,0,0.80)';
     ctx.strokeStyle = info.color + '88'; ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.roundRect(mmX - 4, bgY, mmW + 8, 26, 4); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.roundRect(mmX - 4, bgY, mmW + 8, badgeH, 4); ctx.fill(); ctx.stroke();
 
     // Arrow
     ctx.save();
-    ctx.translate(mmX + 12, bgY + 13);
+    ctx.translate(mmX + this._s(12), bgY + badgeH / 2);
     ctx.rotate(ang);
-    ctx.fillStyle = info.color; ctx.shadowColor = info.color; ctx.shadowBlur = 7;
-    ctx.beginPath(); ctx.moveTo(8, 0); ctx.lineTo(-5, -4.5); ctx.lineTo(-5, 4.5); ctx.closePath(); ctx.fill();
+    const arrSize = this._s(8);
+    const arrHalf = this._s(4.5);
+    ctx.fillStyle = info.color; ctx.shadowColor = info.color; ctx.shadowBlur = 7 * sc;
+    ctx.beginPath(); ctx.moveTo(arrSize, 0); ctx.lineTo(-arrSize * 0.625, -arrHalf); ctx.lineTo(-arrSize * 0.625, arrHalf); ctx.closePath(); ctx.fill();
     ctx.restore();
 
-    ctx.font = 'bold 7.5px Orbitron, monospace'; ctx.textAlign = 'left';
-    ctx.fillStyle = info.color; ctx.shadowColor = info.color; ctx.shadowBlur = 5;
-    ctx.fillText(info.name.length > 12 ? info.name.slice(0, 12) + '…' : info.name, mmX + 26, bgY + 10);
+    ctx.font = `bold ${this._s(7.5)}px Orbitron, monospace`; ctx.textAlign = 'left';
+    ctx.fillStyle = info.color; ctx.shadowColor = info.color; ctx.shadowBlur = 5 * sc;
+    ctx.fillText(info.name.length > 12 ? info.name.slice(0, 12) + '…' : info.name, mmX + this._s(26), bgY + this._s(10));
     ctx.fillStyle = 'rgba(255,255,255,0.5)'; ctx.shadowBlur = 0;
-    ctx.font = '6.5px Orbitron, monospace';
-    ctx.fillText(`${dist}px  ·  [N] MAP`, mmX + 26, bgY + 21);
+    ctx.font = `${this._s(6.5)}px Orbitron, monospace`;
+    ctx.fillText(`${dist}px  ·  [N] MAP`, mmX + this._s(26), bgY + this._s(21));
     ctx.restore();
   }
 }

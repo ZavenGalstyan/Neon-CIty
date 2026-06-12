@@ -461,184 +461,849 @@ body {
   justify-content: center;
   font-size: 12px;
   font-weight: 900;
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family:
+    system-ui,
+    -apple-system,
+    sans-serif;
   color: #fff;
   line-height: 1;
   padding-bottom: 1px;
-  text-shadow: 0 0 2px #fff, 0 0 4px #fff, 0 0 8px rgba(68,238,255,0.9);
+  text-shadow:
+    0 0 2px #fff,
+    0 0 4px #fff,
+    0 0 8px rgba(68, 238, 255, 0.9);
   transition: all 0.2s ease;
-  clip-path: polygon(25% 0%,75% 0%,100% 25%,100% 75%,75% 100%,25% 100%,0% 75%,0% 25%);
+  clip-path: polygon(
+    25% 0%,
+    75% 0%,
+    100% 25%,
+    100% 75%,
+    75% 100%,
+    25% 100%,
+    0% 75%,
+    0% 25%
+  );
   background:
-    linear-gradient(135deg,rgba(255,255,255,.5) 0%,rgba(255,255,255,.12) 30%,transparent 50%),
-    linear-gradient(180deg,rgba(68,238,255,1) 0%,rgba(45,190,230,1) 45%,rgba(25,140,180,1) 100%);
+    linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.5) 0%,
+      rgba(255, 255, 255, 0.12) 30%,
+      transparent 50%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(68, 238, 255, 1) 0%,
+      rgba(45, 190, 230, 1) 45%,
+      rgba(25, 140, 180, 1) 100%
+    );
   box-shadow:
-    inset 0 1px 2px rgba(255,255,255,.65),
-    inset 0 -1px 2px rgba(0,0,0,.45),
-    0 0 0 1px rgba(0,0,0,.5),
-    0 0 0 2px rgba(68,238,255,.7),
-    0 0 6px rgba(68,238,255,.5);
+    inset 0 1px 2px rgba(255, 255, 255, 0.65),
+    inset 0 -1px 2px rgba(0, 0, 0, 0.45),
+    0 0 0 1px rgba(0, 0, 0, 0.5),
+    0 0 0 2px rgba(68, 238, 255, 0.7),
+    0 0 6px rgba(68, 238, 255, 0.5);
 }
 
 /* ── Per-character badge colors ─────────────────────────────── */
 .char-card[data-char="gangster"].selected::after {
-  text-shadow: 0 0 2px #fff,0 0 4px #fff,0 0 8px rgba(255,68,102,.9);
-  background: linear-gradient(135deg,rgba(255,255,255,.5) 0%,rgba(255,255,255,.12) 30%,transparent 50%),linear-gradient(180deg,rgba(255,68,102,1) 0%,rgba(220,40,75,1) 45%,rgba(160,15,50,1) 100%);
-  box-shadow: inset 0 1px 2px rgba(255,255,255,.65),inset 0 -1px 2px rgba(0,0,0,.45),0 0 0 1px rgba(0,0,0,.5),0 0 0 2px rgba(255,68,102,.7),0 0 6px rgba(255,68,102,.5);
+  text-shadow:
+    0 0 2px #fff,
+    0 0 4px #fff,
+    0 0 8px rgba(255, 68, 102, 0.9);
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.5) 0%,
+      rgba(255, 255, 255, 0.12) 30%,
+      transparent 50%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(255, 68, 102, 1) 0%,
+      rgba(220, 40, 75, 1) 45%,
+      rgba(160, 15, 50, 1) 100%
+    );
+  box-shadow:
+    inset 0 1px 2px rgba(255, 255, 255, 0.65),
+    inset 0 -1px 2px rgba(0, 0, 0, 0.45),
+    0 0 0 1px rgba(0, 0, 0, 0.5),
+    0 0 0 2px rgba(255, 68, 102, 0.7),
+    0 0 6px rgba(255, 68, 102, 0.5);
 }
 .char-card[data-char="hacker"].selected::after {
-  text-shadow: 0 0 2px #fff,0 0 4px #fff,0 0 8px rgba(68,238,255,.9);
-  background: linear-gradient(135deg,rgba(255,255,255,.5) 0%,rgba(255,255,255,.12) 30%,transparent 50%),linear-gradient(180deg,rgba(68,238,255,1) 0%,rgba(45,190,230,1) 45%,rgba(25,140,180,1) 100%);
-  box-shadow: inset 0 1px 2px rgba(255,255,255,.65),inset 0 -1px 2px rgba(0,0,0,.45),0 0 0 1px rgba(0,0,0,.5),0 0 0 2px rgba(68,238,255,.7),0 0 6px rgba(68,238,255,.5);
+  text-shadow:
+    0 0 2px #fff,
+    0 0 4px #fff,
+    0 0 8px rgba(68, 238, 255, 0.9);
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.5) 0%,
+      rgba(255, 255, 255, 0.12) 30%,
+      transparent 50%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(68, 238, 255, 1) 0%,
+      rgba(45, 190, 230, 1) 45%,
+      rgba(25, 140, 180, 1) 100%
+    );
+  box-shadow:
+    inset 0 1px 2px rgba(255, 255, 255, 0.65),
+    inset 0 -1px 2px rgba(0, 0, 0, 0.45),
+    0 0 0 1px rgba(0, 0, 0, 0.5),
+    0 0 0 2px rgba(68, 238, 255, 0.7),
+    0 0 6px rgba(68, 238, 255, 0.5);
 }
 .char-card[data-char="mercenary"].selected::after {
-  text-shadow: 0 0 2px #fff,0 0 4px #fff,0 0 8px rgba(68,255,136,.9);
-  background: linear-gradient(135deg,rgba(255,255,255,.5) 0%,rgba(255,255,255,.12) 30%,transparent 50%),linear-gradient(180deg,rgba(68,255,136,1) 0%,rgba(40,210,100,1) 45%,rgba(20,160,65,1) 100%);
-  box-shadow: inset 0 1px 2px rgba(255,255,255,.65),inset 0 -1px 2px rgba(0,0,0,.45),0 0 0 1px rgba(0,0,0,.5),0 0 0 2px rgba(68,255,136,.7),0 0 6px rgba(68,255,136,.5);
+  text-shadow:
+    0 0 2px #fff,
+    0 0 4px #fff,
+    0 0 8px rgba(68, 255, 136, 0.9);
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.5) 0%,
+      rgba(255, 255, 255, 0.12) 30%,
+      transparent 50%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(68, 255, 136, 1) 0%,
+      rgba(40, 210, 100, 1) 45%,
+      rgba(20, 160, 65, 1) 100%
+    );
+  box-shadow:
+    inset 0 1px 2px rgba(255, 255, 255, 0.65),
+    inset 0 -1px 2px rgba(0, 0, 0, 0.45),
+    0 0 0 1px rgba(0, 0, 0, 0.5),
+    0 0 0 2px rgba(68, 255, 136, 0.7),
+    0 0 6px rgba(68, 255, 136, 0.5);
 }
 .char-card[data-char="ghost"].selected::after {
-  text-shadow: 0 0 2px #fff,0 0 4px #fff,0 0 8px rgba(204,136,255,.9);
-  background: linear-gradient(135deg,rgba(255,255,255,.5) 0%,rgba(255,255,255,.12) 30%,transparent 50%),linear-gradient(180deg,rgba(204,136,255,1) 0%,rgba(170,100,220,1) 45%,rgba(130,60,175,1) 100%);
-  box-shadow: inset 0 1px 2px rgba(255,255,255,.65),inset 0 -1px 2px rgba(0,0,0,.45),0 0 0 1px rgba(0,0,0,.5),0 0 0 2px rgba(204,136,255,.7),0 0 6px rgba(204,136,255,.5);
+  text-shadow:
+    0 0 2px #fff,
+    0 0 4px #fff,
+    0 0 8px rgba(204, 136, 255, 0.9);
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.5) 0%,
+      rgba(255, 255, 255, 0.12) 30%,
+      transparent 50%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(204, 136, 255, 1) 0%,
+      rgba(170, 100, 220, 1) 45%,
+      rgba(130, 60, 175, 1) 100%
+    );
+  box-shadow:
+    inset 0 1px 2px rgba(255, 255, 255, 0.65),
+    inset 0 -1px 2px rgba(0, 0, 0, 0.45),
+    0 0 0 1px rgba(0, 0, 0, 0.5),
+    0 0 0 2px rgba(204, 136, 255, 0.7),
+    0 0 6px rgba(204, 136, 255, 0.5);
 }
 .char-card[data-char="engineer"].selected::after {
-  text-shadow: 0 0 2px #fff,0 0 4px #fff,0 0 8px rgba(255,170,0,.9);
-  background: linear-gradient(135deg,rgba(255,255,255,.5) 0%,rgba(255,255,255,.12) 30%,transparent 50%),linear-gradient(180deg,rgba(255,170,0,1) 0%,rgba(220,135,0,1) 45%,rgba(170,100,0,1) 100%);
-  box-shadow: inset 0 1px 2px rgba(255,255,255,.65),inset 0 -1px 2px rgba(0,0,0,.45),0 0 0 1px rgba(0,0,0,.5),0 0 0 2px rgba(255,170,0,.7),0 0 6px rgba(255,170,0,.5);
+  text-shadow:
+    0 0 2px #fff,
+    0 0 4px #fff,
+    0 0 8px rgba(255, 170, 0, 0.9);
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.5) 0%,
+      rgba(255, 255, 255, 0.12) 30%,
+      transparent 50%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(255, 170, 0, 1) 0%,
+      rgba(220, 135, 0, 1) 45%,
+      rgba(170, 100, 0, 1) 100%
+    );
+  box-shadow:
+    inset 0 1px 2px rgba(255, 255, 255, 0.65),
+    inset 0 -1px 2px rgba(0, 0, 0, 0.45),
+    0 0 0 1px rgba(0, 0, 0, 0.5),
+    0 0 0 2px rgba(255, 170, 0, 0.7),
+    0 0 6px rgba(255, 170, 0, 0.5);
 }
 .char-card[data-char="sniper_elite"].selected::after {
-  text-shadow: 0 0 2px #fff,0 0 4px #fff,0 0 8px rgba(34,136,255,.9);
-  background: linear-gradient(135deg,rgba(255,255,255,.5) 0%,rgba(255,255,255,.12) 30%,transparent 50%),linear-gradient(180deg,rgba(34,136,255,1) 0%,rgba(20,100,220,1) 45%,rgba(10,65,175,1) 100%);
-  box-shadow: inset 0 1px 2px rgba(255,255,255,.65),inset 0 -1px 2px rgba(0,0,0,.45),0 0 0 1px rgba(0,0,0,.5),0 0 0 2px rgba(34,136,255,.7),0 0 6px rgba(34,136,255,.5);
+  text-shadow:
+    0 0 2px #fff,
+    0 0 4px #fff,
+    0 0 8px rgba(34, 136, 255, 0.9);
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.5) 0%,
+      rgba(255, 255, 255, 0.12) 30%,
+      transparent 50%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(34, 136, 255, 1) 0%,
+      rgba(20, 100, 220, 1) 45%,
+      rgba(10, 65, 175, 1) 100%
+    );
+  box-shadow:
+    inset 0 1px 2px rgba(255, 255, 255, 0.65),
+    inset 0 -1px 2px rgba(0, 0, 0, 0.45),
+    0 0 0 1px rgba(0, 0, 0, 0.5),
+    0 0 0 2px rgba(34, 136, 255, 0.7),
+    0 0 6px rgba(34, 136, 255, 0.5);
 }
 .char-card[data-char="drone_pilot"].selected::after {
-  text-shadow: 0 0 2px #fff,0 0 4px #fff,0 0 8px rgba(119,221,255,.9);
-  background: linear-gradient(135deg,rgba(255,255,255,.5) 0%,rgba(255,255,255,.12) 30%,transparent 50%),linear-gradient(180deg,rgba(119,221,255,1) 0%,rgba(85,178,225,1) 45%,rgba(50,135,185,1) 100%);
-  box-shadow: inset 0 1px 2px rgba(255,255,255,.65),inset 0 -1px 2px rgba(0,0,0,.45),0 0 0 1px rgba(0,0,0,.5),0 0 0 2px rgba(119,221,255,.7),0 0 6px rgba(119,221,255,.5);
+  text-shadow:
+    0 0 2px #fff,
+    0 0 4px #fff,
+    0 0 8px rgba(119, 221, 255, 0.9);
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.5) 0%,
+      rgba(255, 255, 255, 0.12) 30%,
+      transparent 50%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(119, 221, 255, 1) 0%,
+      rgba(85, 178, 225, 1) 45%,
+      rgba(50, 135, 185, 1) 100%
+    );
+  box-shadow:
+    inset 0 1px 2px rgba(255, 255, 255, 0.65),
+    inset 0 -1px 2px rgba(0, 0, 0, 0.45),
+    0 0 0 1px rgba(0, 0, 0, 0.5),
+    0 0 0 2px rgba(119, 221, 255, 0.7),
+    0 0 6px rgba(119, 221, 255, 0.5);
 }
 .char-card[data-char="chemist"].selected::after {
-  text-shadow: 0 0 2px #fff,0 0 4px #fff,0 0 8px rgba(136,255,68,.9);
-  background: linear-gradient(135deg,rgba(255,255,255,.5) 0%,rgba(255,255,255,.12) 30%,transparent 50%),linear-gradient(180deg,rgba(136,255,68,1) 0%,rgba(100,210,40,1) 45%,rgba(65,160,18,1) 100%);
-  box-shadow: inset 0 1px 2px rgba(255,255,255,.65),inset 0 -1px 2px rgba(0,0,0,.45),0 0 0 1px rgba(0,0,0,.5),0 0 0 2px rgba(136,255,68,.7),0 0 6px rgba(136,255,68,.5);
+  text-shadow:
+    0 0 2px #fff,
+    0 0 4px #fff,
+    0 0 8px rgba(136, 255, 68, 0.9);
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.5) 0%,
+      rgba(255, 255, 255, 0.12) 30%,
+      transparent 50%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(136, 255, 68, 1) 0%,
+      rgba(100, 210, 40, 1) 45%,
+      rgba(65, 160, 18, 1) 100%
+    );
+  box-shadow:
+    inset 0 1px 2px rgba(255, 255, 255, 0.65),
+    inset 0 -1px 2px rgba(0, 0, 0, 0.45),
+    0 0 0 1px rgba(0, 0, 0, 0.5),
+    0 0 0 2px rgba(136, 255, 68, 0.7),
+    0 0 6px rgba(136, 255, 68, 0.5);
 }
 .char-card[data-char="cyber_ninja"].selected::after {
-  text-shadow: 0 0 2px #fff,0 0 4px #fff,0 0 8px rgba(255,0,170,.9);
-  background: linear-gradient(135deg,rgba(255,255,255,.5) 0%,rgba(255,255,255,.12) 30%,transparent 50%),linear-gradient(180deg,rgba(255,0,170,1) 0%,rgba(220,0,135,1) 45%,rgba(165,0,95,1) 100%);
-  box-shadow: inset 0 1px 2px rgba(255,255,255,.65),inset 0 -1px 2px rgba(0,0,0,.45),0 0 0 1px rgba(0,0,0,.5),0 0 0 2px rgba(255,0,170,.7),0 0 6px rgba(255,0,170,.5);
+  text-shadow:
+    0 0 2px #fff,
+    0 0 4px #fff,
+    0 0 8px rgba(255, 0, 170, 0.9);
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.5) 0%,
+      rgba(255, 255, 255, 0.12) 30%,
+      transparent 50%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(255, 0, 170, 1) 0%,
+      rgba(220, 0, 135, 1) 45%,
+      rgba(165, 0, 95, 1) 100%
+    );
+  box-shadow:
+    inset 0 1px 2px rgba(255, 255, 255, 0.65),
+    inset 0 -1px 2px rgba(0, 0, 0, 0.45),
+    0 0 0 1px rgba(0, 0, 0, 0.5),
+    0 0 0 2px rgba(255, 0, 170, 0.7),
+    0 0 6px rgba(255, 0, 170, 0.5);
 }
 .char-card[data-char="cyber_wolf"].selected::after {
-  text-shadow: 0 0 2px #fff,0 0 4px #fff,0 0 8px rgba(136,153,170,.9);
-  background: linear-gradient(135deg,rgba(255,255,255,.5) 0%,rgba(255,255,255,.12) 30%,transparent 50%),linear-gradient(180deg,rgba(136,153,170,1) 0%,rgba(100,115,135,1) 45%,rgba(68,80,100,1) 100%);
-  box-shadow: inset 0 1px 2px rgba(255,255,255,.65),inset 0 -1px 2px rgba(0,0,0,.45),0 0 0 1px rgba(0,0,0,.5),0 0 0 2px rgba(136,153,170,.7),0 0 6px rgba(136,153,170,.5);
+  text-shadow:
+    0 0 2px #fff,
+    0 0 4px #fff,
+    0 0 8px rgba(136, 153, 170, 0.9);
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.5) 0%,
+      rgba(255, 255, 255, 0.12) 30%,
+      transparent 50%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(136, 153, 170, 1) 0%,
+      rgba(100, 115, 135, 1) 45%,
+      rgba(68, 80, 100, 1) 100%
+    );
+  box-shadow:
+    inset 0 1px 2px rgba(255, 255, 255, 0.65),
+    inset 0 -1px 2px rgba(0, 0, 0, 0.45),
+    0 0 0 1px rgba(0, 0, 0, 0.5),
+    0 0 0 2px rgba(136, 153, 170, 0.7),
+    0 0 6px rgba(136, 153, 170, 0.5);
 }
 .char-card[data-char="neon_panther"].selected::after {
-  text-shadow: 0 0 2px #fff,0 0 4px #fff,0 0 8px rgba(255,68,255,.9);
-  background: linear-gradient(135deg,rgba(255,255,255,.5) 0%,rgba(255,255,255,.12) 30%,transparent 50%),linear-gradient(180deg,rgba(255,68,255,1) 0%,rgba(215,35,215,1) 45%,rgba(160,15,160,1) 100%);
-  box-shadow: inset 0 1px 2px rgba(255,255,255,.65),inset 0 -1px 2px rgba(0,0,0,.45),0 0 0 1px rgba(0,0,0,.5),0 0 0 2px rgba(255,68,255,.7),0 0 6px rgba(255,68,255,.5);
+  text-shadow:
+    0 0 2px #fff,
+    0 0 4px #fff,
+    0 0 8px rgba(255, 68, 255, 0.9);
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.5) 0%,
+      rgba(255, 255, 255, 0.12) 30%,
+      transparent 50%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(255, 68, 255, 1) 0%,
+      rgba(215, 35, 215, 1) 45%,
+      rgba(160, 15, 160, 1) 100%
+    );
+  box-shadow:
+    inset 0 1px 2px rgba(255, 255, 255, 0.65),
+    inset 0 -1px 2px rgba(0, 0, 0, 0.45),
+    0 0 0 1px rgba(0, 0, 0, 0.5),
+    0 0 0 2px rgba(255, 68, 255, 0.7),
+    0 0 6px rgba(255, 68, 255, 0.5);
 }
 .char-card[data-char="mecha_bulldog"].selected::after {
-  text-shadow: 0 0 2px #fff,0 0 4px #fff,0 0 8px rgba(170,136,102,.9);
-  background: linear-gradient(135deg,rgba(255,255,255,.5) 0%,rgba(255,255,255,.12) 30%,transparent 50%),linear-gradient(180deg,rgba(170,136,102,1) 0%,rgba(135,105,75,1) 45%,rgba(100,75,50,1) 100%);
-  box-shadow: inset 0 1px 2px rgba(255,255,255,.65),inset 0 -1px 2px rgba(0,0,0,.45),0 0 0 1px rgba(0,0,0,.5),0 0 0 2px rgba(170,136,102,.7),0 0 6px rgba(170,136,102,.5);
+  text-shadow:
+    0 0 2px #fff,
+    0 0 4px #fff,
+    0 0 8px rgba(170, 136, 102, 0.9);
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.5) 0%,
+      rgba(255, 255, 255, 0.12) 30%,
+      transparent 50%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(170, 136, 102, 1) 0%,
+      rgba(135, 105, 75, 1) 45%,
+      rgba(100, 75, 50, 1) 100%
+    );
+  box-shadow:
+    inset 0 1px 2px rgba(255, 255, 255, 0.65),
+    inset 0 -1px 2px rgba(0, 0, 0, 0.45),
+    0 0 0 1px rgba(0, 0, 0, 0.5),
+    0 0 0 2px rgba(170, 136, 102, 0.7),
+    0 0 6px rgba(170, 136, 102, 0.5);
 }
 .char-card[data-char="timebreaker"].selected::after {
-  text-shadow: 0 0 2px #fff,0 0 4px #fff,0 0 8px rgba(255,221,0,.9);
-  background: linear-gradient(135deg,rgba(255,255,255,.5) 0%,rgba(255,255,255,.12) 30%,transparent 50%),linear-gradient(180deg,rgba(255,221,0,1) 0%,rgba(215,178,0,1) 45%,rgba(165,130,0,1) 100%);
-  box-shadow: inset 0 1px 2px rgba(255,255,255,.65),inset 0 -1px 2px rgba(0,0,0,.45),0 0 0 1px rgba(0,0,0,.5),0 0 0 2px rgba(255,221,0,.7),0 0 6px rgba(255,221,0,.5);
+  text-shadow:
+    0 0 2px #fff,
+    0 0 4px #fff,
+    0 0 8px rgba(255, 221, 0, 0.9);
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.5) 0%,
+      rgba(255, 255, 255, 0.12) 30%,
+      transparent 50%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(255, 221, 0, 1) 0%,
+      rgba(215, 178, 0, 1) 45%,
+      rgba(165, 130, 0, 1) 100%
+    );
+  box-shadow:
+    inset 0 1px 2px rgba(255, 255, 255, 0.65),
+    inset 0 -1px 2px rgba(0, 0, 0, 0.45),
+    0 0 0 1px rgba(0, 0, 0, 0.5),
+    0 0 0 2px rgba(255, 221, 0, 0.7),
+    0 0 6px rgba(255, 221, 0, 0.5);
 }
 .char-card[data-char="ai_avatar"].selected::after {
-  text-shadow: 0 0 2px #fff,0 0 4px #fff,0 0 8px rgba(0,255,170,.9);
-  background: linear-gradient(135deg,rgba(255,255,255,.5) 0%,rgba(255,255,255,.12) 30%,transparent 50%),linear-gradient(180deg,rgba(0,255,170,1) 0%,rgba(0,210,130,1) 45%,rgba(0,160,90,1) 100%);
-  box-shadow: inset 0 1px 2px rgba(255,255,255,.65),inset 0 -1px 2px rgba(0,0,0,.45),0 0 0 1px rgba(0,0,0,.5),0 0 0 2px rgba(0,255,170,.7),0 0 6px rgba(0,255,170,.5);
+  text-shadow:
+    0 0 2px #fff,
+    0 0 4px #fff,
+    0 0 8px rgba(0, 255, 170, 0.9);
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.5) 0%,
+      rgba(255, 255, 255, 0.12) 30%,
+      transparent 50%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(0, 255, 170, 1) 0%,
+      rgba(0, 210, 130, 1) 45%,
+      rgba(0, 160, 90, 1) 100%
+    );
+  box-shadow:
+    inset 0 1px 2px rgba(255, 255, 255, 0.65),
+    inset 0 -1px 2px rgba(0, 0, 0, 0.45),
+    0 0 0 1px rgba(0, 0, 0, 0.5),
+    0 0 0 2px rgba(0, 255, 170, 0.7),
+    0 0 6px rgba(0, 255, 170, 0.5);
 }
 .char-card[data-char="overlord"].selected::after {
-  text-shadow: 0 0 2px #fff,0 0 4px #fff,0 0 8px rgba(119,68,255,.9);
-  background: linear-gradient(135deg,rgba(255,255,255,.5) 0%,rgba(255,255,255,.12) 30%,transparent 50%),linear-gradient(180deg,rgba(119,68,255,1) 0%,rgba(88,42,220,1) 45%,rgba(58,20,170,1) 100%);
-  box-shadow: inset 0 1px 2px rgba(255,255,255,.65),inset 0 -1px 2px rgba(0,0,0,.45),0 0 0 1px rgba(0,0,0,.5),0 0 0 2px rgba(119,68,255,.7),0 0 6px rgba(119,68,255,.5);
+  text-shadow:
+    0 0 2px #fff,
+    0 0 4px #fff,
+    0 0 8px rgba(119, 68, 255, 0.9);
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.5) 0%,
+      rgba(255, 255, 255, 0.12) 30%,
+      transparent 50%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(119, 68, 255, 1) 0%,
+      rgba(88, 42, 220, 1) 45%,
+      rgba(58, 20, 170, 1) 100%
+    );
+  box-shadow:
+    inset 0 1px 2px rgba(255, 255, 255, 0.65),
+    inset 0 -1px 2px rgba(0, 0, 0, 0.45),
+    0 0 0 1px rgba(0, 0, 0, 0.5),
+    0 0 0 2px rgba(119, 68, 255, 0.7),
+    0 0 6px rgba(119, 68, 255, 0.5);
 }
 .char-card[data-char="electric_eel"].selected::after {
-  text-shadow: 0 0 2px #fff,0 0 4px #fff,0 0 8px rgba(68,221,255,.9);
-  background: linear-gradient(135deg,rgba(255,255,255,.5) 0%,rgba(255,255,255,.12) 30%,transparent 50%),linear-gradient(180deg,rgba(68,221,255,1) 0%,rgba(40,178,220,1) 45%,rgba(18,135,175,1) 100%);
-  box-shadow: inset 0 1px 2px rgba(255,255,255,.65),inset 0 -1px 2px rgba(0,0,0,.45),0 0 0 1px rgba(0,0,0,.5),0 0 0 2px rgba(68,221,255,.7),0 0 6px rgba(68,221,255,.5);
+  text-shadow:
+    0 0 2px #fff,
+    0 0 4px #fff,
+    0 0 8px rgba(68, 221, 255, 0.9);
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.5) 0%,
+      rgba(255, 255, 255, 0.12) 30%,
+      transparent 50%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(68, 221, 255, 1) 0%,
+      rgba(40, 178, 220, 1) 45%,
+      rgba(18, 135, 175, 1) 100%
+    );
+  box-shadow:
+    inset 0 1px 2px rgba(255, 255, 255, 0.65),
+    inset 0 -1px 2px rgba(0, 0, 0, 0.45),
+    0 0 0 1px rgba(0, 0, 0, 0.5),
+    0 0 0 2px rgba(68, 221, 255, 0.7),
+    0 0 6px rgba(68, 221, 255, 0.5);
 }
 .char-card[data-char="medic"].selected::after {
-  text-shadow: 0 0 2px #fff,0 0 4px #fff,0 0 8px rgba(68,255,170,.9);
-  background: linear-gradient(135deg,rgba(255,255,255,.5) 0%,rgba(255,255,255,.12) 30%,transparent 50%),linear-gradient(180deg,rgba(68,255,170,1) 0%,rgba(40,210,130,1) 45%,rgba(18,160,88,1) 100%);
-  box-shadow: inset 0 1px 2px rgba(255,255,255,.65),inset 0 -1px 2px rgba(0,0,0,.45),0 0 0 1px rgba(0,0,0,.5),0 0 0 2px rgba(68,255,170,.7),0 0 6px rgba(68,255,170,.5);
+  text-shadow:
+    0 0 2px #fff,
+    0 0 4px #fff,
+    0 0 8px rgba(68, 255, 170, 0.9);
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.5) 0%,
+      rgba(255, 255, 255, 0.12) 30%,
+      transparent 50%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(68, 255, 170, 1) 0%,
+      rgba(40, 210, 130, 1) 45%,
+      rgba(18, 160, 88, 1) 100%
+    );
+  box-shadow:
+    inset 0 1px 2px rgba(255, 255, 255, 0.65),
+    inset 0 -1px 2px rgba(0, 0, 0, 0.45),
+    0 0 0 1px rgba(0, 0, 0, 0.5),
+    0 0 0 2px rgba(68, 255, 170, 0.7),
+    0 0 6px rgba(68, 255, 170, 0.5);
 }
 .char-card[data-char="ronin"].selected::after {
-  text-shadow: 0 0 2px #fff,0 0 4px #fff,0 0 8px rgba(255,204,68,.9);
-  background: linear-gradient(135deg,rgba(255,255,255,.5) 0%,rgba(255,255,255,.12) 30%,transparent 50%),linear-gradient(180deg,rgba(255,204,68,1) 0%,rgba(215,162,35,1) 45%,rgba(165,120,12,1) 100%);
-  box-shadow: inset 0 1px 2px rgba(255,255,255,.65),inset 0 -1px 2px rgba(0,0,0,.45),0 0 0 1px rgba(0,0,0,.5),0 0 0 2px rgba(255,204,68,.7),0 0 6px rgba(255,204,68,.5);
+  text-shadow:
+    0 0 2px #fff,
+    0 0 4px #fff,
+    0 0 8px rgba(255, 204, 68, 0.9);
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.5) 0%,
+      rgba(255, 255, 255, 0.12) 30%,
+      transparent 50%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(255, 204, 68, 1) 0%,
+      rgba(215, 162, 35, 1) 45%,
+      rgba(165, 120, 12, 1) 100%
+    );
+  box-shadow:
+    inset 0 1px 2px rgba(255, 255, 255, 0.65),
+    inset 0 -1px 2px rgba(0, 0, 0, 0.45),
+    0 0 0 1px rgba(0, 0, 0, 0.5),
+    0 0 0 2px rgba(255, 204, 68, 0.7),
+    0 0 6px rgba(255, 204, 68, 0.5);
 }
 .char-card[data-char="pyro"].selected::after {
-  text-shadow: 0 0 2px #fff,0 0 4px #fff,0 0 8px rgba(255,85,0,.9);
-  background: linear-gradient(135deg,rgba(255,255,255,.5) 0%,rgba(255,255,255,.12) 30%,transparent 50%),linear-gradient(180deg,rgba(255,85,0,1) 0%,rgba(215,55,0,1) 45%,rgba(160,28,0,1) 100%);
-  box-shadow: inset 0 1px 2px rgba(255,255,255,.65),inset 0 -1px 2px rgba(0,0,0,.45),0 0 0 1px rgba(0,0,0,.5),0 0 0 2px rgba(255,85,0,.7),0 0 6px rgba(255,85,0,.5);
+  text-shadow:
+    0 0 2px #fff,
+    0 0 4px #fff,
+    0 0 8px rgba(255, 85, 0, 0.9);
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.5) 0%,
+      rgba(255, 255, 255, 0.12) 30%,
+      transparent 50%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(255, 85, 0, 1) 0%,
+      rgba(215, 55, 0, 1) 45%,
+      rgba(160, 28, 0, 1) 100%
+    );
+  box-shadow:
+    inset 0 1px 2px rgba(255, 255, 255, 0.65),
+    inset 0 -1px 2px rgba(0, 0, 0, 0.45),
+    0 0 0 1px rgba(0, 0, 0, 0.5),
+    0 0 0 2px rgba(255, 85, 0, 0.7),
+    0 0 6px rgba(255, 85, 0, 0.5);
 }
 .char-card[data-char="phantom"].selected::after {
-  text-shadow: 0 0 2px #fff,0 0 4px #fff,0 0 8px rgba(170,68,255,.9);
-  background: linear-gradient(135deg,rgba(255,255,255,.5) 0%,rgba(255,255,255,.12) 30%,transparent 50%),linear-gradient(180deg,rgba(170,68,255,1) 0%,rgba(135,40,220,1) 45%,rgba(95,18,170,1) 100%);
-  box-shadow: inset 0 1px 2px rgba(255,255,255,.65),inset 0 -1px 2px rgba(0,0,0,.45),0 0 0 1px rgba(0,0,0,.5),0 0 0 2px rgba(170,68,255,.7),0 0 6px rgba(170,68,255,.5);
+  text-shadow:
+    0 0 2px #fff,
+    0 0 4px #fff,
+    0 0 8px rgba(170, 68, 255, 0.9);
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.5) 0%,
+      rgba(255, 255, 255, 0.12) 30%,
+      transparent 50%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(170, 68, 255, 1) 0%,
+      rgba(135, 40, 220, 1) 45%,
+      rgba(95, 18, 170, 1) 100%
+    );
+  box-shadow:
+    inset 0 1px 2px rgba(255, 255, 255, 0.65),
+    inset 0 -1px 2px rgba(0, 0, 0, 0.45),
+    0 0 0 1px rgba(0, 0, 0, 0.5),
+    0 0 0 2px rgba(170, 68, 255, 0.7),
+    0 0 6px rgba(170, 68, 255, 0.5);
 }
 .char-card[data-char="spider_drone"].selected::after {
-  text-shadow: 0 0 2px #fff,0 0 4px #fff,0 0 8px rgba(170,68,68,.9);
-  background: linear-gradient(135deg,rgba(255,255,255,.5) 0%,rgba(255,255,255,.12) 30%,transparent 50%),linear-gradient(180deg,rgba(170,68,68,1) 0%,rgba(135,42,42,1) 45%,rgba(95,20,20,1) 100%);
-  box-shadow: inset 0 1px 2px rgba(255,255,255,.65),inset 0 -1px 2px rgba(0,0,0,.45),0 0 0 1px rgba(0,0,0,.5),0 0 0 2px rgba(170,68,68,.7),0 0 6px rgba(170,68,68,.5);
+  text-shadow:
+    0 0 2px #fff,
+    0 0 4px #fff,
+    0 0 8px rgba(170, 68, 68, 0.9);
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.5) 0%,
+      rgba(255, 255, 255, 0.12) 30%,
+      transparent 50%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(170, 68, 68, 1) 0%,
+      rgba(135, 42, 42, 1) 45%,
+      rgba(95, 20, 20, 1) 100%
+    );
+  box-shadow:
+    inset 0 1px 2px rgba(255, 255, 255, 0.65),
+    inset 0 -1px 2px rgba(0, 0, 0, 0.45),
+    0 0 0 1px rgba(0, 0, 0, 0.5),
+    0 0 0 2px rgba(170, 68, 68, 0.7),
+    0 0 6px rgba(170, 68, 68, 0.5);
 }
 .char-card[data-char="robo_hawk"].selected::after {
-  text-shadow: 0 0 2px #fff,0 0 4px #fff,0 0 8px rgba(221,170,68,.9);
-  background: linear-gradient(135deg,rgba(255,255,255,.5) 0%,rgba(255,255,255,.12) 30%,transparent 50%),linear-gradient(180deg,rgba(221,170,68,1) 0%,rgba(180,135,40,1) 45%,rgba(135,95,15,1) 100%);
-  box-shadow: inset 0 1px 2px rgba(255,255,255,.65),inset 0 -1px 2px rgba(0,0,0,.45),0 0 0 1px rgba(0,0,0,.5),0 0 0 2px rgba(221,170,68,.7),0 0 6px rgba(221,170,68,.5);
+  text-shadow:
+    0 0 2px #fff,
+    0 0 4px #fff,
+    0 0 8px rgba(221, 170, 68, 0.9);
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.5) 0%,
+      rgba(255, 255, 255, 0.12) 30%,
+      transparent 50%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(221, 170, 68, 1) 0%,
+      rgba(180, 135, 40, 1) 45%,
+      rgba(135, 95, 15, 1) 100%
+    );
+  box-shadow:
+    inset 0 1px 2px rgba(255, 255, 255, 0.65),
+    inset 0 -1px 2px rgba(0, 0, 0, 0.45),
+    0 0 0 1px rgba(0, 0, 0, 0.5),
+    0 0 0 2px rgba(221, 170, 68, 0.7),
+    0 0 6px rgba(221, 170, 68, 0.5);
 }
 .char-card[data-char="nano_rat"].selected::after {
-  text-shadow: 0 0 2px #fff,0 0 4px #fff,0 0 8px rgba(136,136,136,.9);
-  background: linear-gradient(135deg,rgba(255,255,255,.5) 0%,rgba(255,255,255,.12) 30%,transparent 50%),linear-gradient(180deg,rgba(136,136,136,1) 0%,rgba(100,100,100,1) 45%,rgba(68,68,68,1) 100%);
-  box-shadow: inset 0 1px 2px rgba(255,255,255,.65),inset 0 -1px 2px rgba(0,0,0,.45),0 0 0 1px rgba(0,0,0,.5),0 0 0 2px rgba(136,136,136,.7),0 0 6px rgba(136,136,136,.5);
+  text-shadow:
+    0 0 2px #fff,
+    0 0 4px #fff,
+    0 0 8px rgba(136, 136, 136, 0.9);
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.5) 0%,
+      rgba(255, 255, 255, 0.12) 30%,
+      transparent 50%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(136, 136, 136, 1) 0%,
+      rgba(100, 100, 100, 1) 45%,
+      rgba(68, 68, 68, 1) 100%
+    );
+  box-shadow:
+    inset 0 1px 2px rgba(255, 255, 255, 0.65),
+    inset 0 -1px 2px rgba(0, 0, 0, 0.45),
+    0 0 0 1px rgba(0, 0, 0, 0.5),
+    0 0 0 2px rgba(136, 136, 136, 0.7),
+    0 0 6px rgba(136, 136, 136, 0.5);
 }
 .char-card[data-char="mini_bee"].selected::after {
-  text-shadow: 0 0 2px #fff,0 0 4px #fff,0 0 8px rgba(255,204,0,.9);
-  background: linear-gradient(135deg,rgba(255,255,255,.5) 0%,rgba(255,255,255,.12) 30%,transparent 50%),linear-gradient(180deg,rgba(255,204,0,1) 0%,rgba(215,162,0,1) 45%,rgba(165,118,0,1) 100%);
-  box-shadow: inset 0 1px 2px rgba(255,255,255,.65),inset 0 -1px 2px rgba(0,0,0,.45),0 0 0 1px rgba(0,0,0,.5),0 0 0 2px rgba(255,204,0,.7),0 0 6px rgba(255,204,0,.5);
+  text-shadow:
+    0 0 2px #fff,
+    0 0 4px #fff,
+    0 0 8px rgba(255, 204, 0, 0.9);
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.5) 0%,
+      rgba(255, 255, 255, 0.12) 30%,
+      transparent 50%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(255, 204, 0, 1) 0%,
+      rgba(215, 162, 0, 1) 45%,
+      rgba(165, 118, 0, 1) 100%
+    );
+  box-shadow:
+    inset 0 1px 2px rgba(255, 255, 255, 0.65),
+    inset 0 -1px 2px rgba(0, 0, 0, 0.45),
+    0 0 0 1px rgba(0, 0, 0, 0.5),
+    0 0 0 2px rgba(255, 204, 0, 0.7),
+    0 0 6px rgba(255, 204, 0, 0.5);
 }
 .char-card[data-char="tank_commander"].selected::after {
-  text-shadow: 0 0 2px #fff,0 0 4px #fff,0 0 8px rgba(85,102,68,.9);
-  background: linear-gradient(135deg,rgba(255,255,255,.5) 0%,rgba(255,255,255,.12) 30%,transparent 50%),linear-gradient(180deg,rgba(85,102,68,1) 0%,rgba(62,78,48,1) 45%,rgba(40,55,30,1) 100%);
-  box-shadow: inset 0 1px 2px rgba(255,255,255,.65),inset 0 -1px 2px rgba(0,0,0,.45),0 0 0 1px rgba(0,0,0,.5),0 0 0 2px rgba(85,102,68,.7),0 0 6px rgba(85,102,68,.5);
+  text-shadow:
+    0 0 2px #fff,
+    0 0 4px #fff,
+    0 0 8px rgba(85, 102, 68, 0.9);
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.5) 0%,
+      rgba(255, 255, 255, 0.12) 30%,
+      transparent 50%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(85, 102, 68, 1) 0%,
+      rgba(62, 78, 48, 1) 45%,
+      rgba(40, 55, 30, 1) 100%
+    );
+  box-shadow:
+    inset 0 1px 2px rgba(255, 255, 255, 0.65),
+    inset 0 -1px 2px rgba(0, 0, 0, 0.45),
+    0 0 0 1px rgba(0, 0, 0, 0.5),
+    0 0 0 2px rgba(85, 102, 68, 0.7),
+    0 0 6px rgba(85, 102, 68, 0.5);
 }
 .char-card[data-char="blade_dancer"].selected::after {
-  text-shadow: 0 0 2px #fff,0 0 4px #fff,0 0 8px rgba(255,102,136,.9);
-  background: linear-gradient(135deg,rgba(255,255,255,.5) 0%,rgba(255,255,255,.12) 30%,transparent 50%),linear-gradient(180deg,rgba(255,102,136,1) 0%,rgba(215,68,100,1) 45%,rgba(160,35,68,1) 100%);
-  box-shadow: inset 0 1px 2px rgba(255,255,255,.65),inset 0 -1px 2px rgba(0,0,0,.45),0 0 0 1px rgba(0,0,0,.5),0 0 0 2px rgba(255,102,136,.7),0 0 6px rgba(255,102,136,.5);
+  text-shadow:
+    0 0 2px #fff,
+    0 0 4px #fff,
+    0 0 8px rgba(255, 102, 136, 0.9);
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.5) 0%,
+      rgba(255, 255, 255, 0.12) 30%,
+      transparent 50%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(255, 102, 136, 1) 0%,
+      rgba(215, 68, 100, 1) 45%,
+      rgba(160, 35, 68, 1) 100%
+    );
+  box-shadow:
+    inset 0 1px 2px rgba(255, 255, 255, 0.65),
+    inset 0 -1px 2px rgba(0, 0, 0, 0.45),
+    0 0 0 1px rgba(0, 0, 0, 0.5),
+    0 0 0 2px rgba(255, 102, 136, 0.7),
+    0 0 6px rgba(255, 102, 136, 0.5);
 }
 .char-card[data-char="frost_walker"].selected::after {
-  text-shadow: 0 0 2px #fff,0 0 4px #fff,0 0 8px rgba(136,221,255,.9);
-  background: linear-gradient(135deg,rgba(255,255,255,.5) 0%,rgba(255,255,255,.12) 30%,transparent 50%),linear-gradient(180deg,rgba(136,221,255,1) 0%,rgba(95,178,225,1) 45%,rgba(55,135,185,1) 100%);
-  box-shadow: inset 0 1px 2px rgba(255,255,255,.65),inset 0 -1px 2px rgba(0,0,0,.45),0 0 0 1px rgba(0,0,0,.5),0 0 0 2px rgba(136,221,255,.7),0 0 6px rgba(136,221,255,.5);
+  text-shadow:
+    0 0 2px #fff,
+    0 0 4px #fff,
+    0 0 8px rgba(136, 221, 255, 0.9);
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.5) 0%,
+      rgba(255, 255, 255, 0.12) 30%,
+      transparent 50%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(136, 221, 255, 1) 0%,
+      rgba(95, 178, 225, 1) 45%,
+      rgba(55, 135, 185, 1) 100%
+    );
+  box-shadow:
+    inset 0 1px 2px rgba(255, 255, 255, 0.65),
+    inset 0 -1px 2px rgba(0, 0, 0, 0.45),
+    0 0 0 1px rgba(0, 0, 0, 0.5),
+    0 0 0 2px rgba(136, 221, 255, 0.7),
+    0 0 6px rgba(136, 221, 255, 0.5);
 }
 .char-card[data-char="volt_runner"].selected::after {
-  text-shadow: 0 0 2px #fff,0 0 4px #fff,0 0 8px rgba(255,255,68,.9);
-  background: linear-gradient(135deg,rgba(255,255,255,.5) 0%,rgba(255,255,255,.12) 30%,transparent 50%),linear-gradient(180deg,rgba(255,255,68,1) 0%,rgba(210,210,35,1) 45%,rgba(160,160,12,1) 100%);
-  box-shadow: inset 0 1px 2px rgba(255,255,255,.65),inset 0 -1px 2px rgba(0,0,0,.45),0 0 0 1px rgba(0,0,0,.5),0 0 0 2px rgba(255,255,68,.7),0 0 6px rgba(255,255,68,.5);
+  text-shadow:
+    0 0 2px #fff,
+    0 0 4px #fff,
+    0 0 8px rgba(255, 255, 68, 0.9);
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.5) 0%,
+      rgba(255, 255, 255, 0.12) 30%,
+      transparent 50%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 68, 1) 0%,
+      rgba(210, 210, 35, 1) 45%,
+      rgba(160, 160, 12, 1) 100%
+    );
+  box-shadow:
+    inset 0 1px 2px rgba(255, 255, 255, 0.65),
+    inset 0 -1px 2px rgba(0, 0, 0, 0.45),
+    0 0 0 1px rgba(0, 0, 0, 0.5),
+    0 0 0 2px rgba(255, 255, 68, 0.7),
+    0 0 6px rgba(255, 255, 68, 0.5);
 }
 .char-card[data-char="shadow_lord"].selected::after {
-  text-shadow: 0 0 2px #fff,0 0 4px #fff,0 0 8px rgba(120,68,180,.9);
-  background: linear-gradient(135deg,rgba(255,255,255,.5) 0%,rgba(255,255,255,.12) 30%,transparent 50%),linear-gradient(180deg,rgba(120,68,180,1) 0%,rgba(88,42,140,1) 45%,rgba(55,18,95,1) 100%);
-  box-shadow: inset 0 1px 2px rgba(255,255,255,.65),inset 0 -1px 2px rgba(0,0,0,.45),0 0 0 1px rgba(0,0,0,.5),0 0 0 2px rgba(120,68,180,.7),0 0 6px rgba(120,68,180,.5);
+  text-shadow:
+    0 0 2px #fff,
+    0 0 4px #fff,
+    0 0 8px rgba(120, 68, 180, 0.9);
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.5) 0%,
+      rgba(255, 255, 255, 0.12) 30%,
+      transparent 50%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(120, 68, 180, 1) 0%,
+      rgba(88, 42, 140, 1) 45%,
+      rgba(55, 18, 95, 1) 100%
+    );
+  box-shadow:
+    inset 0 1px 2px rgba(255, 255, 255, 0.65),
+    inset 0 -1px 2px rgba(0, 0, 0, 0.45),
+    0 0 0 1px rgba(0, 0, 0, 0.5),
+    0 0 0 2px rgba(120, 68, 180, 0.7),
+    0 0 6px rgba(120, 68, 180, 0.5);
 }
 .char-card[data-char="plasma_titan"].selected::after {
-  text-shadow: 0 0 2px #fff,0 0 4px #fff,0 0 8px rgba(255,136,255,.9);
-  background: linear-gradient(135deg,rgba(255,255,255,.5) 0%,rgba(255,255,255,.12) 30%,transparent 50%),linear-gradient(180deg,rgba(255,136,255,1) 0%,rgba(215,95,215,1) 45%,rgba(165,55,165,1) 100%);
-  box-shadow: inset 0 1px 2px rgba(255,255,255,.65),inset 0 -1px 2px rgba(0,0,0,.45),0 0 0 1px rgba(0,0,0,.5),0 0 0 2px rgba(255,136,255,.7),0 0 6px rgba(255,136,255,.5);
+  text-shadow:
+    0 0 2px #fff,
+    0 0 4px #fff,
+    0 0 8px rgba(255, 136, 255, 0.9);
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.5) 0%,
+      rgba(255, 255, 255, 0.12) 30%,
+      transparent 50%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(255, 136, 255, 1) 0%,
+      rgba(215, 95, 215, 1) 45%,
+      rgba(165, 55, 165, 1) 100%
+    );
+  box-shadow:
+    inset 0 1px 2px rgba(255, 255, 255, 0.65),
+    inset 0 -1px 2px rgba(0, 0, 0, 0.45),
+    0 0 0 1px rgba(0, 0, 0, 0.5),
+    0 0 0 2px rgba(255, 136, 255, 0.7),
+    0 0 6px rgba(255, 136, 255, 0.5);
 }
 .char-card[data-char="quantum_ghost"].selected::after {
-  text-shadow: 0 0 2px #fff,0 0 4px #fff,0 0 8px rgba(170,255,255,.9);
-  background: linear-gradient(135deg,rgba(255,255,255,.5) 0%,rgba(255,255,255,.12) 30%,transparent 50%),linear-gradient(180deg,rgba(170,255,255,1) 0%,rgba(120,210,225,1) 45%,rgba(75,165,185,1) 100%);
-  box-shadow: inset 0 1px 2px rgba(255,255,255,.65),inset 0 -1px 2px rgba(0,0,0,.45),0 0 0 1px rgba(0,0,0,.5),0 0 0 2px rgba(170,255,255,.7),0 0 6px rgba(170,255,255,.5);
+  text-shadow:
+    0 0 2px #fff,
+    0 0 4px #fff,
+    0 0 8px rgba(170, 255, 255, 0.9);
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.5) 0%,
+      rgba(255, 255, 255, 0.12) 30%,
+      transparent 50%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(170, 255, 255, 1) 0%,
+      rgba(120, 210, 225, 1) 45%,
+      rgba(75, 165, 185, 1) 100%
+    );
+  box-shadow:
+    inset 0 1px 2px rgba(255, 255, 255, 0.65),
+    inset 0 -1px 2px rgba(0, 0, 0, 0.45),
+    0 0 0 1px rgba(0, 0, 0, 0.5),
+    0 0 0 2px rgba(170, 255, 255, 0.7),
+    0 0 6px rgba(170, 255, 255, 0.5);
 }
 .char-card[data-char="omega_prime"].selected::after {
-  text-shadow: 0 0 2px #fff,0 0 4px #fff,0 0 8px rgba(255,215,0,.9);
-  background: linear-gradient(135deg,rgba(255,255,255,.5) 0%,rgba(255,255,255,.12) 30%,transparent 50%),linear-gradient(180deg,rgba(255,215,0,1) 0%,rgba(215,170,0,1) 45%,rgba(165,125,0,1) 100%);
-  box-shadow: inset 0 1px 2px rgba(255,255,255,.65),inset 0 -1px 2px rgba(0,0,0,.45),0 0 0 1px rgba(0,0,0,.5),0 0 0 2px rgba(255,215,0,.7),0 0 6px rgba(255,215,0,.5);
+  text-shadow:
+    0 0 2px #fff,
+    0 0 4px #fff,
+    0 0 8px rgba(255, 215, 0, 0.9);
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.5) 0%,
+      rgba(255, 255, 255, 0.12) 30%,
+      transparent 50%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(255, 215, 0, 1) 0%,
+      rgba(215, 170, 0, 1) 45%,
+      rgba(165, 125, 0, 1) 100%
+    );
+  box-shadow:
+    inset 0 1px 2px rgba(255, 255, 255, 0.65),
+    inset 0 -1px 2px rgba(0, 0, 0, 0.45),
+    0 0 0 1px rgba(0, 0, 0, 0.5),
+    0 0 0 2px rgba(255, 215, 0, 0.7),
+    0 0 6px rgba(255, 215, 0, 0.5);
 }
 
 /* ── Quantum Ghost special card ──────────────────────────── */
@@ -2916,230 +3581,230 @@ body {
 
 /* Neon City - cyan / electric blue */
 .map-card[data-map="neon_city"] .map-tag {
-  color: var(--neon-theme-color, #44EEFF);
-  border-color: var(--neon-theme-color, rgba(68,238,255,0.6));
+  color: var(--neon-theme-color, #44eeff);
+  border-color: var(--neon-theme-color, rgba(68, 238, 255, 0.6));
 }
 .map-card[data-map="neon_city"]:hover .map-tag,
 .map-card[data-map="neon_city"].selected .map-tag {
-  color: var(--neon-theme-color, #66F4FF);
-  border-color: var(--neon-theme-color, rgba(68,238,255,0.85));
-  text-shadow: 0 0 6px var(--neon-theme-glow, rgba(68,238,255,0.5));
+  color: var(--neon-theme-color, #66f4ff);
+  border-color: var(--neon-theme-color, rgba(68, 238, 255, 0.85));
+  text-shadow: 0 0 6px var(--neon-theme-glow, rgba(68, 238, 255, 0.5));
 }
 
 /* Galactica - cosmic purple */
 .map-card[data-map="galactica"] .map-tag {
-  color: #BB77FF;
-  border-color: rgba(180,100,255,0.55);
+  color: #bb77ff;
+  border-color: rgba(180, 100, 255, 0.55);
 }
 .map-card[data-map="galactica"]:hover .map-tag,
 .map-card[data-map="galactica"].selected .map-tag {
-  color: #CC99FF;
-  border-color: rgba(180,100,255,0.8);
-  text-shadow: 0 0 6px rgba(180,100,255,0.5);
+  color: #cc99ff;
+  border-color: rgba(180, 100, 255, 0.8);
+  text-shadow: 0 0 6px rgba(180, 100, 255, 0.5);
 }
 
 /* The Tower - gold / amber */
 .map-card[data-map="tower"] .map-tag {
-  color: #FFCC44;
-  border-color: rgba(255,200,60,0.55);
+  color: #ffcc44;
+  border-color: rgba(255, 200, 60, 0.55);
 }
 .map-card[data-map="tower"]:hover .map-tag,
 .map-card[data-map="tower"].selected .map-tag {
-  color: #FFDD66;
-  border-color: rgba(255,200,60,0.8);
-  text-shadow: 0 0 6px rgba(255,200,60,0.5);
+  color: #ffdd66;
+  border-color: rgba(255, 200, 60, 0.8);
+  text-shadow: 0 0 6px rgba(255, 200, 60, 0.5);
 }
 
 /* Sky Realm - sky blue */
 .map-card[data-map="sky_realm"] .map-tag {
-  color: #88CCFF;
-  border-color: rgba(135,200,255,0.55);
+  color: #88ccff;
+  border-color: rgba(135, 200, 255, 0.55);
 }
 .map-card[data-map="sky_realm"]:hover .map-tag,
 .map-card[data-map="sky_realm"].selected .map-tag {
-  color: #AADDFF;
-  border-color: rgba(135,200,255,0.8);
-  text-shadow: 0 0 6px rgba(135,200,255,0.5);
+  color: #aaddff;
+  border-color: rgba(135, 200, 255, 0.8);
+  text-shadow: 0 0 6px rgba(135, 200, 255, 0.5);
 }
 
 /* Arena - combat red */
 .map-card[data-map="arena"] .map-tag {
-  color: #FF5577;
-  border-color: rgba(255,70,100,0.55);
+  color: #ff5577;
+  border-color: rgba(255, 70, 100, 0.55);
 }
 .map-card[data-map="arena"]:hover .map-tag,
 .map-card[data-map="arena"].selected .map-tag {
-  color: #FF7799;
-  border-color: rgba(255,70,100,0.8);
-  text-shadow: 0 0 6px rgba(255,70,100,0.5);
+  color: #ff7799;
+  border-color: rgba(255, 70, 100, 0.8);
+  text-shadow: 0 0 6px rgba(255, 70, 100, 0.5);
 }
 
 /* Zombie Outbreak - toxic green */
 .map-card[data-map="zombie"] .map-tag {
-  color: #66FF99;
-  border-color: rgba(80,255,130,0.55);
+  color: #66ff99;
+  border-color: rgba(80, 255, 130, 0.55);
 }
 .map-card[data-map="zombie"]:hover .map-tag,
 .map-card[data-map="zombie"].selected .map-tag {
-  color: #88FFBB;
-  border-color: rgba(80,255,130,0.8);
-  text-shadow: 0 0 6px rgba(80,255,130,0.5);
+  color: #88ffbb;
+  border-color: rgba(80, 255, 130, 0.8);
+  text-shadow: 0 0 6px rgba(80, 255, 130, 0.5);
 }
 
 /* Dino World - prehistoric green */
 .map-card[data-map="dino_world"] .map-tag {
-  color: #99CC66;
-  border-color: rgba(140,190,90,0.55);
+  color: #99cc66;
+  border-color: rgba(140, 190, 90, 0.55);
 }
 .map-card[data-map="dino_world"]:hover .map-tag,
 .map-card[data-map="dino_world"].selected .map-tag {
-  color: #BBDD88;
-  border-color: rgba(140,190,90,0.8);
-  text-shadow: 0 0 6px rgba(140,190,90,0.5);
+  color: #bbdd88;
+  border-color: rgba(140, 190, 90, 0.8);
+  text-shadow: 0 0 6px rgba(140, 190, 90, 0.5);
 }
 
 /* Wasteland - rust orange */
 .map-card[data-map="wasteland"] .map-tag {
-  color: var(--wasteland-theme-color, #FF8844);
-  border-color: var(--wasteland-theme-color, rgba(255,130,60,0.55));
+  color: var(--wasteland-theme-color, #ff8844);
+  border-color: var(--wasteland-theme-color, rgba(255, 130, 60, 0.55));
 }
 .map-card[data-map="wasteland"]:hover .map-tag,
 .map-card[data-map="wasteland"].selected .map-tag {
-  color: var(--wasteland-theme-color, #FFAA66);
-  border-color: var(--wasteland-theme-color, rgba(255,130,60,0.8));
-  text-shadow: 0 0 6px var(--wasteland-theme-glow, rgba(255,130,60,0.5));
+  color: var(--wasteland-theme-color, #ffaa66);
+  border-color: var(--wasteland-theme-color, rgba(255, 130, 60, 0.8));
+  text-shadow: 0 0 6px var(--wasteland-theme-glow, rgba(255, 130, 60, 0.5));
 }
 
 /* Blitz - electric orange */
 .map-card[data-map="blitz"] .map-tag {
-  color: #FFAA33;
-  border-color: rgba(255,160,40,0.55);
+  color: #ffaa33;
+  border-color: rgba(255, 160, 40, 0.55);
 }
 .map-card[data-map="blitz"]:hover .map-tag,
 .map-card[data-map="blitz"].selected .map-tag {
-  color: #FFCC55;
-  border-color: rgba(255,160,40,0.8);
-  text-shadow: 0 0 6px rgba(255,160,40,0.5);
+  color: #ffcc55;
+  border-color: rgba(255, 160, 40, 0.8);
+  text-shadow: 0 0 6px rgba(255, 160, 40, 0.5);
 }
 
 /* Frozen Tundra - ice blue */
 .map-card[data-map="frozen_tundra"] .map-tag {
-  color: #AADDFF;
-  border-color: rgba(170,220,255,0.55);
+  color: #aaddff;
+  border-color: rgba(170, 220, 255, 0.55);
 }
 .map-card[data-map="frozen_tundra"]:hover .map-tag,
 .map-card[data-map="frozen_tundra"].selected .map-tag {
-  color: #CCEEFF;
-  border-color: rgba(170,220,255,0.8);
-  text-shadow: 0 0 6px rgba(170,220,255,0.5);
+  color: #cceeff;
+  border-color: rgba(170, 220, 255, 0.8);
+  text-shadow: 0 0 6px rgba(170, 220, 255, 0.5);
 }
 
 /* Ocean Depths - ocean cyan */
 .map-card[data-map="ocean_depths"] .map-tag {
-  color: #44CCEE;
-  border-color: rgba(60,190,230,0.55);
+  color: #44ccee;
+  border-color: rgba(60, 190, 230, 0.55);
 }
 .map-card[data-map="ocean_depths"]:hover .map-tag,
 .map-card[data-map="ocean_depths"].selected .map-tag {
-  color: #66DDFF;
-  border-color: rgba(60,190,230,0.8);
-  text-shadow: 0 0 6px rgba(60,190,230,0.5);
+  color: #66ddff;
+  border-color: rgba(60, 190, 230, 0.8);
+  text-shadow: 0 0 6px rgba(60, 190, 230, 0.5);
 }
 
 /* Metropolis - warm amber */
 .map-card[data-map="metropolis"] .map-tag {
-  color: #FFBB66;
-  border-color: rgba(255,185,90,0.55);
+  color: #ffbb66;
+  border-color: rgba(255, 185, 90, 0.55);
 }
 .map-card[data-map="metropolis"]:hover .map-tag,
 .map-card[data-map="metropolis"].selected .map-tag {
-  color: #FFDD88;
-  border-color: rgba(255,185,90,0.8);
-  text-shadow: 0 0 6px rgba(255,185,90,0.5);
+  color: #ffdd88;
+  border-color: rgba(255, 185, 90, 0.8);
+  text-shadow: 0 0 6px rgba(255, 185, 90, 0.5);
 }
 
 /* Jungle Safari - jungle green */
 .map-card[data-map="jungle"] .map-tag {
-  color: #66CC44;
-  border-color: rgba(90,190,60,0.55);
+  color: #66cc44;
+  border-color: rgba(90, 190, 60, 0.55);
 }
 .map-card[data-map="jungle"]:hover .map-tag,
 .map-card[data-map="jungle"].selected .map-tag {
-  color: #88DD66;
-  border-color: rgba(90,190,60,0.8);
-  text-shadow: 0 0 6px rgba(90,190,60,0.5);
+  color: #88dd66;
+  border-color: rgba(90, 190, 60, 0.8);
+  text-shadow: 0 0 6px rgba(90, 190, 60, 0.5);
 }
 
 /* Desert Sands - golden sand */
 .map-card[data-map="desert_sands"] .map-tag {
-  color: #DDBB55;
-  border-color: rgba(220,185,80,0.55);
+  color: #ddbb55;
+  border-color: rgba(220, 185, 80, 0.55);
 }
 .map-card[data-map="desert_sands"]:hover .map-tag,
 .map-card[data-map="desert_sands"].selected .map-tag {
-  color: #EECC77;
-  border-color: rgba(220,185,80,0.8);
-  text-shadow: 0 0 6px rgba(220,185,80,0.5);
+  color: #eecc77;
+  border-color: rgba(220, 185, 80, 0.8);
+  text-shadow: 0 0 6px rgba(220, 185, 80, 0.5);
 }
 
 /* Robot City - tech cyan */
 .map-card[data-map="robot_city"] .map-tag {
-  color: #44DDFF;
-  border-color: rgba(60,220,255,0.55);
+  color: #44ddff;
+  border-color: rgba(60, 220, 255, 0.55);
 }
 .map-card[data-map="robot_city"]:hover .map-tag,
 .map-card[data-map="robot_city"].selected .map-tag {
-  color: #66EEFF;
-  border-color: rgba(60,220,255,0.8);
-  text-shadow: 0 0 6px rgba(60,220,255,0.5);
+  color: #66eeff;
+  border-color: rgba(60, 220, 255, 0.8);
+  text-shadow: 0 0 6px rgba(60, 220, 255, 0.5);
 }
 
 /* Hardcore - dark red/crimson */
 .map-card[data-map="hardcore"] .map-tag {
-  color: #EE6655;
-  border-color: rgba(220,90,75,0.55);
+  color: #ee6655;
+  border-color: rgba(220, 90, 75, 0.55);
 }
 .map-card[data-map="hardcore"]:hover .map-tag,
 .map-card[data-map="hardcore"].selected .map-tag {
-  color: #FF8877;
-  border-color: rgba(220,90,75,0.8);
-  text-shadow: 0 0 6px rgba(220,90,75,0.5);
+  color: #ff8877;
+  border-color: rgba(220, 90, 75, 0.8);
+  text-shadow: 0 0 6px rgba(220, 90, 75, 0.5);
 }
 
 /* Campaign - royal gold / amber */
 .map-card[data-map="campaign"] .map-tag {
-  color: #DDAA44;
-  border-color: rgba(220,165,60,0.55);
+  color: #ddaa44;
+  border-color: rgba(220, 165, 60, 0.55);
 }
 .map-card[data-map="campaign"]:hover .map-tag,
 .map-card[data-map="campaign"].selected .map-tag {
-  color: #EECC66;
-  border-color: rgba(220,165,60,0.8);
-  text-shadow: 0 0 6px rgba(220,165,60,0.5);
+  color: #eecc66;
+  border-color: rgba(220, 165, 60, 0.8);
+  text-shadow: 0 0 6px rgba(220, 165, 60, 0.5);
 }
 
 /* Life Mode - soft cyan */
 .map-card--life .map-tag {
-  color: #77DDFF;
-  border-color: rgba(120,220,255,0.55);
+  color: #77ddff;
+  border-color: rgba(120, 220, 255, 0.55);
 }
 .map-card--life:hover .map-tag,
 .map-card--life.selected .map-tag {
-  color: #99EEFF;
-  border-color: rgba(120,220,255,0.8);
-  text-shadow: 0 0 6px rgba(120,220,255,0.5);
+  color: #99eeff;
+  border-color: rgba(120, 220, 255, 0.8);
+  text-shadow: 0 0 6px rgba(120, 220, 255, 0.5);
 }
 
 /* Experimental maps (fallback green) */
 .map-card--experimental .map-tag {
-  color: #66FF99;
-  border-color: rgba(80,255,140,0.55);
+  color: #66ff99;
+  border-color: rgba(80, 255, 140, 0.55);
 }
 .map-card--experimental:hover .map-tag,
 .map-card--experimental.selected .map-tag {
-  color: #88FFBB;
-  border-color: rgba(80,255,140,0.8);
-  text-shadow: 0 0 6px rgba(80,255,140,0.5);
+  color: #88ffbb;
+  border-color: rgba(80, 255, 140, 0.8);
+  text-shadow: 0 0 6px rgba(80, 255, 140, 0.5);
 }
 
 .map-desc-inline {
@@ -4225,14 +4890,18 @@ body {
   left: 10px;
   background: #44ff88;
   color: #000;
-  font: bold 8px "Orbitron", monospace;
+  font:
+    bold 8px "Orbitron",
+    monospace;
   padding: 3px 8px;
   border-radius: 4px;
   letter-spacing: 0.08em;
   z-index: 5;
   box-shadow: 0 0 10px rgba(68, 255, 136, 0.65);
   border: 1px solid rgba(255, 255, 255, 0.25);
-  transition: box-shadow 0.2s ease, transform 0.2s ease;
+  transition:
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
 }
 .map-card:hover .experimental-badge {
   box-shadow: 0 0 18px currentColor;
@@ -5868,6 +6537,18 @@ body {
   pointer-events: none;
   z-index: 100;
   display: none;
+}
+/* Disable touch controls when bigmap overlay is open to allow map clicks */
+body.bigmap-open #touchControls,
+body.bigmap-open #touchControls.active {
+  pointer-events: none !important;
+  opacity: 0.3;
+  z-index: 50; /* Lower z-index when bigmap is open */
+}
+body.bigmap-open #joystickZone,
+body.bigmap-open #touchButtons,
+body.bigmap-open .touch-btn {
+  pointer-events: none !important;
 }
 /* Show touch controls only on tablet/phone — never on wide screens regardless of touch capability */
 #touchControls.active {
@@ -13860,4 +14541,145 @@ html[data-theme="light"] .auth-card {
     border-color 0.3s ease,
     box-shadow 0.3s ease,
     color 0.3s ease;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   IMAGE-BASED LOGOS
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* ── Header Navbar Logo Image ───────────────────────────────────────── */
+.site-nav__logo-img {
+  height: 60px;
+  width: auto;
+  max-width: 200px;
+  object-fit: contain;
+  display: block;
+}
+.site-nav--scrolled .site-nav__logo-img {
+  height: 36px;
+}
+
+/* ── Main Title Logo Image ──────────────────────────────────────────── */
+.game-logo-img {
+  display: block;
+  width: clamp(380px, 60vw, 720px);
+  height: auto;
+  max-height: 280px;
+  object-fit: contain;
+  margin: 50px auto 12px;
+}
+@keyframes titleLogoPulse {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 28px rgba(68, 238, 255, 0.6))
+      drop-shadow(0 0 56px rgba(255, 68, 102, 0.5));
+  }
+  50% {
+    filter: drop-shadow(0 0 42px rgba(68, 238, 255, 0.85))
+      drop-shadow(0 0 70px rgba(255, 68, 102, 0.7));
+  }
+}
+
+/* Adjust game-logo container for image version */
+.game-logo--image {
+  padding: 16px 0 12px;
+  gap: 14px;
+}
+
+/* Hide decorative lines when using image logo */
+.game-logo--image::before,
+.game-logo--image::after {
+  display: none;
+}
+
+/* ── Responsive: Large Tablet (≤ 1024px) ────────────────────────────── */
+@media (max-width: 1024px) {
+  .game-logo-img {
+    width: clamp(320px, 58vw, 580px);
+    max-height: 220px;
+  }
+}
+
+/* ── Responsive: Tablet (≤ 768px) ───────────────────────────────────── */
+@media (max-width: 768px) {
+  .site-nav__logo-img {
+    height: 38px;
+    max-width: 170px;
+  }
+  .site-nav--scrolled .site-nav__logo-img {
+    height: 32px;
+  }
+  .game-logo-img {
+    width: clamp(280px, 65vw, 450px);
+    max-height: 180px;
+    margin-bottom: 10px;
+  }
+  .game-logo--image {
+    padding: 12px 0 10px;
+    gap: 12px;
+  }
+}
+
+/* ── Responsive: Mobile (≤ 480px) ───────────────────────────────────── */
+@media (max-width: 480px) {
+  .site-nav__logo-img {
+    height: 32px;
+    max-width: 145px;
+  }
+  .site-nav--scrolled .site-nav__logo-img {
+    height: 28px;
+  }
+  .game-logo-img {
+    width: clamp(240px, 80vw, 360px);
+    max-height: 140px;
+    margin-bottom: 8px;
+  }
+  .game-logo--image {
+    padding: 10px 0 8px;
+    gap: 10px;
+  }
+}
+
+/* ── Responsive: Small Mobile (≤ 360px) ─────────────────────────────── */
+@media (max-width: 360px) {
+  .site-nav__logo-img {
+    height: 28px;
+    max-width: 125px;
+  }
+  .site-nav--scrolled .site-nav__logo-img {
+    height: 24px;
+  }
+  .game-logo-img {
+    width: clamp(200px, 85vw, 300px);
+    max-height: 110px;
+  }
+  .game-logo--image {
+    gap: 8px;
+  }
+}
+
+/* ── Light Mode Adjustments ─────────────────────────────────────────── */
+html[data-theme="light"] .site-nav__logo-img {
+  filter: drop-shadow(0 0 10px rgba(0, 101, 133, 0.35))
+    drop-shadow(0 0 20px rgba(160, 24, 64, 0.3));
+}
+html[data-theme="light"] .site-nav__logo:hover .site-nav__logo-img {
+  filter: drop-shadow(0 0 14px rgba(0, 101, 133, 0.55))
+    drop-shadow(0 0 26px rgba(160, 24, 64, 0.45));
+}
+html[data-theme="light"] .game-logo-img {
+  filter: drop-shadow(0 0 22px rgba(0, 101, 133, 0.45))
+    drop-shadow(0 0 44px rgba(160, 24, 64, 0.4));
+  animation: titleLogoPulseLight 3.5s ease-in-out infinite;
+}
+@keyframes titleLogoPulseLight {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 22px rgba(0, 101, 133, 0.45))
+      drop-shadow(0 0 44px rgba(160, 24, 64, 0.4));
+  }
+  50% {
+    filter: drop-shadow(0 0 34px rgba(0, 101, 133, 0.65))
+      drop-shadow(0 0 60px rgba(160, 24, 64, 0.55));
+  }
 }
