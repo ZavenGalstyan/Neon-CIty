@@ -6652,7 +6652,7 @@ body.bigmap-open .touch-btn {
   align-items: center;
   justify-content: space-between;
   flex-wrap: nowrap;
-  height: 72px;
+  height: 76px;
   padding: 0 clamp(20px, 4vw, 48px);
   background: linear-gradient(
     180deg,
@@ -6783,9 +6783,6 @@ body.bigmap-open .touch-btn {
 }
 .site-nav__logo:hover .logo-dread {
   filter: drop-shadow(0 0 18px rgba(255, 68, 102, 0.95));
-}
-.site-nav__logo:hover {
-  transform: scale(1.02);
 }
 
 .site-nav__controls {
