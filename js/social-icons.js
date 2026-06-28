@@ -1,6 +1,6 @@
 /* ═══════════════════════════════════════════════════════════
    DASH DREAD — Global Social Icons
-   Always visible regardless of authentication state
+   Visible on all pages EXCEPT during gameplay
    ═══════════════════════════════════════════════════════════ */
 
 (function() {
@@ -8,6 +8,20 @@
 
   // Prevent duplicate injection
   if (document.getElementById('ncsSocialIcons')) return;
+
+  // Check if we're on a game page - don't show social icons during gameplay
+  function isGamePage() {
+    // Check for game-body class (used on game.html)
+    if (document.body && document.body.classList.contains('game-body')) {
+      return true;
+    }
+    // Check URL path
+    if (window.location.pathname.includes('game.html') ||
+        window.location.pathname.endsWith('/game')) {
+      return true;
+    }
+    return false;
+  }
 
   // Create the social icons container
   const container = document.createElement('div');
@@ -32,14 +46,31 @@
     </a>
   `;
 
-  // Add to body when DOM is ready
+  // Add to body when DOM is ready (only if not on game page)
   function addToBody() {
     if (document.body) {
+      // Don't add if on game page
+      if (isGamePage()) {
+        return;
+      }
       document.body.appendChild(container);
+
+      // Listen for gameStarted event in case game starts dynamically
+      window.addEventListener('gameStarted', function() {
+        container.style.display = 'none';
+      });
     } else {
       // If body isn't ready yet, wait for it
       document.addEventListener('DOMContentLoaded', function() {
+        if (isGamePage()) {
+          return;
+        }
         document.body.appendChild(container);
+
+        // Listen for gameStarted event
+        window.addEventListener('gameStarted', function() {
+          container.style.display = 'none';
+        });
       });
     }
   }
