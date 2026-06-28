@@ -4631,9 +4631,10 @@
   animation: ncsBadgePop 0.35s var(--nc-spring);
 }
 
-/* ═══════════════════════════════════════════════════════════
+/* CHAT DISABLED: FAB STYLES
+═══════════════════════════════════════════════════════════
    FAB
-   ═══════════════════════════════════════════════════════════ */
+═══════════════════════════════════════════════════════════
 .ncs-fab {
   position: fixed;
   bottom: 28px;
@@ -4725,6 +4726,7 @@
     transform: scale(1) rotate(0);
   }
 }
+END CHAT DISABLED */
 
 /* ═══════════════════════════════════════════════════════════
    TOAST
@@ -7434,3 +7436,307 @@ html[data-theme="light"] .ncs-confirm-btn.danger:hover:not(:disabled) {
 html[data-theme="light"] .ncs-confirm-btn.loading::after {
   border-top-color: #a01840;
 }
+
+/* ═══════════════════════════════════════════════════════════
+   FIXED SOCIAL ICONS
+   ═══════════════════════════════════════════════════════════ */
+.ncs-social-icons {
+  position: fixed;
+  right: 20px;
+  bottom: 100px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  z-index: 1500;
+}
+
+.ncs-social-icon {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(10, 10, 24, 0.85);
+  border-radius: 12px;
+  text-decoration: none;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+.ncs-social-icon:active {
+  transform: translateX(-2px) scale(0.98);
+}
+
+.ncs-social-icon svg {
+  transition: filter 0.3s ease, transform 0.3s ease;
+}
+
+/* ── Facebook ─────────────────────────────────────────────── */
+.ncs-social-icon--facebook {
+  border: 1px solid rgba(24, 119, 242, 0.35);
+  color: rgba(24, 119, 242, 0.85);
+}
+
+.ncs-social-icon--facebook:hover {
+  background: rgba(24, 119, 242, 0.15);
+  border-color: rgba(24, 119, 242, 0.7);
+  color: #1877f2;
+  transform: translateX(-4px) scale(1.08);
+  box-shadow:
+    0 0 20px rgba(24, 119, 242, 0.45),
+    0 0 40px rgba(24, 119, 242, 0.2),
+    0 4px 20px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.ncs-social-icon--facebook:hover svg {
+  filter: drop-shadow(0 0 8px rgba(24, 119, 242, 0.8));
+}
+
+/* ── Instagram ────────────────────────────────────────────── */
+.ncs-social-icon--instagram {
+  border: 1px solid rgba(225, 48, 108, 0.35);
+  color: rgba(225, 48, 108, 0.85);
+  position: relative;
+}
+
+.ncs-social-icon--instagram::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 12px;
+  padding: 1px;
+  background: linear-gradient(
+    135deg,
+    rgba(64, 93, 230, 0.3) 0%,
+    rgba(225, 48, 108, 0.3) 25%,
+    rgba(253, 29, 29, 0.3) 50%,
+    rgba(245, 96, 64, 0.3) 75%,
+    rgba(252, 175, 69, 0.3) 100%
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.ncs-social-icon--instagram:hover {
+  background: linear-gradient(
+    135deg,
+    rgba(64, 93, 230, 0.12) 0%,
+    rgba(225, 48, 108, 0.12) 50%,
+    rgba(252, 175, 69, 0.12) 100%
+  );
+  border-color: transparent;
+  color: #e1306c;
+  transform: translateX(-4px) scale(1.08);
+  box-shadow:
+    0 0 20px rgba(225, 48, 108, 0.4),
+    0 0 40px rgba(131, 58, 180, 0.25),
+    0 4px 20px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.ncs-social-icon--instagram:hover::before {
+  opacity: 1;
+  background: linear-gradient(
+    135deg,
+    rgba(64, 93, 230, 0.6) 0%,
+    rgba(225, 48, 108, 0.6) 25%,
+    rgba(253, 29, 29, 0.6) 50%,
+    rgba(245, 96, 64, 0.6) 75%,
+    rgba(252, 175, 69, 0.6) 100%
+  );
+}
+
+.ncs-social-icon--instagram:hover svg {
+  filter: drop-shadow(0 0 8px rgba(225, 48, 108, 0.7)) drop-shadow(0 0 12px rgba(131, 58, 180, 0.5));
+}
+
+/* ── TikTok ───────────────────────────────────────────────── */
+.ncs-social-icon--tiktok {
+  border: 1px solid rgba(0, 242, 234, 0.25);
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+}
+
+.ncs-social-icon--tiktok::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(0, 242, 234, 0.08) 0%,
+    transparent 50%,
+    rgba(255, 0, 80, 0.08) 100%
+  );
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.ncs-social-icon--tiktok svg {
+  position: relative;
+  z-index: 1;
+}
+
+.ncs-social-icon--tiktok:hover {
+  background: rgba(0, 0, 0, 0.9);
+  border-color: rgba(0, 242, 234, 0.5);
+  transform: translateX(-4px) scale(1.08);
+  box-shadow:
+    0 0 15px rgba(0, 242, 234, 0.4),
+    0 0 15px rgba(255, 0, 80, 0.4),
+    0 0 30px rgba(0, 242, 234, 0.2),
+    0 0 30px rgba(255, 0, 80, 0.2),
+    0 4px 20px rgba(0, 0, 0, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.ncs-social-icon--tiktok:hover::before {
+  opacity: 1;
+}
+
+.ncs-social-icon--tiktok:hover svg {
+  filter:
+    drop-shadow(-2px 0 0 rgba(0, 242, 234, 0.8))
+    drop-shadow(2px 0 0 rgba(255, 0, 80, 0.8))
+    drop-shadow(0 0 6px rgba(255, 255, 255, 0.5));
+}
+
+
+/* ═══════════════════════════════════════════════════════════
+   SOCIAL ICONS - RESPONSIVE
+   ═══════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  .ncs-social-icons {
+    right: 12px;
+    bottom: 85px;
+    gap: 10px;
+  }
+
+  .ncs-social-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+  }
+
+  .ncs-social-icon--instagram::before {
+    border-radius: 10px;
+  }
+
+  .ncs-social-icon svg {
+    width: 17px;
+    height: 17px;
+  }
+}
+
+@media (max-width: 480px) {
+  .ncs-social-icons {
+    right: 10px;
+    bottom: 75px;
+    gap: 8px;
+  }
+
+  .ncs-social-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+  }
+
+  .ncs-social-icon--instagram::before {
+    border-radius: 8px;
+  }
+
+  .ncs-social-icon svg {
+    width: 15px;
+    height: 15px;
+  }
+}
+
+/* Light mode support for social icons */
+html[data-theme="light"] .ncs-social-icon {
+  background: rgba(245, 248, 255, 0.92);
+  box-shadow:
+    0 4px 16px rgba(10, 25, 50, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+html[data-theme="light"] .ncs-social-icon--facebook {
+  border-color: rgba(24, 119, 242, 0.4);
+  color: rgba(24, 119, 242, 0.85);
+}
+
+html[data-theme="light"] .ncs-social-icon--facebook:hover {
+  background: rgba(24, 119, 242, 0.12);
+  color: #1877f2;
+}
+
+html[data-theme="light"] .ncs-social-icon--instagram {
+  border-color: rgba(225, 48, 108, 0.4);
+  color: rgba(193, 53, 132, 0.85);
+}
+
+html[data-theme="light"] .ncs-social-icon--instagram:hover {
+  background: linear-gradient(
+    135deg,
+    rgba(64, 93, 230, 0.1) 0%,
+    rgba(225, 48, 108, 0.1) 50%,
+    rgba(252, 175, 69, 0.1) 100%
+  );
+  color: #c13584;
+}
+
+html[data-theme="light"] .ncs-social-icon--tiktok {
+  border-color: rgba(0, 0, 0, 0.2);
+  color: #000;
+}
+
+html[data-theme="light"] .ncs-social-icon--tiktok:hover {
+  background: rgba(0, 0, 0, 0.08);
+  border-color: rgba(0, 0, 0, 0.3);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   CHAT DISABLED - All chat UI elements hidden
+   Remove this section to re-enable chat
+   ═══════════════════════════════════════════════════════════ */
+.ncs-fab,
+.ncs-fab-badge,
+#ncsPageChat,
+.ncs-chat-window,
+.ncs-chat-header,
+.ncs-messages-area,
+.ncs-msg,
+.ncs-msg-bubble,
+.ncs-msg-time,
+.ncs-msg-date-div,
+.ncs-input-bar,
+.ncs-msg-input,
+.ncs-send-btn,
+.ncs-conv-row,
+.ncs-conv-info,
+.ncs-conv-name,
+.ncs-conv-preview,
+.ncs-conv-badge,
+.ncs-conv-time,
+/* Clan Chat elements */
+.ncs-clanchat-wrap,
+.ncs-clanchat-messages,
+.ncs-clan-msg,
+.ncs-clan-msg-body,
+.ncs-clan-msg-from,
+.ncs-clan-msg-text,
+.ncs-clan-msg-time,
+#ncsClanMsgArea,
+#ncsClanMsgInput,
+#ncsClanSendBtn {
+  display: none !important;
+}
+/* END CHAT DISABLED */
