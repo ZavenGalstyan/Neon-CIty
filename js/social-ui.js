@@ -5,24 +5,32 @@
    ═══════════════════════════════════════════════════════════ */
 
 const SocialUI = (() => {
-  'use strict';
+  "use strict";
 
   /* ── State ───────────────────────────────────────────────── */
   const S = {
     me: null,
-    friends: [], incoming: [], outgoing: [],
-    conversations: [], unreadDM: 0,
-    activeDM: null, dmMessages: [], dmHasMore: false,
-    clanData: null, clanInvites: [], clanBrowse: [], clanChatMessages: [],
-    clanView: 'browse',
+    friends: [],
+    incoming: [],
+    outgoing: [],
+    conversations: [],
+    unreadDM: 0,
+    activeDM: null,
+    dmMessages: [],
+    dmHasMore: false,
+    clanData: null,
+    clanInvites: [],
+    clanBrowse: [],
+    clanChatMessages: [],
+    clanView: "browse",
     searchResults: [],
     unreadNotif: 0,
     notifications: [],
-    notifFilter: 'all', // 'all' | 'unread'
+    notifFilter: "all", // 'all' | 'unread'
     heartbeatTimer: null,
-    activePage: null,   // 'friends' | 'chat' | 'clans' | 'profile' | 'ranks' | 'notifications'
+    activePage: null, // 'friends' | 'chat' | 'clans' | 'profile' | 'ranks' | 'notifications'
     profileData: null,
-    rankType: 'kills',
+    rankType: "kills",
     rankData: [],
   };
 
@@ -37,16 +45,16 @@ const SocialUI = (() => {
     _bindGlobalEvents();
     _injectNav();
 
-    WS.on('dm_received',             _wsOnDM);
-    WS.on('clan_message_received',   _wsOnClanMsg);
-    WS.on('friend_request_received', _wsOnFriendReq);
-    WS.on('friend_accepted',         _wsOnFriendAccepted);
-    WS.on('clan_invite_received',    _wsOnClanInvite);
-    WS.on('clan_kicked',             _wsOnKicked);
-    WS.on('notification',            _wsOnNotification);
-    WS.on('friend_online',           p => _updateOnline(p.name, true));
-    WS.on('friend_offline',          p => _updateOnline(p.name, false));
-    WS.on('poll_unread',             p => _setNotifCount(p.count));
+    // CHAT DISABLED: WS.on('dm_received',             _wsOnDM);
+    // CHAT DISABLED: WS.on('clan_message_received',   _wsOnClanMsg);
+    WS.on("friend_request_received", _wsOnFriendReq);
+    WS.on("friend_accepted", _wsOnFriendAccepted);
+    WS.on("clan_invite_received", _wsOnClanInvite);
+    WS.on("clan_kicked", _wsOnKicked);
+    WS.on("notification", _wsOnNotification);
+    WS.on("friend_online", (p) => _updateOnline(p.name, true));
+    WS.on("friend_offline", (p) => _updateOnline(p.name, false));
+    WS.on("poll_unread", (p) => _setNotifCount(p.count));
     WS.connect();
 
     _startHeartbeat();
@@ -61,14 +69,29 @@ const SocialUI = (() => {
       Social.DM.conversations(),
       Social.Notifications.unreadCount(),
     ]);
-    if (results[0].status==='fulfilled') S.friends      = results[0].value.friends  || [];
-    if (results[1].status==='fulfilled') S.incoming     = results[1].value.requests || [];
-    if (results[2].status==='fulfilled') S.outgoing     = results[2].value.requests || [];
-    if (results[3].status==='fulfilled') { S.conversations = results[3].value.conversations || []; S.unreadDM = results[3].value.totalUnread || 0; }
-    if (results[4].status==='fulfilled') _setNotifCount(results[4].value.count || 0);
+    if (results[0].status === "fulfilled")
+      S.friends = results[0].value.friends || [];
+    if (results[1].status === "fulfilled")
+      S.incoming = results[1].value.requests || [];
+    if (results[2].status === "fulfilled")
+      S.outgoing = results[2].value.requests || [];
+    if (results[3].status === "fulfilled") {
+      S.conversations = results[3].value.conversations || [];
+      S.unreadDM = results[3].value.totalUnread || 0;
+    }
+    if (results[4].status === "fulfilled")
+      _setNotifCount(results[4].value.count || 0);
 
-    try { S.clanData    = await Social.Clans.me(); }       catch { S.clanData = null; }
-    try { S.clanInvites = (await Social.Clans.myInvites()).invites || []; } catch { /* ignore */ }
+    try {
+      S.clanData = await Social.Clans.me();
+    } catch {
+      S.clanData = null;
+    }
+    try {
+      S.clanInvites = (await Social.Clans.myInvites()).invites || [];
+    } catch {
+      /* ignore */
+    }
 
     _refreshBadges();
     _rerenderActivePage();
@@ -79,62 +102,65 @@ const SocialUI = (() => {
   ══════════════════════════════════════════════════════════ */
   function _injectNav() {
     const try_ = () => {
-      const nav = document.getElementById('siteNav');
+      const nav = document.getElementById("siteNav");
       if (!nav) return;
-      if (nav.querySelector('.ncs-nav-friends-btn')) return;
+      if (nav.querySelector(".ncs-nav-friends-btn")) return;
 
       // CLANS
-      const clanBtn = document.createElement('button');
-      clanBtn.className = 'nav-btn ncs-nav-btn';
-      clanBtn.id = 'ncsNavClanBtn';
+      const clanBtn = document.createElement("button");
+      clanBtn.className = "nav-btn ncs-nav-btn";
+      clanBtn.id = "ncsNavClanBtn";
       clanBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> CLANS`;
-      clanBtn.onclick = () => openPage('clans');
+      clanBtn.onclick = () => openPage("clans");
 
       // FRIENDS
-      const friendBtn = document.createElement('button');
-      friendBtn.className = 'ncs-nav-icon-btn ncs-nav-friends-btn';
-      friendBtn.id = 'ncsNavFriendsBtn';
-      friendBtn.title = 'Friends';
+      const friendBtn = document.createElement("button");
+      friendBtn.className = "ncs-nav-icon-btn ncs-nav-friends-btn";
+      friendBtn.id = "ncsNavFriendsBtn";
+      friendBtn.title = "Friends";
       friendBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="17" height="17"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span class="ncs-nav-badge" id="ncsNavFriendBadge" style="display:none">0</span>`;
-      friendBtn.onclick = () => openPage('friends');
+      friendBtn.onclick = () => openPage("friends");
 
       // NOTIF
-      const notifBtn = document.createElement('button');
-      notifBtn.className = 'ncs-nav-icon-btn';
-      notifBtn.id = 'ncsNavNotifBtn';
-      notifBtn.title = 'Notifications';
+      const notifBtn = document.createElement("button");
+      notifBtn.className = "ncs-nav-icon-btn";
+      notifBtn.id = "ncsNavNotifBtn";
+      notifBtn.title = "Notifications";
       notifBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="17" height="17"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><span class="ncs-nav-badge" id="ncsNavNotifBadge" style="display:none">0</span>`;
-      notifBtn.onclick = () => openPage('notifications');
+      notifBtn.onclick = () => openPage("notifications");
 
-      const links = nav.querySelector('.nav-links');
-      const acct  = nav.querySelector('.nav-account') || nav.lastElementChild;
+      const links = nav.querySelector(".nav-links");
+      const acct = nav.querySelector(".nav-account") || nav.lastElementChild;
       if (links) links.prepend(clanBtn);
       else nav.insertBefore(clanBtn, acct);
 
       // Place theme toggle to the left of CLANS
-      const themeToggle = document.getElementById('navThemeToggle');
+      const themeToggle = document.getElementById("navThemeToggle");
       if (themeToggle && links) links.insertBefore(themeToggle, clanBtn);
       nav.insertBefore(notifBtn, acct);
       nav.insertBefore(friendBtn, notifBtn);
     };
-    try_(); setTimeout(try_, 300); setTimeout(try_, 900);
+    try_();
+    setTimeout(try_, 300);
+    setTimeout(try_, 900);
   }
 
   /* ══════════════════════════════════════════════════════════
      BUILD ALL PAGE HTML
   ══════════════════════════════════════════════════════════ */
   function _buildHTML() {
-    if (document.getElementById('ncs-root')) return;
-    const root = document.createElement('div');
-    root.id = 'ncs-root';
+    if (document.getElementById("ncs-root")) return;
+    const root = document.createElement("div");
+    root.id = "ncs-root";
     root.innerHTML = `
-      <!-- FAB -->
+      <!-- CHAT DISABLED: FAB
       <button class="ncs-fab" id="ncsFab" aria-label="Open Chat">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" width="22" height="22">
           <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
         </svg>
         <span class="ncs-fab-badge" id="ncsFabBadge" style="display:none"></span>
       </button>
+      END CHAT DISABLED -->
 
       <!-- ══ FRIENDS PAGE ════════════════════════════════════ -->
       <div class="ncs-page" id="ncsPageFriends">
@@ -175,7 +201,7 @@ const SocialUI = (() => {
         </div>
       </div>
 
-      <!-- ══ CHAT PAGE ════════════════════════════════════ -->
+      <!-- CHAT DISABLED: CHAT PAGE
       <div class="ncs-page" id="ncsPageChat">
         <div class="ncs-topbar">
           <span class="ncs-topbar-icon">💬</span>
@@ -186,7 +212,6 @@ const SocialUI = (() => {
           <button class="ncs-close-btn" data-close="chat">✕</button>
         </div>
         <div class="ncs-page-body">
-          <!-- Left: conversation list -->
           <div class="ncs-sidebar">
             <div class="ncs-search-box">
               <div class="ncs-search-wrap">
@@ -198,7 +223,6 @@ const SocialUI = (() => {
             </div>
             <div class="ncs-list" id="ncsConvList"></div>
           </div>
-          <!-- Right: chat window -->
           <div class="ncs-chat-window" id="ncsChatWindow">
             <div class="ncs-no-conv" id="ncsNoChatSel">
               <div class="ncs-no-conv-icon">
@@ -215,6 +239,7 @@ const SocialUI = (() => {
           </div>
         </div>
       </div>
+      END CHAT DISABLED -->
 
       <!-- ══ CLANS PAGE ════════════════════════════════════ -->
       <div class="ncs-page" id="ncsPageClans">
@@ -301,6 +326,25 @@ const SocialUI = (() => {
 
       <!-- Toasts -->
       <div class="ncs-toast-container" id="ncsToasts"></div>
+
+      <!-- Fixed Social Icons -->
+      <div class="ncs-social-icons" id="ncsSocialIcons">
+        <a href="https://www.facebook.com/share/1aeAN7Cbvy/?mibextid=wwXIfr" target="_blank" rel="noopener noreferrer" class="ncs-social-icon ncs-social-icon--facebook" aria-label="Follow us on Facebook" title="Facebook">
+          <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+            <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+          </svg>
+        </a>
+        <a href="https://www.instagram.com/dash_dread?igsh=MWQ4bnJkczV2bWtrZQ%3D%3D&utm_source=qr" target="_blank" rel="noopener noreferrer" class="ncs-social-icon ncs-social-icon--instagram" aria-label="Follow us on Instagram" title="Instagram">
+          <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+            <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+          </svg>
+        </a>
+        <a href="https://www.tiktok.com/@dash_dread?_r=1&_t=ZS-97aSpQQ3bpV" target="_blank" rel="noopener noreferrer" class="ncs-social-icon ncs-social-icon--tiktok" aria-label="Follow us on TikTok" title="TikTok">
+          <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+            <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/>
+          </svg>
+        </a>
+      </div>
     `;
     document.body.appendChild(root);
   }
@@ -310,27 +354,30 @@ const SocialUI = (() => {
   ══════════════════════════════════════════════════════════ */
   function openPage(page) {
     // Close current
-    if (S.activePage) document.getElementById(_pageId(S.activePage))?.classList.remove('ncs-open');
+    if (S.activePage)
+      document
+        .getElementById(_pageId(S.activePage))
+        ?.classList.remove("ncs-open");
 
     S.activePage = page;
-    document.getElementById(_pageId(page))?.classList.add('ncs-open');
+    document.getElementById(_pageId(page))?.classList.add("ncs-open");
     _renderPage(page);
     _refreshAll();
   }
 
   function closePage(page) {
-    document.getElementById(_pageId(page))?.classList.remove('ncs-open');
+    document.getElementById(_pageId(page))?.classList.remove("ncs-open");
     if (S.activePage === page) S.activePage = null;
   }
 
   function _pageId(p) {
-    if (p === 'friends')       return 'ncsPageFriends';
-    if (p === 'chat')          return 'ncsPageChat';
-    if (p === 'clans')         return 'ncsPageClans';
-    if (p === 'profile')       return 'ncsPageProfile';
-    if (p === 'ranks')         return 'ncsPageRanks';
-    if (p === 'notifications') return 'ncsPageNotifications';
-    return 'ncsPageFriends';
+    if (p === "friends") return "ncsPageFriends";
+    // CHAT DISABLED: if (p === 'chat')          return 'ncsPageChat';
+    if (p === "clans") return "ncsPageClans";
+    if (p === "profile") return "ncsPageProfile";
+    if (p === "ranks") return "ncsPageRanks";
+    if (p === "notifications") return "ncsPageNotifications";
+    return "ncsPageFriends";
   }
 
   function _rerenderActivePage() {
@@ -338,15 +385,15 @@ const SocialUI = (() => {
   }
 
   function _renderPage(page) {
-    if (page === 'friends')       _renderFriendsPage();
-    if (page === 'chat')          _renderChatPage();
-    if (page === 'clans')         _renderClansPage();
-    if (page === 'profile')       _renderProfilePage();
-    if (page === 'ranks')         _renderRanksPage(S.rankType);
-    if (page === 'notifications') _renderNotificationsPage();
+    if (page === "friends") _renderFriendsPage();
+    // CHAT DISABLED: if (page === 'chat')          _renderChatPage();
+    if (page === "clans") _renderClansPage();
+    if (page === "profile") _renderProfilePage();
+    if (page === "ranks") _renderRanksPage(S.rankType);
+    if (page === "notifications") _renderNotificationsPage();
   }
 
-  /* ── FAB drag-to-reposition ─────────────────────────────── */
+  /* CHAT DISABLED: FAB drag-to-reposition
   function _initFabDrag() {
     const fab = document.getElementById('ncsFab');
     if (!fab) return;
@@ -417,20 +464,24 @@ const SocialUI = (() => {
       }
     });
   }
+  END CHAT DISABLED */
 
   /* ── Global event binding ────────────────────────────────── */
   function _bindGlobalEvents() {
-    _initFabDrag();
+    // CHAT DISABLED: _initFabDrag();
 
-    document.addEventListener('click', e => {
-      const closeBtn = e.target.closest('[data-close]');
-      if (closeBtn) { closePage(closeBtn.dataset.close); return; }
+    document.addEventListener("click", (e) => {
+      const closeBtn = e.target.closest("[data-close]");
+      if (closeBtn) {
+        closePage(closeBtn.dataset.close);
+        return;
+      }
 
       // Keyboard ESC handled below
     });
 
-    document.addEventListener('keydown', e => {
-      if (e.key === 'Escape' && S.activePage) closePage(S.activePage);
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && S.activePage) closePage(S.activePage);
     });
   }
 
@@ -438,64 +489,77 @@ const SocialUI = (() => {
      FRIENDS PAGE RENDER
   ══════════════════════════════════════════════════════════ */
   function _renderFriendsPage() {
-    const online  = S.friends.filter(f => f.isOnline);
-    const offline = S.friends.filter(f => !f.isOnline);
-    const countEl = document.getElementById('ncsFriendsCount');
-    if (countEl) countEl.textContent = `${online.length} online · ${S.friends.length} total`;
+    const online = S.friends.filter((f) => f.isOnline);
+    const offline = S.friends.filter((f) => !f.isOnline);
+    const countEl = document.getElementById("ncsFriendsCount");
+    if (countEl)
+      countEl.textContent = `${online.length} online · ${S.friends.length} total`;
 
     // Friends list
-    const list = document.getElementById('ncsFriendsList');
+    const list = document.getElementById("ncsFriendsList");
     if (list) {
-      let html = '';
+      let html = "";
       if (!S.friends.length) {
         html = `<div class="ncs-empty"><div class="ncs-empty-icon">👤</div>No friends yet — search for players!</div>`;
       } else {
         if (online.length) {
           html += `<div class="ncs-sec-label">ONLINE — ${online.length}</div>`;
-          html += online.map(f => _htmlFriendRow(f)).join('');
+          html += online.map((f) => _htmlFriendRow(f)).join("");
         }
         if (offline.length) {
           html += `<div class="ncs-sec-label" style="opacity:0.45">OFFLINE — ${offline.length}</div>`;
-          html += offline.map(f => _htmlFriendRow(f)).join('');
+          html += offline.map((f) => _htmlFriendRow(f)).join("");
         }
       }
       list.innerHTML = html;
-      list.querySelectorAll('[data-action]').forEach(el => el.addEventListener('click', _handleFriendAction));
-      list.querySelectorAll('.ncs-person-row').forEach(el => el.addEventListener('click', e => {
-        if (e.target.closest('[data-action]')) return;
-        _startDMFromRow(el.dataset.name);
-      }));
+      list
+        .querySelectorAll("[data-action]")
+        .forEach((el) => el.addEventListener("click", _handleFriendAction));
+      list.querySelectorAll(".ncs-person-row").forEach((el) =>
+        el.addEventListener("click", (e) => {
+          if (e.target.closest("[data-action]")) return;
+          _startDMFromRow(el.dataset.name);
+        }),
+      );
     }
 
     // Requests
     _renderRequestsPanel();
 
     // Search filter
-    const searchInput = document.getElementById('ncsFriendSearch');
+    const searchInput = document.getElementById("ncsFriendSearch");
     if (searchInput) {
       searchInput.oninput = () => {
         const q = searchInput.value.toLowerCase();
-        document.querySelectorAll('#ncsFriendsList .ncs-person-row').forEach(row => {
-          row.style.display = q && !row.dataset.name.toLowerCase().includes(q) ? 'none' : '';
-        });
+        document
+          .querySelectorAll("#ncsFriendsList .ncs-person-row")
+          .forEach((row) => {
+            row.style.display =
+              q && !row.dataset.name.toLowerCase().includes(q) ? "none" : "";
+          });
       };
     }
 
     // Add friend
-    const addBtn   = document.getElementById('ncsAddBtn');
-    const addInput = document.getElementById('ncsAddInput');
-    if (addBtn)   addBtn.onclick  = _doSearchPlayers;
-    if (addInput) addInput.onkeydown = e => { if (e.key === 'Enter') _doSearchPlayers(); };
+    const addBtn = document.getElementById("ncsAddBtn");
+    const addInput = document.getElementById("ncsAddInput");
+    if (addBtn) addBtn.onclick = _doSearchPlayers;
+    if (addInput)
+      addInput.onkeydown = (e) => {
+        if (e.key === "Enter") _doSearchPlayers();
+      };
   }
 
   function _htmlFriendRow(f) {
-    const tag = f.clanTag ? `<span class="ncs-clan-tag">[${_esc(f.clanTag)}]</span>` : '';
+    const tag = f.clanTag
+      ? `<span class="ncs-clan-tag">[${_esc(f.clanTag)}]</span>`
+      : "";
     const statusDot = f.isOnline
       ? `<span class="ncs-online-dot"></span> Online`
       : `<span class="ncs-offline-dot"></span> ${_timeAgo(f.lastSeen)}`;
     return `
       <div class="ncs-person-row" data-name="${_esc(f.name)}" title="Click to chat">
-        <div class="ncs-av ${f.isOnline ? 'online' : ''}" data-col="${_avCol(f.name)}">${f.name[0].toUpperCase()}</div>
+        <div class="ncs-av ${f.isOnline ? "online" : ""}" data-col="${_avCol(f.name)}">${f.name[0].toUpperCase()}</div>
         <div class="ncs-person-info">
           <div class="ncs-person-name">${_esc(f.name)} ${tag}</div>
           <div class="ncs-person-sub">${statusDot} &nbsp;·&nbsp; Lv ${f.account?.level || 1}</div>
@@ -513,38 +577,50 @@ const SocialUI = (() => {
   }
 
   function _renderRequestsPanel() {
-    const reqLabel = document.getElementById('ncsReqLabel');
-    const reqList  = document.getElementById('ncsRequestsList');
+    const reqLabel = document.getElementById("ncsReqLabel");
+    const reqList = document.getElementById("ncsRequestsList");
     if (!reqList) return;
 
     const total = S.incoming.length + S.outgoing.length + S.clanInvites.length;
-    if (reqLabel) { reqLabel.style.display = total ? '' : 'none'; reqLabel.textContent = `PENDING — ${total}`; }
+    if (reqLabel) {
+      reqLabel.style.display = total ? "" : "none";
+      reqLabel.textContent = `PENDING — ${total}`;
+    }
 
-    if (!total) { reqList.innerHTML = `<div class="ncs-empty"><div class="ncs-empty-icon">📬</div>No pending requests</div>`; return; }
+    if (!total) {
+      reqList.innerHTML = `<div class="ncs-empty"><div class="ncs-empty-icon">📬</div>No pending requests</div>`;
+      return;
+    }
 
-    let html = '';
+    let html = "";
 
     // Clan invites
-    html += S.clanInvites.map(inv => `
+    html += S.clanInvites
+      .map(
+        (inv) => `
       <div class="ncs-person-row">
-        <div class="ncs-av ncs-av-clan">${_esc(inv.clanTag?.[0] || '⭐')}</div>
+        <div class="ncs-av ncs-av-clan">${_esc(inv.clanTag?.[0] || "⭐")}</div>
         <div class="ncs-person-info">
           <div class="ncs-person-name">${_esc(inv.clanName)} <span class="ncs-clan-tag">[${_esc(inv.clanTag)}]</span></div>
           <div class="ncs-person-sub">Clan invite from ${_esc(inv.fromName)}</div>
         </div>
         <div class="ncs-row-actions always">
-          <button class="ncs-icon-btn success" data-action="accept-clan" data-id="${_esc(inv.id||inv._id)}" title="Join clan">
+          <button class="ncs-icon-btn success" data-action="accept-clan" data-id="${_esc(inv.id || inv._id)}" title="Join clan">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><polyline points="20 6 9 17 4 12"/></svg>
           </button>
-          <button class="ncs-icon-btn danger" data-action="reject-clan" data-id="${_esc(inv.id||inv._id)}" title="Decline">
+          <button class="ncs-icon-btn danger" data-action="reject-clan" data-id="${_esc(inv.id || inv._id)}" title="Decline">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
         </div>
       </div>
-    `).join('');
+    `,
+      )
+      .join("");
 
     // Incoming friend requests
-    html += S.incoming.map(r => `
+    html += S.incoming
+      .map(
+        (r) => `
       <div class="ncs-person-row">
         <div class="ncs-av" data-col="${_avCol(r.fromName)}">${r.fromName[0].toUpperCase()}</div>
         <div class="ncs-person-info">
@@ -552,18 +628,22 @@ const SocialUI = (() => {
           <div class="ncs-person-sub">Wants to be friends</div>
         </div>
         <div class="ncs-row-actions always">
-          <button class="ncs-icon-btn success" data-action="accept-req" data-id="${_esc(r.id||r._id)}" title="Accept">
+          <button class="ncs-icon-btn success" data-action="accept-req" data-id="${_esc(r.id || r._id)}" title="Accept">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><polyline points="20 6 9 17 4 12"/></svg>
           </button>
-          <button class="ncs-icon-btn danger" data-action="reject-req" data-id="${_esc(r.id||r._id)}" title="Decline">
+          <button class="ncs-icon-btn danger" data-action="reject-req" data-id="${_esc(r.id || r._id)}" title="Decline">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
         </div>
       </div>
-    `).join('');
+    `,
+      )
+      .join("");
 
     // Outgoing requests
-    html += S.outgoing.map(r => `
+    html += S.outgoing
+      .map(
+        (r) => `
       <div class="ncs-person-row">
         <div class="ncs-av" data-col="${_avCol(r.toName)}" style="opacity:0.55">${r.toName[0].toUpperCase()}</div>
         <div class="ncs-person-info">
@@ -571,60 +651,72 @@ const SocialUI = (() => {
           <div class="ncs-person-sub" style="opacity:0.55">Request sent · pending</div>
         </div>
         <div class="ncs-row-actions always">
-          <button class="ncs-icon-btn danger" data-action="cancel-req" data-id="${_esc(r.id||r._id)}" title="Cancel">
+          <button class="ncs-icon-btn danger" data-action="cancel-req" data-id="${_esc(r.id || r._id)}" title="Cancel">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
         </div>
       </div>
-    `).join('');
+    `,
+      )
+      .join("");
 
     reqList.innerHTML = html;
-    reqList.querySelectorAll('[data-action]').forEach(el => el.addEventListener('click', _handleFriendAction));
+    reqList
+      .querySelectorAll("[data-action]")
+      .forEach((el) => el.addEventListener("click", _handleFriendAction));
   }
 
   /* ── Player search results ───────────────────────────────── */
   async function _doSearchPlayers() {
-    const q = (document.getElementById('ncsAddInput')?.value || '').trim();
+    const q = (document.getElementById("ncsAddInput")?.value || "").trim();
     if (!q) return;
     try {
       const res = await Social.Players.search(q);
       S.searchResults = res.players || [];
-    } catch { S.searchResults = []; }
+    } catch {
+      S.searchResults = [];
+    }
     _renderSearchResults();
   }
 
   function _renderSearchResults() {
-    const box = document.getElementById('ncsAddResults');
+    const box = document.getElementById("ncsAddResults");
     if (!box) return;
     if (!S.searchResults.length) {
       box.innerHTML = `<div style="padding:12px 4px; font-family:'Rajdhani',sans-serif; font-size:13px; color:rgba(255,255,255,0.3);">No players found.</div>`;
       return;
     }
-    box.innerHTML = S.searchResults.map(p => {
-      const isMe     = p.name === S.me?.name;
-      const isFriend = S.friends.some(f => f.name === p.name);
-      const isSent   = S.outgoing.some(r => r.toName === p.name);
-      let action = '';
-      if (!isMe && !isFriend && !isSent) {
-        action = `<button class="ncs-btn ncs-btn-sm" data-action="add" data-name="${_esc(p.name)}">Add</button>`;
-      } else if (isFriend) {
-        action = `<span style="font-family:'Orbitron',monospace;font-size:9px;color:var(--ncs-green);letter-spacing:.1em;">FRIENDS</span>`;
-      } else if (isSent) {
-        action = `<span style="font-family:'Orbitron',monospace;font-size:9px;color:var(--ncs-muted);letter-spacing:.1em;">SENT</span>`;
-      }
-      const tag = p.clanTag ? `<span class="ncs-clan-tag">[${_esc(p.clanTag)}]</span>` : '';
-      return `
+    box.innerHTML = S.searchResults
+      .map((p) => {
+        const isMe = p.name === S.me?.name;
+        const isFriend = S.friends.some((f) => f.name === p.name);
+        const isSent = S.outgoing.some((r) => r.toName === p.name);
+        let action = "";
+        if (!isMe && !isFriend && !isSent) {
+          action = `<button class="ncs-btn ncs-btn-sm" data-action="add" data-name="${_esc(p.name)}">Add</button>`;
+        } else if (isFriend) {
+          action = `<span style="font-family:'Orbitron',monospace;font-size:9px;color:var(--ncs-green);letter-spacing:.1em;">FRIENDS</span>`;
+        } else if (isSent) {
+          action = `<span style="font-family:'Orbitron',monospace;font-size:9px;color:var(--ncs-muted);letter-spacing:.1em;">SENT</span>`;
+        }
+        const tag = p.clanTag
+          ? `<span class="ncs-clan-tag">[${_esc(p.clanTag)}]</span>`
+          : "";
+        return `
         <div class="ncs-person-row" style="margin:2px 0;">
-          <div class="ncs-av ncs-av-sm ${p.isOnline?'online':''}" data-col="${_avCol(p.name)}">${p.name[0].toUpperCase()}</div>
+          <div class="ncs-av ncs-av-sm ${p.isOnline ? "online" : ""}" data-col="${_avCol(p.name)}">${p.name[0].toUpperCase()}</div>
           <div class="ncs-person-info">
             <div class="ncs-person-name" style="font-size:14px;">${_esc(p.name)} ${tag}</div>
-            <div class="ncs-person-sub">Lv ${p.account?.level || '?'}</div>
+            <div class="ncs-person-sub">Lv ${p.account?.level || "?"}</div>
           </div>
           <div class="ncs-row-actions always">${action}</div>
         </div>
       `;
-    }).join('');
-    box.querySelectorAll('[data-action]').forEach(el => el.addEventListener('click', _handleFriendAction));
+      })
+      .join("");
+    box
+      .querySelectorAll("[data-action]")
+      .forEach((el) => el.addEventListener("click", _handleFriendAction));
   }
 
   /* ── Friend actions (unified handler) ──────────────────── */
@@ -632,29 +724,34 @@ const SocialUI = (() => {
     e.stopPropagation();
     const el = e.currentTarget;
     const { action, name, id } = el.dataset;
-    if (action === 'dm')          _startDMFromRow(name);
-    if (action === 'remove')      _doRemoveFriend(name);
-    if (action === 'add')         _doAddFriend(name);
-    if (action === 'accept-req')  _doAcceptReq(id);
-    if (action === 'reject-req')  _doRejectReq(id);
-    if (action === 'cancel-req')  _doCancelReq(id);
-    if (action === 'accept-clan') _doAcceptClanInvite(id);
-    if (action === 'reject-clan') _doRejectClanInvite(id);
+    if (action === "dm") _startDMFromRow(name);
+    if (action === "remove") _doRemoveFriend(name);
+    if (action === "add") _doAddFriend(name);
+    if (action === "accept-req") _doAcceptReq(id);
+    if (action === "reject-req") _doRejectReq(id);
+    if (action === "cancel-req") _doCancelReq(id);
+    if (action === "accept-clan") _doAcceptClanInvite(id);
+    if (action === "reject-clan") _doRejectClanInvite(id);
   }
 
   async function _doAddFriend(name) {
-    try { await Social.Friends.send(name); toast(`Request sent to ${name}!`, 'friend'); await _refreshAll(); }
-    catch(e) { toast(e.message, 'error'); }
+    try {
+      await Social.Friends.send(name);
+      toast(`Request sent to ${name}!`, "friend");
+      await _refreshAll();
+    } catch (e) {
+      toast(e.message, "error");
+    }
   }
 
   /* ── Remove Friend Confirmation Modal ───────────────────────── */
   function _showRemoveFriendModal(name) {
     // Remove existing modal if any
-    document.getElementById('ncsConfirmModal')?.remove();
+    document.getElementById("ncsConfirmModal")?.remove();
 
-    const overlay = document.createElement('div');
-    overlay.id = 'ncsConfirmModal';
-    overlay.className = 'ncs-confirm-overlay';
+    const overlay = document.createElement("div");
+    overlay.id = "ncsConfirmModal";
+    overlay.className = "ncs-confirm-overlay";
     overlay.innerHTML = `
       <div class="ncs-confirm-modal" role="dialog" aria-modal="true" aria-labelledby="ncsConfirmTitle">
         <div class="ncs-confirm-icon">⚠️</div>
@@ -668,56 +765,56 @@ const SocialUI = (() => {
       </div>
     `;
     document.body.appendChild(overlay);
-    document.body.style.overflow = 'hidden'; // Prevent background scroll
+    document.body.style.overflow = "hidden"; // Prevent background scroll
 
-    const modal = overlay.querySelector('.ncs-confirm-modal');
-    const cancelBtn = overlay.querySelector('#ncsConfirmCancel');
-    const removeBtn = overlay.querySelector('#ncsConfirmRemove');
+    const modal = overlay.querySelector(".ncs-confirm-modal");
+    const cancelBtn = overlay.querySelector("#ncsConfirmCancel");
+    const removeBtn = overlay.querySelector("#ncsConfirmRemove");
 
     // Close modal helper
     function closeModal() {
-      overlay.classList.add('closing');
-      document.body.style.overflow = '';
+      overlay.classList.add("closing");
+      document.body.style.overflow = "";
       setTimeout(() => overlay.remove(), 150);
     }
 
     // Cancel button
-    cancelBtn.addEventListener('click', closeModal);
+    cancelBtn.addEventListener("click", closeModal);
 
     // Click outside modal to close
-    overlay.addEventListener('click', (e) => {
+    overlay.addEventListener("click", (e) => {
       if (e.target === overlay) closeModal();
     });
 
     // Escape key to close
     function handleEscape(e) {
-      if (e.key === 'Escape') {
+      if (e.key === "Escape") {
         closeModal();
-        document.removeEventListener('keydown', handleEscape);
+        document.removeEventListener("keydown", handleEscape);
       }
     }
-    document.addEventListener('keydown', handleEscape);
+    document.addEventListener("keydown", handleEscape);
 
     // Remove button - performs the actual removal
-    removeBtn.addEventListener('click', async () => {
+    removeBtn.addEventListener("click", async () => {
       // Disable buttons and show loading state
       cancelBtn.disabled = true;
       removeBtn.disabled = true;
-      removeBtn.classList.add('loading');
-      removeBtn.textContent = 'REMOVING...';
+      removeBtn.classList.add("loading");
+      removeBtn.textContent = "REMOVING...";
 
       try {
         await Social.Friends.remove(name);
-        toast(`${name} removed.`, 'friend');
+        toast(`${name} removed.`, "friend");
         closeModal();
         await _refreshAll();
       } catch (e) {
-        toast(e.message || 'Failed to remove friend.', 'error');
+        toast(e.message || "Failed to remove friend.", "error");
         // Re-enable buttons on error
         cancelBtn.disabled = false;
         removeBtn.disabled = false;
-        removeBtn.classList.remove('loading');
-        removeBtn.textContent = 'REMOVE FRIEND';
+        removeBtn.classList.remove("loading");
+        removeBtn.textContent = "REMOVE FRIEND";
       }
     });
 
@@ -729,39 +826,83 @@ const SocialUI = (() => {
     _showRemoveFriendModal(name);
   }
   async function _doAcceptReq(id) {
-    if (!id) { toast('Request ID missing — try refreshing the page.', 'error'); return; }
-    try { const r = await Social.Friends.accept(id); toast(`You and ${r.friend?.name} are now friends!`, 'friend'); await _refreshAll(); }
-    catch(e) { toast(e.message, 'error'); }
+    if (!id) {
+      toast("Request ID missing — try refreshing the page.", "error");
+      return;
+    }
+    try {
+      const r = await Social.Friends.accept(id);
+      toast(`You and ${r.friend?.name} are now friends!`, "friend");
+      await _refreshAll();
+    } catch (e) {
+      toast(e.message, "error");
+    }
   }
   async function _doRejectReq(id) {
-    if (!id) { toast('Request ID missing — try refreshing the page.', 'error'); return; }
-    try { await Social.Friends.reject(id); await _refreshAll(); }
-    catch(e) { toast(e.message, 'error'); }
+    if (!id) {
+      toast("Request ID missing — try refreshing the page.", "error");
+      return;
+    }
+    try {
+      await Social.Friends.reject(id);
+      await _refreshAll();
+    } catch (e) {
+      toast(e.message, "error");
+    }
   }
   async function _doCancelReq(id) {
-    if (!id) { toast('Request ID missing — try refreshing the page.', 'error'); return; }
-    try { await Social.Friends.cancel(id); await _refreshAll(); }
-    catch(e) { toast(e.message, 'error'); }
+    if (!id) {
+      toast("Request ID missing — try refreshing the page.", "error");
+      return;
+    }
+    try {
+      await Social.Friends.cancel(id);
+      await _refreshAll();
+    } catch (e) {
+      toast(e.message, "error");
+    }
   }
   async function _doAcceptClanInvite(id) {
-    if (!id) { toast('Invite ID missing — try refreshing the page.', 'error'); return; }
-    try { const r = await Social.Clans.acceptInvite(id); toast(`Joined ${r.clan?.name}!`, 'clan'); await _refreshAll(); }
-    catch(e) { toast(e.message, 'error'); }
+    if (!id) {
+      toast("Invite ID missing — try refreshing the page.", "error");
+      return;
+    }
+    try {
+      const r = await Social.Clans.acceptInvite(id);
+      toast(`Joined ${r.clan?.name}!`, "clan");
+      await _refreshAll();
+    } catch (e) {
+      toast(e.message, "error");
+    }
   }
   async function _doRejectClanInvite(id) {
-    if (!id) { toast('Invite ID missing — try refreshing the page.', 'error'); return; }
-    try { await Social.Clans.rejectInvite(id); await _refreshAll(); }
-    catch(e) { toast(e.message, 'error'); }
+    if (!id) {
+      toast("Invite ID missing — try refreshing the page.", "error");
+      return;
+    }
+    try {
+      await Social.Clans.rejectInvite(id);
+      await _refreshAll();
+    } catch (e) {
+      toast(e.message, "error");
+    }
   }
 
+  /* CHAT DISABLED: _startDMFromRow function
   function _startDMFromRow(name) {
     openPage('chat');
     _openDM(name);
   }
+  END CHAT DISABLED */
+  function _startDMFromRow(name) {
+    // CHAT DISABLED: Chat functionality is temporarily disabled
+    console.log("Chat is currently disabled");
+  }
 
-  /* ══════════════════════════════════════════════════════════
+  /* CHAT DISABLED: CHAT PAGE RENDER SECTION
+  ══════════════════════════════════════════════════════════
      CHAT PAGE RENDER
-  ══════════════════════════════════════════════════════════ */
+  ══════════════════════════════════════════════════════════
   function _renderChatPage() {
     const sub = document.getElementById('ncsChatUnreadSub');
     if (sub) sub.textContent = S.unreadDM ? `${S.unreadDM} unread` : '';
@@ -839,7 +980,6 @@ const SocialUI = (() => {
     if (S.activeDM) _renderChatWindow();
   }
 
-  /* ── Open a DM window ────────────────────────────────────── */
   async function _openDM(partnerName, convId = null) {
     S.activeDM = { friendName: partnerName, conversationId: convId };
     S.dmMessages = [];
@@ -950,7 +1090,7 @@ const SocialUI = (() => {
       if (area) { area.innerHTML = _buildMsgHTML(); const newH = area.scrollHeight; area.scrollTop = newH - prevH; }
       const loadMore = document.getElementById('ncsDmLoadMore');
       if (loadMore) loadMore.onclick = _loadOlderMsgs;
-    } catch { /* ignore */ }
+    } catch {}
   }
 
   async function _sendDM() {
@@ -970,51 +1110,76 @@ const SocialUI = (() => {
     } catch(e) { toast(e.message, 'error'); input.value = content; }
     finally { input.disabled = false; input.focus(); }
   }
+  END CHAT DISABLED */
 
   /* ══════════════════════════════════════════════════════════
      CLANS PAGE RENDER
   ══════════════════════════════════════════════════════════ */
   function _renderClansPage() {
-    const sub = document.getElementById('ncsClansTopSub');
-    if (sub) sub.textContent = S.clanData ? `[${S.clanData.clan?.tag}] ${S.clanData.clan?.name}` : 'Find or create your clan';
+    const sub = document.getElementById("ncsClansTopSub");
+    if (sub)
+      sub.textContent = S.clanData
+        ? `[${S.clanData.clan?.tag}] ${S.clanData.clan?.name}`
+        : "Find or create your clan";
 
     // Side nav
-    const nav = document.getElementById('ncsClanSideNav');
+    const nav = document.getElementById("ncsClanSideNav");
     if (nav) {
       const hasClan = !!S.clanData;
       const views = hasClan
-        ? [['mine','⚔️','My Clan'],['chat','💬','Clan Chat'],['browse','🔍','Browse'],]
-        : [['browse','🔍','Browse Clans'],['create','➕','Create Clan']];
-      if (!views.find(v => v[0] === S.clanView)) S.clanView = views[0][0];
-      nav.innerHTML = views.map(([v, icon, label]) => `
-        <button class="ncs-sidenav-btn ${S.clanView===v?'active':''}" data-view="${v}">
+        ? // CLAN CHAT DISABLED: ? [['mine','⚔️','My Clan'],['chat','💬','Clan Chat'],['browse','🔍','Browse'],]
+          [
+            ["mine", "⚔️", "My Clan"],
+            ["browse", "🔍", "Browse"],
+          ]
+        : [
+            ["browse", "🔍", "Browse Clans"],
+            ["create", "➕", "Create Clan"],
+          ];
+      if (!views.find((v) => v[0] === S.clanView)) S.clanView = views[0][0];
+      nav.innerHTML = views
+        .map(
+          ([v, icon, label]) => `
+        <button class="ncs-sidenav-btn ${S.clanView === v ? "active" : ""}" data-view="${v}">
           <span class="ncs-sidenav-icon">${icon}</span> ${label}
         </button>
-      `).join('');
-      nav.querySelectorAll('[data-view]').forEach(btn => {
-        btn.addEventListener('click', () => { S.clanView = btn.dataset.view; _renderClansPage(); _loadClanViewData(); });
+      `,
+        )
+        .join("");
+      nav.querySelectorAll("[data-view]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          S.clanView = btn.dataset.view;
+          _renderClansPage();
+          _loadClanViewData();
+        });
       });
     }
 
     // Content
-    const content = document.getElementById('ncsClanContent');
+    const content = document.getElementById("ncsClanContent");
     if (!content) return;
-    if (S.clanView === 'browse')  content.innerHTML = _htmlClanBrowse();
-    if (S.clanView === 'create')  content.innerHTML = _htmlClanCreate();
-    if (S.clanView === 'mine')    content.innerHTML = _htmlMyClan();
-    if (S.clanView === 'chat')    content.innerHTML = _htmlClanChat();
+    if (S.clanView === "browse") content.innerHTML = _htmlClanBrowse();
+    if (S.clanView === "create") content.innerHTML = _htmlClanCreate();
+    if (S.clanView === "mine") content.innerHTML = _htmlMyClan();
+    // CLAN CHAT DISABLED: if (S.clanView === 'chat')    content.innerHTML = _htmlClanChat();
     _bindClanActions();
   }
 
   async function _loadClanViewData() {
-    if (S.clanView === 'browse') {
-      try { S.clanBrowse = (await Social.Clans.browse()).clans || []; } catch { S.clanBrowse = []; }
+    if (S.clanView === "browse") {
+      try {
+        S.clanBrowse = (await Social.Clans.browse()).clans || [];
+      } catch {
+        S.clanBrowse = [];
+      }
       _renderClansPage();
     }
+    /* CLAN CHAT DISABLED:
     if (S.clanView === 'chat' && S.clanData?.clan?.id) {
       try { S.clanChatMessages = (await Social.Clans.chatHistory(S.clanData.clan.id)).messages || []; } catch {}
       _renderClansPage();
     }
+    END CLAN CHAT DISABLED */
   }
 
   /* ── Browse ──────────────────────────────────────────────── */
@@ -1033,23 +1198,26 @@ const SocialUI = (() => {
     if (!S.clanBrowse.length) {
       h += `<div class="ncs-empty"><div class="ncs-empty-icon">🏴</div>No clans found. Be the first to create one!</div>`;
     } else {
-      h += `<div class="ncs-clan-grid">` + S.clanBrowse.map(c => {
-        const full    = c.memberCount >= c.maxMembers;
-        const canJoin = c.isOpen && !S.clanData && !full;
-        return `
+      h +=
+        `<div class="ncs-clan-grid">` +
+        S.clanBrowse
+          .map((c) => {
+            const full = c.memberCount >= c.maxMembers;
+            const canJoin = c.isOpen && !S.clanData && !full;
+            return `
           <div class="ncs-clan-card">
             <div class="ncs-clan-card-head">
-              <div class="ncs-clan-emblem">${c.emblem||'⭐'}</div>
+              <div class="ncs-clan-emblem">${c.emblem || "⭐"}</div>
               <div class="ncs-clan-card-title">
                 <div class="ncs-clan-card-name">${_esc(c.name)}</div>
                 <div class="ncs-clan-tag-lg">[${_esc(c.tag)}]</div>
               </div>
-              ${canJoin ? `<button class="ncs-btn ncs-btn-purple ncs-btn-sm" data-action="join-clan" data-id="${c.id}">JOIN</button>` : ''}
+              ${canJoin ? `<button class="ncs-btn ncs-btn-purple ncs-btn-sm" data-action="join-clan" data-id="${c.id}">JOIN</button>` : ""}
             </div>
-            ${c.description ? `<div class="ncs-clan-card-desc">${_esc(c.description)}</div>` : ''}
+            ${c.description ? `<div class="ncs-clan-card-desc">${_esc(c.description)}</div>` : ""}
             <div class="ncs-clan-card-stats">
               <div class="ncs-clan-card-stat">👥 ${c.memberCount}/${c.maxMembers}</div>
-              <div class="ncs-clan-card-stat">⚔️ ${c.totalKills||0} kills</div>
+              <div class="ncs-clan-card-stat">⚔️ ${c.totalKills || 0} kills</div>
             </div>
             <div class="ncs-clan-card-footer">
               <div class="ncs-clan-card-leader">Leader: ${_esc(c.leaderName)}</div>
@@ -1057,7 +1225,9 @@ const SocialUI = (() => {
             </div>
           </div>
         `;
-      }).join('') + `</div>`;
+          })
+          .join("") +
+        `</div>`;
     }
     return h;
   }
@@ -1083,9 +1253,25 @@ const SocialUI = (() => {
           <div class="ncs-field">
             <div class="ncs-field-label">EMBLEM</div>
             <div class="ncs-emblem-row" id="cfEmblemRow">
-              ${['⭐','🔥','💀','⚡','🌊','🎯','🛡','👑','🚀','💎','🌙','🦅'].map((e,i) =>
-                `<button type="button" class="ncs-emblem-btn${i===0?' selected':''}" data-emblem="${e}">${e}</button>`
-              ).join('')}
+              ${[
+                "⭐",
+                "🔥",
+                "💀",
+                "⚡",
+                "🌊",
+                "🎯",
+                "🛡",
+                "👑",
+                "🚀",
+                "💎",
+                "🌙",
+                "🦅",
+              ]
+                .map(
+                  (e, i) =>
+                    `<button type="button" class="ncs-emblem-btn${i === 0 ? " selected" : ""}" data-emblem="${e}">${e}</button>`,
+                )
+                .join("")}
             </div>
           </div>
           <div class="ncs-field ncs-field-row">
@@ -1105,22 +1291,23 @@ const SocialUI = (() => {
   /* ── My Clan ─────────────────────────────────────────────── */
   function _htmlMyClan() {
     const { clan, members = [], myRole } = S.clanData || {};
-    if (!clan) return `<div class="ncs-empty"><div class="ncs-empty-icon">🏴</div>You are not in a clan.</div>`;
-    const isLeader  = myRole === 'leader';
-    const canManage = myRole === 'leader' || myRole === 'officer';
+    if (!clan)
+      return `<div class="ncs-empty"><div class="ncs-empty-icon">🏴</div>You are not in a clan.</div>`;
+    const isLeader = myRole === "leader";
+    const canManage = myRole === "leader" || myRole === "officer";
 
     let h = `
       <div class="ncs-myclan-hero">
-        <div class="ncs-myclan-emblem">${clan.emblem||'⭐'}</div>
+        <div class="ncs-myclan-emblem">${clan.emblem || "⭐"}</div>
         <div class="ncs-myclan-info">
           <div class="ncs-myclan-name">${_esc(clan.name)}</div>
           <div class="ncs-myclan-tag">[${_esc(clan.tag)}]</div>
           <div class="ncs-myclan-stats">
             <div class="ncs-myclan-stat">👥 ${clan.memberCount}/${clan.maxMembers} members</div>
-            <div class="ncs-myclan-stat">⚔️ ${clan.totalKills||0} kills</div>
+            <div class="ncs-myclan-stat">⚔️ ${clan.totalKills || 0} kills</div>
             <div class="ncs-myclan-stat">🎖 ${myRole}</div>
           </div>
-          ${clan.description ? `<div style="font-family:'Rajdhani',sans-serif;font-size:13px;color:rgba(255,255,255,0.45);margin-top:8px;line-height:1.5;">${_esc(clan.description)}</div>` : ''}
+          ${clan.description ? `<div style="font-family:'Rajdhani',sans-serif;font-size:13px;color:rgba(255,255,255,0.45);margin-top:8px;line-height:1.5;">${_esc(clan.description)}</div>` : ""}
         </div>
         <div class="ncs-myclan-actions">
           ${isLeader ? `<button class="ncs-btn ncs-btn-pink ncs-btn-sm" data-action="disband-clan" data-id="${clan.id}">Disband</button>` : `<button class="ncs-btn ncs-btn-sm" data-action="leave-clan" style="border-color:rgba(255,255,255,.15);background:rgba(255,255,255,.04);color:var(--ncs-muted)">Leave</button>`}
@@ -1139,30 +1326,34 @@ const SocialUI = (() => {
 
     h += `<div class="ncs-sec-label ncs-sec-label-gold" style="padding:16px 0 8px;">MEMBERS — ${members.length}</div>`;
     h += `<div class="ncs-member-grid">`;
-    h += members.map(m => {
-      const isMe = m.name === S.me?.name;
-      let actions = '';
-      if (!isMe && isLeader) {
-        if (m.role === 'member')   actions += `<button class="ncs-icon-btn success" data-action="promote" data-name="${_esc(m.name)}" data-clanid="${clan.id}" title="Promote to officer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><polyline points="18 15 12 9 6 15"/></svg></button>`;
-        if (m.role === 'officer')  actions += `<button class="ncs-icon-btn" data-action="demote" data-name="${_esc(m.name)}" data-clanid="${clan.id}" title="Demote to member" style="font-size:11px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><polyline points="6 9 12 15 18 9"/></svg></button>`;
-        actions += `<button class="ncs-icon-btn danger" data-action="kick" data-name="${_esc(m.name)}" data-clanid="${clan.id}" title="Kick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" width="13" height="13"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>`;
-      }
-      return `
+    h += members
+      .map((m) => {
+        const isMe = m.name === S.me?.name;
+        let actions = "";
+        if (!isMe && isLeader) {
+          if (m.role === "member")
+            actions += `<button class="ncs-icon-btn success" data-action="promote" data-name="${_esc(m.name)}" data-clanid="${clan.id}" title="Promote to officer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><polyline points="18 15 12 9 6 15"/></svg></button>`;
+          if (m.role === "officer")
+            actions += `<button class="ncs-icon-btn" data-action="demote" data-name="${_esc(m.name)}" data-clanid="${clan.id}" title="Demote to member" style="font-size:11px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><polyline points="6 9 12 15 18 9"/></svg></button>`;
+          actions += `<button class="ncs-icon-btn danger" data-action="kick" data-name="${_esc(m.name)}" data-clanid="${clan.id}" title="Kick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" width="13" height="13"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>`;
+        }
+        return `
         <div class="ncs-member-row">
-          <div class="ncs-av ncs-av-sm ${m.isOnline?'online':''}" data-col="${_avCol(m.name)}">${m.name[0].toUpperCase()}</div>
+          <div class="ncs-av ncs-av-sm ${m.isOnline ? "online" : ""}" data-col="${_avCol(m.name)}">${m.name[0].toUpperCase()}</div>
           <div class="ncs-member-info">
             <div class="ncs-member-name">${_esc(m.name)} <span class="ncs-role ncs-role-${m.role}">${m.role}</span></div>
-            <div class="ncs-member-sub">Lv ${m.account?.level||1} · ${m.stats?.kills||0} kills${m.isOnline?' · <span style="color:var(--ncs-green)">Online</span>':''}</div>
+            <div class="ncs-member-sub">Lv ${m.account?.level || 1} · ${m.stats?.kills || 0} kills${m.isOnline ? ' · <span style="color:var(--ncs-green)">Online</span>' : ""}</div>
           </div>
-          <div class="ncs-row-actions ${actions?'always':''}">${actions}</div>
+          <div class="ncs-row-actions ${actions ? "always" : ""}">${actions}</div>
         </div>
       `;
-    }).join('');
+      })
+      .join("");
     h += `</div>`;
     return h;
   }
 
-  /* ── Clan Chat ───────────────────────────────────────────── */
+  /* CLAN CHAT DISABLED: Clan Chat functions
   function _htmlClanChat() {
     if (!S.clanData) return `<div class="ncs-empty">Not in a clan.</div>`;
     return `
@@ -1195,42 +1386,54 @@ const SocialUI = (() => {
       `;
     }).join('');
   }
+  END CLAN CHAT DISABLED */
 
   /* ── Bind clan actions ───────────────────────────────────── */
   function _bindClanActions() {
-    const content = document.getElementById('ncsClanContent');
+    const content = document.getElementById("ncsClanContent");
     if (!content) return;
 
-    content.querySelectorAll('[data-action]').forEach(el => {
-      el.addEventListener('click', async e => {
+    content.querySelectorAll("[data-action]").forEach((el) => {
+      el.addEventListener("click", async (e) => {
         e.stopPropagation();
         const { action, id, name, clanid } = el.dataset;
-        if (action === 'join-clan')        _doJoinClan(id);
-        if (action === 'disband-clan')     _doDisbandClan(id);
-        if (action === 'leave-clan')       _doLeaveClan();
-        if (action === 'kick')             _doKick(clanid, name);
-        if (action === 'promote')          _doPromote(clanid, name);
-        if (action === 'demote')           _doDemote(clanid, name);
-        if (action === 'clan-invite-send') _doClanInvite();
+        if (action === "join-clan") _doJoinClan(id);
+        if (action === "disband-clan") _doDisbandClan(id);
+        if (action === "leave-clan") _doLeaveClan();
+        if (action === "kick") _doKick(clanid, name);
+        if (action === "promote") _doPromote(clanid, name);
+        if (action === "demote") _doDemote(clanid, name);
+        if (action === "clan-invite-send") _doClanInvite();
       });
     });
 
     // Create form
-    const form = document.getElementById('ncsClanCreateForm');
+    const form = document.getElementById("ncsClanCreateForm");
     if (form) {
-      form.onsubmit = e => { e.preventDefault(); _doCreateClan(); };
-      form.querySelectorAll('.ncs-emblem-btn').forEach(btn => {
-        btn.onclick = () => { form.querySelectorAll('.ncs-emblem-btn').forEach(b => b.classList.remove('selected')); btn.classList.add('selected'); };
+      form.onsubmit = (e) => {
+        e.preventDefault();
+        _doCreateClan();
+      };
+      form.querySelectorAll(".ncs-emblem-btn").forEach((btn) => {
+        btn.onclick = () => {
+          form
+            .querySelectorAll(".ncs-emblem-btn")
+            .forEach((b) => b.classList.remove("selected"));
+          btn.classList.add("selected");
+        };
       });
     }
 
     // Browse search
-    const searchBtn = document.getElementById('ncsClanSearchBtn');
-    const searchQ   = document.getElementById('ncsClanSearchQ');
+    const searchBtn = document.getElementById("ncsClanSearchBtn");
+    const searchQ = document.getElementById("ncsClanSearchQ");
     if (searchBtn) searchBtn.onclick = _doBrowseSearch;
-    if (searchQ)   searchQ.onkeydown = e => { if (e.key === 'Enter') _doBrowseSearch(); };
+    if (searchQ)
+      searchQ.onkeydown = (e) => {
+        if (e.key === "Enter") _doBrowseSearch();
+      };
 
-    // Clan chat send
+    /* CLAN CHAT DISABLED: Clan chat send binding
     const sendBtn = document.getElementById('ncsClanSendBtn');
     const input   = document.getElementById('ncsClanMsgInput');
     if (sendBtn) sendBtn.onclick = _sendClanChat;
@@ -1239,78 +1442,133 @@ const SocialUI = (() => {
     // Scroll clan chat to bottom
     const area = document.getElementById('ncsClanMsgArea');
     if (area) area.scrollTop = area.scrollHeight;
+    END CLAN CHAT DISABLED */
   }
 
   async function _doBrowseSearch() {
-    const q = (document.getElementById('ncsClanSearchQ')?.value || '').trim();
-    try { S.clanBrowse = (await Social.Clans.browse(q)).clans || []; } catch { S.clanBrowse = []; }
+    const q = (document.getElementById("ncsClanSearchQ")?.value || "").trim();
+    try {
+      S.clanBrowse = (await Social.Clans.browse(q)).clans || [];
+    } catch {
+      S.clanBrowse = [];
+    }
     _renderClansPage();
   }
 
   async function _doCreateClan() {
-    const name   = document.getElementById('cfName')?.value.trim();
-    const tag    = document.getElementById('cfTag')?.value.trim().toUpperCase();
-    const desc   = document.getElementById('cfDesc')?.value.trim() || '';
-    const isOpen = document.getElementById('cfOpen')?.checked || false;
-    const emblem = document.querySelector('.ncs-emblem-btn.selected')?.dataset.emblem || '⭐';
-    const errEl  = document.getElementById('cfError');
-    if (errEl) errEl.textContent = '';
+    const name = document.getElementById("cfName")?.value.trim();
+    const tag = document.getElementById("cfTag")?.value.trim().toUpperCase();
+    const desc = document.getElementById("cfDesc")?.value.trim() || "";
+    const isOpen = document.getElementById("cfOpen")?.checked || false;
+    const emblem =
+      document.querySelector(".ncs-emblem-btn.selected")?.dataset.emblem ||
+      "⭐";
+    const errEl = document.getElementById("cfError");
+    if (errEl) errEl.textContent = "";
     try {
-      const res = await Social.Clans.create({ name, tag, description: desc, emblem, isOpen });
-      S.clanData = { clan: res.clan, members: [], myRole: 'leader' };
-      S.clanView = 'mine';
-      toast(`Clan [${tag}] ${name} created!`, 'clan');
+      const res = await Social.Clans.create({
+        name,
+        tag,
+        description: desc,
+        emblem,
+        isOpen,
+      });
+      S.clanData = { clan: res.clan, members: [], myRole: "leader" };
+      S.clanView = "mine";
+      toast(`Clan [${tag}] ${name} created!`, "clan");
       await _refreshAll();
-    } catch(e) { if (errEl) errEl.textContent = e.message; }
+    } catch (e) {
+      if (errEl) errEl.textContent = e.message;
+    }
   }
 
   async function _doJoinClan(clanId) {
     try {
       const res = await Social.Clans.join(clanId);
-      toast(`Joined ${res.clan?.name}!`, 'clan');
-      S.clanView = 'mine';
+      toast(`Joined ${res.clan?.name}!`, "clan");
+      S.clanView = "mine";
       await _refreshAll();
-    } catch(e) { toast(e.message, 'error'); }
+    } catch (e) {
+      toast(e.message, "error");
+    }
   }
 
   async function _doLeaveClan() {
-    if (!confirm('Leave your clan?')) return;
-    try { await Social.Clans.leave(); toast('You left the clan.', 'clan'); S.clanData = null; S.clanView = 'browse'; await _refreshAll(); }
-    catch(e) { toast(e.message, 'error'); }
+    if (!confirm("Leave your clan?")) return;
+    try {
+      await Social.Clans.leave();
+      toast("You left the clan.", "clan");
+      S.clanData = null;
+      S.clanView = "browse";
+      await _refreshAll();
+    } catch (e) {
+      toast(e.message, "error");
+    }
   }
 
   async function _doDisbandClan(clanId) {
-    if (!confirm('Disband this clan? This cannot be undone.')) return;
-    try { await Social.Clans.disband(clanId); toast('Clan disbanded.', 'clan'); S.clanData = null; S.clanView = 'browse'; await _refreshAll(); }
-    catch(e) { toast(e.message, 'error'); }
+    if (!confirm("Disband this clan? This cannot be undone.")) return;
+    try {
+      await Social.Clans.disband(clanId);
+      toast("Clan disbanded.", "clan");
+      S.clanData = null;
+      S.clanView = "browse";
+      await _refreshAll();
+    } catch (e) {
+      toast(e.message, "error");
+    }
   }
 
   async function _doKick(clanId, name) {
     if (!confirm(`Kick ${name}?`)) return;
-    try { await Social.Clans.kick(clanId, name); toast(`${name} kicked.`, 'clan'); S.clanData = await Social.Clans.me(); _renderClansPage(); }
-    catch(e) { toast(e.message, 'error'); }
+    try {
+      await Social.Clans.kick(clanId, name);
+      toast(`${name} kicked.`, "clan");
+      S.clanData = await Social.Clans.me();
+      _renderClansPage();
+    } catch (e) {
+      toast(e.message, "error");
+    }
   }
 
   async function _doPromote(clanId, name) {
-    try { await Social.Clans.promote(clanId, name); toast(`${name} promoted to officer!`, 'clan'); S.clanData = await Social.Clans.me(); _renderClansPage(); }
-    catch(e) { toast(e.message, 'error'); }
+    try {
+      await Social.Clans.promote(clanId, name);
+      toast(`${name} promoted to officer!`, "clan");
+      S.clanData = await Social.Clans.me();
+      _renderClansPage();
+    } catch (e) {
+      toast(e.message, "error");
+    }
   }
 
   async function _doDemote(clanId, name) {
-    try { await Social.Clans.demote(clanId, name); toast(`${name} demoted.`, 'clan'); S.clanData = await Social.Clans.me(); _renderClansPage(); }
-    catch(e) { toast(e.message, 'error'); }
+    try {
+      await Social.Clans.demote(clanId, name);
+      toast(`${name} demoted.`, "clan");
+      S.clanData = await Social.Clans.me();
+      _renderClansPage();
+    } catch (e) {
+      toast(e.message, "error");
+    }
   }
 
   async function _doClanInvite() {
-    const input = document.getElementById('ncsClanInviteInput');
-    const name  = input?.value.trim();
+    const input = document.getElementById("ncsClanInviteInput");
+    const name = input?.value.trim();
     if (!name) return;
     const clanId = S.clanData?.clan?.id;
     if (!clanId) return;
-    try { await Social.Clans.invite(clanId, name); toast(`Invite sent to ${name}!`, 'clan'); if (input) input.value = ''; }
-    catch(e) { toast(e.message, 'error'); }
+    try {
+      await Social.Clans.invite(clanId, name);
+      toast(`Invite sent to ${name}!`, "clan");
+      if (input) input.value = "";
+    } catch (e) {
+      toast(e.message, "error");
+    }
   }
 
+  /* CLAN CHAT DISABLED: _sendClanChat function
   async function _sendClanChat() {
     const input  = document.getElementById('ncsClanMsgInput');
     const clanId = S.clanData?.clan?.id;
@@ -1327,34 +1585,35 @@ const SocialUI = (() => {
     } catch(e) { toast(e.message, 'error'); }
     finally { input.disabled = false; input.focus(); }
   }
+  END CLAN CHAT DISABLED */
 
   /* ══════════════════════════════════════════════════════════
      PROFILE PAGE RENDER
   ══════════════════════════════════════════════════════════ */
   async function _renderProfilePage() {
-    const body = document.getElementById('ncsProfileBody');
+    const body = document.getElementById("ncsProfileBody");
     if (!body) return;
 
     // Fetch fresh profile data
     try {
       S.profileData = await Social.Profile.me();
-    } catch(e) {
+    } catch (e) {
       body.innerHTML = `<div class="ncs-empty"><div class="ncs-empty-icon">⚠️</div>Could not load profile.<br><span style="opacity:.4;font-size:12px;">${_esc(e.message)}</span></div>`;
       return;
     }
 
     const p = S.profileData;
-    const name    = p.name || S.me?.name || 'Player';
-    const level   = p.account?.level || 1;
-    const xp      = p.account?.xp || 0;
-    const xpNext  = level * 1000; // approximate XP per level
-    const xpPct   = Math.min(100, Math.round((xp % xpNext) / xpNext * 100));
-    const kills   = p.stats?.kills || 0;
-    const waves   = p.stats?.waves || 0;
-    const nex     = p.nex || 0;
-    const clanTag = p.clanTag || '';
+    const name = p.name || S.me?.name || "Player";
+    const level = p.account?.level || 1;
+    const xp = p.account?.xp || 0;
+    const xpNext = level * 1000; // approximate XP per level
+    const xpPct = Math.min(100, Math.round(((xp % xpNext) / xpNext) * 100));
+    const kills = p.stats?.kills || 0;
+    const waves = p.stats?.waves || 0;
+    const nex = p.nex || 0;
+    const clanTag = p.clanTag || "";
 
-    const sub = document.getElementById('ncsProfileSub');
+    const sub = document.getElementById("ncsProfileSub");
     if (sub) sub.textContent = clanTag ? `[${clanTag}] ${name}` : name;
 
     body.innerHTML = `
@@ -1367,7 +1626,7 @@ const SocialUI = (() => {
           </div>
           <div class="ncs-profile-info">
             <div class="ncs-profile-name">${_esc(name)}</div>
-            ${clanTag ? `<div class="ncs-profile-clan-row"><span class="ncs-clan-tag">[${_esc(clanTag)}]</span></div>` : ''}
+            ${clanTag ? `<div class="ncs-profile-clan-row"><span class="ncs-clan-tag">[${_esc(clanTag)}]</span></div>` : ""}
             <div style="display:flex;align-items:baseline;gap:10px;margin:10px 0 4px;">
               <span style="font-family:'Orbitron',monospace;font-size:9px;font-weight:700;letter-spacing:.16em;color:var(--nc-muted)">LEVEL</span>
               <span style="font-family:'Orbitron',monospace;font-size:22px;font-weight:900;color:var(--nc-gold);text-shadow:0 0 20px rgba(255,215,0,.5)">${level}</span>
@@ -1409,19 +1668,28 @@ const SocialUI = (() => {
         </div>
 
         <!-- Friends strip -->
-        ${S.friends.length ? `
+        ${
+          S.friends.length
+            ? `
         <div style="font-family:'Orbitron',monospace;font-size:9px;font-weight:700;letter-spacing:.18em;color:var(--nc-muted);padding:0 2px;margin-top:8px;">FRIENDS — ${S.friends.length}</div>
         <div class="ncs-friends-strip">
           <div class="ncs-strip-row">
-            ${S.friends.slice(0, 12).map(f => `
+            ${S.friends
+              .slice(0, 12)
+              .map(
+                (f) => `
               <div class="ncs-strip-person" title="${_esc(f.name)}">
-                <div class="ncs-av ncs-av-sm ${f.isOnline?'online':''}" data-col="${_avCol(f.name)}">${f.name[0].toUpperCase()}</div>
+                <div class="ncs-av ncs-av-sm ${f.isOnline ? "online" : ""}" data-col="${_avCol(f.name)}">${f.name[0].toUpperCase()}</div>
                 <div class="ncs-strip-name">${_esc(f.name)}</div>
               </div>
-            `).join('')}
-            ${S.friends.length > 12 ? `<div class="ncs-strip-person" style="opacity:.4;"><div class="ncs-av ncs-av-sm" style="font-size:9px;background:rgba(255,255,255,.05);">+${S.friends.length - 12}</div><div class="ncs-strip-name">more</div></div>` : ''}
+            `,
+              )
+              .join("")}
+            ${S.friends.length > 12 ? `<div class="ncs-strip-person" style="opacity:.4;"><div class="ncs-av ncs-av-sm" style="font-size:9px;background:rgba(255,255,255,.05);">+${S.friends.length - 12}</div><div class="ncs-strip-name">more</div></div>` : ""}
           </div>
-        </div>` : ''}
+        </div>`
+            : ""
+        }
       </div>
     `;
   }
@@ -1429,9 +1697,9 @@ const SocialUI = (() => {
   /* ══════════════════════════════════════════════════════════
      RANKS PAGE RENDER
   ══════════════════════════════════════════════════════════ */
-  async function _renderRanksPage(type = 'kills') {
+  async function _renderRanksPage(type = "kills") {
     S.rankType = type;
-    const body = document.getElementById('ncsRanksBody');
+    const body = document.getElementById("ncsRanksBody");
     if (!body) return;
 
     body.innerHTML = `<div class="ncs-empty"><div class="ncs-empty-icon" style="animation:spin 1s linear infinite;">⟳</div>Loading…</div>`;
@@ -1439,17 +1707,22 @@ const SocialUI = (() => {
     try {
       const res = await Social.Leaderboard.get(type);
       S.rankData = res.leaderboard || res.players || res.entries || res || [];
-    } catch(e) {
+    } catch (e) {
       body.innerHTML = `<div class="ncs-empty"><div class="ncs-empty-icon">⚠️</div>Could not load leaderboard.<br><span style="opacity:.4;font-size:12px;">${_esc(e.message)}</span></div>`;
       return;
     }
 
-    const tabs = ['kills','waves','level','nex'];
-    const tabLabels = { kills:'💀 Kills', waves:'🌊 Waves', level:'⚡ Level', nex:'💎 NEX' };
-    const myName = S.me?.name || S.profileData?.name || '';
+    const tabs = ["kills", "waves", "level", "nex"];
+    const tabLabels = {
+      kills: "💀 Kills",
+      waves: "🌊 Waves",
+      level: "⚡ Level",
+      nex: "💎 NEX",
+    };
+    const myName = S.me?.name || S.profileData?.name || "";
 
     // Find max score for bar scaling
-    const maxScore = Math.max(1, ...S.rankData.map(e => _rankScore(e, type)));
+    const maxScore = Math.max(1, ...S.rankData.map((e) => _rankScore(e, type)));
 
     const top3 = S.rankData.slice(0, 3);
     const rest = S.rankData.slice(3);
@@ -1458,82 +1731,106 @@ const SocialUI = (() => {
       <div class="ncs-ranks-wrap">
         <!-- Tabs -->
         <div class="ncs-rank-tabs">
-          ${tabs.map(t => `
-            <button class="ncs-rank-tab ${t===type?'active':''}" data-ranktype="${t}">${tabLabels[t]}</button>
-          `).join('')}
+          ${tabs
+            .map(
+              (t) => `
+            <button class="ncs-rank-tab ${t === type ? "active" : ""}" data-ranktype="${t}">${tabLabels[t]}</button>
+          `,
+            )
+            .join("")}
         </div>
 
         <!-- Podium -->
-        ${top3.length >= 2 ? `
+        ${
+          top3.length >= 2
+            ? `
         <div class="ncs-podium">
           <!-- 2nd -->
           <div class="ncs-podium-slot ncs-podium-slot-2">
             <div class="ncs-podium-crown">🥈</div>
-            <div class="ncs-av ncs-av-lg" data-col="${_avCol(top3[1]?.name)}">${(top3[1]?.name||'?')[0].toUpperCase()}</div>
-            <div class="ncs-podium-name">${_esc(top3[1]?.name||'')}</div>
+            <div class="ncs-av ncs-av-lg" data-col="${_avCol(top3[1]?.name)}">${(top3[1]?.name || "?")[0].toUpperCase()}</div>
+            <div class="ncs-podium-name">${_esc(top3[1]?.name || "")}</div>
             <div class="ncs-podium-score">${_rankScore(top3[1], type).toLocaleString()}</div>
             <div class="ncs-podium-base ncs-podium-base-2">#2</div>
           </div>
           <!-- 1st -->
           <div class="ncs-podium-slot ncs-podium-slot-1">
             <div class="ncs-podium-crown">👑</div>
-            <div class="ncs-av ncs-av-xl" data-col="${_avCol(top3[0]?.name)}">${(top3[0]?.name||'?')[0].toUpperCase()}</div>
-            <div class="ncs-podium-name">${_esc(top3[0]?.name||'')}</div>
+            <div class="ncs-av ncs-av-xl" data-col="${_avCol(top3[0]?.name)}">${(top3[0]?.name || "?")[0].toUpperCase()}</div>
+            <div class="ncs-podium-name">${_esc(top3[0]?.name || "")}</div>
             <div class="ncs-podium-score">${_rankScore(top3[0], type).toLocaleString()}</div>
             <div class="ncs-podium-base ncs-podium-base-1">#1</div>
           </div>
           <!-- 3rd -->
-          ${top3[2] ? `
+          ${
+            top3[2]
+              ? `
           <div class="ncs-podium-slot ncs-podium-slot-3">
             <div class="ncs-podium-crown">🥉</div>
-            <div class="ncs-av ncs-av-lg" data-col="${_avCol(top3[2]?.name)}">${(top3[2]?.name||'?')[0].toUpperCase()}</div>
-            <div class="ncs-podium-name">${_esc(top3[2]?.name||'')}</div>
+            <div class="ncs-av ncs-av-lg" data-col="${_avCol(top3[2]?.name)}">${(top3[2]?.name || "?")[0].toUpperCase()}</div>
+            <div class="ncs-podium-name">${_esc(top3[2]?.name || "")}</div>
             <div class="ncs-podium-score">${_rankScore(top3[2], type).toLocaleString()}</div>
             <div class="ncs-podium-base ncs-podium-base-3">#3</div>
-          </div>` : ''}
-        </div>` : ''}
+          </div>`
+              : ""
+          }
+        </div>`
+            : ""
+        }
 
         <!-- Full table -->
-        ${S.rankData.length ? `
+        ${
+          S.rankData.length
+            ? `
         <div class="ncs-ranks-table">
-          ${S.rankData.map((entry, i) => {
-            const isMe = entry.name === myName;
-            const score = _rankScore(entry, type);
-            const barPct = Math.round(score / maxScore * 100);
-            return `
-              <div class="ncs-rank-row ${isMe ? 'is-me' : ''}">
-                <div class="ncs-rank-num">${i < 3 ? ['🥇','🥈','🥉'][i] : `#${i+1}`}</div>
-                <div class="ncs-av ncs-av-sm" data-col="${_avCol(entry.name)}">${(entry.name||'?')[0].toUpperCase()}</div>
+          ${S.rankData
+            .map((entry, i) => {
+              const isMe = entry.name === myName;
+              const score = _rankScore(entry, type);
+              const barPct = Math.round((score / maxScore) * 100);
+              return `
+              <div class="ncs-rank-row ${isMe ? "is-me" : ""}">
+                <div class="ncs-rank-num">${i < 3 ? ["🥇", "🥈", "🥉"][i] : `#${i + 1}`}</div>
+                <div class="ncs-av ncs-av-sm" data-col="${_avCol(entry.name)}">${(entry.name || "?")[0].toUpperCase()}</div>
                 <div class="ncs-rank-info">
-                  <div class="ncs-rank-name">${_esc(entry.name||'')}${isMe ? ' <span class="ncs-me-badge">YOU</span>' : ''}${entry.clanTag ? ` <span class="ncs-clan-tag">[${_esc(entry.clanTag)}]</span>` : ''}</div>
+                  <div class="ncs-rank-name">${_esc(entry.name || "")}${isMe ? ' <span class="ncs-me-badge">YOU</span>' : ""}${entry.clanTag ? ` <span class="ncs-clan-tag">[${_esc(entry.clanTag)}]</span>` : ""}</div>
                   <div class="ncs-rank-bar-wrap"><div class="ncs-rank-bar"><div class="ncs-rank-bar-fill" style="width:${barPct}%"></div></div></div>
                 </div>
                 <div class="ncs-rank-score">${score.toLocaleString()}</div>
               </div>
             `;
-          }).join('')}
-        </div>` : `<div class="ncs-empty"><div class="ncs-empty-icon">🏆</div>No data yet — be the first!</div>`}
+            })
+            .join("")}
+        </div>`
+            : `<div class="ncs-empty"><div class="ncs-empty-icon">🏆</div>No data yet — be the first!</div>`
+        }
       </div>
     `;
 
     // Bind tab clicks
-    body.querySelectorAll('[data-ranktype]').forEach(btn => {
-      btn.addEventListener('click', () => _renderRanksPage(btn.dataset.ranktype));
+    body.querySelectorAll("[data-ranktype]").forEach((btn) => {
+      btn.addEventListener("click", () =>
+        _renderRanksPage(btn.dataset.ranktype),
+      );
     });
   }
 
   function _rankScore(entry, type) {
     if (!entry) return 0;
-    if (type === 'kills')  return entry.kills  || entry.stats?.kills  || entry.score || 0;
-    if (type === 'waves')  return entry.waves  || entry.stats?.waves  || entry.score || 0;
-    if (type === 'level')  return entry.level  || entry.account?.level || entry.score || 0;
-    if (type === 'nex')    return entry.nex    || entry.score || 0;
+    if (type === "kills")
+      return entry.kills || entry.stats?.kills || entry.score || 0;
+    if (type === "waves")
+      return entry.waves || entry.stats?.waves || entry.score || 0;
+    if (type === "level")
+      return entry.level || entry.account?.level || entry.score || 0;
+    if (type === "nex") return entry.nex || entry.score || 0;
     return entry.score || 0;
   }
 
   /* ══════════════════════════════════════════════════════════
      WEBSOCKET HANDLERS
   ══════════════════════════════════════════════════════════ */
+  /* CHAT DISABLED: _wsOnDM function
   function _wsOnDM({ message, conversationId }) {
     S.unreadDM++;
     _refreshBadges();
@@ -1547,37 +1844,43 @@ const SocialUI = (() => {
     }
     Social.DM.conversations().then(r => { S.conversations = r.conversations||[]; S.unreadDM = r.totalUnread||0; _refreshBadges(); if (S.activePage==='chat') _renderChatPage(); }).catch(() => {});
   }
+  END CHAT DISABLED */
 
+  /* CHAT DISABLED: _wsOnClanMsg function
   function _wsOnClanMsg({ message }) {
     S.clanChatMessages.push(message);
     const area = document.getElementById('ncsClanMsgArea');
     if (area) { area.innerHTML = _buildClanChatHTML(); area.scrollTop = area.scrollHeight; }
     else toast(`[Clan] ${message.fromName}: ${(message.content||'').slice(0,50)}`, 'clan');
   }
+  END CHAT DISABLED */
 
   function _wsOnFriendReq({ request }) {
     S.incoming.push(request);
-    toast(`${request.fromName} sent you a friend request!`, 'friend');
+    toast(`${request.fromName} sent you a friend request!`, "friend");
     _refreshBadges();
-    if (S.activePage === 'friends') _renderFriendsPage();
+    if (S.activePage === "friends") _renderFriendsPage();
   }
 
   function _wsOnFriendAccepted({ friend }) {
     S.friends.push(friend);
-    toast(`${friend.name} accepted your friend request!`, 'friend');
-    if (S.activePage === 'friends') _renderFriendsPage();
+    toast(`${friend.name} accepted your friend request!`, "friend");
+    if (S.activePage === "friends") _renderFriendsPage();
   }
 
   function _wsOnClanInvite({ invite }) {
     S.clanInvites.push(invite);
-    toast(`You were invited to [${invite.clanTag}] ${invite.clanName}!`, 'clan');
+    toast(
+      `You were invited to [${invite.clanTag}] ${invite.clanName}!`,
+      "clan",
+    );
     _refreshBadges();
-    if (S.activePage === 'friends') _renderFriendsPage();
+    if (S.activePage === "friends") _renderFriendsPage();
   }
 
   function _wsOnKicked({ clanName }) {
     S.clanData = null;
-    toast(`You were kicked from ${clanName}.`, 'error');
+    toast(`You were kicked from ${clanName}.`, "error");
   }
 
   function _wsOnNotification({ notification }) {
@@ -1585,15 +1888,16 @@ const SocialUI = (() => {
     S.notifications.unshift(notification);
     S.unreadNotif++;
     _refreshBadges();
-    if (S.activePage === 'notifications') _renderNotificationsPage();
+    if (S.activePage === "notifications") _renderNotificationsPage();
   }
 
   function _updateOnline(name, online) {
-    const f = S.friends.find(x => x.name === name);
+    const f = S.friends.find((x) => x.name === name);
     if (f) {
       f.isOnline = online;
-      if (S.activePage === 'friends') _renderFriendsPage();
-      if (S.activeDM?.friendName === name && S.activePage === 'chat') _renderChatWindow();
+      if (S.activePage === "friends") _renderFriendsPage();
+      if (S.activeDM?.friendName === name && S.activePage === "chat")
+        _renderChatWindow();
     }
   }
 
@@ -1601,8 +1905,8 @@ const SocialUI = (() => {
      NOTIFICATIONS PAGE RENDER
   ══════════════════════════════════════════════════════════ */
   async function _renderNotificationsPage() {
-    const subEl = document.getElementById('ncsNotifSub');
-    const listEl = document.getElementById('ncsNotifList');
+    const subEl = document.getElementById("ncsNotifSub");
+    const listEl = document.getElementById("ncsNotifList");
     if (!listEl) return;
 
     // Show loading state
@@ -1610,28 +1914,43 @@ const SocialUI = (() => {
 
     // Fetch notifications
     try {
-      const unreadOnly = S.notifFilter === 'unread';
+      const unreadOnly = S.notifFilter === "unread";
       const data = await Social.Notifications.list(50, unreadOnly);
       S.notifications = data.notifications || data || [];
-      if (typeof data.unreadCount === 'number') _setNotifCount(data.unreadCount);
+      if (typeof data.unreadCount === "number")
+        _setNotifCount(data.unreadCount);
     } catch (e) {
       listEl.innerHTML = `<div class="ncs-empty"><div class="ncs-empty-icon">⚠️</div>Failed to load notifications</div>`;
       return;
     }
 
     // Update subtitle (readAt === null means unread)
-    const unreadCount = S.notifications.filter(n => !n.readAt).length;
-    if (subEl) subEl.textContent = unreadCount > 0 ? `${unreadCount} unread` : 'All caught up!';
+    const unreadCount = S.notifications.filter((n) => !n.readAt).length;
+    if (subEl)
+      subEl.textContent =
+        unreadCount > 0 ? `${unreadCount} unread` : "All caught up!";
 
     // Bind filter buttons
-    document.getElementById('ncsNotifFilterAll')?.addEventListener('click', () => _setNotifFilter('all'));
-    document.getElementById('ncsNotifFilterUnread')?.addEventListener('click', () => _setNotifFilter('unread'));
-    document.getElementById('ncsNotifMarkAllRead')?.addEventListener('click', _markAllNotificationsRead);
-    document.getElementById('ncsNotifClearRead')?.addEventListener('click', _clearReadNotifications);
+    document
+      .getElementById("ncsNotifFilterAll")
+      ?.addEventListener("click", () => _setNotifFilter("all"));
+    document
+      .getElementById("ncsNotifFilterUnread")
+      ?.addEventListener("click", () => _setNotifFilter("unread"));
+    document
+      .getElementById("ncsNotifMarkAllRead")
+      ?.addEventListener("click", _markAllNotificationsRead);
+    document
+      .getElementById("ncsNotifClearRead")
+      ?.addEventListener("click", _clearReadNotifications);
 
     // Update filter button states
-    document.getElementById('ncsNotifFilterAll')?.classList.toggle('ncs-active', S.notifFilter === 'all');
-    document.getElementById('ncsNotifFilterUnread')?.classList.toggle('ncs-active', S.notifFilter === 'unread');
+    document
+      .getElementById("ncsNotifFilterAll")
+      ?.classList.toggle("ncs-active", S.notifFilter === "all");
+    document
+      .getElementById("ncsNotifFilterUnread")
+      ?.classList.toggle("ncs-active", S.notifFilter === "unread");
 
     // Render list
     if (!S.notifications.length) {
@@ -1643,54 +1962,60 @@ const SocialUI = (() => {
               <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
             </svg>
           </div>
-          <div class="ncs-notif-empty-title">${S.notifFilter === 'unread' ? 'No unread notifications' : 'No notifications yet'}</div>
+          <div class="ncs-notif-empty-title">${S.notifFilter === "unread" ? "No unread notifications" : "No notifications yet"}</div>
           <div class="ncs-notif-empty-desc">You're all caught up! Check back later for updates.</div>
         </div>
       `;
       return;
     }
 
-    listEl.innerHTML = S.notifications.map(n => _htmlNotificationCard(n)).join('');
+    listEl.innerHTML = S.notifications
+      .map((n) => _htmlNotificationCard(n))
+      .join("");
 
     // Bind notification actions
-    listEl.querySelectorAll('[data-notif-action]').forEach(el => {
-      el.addEventListener('click', _handleNotificationAction);
+    listEl.querySelectorAll("[data-notif-action]").forEach((el) => {
+      el.addEventListener("click", _handleNotificationAction);
     });
   }
 
   function _htmlNotificationCard(n) {
     const iconMap = {
-      friend_request:  '👤',
-      friend_accepted: '🤝',
-      clan_invite:     '⭐',
-      clan_kicked:     '⚠️',
-      achievement:     '🏆',
-      system:          '📢',
-      dm:              '💬',
-      dm_received:     '💬',
-      level_up:        '⬆️',
-      reward:          '🎁',
+      friend_request: "👤",
+      friend_accepted: "🤝",
+      clan_invite: "⭐",
+      clan_kicked: "⚠️",
+      achievement: "🏆",
+      system: "📢",
+      dm: "💬",
+      dm_received: "💬",
+      level_up: "⬆️",
+      reward: "🎁",
     };
-    const icon    = iconMap[n.type] || '🔔';
-    const time    = _timeAgo(n.createdAt || n.timestamp);
+    const icon = iconMap[n.type] || "🔔";
+    const time = _timeAgo(n.createdAt || n.timestamp);
     const isUnread = !n.readAt;
-    const id      = n._id || n.id;
+    const id = n._id || n.id;
 
     return `
-      <div class="ncs-notif-card ${isUnread ? 'ncs-notif-unread' : ''}" data-notif-id="${id}">
+      <div class="ncs-notif-card ${isUnread ? "ncs-notif-unread" : ""}" data-notif-id="${id}">
         <div class="ncs-notif-icon-wrap">
           <span class="ncs-notif-icon">${icon}</span>
-          ${isUnread ? '<span class="ncs-notif-dot"></span>' : ''}
+          ${isUnread ? '<span class="ncs-notif-dot"></span>' : ""}
         </div>
         <div class="ncs-notif-content">
           <div class="ncs-notif-title">${_esc(n.title || _notifTypeTitle(n.type))}</div>
-          <div class="ncs-notif-message">${_esc(n.body || n.message || n.content || '')}</div>
+          <div class="ncs-notif-message">${_esc(n.body || n.message || n.content || "")}</div>
           <div class="ncs-notif-time">${time}</div>
         </div>
         <div class="ncs-notif-actions">
-          ${isUnread ? `<button class="ncs-notif-action-btn" data-notif-action="read" data-notif-id="${id}" title="Mark as read">
+          ${
+            isUnread
+              ? `<button class="ncs-notif-action-btn" data-notif-action="read" data-notif-id="${id}" title="Mark as read">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg>
-          </button>` : ''}
+          </button>`
+              : ""
+          }
         </div>
       </div>
     `;
@@ -1698,18 +2023,18 @@ const SocialUI = (() => {
 
   function _notifTypeTitle(type) {
     const titles = {
-      friend_request: 'Friend Request',
-      friend_accepted: 'Friend Accepted',
-      clan_invite: 'Clan Invitation',
-      clan_kicked: 'Removed from Clan',
-      achievement: 'Achievement Unlocked',
-      system: 'System Message',
-      dm: 'New Message',
-      dm_received: 'New Message',
-      level_up: 'Level Up!',
-      reward: 'Reward Received',
+      friend_request: "Friend Request",
+      friend_accepted: "Friend Accepted",
+      clan_invite: "Clan Invitation",
+      clan_kicked: "Removed from Clan",
+      achievement: "Achievement Unlocked",
+      system: "System Message",
+      dm: "New Message",
+      dm_received: "New Message",
+      level_up: "Level Up!",
+      reward: "Reward Received",
     };
-    return titles[type] || 'Notification';
+    return titles[type] || "Notification";
   }
 
   function _setNotifFilter(filter) {
@@ -1721,21 +2046,23 @@ const SocialUI = (() => {
     try {
       await Social.Notifications.markAllRead();
       const now = new Date().toISOString();
-      S.notifications.forEach(n => { if (!n.readAt) n.readAt = now; });
+      S.notifications.forEach((n) => {
+        if (!n.readAt) n.readAt = now;
+      });
       S.unreadNotif = 0;
       _refreshBadges();
       _renderNotificationsPage();
-      toast('All notifications marked as read', 'friend');
+      toast("All notifications marked as read", "friend");
     } catch (e) {
-      toast('Failed to mark notifications as read', 'error');
+      toast("Failed to mark notifications as read", "error");
     }
   }
 
   async function _clearReadNotifications() {
     // Filter out read notifications from display (frontend only)
-    S.notifications = S.notifications.filter(n => !n.read);
+    S.notifications = S.notifications.filter((n) => !n.read);
     _renderNotificationsPage();
-    toast('Read notifications cleared', 'friend');
+    toast("Read notifications cleared", "friend");
   }
 
   async function _handleNotificationAction(e) {
@@ -1743,16 +2070,16 @@ const SocialUI = (() => {
     const action = btn.dataset.notifAction;
     const notifId = btn.dataset.notifId;
 
-    if (action === 'read' && notifId) {
+    if (action === "read" && notifId) {
       try {
         await Social.Notifications.markRead(notifId);
-        const notif = S.notifications.find(n => (n._id || n.id) === notifId);
+        const notif = S.notifications.find((n) => (n._id || n.id) === notifId);
         if (notif) notif.readAt = new Date().toISOString();
         S.unreadNotif = Math.max(0, S.unreadNotif - 1);
         _refreshBadges();
         _renderNotificationsPage();
       } catch (e) {
-        toast('Failed to mark as read', 'error');
+        toast("Failed to mark as read", "error");
       }
     }
   }
@@ -1766,19 +2093,21 @@ const SocialUI = (() => {
   }
 
   function _refreshBadges() {
+    /* CHAT DISABLED: FAB badge
     const totalFAB = (S.unreadDM||0) + (S.incoming.length||0) + (S.clanInvites.length||0);
     const fab = document.getElementById('ncsFabBadge');
     if (fab) { fab.textContent = totalFAB > 99 ? '99+' : totalFAB; fab.style.display = totalFAB ? 'flex' : 'none'; }
+    END CHAT DISABLED */
 
-    _setBadge('ncsNavFriendBadge', S.incoming.length);
-    _setBadge('ncsNavNotifBadge',  S.unreadNotif);
+    _setBadge("ncsNavFriendBadge", S.incoming.length);
+    _setBadge("ncsNavNotifBadge", S.unreadNotif);
   }
 
   function _setBadge(id, count) {
     const el = document.getElementById(id);
     if (!el) return;
-    el.textContent = count > 99 ? '99+' : count;
-    el.style.display = count > 0 ? 'flex' : 'none';
+    el.textContent = count > 99 ? "99+" : count;
+    el.style.display = count > 0 ? "flex" : "none";
   }
 
   /* ══════════════════════════════════════════════════════════
@@ -1786,28 +2115,30 @@ const SocialUI = (() => {
   ══════════════════════════════════════════════════════════ */
   function _startHeartbeat() {
     clearInterval(S.heartbeatTimer);
-    Social.Friends.heartbeat('menu').catch(() => {});
+    Social.Friends.heartbeat("menu").catch(() => {});
     S.heartbeatTimer = setInterval(() => {
-      if (Auth.isLoggedIn()) Social.Friends.heartbeat('menu').catch(() => {});
+      if (Auth.isLoggedIn()) Social.Friends.heartbeat("menu").catch(() => {});
     }, 30000);
   }
 
   /* ══════════════════════════════════════════════════════════
      TOAST
   ══════════════════════════════════════════════════════════ */
-  function toast(msg, type = 'friend') {
-    const container = document.getElementById('ncsToasts');
+  function toast(msg, type = "friend") {
+    const container = document.getElementById("ncsToasts");
     if (!container) return;
-    const icons = { friend:'👤', clan:'⭐', dm:'💬', error:'⚠️' };
-    const el = document.createElement('div');
+    const icons = { friend: "👤", clan: "⭐", dm: "💬", error: "⚠️" };
+    const el = document.createElement("div");
     el.className = `ncs-toast ncs-toast-${type}`;
-    el.innerHTML = `<span class="ncs-toast-icon">${icons[type]||'•'}</span><span class="ncs-toast-msg">${_esc(msg)}</span>`;
+    el.innerHTML = `<span class="ncs-toast-icon">${icons[type] || "•"}</span><span class="ncs-toast-msg">${_esc(msg)}</span>`;
     container.appendChild(el);
-    requestAnimationFrame(() => { requestAnimationFrame(() => el.classList.add('ncs-toast-in')); });
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => el.classList.add("ncs-toast-in"));
+    });
     setTimeout(() => {
-      el.classList.remove('ncs-toast-in');
-      el.classList.add('ncs-toast-out');
-      el.addEventListener('transitionend', () => el.remove(), { once: true });
+      el.classList.remove("ncs-toast-in");
+      el.classList.add("ncs-toast-out");
+      el.addEventListener("transitionend", () => el.remove(), { once: true });
     }, 4200);
   }
 
@@ -1818,26 +2149,35 @@ const SocialUI = (() => {
   function _avCol(name) {
     if (!name) return 0;
     let h = 0;
-    for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;
+    for (let i = 0; i < name.length; i++)
+      h = (h * 31 + name.charCodeAt(i)) >>> 0;
     return h % 8;
   }
 
   function _esc(s) {
-    if (s == null) return '';
-    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+    if (s == null) return "";
+    return String(s)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
   }
   function _timeAgo(iso) {
-    if (!iso) return '';
+    if (!iso) return "";
     const m = Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
-    if (m < 1)   return 'just now';
-    if (m < 60)  return `${m}m ago`;
-    const h = Math.floor(m/60);
-    if (h < 24)  return `${h}h ago`;
-    return `${Math.floor(h/24)}d ago`;
+    if (m < 1) return "just now";
+    if (m < 60) return `${m}m ago`;
+    const h = Math.floor(m / 60);
+    if (h < 24) return `${h}h ago`;
+    return `${Math.floor(h / 24)}d ago`;
   }
   function _formatTime(iso) {
-    if (!iso) return '';
-    return new Date(iso).toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' });
+    if (!iso) return "";
+    return new Date(iso).toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   }
 
   return { init, openPage, closePage, toast };
