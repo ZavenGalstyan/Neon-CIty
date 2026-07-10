@@ -11057,6 +11057,7 @@
     <script>
       (function () {
         const el = document.getElementById("onlineCount");
+        const widget = document.getElementById("onlineWidget");
         async function update() {
           try {
             const res = await fetch(
@@ -11064,8 +11065,12 @@
             );
             const { online } = await res.json();
             el.textContent = online.toLocaleString();
+            // Update tooltip for mobile view
+            const playerText = online === 1 ? "player" : "players";
+            widget.setAttribute("data-tooltip", `${online} ${playerText} online`);
           } catch (_) {
             el.textContent = "—";
+            widget.setAttribute("data-tooltip", "Players online");
           }
         }
         update();
